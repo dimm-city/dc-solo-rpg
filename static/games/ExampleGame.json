@@ -1,0 +1,95 @@
+{
+    "title": "Example Game",
+    "intro": "Make it through this nightmare",
+    "successMessage": "You win!",
+    "primaryFailureMessage": "You starve",
+    "secondaryFailureMessage": "You have been eaten",    
+    "difficulty": 0,
+    "categories": [
+        {
+            "name": "Systems",
+            "tasks": [
+                {
+                    "id": 1.1,
+                    "title": "Found a portal, now to open it...",
+                    "action": "StartSuccessCounter"
+                },
+                {
+                    "id": 1.2,
+                    "title": "Lost your pen, your screwed!",
+                    "action": "AddSecondaryFailureCounter"
+                },
+                {
+                    "id": 1.3,
+                    "title": "Found a paper clip"
+                }
+            ]
+        },
+        {
+            "name": "Health",
+            "tasks": [
+                {
+                    "id": 2.1,
+                    "title": "Ate an apple",
+                    "action": "StartSuccessBonus"
+                },
+                {
+                    "id": 2.2,
+                    "title": "Ate a poison apple",
+                    "action": "AddSecondaryFailureCounter"
+                },
+                {
+                    "id": 2.3,
+                    "title": "Found a bit of granola in your pocket"
+                }
+            ]
+        },
+        {
+            "name": "Friends",
+            "tasks": [
+                {
+                    "id": 3.1,
+                    "title": "Ran into Ralph"
+                },
+                {
+                    "id": 3.2,
+                    "title": "Lost Ralph",
+                    "action": "AddSecondaryFailureCounter"
+                },
+                {
+                    "id": 3.3,
+                    "title": "Neighbor kid said hi"
+                },
+                {
+                    "id": 3.4,
+                    "title": "Cat ran away",
+                    "action": "PrimaryFailureCheck"
+                }
+            ]
+        },
+        {
+            "name": "Enemies",
+            "tasks": [
+                {
+                    "id": 4.1,
+                    "title": "Daemon has been idle",
+                    "action": "SecondaryFailureBonus"
+                },
+                {
+                    "id": 4.2,
+                    "title": "Daemon has sent out scouting parties",
+                    "action": "AddSecondaryFailureCounter"
+                },
+                {
+                    "id": 4.3,
+                    "title": "Sysops yearly meeting is tonight, they should be distracted"
+                },
+                {
+                    "id": 4.4,
+                    "title": "Sysops recruit is tailing you",
+                    "action": "PrimaryFailureCheck"
+                }
+            ]
+        }
+    ]
+}

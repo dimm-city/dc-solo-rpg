@@ -1,0 +1,24 @@
+{
+    "title": "Short Example Game",
+    "difficulty": 0,
+    "categories": [
+        {
+            "name": "Systems",
+            "tasks": [
+                {
+                    "id": 1.1,
+                    "title": ""
+                }
+            ]
+        },
+        {
+            "name": "Health",
+            "tasks": [
+                {
+                    "id": 2.1,
+                    "title": ""
+                }
+            ]
+        }
+    ]
+}
