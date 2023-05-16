@@ -1,6 +1,9 @@
 export class State {
     constructor(currentState = null) {
         if (currentState == null) {
+            this.mode = "start";
+            this.status = "";
+            this.player = null;
             this.currentRound = -1;
             this.currentPhase = -1;
             this.successCounterActive = false;

@@ -1,6 +1,7 @@
 import { State } from './State.js';
 import PrimaryFailureCheck from './Actions/PrimaryFailureCheck.js';
 import SuccessCheck from './Actions/SuccessCheck.js';
+import { roll } from './Dice.js';
 
 const Phases = { Tasks: 0, Logging: 1 };
 
@@ -19,8 +20,10 @@ export class Game {
 
 	async startGame(config, currentState = null) {
 		this.config = config;
-		if (currentState)
-		 this.state = new State(currentState);
+
+		if (!config.rollDice) config.rollDice = () => roll(6);
+
+		if (currentState) this.state = new State(currentState);
 		else {
 			this.state.currentRound = 0;
 			this.state.successCounter = 0;
@@ -31,7 +34,8 @@ export class Game {
 			? await import(config.taskSelector)
 			: await import('./TaskSelector');
 		this.taskSelector = new TaskSelector.default(this.config, this.state);
-
+		this.state.mode = 'active';
+		this.state.status = '';
 		console.debug('game started', this);
 	}
 
@@ -48,6 +52,18 @@ export class Game {
 		if (this.state.successCounter === 10 || this.state.currentTasks.length === 0) {
 			//Final roll before winning
 			this.PrimaryFailureCheck(this.state);
+			this.state.mode = 'over';
+
+			if (this.state.primaryFailureCounter <= 0) {
+				this.state.status = this.config.primaryFailureMessage || 'Ran out of luck this time...';
+			} else if (this.state.secondaryFailureCounter >= 4) {
+				this.state.status = this.config.secondaryFailureMessage || 'You fail!';
+			} else if (this.state.successCounter >= 10) {
+				this.state.status = this.config.successMessage || 'Great success!';
+			} else {
+				this.state.status = this.config.drawMessage || "Right, we'll call it a draw";
+			}
+			console.log(this.state.status);
 		}
 
 		for (let index = 0; index < this.state.currentTasks.length; index++) {
@@ -68,8 +84,11 @@ export class Game {
 
 			if (task.action != null) {
 				if (typeof task.action === 'function') task.action(this.state);
+				else if (typeof task.action === 'object' && typeof task.action.default === 'function')
+					task.action.default(this.state);
 				else if (typeof task.action === 'object' && typeof task.action.run === 'function')
 					task.action.run(this.state);
+				else console.error('Unknown action type for task:', task);
 			}
 
 			task.roundCompleted = this.state.currentRound;
@@ -92,5 +111,8 @@ export class Game {
 		this.currentTasks = [];
 	}
 
-	endGame() {}
+	endGame(journalEntry) {
+		this.state.journalEntries.push(journalEntry);
+		this.state = new State();
+	}
 }

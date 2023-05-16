@@ -1,56 +1,93 @@
-import { writable, derived } from 'svelte/store';
+import { writable, get, derived } from 'svelte/store';
 import { Game } from '../waa/Game.js';
 import { State } from '$lib/waa/State.js';
 
-let gameInstance;
+let gameInstance = new Game();
 
 const internalState = writable(gameInstance?.state);
 
 async function loadGame(url) {
 	const response = await fetch(url);
-	const c = await response.json();
-	return c;
+	const configJson = await response.json();
+
+	configJson.rollDice = () => {
+		isWaitingForDice.set(true);
+		return new Promise((resolve) => {
+			diceRollResolver.set(resolve);
+		});
+	};
+	return configJson;
 }
 
-export const gameEngine = writable(null);
-// Initialize the game when the store is first subscribed to
-gameEngine.subscribe((game) => {
-	if (!game) {
-		// Create an instance of the Game object
-		gameInstance = new Game();
-		// // Start the game flow
-		// gameInstance.startGame
+export const isWaitingForDice = writable(false);
+export const diceRollResolver = writable(null);
 
-		// Update the store with the game instance
-		gameEngine.set(gameInstance);
-	}
-});
 
-export const startGame = async (url) => {
-	const gameConfig = await loadGame(url);
-	selectedGame.set(gameConfig);
-	await gameInstance.startGame(gameConfig, null);
-	internalState.set(gameInstance.state);
-};
+export function displayFinalOutput() {
+	for (let index = 1; index <= gameInstance.state.currentRound; index++) {
+		console.log('============ROUND==============');
+		console.log('Round', index);
+		let tasks = gameInstance.state.completedTasks.filter((t) => t.roundCompleted === index);
+		tasks.forEach((t) => {
+			console.log(t.title);
+		});
 
-export async function nextRound() {
-	if (gameInstance.state.currentRound > 0) {
-		await gameInstance.endRound({
-			text: 'testing'
+		console.log('===========JOURNAL=============');
+		let entries = gameInstance.state.journalEntries.filter((e) => e.round == index);
+		entries.forEach((e) => {
+			console.log(e.text);
 		});
 	}
 
+	console.log('===============================');
+	console.log('Status:', gameInstance.state.status);
+	console.log(
+		`${gameInstance.state.successCounter * 10}% success | ${
+			100 - gameInstance.state.primaryFailureCounter
+		}% failure`
+	);
+}
+
+export const startGame = async (url, player) => {
+	const gameConfig = await loadGame(url);
+	await gameInstance.startGame(gameConfig, null);
+	gameInstance.state.player = player;
+	internalState.set(gameInstance.state);
+	selectedGame.set(gameConfig);
+
+	selectedPlayer.set(player);
+};
+
+export async function nextRound() {
 	await gameInstance.beginRound();
 	internalState.set(gameInstance.state);
 }
+
+export async function recordRound(journalEntry) {
+	await gameInstance.endRound(journalEntry);
+	await gameInstance.beginRound();
+	internalState.set(gameInstance.state);
+}
+
+export async function endGame(journalEntry) {
+	await gameInstance.endGame(journalEntry);
+	internalState.set(gameInstance.state);
+}
+
 export const currentState = derived([internalState], ($internalState) => {
 	console.log('updating state', $internalState[0]);
 	return $internalState[0] ?? new State();
 });
 
-export const selectedPlayer = writable(null);
+const selectedPlayer = writable(null);
 export const selectedGame = writable(null);
-export const availableGames = writable([
-	{ title: 'Game 1', url: '/games/ExampleGame.json' },
-	{ title: 'Game 2', url: '/games/ExampleGame.json' }
-]);
+
+export const failurePercent = derived(
+	[currentState],
+	($currentState) => `${100 - $currentState[0].primaryFailureCounter}%`
+);
+
+export const successPercent = derived(
+	[currentState],
+	($currentState) => `${$currentState[0].successCounter * 10}%`
+);
