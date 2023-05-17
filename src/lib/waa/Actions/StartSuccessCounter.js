@@ -1,10 +1,10 @@
 import PrimaryFailureCheck from './PrimaryFailureCheck.js';
 
-export default (state) => {
+export default async (state, config) => {
 	const result = {
 		message: 'Starting success counter'
 	};
-	PrimaryFailureCheck(state);
+	await PrimaryFailureCheck(state, config);
 	state.successCounterActive = true;
 	return result;
 };

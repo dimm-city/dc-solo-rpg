@@ -85,9 +85,9 @@ export class Game {
 			if (task.action != null) {
 				if (typeof task.action === 'function') task.action(this.state);
 				else if (typeof task.action === 'object' && typeof task.action.default === 'function')
-					task.action.default(this.state);
+					await task.action.default(this.state, this.config);
 				else if (typeof task.action === 'object' && typeof task.action.run === 'function')
-					task.action.run(this.state);
+					await task.action.run(this.state, this.config);
 				else console.error('Unknown action type for task:', task);
 			}
 
@@ -97,7 +97,7 @@ export class Game {
 		console.debug('round started', this);
 	}
 
-	endRound(journalEntry) {
+	async endRound(journalEntry) {
 		if (journalEntry == null || journalEntry.text == null) {
 			throw new Error('No journal entries provided for this round');
 		}
@@ -106,7 +106,7 @@ export class Game {
 		journalEntry.dateRecorded = journalEntry.dateRecorded || new Date().toISOString();
 
 		this.state.journalEntries.push(journalEntry);
-		this.SuccessCheck(this.state);
+		await this.SuccessCheck(this.state, this.config);
 		this.state.completedTasks = [...this.state.completedTasks, ...this.state.currentTasks];
 		this.currentTasks = [];
 	}

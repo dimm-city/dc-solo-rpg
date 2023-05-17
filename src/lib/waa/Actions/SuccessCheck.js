@@ -3,9 +3,9 @@ import { d6 } from '../Dice.js';
 class SuccessCheck {
 	//rollDice = d6;
 
-	run(state) {
+	async run(state, config) {
 		if (state.successCounterActive) {
-			const result = d6(); //this.rollDice();
+			const result = config.rollDice ? await config.rollDice(6) : d6(); //this.rollDice();
 			if (result === 6) state.successCounter++;
 			else if (result === 5 && state.successBonusActive) state.successCounter++;
 			return result;
