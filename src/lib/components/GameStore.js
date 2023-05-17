@@ -1,86 +1,72 @@
-import { writable, get, derived } from 'svelte/store';
+import { writable, derived } from 'svelte/store';
 import { Game } from '../waa/Game.js';
 import { State } from '$lib/waa/State.js';
 
 let gameInstance = new Game();
 
 const internalState = writable(gameInstance?.state);
+function updateGameState() {
+	internalState.set(gameInstance.state);
+}
+async function rollDiceAwaiter() {
+		isWaitingForDice.set(true);
+		return new Promise((resolve) => {
+			diceRollResolver.set(async (data) => {
+				updateGameState();
+				await resolve(data);
+				isWaitingForDice.set(false);
+			});
+		});
+	
+}
 
-async function loadGame(url) {
+async function loadGameConfig(url) {
 	const response = await fetch(url);
 	const configJson = await response.json();
 
-	configJson.rollDice = () => {
-		isWaitingForDice.set(true);
-		return new Promise((resolve) => {
-			diceRollResolver.set(resolve);
-		});
-	};
+	configJson.rollDice = rollDiceAwaiter;
 	return configJson;
 }
 
 export const isWaitingForDice = writable(false);
 export const diceRollResolver = writable(null);
 
-
-export function displayFinalOutput() {
-	for (let index = 1; index <= gameInstance.state.currentRound; index++) {
-		console.log('============ROUND==============');
-		console.log('Round', index);
-		let tasks = gameInstance.state.completedTasks.filter((t) => t.roundCompleted === index);
-		tasks.forEach((t) => {
-			console.log(t.title);
-		});
-
-		console.log('===========JOURNAL=============');
-		let entries = gameInstance.state.journalEntries.filter((e) => e.round == index);
-		entries.forEach((e) => {
-			console.log(e.text);
-		});
-	}
-
-	console.log('===============================');
-	console.log('Status:', gameInstance.state.status);
-	console.log(
-		`${gameInstance.state.successCounter * 10}% success | ${
-			100 - gameInstance.state.primaryFailureCounter
-		}% failure`
-	);
-}
-
-export const startGame = async (url, player) => {
-	const gameConfig = await loadGame(url);
-	await gameInstance.startGame(gameConfig, null);
+export const loadGame = async (url, player) => {
+	const gameConfig = await loadGameConfig(url);
+	await gameInstance.loadGame(gameConfig, null);
 	gameInstance.state.player = player;
-	internalState.set(gameInstance.state);
-	selectedGame.set(gameConfig);
-
-	selectedPlayer.set(player);
+	updateGameState();
 };
 
-export async function nextRound() {
+export async function startGame() {
+	await gameInstance.startGame();
+	updateGameState();
 	await gameInstance.beginRound();
-	internalState.set(gameInstance.state);
+	updateGameState();
 }
 
 export async function recordRound(journalEntry) {
 	await gameInstance.endRound(journalEntry);
 	await gameInstance.beginRound();
-	internalState.set(gameInstance.state);
+	updateGameState();
 }
 
 export async function endGame(journalEntry) {
 	await gameInstance.endGame(journalEntry);
-	internalState.set(gameInstance.state);
+	updateGameState();
+}
+
+export async function exitGame() {
+	await gameInstance.endGame({text: "i quit"});
+	// gameInstance.state.mode = 'start';
+	console.log('exit', gameInstance);
+	updateGameState();
 }
 
 export const currentState = derived([internalState], ($internalState) => {
 	console.log('updating state', $internalState[0]);
 	return $internalState[0] ?? new State();
 });
-
-const selectedPlayer = writable(null);
-export const selectedGame = writable(null);
 
 export const failurePercent = derived(
 	[currentState],

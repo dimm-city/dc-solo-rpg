@@ -18,7 +18,7 @@ export class Game {
 		return Math.floor(Math.random() * (max - 2) + 1);
 	}
 
-	async startGame(config, currentState = null) {
+	async loadGame(config, currentState = null) {
 		this.config = config;
 
 		if (!config.rollDice) config.rollDice = () => roll(6);
@@ -29,16 +29,23 @@ export class Game {
 			this.state.successCounter = 0;
 			this.state.primaryFailureCounter = 100;
 			this.state.secondaryFailureCounter = 0;
+			this.state.status = '';
 		}
+
+		this.state.config = config;
+
+		this.state.mode = 'intro';
 		const TaskSelector = config.taskSelector
-			? await import(config.taskSelector)
-			: await import('./TaskSelector');
+			? await import(`./TaskSelectors/${config.taskSelector}.js`)
+			: await import('./TaskSelector.js');
 		this.taskSelector = new TaskSelector.default(this.config, this.state);
-		this.state.mode = 'active';
-		this.state.status = '';
+
 		console.debug('game started', this);
 	}
 
+	async startGame() {
+		this.state.mode = 'active';
+	}
 	async beginRound() {
 		this.state.currentRound++;
 		this.state.currentPhase = Phases.Tasks;
@@ -46,7 +53,9 @@ export class Game {
 		if (this.state.availableTasks.length === 0) {
 			this.state.currentTasks = [];
 		} else {
+			this.state.status = "Roll for the number of tasks this round";
 			this.state.currentTasks = await this.taskSelector.getTasksForRound();
+			this.state.status = "";
 		}
 
 		if (this.state.successCounter === 10 || this.state.currentTasks.length === 0) {
@@ -71,14 +80,14 @@ export class Game {
 
 			if (typeof task.action === 'string') {
 				try {
-					task.action = await import('./Actions/' + task.action);
+					task.action = await import('./Actions/' + task.action + '.js');
 				} catch (error) {
 					console.error(error);
-					try {
-						task.action = await import(task.action);
-					} catch (error) {
-						console.error(error);
-					}
+					// try {
+					// 	task.action = await import(task.action);
+					// } catch (error) {
+					// 	console.error(error);
+					// }
 				}
 			}
 

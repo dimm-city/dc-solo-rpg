@@ -10,5 +10,4 @@
 		}
 	];
 </script>
-
 <Game {games} {players} />

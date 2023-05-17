@@ -1,5 +1,5 @@
 <script>
-	import { startGame } from './GameStore.js';
+	import { loadGame } from './GameStore.js';
 	export let players = [];
 	export let games = [];
 	let game;
@@ -19,5 +19,5 @@
 			<option value={game}>{game.title}</option>
 		{/each}
 	</select>
-	<button on:click={() => startGame(game.url, selectedPlayer)}>Start Game</button>
+	<button on:click={() => loadGame(game.url, selectedPlayer)}>Start Game</button>
 </div>

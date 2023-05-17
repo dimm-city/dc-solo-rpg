@@ -15,6 +15,7 @@ export class State {
             this.completedTasks = [];
             this.availableTasks = null;
             this.journalEntries = [];
+            this.config = {};
         } else {
             Object.assign(this, currentState);
         }
