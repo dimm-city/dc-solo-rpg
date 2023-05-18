@@ -7,7 +7,7 @@
 	const diceList = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅']; // Dice characters
 	export let autoConfirm = false;
 	export let rollDuration = 500; // Duration of rolling animation in milliseconds
-	export let characterList = [...diceList, ...generateRandomCharacters()];
+	export let characterList = [...diceList]; //add random characters, ...generateRandomCharacters()];
 
 	let rolling = false;
 	let characters = [];
@@ -28,7 +28,12 @@
 		return characterList;
 	}
 
+	function onClick() {
+		if (finalNumber > 0) confirmRoll();
+		else if (finalNumber == null && !rolling) rollDice();
+	}
 	export async function rollDice() {
+		if (rolling || finalNumber >0) return;
 		rolling = true;
 		characters = [];
 
@@ -67,27 +72,6 @@
 	});
 
 	async function generateNumber() {
-		// const response = await fetch('https://api.random.org/json-rpc/2/invoke', {
-		// 	method: 'POST',
-		// 	headers: {
-		// 		'Content-Type': 'application/json'
-		// 	},
-		// 	body: JSON.stringify({
-		// 		jsonrpc: '2.0',
-		// 		method: 'generateIntegers',
-		// 		params: {
-		// 			apiKey: 'YOUR_RANDOM_ORG_API_KEY',
-		// 			n: 1,
-		// 			min: 1,
-		// 			max: 6,
-		// 			replacement: true
-		// 		},
-		// 		id: 1
-		// 	})
-		// });
-
-		// const data = await response.json();
-		// return data.result.random.data[0];
 		return fetch(
 			'https://www.random.org/integers/?num=1&min=1&max=6&col=1&base=10&format=plain&rnd=new'
 		)
@@ -111,12 +95,12 @@
 	}
 </script>
 
-<div class="dice-roller-container">
+<div class="dice-roller-container" on:click={onClick} on:keydown={onClick} disabled={rolling}>
 	<div>
 		{$currentState.status}
 	</div>
 	<div>
-		<div class="dice-roller" on:click={rollDice} on:keydown={rollDice}>
+		<div class="dice-roller">
 			{#if rolling}
 				<!-- {#each characters as character, i} key={i}-->
 				<span in:fade>
@@ -124,21 +108,26 @@
 				</span>
 				<!-- {/each} -->
 			{:else if finalNumber > 0}
-				{diceList[finalNumber - 1]}
+				<!-- svelte-ignore a11y-click-events-have-key-events -->
+				<span class="result" in:fade on:click={confirmRoll}> {diceList[finalNumber - 1]}</span>
+			{:else}
+				<!-- svelte-ignore a11y-click-events-have-key-events  on:click={rollDice} -->
+				<span in:fade> {diceList[0]}</span>
 			{/if}
 		</div>
 	</div>
-	<div>
+	<!-- <div>
 		{#if !rolling && finalNumber > 0}
 			<button on:click={confirmRoll}>confirm</button>
 		{:else}
 			<button on:click={rollDice} disabled={rolling}>roll</button>
 		{/if}
-	</div>
+	</div> -->
 </div>
 
 <style>
 	.dice-roller-container {
+		cursor: pointer;
 		display: flex;
 		flex-direction: column;
 		height: 100%;
@@ -161,5 +150,8 @@
 
 	.dice-roller:hover {
 		opacity: 0.8;
+	}
+	.dice-roller span {
+		cursor: pointer;
 	}
 </style>

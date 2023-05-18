@@ -11,22 +11,23 @@
 
 <div class="container">
 	<div class="text-entry-area">
-		<textarea bind:value={journalText} rows=5 />
+		<textarea bind:value={journalText} rows="5" />
 	</div>
-	<div class="journal-tools-right-area">
+	<div class="journal-tools-right-area" />
+	<div class="journal-tools-center-area">
 		<button on:click={next}>record</button>
 	</div>
 	<div class="journal-tools-left-area" />
-	<div class="journal-tools-center-area" />
 </div>
 
 <style>
 	.container {
 		display: grid;
-        width: 100%;
+		margin-bottom: 0.5rem;
+		width: 100%;
 		grid-template-columns: min-content auto min-content;
 		grid-template-rows: 1fr min-content;
-		gap: 0;
+		gap: 0.5rem;
 		grid-auto-flow: row;
 		grid-template-areas:
 			'text-entry-area text-entry-area text-entry-area'
@@ -36,15 +37,15 @@
 	.text-entry-area {
 		grid-area: text-entry-area;
 	}
-textarea{
-    width: 100%;
-    max-width: 100svw;
-    box-sizing: border-box;
-}
+	textarea, button {
+		width: 100%;
+		max-width: 100svw;
+		box-sizing: border-box;
+	}
 	.journal-tools-right-area {
 		grid-area: journal-tools-right-area;
-        display: flex;
-        justify-content: flex-end;
+		display: flex;
+		justify-content: flex-end;
 	}
 
 	.journal-tools-left-area {
@@ -53,5 +54,7 @@ textarea{
 
 	.journal-tools-center-area {
 		grid-area: journal-tools-center-area;
+		justify-content: center;
+		display: flex;
 	}
 </style>

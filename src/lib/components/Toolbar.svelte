@@ -9,6 +9,7 @@ import { currentState, exitGame } from './GameStore.js';
     justify-content: space-between;
     align-items: center;
     background-color: #f1f1f1;
+    padding: 0.5rem;
   }
   .toolbar h3{
     margin: 0;

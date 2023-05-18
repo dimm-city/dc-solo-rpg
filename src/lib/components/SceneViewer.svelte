@@ -1,12 +1,13 @@
 <script>
+	import TaskViewer from './TaskViewer.svelte';
+  import StoryViewer from './StoryViewer.svelte';
+
 	import DiceRoller from './DiceRoller.svelte';
-	
+
 	import StatusDisplay from './StatusDisplay.svelte';
 	import JournalEntry from './JournalEntry.svelte';
 	import { currentState, isWaitingForDice } from './GameStore.js';
 	import Toolbar from './Toolbar.svelte';
-
-
 </script>
 
 <div class="profile-container">
@@ -18,16 +19,9 @@
 	</div>
 	<div class="main-screen-area">
 		{#if $isWaitingForDice == true}
-				<DiceRoller />
+			<DiceRoller />
 		{:else}
-			{#each $currentState.completedTasks as task (task.id)}
-				<p>{task.title}</p>
-			{/each}
-			{#each $currentState.currentTasks as task (task.id)}
-				<p>{task.title}</p>
-			{:else}
-				<p>No tasks this round</p>
-			{/each}
+			<TaskViewer />
 		{/if}
 	</div>
 	<div class="journal-entry-area">
@@ -42,15 +36,15 @@
 		display: grid;
 		width: 100%;
 		height: 100%;
-		min-height: 100svh;
-		grid-template-columns: auto min-content;
+		max-height: 100svh;
+		grid-template-columns: auto minmax(10rem, min-content);
 		grid-template-rows: min-content 1fr min-content;
 		gap: 1rem;
 		grid-auto-flow: row;
 		grid-template-areas:
 			'toolbar-area toolbar-area'
 			'main-screen-area status-display-area'
-			'journal-entry-area status-display-area';
+			'journal-entry-area journal-entry-area';
 	}
 
 	.journal-entry-area {
@@ -68,8 +62,11 @@
 		overflow-y: auto;
 	}
 
-
-
+	.story-container {
+		display:flex;
+		flex-direction: column;
+		overflow-y: auto;
+	}
 	.status-display-area {
 		grid-area: status-display-area;
 		padding-inline: 0.25rem;

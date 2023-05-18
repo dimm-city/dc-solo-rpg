@@ -1,28 +1,21 @@
 <script>
+	import FailureCounter from './FailureCounter.svelte';
 
-	import {
-		currentState,
-		recordRound,
-		failurePercent,
-		successPercent,
-		isWaitingForDice,
-		diceRollResolver
-	} from './GameStore.js';
-
+	import { currentState, failurePercent, successPercent } from './GameStore.js';
+	import SuccessCounter from './SuccessCounter.svelte';
 </script>
 
-<pre>
-    Round: {$currentState?.currentRound}
-    Failure: {$failurePercent}
-    Success: {$successPercent}
-    Health: {$currentState.primaryFailureCounter}
-    Success: {$currentState.successCounter}
-    Available: {$currentState.availableTasks?.length}
-    Current: {$currentState.currentTasks?.length}
-    Completed: {$currentState.completedTasks?.length}
-</pre>
+<div class="status-display-container">
+	<h4>Round: {$currentState?.currentRound}</h4>
+	<FailureCounter failureCounter={$currentState.primaryFailureCounter} />
+	<SuccessCounter successScore={$currentState.successCounter} />
+</div>
 
 <style>
-
+    h4{
+        margin-block: var(--dc-header-block-margin);
+    }
+	.status-display-container {		
+        text-align: center;
+	}
 </style>
-
