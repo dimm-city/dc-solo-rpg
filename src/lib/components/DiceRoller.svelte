@@ -1,6 +1,4 @@
 <script>
-	import { currentState, isWaitingForDice, diceRollResolver } from './GameStore.js';
-
 	import { afterUpdate, onDestroy } from 'svelte';
 	import { fade } from 'svelte/transition';
 
@@ -9,11 +7,40 @@
 	export let rollDuration = 500; // Duration of rolling animation in milliseconds
 	export let characterList = [...diceList]; //add random characters, ...generateRandomCharacters()];
 
-	let rolling = false;
+	export let rolling = false;
+	export let finalNumber = null;
+
 	let characters = [];
 	let character = '';
-	let finalNumber = null;
 	let rollTimer = null;
+
+	export async function roll(number = -1) {
+		rolling = true;
+		characters = [];
+
+		const rollInterval = rollDuration / 15; // Interval between character changes in milliseconds
+
+		rollTimer = setInterval(() => {
+			character = characterList[Math.floor(Math.random() * characterList.length)];
+		}, rollInterval);
+
+		var timerPromise = new Promise((timerResolver) => {
+			setTimeout(() => {
+				rolling = false;
+				timerResolver();
+			}, rollDuration);
+		});
+
+		var numberPromise = new Promise(async (resolve) => {
+			finalNumber = number > 0 ? number : await generateRandomNumber();
+			resolve();
+		});
+
+		await Promise.all([timerPromise, numberPromise])
+		clearInterval(rollTimer);
+
+		return finalNumber;
+	}
 
 	function generateRandomCharacters() {
 		const characterList = [];
@@ -28,50 +55,51 @@
 		return characterList;
 	}
 
-	function onClick() {
-		if (finalNumber > 0) confirmRoll();
-		else if (finalNumber == null && !rolling) rollDice();
-	}
-	export async function rollDice() {
-		if (rolling || finalNumber >0) return;
-		rolling = true;
-		characters = [];
+	// function onClick() {
+	// 	if (finalNumber > 0) confirmRoll();
+	// 	else if (finalNumber == null && !rolling) rollDice();
+	// }
+	// export async function rollDice() {
+	// 	if (rolling || finalNumber > 0) return;
+	// 	rolling = true;
+	// 	characters = [];
 
-		const rollInterval = rollDuration / 15; // Interval between character changes in milliseconds
+	// 	const rollInterval = rollDuration / 15; // Interval between character changes in milliseconds
 
-		rollTimer = setInterval(() => {
-			// characters = Array.from(
-			// 	{ length: 3 },
-			// 	() => characterList[Math.floor(Math.random() * characterList.length)]
-			// );
-			character = characterList[Math.floor(Math.random() * characterList.length)];
-		}, rollInterval);
+	// 	rollTimer = setInterval(() => {
+	// 		// characters = Array.from(
+	// 		// 	{ length: 3 },
+	// 		// 	() => characterList[Math.floor(Math.random() * characterList.length)]
+	// 		// );
+	// 		character = characterList[Math.floor(Math.random() * characterList.length)];
+	// 	}, rollInterval);
 
-		finalNumber = await generateNumber();
+	// 	finalNumber = await generateNumber();
 
-		clearInterval(rollTimer);
-		rolling = false;
-	}
+	// 	clearInterval(rollTimer);
+	// 	rolling = false;
+	// }
 
-	export function confirmRoll() {
-		$diceRollResolver(finalNumber);
-	}
+	// export function confirmRoll() {
+	// 	$diceRollResolver(finalNumber);
+	// }
 
 	afterUpdate(() => {
-		if (autoConfirm && finalNumber !== null) {
-			setTimeout(() => {
-				confirmRoll();
-				finalNumber = null;
-				characters = [];
-			}, 3000);
-		}
+		// if (autoConfirm && finalNumber !== null) {
+		// 	setTimeout(() => {
+		// 		confirmRoll();
+		// 		finalNumber = null;
+		// 		characters = [];
+		// 	}, 3000);
+		// }
 	});
 
 	onDestroy(() => {
 		clearInterval(rollTimer);
 	});
 
-	async function generateNumber() {
+	async function generateRandomNumber() {
+		// return Math.floor(Math.random() * (6 - 2) + 1);
 		return fetch(
 			'https://www.random.org/integers/?num=1&min=1&max=6&col=1&base=10&format=plain&rnd=new'
 		)
@@ -90,15 +118,14 @@
 		// });
 	}
 
-	function getRandomNumber() {
-		return Math.floor(Math.random() * (6 - 2) + 1);
-	}
+
 </script>
 
-<div class="dice-roller-container" on:click={onClick} on:keydown={onClick} disabled={rolling}>
-	<div>
+<!-- on:click={onClick} on:keydown={onClick} -->
+<div class="dice-roller-container" disabled={rolling}>
+	<!-- <div>
 		{$currentState.status}
-	</div>
+	</div> -->
 	<div>
 		<div class="dice-roller">
 			{#if rolling}
@@ -108,8 +135,8 @@
 				</span>
 				<!-- {/each} -->
 			{:else if finalNumber > 0}
-				<!-- svelte-ignore a11y-click-events-have-key-events -->
-				<span class="result" in:fade on:click={confirmRoll}> {diceList[finalNumber - 1]}</span>
+				<!-- svelte-ignore a11y-click-events-have-key-events  on:click={confirmRoll}-->
+				<span class="result" in:fade> {diceList[finalNumber - 1]}</span>
 			{:else}
 				<!-- svelte-ignore a11y-click-events-have-key-events  on:click={rollDice} -->
 				<span in:fade> {diceList[0]}</span>

@@ -126,12 +126,17 @@ export const rollForTasks = async () => {
 	gameStore.update((state) => {
 		state.cardsToDraw = result;
 		//Go to draw cards
-        state.currentCard = null;
+		state.currentCard = null;
 		state.state = stateMachine.next('drawCard');
 		console.log('task this round', state.cardsToDraw);
-		nextScreen();
+		//nextScreen();
 		return state;
 	});
+	return result;
+};
+
+export const confirmTaskRoll = () => {
+	nextScreen();
 };
 
 export const drawCard = () => {
@@ -146,7 +151,7 @@ export const drawCard = () => {
 		// Draw a card
 		//const cardIndex = Math.floor(Math.random() * state.deck.length);
 		const card = state.deck.pop(); // state.deck.splice(cardIndex, 1)[0];
-        state.currentCard = card;
+		state.currentCard = card;
 		console.debug('drew card', card);
 
 		// Decrease the number of cards to draw
@@ -186,22 +191,21 @@ export const drawCard = () => {
 		//nextScreen();
 		return state;
 	});
-    
 };
 
-export const confirmCard = ()=>{
+export const confirmCard = () => {
 	gameStore.update((state) => {
 		state.currentCard = null;
-        return state;
+		return state;
 	});
 	nextScreen();
-}
+};
 
 export const pullFromTower = async () => {
 	// Roll a die
 	let roll = await rollDice();
-	
-    //Very short game: roll = 20;
+
+	//Very short game: roll = 20;
 
 	gameStore.update((state) => {
 		if (state.gameOver) throw new Error('The game is over, stop playing with the tower!');
@@ -279,6 +283,8 @@ export const successCheck = async () => {
 
 		return state;
 	});
+
+    return roll;
 };
 
 export const restartGame = () => {

@@ -1,4 +1,8 @@
 <script>
+	import SuccessCheck from './SuccessCheck.svelte';
+
+	import RollForTasks from './RollForTasks.svelte';
+
 	import DrawCard from './DrawCard.svelte';
 
 	import Tower from './Tower.svelte';
@@ -12,6 +16,7 @@
 	import StatusDisplay from './StatusDisplay.svelte';
 	import JournalEntry from './JournalEntry.svelte';
 	import {
+		confirmTaskRoll,
 		currentScreen,
 		drawCard,
 		gameStore,
@@ -37,8 +42,7 @@
 				<button on:click={() => nextScreen('rollForTasks')}>Roll for tasks</button>
 			</div>
 		{:else if $currentScreen == 'rollForTasks'}
-			<button on:click={rollForTasks}>roll</button>
-			<DiceRoller />
+			<RollForTasks />
 		{:else if $currentScreen == 'drawCard'}
 			<div class="dc-fade-in">
 				<DrawCard />
@@ -57,14 +61,7 @@
 				<JournalEntry />
 			</div>
 		{:else if $currentScreen == 'successCheck'}
-			<div class="dc-fade-in">
-				{#if $gameStore.state == 'successCheck'}
-					<button on:click={successCheck}>successCheck</button>
-				{:else}
-					<button on:click={startRound}>startRound</button>
-				{/if}
-				<DiceRoller />
-			</div>
+			<SuccessCheck />
 		{:else if $currentScreen == 'finalLog'}
 			<div class="dc-fade-in">
 				<JournalEntry />
