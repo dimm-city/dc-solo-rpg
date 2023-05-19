@@ -1,6 +1,6 @@
 <script>
 
-import { currentState, exitGame } from './GameStore.js';
+import { gameStore, gameConfig, currentScreen, exitGame } from "./WAAStore.js";
 </script>
 
 <style>
@@ -39,10 +39,10 @@ import { currentState, exitGame } from './GameStore.js';
 </style>
 <div class="toolbar">
   <div class="left">
-    <span>{$currentState?.player?.name} </span>
+    <span>{$gameStore?.player?.name}</span>
   </div>
   <div class="center">
-    <h3>{$currentState?.config?.title ?? 'Please select a game'}</h3>
+    <h3>{gameConfig?.title ?? 'Please select a game'}</h3>
     <!-- <span>Round: {$currentState.currentRound}</span> -->
   </div>
   <div class="right">

@@ -9,6 +9,7 @@ export class StateMachine {
 
 		if (transition) {
 			this.state = transition;
+			console.log('transtion to:', action);
             return action; //this.state.toString();
 		} else {
 			throw new Error(`Invalid transition from ${this.state} on ${action}`);

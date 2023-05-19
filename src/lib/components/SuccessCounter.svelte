@@ -1,14 +1,12 @@
 <script>
-	import { currentState } from './GameStore';
-
-	export let successScore = 0; // Player's success score
+	import { gameStore, gameConfig } from './WAAStore.js';
 
 	const numTokens = 10;
-	$: tokens = Array.from({ length: numTokens }, (_, index) => index < successScore);
+	$: tokens = Array.from({ length: numTokens }, (_, index) => index < $gameStore.tokens);
 </script>
 
 <div class="success-counters-container">
-	<h4>{$currentState.config?.labels?.successCounters ?? 'Success Counters'}</h4>
+	<h4>{gameConfig?.labels?.successCounters ?? 'Success Counters'}</h4>
 	<!-- Success: {$currentState.successCounter} -->
 	<div class="grid">
 		{#each tokens as token, index}
@@ -20,7 +18,6 @@
 </div>
 
 <style>
-	
 	h4 {
 		margin-block: var(--dc-header-block-margin);
 	}
@@ -43,6 +40,6 @@
 		grid-template-columns: repeat(2, min-content);
 		grid-template-rows: repeat(5, 1fr);
 		gap: 0.25rem;
-        justify-content: center;
+		justify-content: center;
 	}
 </style>

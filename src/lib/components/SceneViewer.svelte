@@ -1,12 +1,25 @@
 <script>
+	import DrawCard from './DrawCard.svelte';
+
+	import Tower from './Tower.svelte';
+
 	import TaskViewer from './TaskViewer.svelte';
-  import StoryViewer from './StoryViewer.svelte';
+	import StoryViewer from './StoryViewer.svelte';
+	import GameOver from './GameOver.svelte';
 
 	import DiceRoller from './DiceRoller.svelte';
 
 	import StatusDisplay from './StatusDisplay.svelte';
 	import JournalEntry from './JournalEntry.svelte';
-	import { currentState, isWaitingForDice } from './GameStore.js';
+	import {
+		currentScreen,
+		drawCard,
+		gameStore,
+		nextScreen,
+		rollForTasks,
+		startRound,
+		successCheck
+	} from './WAAStore.js';
 	import Toolbar from './Toolbar.svelte';
 </script>
 
@@ -18,16 +31,58 @@
 		<StatusDisplay />
 	</div>
 	<div class="main-screen-area">
-		{#if $isWaitingForDice == true}
+		{#if $currentScreen == 'startRound'}
+			<div class="dc-fade-in">
+				<h4>Round {$gameStore.round}</h4>
+				<button on:click={() => nextScreen('rollForTasks')}>Roll for tasks</button>
+			</div>
+		{:else if $currentScreen == 'rollForTasks'}
+			<button on:click={rollForTasks}>roll</button>
 			<DiceRoller />
+		{:else if $currentScreen == 'drawCard'}
+			<div class="dc-fade-in">
+				<DrawCard />
+			</div>
+		{:else if $currentScreen == 'pullFromTower'}
+			<div class="dc-fade-in">
+				<Tower />
+			</div>
+		{:else if $currentScreen == 'endTurn'}
+			<div class="dc-fade-in">
+				<h4>Turn Over</h4>
+				<button on:click={() => nextScreen('log')}>next</button>
+			</div>
+		{:else if $currentScreen == 'log'}
+			<div class="dc-fade-in">
+				<JournalEntry />
+			</div>
+		{:else if $currentScreen == 'successCheck'}
+			<div class="dc-fade-in">
+				{#if $gameStore.state == 'successCheck'}
+					<button on:click={successCheck}>successCheck</button>
+				{:else}
+					<button on:click={startRound}>startRound</button>
+				{/if}
+				<DiceRoller />
+			</div>
+		{:else if $currentScreen == 'finalLog'}
+			<div class="dc-fade-in">
+				<JournalEntry />
+			</div>
+		{:else if $currentScreen == 'gameOver'}
+			<div class="dc-fade-in">
+				<GameOver />
+			</div>
 		{:else}
 			<TaskViewer />
 		{/if}
 	</div>
 	<div class="journal-entry-area">
-		{#if !$isWaitingForDice}
+		<!-- {#if !$isWaitingForDice}
 			<JournalEntry />
-		{/if}
+		/if
+		
+		<button on:click={() => nextScreen()}>next</button>-->
 	</div>
 </div>
 
@@ -63,7 +118,7 @@
 	}
 
 	.story-container {
-		display:flex;
+		display: flex;
 		flex-direction: column;
 		overflow-y: auto;
 	}

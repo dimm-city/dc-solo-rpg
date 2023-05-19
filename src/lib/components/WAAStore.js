@@ -4,11 +4,12 @@
 // the play must click to draw cards and roll dice. instead of using
 // the block tower, implement a new mechanic that is statistically similiar
 // but uses six or 20 sided dice
-import { writable } from 'svelte/store';
+import { writable, get } from 'svelte/store';
 import { StateMachine, transitions } from './WAAStateMachine.js';
 
 // Define the initial state of the game
 const initialState = {
+	player: null,
 	deck: [
 		//{ card: 'A', suit: 'hearts', description: 'Ace of Hearts description', action: "" }
 		// ... add the rest of the cards with their descriptions and suits
@@ -24,7 +25,9 @@ const initialState = {
 	journalEntries: [],
 	round: 0, // Current round
 	state: 'loadGame', // Current state
-	cardsToDraw: 1, // Number of cards to draw
+	status: '', // Status message for the player
+	cardsToDraw: 0, // Number of cards to draw
+	currentCard: null, //The current card that was drawn
 	diceRoll: 0 // Dice roll result
 };
 const stateMachine = new StateMachine('loadGame', transitions);
@@ -54,33 +57,44 @@ function shuffle(array) {
 }
 
 export let gameConfig = {};
-export const gameStore = writable(initialState);
+export const gameStore = writable({ ...initialState });
 
 export const currentScreen = writable('loadGame');
 
-export const next = () => {
+export const nextScreen = (action) => {
 	currentScreen.update((state) => {
+		if (action) stateMachine.next(action);
+
 		state = stateMachine.state;
 		return state;
 	});
 };
 
 // Define actions
-export const loadGame = (config) => {
+export const loadGame = async (config, player) => {
 	//Load configuration
-	this.gameConfig = config;
+	const response = await fetch(config.url);
+	const configJson = await response.json();
+	gameConfig = configJson;
 	stateMachine.next('options');
+	startGame(player, {});
 };
 
-export const startGame = (options = {}) => {
+export const startGame = (player, options = {}) => {
+	if (!player || !player.name) throw new Error('Must provide a valid player');
+
 	//Set game options
-	this.gameConfig.options = options;
-	this.gameConfig.difficulty = options?.difficulty ?? 0;
+	gameConfig.options = options;
+	gameConfig.difficulty = options?.difficulty ?? 0;
 
 	gameStore.update((state) => {
-		state.deck = [...this.gameConfig.deck];
+		state = { ...initialState };
+		state.round = 1;
+		state.player = player;
 
-		if (this.gameConfig.difficulty === 0) {
+		state.deck = [...gameConfig.deck];
+
+		if (gameConfig.difficulty === 0) {
 			state.aceOfHeartsRevealed = true;
 			state.deck = [...state.deck.filter((c) => c.card != 'A' && c.suit != 'hearts')];
 		}
@@ -90,22 +104,32 @@ export const startGame = (options = {}) => {
 
 		//Start intro
 		state.state = stateMachine.next('intro');
+
+		return state;
 	});
+	nextScreen();
 };
 
 export const startRound = () => {
 	gameStore.update((state) => {
-		state.round++;
+		console.log('starting round', state.round, get(currentScreen));
+		state.round += 1;
 		state.state = stateMachine.next('rollForTasks');
+		nextScreen();
+		return state;
 	});
 };
 
 export const rollForTasks = async () => {
 	//Roll dice
-	gameStore.update(async (state) => {
-		state.cardsToDraw = await rollDice();
+	let result = await rollDice();
+	gameStore.update((state) => {
+		state.cardsToDraw = result;
 		//Go to draw cards
+        state.currentCard = null;
 		state.state = stateMachine.next('drawCard');
+		console.log('task this round', state.cardsToDraw);
+		nextScreen();
 		return state;
 	});
 };
@@ -115,12 +139,18 @@ export const drawCard = () => {
 		if (state.deck.length === 0) {
 			state.gameOver = true;
 			state.state = stateMachine.next('gameOver');
+			nextScreen();
 			return state;
 		}
 
 		// Draw a card
 		//const cardIndex = Math.floor(Math.random() * state.deck.length);
 		const card = state.deck.pop(); // state.deck.splice(cardIndex, 1)[0];
+        state.currentCard = card;
+		console.debug('drew card', card);
+
+		// Decrease the number of cards to draw
+		state.cardsToDraw -= 1;
 
 		// Add the card to the log
 		card.round = state.currentRound;
@@ -134,7 +164,7 @@ export const drawCard = () => {
 		// Check if the card is an Ace
 		if (card.card === 'A') {
 			state.bonus += 1;
-			if (card.suit === 'hears') state.aceOfHeartsRevealed = true;
+			if (card.suit === 'hearts') state.aceOfHeartsRevealed = true;
 		}
 
 		// Check if the game is over
@@ -143,9 +173,6 @@ export const drawCard = () => {
 			state.state = stateMachine.next('gameOver');
 			return state;
 		}
-
-		// Decrease the number of cards to draw
-		state.cardsToDraw -= 1;
 
 		// If the card is odd, set the state to 'pullFromTower'
 		if (parseInt(card.card) % 2 !== 0) {
@@ -156,14 +183,28 @@ export const drawCard = () => {
 			stateMachine.next('endTurn');
 		}
 		state.state = stateMachine.state;
+		//nextScreen();
 		return state;
 	});
+    
 };
 
-export const pullFromTower = () => {
-	gameStore.update(async (state) => {
-		// Roll a die
-		const roll = await rollDice();
+export const confirmCard = ()=>{
+	gameStore.update((state) => {
+		state.currentCard = null;
+        return state;
+	});
+	nextScreen();
+}
+
+export const pullFromTower = async () => {
+	// Roll a die
+	let roll = await rollDice();
+	
+    //Very short game: roll = 20;
+
+	gameStore.update((state) => {
+		if (state.gameOver) throw new Error('The game is over, stop playing with the tower!');
 		state.diceRoll = roll;
 
 		// Calculate the number of blocks to remove
@@ -172,43 +213,49 @@ export const pullFromTower = () => {
 		// Decrease the number of blocks in the tower
 		state.tower -= blocksToRemove;
 
+		console.log('current tower score', state.tower);
 		// Check if the tower has collapsed
 		if (state.tower <= 0) {
+			state.tower = 0;
+			state.status = gameConfig.labels?.towerFell ?? 'The tower has fallen';
 			state.gameOver = true;
 			state.state = stateMachine.next('gameOver');
-		}
-
-		if (state.cardsToDraw > 0) {
-			state.state = stateMachine.next('drawCard');
 		} else {
-			state.state = stateMachine.next('endTurn');
+			if (state.cardsToDraw > 0) {
+				state.state = stateMachine.next('drawCard');
+			} else {
+				state.state = stateMachine.next('endTurn');
+			}
 		}
-
 		return state;
 	});
+	nextScreen();
 };
 
-export const recordRound = async (journalEntry) => {
+export const recordRound = (journalEntry) => {
 	if (journalEntry == null || journalEntry.text == null) {
 		throw new Error('No journal entries provided for this round');
 	}
 
-	gameStore.update(async (state) => {
+	gameStore.update((state) => {
 		journalEntry.round = state.round;
 		journalEntry.dateRecorded = journalEntry.dateRecorded || new Date().toISOString();
 		state.journalEntries.push(journalEntry);
 
-		if (state.aceOfHeartsRevealed) state.state = stateMachine.next('successCheck');
-		else state.state = stateMachine.next('startRound');
+		if (!state.gameOver) {
+			if (state.aceOfHeartsRevealed) state.state = stateMachine.next('successCheck');
+			else state.state = stateMachine.next('startRound');
+			nextScreen();
+		}
 		return state;
 	});
-	next();
 };
 
-export const successCheck = () => {
-	gameStore.update(async (state) => {
-		// Roll a die
-		const roll = await rollDice();
+export const successCheck = async () => {
+	// Roll a die
+	const roll = await rollDice();
+	console.log('success roll', roll);
+	gameStore.update((state) => {
 		//ToDo use random.org
 
 		// Store the dice roll result
@@ -223,6 +270,7 @@ export const successCheck = () => {
 		// Check if the game is won
 		if (state.tokens === 0) {
 			state.win = true;
+			state.status = gameConfig.labels?.successCheckWinStatus ?? 'Salvation has arrived';
 			state.gameOver = true;
 			state.state = stateMachine.next('gameOver');
 		} else {
@@ -231,4 +279,17 @@ export const successCheck = () => {
 
 		return state;
 	});
+};
+
+export const restartGame = () => {
+	const currentState = get(gameStore);
+	startGame(currentState.player, gameConfig.options);
+};
+export const exitGame = async () => {
+	const currentState = get(gameStore);
+	const newState = { ...initialState };
+	newState.player = currentState.player;
+	gameStore.set({ ...newState });
+	stateMachine.state = 'loadGame';
+	nextScreen();
 };

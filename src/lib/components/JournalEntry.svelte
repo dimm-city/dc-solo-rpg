@@ -1,11 +1,16 @@
 <script>
-	import { recordRound } from './GameStore.js';
+	import { recordRound, gameStore, nextScreen, restartGame, exitGame } from './WAAStore.js';
 
+	let saved = false;
 	let journalText = '';
-
-	function next() {
+	function save() {
 		recordRound({ text: journalText?.toString() });
 		journalText = '';
+		saved = true;
+	}
+
+	function next(action) {
+		nextScreen(action);
 	}
 </script>
 
@@ -15,7 +20,16 @@
 	</div>
 	<div class="journal-tools-right-area" />
 	<div class="journal-tools-center-area">
-		<button on:click={next}>record</button>
+		{#if saved}
+			{#if $gameStore.gameOver}
+				<button on:click={restartGame}>restart</button>
+				<button on:click={exitGame}>new game</button>
+			{:else}
+				<button on:click={next}>continue</button>
+			{/if}
+		{:else}
+			<button on:click={save}>record</button>
+		{/if}
 	</div>
 	<div class="journal-tools-left-area" />
 </div>
@@ -37,7 +51,8 @@
 	.text-entry-area {
 		grid-area: text-entry-area;
 	}
-	textarea, button {
+	textarea,
+	button {
 		width: 100%;
 		max-width: 100svw;
 		box-sizing: border-box;

@@ -1,4 +1,6 @@
 {
+	"title":"Example Game",
+	"intro": "This is an example game...",
 	"deck": [
 		{
 			"card": "A",

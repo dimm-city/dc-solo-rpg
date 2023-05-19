@@ -1,18 +1,18 @@
 <script>
-	export let failureCounter = 0; // Failure counter value
-	const maxCounter = 100; // Maximum failure counter value
+	import { gameStore } from './WAAStore.js';
+	const maxCounter = 54; // 100; // Maximum failure counter value
 
 	// Calculate the percentage of failure progress
-	$: failureProgress = maxCounter - failureCounter;
+	$: failureProgress = Math.floor(100 - ($gameStore.tower / maxCounter) * 100);
 
 	// Determine the fill color based on the failure counter value
-	$: fillColor = failureCounter < 50 ? '#FF0000' : '#00FF00';
+	$: fillColor = $gameStore.tower < 25 ? '#FF0000' : '#00FF00';
 </script>
 
 <h4>Failure Meter</h4>
 <div class="progress-bar">
 	<div class="fill" style="width: {failureProgress}%; background-color: {fillColor}" />
-    <span>{failureProgress}%</span>
+	<span>{failureProgress}%</span>
 </div>
 
 <!-- <script>
@@ -110,11 +110,11 @@
 </style> -->
 
 <style>
-	h4{
-        margin-block: var(--dc-header-block-margin);
-    }
+	h4 {
+		margin-block: var(--dc-header-block-margin);
+	}
 	.progress-bar {
-        position: relative;
+		position: relative;
 		width: 100%;
 		height: 1rem;
 		background-color: #eeeeee;
@@ -122,12 +122,12 @@
 		overflow: hidden;
 	}
 
-    .progress-bar span{
-        position: absolute;
-        /* width: 100%;
+	.progress-bar span {
+		position: absolute;
+		/* width: 100%;
         text-align: center; */
-        top: 0;
-    }
+		top: 0;
+	}
 	.fill {
 		height: 100%;
 		opacity: 1;
