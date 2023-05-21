@@ -24,12 +24,23 @@
 </script>
 
 <div class="dc-roll-tasks-container">
-	<!-- {:else}
-		<button on:click={rollTaskDice} disabled={rolling}>roll</button>
-	{/if} -->
-	<h4>Roll for tasks</h4>
-	<DiceRoller bind:this={taskDice} bind:rolling on:click={action} on:keyup={action} />
 	{#if rolled}
-		<button on:click={confirm} disabled={rolling}>continue</button>
+		<!-- <button on:click={confirm} disabled={rolling}>continue</button> -->
+
+		<h4>Click to continue...</h4>
+	{:else}
+		<h4>Roll for tasks</h4>
+		<!-- <button on:click={rollTaskDice} disabled={rolling}>roll</button> -->
 	{/if}
+
+	<DiceRoller bind:this={taskDice} bind:rolling on:click={action} on:keyup={action} />
 </div>
+
+<style>
+	.dc-roll-tasks-container {
+		height: 100%;
+		display: grid;
+		flex-direction: column;
+		text-align: center;
+	}
+</style>

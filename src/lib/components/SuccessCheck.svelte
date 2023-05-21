@@ -16,11 +16,20 @@
 </script>
 
 <div class="dc-success-check-container">
-	<h4>Roll for Success</h4>
-	<!-- {#if $gameStore.state == 'successCheck'}
-		<button on:click={doCheck}>successCheck</button>
+	
+	{#if $gameStore.state == 'successCheck'}
+		<h4>Roll for Success</h4>
 	{:else}
-		<button on:click={startRound}>startRound</button>
-	{/if} -->
+		<h4>Click to continue...</h4>
+	{/if}
 	<DiceRoller bind:this={diceRoller} bind:rolling on:click={doCheck} on:keyup={doCheck} />
 </div>
+
+<style>
+	.dc-success-check-container{
+		height: 100%;
+		display: grid;
+		flex-direction: column;
+		text-align: center;
+	}
+</style>

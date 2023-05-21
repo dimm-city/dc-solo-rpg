@@ -1,23 +1,40 @@
 <script>
+	import CardDeck from './CardDeck.svelte';
 	import { confirmCard, drawCard, gameStore } from './WAAStore.js';
+	let deck;
+	async function onDrawCard() {
+		await drawCard();
+		deck.drawCard($gameStore.currentCard);
+	}
+	async function onConfirmCard() {
+		deck.reset();
+		await confirmCard();
+	}
+	async function onDeckClicked() {
+		if ($gameStore?.currentCard != null) await onConfirmCard();
+		else await onDrawCard();
+	}
 </script>
 
 <div class="dc-draw-card-container">
-	<h4>Draw a card</h4>
-	<p>{$gameStore.currentCard?.description ?? ''}</p>
 	{#if $gameStore?.currentCard != null}
-		<button on:click={confirmCard}>continue</button>
+		<h4>Click to continue...</h4>
+		<!-- <button on:click={onConfirmCard}>continue</button> -->
 	{:else}
-		<button on:click={drawCard}>draw a card</button>
+		<h4>Draw a card</h4>
+		<!-- <button on:click={onDrawCard}>draw a card</button> -->
 	{/if}
+	<CardDeck bind:this={deck} on:click={onDeckClicked} />
 </div>
 
 <style>
 	.dc-draw-card-container {
-		display: flex;
+		display: grid;
 		height: 100%;
-		flex-direction: column;
-		align-items: center;
+		width: 100%;
 		justify-content: center;
+		/* flex-direction: column;
+		align-items: center;
+		 */
 	}
 </style>

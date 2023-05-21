@@ -1,38 +1,54 @@
 <script>
+	import DiceRoller from './DiceRoller.svelte';
 	import { gameStore, nextScreen, pullFromTower, confirmTowerPull } from './WAAStore.js';
 
-	let pulling = false;
+	let diceRoller;
+	let rolling = false;
 	let pulled = false;
-let result;
+	let result;
 	async function pull() {
-		pulling = true;
+		rolling = true;
 		result = await pullFromTower();
-		pulling = false;
+		rolling = false;
 		pulled = true;
+	}
+
+	async function doCheck() {
+		if (rolling) return;
+		if ($gameStore.state == 'pullFromTower') {
+			const result = await pullFromTower();
+			await diceRoller.roll(result);
+		} else {
+			await confirmTowerPull();
+		}
 	}
 </script>
 
 <div class="dc-tower-container">
-	<h4>Pull from Tower</h4>
+	{#if result}
+		<!-- Rolled: {result} -->
+		<h4>Click to continue...</h4>
+		<!-- <button on:click={confirmTowerPull}>continue</button> -->
+	{:else}
+		<h4>Failure check</h4>
+		<!-- <button on:click={pull}>pull from tower</button> -->
+	{/if}
+
 	<!-- {#if $gameStore.gameOver}
 		<button on:click={() => nextScreen('finalLog')}>record final log</button>
 	{:else}
 		<button on:click={pull}>pull from tower</button>
 	{/if} -->
 
-	{#if result}
-		Rolled: {result}
-		<button on:click={confirmTowerPull}>continue</button>
-	{:else}
-		<button on:click={pull}>pull from tower</button>
-	{/if}
+	<DiceRoller bind:this={diceRoller} bind:rolling on:click={doCheck} on:keyup={doCheck} />
 </div>
 
 <style>
 	.dc-tower-container {
 		width: 100%;
-		display: flex;
-		flex-direction: column;
+		height: 100%;
+		display: grid;
 		justify-content: center;
+		text-align: center;
 	}
 </style>

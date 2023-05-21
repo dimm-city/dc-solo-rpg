@@ -12,6 +12,7 @@
   }
 </style>
 
+<link rel="stylesheet" href="WAAStyles.css">
 <main class="container">  
   <slot>    
   </slot>

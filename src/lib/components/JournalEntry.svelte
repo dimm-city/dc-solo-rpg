@@ -42,9 +42,10 @@
 		display: grid;
 		margin-bottom: 0.5rem;
 		width: 100%;
+		height: 100%;
 		grid-template-columns: 1fr;
 		grid-template-rows: min-content 1fr min-content;
-		gap: 0.5rem;
+		row-gap: 0.5rem;
 		grid-auto-flow: row;
 		grid-template-areas:
 			'header-area'
@@ -58,12 +59,21 @@
 
 	.text-entry-area {
 		grid-area: text-entry-area;
+		display: flex;
+		height: 100%;
 	}
 	textarea,
 	button {
 		width: 100%;
 		max-width: 100svw;
 		box-sizing: border-box;
+	}
+
+	textarea{
+		display: flex;
+		flex:1;
+		resize: none;
+
 	}
 	.journal-tools-right-area {
 		grid-area: journal-tools-right-area;

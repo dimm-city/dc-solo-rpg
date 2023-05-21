@@ -81,9 +81,10 @@
 		width: 100%;
 		height: 100svh;
 		max-height: 100svh;
-		grid-template-columns: auto minmax(10rem, min-content);
+		grid-template-columns: auto minmax(8rem, min-content);
 		grid-template-rows: min-content 1fr min-content;
-		gap: 1rem;
+		row-gap: 1rem;
+		column-gap: 0.5rem;
 		grid-auto-flow: row;
 		grid-template-areas:
 			'toolbar-area toolbar-area'
@@ -115,6 +116,7 @@
 
 	.main-screen-area > div {
 		width: 100%;
+		height: 100%;
 	}
 
 	.status-display-area {
