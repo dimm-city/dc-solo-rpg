@@ -17,13 +17,19 @@
 		rolled = false;
 		confirmTaskRoll();
 	}
+	function action() {
+		if (rolled) confirm();
+		else rollTaskDice();
+	}
 </script>
 
-<div>
+<div class="dc-roll-tasks-container">
+	<!-- {:else}
+		<button on:click={rollTaskDice} disabled={rolling}>roll</button>
+	{/if} -->
+	<h4>Roll for tasks</h4>
+	<DiceRoller bind:this={taskDice} bind:rolling on:click={action} on:keyup={action} />
 	{#if rolled}
 		<button on:click={confirm} disabled={rolling}>continue</button>
-	{:else}
-		<button on:click={rollTaskDice} disabled={rolling}>roll</button>
 	{/if}
-	<DiceRoller bind:this={taskDice} bind:rolling />
 </div>

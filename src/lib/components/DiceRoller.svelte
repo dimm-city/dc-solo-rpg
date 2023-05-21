@@ -122,11 +122,11 @@
 </script>
 
 <!-- on:click={onClick} on:keydown={onClick} -->
-<div class="dice-roller-container" disabled={rolling}>
+<div class="dice-roller-container" disabled={rolling} on:click on:keyup>
 	<!-- <div>
 		{$currentState.status}
-	</div> -->
-	<div>
+	</div>
+	<div> -->
 		<div class="dice-roller">
 			{#if rolling}
 				<!-- {#each characters as character, i} key={i}-->
@@ -142,8 +142,8 @@
 				<span in:fade> {diceList[0]}</span>
 			{/if}
 		</div>
-	</div>
-	<!-- <div>
+	<!-- </div>
+	<div>
 		{#if !rolling && finalNumber > 0}
 			<button on:click={confirmRoll}>confirm</button>
 		{:else}

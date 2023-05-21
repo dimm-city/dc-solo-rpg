@@ -1,21 +1,36 @@
 <script>
-	import { gameStore } from "./WAAStore.js";
 	import FailureCounter from './FailureCounter.svelte';
+	import { gameStore } from './WAAStore.js';
+	import FailureMeter from './FailureMeter.svelte';
 	import SuccessCounter from './SuccessCounter.svelte';
 </script>
 
 <div class="status-display-container">
-	<h4>Round: {$gameStore?.round}</h4>
-	<h5>Cards Remaining: {$gameStore.cardsToDraw} ({$gameStore.deck?.length})</h5>
-	<FailureCounter />
-	<SuccessCounter  />
+	<div>
+		<h4>Round: {$gameStore?.round}</h4>
+		<h5>Cards Remaining: {$gameStore.cardsToDraw}</h5>
+	</div>
+	<div>
+		
+		<FailureCounter />
+		<FailureMeter />
+	</div>
+	<div>
+		<SuccessCounter />
+	</div>
 </div>
 
 <style>
-    h4, h5{
-        margin-block: var(--dc-header-block-margin);
-    }
-	.status-display-container {		
-        text-align: center;
+	h4,
+	h5 {
+		margin-block: var(--dc-header-block-margin);
+	}
+	.status-display-container {
+		text-align: center;
+		display: flex;
+		flex-direction: column;
+		
+		height: 100%;
+		row-gap: 3rem;
 	}
 </style>

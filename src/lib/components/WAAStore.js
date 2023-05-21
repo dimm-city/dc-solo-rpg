@@ -185,7 +185,7 @@ export const drawCard = () => {
 		} else if (state.cardsToDraw > 0) {
 			stateMachine.next('drawCard');
 		} else {
-			stateMachine.next('endTurn');
+			stateMachine.next('log');
 		}
 		state.state = stateMachine.state;
 		//nextScreen();
@@ -228,14 +228,18 @@ export const pullFromTower = async () => {
 			if (state.cardsToDraw > 0) {
 				state.state = stateMachine.next('drawCard');
 			} else {
-				state.state = stateMachine.next('endTurn');
+				state.state = stateMachine.next('log');
 			}
 		}
 		return state;
 	});
-	nextScreen();
+	//nextScreen();
+	return roll;
 };
 
+export const confirmTowerPull = () => {
+	nextScreen();
+};
 export const recordRound = (journalEntry) => {
 	if (journalEntry == null || journalEntry.text == null) {
 		throw new Error('No journal entries provided for this round');

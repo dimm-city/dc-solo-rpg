@@ -15,16 +15,7 @@
 
 	import StatusDisplay from './StatusDisplay.svelte';
 	import JournalEntry from './JournalEntry.svelte';
-	import {
-		confirmTaskRoll,
-		currentScreen,
-		drawCard,
-		gameStore,
-		nextScreen,
-		rollForTasks,
-		startRound,
-		successCheck
-	} from './WAAStore.js';
+	import { currentScreen, gameStore, nextScreen } from './WAAStore.js';
 	import Toolbar from './Toolbar.svelte';
 </script>
 
@@ -75,19 +66,20 @@
 		{/if}
 	</div>
 	<div class="journal-entry-area">
-		<!-- {#if !$isWaitingForDice}
-			<JournalEntry />
-		/if
-		
-		<button on:click={() => nextScreen()}>next</button>-->
+		<!-- <button on:click={() => nextScreen()}>next</button> -->
 	</div>
 </div>
+
+<!-- <div class="button-bar">
+	<button on:click={() => exitGame()}>run away!</button>
+	<button on:click={() => nextScreen('startRound')}>start your adventure</button>
+</div> -->
 
 <style>
 	.profile-container {
 		display: grid;
 		width: 100%;
-		height: 100%;
+		height: 100svh;
 		max-height: 100svh;
 		grid-template-columns: auto minmax(10rem, min-content);
 		grid-template-rows: min-content 1fr min-content;
@@ -112,15 +104,32 @@
 		grid-area: main-screen-area;
 		padding-inline: 0.25rem;
 		overflow-y: auto;
+
+		display: flex;
+		height: 100%;
+		width: 100%;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
 	}
 
-	.story-container {
-		display: flex;
-		flex-direction: column;
-		overflow-y: auto;
+	.main-screen-area > div {
+		width: 100%;
 	}
+
 	.status-display-area {
 		grid-area: status-display-area;
 		padding-inline: 0.25rem;
 	}
+
+	/* .button-bar {
+		position: sticky;
+		height: min-content;
+		top: 100svh;
+		width: 100%;
+		display: flex;
+		justify-content: center;
+		background-color: #363636c4;
+		padding-block: 0.5rem;
+	} */
 </style>

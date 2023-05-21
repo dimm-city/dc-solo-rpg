@@ -8,7 +8,7 @@
 	export let players = [];
 	export let selectedPlayer = null;
 	export let games = [];
-	export let selectedGame = null;	
+	export let selectedGame = null;
 </script>
 
 <Shell title={gameConfig?.title ?? 'Please select a game'}>
@@ -21,11 +21,11 @@
 			<IntroScreen />
 		</div>
 	{:else}
-		<div in:fade>
 			<SceneViewer />
-		</div>
 	{/if}
+
 </Shell>
+
 <style>
 	div {
 		display: flex;
@@ -34,4 +34,5 @@
 		align-items: center;
 		justify-content: center;
 	}
+
 </style>

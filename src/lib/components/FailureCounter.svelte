@@ -1,137 +1,45 @@
 <script>
-	import { gameStore } from './WAAStore.js';
-	const maxCounter = 54; // 100; // Maximum failure counter value
+	import { gameStore, gameConfig } from './WAAStore.js';
 
-	// Calculate the percentage of failure progress
-	$: failureProgress = Math.floor(100 - ($gameStore.tower / maxCounter) * 100);
-
-	// Determine the fill color based on the failure counter value
-	$: fillColor = $gameStore.tower < 25 ? '#FF0000' : '#00FF00';
+	const numTokens = 4;
+	$: tokens = Array.from({ length: numTokens }, (_, index) => index < $gameStore.kingsRevealed);
 </script>
 
-<h4>Failure Meter</h4>
-<div class="progress-bar">
-	<div class="fill" style="width: {failureProgress}%; background-color: {fillColor}" />
-	<span>{failureProgress}%</span>
+<div class="success-counters-container">
+	<h4>{gameConfig?.labels?.failureCounters ?? 'Failure Counters'}</h4>
+	<!-- Success: {$currentState.successCounter} -->
+	<div class="grid">
+		{#each tokens as token, index}
+			<svg class="token" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+				<polygon points="50,5 95,30 95,70 50,95 5,70 5,30" class:filled={token} />
+			</svg>
+		{/each}
+	</div>
 </div>
-
-<!-- <script>
-  export let health = 100; // Current health of the tower
-</script>
-
-<style>
-  /* Component styles go here */
-  .tower {
-    width: 80px;
-    height: 200px;
-  }
-
-  .block {
-    fill: #00ff00;
-    transition: fill 0.3s ease;
-  }
-
-  .block.danger {
-    fill: #ff0000;
-    animation: damageAnimation 0.5s infinite alternate;
-  }
-
-  @keyframes damageAnimation {
-    0% {
-      fill: #ff0000;
-    }
-    50% {
-      fill: #ffcccc;
-    }
-    100% {
-      fill: #ff0000;
-    }
-  }
-</style>
-
-<svg class="tower" viewBox="0 0 80 200" xmlns="http://www.w3.org/2000/svg">
-  <rect x="0" y="0" width="80" height="200" fill="#333333" />
-  {#each Array(Math.ceil(health / 10)) as _, index}
-    <rect
-      x="10"
-      y={index * 20}
-      width="60"
-      height="10"
-      class="block"
-      class:danger={health <= index * 40}
-    />
-  {/each}
-</svg> -->
-
-<!-- <script>
-	export let health = 100; // Current health of the tower
-
-	let totalHeight = 200;
-	let top;
-	let bottom;
-
-	$: if(top && bottom) {
-		const bottomHeight = (health / 100) * totalHeight;
-		const topHeight = totalHeight - bottomHeight;
-		const clipPathInset = `inset(0 0 ${bottomHeight}px 0)`;
-		top.style.fill = '#00ff00';
-		bottom.style.fill = '#ff0000';
-		bottom.style.clipPath = `clip-path: ${clipPathInset}`;
-	}
-</script>
-
-<svg class="tower" viewBox="0 0 100 200" xmlns="http://www.w3.org/2000/svg">
-	<polygon bind:this={top} points="0,0 100,0 60,100 100,200 0,200 40,100" class="hourglass" />
-	<polygon
-		bind:this={bottom}
-		points="40,100 60,100 40,200 60,200"
-		class="hourglass bottom"
-		style="clip-path: inset(0 0 50% 0);"
-	/>
-</svg>
-
-<style>
-	/* Component styles go here */
-	.tower {
-		width: 100px;
-		height: 200px;
-		position: relative;
-	}
-
-	.hourglass {
-		fill: #00ff00;
-		transition: fill 0.3s ease;
-	}
-
-	.hourglass.bottom {
-		fill: #ff0000;
-		transition: fill 0.3s ease;
-	}
-</style> -->
 
 <style>
 	h4 {
 		margin-block: var(--dc-header-block-margin);
 	}
-	.progress-bar {
-		position: relative;
-		width: 100%;
-		height: 1rem;
-		background-color: #eeeeee;
-		border-radius: 10px;
-		overflow: hidden;
+	.token {
+		width: 2rem;
+		height: 2rem;
+		stroke: var(--dc-accent-color);
+		stroke-width: 3;
+		fill: transparent;
+		transition: fill 0.3s ease;
 	}
 
-	.progress-bar span {
-		position: absolute;
-		/* width: 100%;
-        text-align: center; */
-		top: 0;
+	.filled {
+		fill: var(--dc-accent-color);
+		transition: fill 0.3s ease-in-out;
 	}
-	.fill {
-		height: 100%;
-		opacity: 1;
-		transition: all 0.3s ease;
-		transform-origin: bottom;
+
+	.grid {
+		display: grid;
+		grid-template-columns: repeat(2, min-content);
+		grid-template-rows: repeat(5, 1fr);
+		gap: 0.25rem;
+		justify-content: center;
 	}
 </style>

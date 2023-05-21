@@ -14,7 +14,10 @@
 	}
 </script>
 
-<div class="container">
+<div class="dc-journal-container">
+	<div class="journal-header-area">
+		<h4>Record your journal entry</h4>
+	</div>
 	<div class="text-entry-area">
 		<textarea bind:value={journalText} rows="5" />
 	</div>
@@ -35,17 +38,22 @@
 </div>
 
 <style>
-	.container {
+	.dc-journal-container {
 		display: grid;
 		margin-bottom: 0.5rem;
 		width: 100%;
-		grid-template-columns: min-content auto min-content;
-		grid-template-rows: 1fr min-content;
+		grid-template-columns: 1fr;
+		grid-template-rows: min-content 1fr min-content;
 		gap: 0.5rem;
 		grid-auto-flow: row;
 		grid-template-areas:
-			'text-entry-area text-entry-area text-entry-area'
-			'journal-tools-left-area journal-tools-center-area journal-tools-right-area';
+			'header-area'
+			'text-entry-area'
+			'journal-tools-center-area';
+	}
+
+	.journal-header-area{
+		grid-area: 'header-area';
 	}
 
 	.text-entry-area {

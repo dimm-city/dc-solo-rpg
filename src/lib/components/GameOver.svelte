@@ -7,5 +7,5 @@
 <div>
 	<h2>Game Over</h2>
 	<h3>{$gameStore.status}</h3>
-	<button on:click={() => nextScreen('finalLog')}>start new game</button>
+	<button on:click={() => nextScreen('finalLog')}>record your final log</button>
 </div>
