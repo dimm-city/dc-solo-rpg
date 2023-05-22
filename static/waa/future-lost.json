@@ -1,6 +1,6 @@
 {
     "title": "Future Lost",
-	"intro":"Who\nYou are a time traveler, an explorer of the temporal realms, who has accidentally landed in a dystopian future. This future is a grim shadow of the world you once knew, where society has collapsed, and dangerous creatures roam the streets. You are alone, with only your wits and the remnants of your time machine to aid you.\nWhat\nYour mission is to survive in this harsh and unfamiliar world, while trying to repair your time machine. You'll need to scavenge for resources, navigate through the ruins of the city, interact with other survivors, and deal with the remnants of technology that have taken on a life of their own. Each card drawn will present a new challenge or opportunity, shaping your story as you try to make it back to your own time. Will you find the salvation you seek, or will the countdown to failure catch up with you? Only time will tell.",
+	"intro":"<h2>Who</h2>\nYou are a time traveler, an explorer of the temporal realms, who has accidentally landed in a dystopian future. This future is a grim shadow of the world you once knew, where society has collapsed, and dangerous creatures roam the streets. You are alone, with only your wits and the remnants of your time machine to aid you.\n\n<h2>What</h2>\n\nYour mission is to survive in this harsh and unfamiliar world, while trying to repair your time machine. You'll need to scavenge for resources, navigate through the ruins of the city, interact with other survivors, and deal with the remnants of technology that have taken on a life of their own. Each card drawn will present a new challenge or opportunity, shaping your story as you try to make it back to your own time. Will you find the salvation you seek, or will the countdown to failure catch up with you? Only time will tell.",
     "deck":[
 			{
 				"card": "A",
@@ -83,184 +83,184 @@
 				"description": "A piece of your time machine breaks down."
 			},
 			{
-				"card": "2",
+				"card": 2,
 				"suit": "hearts",
-				"description": "You encounter a hostile survivor. This contributes to failure."
+				"description": "You encounter a helpful survivor."
 			},
 			{
-				"card": "3",
+				"card": 3,
+				"suit": "hearts",
+				"description": "You're betrayed by a survivor you trusted."
+			},
+			{
+				"card": 4,
 				"suit": "hearts",
 				"description": "A survivor offers to trade useful items."
 			},
 			{
-				"card": "4",
+				"card": 5,
 				"suit": "hearts",
-				"description": "You're betrayed by a survivor you trusted. This contributes to failure."
+				"description": "A group of survivors tries to steal your supplies."
 			},
 			{
-				"card": "5",
+				"card": 6,
 				"suit": "hearts",
 				"description": "A survivor shares valuable information about the city."
 			},
 			{
-				"card": "6",
+				"card": 7,
 				"suit": "hearts",
-				"description": "A group of survivors tries to steal your supplies. This contributes to failure."
+				"description": "You're caught in a dispute between survivor factions."
 			},
 			{
-				"card": "7",
+				"card": 8,
 				"suit": "hearts",
 				"description": "You find a survivor who can repair a part of your time machine."
 			},
 			{
-				"card": "8",
+				"card": 9,
 				"suit": "hearts",
-				"description": "You're caught in a dispute between survivor factions. This contributes to failure."
+				"description": "You're injured in a fight with a survivor."
 			},
 			{
-				"card": "9",
+				"card": 10,
 				"suit": "hearts",
 				"description": "A survivor helps you find a safe route through a dangerous area."
 			},
 			{
-				"card": "10",
-				"suit": "hearts",
-				"description": "You're injured in a fight with a survivor. This contributes to failure."
-			},
-			{
-				"card": "2",
-				"suit": "diamonds",
-				"description": "You find a stash of spoiled food. This contributes to failure."
-			},
-			{
-				"card": "3",
+				"card": 2,
 				"suit": "diamonds",
 				"description": "You discover a cache of useful tools."
 			},
 			{
-				"card": "4",
+				"card": 3,
 				"suit": "diamonds",
-				"description": "A valuable item you found breaks. This contributes to failure."
+				"description": "You find a stash of spoiled food."
 			},
 			{
-				"card": "5",
+				"card": 4,
 				"suit": "diamonds",
 				"description": "You find a map of the city."
 			},
 			{
-				"card": "6",
+				"card": 5,
 				"suit": "diamonds",
-				"description": "You accidentally lose some of your supplies. This contributes to failure."
+				"description": "A valuable item you found breaks."
 			},
 			{
-				"card": "7",
+				"card": 6,
 				"suit": "diamonds",
 				"description": "You find a working vehicle."
 			},
 			{
-				"card": "8",
+				"card": 7,
 				"suit": "diamonds",
-				"description": "You're exposed to harmful radiation while scavenging. This contributes to failure."
+				"description": "You accidentally lose some of your supplies."
 			},
 			{
-				"card": "9",
+				"card": 8,
 				"suit": "diamonds",
 				"description": "You find a source of clean water."
 			},
 			{
-				"card": "10",
+				"card": 9,
 				"suit": "diamonds",
-				"description": "You're trapped in a building while scavenging. This contributes to failure."
+				"description": "You're exposed to harmful radiation while scavenging."
 			},
 			{
-				"card": "2",
+				"card": 10,
+				"suit": "diamonds",
+				"description": "You're given food by another survivor while scavenging."
+			},
+			{
+				"card": 2,
 				"suit": "clubs",
-				"description": "You get lost in the city. This contributes to failure."
+				"description": "You find an abandoned house with some food still inside."
 			},
 			{
-				"card": "3",
+				"card": 3,
+				"suit": "clubs",
+				"description": "You fall into a trap set by other survivors."
+			},
+			{
+				"card": 4,
 				"suit": "clubs",
 				"description": "You discover a shortcut through the city."
 			},
 			{
-				"card": "4",
+				"card": 5,
 				"suit": "clubs",
-				"description": "You fall into a trap set by other survivors. This contributes to failure."
+				"description": "You're chased by a pack of mutated animals."
 			},
 			{
-				"card": "5",
+				"card": 6,
 				"suit": "clubs",
 				"description": "You find a safe hideout."
 			},
 			{
-				"card": "6",
+				"card": 7,
 				"suit": "clubs",
-				"description": "You're chased by a pack of mutated animals. This contributes to failure."
+				"description": "You're caught in a territorial dispute between survivor groups."
 			},
 			{
-				"card": "7",
+				"card": 8,
 				"suit": "clubs",
 				"description": "You find a hidden underground bunker."
 			},
 			{
-				"card": "8",
+				"card": 9,
 				"suit": "clubs",
-				"description": "You're caught in a territorial dispute between survivor groups. This contributes to failure."
+				"description": "You're trapped in a collapsed building."
 			},
 			{
-				"card": "9",
+				"card": 10,
 				"suit": "clubs",
 				"description": "You find a safe route through a dangerous area."
 			},
 			{
-				"card": "10",
-				"suit": "clubs",
-				"description": "You're trapped in a collapsed building. This contributes to failure."
-			},
-			{
-				"card": "2",
-				"suit": "spades",
-				"description": "A piece of your time machine malfunctions. This contributes to failure."
-			},
-			{
-				"card": "3",
+				"card": 2,
 				"suit": "spades",
 				"description": "You find a blueprint of the time machine."
 			},
 			{
-				"card": "4",
+				"card": 3,
 				"suit": "spades",
-				"description": "A malfunctioningrobot attacks you. This contributes to failure."
+				"description": "A piece of your time machine malfunctions."
 			},
 			{
-				"card": "5",
+				"card": 4,
 				"suit": "spades",
 				"description": "You find a working computer."
 			},
 			{
-				"card": "6",
+				"card": 5,
 				"suit": "spades",
-				"description": "You're caught in a toxic gas leak. This contributes to failure."
+				"description": "A malfunctioningrobot attacks you."
 			},
 			{
-				"card": "7",
+				"card": 6,
 				"suit": "spades",
 				"description": "You manage to deactivate a dangerous AI."
 			},
 			{
-				"card": "8",
+				"card": 7,
 				"suit": "spades",
-				"description": "You're pursued by a rogue AI. This contributes to failure."
+				"description": "You're caught in a toxic gas leak."
 			},
 			{
-				"card": "9",
+				"card": 8,
 				"suit": "spades",
 				"description": "You find a complete toolkit for your time machine."
 			},
 			{
-				"card": "10",
+				"card": 9,
 				"suit": "spades",
-				"description": "You're lost in a maze of ruined buildings. This contributes to failure."
+				"description": "You're pursued by a rogue AI."
+			},
+			{
+				"card": 10,
+				"suit": "spades",
+				"description": "You find some helpful parts among some ruined buildings."
 			}
 		]
 }
