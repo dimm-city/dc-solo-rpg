@@ -25,7 +25,7 @@ export const transitions = {
 		intro: 'intro'
 	},
 	intro: {
-		startRound: 'startRound'
+		rollForTasks: 'rollForTasks'
 	},
 	startRound: {
 		rollForTasks: 'rollForTasks'
@@ -38,13 +38,13 @@ export const transitions = {
 		drawCard: 'drawCard',
 		endTurn: 'endTurn',
 		log: 'log',
-        gameOver: 'gameOver'
+		gameOver: 'gameOver'
 	},
 	pullFromTower: {
 		drawCard: 'drawCard',
 		endTurn: 'endTurn',
 		log: 'log',
-        gameOver: 'gameOver'
+		gameOver: 'gameOver'
 	},
 	endTurn: {
 		log: 'log'
@@ -55,15 +55,15 @@ export const transitions = {
 	},
 	successCheck: {
 		startRound: 'startRound',
-        gameOver: 'gameOver'
+		gameOver: 'gameOver'
 	},
-    gameOver:{
-        finalLog: "finalLog"
-    },
-    finalLog:{
-        loadGame: "loadGame",
-        intro: "intro"
-    }
+	gameOver: {
+		finalLog: 'finalLog'
+	},
+	finalLog: {
+		loadGame: 'loadGame',
+		intro: 'intro'
+	}
 };
 
 // const stateMachine = new StateMachine('loadGame', transitions, {});

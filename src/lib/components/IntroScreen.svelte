@@ -1,5 +1,5 @@
 <script>
-	import { nextScreen, gameConfig, exitGame } from './WAAStore.js';
+	import { nextScreen, startRound, gameConfig, exitGame } from './WAAStore.js';
 </script>
 
 <div class="intro-container">
@@ -9,7 +9,7 @@
 	</div>
 	<div class="button-bar">
 		<button on:click={() => exitGame()}>run away!</button>
-		<button on:click={() => nextScreen('startRound')}>start your adventure</button>
+		<button on:click={() => nextScreen('rollForTasks')}>start your adventure</button>
 	</div>
 </div>
 

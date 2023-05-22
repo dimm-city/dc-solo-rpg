@@ -38,7 +38,7 @@
 	.grid {
 		display: grid;
 		grid-template-columns: repeat(2, min-content);
-		grid-template-rows: repeat(5, 1fr);
+		grid-template-rows: repeat(2, 1fr);
 		gap: 0.25rem;
 		justify-content: center;
 	}

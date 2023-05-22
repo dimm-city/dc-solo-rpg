@@ -1,6 +1,13 @@
-:root{
-    --dc-card-back-bg: lightblue;
+:root {
+	--dc-accent-color: rgb(58, 159, 199);
+	--dc-toolbar-height: 3rem;
+	--dc-header-block-margin: 0.25rem;
+
+    --dc-card-border: 1px solid #000000;
+    --dc-card-border-radius: 3svw;
+	--dc-card-back-bg: rgb(63, 72, 75);
+	--dc-card-front-bg: rgb(225, 232, 235);
 }
-h4{
-    margin: 0;    
+h4 {
+	margin: 0;
 }

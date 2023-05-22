@@ -33,8 +33,6 @@
 		height: 100%;
 		width: 100%;
 		justify-content: center;
-		/* flex-direction: column;
-		align-items: center;
-		 */
+		text-align: center;	
 	}
 </style>

@@ -10,8 +10,7 @@
 		<h4>Round: {$gameStore?.round}</h4>
 		<h5>Cards Remaining: {$gameStore.cardsToDraw}</h5>
 	</div>
-	<div>
-		
+	<div>		
 		<FailureCounter />
 		<FailureMeter />
 	</div>
@@ -27,10 +26,8 @@
 	}
 	.status-display-container {
 		text-align: center;
-		display: flex;
-		flex-direction: column;
-		
-		height: 100%;
-		row-gap: 3rem;
+		display: grid;
+	
+		row-gap: 2rem;
 	}
 </style>
