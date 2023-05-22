@@ -9,10 +9,12 @@
 	$: fillColor = $gameStore.tower < 25 ? '#FF0000' : '#00FF00';
 </script>
 
-<h4>Failure Meter</h4>
-<div class="progress-bar">
-	<div class="fill" style="width: {failureProgress}%; background-color: {fillColor}" />
-	<span>{failureProgress}%</span>
+<div>
+	<h4>Failure Meter</h4>
+	<div class="progress-bar">
+		<div class="fill" style="width: {failureProgress}%; background-color: {fillColor}" />
+		<span>{failureProgress}%</span>
+	</div>
 </div>
 
 <style>

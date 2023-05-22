@@ -8,11 +8,11 @@
 <div class="status-display-container">
 	<div>
 		<h4>Round: {$gameStore?.round}</h4>
-		<h5>Cards Remaining: {$gameStore.cardsToDraw}</h5>
+		<!-- <h5>Cards Remaining: {$gameStore.cardsToDraw}</h5> -->
 	</div>
-	<div>		
+	<div class="failure-container">
+		<FailureMeter />		
 		<FailureCounter />
-		<FailureMeter />
 	</div>
 	<div>
 		<SuccessCounter />
@@ -23,11 +23,17 @@
 	h4,
 	h5 {
 		margin-block: var(--dc-header-block-margin);
+		white-space: nowrap;
 	}
 	.status-display-container {
+		margin-inline: 0.25rem;
 		text-align: center;
 		display: grid;
 	
 		row-gap: 2rem;
+	}
+	.failure-container{
+		display: grid;
+		row-gap: 0.9rem;
 	}
 </style>

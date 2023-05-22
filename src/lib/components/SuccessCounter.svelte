@@ -18,6 +18,9 @@
 </div>
 
 <style>
+	:root{
+		--dc-success-counter-grid-flow: row;
+	}
 	h4 {
 		margin-block: var(--dc-header-block-margin);
 	}
@@ -37,8 +40,9 @@
 
 	.grid {
 		display: grid;
-		grid-template-columns: repeat(2, min-content);
-		grid-template-rows: repeat(5, 1fr);
+		grid-auto-flow: var(--dc-success-counter-grid-flow);
+		/*grid-template-columns: repeat(1, min-content);
+		 grid-template-rows: repeat(10, 1fr); */
 		gap: 0.25rem;
 		justify-content: center;
 	}

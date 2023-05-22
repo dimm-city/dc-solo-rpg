@@ -9,7 +9,8 @@
 			assetPath: '/assets/',
 			settleTimeout: rollDuration,
 			scale: 6,
-			themeColor: '#1387b9'
+			themeColor: '#1387b9',
+			offscreen: false
 		});
 	});
 
@@ -41,6 +42,7 @@
 		display: grid;
 		height: 100%;
 		width: 100%;
+		justify-content: center;
 	}
 	:global(.dice-roller-container > canvas) {
 		display: grid;

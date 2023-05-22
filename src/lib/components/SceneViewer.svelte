@@ -15,7 +15,9 @@
 		<Toolbar />
 	</div>
 	<div class="status-display-area">
+		{#if $currentScreen != 'rollForTasks' && $currentScreen != 'pullFromTower' && $currentScreen != 'successCheck'}
 		<StatusDisplay />
+		{/if}
 	</div>
 	<div class="main-screen-area">
 		{#if $currentScreen == 'startRound'}
@@ -72,7 +74,7 @@
 		width: 100%;
 		height: 100svh;
 		max-height: 100svh;
-		grid-template-columns: auto minmax(8rem, min-content);
+		grid-template-columns: auto min-content;
 		grid-template-rows: min-content 1fr min-content;
 		row-gap: 1rem;
 		column-gap: 0.5rem;
@@ -112,7 +114,6 @@
 
 	.status-display-area {
 		grid-area: status-display-area;
-		padding-inline: 0.25rem;
 	}
 
 	/* .button-bar {

@@ -1,4 +1,5 @@
 <script>
+	import FailureMeter from './FailureMeter.svelte';
 	import DiceRoller from './3DiceRoller.svelte';
 	import { gameStore, nextScreen, pullFromTower, confirmTowerPull } from './WAAStore.js';
 
@@ -18,12 +19,14 @@
 </script>
 
 <div class="dc-tower-container">
-	{#if result}
-		<h4>Click to continue...</h4>
-	{:else}
-		<h4>Failure check</h4>
-	{/if}
-
+	<div>
+		{#if result}
+			<h4>Click to continue...</h4>
+		{:else}
+			<h4>Failure check</h4>
+		{/if}
+		<FailureMeter />
+	</div>
 
 	<DiceRoller bind:this={diceRoller} bind:rolling on:click={doCheck} on:keyup={doCheck} />
 </div>
@@ -33,7 +36,6 @@
 		width: 100%;
 		height: 100%;
 		display: grid;
-		justify-content: center;
 		text-align: center;
 	}
 </style>

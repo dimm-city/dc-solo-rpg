@@ -1,6 +1,6 @@
 <script>
-	import { recordRound, gameStore, nextScreen, restartGame, exitGame } from './WAAStore.js';
-
+	import { recordRound, gameStore, currentEvents, nextScreen, restartGame, exitGame } from './WAAStore.js';
+	
 	let saved = false;
 	let journalText = '';
 	function save() {
@@ -17,6 +17,10 @@
 <div class="dc-journal-container">
 	<div class="journal-header-area">
 		<h4>Record your journal entry</h4>
+		<h5>Summary of events</h5>
+		{#each $currentEvents as event (event)}
+		   <p>{event.description}</p>
+		{/each}		
 	</div>
 	<div class="text-entry-area">
 		<textarea bind:value={journalText} rows="5" />

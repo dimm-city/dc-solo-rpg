@@ -38,9 +38,10 @@
 
 <style>
 	.dc-roll-tasks-container {
+		width: 100%;
 		height: 100%;
 		display: grid;
-		flex-direction: column;
 		text-align: center;
+		grid-template-rows: min-content 1fr;
 	}
 </style>

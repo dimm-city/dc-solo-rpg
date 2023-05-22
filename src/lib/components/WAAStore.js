@@ -4,7 +4,7 @@
 // the play must click to draw cards and roll dice. instead of using
 // the block tower, implement a new mechanic that is statistically similiar
 // but uses six or 20 sided dice
-import { writable, get } from 'svelte/store';
+import { writable, get, derived } from 'svelte/store';
 import { StateMachine, transitions } from './WAAStateMachine.js';
 
 // Define the initial state of the game
@@ -32,10 +32,6 @@ const initialState = {
 };
 const stateMachine = new StateMachine('loadGame', transitions);
 
-async function rollDice(max = 6) {
-	return Math.floor(Math.random() * max) + 1;
-}
-
 function shuffle(array) {
 	let currentIndex = array.length,
 		temporaryValue,
@@ -58,6 +54,10 @@ function shuffle(array) {
 
 export let gameConfig = {};
 export const gameStore = writable({ ...initialState });
+export const currentEvents = derived([gameStore], ([$gameStore]) =>{
+	console.log('currentEvents');
+	return $gameStore.log.filter(l => l.round == $gameStore.round);
+});
 
 export const currentScreen = writable('loadGame');
 
@@ -158,7 +158,7 @@ export const drawCard = () => {
 		state.cardsToDraw -= 1;
 
 		// Add the card to the log
-		card.round = state.currentRound;
+		card.round = state.round;
 		state.log.push(card);
 
 		// Check if the card is a King
