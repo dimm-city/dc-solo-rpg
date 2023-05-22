@@ -10,7 +10,9 @@
 	export let games = [];
 	export let selectedGame = null;
 </script>
-
+<!-- <svelte:head>
+<script src="/assets/dice-box.es.js" type="module"></script>
+</svelte:head> -->
 <Shell title={gameConfig?.title ?? 'Please select a game'}>
 	{#if $currentScreen == 'loadGame' || $currentScreen == 'options'}
 		<div in:fade>

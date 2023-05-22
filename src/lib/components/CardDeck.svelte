@@ -71,6 +71,7 @@
 
 	.card-front {
         text-align: center;
+		padding: 0.25rem;
         background: var(--dc-card-front-bg);		
 		transform: rotateY(180deg);
 	}

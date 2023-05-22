@@ -1,5 +1,5 @@
 <script>
-	import DiceRoller from './DiceRoller.svelte';
+	import DiceRoller from './3DiceRoller.svelte';
 
 	import { confirmTaskRoll, rollForTasks } from './WAAStore.js';
 
@@ -8,8 +8,8 @@
 	let rolling = false;
 	async function rollTaskDice() {
 		if (rolling) return;
-		const result = await rollForTasks();
-		await taskDice.roll(result);
+		const result = await taskDice.roll();
+		await rollForTasks(result);
 		rolled = true;
 	}
 	function confirm() {

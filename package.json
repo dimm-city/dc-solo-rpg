@@ -50,6 +50,7 @@
 	"types": "./dist/index.d.ts",
 	"type": "module",
 	"dependencies": {
+		"@3d-dice/dice-box": "^1.0.8",
 		"waajs": "github:itlackey/waajs"
 	}
 }

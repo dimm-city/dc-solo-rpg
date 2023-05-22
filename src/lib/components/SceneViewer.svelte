@@ -1,18 +1,9 @@
 <script>
 	import SuccessCheck from './SuccessCheck.svelte';
-
 	import RollForTasks from './RollForTasks.svelte';
-
 	import DrawCard from './DrawCard.svelte';
-
 	import Tower from './Tower.svelte';
-
-	import TaskViewer from './TaskViewer.svelte';
-	import StoryViewer from './StoryViewer.svelte';
 	import GameOver from './GameOver.svelte';
-
-	import DiceRoller from './DiceRoller.svelte';
-
 	import StatusDisplay from './StatusDisplay.svelte';
 	import JournalEntry from './JournalEntry.svelte';
 	import { currentScreen, gameStore, nextScreen } from './WAAStore.js';
@@ -62,7 +53,7 @@
 				<GameOver />
 			</div>
 		{:else}
-			<TaskViewer />
+			<div>error</div>
 		{/if}
 	</div>
 	<div class="journal-entry-area">

@@ -120,9 +120,9 @@ export const startRound = () => {
 	});
 };
 
-export const rollForTasks = async () => {
+export const rollForTasks = async (result) => {
 	//Roll dice
-	let result = await rollDice();
+	//let result = await rollDice();
 	gameStore.update((state) => {
 		state.cardsToDraw = result;
 		//Go to draw cards
@@ -201,18 +201,18 @@ export const confirmCard = () => {
 	nextScreen();
 };
 
-export const pullFromTower = async () => {
+export const pullFromTower = async (result) => {
 	// Roll a die
-	let roll = await rollDice();
+	//let roll = await rollDice();
 
 	//Very short game: roll = 20;
 
 	gameStore.update((state) => {
 		if (state.gameOver) throw new Error('The game is over, stop playing with the tower!');
-		state.diceRoll = roll;
+		state.diceRoll = result;
 
 		// Calculate the number of blocks to remove
-		const blocksToRemove = Math.max(roll - state.bonus, 0);
+		const blocksToRemove = Math.max(result - state.bonus, 0);
 
 		// Decrease the number of blocks in the tower
 		state.tower -= blocksToRemove;
@@ -234,7 +234,7 @@ export const pullFromTower = async () => {
 		return state;
 	});
 	//nextScreen();
-	return roll;
+	return result;
 };
 
 export const confirmTowerPull = () => {
@@ -259,9 +259,9 @@ export const recordRound = (journalEntry) => {
 	});
 };
 
-export const successCheck = async () => {
+export const successCheck = async (roll) => {
 	// Roll a die
-	const roll = await rollDice();
+	//const roll = await rollDice();
 	console.log('success roll', roll);
 	gameStore.update((state) => {
 		//ToDo use random.org

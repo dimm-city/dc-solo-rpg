@@ -1,22 +1,21 @@
 <script>
-	import DiceRoller from './DiceRoller.svelte';
+	import DiceRoller from './3DiceRoller.svelte';
 	import { gameStore, startRound, successCheck } from './WAAStore.js';
 	let diceRoller;
 	let rolling = false;
 
 	async function doCheck() {
 		if (rolling) return;
-		if ($gameStore.state == 'successCheck') {
-			const result = await successCheck();
-			await diceRoller.roll(result);
+		if ($gameStore.state == 'successCheck') {			
+			const result = await diceRoller.roll();
+			await successCheck(result);
 		} else {
 			startRound();
 		}
 	}
 </script>
 
-<div class="dc-success-check-container">
-	
+<div class="dc-success-check-container">	
 	{#if $gameStore.state == 'successCheck'}
 		<h4>Roll for Success</h4>
 	{:else}
