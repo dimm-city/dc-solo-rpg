@@ -26,7 +26,7 @@
 		white-space: nowrap;
 	}
 	.status-display-container {
-		margin-inline: 0.25rem;
+	
 		text-align: center;
 		display: grid;
 	

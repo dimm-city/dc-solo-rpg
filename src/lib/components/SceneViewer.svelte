@@ -14,11 +14,7 @@
 	<div class="toolbar-area">
 		<Toolbar />
 	</div>
-	<div class="status-display-area">
-		{#if $currentScreen != 'rollForTasks' && $currentScreen != 'pullFromTower' && $currentScreen != 'successCheck'}
-		<StatusDisplay />
-		{/if}
-	</div>
+
 	<div class="main-screen-area">
 		{#if $currentScreen == 'startRound'}
 			<div class="dc-fade-in">
@@ -58,9 +54,14 @@
 			<div>error</div>
 		{/if}
 	</div>
-	<div class="journal-entry-area">
-		<!-- <button on:click={() => nextScreen()}>next</button> -->
-	</div>
+		<div class="status-display-area">
+		{#if $currentScreen != 'rollForTasks' && $currentScreen != 'pullFromTower' && $currentScreen != 'successCheck'}
+			<StatusDisplay />
+	{/if}
+		</div>
+	<!-- <div class="journal-entry-area">
+		<button on:click={() => nextScreen()}>next</button>
+	</div> -->
 </div>
 
 <!-- <div class="button-bar">
@@ -74,21 +75,20 @@
 		width: 100%;
 		height: 100svh;
 		max-height: 100svh;
-		grid-template-columns: auto min-content;
-		grid-template-rows: min-content 1fr min-content;
+		grid-template-columns: auto minmax(0,min-content);
+		grid-template-rows: min-content 1fr;
 		row-gap: 1rem;
 		column-gap: 0.5rem;
 		grid-auto-flow: row;
 		grid-template-areas:
 			'toolbar-area toolbar-area'
-			'main-screen-area status-display-area'
-			'journal-entry-area journal-entry-area';
+			'main-screen-area status-display-area';
 	}
 
-	.journal-entry-area {
+	/* .journal-entry-area {
 		grid-area: journal-entry-area;
 		padding-inline: 0.25rem;
-	}
+	} */
 
 	.toolbar-area {
 		grid-area: toolbar-area;

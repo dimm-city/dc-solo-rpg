@@ -22,8 +22,6 @@
 		else rollTaskDice();
 	}
 </script>
-
-<div class="dc-roll-tasks-container">
 	{#if rolled}
 		<!-- <button on:click={confirm} disabled={rolling}>continue</button> -->
 
@@ -32,6 +30,8 @@
 		<h4>Roll for tasks</h4>
 		<!-- <button on:click={rollTaskDice} disabled={rolling}>roll</button> -->
 	{/if}
+<div class="dc-roll-tasks-container">
+
 
 	<DiceRoller bind:this={taskDice} bind:rolling on:click={action} on:keyup={action} />
 </div>
@@ -42,6 +42,5 @@
 		height: 100%;
 		display: grid;
 		text-align: center;
-		grid-template-rows: min-content 1fr;
 	}
 </style>
