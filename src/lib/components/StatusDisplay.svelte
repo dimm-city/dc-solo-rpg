@@ -3,6 +3,7 @@
 	import { gameStore } from './WAAStore.js';
 	import FailureMeter from './FailureMeter.svelte';
 	import SuccessCounter from './SuccessCounter.svelte';
+	import HealthMeter from './HealthMeter.svelte';
 </script>
 
 <div class="status-display-container">
@@ -11,7 +12,8 @@
 		<!-- <h5>Cards Remaining: {$gameStore.cardsToDraw}</h5> -->
 	</div>
 	<div class="failure-container">
-		<FailureMeter />		
+		<!-- <FailureMeter /> -->
+		<HealthMeter  />		
 		<FailureCounter />
 	</div>
 	<div>

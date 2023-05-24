@@ -7,7 +7,7 @@
 
 	async function doCheck() {
 		if (rolling) return;
-		if ($gameStore.state == 'successCheck') {			
+		if ($gameStore.state == 'successCheck') {
 			const result = await diceRoller.roll();
 			await successCheck(result);
 		} else {
@@ -17,25 +17,27 @@
 </script>
 
 <div class="dc-success-check-container">
-	<div class="dc-success-check-header">
-	{#if $gameStore.state == 'successCheck'}
-		<h4>Roll for Success</h4>
-	{:else}
-		<h4>Click to continue...</h4>
-	{/if}
-		<SuccessCounter />
-	</div>
-	<DiceRoller bind:this={diceRoller} bind:rolling on:click={doCheck} on:keyup={doCheck} />
+	<DiceRoller bind:this={diceRoller} bind:rolling on:click={doCheck} on:keyup={doCheck}>
+		<div class="dc-success-check-header dc-header-container">
+			{#if $gameStore.state == 'successCheck'}
+				<h4>Roll for Success</h4>
+			{:else}
+				<h4>Click to continue...</h4>
+			{/if}
+			<SuccessCounter />
+		</div>
+	</DiceRoller>
 </div>
 
 <style>
-	.dc-success-check-container{
+	.dc-success-check-container {
 		height: 100%;
 		width: 100%;
 		display: grid;
 		text-align: center;
 	}
 	.dc-success-check-header {
+		justify-self: center;
 		--dc-success-counter-grid-flow: column;
 	}
 </style>

@@ -1,7 +1,8 @@
 <script>
+	import HealthMeter from './HealthMeter.svelte';
 	import FailureMeter from './FailureMeter.svelte';
 	import DiceRoller from './3DiceRoller.svelte';
-	import { gameStore, nextScreen, pullFromTower, confirmTowerPull } from './WAAStore.js';
+	import { gameStore, pullFromTower, confirmTowerPull } from './WAAStore.js';
 
 	let diceRoller;
 	let rolling;
@@ -19,16 +20,18 @@
 </script>
 
 <div class="dc-tower-container">
-	<div>
-		{#if result}
-			<h4>Click to continue...</h4>
-		{:else}
-			<h4>Failure check</h4>
-		{/if}
-		<FailureMeter />
-	</div>
-
-	<DiceRoller bind:this={diceRoller} bind:rolling on:click={doCheck} on:keyup={doCheck} />
+	<DiceRoller bind:this={diceRoller} bind:rolling on:click={doCheck} on:keyup={doCheck}>
+		<div class="dc-dice-header dc-header-container">
+			{#if result}
+				<h4>Click to continue...</h4>
+			{:else}
+				<h4>Failure check</h4>
+			{/if}
+			<div class="health-meter">
+				<HealthMeter />
+			</div>
+		</div>
+	</DiceRoller>
 </div>
 
 <style>
@@ -37,5 +40,13 @@
 		height: 100%;
 		display: grid;
 		text-align: center;
+	}
+	.dc-dice-header{
+		margin-top: 5rem;
+	}
+	.dc-dice-header > .health-meter {
+		position: absolute;
+		right: 3rem;
+		height: 5rem;
 	}
 </style>

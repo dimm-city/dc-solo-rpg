@@ -3,11 +3,29 @@
 	--dc-toolbar-height: 3rem;
 	--dc-header-block-margin: 0.25rem;
 
-    --dc-card-border: 1px solid #000000;
-    --dc-card-border-radius: 3svw;
-	--dc-card-back-bg:  #1387b9;
+	--dc-dice-roller-bg: #cccfd1;
+	--dc-card-border: 1px solid #000000;
+	--dc-card-border-radius: 3svw;
+	--dc-card-back-bg: #1387b9;
 	--dc-card-front-bg: rgb(235, 235, 235);
 }
 h4 {
 	margin: 0;
+}
+
+#dc-dice-canvas {
+	border-radius: 3rem;
+}
+
+.dc-health-meter-bg1 {
+	fill: var(--dc-accent-color);
+}
+
+/*utils*/
+.dc-header-container {
+	margin-top: 1rem;
+	background-color: rgba(245, 245, 245, 0.486);
+	border-radius: 3rem;
+	width: 80%;
+	justify-self: center;
 }
