@@ -24,7 +24,7 @@
 			{:else}
 				<h4>Click to continue...</h4>
 			{/if}
-			<SuccessCounter />
+			<!-- <SuccessCounter /> -->
 		</div>
 	</DiceRoller>
 </div>

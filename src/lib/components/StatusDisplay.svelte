@@ -6,7 +6,7 @@
 	import HealthMeter from './HealthMeter.svelte';
 </script>
 
-<div class="status-display-container">
+<div class="status-display-container dc-fade-in">
 	<div>
 		<h4>Round: {$gameStore?.round}</h4>
 	</div>
@@ -28,6 +28,7 @@
 		text-align: center;
 		display: grid;
 		row-gap: 2rem;
+		max-width: 7rem;
 	}
 	.failure-container {
 		display: grid;

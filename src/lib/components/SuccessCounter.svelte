@@ -25,21 +25,25 @@
 		margin-block: var(--dc-header-block-margin);
 	}
 	.token {
-		width: 2rem;
-		height: 2rem;
+		
 		stroke: var(--dc-accent-color);
 		stroke-width: 3;
 		fill: transparent;
-		transition: fill 0.3s ease;
+		transition: all 0.3s ease;
+		max-width: 2rem;
 	}
 
 	.filled {
-		fill: var(--dc-accent-color);
-		transition: fill 0.3s ease-in-out;
+		fill: var(--dc-accent-color);		
+		stroke: black;
+		transition: all 0.3s ease-in-out;
 	}
 
 	.grid {
-		display: grid;
+		display: flex;
+		flex-flow: column;
+		flex-wrap: wrap;
+		max-height: 13rem;
 		grid-auto-flow: var(--dc-success-counter-grid-flow);
 		/*grid-template-columns: repeat(1, min-content);
 		 grid-template-rows: repeat(10, 1fr); */

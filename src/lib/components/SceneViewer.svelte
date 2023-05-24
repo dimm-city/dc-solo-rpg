@@ -11,10 +11,15 @@
 </script>
 
 <div class="profile-container">
+	{#if $currentScreen != 'log' && $currentScreen != 'finalLog'}
+	<div class="status-display-area">		
+		<StatusDisplay />
+	</div>
+	{/if}
 	<div class="toolbar-area">
 		<Toolbar />
 	</div>
-	<div class="main-screen-area">
+	<div class="main-screen-area dc-table-bg">
 		{#if $currentScreen == 'startRound'}
 			<div class="dc-fade-in">
 				<h4>Round {$gameStore.round}</h4>
@@ -27,9 +32,7 @@
 				<DrawCard />
 			</div>
 		{:else if $currentScreen == 'pullFromTower'}
-			<div class="dc-fade-in">
-				<Tower />
-			</div>
+			<Tower />
 		{:else if $currentScreen == 'endTurn'}
 			<div class="dc-fade-in">
 				<h4>Turn Over</h4>
@@ -42,7 +45,7 @@
 		{:else if $currentScreen == 'successCheck'}
 			<SuccessCheck />
 		{:else if $currentScreen == 'finalLog'}
-			<div class="dc-fade-in">
+			<div class="dc-fade-in padding">
 				<JournalEntry />
 			</div>
 		{:else if $currentScreen == 'gameOver'}
@@ -53,14 +56,17 @@
 			<div>error</div>
 		{/if}
 	</div>
-	{#if $currentScreen != 'rollForTasks' && $currentScreen != 'pullFromTower' && $currentScreen != 'successCheck'}
+	<!-- {#if $currentScreen != 'rollForTasks' && $currentScreen != 'pullFromTower' && $currentScreen != 'successCheck'}
 		<div class="status-display-area">
 			<StatusDisplay />
 		</div>
-	{/if}
+	{/if} -->
 </div>
 
 <style>
+	.padding{
+		padding: 1rem;
+	}
 	.profile-container {
 		display: grid;
 		width: 100%;
@@ -69,8 +75,8 @@
 		row-gap: 1rem;
 		grid-auto-flow: row;
 		grid-template-areas:
-			'toolbar-area toolbar-area'
-			'main-screen-area main-screen-area';
+			'toolbar-area'
+			'main-screen-area';
 	}
 
 	/* .journal-entry-area {
@@ -84,13 +90,13 @@
 
 	.main-screen-area {
 		grid-area: main-screen-area;
-		overflow-y: auto;
+		/* overflow-y: auto;
 		display: flex;
 		height: 100%;
 		width: 100%;
 		flex-direction: column;
 		align-items: center;
-		justify-content: center;
+		justify-content: center; */
 	}
 
 	.main-screen-area > div {
@@ -99,8 +105,13 @@
 	}
 
 	.status-display-area {
-		display: none;
-		grid-area: status-display-area;
+		/* display: none;
+		grid-area: status-display-area; */
+		position: absolute;
+		display: grid;
+		width: min-content;
+		right: 1.5rem;
+		top: 5rem;
 	}
 
 	/* .button-bar {
@@ -114,18 +125,17 @@
 		padding-block: 0.5rem;
 	} */
 
-	@media (min-width: 1024px) {
-		.profile-container {
+	@media (max-width: 350px) {
+		/* .profile-container {
 			grid-template-columns: auto minmax(0, min-content);
 			grid-template-rows: min-content 1fr;
 			column-gap: 0.5rem;
 			grid-template-areas:
 				'toolbar-area toolbar-area'
 				'main-screen-area status-display-area';
-		}
+		} */
 		.status-display-area {
-			display: block;
-			padding-inline: 0.5rem;
+			display: none;
 		}
 	}
 </style>

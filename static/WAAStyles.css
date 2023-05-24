@@ -5,7 +5,7 @@
 
 	--dc-dice-roller-bg: #cccfd1;
 	--dc-card-border: 1px solid #000000;
-	--dc-card-border-radius: 3svw;
+	--dc-card-border-radius: 1rem;
 	--dc-card-back-bg: #1387b9;
 	--dc-card-front-bg: rgb(235, 235, 235);
 }
@@ -17,8 +17,13 @@ h4 {
 	border-radius: 3rem;
 }
 
-.dc-health-meter-bg1 {
-	fill: var(--dc-accent-color);
+.dc-table-bg {
+	display: grid;
+	height: 99%;
+	width: 100%;
+	border-radius: 3rem;
+	box-sizing: border-box;
+	background: var(--dc-dice-roller-bg);
 }
 
 /*utils*/
@@ -30,16 +35,15 @@ h4 {
 	justify-self: center;
 }
 
-
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
 }
 
 .dc-fade-in {
-  animation: fadeIn 2s;
+	animation: fadeIn 2s;
 }

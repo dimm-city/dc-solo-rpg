@@ -5,6 +5,7 @@
 	import Shell from './Shell.svelte';
 	import StartScreen from './StartScreen.svelte';
 	import { fade } from 'svelte/transition';
+	import JournalEntry from './JournalEntry.svelte';
 	export let players = [];
 	export let selectedPlayer = null;
 	export let games = [];
@@ -22,6 +23,10 @@
 		<div in:fade>
 			<IntroScreen />
 		</div>
+	<!-- {:else if $currentScreen == 'log' || $currentScreen == 'finalLog'}
+		<div in:fade>
+			<JournalEntry />
+		</div> -->
 	{:else}
 			<SceneViewer />
 	{/if}

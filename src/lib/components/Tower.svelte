@@ -26,9 +26,9 @@
 			{:else}
 				<h4>Failure check</h4>
 			{/if}
-			<div class="health-meter">
+			<!-- <div class="health-meter">
 				<HealthMeter />
-			</div>
+			</div> -->
 		</div>
 	</DiceRoller>
 </div>
@@ -41,11 +41,12 @@
 		text-align: center;
 	}
 	.dc-dice-header{
-		margin-top: 5rem;
+		margin-top: 0.5rem;
 	}
-	.dc-dice-header > .health-meter {
+	/* .dc-dice-header > .health-meter {
+		display: none;
 		position: absolute;
 		right: 3rem;
 		height: 5rem;
-	}
+	} */
 </style>
