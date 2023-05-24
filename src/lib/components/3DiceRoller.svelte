@@ -61,7 +61,7 @@
 		height: 99%;
 		width: 100%;
 		box-sizing: border-box;
-		background: var(--dc-dice-roller-bg);
+		/* background: var(--dc-dice-roller-bg); */
 	}
 	.dc-dice-roller-header {
 		position: absolute;

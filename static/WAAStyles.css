@@ -13,9 +13,9 @@ h4 {
 	margin: 0;
 }
 
-#dc-dice-canvas {
+/* #dc-dice-canvas {
 	border-radius: 3rem;
-}
+} */
 
 .dc-table-bg {
 	display: grid;
@@ -24,6 +24,12 @@ h4 {
 	border-radius: 3rem;
 	box-sizing: border-box;
 	background: var(--dc-dice-roller-bg);
+
+	/* background: rgb(19,135,185);
+background: radial-gradient(circle, rgba(19,135,185,1) 0%, rgba(29,63,78,1) 71%, rgba(136,136,136,1) 100%); */
+}
+.dc-health-meter-stroke {
+	stroke: rgba(0, 0, 0, 0.801);
 }
 
 /*utils*/

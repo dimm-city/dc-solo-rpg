@@ -11,7 +11,7 @@
 
 <div class="health-meter">
 	<svg width="100%" height="100%" viewBox="0 0 100 100">
-		<polygon points="50 1 95 25 95 75 50 99 5 75 5 25" fill={color}/>
+		<polygon points="50 1 95 25 95 75 50 99 5 75 5 25" fill={color} class="dc-health-meter-stroke"/>
 		<mask id="health-mask">
 			<rect
 				class="mask-rect"
@@ -29,6 +29,7 @@
 </div>
 
 <style>
+	
 	.mask-rect {
 		transition: height 1s linear;
 	}
