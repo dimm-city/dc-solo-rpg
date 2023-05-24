@@ -1,6 +1,5 @@
 <script>
 	import HealthMeter from './HealthMeter.svelte';
-	import FailureMeter from './FailureMeter.svelte';
 	import DiceRoller from './3DiceRoller.svelte';
 	import { gameStore, pullFromTower, confirmTowerPull } from './WAAStore.js';
 

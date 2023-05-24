@@ -29,3 +29,17 @@ h4 {
 	width: 80%;
 	justify-self: center;
 }
+
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.dc-fade-in {
+  animation: fadeIn 2s;
+}

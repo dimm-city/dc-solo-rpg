@@ -14,7 +14,6 @@
 	<div class="toolbar-area">
 		<Toolbar />
 	</div>
-
 	<div class="main-screen-area">
 		{#if $currentScreen == 'startRound'}
 			<div class="dc-fade-in">
@@ -54,35 +53,24 @@
 			<div>error</div>
 		{/if}
 	</div>
+	{#if $currentScreen != 'rollForTasks' && $currentScreen != 'pullFromTower' && $currentScreen != 'successCheck'}
 		<div class="status-display-area">
-		{#if $currentScreen != 'rollForTasks' && $currentScreen != 'pullFromTower' && $currentScreen != 'successCheck'}
 			<StatusDisplay />
-	{/if}
 		</div>
-	<!-- <div class="journal-entry-area">
-		<button on:click={() => nextScreen()}>next</button>
-	</div> -->
+	{/if}
 </div>
-
-<!-- <div class="button-bar">
-	<button on:click={() => exitGame()}>run away!</button>
-	<button on:click={() => nextScreen('startRound')}>start your adventure</button>
-</div> -->
 
 <style>
 	.profile-container {
 		display: grid;
 		width: 100%;
-		height: 100svh;
-		max-height: 100svh;
-		grid-template-columns: auto minmax(0,min-content);
+		height: 100%;
 		grid-template-rows: min-content 1fr;
 		row-gap: 1rem;
-		column-gap: 0.5rem;
 		grid-auto-flow: row;
 		grid-template-areas:
 			'toolbar-area toolbar-area'
-			'main-screen-area status-display-area';
+			'main-screen-area main-screen-area';
 	}
 
 	/* .journal-entry-area {
@@ -96,9 +84,7 @@
 
 	.main-screen-area {
 		grid-area: main-screen-area;
-		padding-inline: 0.25rem;
 		overflow-y: auto;
-
 		display: flex;
 		height: 100%;
 		width: 100%;
@@ -113,6 +99,7 @@
 	}
 
 	.status-display-area {
+		display: none;
 		grid-area: status-display-area;
 	}
 
@@ -126,4 +113,19 @@
 		background-color: #363636c4;
 		padding-block: 0.5rem;
 	} */
+
+	@media (min-width: 1024px) {
+		.profile-container {
+			grid-template-columns: auto minmax(0, min-content);
+			grid-template-rows: min-content 1fr;
+			column-gap: 0.5rem;
+			grid-template-areas:
+				'toolbar-area toolbar-area'
+				'main-screen-area status-display-area';
+		}
+		.status-display-area {
+			display: block;
+			padding-inline: 0.5rem;
+		}
+	}
 </style>
