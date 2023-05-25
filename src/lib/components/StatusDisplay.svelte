@@ -1,7 +1,6 @@
 <script>
 	import FailureCounter from './FailureCounter.svelte';
 	import { gameStore } from './WAAStore.js';
-	import FailureMeter from './FailureMeter.svelte';
 	import SuccessCounter from './SuccessCounter.svelte';
 	import HealthMeter from './HealthMeter.svelte';
 </script>
@@ -29,6 +28,12 @@
 		display: grid;
 		row-gap: 2rem;
 		max-width: 7rem;
+		box-shadow: var(--dc-default-box-shadow); 
+		background-color: var(--dc-default-container-bg);
+		border-radius: var(--dc-default-border-radius);
+		padding: var(--dc-status-display-padding);
+		z-index: 3;
+		pointer-events: none;
 	}
 	.failure-container {
 		display: grid;

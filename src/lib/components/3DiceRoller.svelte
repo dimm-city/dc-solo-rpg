@@ -43,7 +43,7 @@
 	on:keyup
 >
 	<canvas bind:this={canvas} id="dc-dice-canvas" />
-	<div class="dc-dice-roller-header">
+	<div class="dc-dice-roller-header dc-header">
 		<slot />
 	</div>
 </div>
@@ -61,11 +61,11 @@
 		height: 99%;
 		width: 100%;
 		box-sizing: border-box;
-		/* background: var(--dc-dice-roller-bg); */
 	}
-	.dc-dice-roller-header {
+	/* .dc-dice-roller-header {
 		position: absolute;
 		display: grid;
-		width: 100%;
-	}
+		width: min(65ch, 100% - 1rem);
+		justify-self: center;
+	} */
 </style>

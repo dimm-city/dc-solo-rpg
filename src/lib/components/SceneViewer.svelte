@@ -12,9 +12,9 @@
 
 <div class="profile-container">
 	{#if $currentScreen != 'log' && $currentScreen != 'finalLog'}
-	<div class="status-display-area">		
-		<StatusDisplay />
-	</div>
+		<div class="status-display-area">
+			<StatusDisplay />
+		</div>
 	{/if}
 	<div class="toolbar-area">
 		<Toolbar />
@@ -26,7 +26,9 @@
 				<button on:click={() => nextScreen('rollForTasks')}>Roll for tasks</button>
 			</div>
 		{:else if $currentScreen == 'rollForTasks'}
-			<RollForTasks />
+			<div class="dc-fade-in">
+				<RollForTasks />
+			</div>
 		{:else if $currentScreen == 'drawCard'}
 			<div class="dc-fade-in">
 				<DrawCard />
@@ -43,9 +45,11 @@
 				<JournalEntry />
 			</div>
 		{:else if $currentScreen == 'successCheck'}
-			<SuccessCheck />
+			<div class="dc-fade-in">
+				<SuccessCheck />
+			</div>
 		{:else if $currentScreen == 'finalLog'}
-			<div class="dc-fade-in padding">
+			<div class="dc-fade-in">
 				<JournalEntry />
 			</div>
 		{:else if $currentScreen == 'gameOver'}
@@ -56,33 +60,21 @@
 			<div>error</div>
 		{/if}
 	</div>
-	<!-- {#if $currentScreen != 'rollForTasks' && $currentScreen != 'pullFromTower' && $currentScreen != 'successCheck'}
-		<div class="status-display-area">
-			<StatusDisplay />
-		</div>
-	{/if} -->
 </div>
 
 <style>
-	.padding{
+	.padding {
 		padding: 1rem;
 	}
 	.profile-container {
 		display: grid;
-		width: 100%;
 		height: 100%;
 		grid-template-rows: min-content 1fr;
 		row-gap: 1rem;
-		grid-auto-flow: row;
 		grid-template-areas:
 			'toolbar-area'
 			'main-screen-area';
 	}
-
-	/* .journal-entry-area {
-		grid-area: journal-entry-area;
-		padding-inline: 0.25rem;
-	} */
 
 	.toolbar-area {
 		grid-area: toolbar-area;
@@ -90,13 +82,8 @@
 
 	.main-screen-area {
 		grid-area: main-screen-area;
-		/* overflow-y: auto;
-		display: flex;
-		height: 100%;
-		width: 100%;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center; */
+		width: calc(100% - var(--dc-default-padding));
+		margin-inline: auto;
 	}
 
 	.main-screen-area > div {
@@ -105,35 +92,21 @@
 	}
 
 	.status-display-area {
-		/* display: none;
-		grid-area: status-display-area; */
 		position: absolute;
-		display: grid;
 		width: min-content;
 		right: 1.5rem;
-		top: 5rem;
+		top: 7rem;
+		z-index: 3;
+		opacity: 0.9;
 	}
 
-	/* .button-bar {
-		position: sticky;
-		height: min-content;
-		top: 100svh;
-		width: 100%;
-		display: flex;
-		justify-content: center;
-		background-color: #363636c4;
-		padding-block: 0.5rem;
-	} */
-
+	@media (max-width: 768px) {
+		.status-display-area {
+			top: 3rem;
+			right: 0.5rem;
+		}
+	}
 	@media (max-width: 350px) {
-		/* .profile-container {
-			grid-template-columns: auto minmax(0, min-content);
-			grid-template-rows: min-content 1fr;
-			column-gap: 0.5rem;
-			grid-template-areas:
-				'toolbar-area toolbar-area'
-				'main-screen-area status-display-area';
-		} */
 		.status-display-area {
 			display: none;
 		}

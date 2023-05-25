@@ -20,7 +20,7 @@
 
 <div class="dc-tower-container">
 	<DiceRoller bind:this={diceRoller} bind:rolling on:click={doCheck} on:keyup={doCheck}>
-		<div class="dc-dice-header dc-header-container">
+		<div class="dc-header dc-tower-header">
 			{#if result}
 				<h4>Click to continue...</h4>
 			{:else}
@@ -40,10 +40,10 @@
 		display: grid;
 		text-align: center;
 	}
-	.dc-dice-header{
+	/*.dc-dice-header{
 		margin-top: 0.5rem;
 	}
-	/* .dc-dice-header > .health-meter {
+	 .dc-dice-header > .health-meter {
 		display: none;
 		position: absolute;
 		right: 3rem;

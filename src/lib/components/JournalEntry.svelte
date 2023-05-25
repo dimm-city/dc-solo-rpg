@@ -1,6 +1,13 @@
 <script>
-	import { recordRound, gameStore, currentEvents, nextScreen, restartGame, exitGame } from './WAAStore.js';
-	
+	import {
+		recordRound,
+		gameStore,
+		currentEvents,
+		nextScreen,
+		restartGame,
+		exitGame
+	} from './WAAStore.js';
+
 	let saved = false;
 	let journalText = '';
 	function save() {
@@ -18,9 +25,10 @@
 	<div class="journal-header-area">
 		<h4>Record your journal entry</h4>
 		<h5>Summary of events</h5>
+		<div />
 		{#each $currentEvents as event (event)}
-		   <p>{event.description}</p>
-		{/each}		
+			<p>{event.description}</p>
+		{/each}
 	</div>
 	<div class="text-entry-area">
 		<textarea bind:value={journalText} rows="5" />
@@ -42,9 +50,10 @@
 <style>
 	.dc-journal-container {
 		display: grid;
-		margin: 3rem;
+		height: calc(100% - var(--dc-default-padding));
+		margin-inline: var(--dc-default-padding);
 		grid-template-columns: 1fr;
-		grid-template-rows: min-content 1fr min-content;
+		grid-template-rows: 3fr 1fr min-content;
 		row-gap: 0.5rem;
 		grid-auto-flow: row;
 		grid-template-areas:
@@ -53,36 +62,23 @@
 			'journal-tools-center-area';
 	}
 
-	.journal-header-area{
+	.journal-header-area {
 		grid-area: header-area;
+		margin-top: var(--dc-default-padding);
+		overflow-y: auto;
 	}
 
 	.text-entry-area {
 		grid-area: text-entry-area;
 		display: flex;
-		
 	}
 	textarea,
-	button {		
+	button {
 		width: 100%;
+		height: min(5rem, min-content);
 		box-sizing: border-box;
-	}
-
-	/* textarea{
-		display: flex;
-		flex:1;
 		resize: none;
-
-	} */
-	/* .journal-tools-right-area {
-		grid-area: journal-tools-right-area;
-		display: flex;
-		justify-content: flex-end;
 	}
-
-	.journal-tools-left-area {
-		grid-area: journal-tools-left-area;
-	} */
 
 	.journal-tools-center-area {
 		grid-area: journal-tools-center-area;

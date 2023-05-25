@@ -1,4 +1,9 @@
 :root {
+	--dc-default-border-radius: 1rem;
+	--dc-default-padding: 1rem;
+	--dc-default-boxshadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+	--dc-default-container-bg: rgba(255, 255, 255, 0.3);
+
 	--dc-accent-color: rgb(58, 159, 199);
 	--dc-toolbar-height: 3rem;
 	--dc-header-block-margin: 0.25rem;
@@ -8,6 +13,8 @@
 	--dc-card-border-radius: 1rem;
 	--dc-card-back-bg: #1387b9;
 	--dc-card-front-bg: rgb(235, 235, 235);
+
+	--dc-status-display-padding: var(--dc-default-padding);
 }
 h4 {
 	margin: 0;
@@ -33,12 +40,14 @@ background: radial-gradient(circle, rgba(19,135,185,1) 0%, rgba(29,63,78,1) 71%,
 }
 
 /*utils*/
-.dc-header-container {
-	margin-top: 1rem;
-	background-color: rgba(245, 245, 245, 0.486);
-	border-radius: 3rem;
-	width: 80%;
-	justify-self: center;
+.dc-header {
+	position: absolute;
+	display: grid;
+	justify-self: center;	
+	width: calc(100% - var(--dc-default-padding));
+	border-radius: var(--dc-default-border-radius);
+	box-shadow: var(--dc-default-box-shadow);
+	background-color: var(--dc-default-container-bg);
 }
 
 @keyframes fadeIn {

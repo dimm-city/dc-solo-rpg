@@ -1,5 +1,4 @@
 <script>
-	import SuccessCounter from './SuccessCounter.svelte';
 	import DiceRoller from './3DiceRoller.svelte';
 	import { gameStore, startRound, successCheck } from './WAAStore.js';
 	let diceRoller;
@@ -18,13 +17,12 @@
 
 <div class="dc-success-check-container">
 	<DiceRoller bind:this={diceRoller} bind:rolling on:click={doCheck} on:keyup={doCheck}>
-		<div class="dc-success-check-header dc-header-container">
+		<div class="dc-header">
 			{#if $gameStore.state == 'successCheck'}
 				<h4>Roll for Success</h4>
 			{:else}
 				<h4>Click to continue...</h4>
 			{/if}
-			<!-- <SuccessCounter /> -->
 		</div>
 	</DiceRoller>
 </div>
@@ -36,8 +34,5 @@
 		display: grid;
 		text-align: center;
 	}
-	.dc-success-check-header {
-		justify-self: center;
-		--dc-success-counter-grid-flow: column;
-	}
+	
 </style>

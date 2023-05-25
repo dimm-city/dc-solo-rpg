@@ -1,47 +1,57 @@
 <script>
-	import { flip } from 'svelte/animate';
-
 	import { createEventDispatcher, onMount } from 'svelte';
 
 	export let card = null;
 	let isFlipped = false;
+	let isCleared = false;
 	const dispatch = createEventDispatcher();
 
-    onMount(()=> isFlipped = false);
+	onMount(() => {
+		isFlipped = false;
+		isCleared = false;
+	});
 
-    export const reset = ()=> isFlipped = !isFlipped;
-	export const  drawCard = (newCard) => {
-        card = newCard;
-        console.log('drawing card');
+	export const reset = () => {
+		isCleared = true;
+		isFlipped = !isFlipped;
+	};
+	export const drawCard = (newCard) => {
+		isCleared = false;
+		card = newCard;
+		console.log('drawing card');
 		isFlipped = !isFlipped;
 		dispatch('carddrawn', { card });
-	}
+	};
 </script>
 
-<div class="card {isFlipped ? 'flipped' : ''}" on:click on:keyup>
-	<div class="card-inner">		
+<div class="card {isFlipped ? 'flipped' : ''} {isCleared ? 'cleared' : ''}" on:click on:keyup>
+	<div class="card-inner">
 		<div class="card-back">
 			<h2>Draw a card</h2>
 		</div>
-        <div class="card-front">
+		<div class="card-front">
 			<p>{card?.description ?? ''}</p>
 		</div>
 	</div>
 </div>
+
 <style>
 	.card {
 		width: 200px;
 		height: 300px;
 		border: var(--dc-card-border);
-        border-radius: var(--dc-card-border-radius);
-        background: var(--dc-card-back-bg);
-		cursor: pointer;	
+		border-radius: var(--dc-card-border-radius);
+		background: var(--dc-card-back-bg);
+		cursor: pointer;
 		perspective: 1000px;
-    }
+	}
 
 	.card.flipped .card-inner {
-		transform: rotateY(-180deg) translateY(050px);
+		transform: rotateY(-180deg) translate3D(50px, 50px, 0);
 	}
+	/* .card.cleared .card-inner {
+		transform: rotateY(-180deg) translate3D(100svw, 50px, 0);
+	} */
 
 	.card-inner {
 		width: 100%;
@@ -57,22 +67,21 @@
 		height: 100%;
 		backface-visibility: hidden;
 		border: var(--dc-card-border);
-        border-radius: var(--dc-card-border-radius);
-
+		border-radius: var(--dc-card-border-radius);
 	}
 
 	.card-back {
-        display: grid;
-        height: 100%;
-        align-items: center;
-        background: var(--dc-card-back-bg);
-        text-align: center;
+		display: grid;
+		height: 100%;
+		align-items: center;
+		background: var(--dc-card-back-bg);
+		text-align: center;
 	}
 
 	.card-front {
-        text-align: center;
+		text-align: center;
 		padding: 0.25rem;
-        background: var(--dc-card-front-bg);		
+		background: var(--dc-card-front-bg);
 		transform: rotateY(180deg);
 	}
 </style>

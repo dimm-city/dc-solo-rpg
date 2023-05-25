@@ -2,7 +2,7 @@
 	import { nextScreen, gameConfig, exitGame } from './WAAStore.js';
 </script>
 
-<div class="intro-container">
+<div class="dc-intro-container">
 	<div class="content">
 		<h2>Intro</h2>
 		<p>{@html gameConfig.intro?.replace('\n', '<br /><br />')}</p>
@@ -14,7 +14,7 @@
 </div>
 
 <style>
-	.intro-container {
+	.dc-intro-container {
 		display: flex;
 		height: 100%;
 		width: 100%;

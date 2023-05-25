@@ -1,11 +1,32 @@
 <script>
-	import { nextScreen, gameStore } from "./WAAStore.js";
-
-
+	import { nextScreen, gameStore } from './WAAStore.js';
 </script>
 
-<div>
-	<h2>Game Over</h2>
-	<h3>{$gameStore.status}</h3>
-	<button on:click={() => nextScreen('finalLog')}>record your final log</button>
+<div class="dc-game-over-container">
+	<div class="dc-game-over-header"><h1>Game Over</h1></div>
+	<div class="dc-game-over-content">
+		<h3>{$gameStore.status}</h3>
+	</div>
+	<div class="dc-game-over-toolbar">
+		<button on:click={() => nextScreen('finalLog')}>record your final log</button>
+	</div>
 </div>
+
+<style>
+	.dc-game-over-container {
+		display: grid;
+		height: 100%;
+		width: 100%;
+		grid-template-rows: min-content 1fr min-content;
+		justify-content: center;
+	}
+
+	.dc-game-over-content {
+		display: grid;
+		height: 100%;
+		align-content: center;
+	}
+	.dc-game-over-toolbar {
+		margin: var(--dc-default-padding);
+	}
+</style>

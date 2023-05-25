@@ -25,14 +25,11 @@
 
 <div class="dc-roll-tasks-container">
 	<DiceRoller bind:this={taskDice} bind:rolling on:click={action} on:keyup={action}>
-		<div class="dc-roll-tasks-header dc-header-container">
+		<div class="dc-header dc-roll-tasks-header">
 			{#if rolled}
-				<!-- <button on:click={confirm} disabled={rolling}>continue</button> -->
-
 				<h4>Click to continue...</h4>
 			{:else}
 				<h4>Roll for tasks</h4>
-				<!-- <button on:click={rollTaskDice} disabled={rolling}>roll</button> -->
 			{/if}
 		</div>
 	</DiceRoller>
