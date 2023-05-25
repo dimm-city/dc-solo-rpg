@@ -1,7 +1,9 @@
 <script>
-	import { onMount, beforeUpdate } from 'svelte';
+	import { onMount } from 'svelte';
 	import DiceBox from '@3d-dice/dice-box';
+	import { gameConfig } from './WAAStore.js';
 
+	
 	export let rollDuration = 3000; // Duration of rolling animation in milliseconds
 	export let rolling = false;
 
@@ -14,7 +16,7 @@
 			assetPath: '/assets/',
 			settleTimeout: rollDuration,
 			scale: 6,
-			themeColor: '#1387b9',
+			themeColor: gameConfig.options?.diceColor ?? '#1387b9',
 			offscreen: true
 		});
 		if (canvas && container && !rolling) {

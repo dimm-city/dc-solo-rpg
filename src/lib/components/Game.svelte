@@ -5,31 +5,23 @@
 	import Shell from './Shell.svelte';
 	import StartScreen from './StartScreen.svelte';
 	import { fade } from 'svelte/transition';
-	import JournalEntry from './JournalEntry.svelte';
 	export let players = [];
 	export let selectedPlayer = null;
 	export let games = [];
 	export let selectedGame = null;
 </script>
 
-<!-- <svelte:head>
-<script src="/assets/dice-box.es.js" type="module"></script>
-</svelte:head> -->
 <Shell title={gameConfig?.title ?? 'Please select a game'}>
 	{#if $currentScreen == 'loadGame' || $currentScreen == 'options'}
-		<div in:fade>
+		<div class="dc-fade-in">
 			<StartScreen {games} {players} {selectedPlayer} {selectedGame} />
 		</div>
 	{:else if $currentScreen == 'intro'}
-		<div in:fade>
+		<div class="dc-fade-in">
 			<IntroScreen />
 		</div>
-		<!-- {:else if $currentScreen == 'log' || $currentScreen == 'finalLog'}
-		<div in:fade>
-			<JournalEntry />
-		</div> -->
 	{:else}
-		<SceneViewer />
+			<SceneViewer />
 	{/if}
 </Shell>
 

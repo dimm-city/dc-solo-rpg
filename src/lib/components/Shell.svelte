@@ -1,4 +1,4 @@
-<link rel="stylesheet" href="WAAStyles.css" />
+
 <div class="container">
 	<slot />
 </div>

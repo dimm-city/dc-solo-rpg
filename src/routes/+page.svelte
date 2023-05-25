@@ -16,5 +16,5 @@
 		}
 	];
 </script>
-
+<link rel="stylesheet" href="WAAStyles.css" />
 <Game {games} {players} selectedPlayer={players.at(1)} selectedGame={games.at(1)} />

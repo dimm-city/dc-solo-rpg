@@ -1,6 +1,9 @@
 {
-	"name": "dc-solo-rpg",
-	"version": "0.0.1",
+	"name": "@dimm-city/dc-solo-rpg",
+	"version": "0.0.2",
+	"publishConfig": {
+		"access": "public"
+	},
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build && npm run package",
@@ -50,7 +53,6 @@
 	"types": "./dist/index.d.ts",
 	"type": "module",
 	"dependencies": {
-		"@3d-dice/dice-box": "^1.0.8",
-		"waajs": "github:itlackey/waajs"
+		"@3d-dice/dice-box": "^1.0.8"
 	}
 }

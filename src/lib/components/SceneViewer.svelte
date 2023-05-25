@@ -85,12 +85,20 @@
 		grid-area: main-screen-area;
 		width: calc(100% - var(--dc-default-padding));
 		margin-inline: auto;
+		display: grid;
+		height: 99%;
+		box-sizing: border-box;
 	}
 
 	.main-screen-area > div {
 		width: 100%;
 		height: 100%;
 	}
+
+	/*.dc-table-bg {
+		 border-radius: var(--dc-default-border-radius);
+		background: var(--dc-dice-roller-bg); 
+	}*/
 
 	.status-display-area {
 		position: absolute;
