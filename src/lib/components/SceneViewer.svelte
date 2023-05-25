@@ -12,7 +12,7 @@
 
 <div class="profile-container">
 	{#if $currentScreen != 'log' && $currentScreen != 'finalLog'}
-		<div class="status-display-area">
+		<div class="status-display-area dc-fade-in">
 			<StatusDisplay />
 		</div>
 	{/if}
@@ -34,7 +34,9 @@
 				<DrawCard />
 			</div>
 		{:else if $currentScreen == 'pullFromTower'}
-			<Tower />
+			<div class="dc-fade-in">
+				<Tower />
+			</div>
 		{:else if $currentScreen == 'endTurn'}
 			<div class="dc-fade-in">
 				<h4>Turn Over</h4>
@@ -63,10 +65,9 @@
 </div>
 
 <style>
-	.padding {
-		padding: 1rem;
-	}
 	.profile-container {
+		position: relative;
+		align-items: center;
 		display: grid;
 		height: 100%;
 		grid-template-rows: min-content 1fr;
@@ -95,15 +96,14 @@
 		position: absolute;
 		width: min-content;
 		right: 1.5rem;
-		top: 7rem;
 		z-index: 3;
 		opacity: 0.9;
 	}
 
 	@media (max-width: 768px) {
 		.status-display-area {
-			top: 3rem;
 			right: 0.5rem;
+			font-size: 0.9rem;
 		}
 	}
 	@media (max-width: 350px) {

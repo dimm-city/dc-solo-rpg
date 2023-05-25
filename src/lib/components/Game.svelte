@@ -11,6 +11,7 @@
 	export let games = [];
 	export let selectedGame = null;
 </script>
+
 <!-- <svelte:head>
 <script src="/assets/dice-box.es.js" type="module"></script>
 </svelte:head> -->
@@ -23,17 +24,19 @@
 		<div in:fade>
 			<IntroScreen />
 		</div>
-	<!-- {:else if $currentScreen == 'log' || $currentScreen == 'finalLog'}
+		<!-- {:else if $currentScreen == 'log' || $currentScreen == 'finalLog'}
 		<div in:fade>
 			<JournalEntry />
 		</div> -->
 	{:else}
-			<SceneViewer />
+		<SceneViewer />
 	{/if}
-
 </Shell>
 
 <style>
+	* {
+		-webkit-tap-highlight-color: transparent;
+	}
 	div {
 		display: flex;
 		height: 100%;

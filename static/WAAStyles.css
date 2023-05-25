@@ -20,15 +20,12 @@ h4 {
 	margin: 0;
 }
 
-/* #dc-dice-canvas {
-	border-radius: 3rem;
-} */
 
 .dc-table-bg {
 	display: grid;
 	height: 99%;
 	width: 100%;
-	border-radius: 3rem;
+	border-radius: var(--dc-default-border-radius);
 	box-sizing: border-box;
 	background: var(--dc-dice-roller-bg);
 
@@ -60,5 +57,5 @@ background: radial-gradient(circle, rgba(19,135,185,1) 0%, rgba(29,63,78,1) 71%,
 }
 
 .dc-fade-in {
-	animation: fadeIn 2s;
+	animation: fadeIn 1s ease-in;
 }

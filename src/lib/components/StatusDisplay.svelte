@@ -5,7 +5,7 @@
 	import HealthMeter from './HealthMeter.svelte';
 </script>
 
-<div class="status-display-container dc-fade-in">
+<div class="status-display-container">
 	<div>
 		<h4>Round: {$gameStore?.round}</h4>
 	</div>
