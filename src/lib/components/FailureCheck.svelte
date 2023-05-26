@@ -15,17 +15,12 @@
 			await confirmTowerPull();
 		}
 	}
+
+	$: header = result ? "Click to continue" : "Roll failure check";
 </script>
 
 <div class="dc-tower-container">
-	<DiceRoller bind:this={diceRoller} bind:rolling on:click={doCheck} on:keyup={doCheck}>
-		<div class="dc-header dc-tower-header">
-			{#if result}
-				<h4>Click to continue...</h4>
-			{:else}
-				<h4>Failure check</h4>
-			{/if}
-		</div>
+	<DiceRoller bind:this={diceRoller} bind:rolling on:click={doCheck} on:keyup={doCheck} {header}>		
 	</DiceRoller>
 </div>
 

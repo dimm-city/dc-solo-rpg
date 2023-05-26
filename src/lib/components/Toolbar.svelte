@@ -37,10 +37,10 @@ import { gameStore, gameConfig, exitGame } from "./WAAStore.js";
 </style>
 <div class="toolbar">
   <div class="left">
-    <span>{$gameStore?.player?.name}</span>
+    <h3>{gameConfig?.title ?? 'Please select a game'}</h3>
   </div>
   <div class="center">
-    <h3>{gameConfig?.title ?? 'Please select a game'}</h3>
+   
   </div>
   <div class="right">
     <button class="dc-exit-button" on:click={exitGame}>exit</button>

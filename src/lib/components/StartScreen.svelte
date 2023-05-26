@@ -6,6 +6,15 @@
 	export let selectedPlayer = null; // players?.find((p) => p.name == $gameStore.player);
 	export let diceThemes = [];
 	export let selectedDice = null;
+
+	function setConfig() {
+		if (selectedGame && selectedPlayer) {
+			if (!selectedGame.options) selectedGame.options = {};
+
+			selectedGame.options.diceColor = selectedDice?.color;
+			loadGame(selectedGame, selectedPlayer);
+		}
+	}
 </script>
 
 <div class="dc-start-screen-container">
@@ -38,7 +47,7 @@
 		</select>
 	</div>
 
-	<button on:click={() => loadGame(selectedGame, selectedPlayer)}>Start Game</button>
+	<button on:click={() => setConfig()}>Start Game</button>
 </div>
 
 <style>

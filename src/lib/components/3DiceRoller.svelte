@@ -3,8 +3,9 @@
 	import DiceBox from '@3d-dice/dice-box';
 	import { gameConfig } from './WAAStore.js';
 
-	export let rollDuration = 3000; // Duration of rolling animation in milliseconds
+	export let rollDuration = gameConfig.options?.rollDuration ?? 3000; // Duration of rolling animation in milliseconds
 	export let rolling = false;
+	export let header = '';
 
 	let container;
 	let canvas;
@@ -44,8 +45,16 @@
 >
 	<canvas bind:this={canvas} id="dc-dice-canvas" />
 	<div class="dc-dice-roller-header dc-header">
-		<slot />
+		<slot>
+			<div class="dc-header">
+				<h4>{header}</h4>
+			</div>
+		</slot>
 	</div>
+	{#if !rolling}
+
+		<button class="dc-fade-in" on:click on:keyup>{header}</button>
+	{/if}
 </div>
 
 <style>
@@ -62,6 +71,14 @@
 		height: 99%;
 		width: 100%;
 		box-sizing: border-box;
+	}
+
+	.dc-dice-roller-container button {
+		position: absolute;
+		display: grid;
+		justify-self: center;
+		align-self: center;
+		
 	}
 	/* .dc-dice-roller-header {
 		position: absolute;

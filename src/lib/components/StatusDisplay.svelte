@@ -7,6 +7,8 @@
 
 <div class="status-display-container">
 	<div>
+		<h4>{$gameStore.player?.name}</h4>
+		<hr />
 		<h4>Round: {$gameStore?.round}</h4>
 	</div>
 	<div class="failure-container">

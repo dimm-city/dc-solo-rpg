@@ -1,5 +1,6 @@
 <script>
-	import { currentScreen, gameStore, nextScreen } from './WAAStore.js';
+	import { onMount } from 'svelte';
+	import { currentScreen, gameStore, loadSystemConfig, nextScreen } from './WAAStore.js';
 	import IntroScreen from './IntroScreen.svelte';
 	import SuccessCheck from './SuccessCheck.svelte';
 	import RollForTasks from './RollForTasks.svelte';
@@ -16,6 +17,11 @@
 	export let selectedGame = null;
 	export let diceThemes = [];
 	export let selectedDice = null;
+	export let systemConfig = {};
+
+	onMount(() => {
+		loadSystemConfig(systemConfig);
+	});
 </script>
 
 <div class="dc-game-container">
@@ -86,6 +92,7 @@
 	.dc-game-container {
 		display: contents;
 		box-sizing: border-box;
+		font-family: arial;
 	}
 
 	.game-screen {

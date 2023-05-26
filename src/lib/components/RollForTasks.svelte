@@ -21,17 +21,13 @@
 		if (rolled) confirm();
 		else rollTaskDice();
 	}
+
+	$:header = rolled ? "Click to continue" : "Roll for tasks";
 </script>
 
 <div class="dc-roll-tasks-container">
-	<DiceRoller bind:this={taskDice} bind:rolling on:click={action} on:keyup={action}>
-		<div class="dc-header dc-roll-tasks-header">
-			{#if rolled}
-				<h4>Click to continue...</h4>
-			{:else}
-				<h4>Roll for tasks</h4>
-			{/if}
-		</div>
+	<DiceRoller bind:this={taskDice} bind:rolling on:click={action} on:keyup={action} {header}>
+		
 	</DiceRoller>
 </div>
 

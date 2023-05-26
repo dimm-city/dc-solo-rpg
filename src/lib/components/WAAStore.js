@@ -54,9 +54,9 @@ function shuffle(array) {
 
 export let gameConfig = {};
 export const gameStore = writable({ ...initialState });
-export const currentEvents = derived([gameStore], ([$gameStore]) =>{
+export const currentEvents = derived([gameStore], ([$gameStore]) => {
 	console.log('currentEvents');
-	return $gameStore.log.filter(l => l.round == $gameStore.round);
+	return $gameStore.log.filter((l) => l.round == $gameStore.round);
 });
 
 export const currentScreen = writable('loadGame');
@@ -71,11 +71,15 @@ export const nextScreen = (action) => {
 };
 
 // Define actions
+export const loadSystemConfig = (systemConfig) => {
+	gameConfig = { ...systemConfig };
+};
 export const loadGame = async (config, player) => {
 	//Load configuration
 	const response = await fetch(config.url);
 	const configJson = await response.json();
-	gameConfig = configJson;
+	gameConfig = Object.assign(gameConfig, configJson);
+	console.log('gameConfig', gameConfig);
 	stateMachine.next('options');
 	startGame(player, {});
 };
@@ -288,7 +292,7 @@ export const successCheck = async (roll) => {
 		return state;
 	});
 
-    return roll;
+	return roll;
 };
 
 export const restartGame = () => {

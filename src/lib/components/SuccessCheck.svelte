@@ -13,18 +13,12 @@
 			startRound();
 		}
 	}
+
+	$: header = $gameStore.state == 'successCheck' ? 'Roll success check' : 'Click to continue';
 </script>
 
 <div class="dc-success-check-container">
-	<DiceRoller bind:this={diceRoller} bind:rolling on:click={doCheck} on:keyup={doCheck}>
-		<div class="dc-header">
-			{#if $gameStore.state == 'successCheck'}
-				<h4>Roll for Success</h4>
-			{:else}
-				<h4>Click to continue...</h4>
-			{/if}
-		</div>
-	</DiceRoller>
+	<DiceRoller bind:this={diceRoller} bind:rolling on:click={doCheck} on:keyup={doCheck} {header}/>
 </div>
 
 <style>
@@ -34,5 +28,4 @@
 		display: grid;
 		text-align: center;
 	}
-	
 </style>
