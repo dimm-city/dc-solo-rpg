@@ -7,12 +7,16 @@
 	export let diceThemes = [];
 	export let selectedDice = null;
 
+	let status = '';
 	function setConfig() {
 		if (selectedGame && selectedPlayer) {
 			if (!selectedGame.options) selectedGame.options = {};
 
-			selectedGame.options.diceColor = selectedDice?.color;
+			selectedGame.options.dice = selectedDice;
+			console.log('game', selectedGame);
 			loadGame(selectedGame, selectedPlayer);
+		} else {
+			status = 'Please select a player and a game';
 		}
 	}
 </script>
@@ -48,6 +52,7 @@
 	</div>
 
 	<button on:click={() => setConfig()}>Start Game</button>
+	<span>{status}</span>
 </div>
 
 <style>

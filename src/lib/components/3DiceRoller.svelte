@@ -11,11 +11,12 @@
 	let canvas;
 	let diceBox;
 	onMount(() => {
+		console.log('dice mount', gameConfig);
 		diceBox = new DiceBox('#dc-dice-canvas', {
 			assetPath: '/assets/',
 			settleTimeout: rollDuration,
 			scale: 6,
-			themeColor: gameConfig.options?.diceColor ?? '#1387b9',
+			themeColor: gameConfig.options?.dice?.color ?? '#1387b9',
 			offscreen: true
 		});
 		if (canvas && container && !rolling) {

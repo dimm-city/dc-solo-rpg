@@ -19,6 +19,7 @@
 		width: 100%;
 		grid-template-rows: min-content 1fr min-content;
 		justify-content: center;
+		text-align: center;
 	}
 
 	.dc-game-over-content {

@@ -16,7 +16,7 @@
 		}
 	];
 
-	let diceThemes = [{ name: 'default', color: "#1387b9" }, { name: 'red', color: "red" }];
+	let diceThemes = [{ name: 'default', color: "#1387b9" }, { name: 'golden', color: "#fed341" }];
 </script>
 
 <link rel="stylesheet" href="WAAStyles.css" />

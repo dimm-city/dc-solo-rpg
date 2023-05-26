@@ -75,20 +75,24 @@ export const loadSystemConfig = (systemConfig) => {
 	gameConfig = { ...systemConfig };
 };
 export const loadGame = async (config, player) => {
+	if (!config || !config.url) throw new Error('Must provide a valid game configuration and url');
+
 	//Load configuration
 	const response = await fetch(config.url);
 	const configJson = await response.json();
-	gameConfig = Object.assign(gameConfig, configJson);
-	console.log('gameConfig', gameConfig);
+	gameConfig = Object.assign(gameConfig, Object.assign(config, configJson));
+	console.log('gameConfig', gameConfig, configJson);
+
+	//ToDo: add options screen
 	stateMachine.next('options');
-	startGame(player, {});
+	startGame(player, config.options);
 };
 
 export const startGame = (player, options = {}) => {
 	if (!player || !player.name) throw new Error('Must provide a valid player');
 
 	//Set game options
-	gameConfig.options = options;
+	gameConfig.options = { ...gameConfig.options, ...options };
 	gameConfig.difficulty = options?.difficulty ?? 0;
 
 	gameStore.update((state) => {
