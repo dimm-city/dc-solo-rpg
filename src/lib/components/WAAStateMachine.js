@@ -34,13 +34,13 @@ export const transitions = {
 		drawCard: 'drawCard'
 	},
 	drawCard: {
-		pullFromTower: 'pullFromTower',
+		failureCheck: 'failureCheck',
 		drawCard: 'drawCard',
 		endTurn: 'endTurn',
 		log: 'log',
 		gameOver: 'gameOver'
 	},
-	pullFromTower: {
+	failureCheck: {
 		drawCard: 'drawCard',
 		endTurn: 'endTurn',
 		log: 'log',

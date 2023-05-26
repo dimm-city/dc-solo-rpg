@@ -179,9 +179,9 @@ export const drawCard = () => {
 			return state;
 		}
 
-		// If the card is odd, set the state to 'pullFromTower'
+		// If the card is odd, set the state to 'failureCheck'
 		if (parseInt(card.card) % 2 !== 0) {
-			stateMachine.next('pullFromTower');
+			stateMachine.next('failureCheck');
 		} else if (state.cardsToDraw > 0) {
 			stateMachine.next('drawCard');
 		} else {
@@ -201,7 +201,7 @@ export const confirmCard = () => {
 	nextScreen();
 };
 
-export const pullFromTower = async (result) => {
+export const failureCheck = async (result) => {
 	// Roll a die
 	//let roll = await rollDice();
 

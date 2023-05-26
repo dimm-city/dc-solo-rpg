@@ -1,6 +1,6 @@
 <script>
 	import DiceRoller from './3DiceRoller.svelte';
-	import { gameStore, pullFromTower, confirmTowerPull } from './WAAStore.js';
+	import { gameStore, failureCheck, confirmTowerPull } from './WAAStore.js';
 
 	let diceRoller;
 	let rolling;
@@ -8,9 +8,9 @@
 
 	async function doCheck() {
 		if (rolling) return;
-		if ($gameStore.state == 'pullFromTower') {
+		if ($gameStore.state == 'failureCheck') {
 			result = await diceRoller.roll();
-			await pullFromTower(result);
+			await failureCheck(result);
 		} else {
 			await confirmTowerPull();
 		}
