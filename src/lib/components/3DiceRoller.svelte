@@ -3,10 +3,8 @@
 	import DiceBox from '@3d-dice/dice-box';
 	import { gameConfig } from './WAAStore.js';
 
-	
 	export let rollDuration = 3000; // Duration of rolling animation in milliseconds
 	export let rolling = false;
-
 
 	let container;
 	let canvas;
@@ -60,6 +58,7 @@
 	}
 	.dc-dice-roller-container > canvas {
 		display: grid;
+		cursor: pointer;
 		height: 99%;
 		width: 100%;
 		box-sizing: border-box;

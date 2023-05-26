@@ -19,9 +19,9 @@
 <div class="dc-draw-card-container">
 	<div class="dc-header dc-draw-card-header">
 		{#if $gameStore?.currentCard != null}
-			<h4>Click to continue...</h4>
+			<h4 class="dc-fade-in">Click to continue...</h4>
 		{:else}
-			<h4>Draw a card</h4>
+			<h4 class="dc-fade-in">Draw a card</h4>
 		{/if}
 	</div>
 	<CardDeck bind:this={deck} on:click={onDeckClicked} />

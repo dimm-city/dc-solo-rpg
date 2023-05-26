@@ -34,8 +34,7 @@
 	}
 
 	.filled {
-		fill: rgba(58, 159, 199, 0.877);		
-		stroke: rgba(0, 0, 0, 0.534);
+		fill: var(--dc-accent-color);	
 		transition: all 0.3s ease-in-out;
 	}
 

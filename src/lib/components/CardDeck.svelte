@@ -36,12 +36,16 @@
 </div>
 
 <style>
+	:root{
+		--dc-card-width: 200px;
+		--dc-card-height: 300px;
+	}
 	.card {
-		width: 200px;
-		height: 300px;
+		width: var(--dc-card-width);
+		height: var(--dc-card-height);
 		border: var(--dc-card-border);
 		border-radius: var(--dc-card-border-radius);
-		background: var(--dc-card-back-bg);
+		background-color: var(--dc-card-back-bg);
 		cursor: pointer;
 		perspective: 1000px;
 	}
@@ -62,7 +66,7 @@
 
 	.card-front,
 	.card-back {
-		position: absolute;
+		position: fixed;
 		width: 100%;
 		height: 100%;
 		backface-visibility: hidden;
@@ -74,14 +78,14 @@
 		display: grid;
 		height: 100%;
 		align-items: center;
-		background: var(--dc-card-back-bg);
+		background-color: var(--dc-card-back-bg);
 		text-align: center;
 	}
 
 	.card-front {
 		text-align: center;
 		padding: 0.25rem;
-		background: var(--dc-card-front-bg);
+		background-color: var(--dc-card-front-bg);
 		transform: rotateY(180deg);
 	}
 </style>

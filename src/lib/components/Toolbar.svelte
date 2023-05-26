@@ -43,6 +43,6 @@ import { gameStore, gameConfig, exitGame } from "./WAAStore.js";
     <h3>{gameConfig?.title ?? 'Please select a game'}</h3>
   </div>
   <div class="right">
-    <button on:click={exitGame}>exit</button>
+    <button class="dc-exit-button" on:click={exitGame}>exit</button>
   </div>
 </div>
