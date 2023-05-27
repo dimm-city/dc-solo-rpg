@@ -27,7 +27,7 @@
 		<h5>Summary of events</h5>
 		<div />
 		{#each $currentEvents as event (event)}
-			<p>{event.round}: {event.description}</p>
+			<p>{event.description}</p>
 		{/each}
 	</div>
 	<div class="text-entry-area">
