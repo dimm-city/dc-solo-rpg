@@ -1,6 +1,6 @@
 {
 	"name": "@dimm-city/dc-solo-rpg",
-	"version": "0.0.6",
+	"version": "0.0.7",
 	"publishConfig": {
 		"access": "public"
 	},
@@ -53,6 +53,6 @@
 	"types": "./dist/index.d.ts",
 	"type": "module",
 	"dependencies": {
-		"@3d-dice/dice-box": "^1.0.8"
+		"@3d-dice/dice-box-threejs": "^0.0.12"
 	}
 }

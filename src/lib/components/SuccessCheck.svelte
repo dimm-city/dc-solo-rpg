@@ -1,5 +1,5 @@
 <script>
-	import DiceRoller from './3DiceRoller.svelte';
+	import DiceRoller from './ThreeJSDiceBoxRoller.svelte';
 	import { gameStore, startRound, successCheck } from './WAAStore.js';
 	let diceRoller;
 	let rolling = false;

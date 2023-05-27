@@ -27,7 +27,7 @@
 		<h5>Summary of events</h5>
 		<div />
 		{#each $currentEvents as event (event)}
-			<p>{event.description}</p>
+			<p>{event.round}: {event.description}</p>
 		{/each}
 	</div>
 	<div class="text-entry-area">
@@ -53,7 +53,7 @@
 		height: calc(100% - var(--dc-default-padding));
 		margin-inline: var(--dc-default-padding);
 		grid-template-columns: 1fr;
-		grid-template-rows: 3fr 1fr min-content;
+		grid-template-rows: 1fr min-content;
 		row-gap: 0.5rem;
 		grid-auto-flow: row;
 		grid-template-areas:

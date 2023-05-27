@@ -225,7 +225,7 @@ export const failureCheck = async (result) => {
 		// Decrease the number of blocks in the tower
 		state.tower -= blocksToRemove;
 
-		console.log('current tower score', state.tower);
+		console.log('current tower score', result, state.tower);
 		// Check if the tower has collapsed
 		if (state.tower <= 0) {
 			state.tower = 0;

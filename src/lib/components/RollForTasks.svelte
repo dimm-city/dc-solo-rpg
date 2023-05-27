@@ -1,5 +1,5 @@
 <script>
-	import DiceRoller from './3DiceRoller.svelte';
+	import DiceRoller from './ThreeJSDiceBoxRoller.svelte';
 
 	import { confirmTaskRoll, rollForTasks } from './WAAStore.js';
 
