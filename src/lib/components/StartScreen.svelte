@@ -13,7 +13,6 @@
 			if (!selectedGame.options) selectedGame.options = {};
 
 			selectedGame.options.dice = selectedDice;
-			console.log('game', selectedGame);
 			loadGame(selectedGame, selectedPlayer);
 		} else {
 			status = 'Please select a player and a game';

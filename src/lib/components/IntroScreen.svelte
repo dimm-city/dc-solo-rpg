@@ -36,7 +36,6 @@
 		width: 100%;
 		display: flex;
 		justify-content: space-between;
-		background-color: #363636c4;
 		padding-block: 0.5rem;
 	}
 	.button-bar button{

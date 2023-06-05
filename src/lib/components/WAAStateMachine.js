@@ -22,6 +22,9 @@ export const transitions = {
 		options: 'options'
 	},
 	options: {
+		rules: 'rules'
+	},
+	rules: {
 		intro: 'intro'
 	},
 	intro: {
