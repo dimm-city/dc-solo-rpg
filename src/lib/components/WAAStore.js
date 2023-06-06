@@ -6,6 +6,7 @@
 // but uses six or 20 sided dice
 import { writable, get, derived } from 'svelte/store';
 import { StateMachine, transitions } from './WAAStateMachine.js';
+import { default as yaml } from 'js-yaml';
 
 // Define the initial state of the game
 const initialState = {
@@ -51,6 +52,46 @@ function shuffle(array) {
 
 	return array;
 }
+async function loadGameConfiguration(config) {
+	//if config.url does not end with '/config.yml' add it to the end of the string
+	if (!config.url.endsWith('config.yml')) {
+		config.url += config.url.endsWith('/') ? 'config.yml' : '/' + 'config.yml';
+	}
+	const response = await fetch(config.url);
+
+	const configYaml = await response.text();
+	const configJson = yaml.load(configYaml);
+
+	//if config.deck is null, fetch it from config.url but replace 'config.yml' with deck.csv
+	if (!configJson.deck) {
+		const deckUrl = config.url.replace('config.yml', 'deck.csv');
+
+		//fetch deck csv from the deckUrl and convert it to a deck array
+		const deckResponse = await fetch(deckUrl);
+		const deckCsv = await deckResponse.text();
+		const deckArray = deckCsv
+			.split('\n')
+			.map((line) => {
+				const [card, suit, description, action] = line.split(',');
+				return { card, suit, description: description?.replaceAll('"', ''), action };
+			})
+			.filter((line) => line.card && !line.card.includes('card'));
+		configJson.deck = deckArray;
+	}
+
+	//if config.introduction ends with '.md', fetch it from config.url but replace 'config.yml' with the value of config.introduction
+	if (!configJson.introduction || configJson.introduction?.endsWith('.md')) {
+		const introductionUrl = config.url.replace('config.yml', configJson.introduction ?? 'intro.md');
+
+		//fetch introduction from the introductionUrl and convert it to a string
+		const introductionResponse = await fetch(introductionUrl);
+		const introduction = await introductionResponse.text();
+		configJson.introduction = introduction;
+	}
+
+	gameConfig = Object.assign(gameConfig, Object.assign(config, configJson));
+	console.log('gameConfig', gameConfig, configJson);
+}
 
 export let gameConfig = {};
 export const gameStore = writable({ ...initialState });
@@ -78,10 +119,7 @@ export const loadGame = async (config, player) => {
 	if (!config || !config.url) throw new Error('Must provide a valid game configuration and url');
 
 	//Load configuration
-	const response = await fetch(config.url);
-	const configJson = await response.json();
-	gameConfig = Object.assign(gameConfig, Object.assign(config, configJson));
-	console.log('gameConfig', gameConfig, configJson);
+	await loadGameConfiguration(config);
 
 	//ToDo: add options screen
 	stateMachine.next('options');
@@ -229,7 +267,7 @@ export const failureCheck = async (result) => {
 		// Check if the tower has collapsed
 		if (state.tower <= 0) {
 			state.tower = 0;
-			state.status = gameConfig.labels?.towerFell ?? 'The tower has fallen';
+			state.status = gameConfig.labels?.failureCheckLoss ?? 'The tower has fallen';
 			state.gameOver = true;
 			state.state = stateMachine.next('gameOver');
 		} else {
@@ -286,7 +324,7 @@ export const successCheck = async (roll) => {
 		// Check if the game is won
 		if (state.tokens === 0) {
 			state.win = true;
-			state.status = gameConfig.labels?.successCheckWinStatus ?? 'Salvation has arrived';
+			state.status = gameConfig.labels?.successCheckWin ?? 'Salvation has arrived';
 			state.gameOver = true;
 			state.state = stateMachine.next('gameOver');
 		} else {

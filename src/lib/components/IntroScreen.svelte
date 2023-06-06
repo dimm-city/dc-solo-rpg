@@ -1,8 +1,10 @@
 <script>
+	import {marked} from "marked";
 	import { nextScreen, gameConfig, exitGame } from './WAAStore.js';
 	let currentView = 'rules';
 	$: backButtonText = currentView == 'intro' ? 'back' : 'exit';
 	$: nextButtonText = currentView == 'intro' ? 'start' : 'continue';
+	$: intro = marked(gameConfig.introduction ?? '');
 	function next() {
 		if (currentView == 'rules') {
 			currentView = 'intro';
@@ -83,7 +85,7 @@
 			</div>
 		{:else}
 			<div class="dc-fade-in">
-				{@html gameConfig.intro?.replace('\n', '<br /><br />')}
+				{@html intro}
 			</div>
 		{/if}
 	</div>
