@@ -1,4 +1,5 @@
 <script>
+	import { createEventDispatcher } from 'svelte';
 	import {
 		recordRound,
 		gameStore,
@@ -8,12 +9,14 @@
 		exitGame
 	} from './WAAStore.js';
 
+	const dispatcher = createEventDispatcher;
 	let saved = false;
-	let journalText = '';
+	const journal = { text: '' };
 	function save() {
-		recordRound({ text: journalText?.toString() });
+		recordRound(journal);
 		journalText = '';
 		saved = true;
+		dispatcher('dc-solo-rpg.journalSaved', journal);
 	}
 
 	function next(action) {
@@ -31,7 +34,7 @@
 		{/each}
 	</div>
 	<div class="text-entry-area">
-		<textarea bind:value={journalText} rows="5" />
+		<textarea bind:value={journal.text} rows="5" />
 	</div>
 	<div class="journal-tools-center-area">
 		{#if saved}

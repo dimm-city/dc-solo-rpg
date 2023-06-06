@@ -111,7 +111,7 @@ export const startGame = (player, options = {}) => {
 		state.deck = shuffle(state.deck);
 
 		//Start intro
-		state.state = stateMachine.next('rules');
+		state.state = stateMachine.next('intro');
 
 		return state;
 	});

@@ -70,7 +70,11 @@
 			description: 'Acid'
 		}
 	];
+
+	function onJournalSaved(journal) {
+		console.log('onJournalSaved', journal);
+	}
 </script>
 
 <link rel="stylesheet" href="WAAStyles.css" />
-<Game {games} {players} {diceThemes} selectedPlayer={players.at(0)} selectedGame={games.at(1)} />
+<Game {games} {players} {diceThemes} selectedPlayer={players.at(0)} selectedGame={games.at(1)}  on:journalSaved={onJournalSaved}/>

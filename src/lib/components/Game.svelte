@@ -1,6 +1,4 @@
 <script>
-  import RuleScreen from './RuleScreen.svelte';
-
 	import { onMount } from 'svelte';
 	import { currentScreen, gameStore, loadSystemConfig, nextScreen } from './WAAStore.js';
 	import IntroScreen from './IntroScreen.svelte';
@@ -30,10 +28,6 @@
 	{#if $currentScreen == 'loadGame' || $currentScreen == 'options'}
 		<slot name="start-screen">
 			<StartScreen {games} {players} {diceThemes} {selectedPlayer} {selectedGame} {selectedDice} />
-		</slot>
-	{:else if $currentScreen == 'rules'}
-		<slot name="intro-screen">
-			<RuleScreen></RuleScreen>
 		</slot>
 	{:else if $currentScreen == 'intro'}
 		<slot name="intro-screen">
@@ -69,7 +63,7 @@
 					</div>
 				{:else if $currentScreen == 'log'}
 					<div class="dc-fade-in">
-						<JournalEntry />
+						<JournalEntry on:journalSaved/>
 					</div>
 				{:else if $currentScreen == 'successCheck'}
 					<div class="dc-fade-in">
