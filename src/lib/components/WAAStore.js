@@ -89,10 +89,26 @@ async function loadGameConfiguration(config) {
 		configJson.introduction = introduction;
 	}
 
+	//check to see if config.url + "/game.css" exits via a fetch call. if so, assign config.stylesheet to the value of config.url + "/game.css"
+	if (!configJson.stylesheet || configJson.stylesheet?.endsWith('.css')) {
+		const stylesheetUrl = config.url.replace('config.yml', configJson.stylesheet ?? 'game.css');
+
+		//fetch stylesheet from the stylesheetUrl and convert it to a string
+		const stylesheetResponse = await fetch(stylesheetUrl);
+		if (stylesheetResponse.status == 404) {
+			configJson.stylesheet = '';
+		} else {
+			//const stylesheet = await stylesheetResponse.text();
+			configJson.stylesheet = stylesheetUrl;
+			gameStylesheet.set(stylesheetUrl);
+		}
+	}
+
 	gameConfig = Object.assign(gameConfig, Object.assign(config, configJson));
 	console.log('gameConfig', gameConfig, configJson);
 }
 
+export const gameStylesheet = writable('');
 export let gameConfig = {};
 export const gameStore = writable({ ...initialState });
 export const currentEvents = derived([gameStore], ([$gameStore]) => {
@@ -316,8 +332,7 @@ export const successCheck = async (roll) => {
 		state.diceRoll = roll;
 
 		// Check if the roll is a 6
-		if (roll === 6) {
-			//ToDo: add bonus of 5 or greater
+		if (roll === 6 || (gameConfig.difficulty > 0 && roll + state.bonus === 6)) {
 			state.tokens -= 1;
 		}
 
@@ -346,6 +361,8 @@ export const exitGame = async () => {
 	const newState = { ...initialState };
 	newState.player = currentState.player;
 	gameStore.set({ ...newState });
+	gameConfig = {};
+	gameStylesheet.set('');
 	stateMachine.state = 'loadGame';
 	nextScreen();
 };

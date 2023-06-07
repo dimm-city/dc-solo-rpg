@@ -1,0 +1,33 @@
+
+h4 {
+	margin: 0;
+}
+
+
+.dc-health-meter-stroke {
+	stroke: rgba(0, 0, 0, 0.801);
+}
+
+/*utils*/
+.dc-header {
+	position: absolute;
+	display: grid;
+	justify-self: center;
+	width: calc(100% - var(--dc-default-padding));
+	border-radius: var(--dc-default-border-radius);
+	box-shadow: var(--dc-default-box-shadow);
+	background-color: var(--dc-default-container-bg);
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+.dc-fade-in {
+	animation: fadeIn 1s ease-in;
+}

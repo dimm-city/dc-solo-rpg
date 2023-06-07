@@ -1,0 +1,201 @@
+:root {
+	--main-font-family: 'dimm-city', 'Tomorrow', 'Droid Sans Mono', 'Comfortaa', Nunito, -apple-system,
+		BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif, Apple Color Emoji,
+		Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
+
+	--pink: #ef1ebf;
+	--blue: #3e6ab3;
+	--yellow: #f8f400da;
+	--bs-body-font-family: var(--main-font-family);
+	--bg-main: #01242f;
+	--bg-secondary: #190030;
+
+	--light: rgba(255, 255, 255, 0.9);
+	--translucent-dark: rgba(17, 17, 17, 0.5);
+	--opaque-dark: rgba(17, 17, 17, 0.925);
+	--dark: rgba(0, 0, 0, 0.9);
+	--blue-accent: var(--blue);
+	--primary-accent: var(--blue-accent);
+	--secondary-accent: #c643ff;
+	--secondary-accent-muted: #c743ffad;
+	/* #ff8300; */
+	--third-accent: #ff15cb;
+	--fourth-accent: var(--yellow);
+	--disabled-color: rgb(196, 192, 192);
+	--disabled-color-dark: rgb(75, 75, 75);
+
+
+	/*WAA variables*/
+
+	--dc-default-border-radius: 1rem;
+	--dc-default-padding: 1rem;
+	--dc-default-boxshadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+	/* --dc-default-container-bg: rgba(255, 255, 255, 0.3);*/
+	--dc-default-container-bg: transparent;
+
+	--dc-accent-color: var(--third-accent);
+	/* rgb(58, 159, 199); */
+	--dc-toolbar-height: 3rem;
+	--dc-header-block-margin: 0.25rem;
+
+	--dc-dice-roller-bg: #cccfd1;
+	--dc-card-border: 1px solid var(--secondary-accent-muted);
+	--dc-card-border-radius: 1rem;
+	--dc-card-back-bg: linear-gradient(
+		33deg,
+		var(--primary-accent),
+		var(--primary-accent),
+		var(--dark),
+		var(--dark),
+		var(--dark),
+		var(--secondary-accent-muted),
+		var(--secondary-accent-muted)
+	);
+	/* #1387b9; */
+	--dc-card-front-bg: var(--opaque-dark);
+	--dc-card-front-color: var(--third-accent);
+
+	--dc-status-display-padding: var(--dc-default-padding);
+
+	/*health meter*/
+	--dc-health-meter-high: var(--third-accent);
+	--dc-health-meter-med: var(--yellow);
+	--dc-health-meter-low: var(--secondary-accent-muted);
+}
+body {
+	background: var(--bg-main);
+	color: var(--third-accent);
+}
+*{
+	color: var(--third-accent);
+}
+h4 {
+	margin: 0;
+}
+
+.dc-table-bg {
+	border-radius: var(--dc-default-border-radius);
+	background: var(--dc-dice-roller-bg);
+	background: transparent;
+
+	/* background: rgb(19,135,185);
+background: radial-gradient(circle, rgba(19,135,185,1) 0%, rgba(29,63,78,1) 71%, rgba(136,136,136,1) 100%); */
+}
+.dc-health-meter-stroke {
+	stroke: var(--translucent-dark);
+}
+
+/*utils*/
+.dc-header {
+	position: absolute;
+	display: grid;
+	justify-self: center;
+	width: calc(100% - var(--dc-default-padding));
+	border-radius: var(--dc-default-border-radius);
+	box-shadow: var(--dc-default-box-shadow);
+	background-color: var(--dc-default-container-bg);
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+.dc-fade-in {
+	animation: fadeIn 1s ease-in;
+}
+
+/*dc specific*/
+
+.dc-game-container input,
+.dc-game-container textarea,
+.dc-game-container select,
+.dc-game-container button {
+	width: 100%;
+	padding: 0.5rem 1rem;
+	background-color: rgba(17, 17, 17, 0.75);
+	border: 0;
+	color: var(--third-accent);
+	font-size: 1rem;
+	font-family: var(--main-font-family);
+}
+.dc-game-container button,
+.dc-game-container textarea {
+	border: 1px var(--third-accent) solid;
+}
+
+button.dc-exit-button {
+	border: 0;
+	background-color: transparent;
+}
+
+div:focus,
+div:focus-visible {
+	outline: none;
+}
+
+@media (max-width: 768px) {
+	.dc-game-container {
+		margin: 0rem;
+		display: grid !important;
+	}
+
+	.dc-game-container .game-screen .toolbar {
+		padding: 0 !important;
+		margin-top: 0.75rem;
+		margin-inline: 0.5rem;
+	}
+	.status-display-area {
+		right: 0 !important;
+		/* bottom: 0.25rem;
+		width: 5rem; */
+	}
+	.status-display-container {
+		padding: 0.25rem !important;
+		row-gap: 0.25rem !important;
+		margin-top: 1rem;
+	}
+}
+
+.card-front {
+	color: var(--dc-card-front-color);
+}
+
+.card-back {
+	top: 0;
+	bottom: 0;
+	right: 0;
+	left: 0;
+}
+
+.card,
+.card-back {
+	background: linear-gradient(
+		139deg,
+		var(--primary-accent),
+		var(--dark),
+		var(--dark),
+		var(--secondary-accent-muted)
+	);
+	background-size: 150% 150%;
+
+	--bg-animation-duration: 10s;
+	-webkit-animation: background-gradient var(--bg-animation-duration)
+		cubic-bezier(0.375, 0.5, 0.32, 0.9) infinite alternate-reverse;
+	-moz-animation: background-gradient var(--bg-animation-duration)
+		cubic-bezier(0.375, 0.5, 0.32, 0.9) infinite alternate-reverse;
+	animation: background-gradient var(--bg-animation-duration) cubic-bezier(0.375, 0.5, 0.32, 0.9)
+		infinite alternate-reverse;
+}
+
+@media (max-width: 400px) {
+	.card {
+		--dc-card-width: 150px;
+		--dc-card-height: auto;
+		aspect-ratio: 2/3;
+	}
+}

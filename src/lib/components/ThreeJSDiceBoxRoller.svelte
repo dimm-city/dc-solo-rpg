@@ -40,7 +40,7 @@
 			//theme_colorset:  gameConfig.options?.dice?.key ?? 'pinkdreams',
 			//theme_customColorset: gameConfig.options?.dice,
 			baseScale: 140,
-			strength: 0.8
+			strength: 1
 		};
 
 		if (gameConfig.options?.dice?.key) {

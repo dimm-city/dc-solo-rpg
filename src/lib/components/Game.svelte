@@ -1,6 +1,14 @@
 <script>
+	import './default.css';
 	import { onMount } from 'svelte';
-	import { currentScreen, gameStore, loadSystemConfig, nextScreen } from './WAAStore.js';
+	import {
+		currentScreen,
+		gameConfig,
+		gameStore,
+		gameStylesheet,
+		loadSystemConfig,
+		nextScreen
+	} from './WAAStore.js';
 	import IntroScreen from './IntroScreen.svelte';
 	import SuccessCheck from './SuccessCheck.svelte';
 	import RollForTasks from './RollForTasks.svelte';
@@ -24,6 +32,10 @@
 	});
 </script>
 
+
+<svelte:head>	
+	<link rel="stylesheet" href="{$gameStylesheet}" />
+</svelte:head>
 <div class="dc-game-container">
 	{#if $currentScreen == 'loadGame' || $currentScreen == 'options'}
 		<slot name="start-screen">
@@ -63,7 +75,7 @@
 					</div>
 				{:else if $currentScreen == 'log'}
 					<div class="dc-fade-in">
-						<JournalEntry on:journalSaved/>
+						<JournalEntry on:journalSaved />
 					</div>
 				{:else if $currentScreen == 'successCheck'}
 					<div class="dc-fade-in">
@@ -86,6 +98,24 @@
 </div>
 
 <style>
+	:root {
+		--dc-default-border-radius: 1rem;
+		--dc-default-padding: 1rem;
+		--dc-default-boxshadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+		--dc-default-container-bg: rgba(255, 255, 255, 0.3);
+
+		--dc-accent-color: rgb(58, 159, 199);
+		--dc-toolbar-height: 3rem;
+		--dc-header-block-margin: 0.25rem;
+
+		--dc-dice-roller-bg: #cccfd1;
+		--dc-card-border: 1px solid #000000;
+		--dc-card-border-radius: 1rem;
+		--dc-card-back-bg: #1387b9;
+		--dc-card-front-bg: rgb(235, 235, 235);
+
+		--dc-status-display-padding: var(--dc-default-padding);
+	}
 	* {
 		-webkit-tap-highlight-color: transparent;
 	}
@@ -124,6 +154,13 @@
 	.main-screen-area > div {
 		width: 100%;
 		height: 100%;
+	}
+	.dc-table-bg {
+		border-radius: var(--dc-default-border-radius);
+		background: var(--dc-dice-roller-bg);
+
+		/* background: rgb(19,135,185);
+background: radial-gradient(circle, rgba(19,135,185,1) 0%, rgba(29,63,78,1) 71%, rgba(136,136,136,1) 100%); */
 	}
 
 	/*.dc-table-bg {

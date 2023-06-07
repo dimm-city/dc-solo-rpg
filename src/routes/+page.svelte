@@ -1,8 +1,10 @@
 <script>
+	import { gameStylesheet } from '$lib/components/WAAStore.js';
+	import { gameConfig } from '$lib';
 	import Game from '$lib/components/Game.svelte';
 	const games = [
-		{ title: 'WAA Game Template', url: '/waa/example' },
-		{ title: 'Future Lost', url: '/waa/future-lost/' }
+		{ title: 'WAA Game Template', url: '/games/example' },
+		{ title: 'Future Lost', url: '/games/future-lost/' }
 		// { title: 'Game Template', url: '/games/GameTemplate.json' },
 		// { title: 'Game 1', url: '/games/ExampleGame.json' },
 		// { title: 'Game 2', url: '/games/ShortExampleGame.json' }
@@ -76,5 +78,5 @@
 	}
 </script>
 
-<link rel="stylesheet" href="WAAStyles.css" />
+	
 <Game {games} {players} {diceThemes} selectedPlayer={players.at(0)} selectedGame={games.at(1)}  on:journalSaved={onJournalSaved}/>
