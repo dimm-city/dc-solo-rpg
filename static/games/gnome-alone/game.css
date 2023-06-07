@@ -1,0 +1,37 @@
+:root {
+    --dc-default-border-radius: 1rem;
+    --dc-default-padding: 1rem;
+    --dc-default-boxshadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    --dc-default-container-bg: rgba(255, 250, 220, 0.5); /* parchment-like background */
+
+    --dc-accent-color: rgb(58, 122, 87); /* forest green for gnome nature affinity */
+    --dc-toolbar-height: 3rem;
+    --dc-header-block-margin: 0.25rem;
+	
+    --dc-dice-roller-bg: #7f3300; /* rich earthy brown reminiscent of gnome's tinkering tools */
+    --dc-card-border: 1px solid #000000;
+    --dc-card-border-radius: 1rem;
+    --dc-card-back-bg: #007a58; /* deep green representing the dense jungle of the island */
+    --dc-card-front-bg: rgb(235, 235, 235); /* remaining as is for good readability */
+
+    --dc-status-display-padding: var(--dc-default-padding);
+}
+
+.dc-table-bg {
+	border-radius: 0.5rem;
+	background: var(--dc-dice-roller-bg);
+}
+.dc-health-meter-stroke {
+	stroke: rgba(0, 0, 0, 0.801);
+}
+
+/*utils*/
+.dc-header {
+	position: absolute;
+	display: grid;
+	justify-self: center;
+	width: calc(100% - var(--dc-default-padding));
+	border-radius: var(--dc-default-border-radius);
+	box-shadow: var(--dc-default-box-shadow);
+	background-color: var(--dc-default-container-bg);
+}

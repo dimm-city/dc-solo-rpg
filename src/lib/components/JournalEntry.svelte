@@ -9,12 +9,12 @@
 		exitGame
 	} from './WAAStore.js';
 
-	const dispatcher = createEventDispatcher;
+	const dispatcher = createEventDispatcher();
 	let saved = false;
 	const journal = { text: '' };
 	function save() {
 		recordRound(journal);
-		journalText = '';
+		journal.text = '';
 		saved = true;
 		dispatcher('dc-solo-rpg.journalSaved', journal);
 	}

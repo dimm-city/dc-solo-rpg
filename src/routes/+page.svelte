@@ -3,11 +3,10 @@
 	import { gameConfig } from '$lib';
 	import Game from '$lib/components/Game.svelte';
 	const games = [
-		{ title: 'WAA Game Template', url: '/games/example' },
-		{ title: 'Future Lost', url: '/games/future-lost/' }
-		// { title: 'Game Template', url: '/games/GameTemplate.json' },
-		// { title: 'Game 1', url: '/games/ExampleGame.json' },
-		// { title: 'Game 2', url: '/games/ShortExampleGame.json' }
+		{ title: 'Artful Detective', url: '/games/artful-detective' },
+		{ title: 'Gnome Alone', url: '/games/gnome-alone' },
+		{ title: 'Future Lost', url: '/games/future-lost/' },
+		{ title: 'WAA Game Template', url: '/games/example' }
 	];
 	let players = [
 		{
@@ -79,4 +78,4 @@
 </script>
 
 	
-<Game {games} {players} {diceThemes} selectedPlayer={players.at(0)} selectedGame={games.at(1)}  on:journalSaved={onJournalSaved}/>
+<Game {games} {players} {diceThemes} selectedPlayer={players.at(0)} selectedGame={games.at(0)}  on:journalSaved={onJournalSaved}/>

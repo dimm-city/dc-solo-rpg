@@ -1,0 +1,18 @@
+:root {
+	--dc-default-border-radius: 1rem;
+	--dc-default-padding: 1rem;
+	--dc-default-boxshadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+	--dc-default-container-bg: rgba(255, 255, 255, 0.5);
+
+	--dc-accent-color: rgb(255, 210, 0); /* Bright yellow for a comedic touch */
+	--dc-toolbar-height: 3rem;
+	--dc-header-block-margin: 0.25rem;
+
+	--dc-dice-roller-bg: #ff5722; /* A vibrant orange for the dice roller */
+	--dc-card-border: 1px solid #000000;
+	--dc-card-border-radius: 1rem;
+	--dc-card-back-bg: #1a237e; /* A deep blue for the mystery aspect */
+	--dc-card-front-bg: rgb(255, 255, 255); /* A clean white for the card front */
+
+	--dc-status-display-padding: var(--dc-default-padding);
+}
