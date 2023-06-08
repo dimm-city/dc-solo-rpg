@@ -74,9 +74,7 @@
 	<!-- <canvas bind:this={canvas} id="dc-dice-canvas" /> -->
 	<div class="dc-dice-roller-header dc-header">
 		<slot>
-			<div class="dc-header">
-				<h4>{header}</h4>
-			</div>
+			<h4 class="dc-fade-in">{header}</h4>
 		</slot>
 	</div>
 	{#if !rolling}
@@ -92,6 +90,9 @@
 		width: 100%;
 		justify-content: center;
 	}
+	.dc-dice-roller-header {
+		width: 100%;
+	}
 	:global(.dc-dice-roller-container > canvas) {
 		display: grid;
 		cursor: pointer;
@@ -106,10 +107,4 @@
 		justify-self: center;
 		align-self: center;
 	}
-	/* .dc-dice-roller-header {
-		position: absolute;
-		display: grid;
-		width: min(65ch, 100% - 1rem);
-		justify-self: center;
-	} */
 </style>

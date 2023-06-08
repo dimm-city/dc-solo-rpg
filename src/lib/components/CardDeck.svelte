@@ -1,5 +1,6 @@
 <script>
 	import { createEventDispatcher, onMount } from 'svelte';
+	import { gameConfig } from './WAAStore.js';
 
 	export let card = null;
 	let isFlipped = false;
@@ -24,10 +25,12 @@
 	};
 </script>
 
-<div class="card {isFlipped ? 'flipped' : ''} {isCleared ? 'cleared' : ''}" on:click on:keyup>
+<div class="dc-card {isFlipped ? 'flipped' : ''} {isCleared ? 'cleared' : ''}" on:click on:keyup>
 	<div class="card-inner">
 		<div class="card-back">
-			<h2>Draw a card</h2>
+			<slot name="card-back">
+				<h2>{gameConfig.labels?.cardBackText ?? gameConfig.title}</h2>
+			</slot>
 		</div>
 		<div class="card-front">
 			<p>{card?.description ?? ''}</p>
@@ -36,11 +39,11 @@
 </div>
 
 <style>
-	:root{
+	:root {
 		--dc-card-width: 200px;
 		--dc-card-height: 300px;
 	}
-	.card {
+	.dc-card {
 		width: var(--dc-card-width);
 		height: var(--dc-card-height);
 		border: var(--dc-card-border);
@@ -50,7 +53,7 @@
 		perspective: 1000px;
 	}
 
-	.card.flipped .card-inner {
+	.dc-card.flipped .card-inner {
 		transform: rotateY(-180deg) translate3D(50px, 50px, 0);
 	}
 	/* .card.cleared .card-inner {
@@ -78,6 +81,7 @@
 		display: grid;
 		height: 100%;
 		align-items: center;
+		color: var(--dc-card-back-color);
 		background-color: var(--dc-card-back-bg);
 		text-align: center;
 	}

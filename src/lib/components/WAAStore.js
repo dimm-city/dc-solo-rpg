@@ -299,7 +299,7 @@ export const failureCheck = async (result) => {
 	return result;
 };
 
-export const confirmTowerPull = () => {
+export const confirmFailureCheck = () => {
 	nextScreen();
 };
 export const recordRound = (journalEntry) => {

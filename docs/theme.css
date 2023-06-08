@@ -1,0 +1,33 @@
+:root {
+
+    /*General*/
+    --dc-default-font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    --dc-default-container-bg: rgba(255, 255, 255, 0.3);
+    --dc-accent-color: rgb(58, 159, 199);
+    
+    --dc-default-border-radius: 1rem;
+    --dc-default-padding: 1rem;
+    --dc-default-boxshadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    --dc-toolbar-height: 3rem;
+    --dc-header-block-margin: 0.25rem;
+
+    --dc-status-display-padding: var(--dc-default-padding);
+
+    /*Dice Roller*/
+    --dc-dice-roller-bg: #cccfd1;
+
+	/*Cards*/
+	--dc-card-back-color: white;
+    --dc-card-back-bg: #1387b9;
+    --dc-card-front-bg: rgb(235, 235, 235);
+    --dc-card-border: 1px solid #000000;
+    --dc-card-border-radius: 1rem;
+	--dc-card-width: 200px;
+	--dc-card-height: 300px;
+
+	/*Health meter*/
+	--dc-health-meter-high: green;
+	--dc-health-meter-med: orange;
+	--dc-health-meter-low: red;
+	--dc-health-meter-stroke: rgba(0, 0, 0, 0.8);
+}

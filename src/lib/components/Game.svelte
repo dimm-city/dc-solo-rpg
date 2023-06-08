@@ -1,5 +1,4 @@
 <script>
-	import './default.css';
 	import { onMount } from 'svelte';
 	import {
 		currentScreen,
@@ -32,9 +31,8 @@
 	});
 </script>
 
-
-<svelte:head>	
-	<link rel="stylesheet" href="{$gameStylesheet}" />
+<svelte:head>
+	<link rel="stylesheet" href={$gameStylesheet} />
 </svelte:head>
 <div class="dc-game-container">
 	{#if $currentScreen == 'loadGame' || $currentScreen == 'options'}
@@ -47,46 +45,46 @@
 		</slot>
 	{:else}
 		<div class="game-screen">
-			{#if $currentScreen != 'log' && $currentScreen != 'finalLog'}
-				<div class="status-display-area dc-fade-in">
-					<StatusDisplay />
-				</div>
-			{/if}
 			<div class="toolbar-area">
 				<Toolbar />
 			</div>
 			<div class="main-screen-area dc-table-bg">
+				{#if $currentScreen != 'log' && $currentScreen != 'finalLog'}
+					<div class="status-display-area dc-fade-in">
+						<StatusDisplay />
+					</div>
+				{/if}
 				{#if $currentScreen == 'startRound'}
-					<div class="dc-fade-in">
+					<div class="dc-fade-in dc-screen-container">
 						<h4>Round {$gameStore.round}</h4>
 						<button on:click={() => nextScreen('rollForTasks')}>Roll for tasks</button>
 					</div>
 				{:else if $currentScreen == 'rollForTasks'}
-					<div class="dc-fade-in">
+					<div class="dc-fade-in dc-screen-container">
 						<RollForTasks />
 					</div>
 				{:else if $currentScreen == 'drawCard'}
-					<div class="dc-fade-in">
+					<div class="dc-fade-in dc-screen-container">
 						<DrawCard />
 					</div>
 				{:else if $currentScreen == 'failureCheck'}
-					<div class="dc-fade-in">
+					<div class="dc-fade-in dc-screen-container">
 						<FailureCheck />
 					</div>
 				{:else if $currentScreen == 'log'}
-					<div class="dc-fade-in">
+					<div class="dc-fade-in dc-screen-container">
 						<JournalEntry on:journalSaved />
 					</div>
 				{:else if $currentScreen == 'successCheck'}
-					<div class="dc-fade-in">
+					<div class="dc-fade-in dc-screen-container">
 						<SuccessCheck />
 					</div>
 				{:else if $currentScreen == 'finalLog'}
-					<div class="dc-fade-in">
+					<div class="dc-fade-in dc-screen-container">
 						<JournalEntry />
 					</div>
 				{:else if $currentScreen == 'gameOver'}
-					<div class="dc-fade-in">
+					<div class="dc-fade-in dc-screen-container">
 						<GameOver />
 					</div>
 				{:else}
@@ -99,6 +97,7 @@
 
 <style>
 	:root {
+		--dc-default-font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
 		--dc-default-border-radius: 1rem;
 		--dc-default-padding: 1rem;
 		--dc-default-boxshadow: 0 2px 5px rgba(0, 0, 0, 0.1);
@@ -109,20 +108,23 @@
 		--dc-header-block-margin: 0.25rem;
 
 		--dc-dice-roller-bg: #cccfd1;
+
 		--dc-card-border: 1px solid #000000;
 		--dc-card-border-radius: 1rem;
+		--dc-card-back-color: white;
 		--dc-card-back-bg: #1387b9;
 		--dc-card-front-bg: rgb(235, 235, 235);
 
 		--dc-status-display-padding: var(--dc-default-padding);
 	}
+
 	* {
 		-webkit-tap-highlight-color: transparent;
 	}
 	.dc-game-container {
 		display: contents;
 		box-sizing: border-box;
-		font-family: arial;
+		font-family: var(--dc-default-font-family);
 	}
 
 	.game-screen {
@@ -139,7 +141,7 @@
 	}
 
 	.toolbar-area {
-		grid-area: toolbar-area;
+		grid-area: toolbar-area;		;
 	}
 
 	.main-screen-area {
@@ -149,9 +151,10 @@
 		display: grid;
 		height: 99%;
 		box-sizing: border-box;
+		position: relative;
 	}
 
-	.main-screen-area > div {
+	.main-screen-area > div.dc-screen-container {
 		width: 100%;
 		height: 100%;
 	}
@@ -168,18 +171,48 @@ background: radial-gradient(circle, rgba(19,135,185,1) 0%, rgba(29,63,78,1) 71%,
 		background: var(--dc-dice-roller-bg); 
 	}*/
 
+	:global(.dc-header) {
+		position: absolute;
+		display: grid;
+		justify-self: center;
+		width: calc(100% - var(--dc-default-padding));
+		border-radius: var(--dc-default-border-radius);
+		box-shadow: var(--dc-default-box-shadow);
+		background-color: var(--dc-default-container-bg);
+	}
 	.status-display-area {
 		position: absolute;
+		display: grid;
+		justify-content: center;
+		align-content: center;
+
 		width: min-content;
 		right: 1.5rem;
 		z-index: 3;
 		opacity: 0.9;
+
+		top: 0;
+		bottom: 0;
+		margin: auto 0;
+	}
+	@keyframes fadeIn {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
+	}
+
+	:global(.dc-fade-in) {
+		animation: fadeIn 1s ease-in;
 	}
 
 	@media (max-width: 768px) {
 		.status-display-area {
 			right: 0.5rem;
 			font-size: 0.9rem;
+			bottom: 0;
 		}
 	}
 	@media (max-width: 350px) {

@@ -40,6 +40,10 @@
 		--dc-health-meter-high: green;
 		--dc-health-meter-med: orange;
 		--dc-health-meter-low: red;
+		--dc-health-meter-stroke: rgba(0, 0, 0, 0.8);
+	}
+	.dc-health-meter-stroke {
+		stroke: var(--dc-health-meter-stroke);
 	}
 	.high {
 		fill: var(--dc-health-meter-high);
