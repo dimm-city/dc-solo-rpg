@@ -33,7 +33,10 @@
 			</slot>
 		</div>
 		<div class="card-front">
+			{#if card}
 			<p>{card?.description ?? ''}</p>
+			<small>{card.card} {card.suit}</small>
+			{/if}
 		</div>
 	</div>
 </div>
@@ -91,5 +94,11 @@
 		padding: 0.25rem;
 		background-color: var(--dc-card-front-bg);
 		transform: rotateY(180deg);
+	}
+	.card-front small{
+		position: absolute;
+		bottom: 0;
+		right: 0;
+		padding: 0.25rem;
 	}
 </style>

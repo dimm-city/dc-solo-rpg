@@ -1,7 +1,7 @@
 <script>
 	import DiceRoller from './ThreeJSDiceBoxRoller.svelte';
 
-	import { confirmTaskRoll, rollForTasks } from './WAAStore.js';
+	import { confirmTaskRoll, gameConfig, rollForTasks } from './WAAStore.js';
 
 	let taskDice;
 	let rolled = false;
@@ -22,7 +22,7 @@
 		else rollTaskDice();
 	}
 
-	$:header = rolled ? "Click to continue" : "Roll for tasks";
+	$:header = rolled ? gameConfig.labels.rollForTasksResultHeader : gameConfig.labels.rollForTasksHeader;
 </script>
 
 <div class="dc-roll-tasks-container">

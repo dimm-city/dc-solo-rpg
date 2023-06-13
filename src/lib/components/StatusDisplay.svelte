@@ -1,6 +1,6 @@
 <script>
 	import FailureCounter from './FailureCounter.svelte';
-	import { gameStore } from './WAAStore.js';
+	import { gameConfig, gameStore } from './WAAStore.js';
 	import SuccessCounter from './SuccessCounter.svelte';
 	import HealthMeter from './HealthMeter.svelte';
 </script>
@@ -9,7 +9,7 @@
 	<div>
 		<h4>{$gameStore.player?.name}</h4>
 		<hr />
-		<h4>Round: {$gameStore?.round}</h4>
+		<h4>{gameConfig.labels.statusDisplayRoundText}{$gameStore?.round}</h4>
 	</div>
 	<div class="failure-container">
 		<HealthMeter />

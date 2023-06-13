@@ -5,8 +5,10 @@
 // the block tower, implement a new mechanic that is statistically similiar
 // but uses six or 20 sided dice
 import { writable, get, derived } from 'svelte/store';
+import { ConfigurationLoader } from "../configuration/ConfigurationLoader.js";
 import { StateMachine, transitions } from './WAAStateMachine.js';
-import { default as yaml } from 'js-yaml';
+
+const configLoader = new ConfigurationLoader();
 
 // Define the initial state of the game
 const initialState = {
@@ -52,63 +54,10 @@ function shuffle(array) {
 
 	return array;
 }
-async function loadGameConfiguration(config) {
-	//if config.url does not end with '/config.yml' add it to the end of the string
-	if (!config.url.endsWith('config.yml')) {
-		config.url += config.url.endsWith('/') ? 'config.yml' : '/' + 'config.yml';
-	}
-	const response = await fetch(config.url);
-
-	const configYaml = await response.text();
-	const configJson = yaml.load(configYaml);
-
-	//if config.deck is null, fetch it from config.url but replace 'config.yml' with deck.csv
-	if (!configJson.deck) {
-		const deckUrl = config.url.replace('config.yml', 'deck.csv');
-
-		//fetch deck csv from the deckUrl and convert it to a deck array
-		const deckResponse = await fetch(deckUrl);
-		const deckCsv = await deckResponse.text();
-		const deckArray = deckCsv
-			.split('\n')
-			.map((line) => {
-				const [card, suit, description, action] = line.split(',');
-				return { card, suit, description: description?.replaceAll('"', ''), action };
-			})
-			.filter((line) => line.card && !line.card.includes('card'));
-		configJson.deck = deckArray;
-	}
-
-	//if config.introduction ends with '.md', fetch it from config.url but replace 'config.yml' with the value of config.introduction
-	if (!configJson.introduction || configJson.introduction?.endsWith('.md')) {
-		const introductionUrl = config.url.replace('config.yml', configJson.introduction ?? 'intro.md');
-
-		//fetch introduction from the introductionUrl and convert it to a string
-		const introductionResponse = await fetch(introductionUrl);
-		const introduction = await introductionResponse.text();
-		configJson.introduction = introduction;
-	}
-
-	//check to see if config.url + "/game.css" exits via a fetch call. if so, assign config.stylesheet to the value of config.url + "/game.css"
-	if (!configJson.stylesheet || configJson.stylesheet?.endsWith('.css')) {
-		const stylesheetUrl = config.url.replace('config.yml', configJson.stylesheet ?? 'game.css');
-
-		//fetch stylesheet from the stylesheetUrl and convert it to a string
-		const stylesheetResponse = await fetch(stylesheetUrl);
-		if (stylesheetResponse.status == 404) {
-			configJson.stylesheet = '';
-		} else {
-			//const stylesheet = await stylesheetResponse.text();
-			configJson.stylesheet = stylesheetUrl;
-			gameStylesheet.set(stylesheetUrl);
-		}
-	}
-
-	gameConfig = Object.assign(gameConfig, Object.assign(config, configJson));
-	console.log('gameConfig', gameConfig, configJson);
-}
 
 export const gameStylesheet = writable('');
+
+/** @property {GameSettings} gameConfig */
 export let gameConfig = {};
 export const gameStore = writable({ ...initialState });
 export const currentEvents = derived([gameStore], ([$gameStore]) => {
@@ -129,15 +78,17 @@ export const nextScreen = (action) => {
 
 // Define actions
 export const loadSystemConfig = (systemConfig) => {
-	gameConfig = { ...systemConfig };
+	gameConfig = configLoader.loadSystemSettings(systemConfig);
+	//gameConfig = { ...systemConfig };
 };
 export const loadGame = async (config, player) => {
 	if (!config || !config.url) throw new Error('Must provide a valid game configuration and url');
 
 	//Load configuration
-	await loadGameConfiguration(config);
-
-	//ToDo: add options screen
+	gameConfig = await configLoader.loadGameSettings(config);
+	gameStylesheet.set(gameConfig.stylesheet);
+	
+	//ToDo: add user settings screen
 	stateMachine.next('options');
 	startGame(player, config.options);
 };
@@ -146,8 +97,10 @@ export const startGame = (player, options = {}) => {
 	if (!player || !player.name) throw new Error('Must provide a valid player');
 
 	//Set game options
-	gameConfig.options = { ...gameConfig.options, ...options };
-	gameConfig.difficulty = options?.difficulty ?? 0;
+	// gameConfig.options = { ...gameConfig.options, ...options };
+	// gameConfig.options.difficulty = options?.difficulty ?? 0;
+	gameConfig = configLoader.loadUserSettings(options);
+
 
 	gameStore.update((state) => {
 		state = { ...initialState };
@@ -156,7 +109,7 @@ export const startGame = (player, options = {}) => {
 
 		state.deck = [...gameConfig.deck];
 
-		if (gameConfig.difficulty === 0) {
+		if (gameConfig.options.difficulty === 0) {
 			state.aceOfHeartsRevealed = true;
 			state.deck = [...state.deck.filter((c) => c.card != 'A' && c.suit != 'hearts')];
 		}
@@ -269,6 +222,7 @@ export const failureCheck = async (result) => {
 
 	//Very short game: roll = 20;
 
+	result = 20;
 	gameStore.update((state) => {
 		if (state.gameOver) throw new Error('The game is over, stop playing with the tower!');
 		state.diceRoll = result;

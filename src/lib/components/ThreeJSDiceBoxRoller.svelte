@@ -3,7 +3,6 @@
 	import DiceBox from '@3d-dice/dice-box-threejs';
 	import { gameConfig } from './WAAStore.js';
 
-	export let rollDuration = gameConfig.options?.rollDuration ?? 3000; // Duration of rolling animation in milliseconds
 	export let rolling = false;
 	export let header = '';
 
@@ -27,8 +26,6 @@
 		onRollComplete: () => {}
 	};
 
-	let container;
-	let canvas;
 	let diceBox;
 	onMount(async () => {
 		defaultConfig.theme_colorset = gameConfig.options?.dice ?? defaultConfig.theme_colorset;
@@ -67,11 +64,9 @@
 	id="dice-roller-container"
 	class="dc-dice-roller-container"
 	disabled={rolling}
-	bind:this={container}
 	on:click
 	on:keyup
 >
-	<!-- <canvas bind:this={canvas} id="dc-dice-canvas" /> -->
 	<div class="dc-dice-roller-header dc-header">
 		<slot>
 			<h4 class="dc-fade-in">{header}</h4>

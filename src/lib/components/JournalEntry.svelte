@@ -6,7 +6,9 @@
 		currentEvents,
 		nextScreen,
 		restartGame,
-		exitGame
+		exitGame,
+		gameConfig
+
 	} from './WAAStore.js';
 
 	const dispatcher = createEventDispatcher();
@@ -26,8 +28,8 @@
 
 <div class="dc-journal-container">
 	<div class="journal-header-area">
-		<h4>Record your journal entry</h4>
-		<h5>Summary of events</h5>
+		<h4>{gameConfig.labels.journalEntryHeader}</h4>
+		<h5>{gameConfig.labels.journalEntrySubHeader}</h5>
 		<div />
 		{#each $currentEvents as event (event)}
 			<p>{event.description}</p>
@@ -39,13 +41,13 @@
 	<div class="journal-tools-center-area">
 		{#if saved}
 			{#if $gameStore.gameOver}
-				<button on:click={restartGame}>restart</button>
-				<button on:click={exitGame}>new game</button>
+				<button on:click={restartGame}>{gameConfig.labels.journalEntryRestartButtonText}</button>
+				<button on:click={exitGame}>{gameConfig.labels.journalEntryExitButtonText}</button>
 			{:else}
-				<button on:click={next}>continue</button>
+				<button on:click={next}>{gameConfig.labels.journalEntryNextButtonText}</button>
 			{/if}
 		{:else}
-			<button on:click={save}>record</button>
+			<button on:click={save}>{gameConfig.labels.journalEntrySaveButtonText}</button>
 		{/if}
 	</div>
 </div>

@@ -1,6 +1,6 @@
 <script>
 	import DiceRoller from './ThreeJSDiceBoxRoller.svelte';
-	import { gameStore, startRound, successCheck } from './WAAStore.js';
+	import { gameConfig, gameStore, startRound, successCheck } from './WAAStore.js';
 	let diceRoller;
 	let rolling = false;
 
@@ -14,11 +14,14 @@
 		}
 	}
 
-	$: header = $gameStore.state == 'successCheck' ? 'Roll success check' : 'Click to continue';
+	$: header =
+		$gameStore.state == 'successCheck'
+			? gameConfig.labels.successCheckHeader
+			: gameConfig.labels.successCheckResultHeader;
 </script>
 
 <div class="dc-success-check-container">
-	<DiceRoller bind:this={diceRoller} bind:rolling on:click={doCheck} on:keyup={doCheck} {header}/>
+	<DiceRoller bind:this={diceRoller} bind:rolling on:click={doCheck} on:keyup={doCheck} {header} />
 </div>
 
 <style>

@@ -1,5 +1,7 @@
 title: Future Lost
 subtitle: A Dimm City Campaign
+introduction: intro.md
+stylesheet: game.css
 options:
   difficulty: 0
   rollDuration: 3000
@@ -13,5 +15,29 @@ options:
     texture: 'glass'
     description: 'Pink Dreams, for Ethan'
 labels:
+  introNextButtonText: 'Next'
+  introBackButtonText: 'Back'
+  introStartButtonText: 'Start'
+  introExitButtonText: 'Exit'
+  toolbarExitButtonText: 'Exit'
+  journalEntryHeader: 'Record your journal entry'
+  journalEntrySubHeader: 'Summary of events'
+  journalEntryNextButtonText: 'Continue'
+  journalEntrySaveButtonText: 'Record'
+  journalEntryRestartButtonText: 'Restart'
+  journalEntryExitButtonText: 'New Game'
+  rollForTasksHeader: 'Roll for tasks'
+  rollForTasksResultHeader: 'Click to continue'
+  drawCardButtonText: 'Draw Card'
+  successCheckHeader: 'Roll success check'
+  successCheckResultHeader: 'Click to continue'
+  failureCheckHeader: 'Failure Check'
   failureCheckLoss: 'The time machine has been damaged beyond repair'
   successCheckWin: 'You have managed to repair the time machine and are able to return home!'
+  gameOverHeader: 'Game Over'
+  gameOverButtonText: 'Record your final log'
+  statusDisplayRoundText: 'Round: '
+  healthMeterHeader: 'Health Meter'
+  healthMeterSvg: null
+  failureCounterHeader: 'Failure Counters'
+  failureCounterSvg: null
