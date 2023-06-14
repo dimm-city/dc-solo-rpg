@@ -51,7 +51,7 @@
 		height: var(--dc-card-height);
 		border: var(--dc-card-border);
 		border-radius: var(--dc-card-border-radius);
-		background-color: var(--dc-card-back-bg);
+		background: var(--dc-card-back-bg);
 		cursor: pointer;
 		perspective: 1000px;
 	}
@@ -85,7 +85,7 @@
 		height: 100%;
 		align-items: center;
 		color: var(--dc-card-back-color);
-		background-color: var(--dc-card-back-bg);
+		background: var(--dc-card-back-bg);
 		text-align: center;
 	}
 

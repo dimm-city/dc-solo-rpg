@@ -1,4 +1,4 @@
-:root {
+.dc-game-container {
 	--main-font-family: 'dimm-city', 'Tomorrow', 'Droid Sans Mono', 'Comfortaa', Nunito, -apple-system,
 		BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif, Apple Color Emoji,
 		Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
@@ -13,7 +13,7 @@
 	--light: rgba(255, 255, 255, 0.9);
 	--translucent-dark: rgba(17, 17, 17, 0.5);
 	--opaque-dark: rgba(17, 17, 17, 0.925);
-	--dark: rgba(0, 0, 0, 0.9);
+	--dark: rgba(0, 0, 0, 0.975);
 	--blue-accent: var(--blue);
 	--primary-accent: var(--blue-accent);
 	--secondary-accent: #c643ff;
@@ -27,11 +27,11 @@
 
 	/*WAA variables*/
 
-	--dc-default-border-radius: 1rem;
+	--dc-default-border-radius: 0.175rem;
 	--dc-default-padding: 1rem;
 	--dc-default-boxshadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 	/* --dc-default-container-bg: rgba(255, 255, 255, 0.3);*/
-	--dc-default-container-bg: transparent;
+	--dc-default-container-bg: var(--translucent-dark);
 
 	--dc-accent-color: var(--third-accent);
 	/* rgb(58, 159, 199); */
@@ -51,8 +51,9 @@
 		var(--secondary-accent-muted),
 		var(--secondary-accent-muted)
 	);
+
 	/* #1387b9; */
-	--dc-card-front-bg: var(--opaque-dark);
+	--dc-card-front-bg: var(--dark);
 	--dc-card-front-color: var(--third-accent);
 
 	--dc-status-display-padding: var(--dc-default-padding);

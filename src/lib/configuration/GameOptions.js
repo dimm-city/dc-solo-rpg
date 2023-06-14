@@ -1,3 +1,5 @@
+import { Difficulty } from "./DifficultyLevels.js";
+
 /**
  * This class encapsulates the game options derived from a YAML configuration file.
  * It provides all the configurable option properties required by the game.
@@ -11,7 +13,7 @@ export class GameOptions {
       /** 
        * @property {number} difficulty - The game's difficulty level. 
        */
-      this.difficulty = options.difficulty;
+      this.difficulty = options.difficulty ?? Difficulty.IMPOSSIBLE;
   
       /** 
        * @property {number} rollDuration - The duration of a dice roll. 

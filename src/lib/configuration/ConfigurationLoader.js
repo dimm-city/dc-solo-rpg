@@ -1,4 +1,5 @@
 import { default as yaml } from 'js-yaml';
+import { SystemSettings } from './SystemSettings.js';
 
 /**
  * This class handles loading and retrieving configuration settings for a web-based game.
@@ -14,90 +15,39 @@ export class ConfigurationLoader {
 	 */
 	constructor(systemSettings = {}) {
 		// immutable system settings
-		this.systemSettings = this.loadSystemSettings(systemSettings);
+		this.systemSettings =  new SystemSettings(systemSettings);
 		// mutable settings
 		this.gameSettings = {};
 		this.userSettings = {};
 	}
 
-	/**
-	 * Load system settings.
-	 * @param {SystemSettings} systemSettings - The initial system settings.
-	 */
+	// /**
+	//  * Load system settings.
+	//  * @param {SystemSettings} systemSettings - The initial system settings.
+	//  */
 	loadSystemSettings(systemSettings = {}) {
-		// If the systemSettings parameter is not provided, use the default values
-		if (Object.keys(systemSettings).length === 0) {
-			systemSettings = {
-				stylesheet: 'game.css',
-				options: {
-					difficulty: 0,
-					rollDuration: 3000,
-					dice: {
-						key: null,
-						name: 'Pink Dreams',
-						category: 'Custom Sets',
-						foreground: 'white',
-						background: ['#ff007c', '#df73ff', '#f400a1', '#df00ff', '#ff33cc'],
-						outline: '#570000',
-						texture: 'glass',
-						description: 'Pink Dreams, for Ethan'
-					}
-				},
-				labels: {
-					introNextButtonText: 'Next',
-					introBackButtonText: 'Back',
-					introStartButtonText: 'Start',
-					introExitButtonText: 'Exit',
-					toolbarExitButtonText: 'Exit',
-					journalEntryHeader: 'Record your journal entry',
-					journalEntrySubHeader: 'Summary of events',
-					journalEntryNextButtonText: 'Continue',
-					journalEntrySaveButtonText: 'Record',
-					journalEntryRestartButtonText: 'Restart',
-					journalEntryExitButtonText: 'New Game',
-					rollForTasksHeader: 'Roll for tasks',
-					rollForTasksResultHeader: 'Click to continue',
-					drawCardButtonText: 'Draw Card',
-					successCheckHeader: 'Roll success check',
-					successCheckResultHeader: 'Click to continue',
-					failureCheckHeader: 'Failure Check',
-					failureCheckLoss: 'The time machine has been damaged beyond repair',
-					successCheckWin:
-						'You have managed to repair the time machine and are able to return home!',
-					gameOverHeader: 'Game Over',
-					gameOverButtonText: 'Record your final log',
-					statusDisplayRoundText: 'Round: ',
-					healthMeterHeader: 'Health Meter',
-					healthMeterSvg: null,
-					failureCounterHeader: 'Failure Counters',
-					failureCounterSvg: null
-				}
-			};
-		}
-
 		// Freeze the systemSettings object to prevent modification
-		this.systemSettings = Object.freeze(systemSettings);
-
+		this.systemSettings =  new SystemSettings(systemSettings);
 		return this.systemSettings;
 	}
 
 	/**
 	 * Load game settings. These can override system settings.
-	 * @param {GameSettings} gameSettings - The game settings.
+	 * @param {string} gameConfigUrl - The URL to the game configuration file.
 	 */
-	async loadGameSettings(gameSettings = {}) {
+	async loadGameSettings(gameConfigUrl) {
 		//if config.url does not end with '/config.yml' add it to the end of the string
-		if (!gameSettings.url.endsWith('config.yml')) {
-			gameSettings.url += gameSettings.url.endsWith('/') ? 'config.yml' : '/' + 'config.yml';
+		if (!gameConfigUrl?.endsWith('config.yml')) {
+			gameConfigUrl += gameConfigUrl.endsWith('/') ? 'config.yml' : '/' + 'config.yml';
 		}
-		const response = await fetch(gameSettings.url);
+		const response = await fetch(gameConfigUrl);
 
 		const configYaml = await response.text();
 		const configJson = yaml.load(configYaml);
 
 		//if config.deck is null, fetch it from config.url but replace 'config.yml' with deck.csv
 		if (!configJson.deck) {
-			const deckUrl = gameSettings.url.replace('config.yml', 'deck.csv');
+			const deckUrl = gameConfigUrl.replace('config.yml', 'deck.csv');
 
 			//fetch deck csv from the deckUrl and convert it to a deck array
 			const deckResponse = await fetch(deckUrl);
@@ -114,7 +64,7 @@ export class ConfigurationLoader {
 
 		//if config.introduction ends with '.md', fetch it from config.url but replace 'config.yml' with the value of config.introduction
 		if (!configJson.introduction || configJson.introduction?.endsWith('.md')) {
-			const introductionUrl = gameSettings.url.replace(
+			const introductionUrl = gameConfigUrl.replace(
 				'config.yml',
 				configJson.introduction ?? 'intro.md'
 			);
@@ -126,43 +76,44 @@ export class ConfigurationLoader {
 		}
 
 		//check to see if config.url + "/game.css" exits via a fetch call. if so, assign config.stylesheet to the value of config.url + "/game.css"
-		if (!configJson.stylesheet || configJson.stylesheet?.endsWith('.css')) {
-			const stylesheetUrl = gameSettings.url.replace(
-				'config.yml',
-				configJson.stylesheet ?? 'game.css'
-			);
+		const stylesheetUrl = gameConfigUrl.replace(
+			'config.yml',
+			configJson.stylesheet ?? 'game.css'
+		);
 
-			//fetch stylesheet from the stylesheetUrl and convert it to a string
-			const stylesheetResponse = await fetch(stylesheetUrl);
-			if (stylesheetResponse.status == 404) {
-				configJson.stylesheet = '';
-			} else {
-				//const stylesheet = await stylesheetResponse.text();
-				configJson.stylesheet = stylesheetUrl;
-			}
+		//fetch stylesheet from the stylesheetUrl and convert it to a string
+		const stylesheetResponse = await fetch(stylesheetUrl);
+		if (stylesheetResponse.status == 404) {
+			configJson.stylesheet = '';
+		} else {
+			//const stylesheet = await stylesheetResponse.text();
+			configJson.stylesheet = stylesheetUrl;
 		}
 
-		gameSettings = Object.assign(gameSettings, configJson);
-		console.log('gameSettings', gameSettings, configJson);
+		
+		console.log('gameSettings', gameConfigUrl, this.systemSettings, configJson);
 
 		// Merge system settings with game settings, overwriting system settings with game settings if necessary.
 		// This is to allow game settings to overwrite system settings, but not vice versa.
 		// This is to allow system settings to be changed by the user, but not changed by the game.
 
-		this.gameSettings = { ...this.systemSettings, ...gameSettings };
+		this.gameSettings = { ...this.systemSettings, ...configJson };
+		this.gameSettings.loaded = true;
+
 		return this.gameSettings;
 	}
 
 	/**
 	 * Load user settings. These can override both system and game settings.
-	 * @param {GameOptions} userSettings - The user settings.
+	 * @param {GameOptions} options - The user settings.
 	 */
-	loadUserSettings(userSettings = {}) {
-		this.userSettings = { ...userSettings };
-		this.gameSettings.options = { ...this.gameSettings.options, ...userSettings.options };
+	loadUserSettings(options = {}) {
+		this.userSettings = { ...options };
+		this.gameSettings.options = { ...this.gameSettings.options, ...options };
 
 		if (this.gameSettings.options.difficulty == undefined) this.gameSettings.options.difficulty = 0;
 
+		console.log('loadUserSettings', this.userSettings, this.gameSettings);
 		return this.gameSettings;
 	}
 

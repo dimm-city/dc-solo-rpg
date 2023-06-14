@@ -1,14 +1,18 @@
 <script>
-	import { gameStylesheet } from '$lib/components/WAAStore.js';
-	import { gameConfig } from '$lib';
+	import GameSelector from '../lib/components/GameSelector.svelte';
+	import { SystemSettings } from '$lib/configuration/SystemSettings.js';
+	import { gameStylesheet, currentScreen } from '$lib/components/WAAStore.js';
+
 	import Game from '$lib/components/Game.svelte';
+
+	let systemSettings = new SystemSettings();
 	const games = [
 		{ title: 'Artful Detective', url: '/games/artful-detective' },
 		{ title: 'Gnome Alone', url: '/games/gnome-alone' },
 		{ title: 'Future Lost', url: '/games/future-lost/' },
 		{ title: 'WAA Game Template', url: '/games/example' }
 	];
-	let players = [
+	const players = [
 		{
 			name: 'Ralph'
 		},
@@ -17,65 +21,45 @@
 		}
 	];
 
-	let diceThemes = [
-		{
-			name: 'default',
-			foreground: 'white',
-			background: '#1387b9',
-			texture: 'glass',
-			description: 'Default dice'
-		},
-		{
-			name: 'Pink Dreams',
-			category: 'Custom Sets',
-			foreground: 'white',
-			background: ['#ff007c', '#df73ff', '#f400a1', '#df00ff', '#ff33cc'],
-			outline: '#570000',
-			texture: 'glass',
-			description: 'Pink Dreams, for Ethan'
-		},
-		{
-			name: 'Fire',
-			category: 'Damage Types',
-			foreground: '#f8d84f',
-			background: ['#f8d84f', '#f9b02d', '#f43c04', '#910200', '#4c1009'],
-			outline: 'black',
-			texture: 'fire',
-			description: 'Fire'
-		},
-		{
-			name: 'Ice',
-			category: 'Damage Types',
-			foreground: '#60E9FF',
-			background: ['#214fa3', '#3c6ac1', '#253f70', '#0b56e2', '#09317a'],
-			outline: 'black',
-			texture: 'ice',
-			description: 'Ice'
-		},
-		{
-			name: 'Poison',
-			category: 'Damage Types',
-			foreground: '#D6A8FF',
-			background: ['#313866', '#504099', '#66409e', '#934fc3', '#c949fc'],
-			outline: 'black',
-			texture: 'cloudy',
-			description: 'Poison'
-		},
-		{
-			name: 'Acid',
-			category: 'Damage Types',
-			foreground: '#A9FF70',
-			background: ['#a6ff00', '#83b625', '#5ace04', '#69f006', '#b0f006', '#93bc25'],
-			outline: 'black',
-			texture: 'marble',
-			description: 'Acid'
-		}
-	];
-
+	let gameComponent;
+	let ready = false;
+	let selectedGame;
+	let selectedPlayer;
+	function loadGame() {
+		ready = true;
+		systemSettings.gameConfigUrl = selectedGame.url;
+		systemSettings.player = selectedPlayer;
+		gameComponent.startGame();
+	}
 	function onJournalSaved(journal) {
 		console.log('onJournalSaved', journal);
 	}
 </script>
 
-	
-<Game {games} {players} {diceThemes} selectedPlayer={players.at(0)} selectedGame={games.at(0)}  on:journalSaved={onJournalSaved}/>
+<div class:hidden={!ready || $currentScreen == 'loadGame'}>
+	<Game
+		bind:this={gameComponent}
+		{systemSettings}
+		on:dc-solo-rpg.journalSaved={onJournalSaved}
+		on:dc-solo-rpg.gameOver={() => (ready = false)}
+	/>
+</div>
+<div class:hidden={ready && $currentScreen != 'loadGame'}>
+	<GameSelector
+		{games}
+		{players}
+		bind:selectedPlayer
+		bind:selectedGame
+		on:dc-solo-rpg.gameSelected={loadGame}
+	/>
+</div>
+
+<style>
+	div {
+		display: grid;
+		height: 100%;
+	}
+	.hidden {
+		display: none;
+	}
+</style>

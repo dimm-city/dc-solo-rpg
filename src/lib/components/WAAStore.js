@@ -5,13 +5,14 @@
 // the block tower, implement a new mechanic that is statistically similiar
 // but uses six or 20 sided dice
 import { writable, get, derived } from 'svelte/store';
-import { ConfigurationLoader } from "../configuration/ConfigurationLoader.js";
+import { ConfigurationLoader } from '../configuration/ConfigurationLoader.js';
 import { StateMachine, transitions } from './WAAStateMachine.js';
 
 const configLoader = new ConfigurationLoader();
 
 // Define the initial state of the game
 const initialState = {
+	config: {},
 	player: null,
 	deck: [
 		//{ card: 'A', suit: 'hearts', description: 'Ace of Hearts description', action: "" }
@@ -68,41 +69,65 @@ export const currentEvents = derived([gameStore], ([$gameStore]) => {
 export const currentScreen = writable('loadGame');
 
 export const nextScreen = (action) => {
-	currentScreen.update((state) => {
+	currentScreen.update((screen) => {
 		if (action) stateMachine.next(action);
 
-		state = stateMachine.state;
-		return state;
+		screen = stateMachine.state;
+		return screen;
 	});
 };
 
 // Define actions
-export const loadSystemConfig = (systemConfig) => {
-	gameConfig = configLoader.loadSystemSettings(systemConfig);
-	//gameConfig = { ...systemConfig };
-};
-export const loadGame = async (config, player) => {
-	if (!config || !config.url) throw new Error('Must provide a valid game configuration and url');
+export const loadSystemConfig = async (systemConfig) => {
+	if (!systemConfig || !systemConfig.gameConfigUrl)
+		throw new Error('Must provide a valid game configuration and url');
+
+	configLoader.loadSystemSettings(systemConfig);
+	console.log('system settings loaded', systemConfig);
 
 	//Load configuration
-	gameConfig = await configLoader.loadGameSettings(config);
+	gameConfig = await configLoader.loadGameSettings(systemConfig.gameConfigUrl);
 	gameStylesheet.set(gameConfig.stylesheet);
-	
+
+	gameStore.update((state) => {
+		state.config = { ...gameConfig };
+		console.log('updating config', state.config);
+		return state;
+	});
 	//ToDo: add user settings screen
-	stateMachine.next('options');
-	startGame(player, config.options);
+	//stateMachine.next('options');
+	nextScreen('options');
+
+	//gameConfig = { ...systemConfig };
 };
+// export const loadGame = async (config, player) => {
+// 	if (!config || !config.url) throw new Error('Must provide a valid game configuration and url');
+
+// 	//Load configuration
+// 	gameConfig = await configLoader.loadGameSettings(config);
+// 	gameStylesheet.set(gameConfig.stylesheet);
+
+// 	//ToDo: add user settings screen
+// 	stateMachine.next('options');
+// 	startGame(player, config.options);
+// };
 
 export const startGame = (player, options = {}) => {
 	if (!player || !player.name) throw new Error('Must provide a valid player');
+	console.log('starting game', player, options);
 
+	//Set game options
+	// gameConfig.options = { ...gameConfig.options, ...options }');
 	//Set game options
 	// gameConfig.options = { ...gameConfig.options, ...options };
 	// gameConfig.options.difficulty = options?.difficulty ?? 0;
+
 	gameConfig = configLoader.loadUserSettings(options);
 
-
 	gameStore.update((state) => {
+		state.config = { ...gameConfig };
+		console.log('updating config', state.config);
+
 		state = { ...initialState };
 		state.round = 1;
 		state.player = player;
@@ -114,7 +139,7 @@ export const startGame = (player, options = {}) => {
 			state.deck = [...state.deck.filter((c) => c.card != 'A' && c.suit != 'hearts')];
 		}
 
-		//Shuffledeck
+		//Shuffle deck
 		state.deck = shuffle(state.deck);
 
 		//Start intro
@@ -220,9 +245,9 @@ export const failureCheck = async (result) => {
 	// Roll a die
 	//let roll = await rollDice();
 
-	//Very short game: roll = 20;
-
-	result = 20;
+	//Very short game
+	//result = 20;
+	
 	gameStore.update((state) => {
 		if (state.gameOver) throw new Error('The game is over, stop playing with the tower!');
 		state.diceRoll = result;
@@ -317,6 +342,5 @@ export const exitGame = async () => {
 	gameStore.set({ ...newState });
 	gameConfig = {};
 	gameStylesheet.set('');
-	stateMachine.state = 'loadGame';
-	nextScreen();
+	nextScreen('loadGame');
 };

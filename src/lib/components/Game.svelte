@@ -1,5 +1,6 @@
 <script>
-	import { onMount } from 'svelte';
+	import OptionsScreen from './OptionsScreen.svelte';
+	import { createEventDispatcher, onMount } from 'svelte';
 	import {
 		currentScreen,
 		gameConfig,
@@ -17,27 +18,36 @@
 	import StatusDisplay from './StatusDisplay.svelte';
 	import JournalEntry from './JournalEntry.svelte';
 	import Toolbar from './Toolbar.svelte';
-	import StartScreen from './StartScreen.svelte';
-	export let players = [];
-	export let selectedPlayer = null;
-	export let games = [];
-	export let selectedGame = null;
-	export let diceThemes = [];
-	export let selectedDice = null;
-	export let systemConfig = {};
+	import LoadScreen from './LoadScreen.svelte';
 
-	onMount(() => {
-		loadSystemConfig(systemConfig);
-	});
+	export let systemSettings = {};
+	export const startGame = async () => {
+		if (systemSettings.gameConfigUrl && systemSettings.player?.name) {
+			await loadSystemConfig(systemSettings);
+			dispatcher('dc-solo-rpg.gameLoaded', systemSettings);
+		} else {
+			$gameStore.status = 'Please select a player and a game';
+		}
+	};
+
+	const dispatcher = createEventDispatcher();
+
+	$: if ($currentScreen == 'gameOver') {
+		dispatcher('dc-solo-rpg.gameOver', $gameStore.state);
+	}
 </script>
 
 <svelte:head>
 	<link rel="stylesheet" href={$gameStylesheet} />
 </svelte:head>
 <div class="dc-game-container">
-	{#if $currentScreen == 'loadGame' || $currentScreen == 'options'}
-		<slot name="start-screen">
-			<StartScreen {games} {players} {diceThemes} {selectedPlayer} {selectedGame} {selectedDice} />
+	{#if $currentScreen == 'loadGame'}
+		<slot name="load-screen">
+			<LoadScreen />
+		</slot>
+	{:else if $currentScreen == 'options'}
+		<slot name="options-screen">
+			<OptionsScreen {systemSettings} />
 		</slot>
 	{:else if $currentScreen == 'intro'}
 		<slot name="intro-screen">
@@ -73,7 +83,7 @@
 					</div>
 				{:else if $currentScreen == 'log'}
 					<div class="dc-fade-in dc-screen-container">
-						<JournalEntry on:journalSaved />
+						<JournalEntry on:dc-solo-rpg.journalSaved />
 					</div>
 				{:else if $currentScreen == 'successCheck'}
 					<div class="dc-fade-in dc-screen-container">
@@ -81,14 +91,14 @@
 					</div>
 				{:else if $currentScreen == 'finalLog'}
 					<div class="dc-fade-in dc-screen-container">
-						<JournalEntry />
+						<JournalEntry on:dc-solo-rpg.journalSaved />
 					</div>
 				{:else if $currentScreen == 'gameOver'}
 					<div class="dc-fade-in dc-screen-container">
 						<GameOver />
 					</div>
 				{:else}
-					<div>error</div>
+					<div>error: {$currentScreen}</div>
 				{/if}
 			</div>
 		</div>
@@ -97,7 +107,8 @@
 
 <style>
 	:root {
-		--dc-default-font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+		--dc-default-font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande',
+			'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
 		--dc-default-border-radius: 1rem;
 		--dc-default-padding: 1rem;
 		--dc-default-boxshadow: 0 2px 5px rgba(0, 0, 0, 0.1);
@@ -141,7 +152,7 @@
 	}
 
 	.toolbar-area {
-		grid-area: toolbar-area;		;
+		grid-area: toolbar-area;
 	}
 
 	.main-screen-area {

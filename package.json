@@ -1,6 +1,7 @@
 {
 	"name": "@dimm-city/dc-solo-rpg",
-	"version": "0.0.13",
+	"version": "0.0.14",
+	"license": "cc-by-4.0",
 	"publishConfig": {
 		"access": "public"
 	},

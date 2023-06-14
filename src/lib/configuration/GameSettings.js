@@ -11,6 +11,9 @@ export class GameSettings {
 	 * @param {Object} config - The YAML configuration.
 	 */
 	constructor(config) {
+		/** @property {boolean} loaded - Whether the game settings have been loaded.	 */
+		this.loaded = false;
+
 		/** @property {string} title - The game's main title. */
 		this.title = config.title;
 

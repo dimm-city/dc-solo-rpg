@@ -1,10 +1,5 @@
 <script>
-	import { loadSystemConfig, gameStore, gameConfig } from './WAAStore.js';
-	
-	/**
-	 * @property  {SystemSettings} systemSettings - Current system settings
-	 */
-	export let systemSettings = {};
+    import { createEventDispatcher } from "svelte";
 
 	export let players = [];
 	export let games = [];
@@ -12,14 +7,12 @@
 	export let selectedPlayer = null; // players?.find((p) => p.name == $gameStore.player);
 
 
+    const dispatcher = createEventDispatcher();
+
 	let status = '';
 	async function setConfig() {
 		if (selectedGame && selectedPlayer) {
-			if (!selectedGame.options) selectedGame.options = {};
-
-			systemSettings.gameConfigUrl = selectedGame.url;
-
-			await loadSystemConfig(systemSettings);
+            dispatcher('dc-solo-rpg.gameSelected', {selectedGame, selectedPlayer});
 		} else {
 			status = 'Please select a player and a game';
 		}
@@ -27,10 +20,10 @@
 </script>
 
 <div class="dc-start-screen-container">
-	<h2>Start Screen</h2>
+	<h2>Load Game</h2>
 	<div>
 		<label for="player">Player:</label>
-		<select id="player" bind:value={systemSettings.player}>
+		<select id="player" bind:value={selectedPlayer}>
 			<option value={null}>Please select a player</option>
 			{#each players as player}
 				<option value={player}>{player.name}</option>
@@ -47,7 +40,7 @@
 		</select>
 	</div>
 
-	<button on:click={() => setConfig()}>Start Game</button>
+	<button on:click={() => setConfig()}>Load Game</button>
 </div>
 
 <style>
