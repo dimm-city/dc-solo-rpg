@@ -1,0 +1,16 @@
+title: Simple Example Game
+subtitle: A game used for demo purposes
+introduction: |
+  # The Artful Detective
+  
+  ## Who
+
+  You are a person playing a game...
+  
+  ## What
+
+  The game revolves around you playing games...
+
+labels:
+  failureCheckLoss: 'The time machine has been damaged beyond repair'
+  successCheckWin: 'You have managed to repair the time machine and are able to return home!'

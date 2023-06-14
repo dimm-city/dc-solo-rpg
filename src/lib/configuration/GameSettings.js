@@ -30,10 +30,7 @@ export class GameSettings {
 		this.deck = config.deck;
 
 		/**
-		 * @property {Object} options - Various gameplay options.
-		 * @property {number} options.difficulty - The game's difficulty setting.
-		 * @property {number} options.rollDuration - The duration of dice roll animations.
-		 * @property {Object} options.dice - The dice theme settings.
+		 * @property {GameOptions} options - Various gameplay options.
 		 */
 		this.options = new GameOptions(config.options);
 

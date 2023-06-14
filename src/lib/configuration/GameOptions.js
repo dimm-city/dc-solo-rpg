@@ -15,10 +15,6 @@ export class GameOptions {
        */
       this.difficulty = options.difficulty ?? Difficulty.IMPOSSIBLE;
   
-      /** 
-       * @property {number} rollDuration - The duration of a dice roll. 
-       */
-      this.rollDuration = options.rollDuration;
   
       /** 
        * @property {Object} dice - The selected dice theme. 

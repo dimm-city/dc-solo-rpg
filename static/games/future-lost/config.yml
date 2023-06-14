@@ -1,19 +1,13 @@
 title: Future Lost
 subtitle: A Dimm City Campaign
-introduction: intro.md
-stylesheet: game.css
-options:
-  difficulty: 0
-  rollDuration: 3000
-  dice:
-    key: null
-    name: 'Pink Dreams'
+availableDiceThemes:
+  - name: 'Pink Dreams'
     category: 'Custom Sets'
     foreground: 'white'
     background: ['#ff007c', '#df73ff', '#f400a1', '#df00ff', '#ff33cc']
     outline: '#570000'
     texture: 'glass'
-    description: 'Pink Dreams, for Ethan'
+    description: Default dice
 labels:
   introNextButtonText: 'Next'
   introBackButtonText: 'Back'
