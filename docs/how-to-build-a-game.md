@@ -10,9 +10,15 @@ We will cover the following topics:
 2. Card Deck Creation: How to create the card deck used in your game.
 3. Styling the Game: How to customize the visual style of your game.
 
-At the end of this tutorial, you will have created three files that make up your game. Each file will relate to one of these topics. So we will create them as we walk through each section.
+At the end of this tutorial, you will have modified three files that make up your game. Each file will relate to one of these topics. We will update each of them as we walk through each section.
 
 Let's get started!
+
+## Download the Templates
+
+The easiest way to get started is to download the templates and extract it to a folder on your computer. [Click here](templates.zip) to download the templates. Once that has completed, extract all of the files to a folder that is specific to your game. We recommend creating a folder that matches the title of your game in this format: `my-game-title`. This folder can be anywhere, and can be named anything as long as it contains only letters, numbers, and hyphens (-). This will help in the final step [Packaging the Game](#packaging-the-game).
+
+Now that you have the templates downloaded, you can move on to adjusting the configuration for the game.
 
 ## Game Configuration
 
@@ -48,23 +54,17 @@ labels:
   successCheckWin: 'You have won the game!'
 ```
 
-Don't worry, you will not need to understand all of the details of YAML formatting to create your game. We have provided some resources to get you started. The next section will walk you through how to create the configuration file by starting with one of our templates.
+Don't worry, you will not need to understand all of the details of YAML formatting to create your game. We have provided some resources to get you started. The next section will walk you through how to update the configuration file for your game.
 
-### Creating the configuration file
+### Updating the configuration file
 
-Every DC Solo RPG game consists of a group of files contained in a folder. So the first step to creating a game is to create a new folder on your computer to hold your game files. This folder can be anywhere, and can be named anything as long as it contains only letters, numbers, and hyphens (-).
+Every DC Solo RPG game consists of a group of files contained in a folder. So the first step to creating a game is to create a new folder on your computer to hold your game files if you haven't already. 
 
-Once you have your game folder created, follow these steps to create the configuration file.
+Once you have your game folder created, and the templates extracted, you can open the `config.yml` file using a text editor of your choice (e.g., Notepad, Sublime Text, Visual Studio Code) and make any necessary edits to the configuration.
 
-1. Go to the example YAML file located at [this link](templates/config.yml).
-2. Right-click on the page and select "Save As" or "Save Page As" to download the YAML file to your computer.
-3. Choose the folder on your computer that your created for your game and click "Save".
+We recommend spending time and effort defining the introduction and adjust labels along with updating the title(s) of the game. To see what other configuration options are available see the [full template](/templates/full-config.yml) which includes all currently supported configuration options. More information can be found in the [Game Configuration](game-configuration.md) document.
 
-Once you have downloaded the YAML file, you can open it using a text editor of your choice (e.g., Notepad, Sublime Text, Visual Studio Code) and make any necessary edits to the configuration.
-
-To see what other configuration options are available see the [full template](/templates/full-config.yml) which includes all currently supported configuration options.
-
-After making the desired changes, save the file. You can then use the updated YAML file in your game or application.
+After making the desired changes, save the file.
 
 
 ## Card Deck
@@ -98,35 +98,33 @@ For now, leave this column set to the default value to ensure your game continue
 
 ### Creating the deck
 
-Now that you have you are familiar with how a card deck is built, you can proceed to create the card deck for your game. The DC Solo RPG system provides an example deck CSV file that you can use as a template to help you get started.
+Now that you have you are familiar with how a card deck is built, you can proceed to create the card deck for your game. The DC Solo RPG system provides a `deck.csv` file that you can use as a template to help you get started.
 
-Here is an example deck CSV file: [deck.csv](https://raw.githubusercontent.com/dimm-city/dc-solo-rpg/main/docs/templates/deck.csv)
+Here is an example deck CSV file: [deck.csv](templates/deck.csv)
 
 To create your own card decks, follow these steps:
 
-1. Open the example deck CSV file in a text editor or spreadsheet program.
-2. Replace the existing card entries with your own cards, following the format specified in the file.
+1. Open the `deck.csv` file in a text editor or spreadsheet program.
+2. Replace the existing card description with an event that is relevant to your game.
 3. Save the modified CSV file into the same folder as your configuration file.
 
-Now your game folder should contain two files:
-- `config.yml`
-- `deck.csv`
+
 
 ## Styling the Game
 
 To customize the visual style of your game in the DC Solo RPG system, you can modify the game's stylesheet. We have provided an example theme CSS file that you can use as a starting point.
 
-Here is an example theme CSS file: [theme.css](https://raw.githubusercontent.com/dimm-city/dc-solo-rpg/main/docs/templates/theme.css)
+Here is an example theme CSS file: [theme.css](templates/theme.css)
 
 To style your game, follow these steps:
 
-1. Open the example theme CSS file in a text editor.
+1. Open the `theme.css` file in a text editor.
 2. Modify the CSS rules to achieve the desired visual style for your game.
 3. Save the modified CSS file into the same folder as your configuration file.
 
 You can customize various aspects of the game's appearance, such as colors, fonts, and layout, by modifying the CSS rules in the theme file. You can refer to the style guide for more information.
 
-(Source: [Style Guide](https://raw.githubusercontent.com/dimm-city/dc-solo-rpg/main/docs/style-guide.md))
+(Source: [Style Guide](style-guide.md))
 
 
 ## Packaging the Game
