@@ -1,5 +1,5 @@
 <script>
-	import { gameStore } from './WAAStore.js';
+	import { gameStore } from '../stores/WAAStore.js';
 	let health = 100;
 	let text = '100';
 	let indicator = 'high';

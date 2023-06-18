@@ -1,7 +1,7 @@
 <script>
 	import GameSelector from '../lib/components/GameSelector.svelte';
 	import { SystemSettings } from '$lib/configuration/SystemSettings.js';
-	import { gameStylesheet, currentScreen } from '$lib/components/WAAStore.js';
+	import { gameStylesheet, currentScreen } from '$lib/stores/WAAStore.js';
 
 	import Game from '$lib/components/Game.svelte';
 

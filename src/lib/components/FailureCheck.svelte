@@ -1,6 +1,6 @@
 <script>
 	import DiceRoller from './ThreeJSDiceBoxRoller.svelte';
-	import { gameStore, failureCheck, confirmFailureCheck } from './WAAStore.js';
+	import { gameStore, failureCheck, confirmFailureCheck } from '../stores/WAAStore.js';
 
 	let diceRoller;
 	let rolling;

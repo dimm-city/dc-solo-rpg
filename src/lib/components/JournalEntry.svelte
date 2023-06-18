@@ -9,7 +9,7 @@
 		exitGame,
 		gameConfig
 
-	} from './WAAStore.js';
+	} from '../stores/WAAStore.js';
 
 	const dispatcher = createEventDispatcher();
 	let saved = false;

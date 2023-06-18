@@ -1,5 +1,5 @@
 <script>
-	import { loadSystemConfig, gameStore, gameConfig } from './WAAStore.js';
+	import { loadSystemConfig, gameStore, gameConfig } from '../stores/WAAStore.js';
 	
 	/**
 	 * @property  {SystemSettings} systemSettings - Current system settings

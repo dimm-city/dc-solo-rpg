@@ -1,7 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	import DiceBox from '@3d-dice/dice-box-threejs';
-	import { gameConfig } from './WAAStore.js';
+	import { gameConfig } from '../stores/WAAStore.js';
 
 	export let rolling = false;
 	export let header = '';

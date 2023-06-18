@@ -1,5 +1,5 @@
 <script>
-	import { gameConfig, gameStore, exitGame } from './WAAStore.js';
+	import { gameConfig, gameStore, exitGame } from '../stores/WAAStore.js';
 </script>
 
 <div class="dc-toolbar">

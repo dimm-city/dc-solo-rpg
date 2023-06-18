@@ -1,5 +1,5 @@
 <script>
-	import { nextScreen, gameStore } from './WAAStore.js';
+	import { nextScreen, gameStore } from '../stores/WAAStore.js';
 </script>
 
 <div class="dc-game-over-container">

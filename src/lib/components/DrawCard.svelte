@@ -1,6 +1,6 @@
 <script>
 	import CardDeck from './CardDeck.svelte';
-	import { confirmCard, drawCard, gameStore } from './WAAStore.js';
+	import { confirmCard, drawCard, gameStore } from '../stores/WAAStore.js';
 	let deck;
 	async function onDrawCard() {
 		await drawCard();

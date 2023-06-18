@@ -1,5 +1,5 @@
 <script>
-	import { gameStore, gameConfig } from './WAAStore.js';
+	import { gameStore, gameConfig } from '../stores/WAAStore.js';
 
 	const numTokens = 10;
 	$: tokens = Array.from({ length: numTokens }, (_, index) => index < $gameStore.tokens);

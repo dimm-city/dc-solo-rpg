@@ -3,5 +3,16 @@
         "Dimm",
         "gameplay",
         "stylesheet"
-    ]
+    ],
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "**/.svelte*":true,
+        "**/node_modules": true,
+        "**/dist": true
+    }
 }

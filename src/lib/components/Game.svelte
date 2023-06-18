@@ -8,7 +8,7 @@
 		gameStylesheet,
 		loadSystemConfig,
 		nextScreen
-	} from './WAAStore.js';
+	} from '../stores/WAAStore.js';
 	import IntroScreen from './IntroScreen.svelte';
 	import SuccessCheck from './SuccessCheck.svelte';
 	import RollForTasks from './RollForTasks.svelte';

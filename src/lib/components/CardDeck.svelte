@@ -1,6 +1,6 @@
 <script>
 	import { createEventDispatcher, onMount } from 'svelte';
-	import { gameConfig } from './WAAStore.js';
+	import { gameConfig } from '../stores/WAAStore.js';
 
 	export let card = null;
 	let isFlipped = false;

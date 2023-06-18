@@ -1,7 +1,7 @@
 <script>
 	import DiceRoller from './ThreeJSDiceBoxRoller.svelte';
 
-	import { confirmTaskRoll, gameConfig, rollForTasks } from './WAAStore.js';
+	import { confirmTaskRoll, gameConfig, rollForTasks } from '../stores/WAAStore.js';
 
 	let taskDice;
 	let rolled = false;
