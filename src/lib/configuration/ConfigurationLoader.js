@@ -1,6 +1,6 @@
 import { default as yaml } from 'js-yaml';
 import { SystemSettings } from './SystemSettings.js';
-import { existsSync, readFileSync } from 'fs';
+//import { readFileSync } from 'fs';
 
 /**
  * This class handles loading and retrieving configuration settings for a web-based game.
@@ -55,6 +55,11 @@ export class ConfigurationLoader {
 
 		const configJson = this.loadYaml(text);
 
+		//if configJson is not an object, throw an error
+		if (!configJson || typeof configJson !== 'object') {
+			throw new Error('Could not load config.yml');
+		}
+
 		//if config.deck is null, fetch it from config.url but replace 'config.yml' with deck.csv
 		if (!configJson.deck) {
 			const deckUrl = gameConfigUrl.replace('config.yml', 'deck.csv');
@@ -63,14 +68,20 @@ export class ConfigurationLoader {
 
 			const deckCsv = await readUrlAsText(deckUrl);
 
-			const deckArray = deckCsv
-				.split('\n')
-				.map((line) => {
-					const [card, suit, description, action] = line.split(',');
-					return { card, suit, description: description?.replaceAll('"', ''), action };
-				})
-				.filter((line) => line.card && !line.card.includes('card'));
-			configJson.deck = deckArray;
+			if (deckCsv?.split) {
+				try {
+					const deckArray = deckCsv
+						.split('\n')
+						.map((line) => {
+							const [card, suit, description, action] = line.split(',');
+							return { card, suit, description: description?.replaceAll('"', ''), action };
+						})
+						.filter((line) => line.card && !line.card.includes('card'));
+					configJson.deck = deckArray;
+				} catch (error) {
+					throw new Error('Could not load deck', error);
+				}
+			} //else throw new Error('deckCsv is not a string', deckCsv);
 		}
 
 		//if config.introduction ends with '.md', fetch it from config.url but replace 'config.yml' with the value of config.introduction
@@ -97,9 +108,9 @@ export class ConfigurationLoader {
 			} else {
 				configJson.stylesheet = stylesheetUrl;
 			}
-		} else if (existsSync(stylesheetUrl)) {
-			//const stylesheet = readFileSync(stylesheetUrl);
-			configJson.stylesheet = stylesheetUrl;
+			// } else if (existsSync(stylesheetUrl)) {
+			// 	//const stylesheet = readFileSync(stylesheetUrl);
+			// 	configJson.stylesheet = stylesheetUrl;
 		} else {
 			configJson.stylesheet = stylesheetUrl;
 			console.error('stylesheetUrl', stylesheetUrl);
@@ -152,14 +163,12 @@ export class ConfigurationLoader {
 }
 async function readUrlAsText(filePath) {
 	let text;
-	if (filePath.startsWith('http')) {
-		const response = await fetch(filePath);
 
-		text = await response.text();
-	} else {
-		const buffer = readFileSync(filePath);
-		text = buffer.toString();
-	}
-	if (!text.split) console.warn('Loaded empty file:', filePath, text);
+	//if (filePath.startsWith('./') || filePath.startsWith('http')) {
+	const response = await fetch(filePath);
+	text = await response.text();
+	//}
+
+	if (!text?.split) console.warn('Loaded empty file:', filePath, text);
 	return text;
 }

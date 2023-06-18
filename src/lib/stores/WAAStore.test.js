@@ -1,4 +1,5 @@
-import { test, describe, expect, vi } from 'vitest';
+import { test, describe, expect, vi, beforeEach } from 'vitest';
+import { readFileSync } from 'fs';
 import { get } from 'svelte/store';
 import {
 	gameStore,
@@ -18,49 +19,122 @@ import {
 } from './WAAStore.js';
 import { GameSettings } from '$lib/configuration/GameSettings.js';
 import { SystemSettings } from '$lib/configuration/SystemSettings.js';
+import { GameLabels } from '$lib/configuration/GameLabels.js';
 
+// vi.stubGlobal(
+// 	'fetch',
+// 	vi.fn((url) => {
+// 		console.log('Mocking fetch');
+// 		return Promise.resolve({
+// 			text: () => {
+// 				console.log('mocking fetch text');
+// 				// 	gameConfigUrl: './static/games/simple-example/config.yml'
 
+// 				const buffer = readFileSync(url);
+// 				const text = buffer.toString();
+// 				return Promise.resolve(text);
+// 			}
+// 		});
+// 	})
+// );
 
+// global.fetch = vi.fn(
+// 	(url) =>
+// 		new Promise(() => {
+// 			return {
+// 				json: () => new Promise((resolve) => resolve({})),
+// 				text: () =>
+// 					new Promise((resolve) => {
+// 						// // Return a mock game configuration
+// 						// const config = new GameSettings();
+// 						// config.stylesheet = 'game.css';
+// 						// return config;
+// 						const buffer = readFileSync(url);
+// 						const output = buffer.toString();
+
+// 						console.log('MOCKED', url); //, output);
+// 						return resolve(output);
+// 					})
+// 			};
+// 		})
+// );
+
+global.fetch = vi.fn(); //(url) => {
+// 	console.log('MOCKING FETCH', url);
+// 	return Promise.resolve(createFetchResponse(url));
+
+// });
+
+function createFetchResponse(url, data) {
+	return {
+		json: () => new Promise((resolve) => resolve(data)),
+		text: () =>
+			new Promise((resolve) => {
+				// // Return a mock game configuration
+				// const config = new GameSettings();
+				// config.stylesheet = 'game.css';
+				// return config;
+				const buffer = readFileSync(url);
+				const output = buffer.toString();
+
+				console.log('MOCKED', url); //, output);
+				return resolve(output);
+			})
+	};
+}
 // Mock ConfigurationLoader.loadSystemSettings and ConfigurationLoader.loadGameSettings
 
-vi.mock('./WAAStore.js', () => {
-
-	return {
-		configLoader: {
-			loadSystemSettings: vi.fn(() => {
-				return new SystemSettings({
-					gameConfigUrl: 'test-game/config.yaml'
-				});
-			}),
-			loadGameSettings: vi.fn((gameConfigUrl) => {
-				console.log('MOCKED');
-				// Return a mock game configuration
-				const config = new GameSettings();
-				config.stylesheet = 'game.css';
-				return config;
-			})
-		}
-	};
-});
+// vi.mock('./WAAStore.js', () => {
+// 	return {
+// 		configLoader: {
+// 			loadSystemSettings: vi.fn(() => {
+// 				return new SystemSettings({
+// 					gameConfigUrl: 'test-game/config.yaml'
+// 				});
+// 			}),
+// 			loadGameSettings: vi.fn((gameConfigUrl) => {
+// 				console.log('MOCKED');
+// 				// Return a mock game configuration
+// 				const config = new GameSettings();
+// 				config.stylesheet = 'game.css';
+// 				return config;
+// 			})
+// 		}
+// 	};
+// });
 
 describe('WAAStore', () => {
+	beforeEach(() => {
+		global.fetch.mockReset();
+	});
 	// Test loadSystemConfig
 	test('loadSystemConfig', async () => {
+		const gameUrl = './static/games/simple-example/config.yml';
 		const systemConfig = {
-			gameConfigUrl: './static/games/simple-example/config.yml'
+			gameConfigUrl: gameUrl
 		};
+
+		fetch.mockImplementation((url) => createFetchResponse(url));
 
 		try {
 			await loadSystemConfig(systemConfig);
 		} catch (error) {
+			console.error('loadSystemConfig error', error);
 			expect(error).toBe(undefined);
 		}
 
+		expect(fetch).toHaveBeenCalledWith(gameUrl);
+
 		expect(gameConfig).toBeDefined();
-		expect(gameConfig.stylesheet).toBe('./static/games/simple-example/game.css');
+		expect(gameConfig.stylesheet).toBe(gameUrl.replace('config.yml', 'game.css'));
 		expect(gameConfig.deck?.length).toBe(52);
 		expect(get(currentScreen)).toBe('options');
-	
+
+		expect(gameConfig.labels).toContain({
+			failureCheckLoss: 'You have lost the game',
+			successCheckWin: 'You have won the game!'
+		});
+
 		// expect(gameConfig.deck).toContain(
 		// 	{
 		// 		card: '"A"',

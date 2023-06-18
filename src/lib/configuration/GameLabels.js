@@ -8,6 +8,8 @@ export class GameLabels {
      * @param {Object} labels - The labels from the YAML configuration.
      */
     constructor(labels) {
+      if(!labels) return;
+      
       /** @property {string} introNextButtonText - Text for the 'Next' button on the intro screen. */
       this.introNextButtonText = labels.introNextButtonText;
   
