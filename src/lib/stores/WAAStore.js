@@ -1,5 +1,5 @@
 // Write a svelte component to allow a player to play the
-// wretched and alone solor RPG. Be sure to include all possible
+// wretched and alone solo RPG. Be sure to include all possible
 // win and loss conditions. Also write the store in such a way that
 // the play must click to draw cards and roll dice. instead of using
 // the block tower, implement a new mechanic that is statistically similiar
@@ -8,7 +8,8 @@ import { writable, get, derived } from 'svelte/store';
 import { ConfigurationLoader } from '../configuration/ConfigurationLoader.js';
 import { StateMachine, transitions } from './WAAStateMachine.js';
 
-const configLoader = new ConfigurationLoader();
+let configLoader = new ConfigurationLoader();
+let stateMachine = new StateMachine('loadGame', transitions);
 
 // Define the initial state of the game
 const initialState = {
@@ -34,7 +35,6 @@ const initialState = {
 	currentCard: null, //The current card that was drawn
 	diceRoll: 0 // Dice roll result
 };
-const stateMachine = new StateMachine('loadGame', transitions);
 
 function shuffle(array) {
 	let currentIndex = array.length,
@@ -83,7 +83,7 @@ export const loadSystemConfig = async (systemConfig) => {
 		throw new Error('Must provide a valid game configuration and url');
 
 	configLoader.loadSystemSettings(systemConfig);
-	console.log('system settings loaded', systemConfig);
+	console.debug('system settings loaded', systemConfig);
 
 	//Load configuration
 	gameConfig = await configLoader.loadGameSettings(systemConfig.gameConfigUrl);
@@ -91,30 +91,19 @@ export const loadSystemConfig = async (systemConfig) => {
 
 	gameStore.update((state) => {
 		state.config = { ...gameConfig };
-		console.log('updating config', state.config);
+		console.debug('updating config', state.config);
 		return state;
 	});
-	//ToDo: add user settings screen
-	//stateMachine.next('options');
+
 	nextScreen('options');
 
 	//gameConfig = { ...systemConfig };
 };
-// export const loadGame = async (config, player) => {
-// 	if (!config || !config.url) throw new Error('Must provide a valid game configuration and url');
 
-// 	//Load configuration
-// 	gameConfig = await configLoader.loadGameSettings(config);
-// 	gameStylesheet.set(gameConfig.stylesheet);
-
-// 	//ToDo: add user settings screen
-// 	stateMachine.next('options');
-// 	startGame(player, config.options);
-// };
 
 export const startGame = (player, options = {}) => {
 	if (!player || !player.name) throw new Error('Must provide a valid player');
-	console.log('starting game', player, options);
+	console.debug('starting game', player, options);
 
 	//Set game options
 	// gameConfig.options = { ...gameConfig.options, ...options }');
@@ -126,7 +115,7 @@ export const startGame = (player, options = {}) => {
 
 	gameStore.update((state) => {
 		state.config = { ...gameConfig };
-		console.log('updating config', state.config);
+		console.debug('updating config', state.config);
 
 		state = { ...initialState };
 		state.round = 1;
@@ -152,7 +141,7 @@ export const startGame = (player, options = {}) => {
 
 export const startRound = () => {
 	gameStore.update((state) => {
-		console.log('starting round', state.round, get(currentScreen));
+		console.debug('starting round', state.round, get(currentScreen));
 		state.round += 1;
 		state.state = stateMachine.next('rollForTasks');
 		nextScreen();
@@ -247,7 +236,7 @@ export const failureCheck = async (result) => {
 
 	//Very short game
 	//result = 20;
-	
+
 	gameStore.update((state) => {
 		if (state.gameOver) throw new Error('The game is over, stop playing with the tower!');
 		state.diceRoll = result;

@@ -1,5 +1,6 @@
 import { default as yaml } from 'js-yaml';
 import { SystemSettings } from './SystemSettings.js';
+import { existsSync, readFileSync } from 'fs';
 
 /**
  * This class handles loading and retrieving configuration settings for a web-based game.
@@ -15,13 +16,13 @@ export class ConfigurationLoader {
 	 */
 	constructor(systemSettings = {}) {
 		// immutable system settings
-		this.systemSettings =  new SystemSettings(systemSettings);
+		this.systemSettings = new SystemSettings(systemSettings);
 		// mutable settings
 		this.gameSettings = {};
 		this.userSettings = {};
 	}
 
-	loadYaml(configYaml){
+	loadYaml(configYaml) {
 		return yaml.load(configYaml);
 	}
 
@@ -31,7 +32,7 @@ export class ConfigurationLoader {
 	//  */
 	loadSystemSettings(systemSettings = {}) {
 		// Freeze the systemSettings object to prevent modification
-		this.systemSettings =  new SystemSettings(systemSettings);
+		this.systemSettings = new SystemSettings(systemSettings);
 		return this.systemSettings;
 	}
 
@@ -49,18 +50,19 @@ export class ConfigurationLoader {
 		if (!gameConfigUrl?.endsWith('config.yml')) {
 			gameConfigUrl += gameConfigUrl.endsWith('/') ? 'config.yml' : '/' + 'config.yml';
 		}
-		const response = await fetch(gameConfigUrl);
 
-		const configYaml = await response.text();
-		const configJson = this.loadYaml(configYaml);
+		let text = await readUrlAsText(gameConfigUrl);
+
+		const configJson = this.loadYaml(text);
 
 		//if config.deck is null, fetch it from config.url but replace 'config.yml' with deck.csv
 		if (!configJson.deck) {
 			const deckUrl = gameConfigUrl.replace('config.yml', 'deck.csv');
 
 			//fetch deck csv from the deckUrl and convert it to a deck array
-			const deckResponse = await fetch(deckUrl);
-			const deckCsv = await deckResponse.text();
+
+			const deckCsv = await readUrlAsText(deckUrl);
+
 			const deckArray = deckCsv
 				.split('\n')
 				.map((line) => {
@@ -85,22 +87,25 @@ export class ConfigurationLoader {
 		}
 
 		//check to see if config.url + "/game.css" exits via a fetch call. if so, assign config.stylesheet to the value of config.url + "/game.css"
-		const stylesheetUrl = gameConfigUrl.replace(
-			'config.yml',
-			configJson.stylesheet ?? 'game.css'
-		);
+		const stylesheetUrl = gameConfigUrl.replace('config.yml', configJson.stylesheet ?? 'game.css');
 
 		//fetch stylesheet from the stylesheetUrl and convert it to a string
-		const stylesheetResponse = await fetch(stylesheetUrl);
-		if (stylesheetResponse.status == 404) {
-			configJson.stylesheet = '';
-		} else {
-			//const stylesheet = await stylesheetResponse.text();
+		if (stylesheetUrl.startsWith('http')) {
+			const stylesheetResponse = await fetch(stylesheetUrl);
+			if (stylesheetResponse.status == 404) {
+				configJson.stylesheet = '';
+			} else {
+				configJson.stylesheet = stylesheetUrl;
+			}
+		} else if (existsSync(stylesheetUrl)) {
+			//const stylesheet = readFileSync(stylesheetUrl);
 			configJson.stylesheet = stylesheetUrl;
+		} else {
+			configJson.stylesheet = stylesheetUrl;
+			console.error('stylesheetUrl', stylesheetUrl);
 		}
 
-		
-		console.log('gameSettings', gameConfigUrl, this.systemSettings, configJson);
+		console.debug('gameSettings', gameConfigUrl, this.systemSettings, configJson);
 
 		// Merge system settings with game settings, overwriting system settings with game settings if necessary.
 		// This is to allow game settings to overwrite system settings, but not vice versa.
@@ -122,7 +127,7 @@ export class ConfigurationLoader {
 
 		if (this.gameSettings.options.difficulty == undefined) this.gameSettings.options.difficulty = 0;
 
-		console.log('loadUserSettings', this.userSettings, this.gameSettings);
+		console.debug('loadUserSettings', this.userSettings, this.gameSettings);
 		return this.gameSettings;
 	}
 
@@ -144,4 +149,17 @@ export class ConfigurationLoader {
 		// Merge all settings with priority: userSettings -> gameSettings -> systemSettings
 		return { ...this.systemSettings, ...this.gameSettings, ...this.userSettings };
 	}
+}
+async function readUrlAsText(filePath) {
+	let text;
+	if (filePath.startsWith('http')) {
+		const response = await fetch(filePath);
+
+		text = await response.text();
+	} else {
+		const buffer = readFileSync(filePath);
+		text = buffer.toString();
+	}
+	if (!text.split) console.warn('Loaded empty file:', filePath, text);
+	return text;
 }
