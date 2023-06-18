@@ -21,6 +21,10 @@ export class ConfigurationLoader {
 		this.userSettings = {};
 	}
 
+	loadYaml(configYaml){
+		return yaml.load(configYaml);
+	}
+
 	// /**
 	//  * Load system settings.
 	//  * @param {SystemSettings} systemSettings - The initial system settings.
@@ -36,6 +40,11 @@ export class ConfigurationLoader {
 	 * @param {string} gameConfigUrl - The URL to the game configuration file.
 	 */
 	async loadGameSettings(gameConfigUrl) {
+		//if gameConfigUrl is null or not a string, return
+		if (!gameConfigUrl || typeof gameConfigUrl !== 'string') {
+			return;
+		}
+
 		//if config.url does not end with '/config.yml' add it to the end of the string
 		if (!gameConfigUrl?.endsWith('config.yml')) {
 			gameConfigUrl += gameConfigUrl.endsWith('/') ? 'config.yml' : '/' + 'config.yml';
@@ -43,7 +52,7 @@ export class ConfigurationLoader {
 		const response = await fetch(gameConfigUrl);
 
 		const configYaml = await response.text();
-		const configJson = yaml.load(configYaml);
+		const configJson = this.loadYaml(configYaml);
 
 		//if config.deck is null, fetch it from config.url but replace 'config.yml' with deck.csv
 		if (!configJson.deck) {
