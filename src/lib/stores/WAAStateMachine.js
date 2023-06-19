@@ -40,7 +40,8 @@ export const transitions = {
 		gameOver: 'gameOver'
 	},
 	gameOver: {
-		finalLog: 'finalLog'
+		finalLog: 'finalLog',
+		intro: 'intro'
 	},
 	finalLog: {
 		loadGame: 'loadGame',

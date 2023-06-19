@@ -9,6 +9,7 @@ import {
 	rollForTasks,
 	drawCard,
 	failureCheck,
+	confirmFailureCheck,
 	recordRound,
 	successCheck,
 	restartGame,
@@ -142,170 +143,384 @@ describe('WAAStore', () => {
 	});
 
 	// Test drawCard
-	test('drawCard - final king', () => {
-		const card = { card: 'K', suit: 'hearts' };
-		const initialState = {
-			kingsRevealed: 3,
-			cardsToDraw: 1,
-			log: [],
-			deck: [card]
-		};
-		services.stateMachine = new StateMachine('drawCard');
-		gameStore.set({ ...initialState });
-		drawCard();
+	describe('drawCard', () => {
+		test('drawCard - final king', () => {
+			const card = { card: 'K', suit: 'hearts' };
+			const initialState = {
+				kingsRevealed: 3,
+				cardsToDraw: 1,
+				log: [],
+				deck: [card]
+			};
+			services.stateMachine = new StateMachine('drawCard');
+			gameStore.set({ ...initialState });
+			drawCard();
 
-		validateDrawCard(initialState, card);
+			validateDrawCard(initialState, card);
+		});
+
+		test('should draw a card and update the game state (even card)', () => {
+			const card = { card: '2', suit: 'hearts' };
+			const initialState = {
+				state: 'drawCard',
+				kingsRevealed: 3,
+				cardsToDraw: 1,
+				log: [],
+				deck: [card]
+			};
+			services.stateMachine = new StateMachine('drawCard');
+			gameStore.set({ ...initialState });
+			drawCard();
+
+			const updatedState = get(gameStore);
+
+			expect(updatedState.currentCard).toEqual(card);
+			expect(updatedState.cardsToDraw).toBe(initialState.cardsToDraw - 1);
+			expect(updatedState.log).toEqual([{ ...card, round: initialState.round }]);
+			expect(updatedState.kingsRevealed).toBe(initialState.kingsRevealed);
+			expect(updatedState.bonus).toBe(initialState.bonus);
+			expect(updatedState.aceOfHeartsRevealed).toBe(initialState.aceOfHeartsRevealed);
+			expect(updatedState.tower).toBe(initialState.tower);
+			expect(updatedState.state).toBe('log');
+		});
+
+		test('should draw a card and update the game state (odd card)', () => {
+			const card = { card: '7', suit: 'diamonds' };
+			const initialState = {
+				state: 'drawCard',
+				kingsRevealed: 3,
+				cardsToDraw: 1,
+				log: [],
+				deck: [card]
+			};
+			services.stateMachine = new StateMachine('drawCard');
+			gameStore.set({ ...initialState });
+			drawCard();
+
+			const updatedState = get(gameStore);
+
+			expect(updatedState.currentCard).toEqual(card);
+			expect(updatedState.cardsToDraw).toBe(initialState.cardsToDraw - 1);
+			expect(updatedState.log).toEqual([{ ...card, round: initialState.round }]);
+			expect(updatedState.kingsRevealed).toBe(initialState.kingsRevealed);
+			expect(updatedState.bonus).toBe(initialState.bonus);
+			expect(updatedState.aceOfHeartsRevealed).toBe(initialState.aceOfHeartsRevealed);
+			expect(updatedState.tower).toBe(initialState.tower);
+			expect(updatedState.state).toBe('failureCheck');
+		});
+		test('should draw a card and update the game state (final king)', () => {
+			const card = { card: 'K', suit: 'hearts' };
+			const initialState = {
+				state: 'drawCard',
+				kingsRevealed: 3,
+				cardsToDraw: 1,
+				log: [],
+				deck: [card]
+			};
+			services.stateMachine = new StateMachine('drawCard');
+			gameStore.set({ ...initialState });
+			drawCard();
+
+			const updatedState = get(gameStore);
+
+			expect(updatedState.currentCard).toEqual(card);
+			expect(updatedState.cardsToDraw).toBe(initialState.cardsToDraw - 1);
+			expect(updatedState.log).toEqual([{ ...card, round: initialState.round }]);
+			expect(updatedState.kingsRevealed).toBe(initialState.kingsRevealed + 1);
+			expect(updatedState.bonus).toBe(initialState.bonus);
+			expect(updatedState.aceOfHeartsRevealed).toBe(initialState.aceOfHeartsRevealed);
+			expect(updatedState.tower).toBe(initialState.tower);
+			expect(updatedState.state).toBe('gameOver');
+		});
+
+		test('should draw a card and update the game state (ace of hearts)', () => {
+			const card = { card: 'A', suit: 'hearts' };
+			const initialState = {
+				state: 'drawCard',
+				kingsRevealed: 3,
+				cardsToDraw: 1,
+				log: [],
+				deck: [card]
+			};
+			services.stateMachine = new StateMachine('drawCard');
+			gameStore.set({ ...initialState });
+			drawCard();
+
+			const updatedState = get(gameStore);
+
+			expect(updatedState.currentCard).toEqual(card);
+			expect(updatedState.cardsToDraw).toBe(initialState.cardsToDraw - 1);
+			expect(updatedState.log).toEqual([{ ...card, round: initialState.round }]);
+			expect(updatedState.kingsRevealed).toBe(initialState.kingsRevealed);
+			expect(updatedState.bonus).toBe(initialState.bonus + 1);
+			expect(updatedState.aceOfHeartsRevealed).toBe(true);
+			expect(updatedState.tower).toBe(initialState.tower);
+			expect(updatedState.state).toBe('log');
+		});
+
+		test('should draw a card and update the game state (game over)', () => {
+			const initialState = {
+				state: 'drawCard',
+				kingsRevealed: 3,
+				cardsToDraw: 1,
+				log: [],
+				deck: []
+			};
+			services.stateMachine = new StateMachine('drawCard');
+			gameStore.set({ ...initialState });
+			drawCard();
+
+			const updatedState = get(gameStore);
+
+			expect(updatedState.gameOver).toBe(true);
+			expect(updatedState.cardsToDraw).toBe(initialState.cardsToDraw);
+			expect(updatedState.bonus).toBe(initialState.bonus);
+			expect(updatedState.aceOfHeartsRevealed).toBe(initialState.aceOfHeartsRevealed);
+			expect(updatedState.tower).toBe(initialState.tower);
+			expect(updatedState.state).toBe('gameOver');
+		});
 	});
-
-	test('should draw a card and update the game state (even card)', () => {
-		const card = { card: '2', suit: 'hearts' };
-		const initialState = {
-			state: 'drawCard',
-			kingsRevealed: 3,
-			cardsToDraw: 1,
-			log: [],
-			deck: [card]
-		};
-		services.stateMachine = new StateMachine('drawCard');
-		gameStore.set({ ...initialState });
-		drawCard();
-
-		const updatedState = get(gameStore);
-
-		expect(updatedState.currentCard).toEqual(card);
-		expect(updatedState.cardsToDraw).toBe(initialState.cardsToDraw - 1);
-		expect(updatedState.log).toEqual([{ ...card, round: initialState.round }]);
-		expect(updatedState.kingsRevealed).toBe(initialState.kingsRevealed);
-		expect(updatedState.bonus).toBe(initialState.bonus);
-		expect(updatedState.aceOfHeartsRevealed).toBe(initialState.aceOfHeartsRevealed);
-		expect(updatedState.tower).toBe(initialState.tower);
-		expect(updatedState.state).toBe('log');
-	});
-
-	test('should draw a card and update the game state (odd card)', () => {
-		const card = { card: '7', suit: 'diamonds' };
-		const initialState = {
-			state: 'drawCard',
-			kingsRevealed: 3,
-			cardsToDraw: 1,
-			log: [],
-			deck: [card]
-		};
-		services.stateMachine = new StateMachine('drawCard');
-		gameStore.set({ ...initialState });
-		drawCard();
-
-		const updatedState = get(gameStore);
-
-		expect(updatedState.currentCard).toEqual(card);
-		expect(updatedState.cardsToDraw).toBe(initialState.cardsToDraw - 1);
-		expect(updatedState.log).toEqual([{ ...card, round: initialState.round }]);
-		expect(updatedState.kingsRevealed).toBe(initialState.kingsRevealed);
-		expect(updatedState.bonus).toBe(initialState.bonus);
-		expect(updatedState.aceOfHeartsRevealed).toBe(initialState.aceOfHeartsRevealed);
-		expect(updatedState.tower).toBe(initialState.tower);
-		expect(updatedState.state).toBe('failureCheck');
-	});
-	test('should draw a card and update the game state (final king)', () => {
-		const card = { card: 'K', suit: 'hearts' };
-		const initialState = {
-		  state: 'drawCard',
-		  kingsRevealed: 3,
-		  cardsToDraw: 1,
-		  log: [],
-		  deck: [card],
-		};
-		services.stateMachine = new StateMachine('drawCard');
-		gameStore.set({ ...initialState });
-		drawCard();
-	
-		const updatedState = get(gameStore);
-	
-		expect(updatedState.currentCard).toEqual(card);
-		expect(updatedState.cardsToDraw).toBe(initialState.cardsToDraw - 1);
-		expect(updatedState.log).toEqual([{ ...card, round: initialState.round }]);
-		expect(updatedState.kingsRevealed).toBe(initialState.kingsRevealed + 1);
-		expect(updatedState.bonus).toBe(initialState.bonus);
-		expect(updatedState.aceOfHeartsRevealed).toBe(initialState.aceOfHeartsRevealed);
-		expect(updatedState.tower).toBe(initialState.tower);
-		expect(updatedState.state).toBe('gameOver');
-	  });
-
-	  test('should draw a card and update the game state (ace of hearts)', () => {
-		const card = { card: 'A', suit: 'hearts' };
-		const initialState = {
-		  state: 'drawCard',
-		  kingsRevealed: 3,
-		  cardsToDraw: 1,
-		  log: [],
-		  deck: [card],
-		};
-		services.stateMachine = new StateMachine('drawCard');
-		gameStore.set({ ...initialState });
-		drawCard();
-	
-		const updatedState = get(gameStore);
-	
-		expect(updatedState.currentCard).toEqual(card);
-		expect(updatedState.cardsToDraw).toBe(initialState.cardsToDraw - 1);
-		expect(updatedState.log).toEqual([{ ...card, round: initialState.round }]);
-		expect(updatedState.kingsRevealed).toBe(initialState.kingsRevealed);
-		expect(updatedState.bonus).toBe(initialState.bonus + 1);
-		expect(updatedState.aceOfHeartsRevealed).toBe(true);
-		expect(updatedState.tower).toBe(initialState.tower);
-		expect(updatedState.state).toBe('log');
-	  });
-
-	  test('should draw a card and update the game state (game over)', () => {
-		
-		const initialState = {
-		  state: 'drawCard',
-		  kingsRevealed: 3,
-		  cardsToDraw: 1,
-		  log: [],
-		  deck: [],
-		};
-		services.stateMachine = new StateMachine('drawCard');
-		gameStore.set({ ...initialState });
-		drawCard();
-	
-		const updatedState = get(gameStore);
-	
-		expect(updatedState.gameOver).toBe(true);
-		expect(updatedState.cardsToDraw).toBe(initialState.cardsToDraw );		
-		expect(updatedState.bonus).toBe(initialState.bonus);
-		expect(updatedState.aceOfHeartsRevealed).toBe(initialState.aceOfHeartsRevealed);
-		expect(updatedState.tower).toBe(initialState.tower);
-		expect(updatedState.state).toBe('gameOver');
-	  });
 	// Test failureCheck
-	test('failureCheck', async () => {
-		// Call failureCheck with a mock result
-		// Assert that the tower in the gameStore is updated correctly
+	describe('failureCheck', () => {
+		test('should perform the failure check and update the game state (tower collapsed)', async () => {
+			services.stateMachine = new StateMachine('failureCheck');
+			const initialState = {
+				gameOver: false,
+				diceRoll: 0,
+				bonus: 1,
+				tower: 3,
+				cardsToDraw: 0,
+				config: {
+					labels: {
+						failureCheckLoss: 'Custom Loss Label'
+					}
+				}
+			};
+
+			gameStore.set({ ...initialState });
+
+			const result = await failureCheck(5, services);
+
+			const updatedState = get(gameStore);
+
+			expect(result).toBe(5);
+			expect(updatedState.diceRoll).toBe(result);
+			expect(updatedState.tower).toBe(0);
+			expect(updatedState.status).toBe('Custom Loss Label');
+			expect(updatedState.gameOver).toBe(true);
+			expect(updatedState.state).toBe('gameOver');
+		});
+
+		test('should perform the failure check and update the game state (tower not collapsed)', async () => {
+			services.stateMachine = new StateMachine('failureCheck');
+			const initialState = {
+				gameOver: false,
+				diceRoll: 0,
+				bonus: 1,
+				tower: 5,
+				cardsToDraw: 1,
+				config: {}
+			};
+
+			gameStore.set({ ...initialState });
+
+			const result = await failureCheck(2, services);
+
+			const updatedState = get(gameStore);
+
+			expect(result).toBe(2);
+			expect(updatedState.diceRoll).toBe(result);
+			expect(updatedState.tower).toBe(initialState.tower - (result - initialState.bonus));
+			expect(updatedState.status).toBeUndefined();
+			expect(updatedState.gameOver).toBe(false);
+			expect(updatedState.state).toBe('drawCard');
+		});
+	});
+
+	describe('confirmFailureCheck', () => {
+		test('should update the current screen', () => {
+			const initialState = {
+				state: 'failureCheck'
+			};
+			gameStore.set({ ...initialState });
+
+			//Failure check game not over, no cards left to draw this round
+			services.stateMachine = new StateMachine('failureCheck');
+			services.stateMachine.next('log');
+
+			confirmFailureCheck();
+
+			const updatedState = get(currentScreen);
+
+			expect(updatedState).toBe('log');
+		});
 	});
 
 	// Test recordRound
-	test('recordRound', () => {
-		// Call recordRound with a mock journalEntry
-		// Assert that the journalEntry is added to the journalEntries in the gameStore
+	describe('recordRound', () => {
+		test('should record the round and update the game state (ace of hearts revealed)', () => {
+			const journalEntry = { text: 'Journal entry 1' };
+			const initialState = {
+				round: 1,
+				aceOfHeartsRevealed: true,
+				gameOver: false,
+				journalEntries: [],
+				state: 'log'
+			};
+
+			services.stateMachine = new StateMachine('log');
+
+			gameStore.set({ ...initialState });
+
+			recordRound(journalEntry, services);
+
+			const updatedState = get(gameStore);
+
+			expect(updatedState.journalEntries).toEqual([
+				{ ...journalEntry, round: initialState.round, dateRecorded: expect.any(String) }
+			]);
+			expect(updatedState.state).toBe('successCheck');
+		});
+
+		test('should record the round and update the game state (ace of hearts not revealed)', () => {
+			const journalEntry = { text: 'Journal entry 1' };
+			const initialState = {
+				round: 1,
+				aceOfHeartsRevealed: false,
+				gameOver: false,
+				journalEntries: [],
+				state: 'log'
+			};
+			services.stateMachine = new StateMachine('log');
+
+			gameStore.set({ ...initialState });
+
+			recordRound(journalEntry, services);
+
+			const updatedState = get(gameStore);
+
+			expect(updatedState.journalEntries).toEqual([
+				{ ...journalEntry, round: initialState.round, dateRecorded: expect.any(String) }
+			]);
+			expect(updatedState.state).toBe('startRound');
+		});
+
+		test('should throw an error if no journal entry provided', () => {
+			expect(() => recordRound(null)).toThrow('No journal entries provided for this round');
+		});
+
+		test('should throw an error if journal entry text is null', () => {
+			const journalEntry = { text: null };
+
+			expect(() => recordRound(journalEntry)).toThrow('No journal entries provided for this round');
+		});
 	});
 
-	// Test successCheck
-	test('successCheck', async () => {
-		// Call successCheck with a mock roll
-		// Assert that the tokens in the gameStore are updated correctly
+	//Test successCheck
+	describe('successCheck', () => {
+		test('should perform the success check and update the game state (success)', async () => {
+			services.getRandomNumber = vi.fn().mockResolvedValueOnce(6);
+			services.stateMachine = new StateMachine('successCheck');
+			const initialState = {
+				diceRoll: 0,
+				tokens: 1,
+				state: 'successCheck',
+				config: {
+					difficulty: 0,
+					labels: {
+						successCheckWin: 'Custom Win Label'
+					}
+				}
+			};
+
+			gameStore.set({ ...initialState });
+
+			const roll = await successCheck(services);
+
+			const updatedState = get(gameStore);
+
+			expect(roll).toBe(6);
+			expect(updatedState.diceRoll).toBe(roll);
+			expect(updatedState.tokens).toBe(initialState.tokens - 1);
+			expect(updatedState.win).toBe(true);
+			expect(updatedState.status).toBe('Custom Win Label');
+			expect(updatedState.gameOver).toBe(true);
+			expect(updatedState.state).toBe('gameOver');
+		});
+
+		test('should perform the success check and update the game state (failure)', async () => {
+			services.getRandomNumber = vi.fn().mockResolvedValueOnce(4);
+			services.stateMachine = new StateMachine('successCheck');
+			const initialState = {
+				diceRoll: 0,
+				tokens: 2,
+				state: 'successCheck',
+				win: false,
+				gameOver: false,
+				config: {
+					difficulty: 1,
+					labels: {}
+				}
+			};
+
+			gameStore.set({ ...initialState });
+
+			const roll = await successCheck(services);
+
+			const updatedState = get(gameStore);
+
+			expect(roll).toBe(4);
+			expect(updatedState.diceRoll).toBe(roll);
+			expect(updatedState.tokens).toBe(initialState.tokens);
+			expect(updatedState.win).toBe(false);
+			expect(updatedState.status).toBeUndefined();
+			expect(updatedState.gameOver).toBe(false);
+			expect(updatedState.state).toBe('startRound');
+		});
 	});
 
 	// Test restartGame
 	test('restartGame', () => {
-		// Call restartGame
-		// Assert that the gameStore is reset to the initial state
+		const player = { name: 'John Doe' };
+		const options = { difficulty: 1 };
+		const currentState = {
+			player,
+			state: 'gameOver',
+			config: { options }
+		};
+		services.stateMachine = new StateMachine('gameOver');
+		gameStore.set({ ...currentState });
+
+		//Can only restart a game that is in the gameOver state
+		expect(currentState.state).toBe('gameOver');
+
+		restartGame();
+
+		const store = get(gameStore);
+		expect(store.player).toBe(player);
+		expect(store.config.options).toStrictEqual(options);
+		expect(store.state).toBe('intro');
 	});
 
 	// Test exitGame
 	test('exitGame', async () => {
-		// Call exitGame
-		// Assert that the gameStore is reset to the initial state
+		const player = { name: 'John Doe' };
+		const options = { difficulty: 1 };
+		const currentState = {
+			player,
+			round: 5,
+			deck: [{ card: '2', suit: 'hearts', description: 'Two of Hearts' }],
+			config: { options }
+		};
+
+		gameStore.set({ ...currentState });
+
+		exitGame();
+
+		const store = get(gameStore);
+		expect(store.player).toBe(player);
+		expect(store.state).toBe('loadGame');
+		expect(store.round).toBe(0);
 	});
 });
 function validateDrawCard(initialState, card) {
