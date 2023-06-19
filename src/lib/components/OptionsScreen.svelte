@@ -1,5 +1,5 @@
 <script>
-	import { startGame, gameStore, gameConfig } from '../stores/WAAStore.js';
+	import { startGame, gameStore } from '../stores/WAAStore.js';
 	import { Difficulty } from '../configuration/DifficultyLevels.js';
 	export let systemSettings = {};
 	let options = {};

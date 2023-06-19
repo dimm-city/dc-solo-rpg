@@ -2,8 +2,7 @@
 	import OptionsScreen from './OptionsScreen.svelte';
 	import { createEventDispatcher, onMount } from 'svelte';
 	import {
-		currentScreen,
-		gameConfig,
+		currentScreen,		
 		gameStore,
 		gameStylesheet,
 		loadSystemConfig,

@@ -1,7 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	import DiceBox from '@3d-dice/dice-box-threejs';
-	import { gameConfig } from '../stores/WAAStore.js';
+	import { gameStore } from '../stores/WAAStore.js';
 
 	export let rolling = false;
 	export let header = '';
@@ -28,22 +28,22 @@
 
 	let diceBox;
 	onMount(async () => {
-		defaultConfig.theme_colorset = gameConfig.options?.dice ?? defaultConfig.theme_colorset;
+		defaultConfig.theme_colorset = $gameStore.config.options?.dice ?? defaultConfig.theme_colorset;
 
 		let config = {
 			assetPath: '/dice/',
 			sounds: true,
 			volume: 100,
-			//theme_colorset:  gameConfig.options?.dice?.key ?? 'pinkdreams',
-			//theme_customColorset: gameConfig.options?.dice,
+			//theme_colorset:  $gameStore.config.options?.dice?.key ?? 'pinkdreams',
+			//theme_customColorset: $gameStore.config.options?.dice,
 			baseScale: 140,
 			strength: 1
 		};
 
-		if (gameConfig.options?.dice?.key) {
-			config.theme_colorset = gameConfig.options?.dice?.key ?? 'pinkdreams';
+		if ($gameStore.config.options?.dice?.key) {
+			config.theme_colorset = $gameStore.config.options?.dice?.key ?? 'pinkdreams';
 		} else {
-			config.theme_customColorset = gameConfig.options?.dice;
+			config.theme_customColorset = $gameStore.config.options?.dice;
 		}
 
 		diceBox = new DiceBox('#dice-roller-container', config);

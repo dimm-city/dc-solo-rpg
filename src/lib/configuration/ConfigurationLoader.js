@@ -1,6 +1,5 @@
 import { default as yaml } from 'js-yaml';
 import { SystemSettings } from './SystemSettings.js';
-//import { readFileSync } from 'fs';
 
 /**
  * This class handles loading and retrieving configuration settings for a web-based game.
@@ -116,7 +115,7 @@ export class ConfigurationLoader {
 			console.error('stylesheetUrl', stylesheetUrl);
 		}
 
-		console.debug('gameSettings', gameConfigUrl, this.systemSettings, configJson);
+		//console.debug('gameSettings', gameConfigUrl, this.systemSettings, configJson);
 
 		// Merge system settings with game settings, overwriting system settings with game settings if necessary.
 		// This is to allow game settings to overwrite system settings, but not vice versa.
@@ -138,7 +137,7 @@ export class ConfigurationLoader {
 
 		if (this.gameSettings.options.difficulty == undefined) this.gameSettings.options.difficulty = 0;
 
-		console.debug('loadUserSettings', this.userSettings, this.gameSettings);
+		//console.debug('loadUserSettings', this.userSettings, this.gameSettings);
 		return this.gameSettings;
 	}
 

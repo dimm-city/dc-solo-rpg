@@ -1,10 +1,10 @@
 <script>
 	import {marked} from "marked";
-	import { nextScreen, gameConfig, exitGame } from '../stores/WAAStore.js';
+	import { nextScreen, gameStore, exitGame } from '../stores/WAAStore.js';
 	let currentView = 'rules';
 	$: backButtonText = currentView == 'intro' ? 'back' : 'exit';
 	$: nextButtonText = currentView == 'intro' ? 'start' : 'continue';
-	$: intro = marked(gameConfig.introduction ?? '');
+	$: intro = marked($gameStore.config?.introduction ?? '');
 	function next() {
 		if (currentView == 'rules') {
 			currentView = 'intro';

@@ -1,6 +1,6 @@
 <script>
 	import DiceRoller from './ThreeJSDiceBoxRoller.svelte';
-	import { gameConfig, gameStore, startRound, successCheck } from '../stores/WAAStore.js';
+	import {  gameStore, startRound, successCheck } from '../stores/WAAStore.js';
 	let diceRoller;
 	let rolling = false;
 
@@ -16,8 +16,8 @@
 
 	$: header =
 		$gameStore.state == 'successCheck'
-			? gameConfig.labels.successCheckHeader
-			: gameConfig.labels.successCheckResultHeader;
+			? $gameStore.config.labels.successCheckHeader
+			: $gameStore.config.labels.successCheckResultHeader;
 </script>
 
 <div class="dc-success-check-container">

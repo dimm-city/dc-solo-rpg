@@ -3,8 +3,6 @@ import { readFileSync } from 'fs';
 import { get } from 'svelte/store';
 import {
 	gameStore,
-	configLoader,
-	gameConfig,
 	loadSystemConfig,
 	startGame,
 	startRound,
@@ -15,55 +13,18 @@ import {
 	successCheck,
 	restartGame,
 	exitGame,
-	currentScreen
+	currentScreen,
+	services
 } from './WAAStore.js';
-import { GameSettings } from '$lib/configuration/GameSettings.js';
-import { SystemSettings } from '$lib/configuration/SystemSettings.js';
-import { GameLabels } from '$lib/configuration/GameLabels.js';
 
-// vi.stubGlobal(
-// 	'fetch',
-// 	vi.fn((url) => {
-// 		console.log('Mocking fetch');
-// 		return Promise.resolve({
-// 			text: () => {
-// 				console.log('mocking fetch text');
-// 				// 	gameConfigUrl: './static/games/simple-example/config.yml'
-
-// 				const buffer = readFileSync(url);
-// 				const text = buffer.toString();
-// 				return Promise.resolve(text);
-// 			}
-// 		});
-// 	})
-// );
-
-// global.fetch = vi.fn(
-// 	(url) =>
-// 		new Promise(() => {
-// 			return {
-// 				json: () => new Promise((resolve) => resolve({})),
-// 				text: () =>
-// 					new Promise((resolve) => {
-// 						// // Return a mock game configuration
-// 						// const config = new GameSettings();
-// 						// config.stylesheet = 'game.css';
-// 						// return config;
-// 						const buffer = readFileSync(url);
-// 						const output = buffer.toString();
-
-// 						console.log('MOCKED', url); //, output);
-// 						return resolve(output);
-// 					})
-// 			};
-// 		})
-// );
-
-global.fetch = vi.fn(); //(url) => {
-// 	console.log('MOCKING FETCH', url);
-// 	return Promise.resolve(createFetchResponse(url));
-
+// vi.mock('./WAAStore.js', () => {
+// 	return {
+// 		getRandomNumber: vi.fn(() => 5),
+// 		failure: vi.fn()
+// 	};
 // });
+
+global.fetch = vi.fn();
 
 function createFetchResponse(url, data) {
 	return {
@@ -82,31 +43,14 @@ function createFetchResponse(url, data) {
 			})
 	};
 }
-// Mock ConfigurationLoader.loadSystemSettings and ConfigurationLoader.loadGameSettings
-
-// vi.mock('./WAAStore.js', () => {
-// 	return {
-// 		configLoader: {
-// 			loadSystemSettings: vi.fn(() => {
-// 				return new SystemSettings({
-// 					gameConfigUrl: 'test-game/config.yaml'
-// 				});
-// 			}),
-// 			loadGameSettings: vi.fn((gameConfigUrl) => {
-// 				console.log('MOCKED');
-// 				// Return a mock game configuration
-// 				const config = new GameSettings();
-// 				config.stylesheet = 'game.css';
-// 				return config;
-// 			})
-// 		}
-// 	};
-// });
 
 describe('WAAStore', () => {
 	beforeEach(() => {
 		global.fetch.mockReset();
+		gameStore.set({});
+		currentScreen.set('');
 	});
+
 	// Test loadSystemConfig
 	test('loadSystemConfig', async () => {
 		const gameUrl = './static/games/simple-example/config.yml';
@@ -116,19 +60,19 @@ describe('WAAStore', () => {
 
 		fetch.mockImplementation((url) => createFetchResponse(url));
 
-		try {
-			await loadSystemConfig(systemConfig);
-		} catch (error) {
-			console.error('loadSystemConfig error', error);
-			expect(error).toBe(undefined);
-		}
+		await loadSystemConfig(systemConfig);
 
 		expect(fetch).toHaveBeenCalledWith(gameUrl);
 
+		const store = get(gameStore);
+		expect(store).toBeDefined();
+
+		const gameConfig = store.config;
 		expect(gameConfig).toBeDefined();
 		expect(gameConfig.stylesheet).toBe(gameUrl.replace('config.yml', 'game.css'));
 		expect(gameConfig.deck?.length).toBe(52);
-		expect(get(currentScreen)).toBe('options');
+		expect(store.state).toBeDefined();
+		expect(store.state).toBe('options');
 
 		expect(gameConfig.labels).toContain({
 			failureCheckLoss: 'You have lost the game',
@@ -146,20 +90,57 @@ describe('WAAStore', () => {
 
 	// Test startGame
 	test('startGame', () => {
-		// Call startGame with a mock player and options
-		// Assert that the gameStore is updated correctly
+		const mockPlayer = {
+			name: 'John Doe'
+		};
+
+		// Call the startGame action
+		startGame(mockPlayer, {
+			difficulty: 3
+		});
+
+		const store = get(gameStore);
+		expect(store.round).toBe(1);
+		expect(store.player).toBe(mockPlayer);
+		expect(store.player.name).toBe(mockPlayer.name);
+		expect(store.deck).toBeDefined();
+		expect(store.deck.length).toBe(52);
+		expect(store.state).toBe('intro');
+		expect(store.config.options).toBeDefined();
+		expect(store.config.options.difficulty).toBe(3);
 	});
 
 	// Test startRound
 	test('startRound', () => {
+		//Write a test for startRound
+		gameStore.set({
+			round: 1,
+			state: 'intro'
+		});
+
 		// Call startRound
+		startRound();
+
 		// Assert that the round number in the gameStore is incremented
+		const store = get(gameStore);
+		expect(store.round).toBe(2);
+		expect(store.state).toBe('rollForTasks');
+		expect(get(currentScreen)).toBe('rollForTasks');
 	});
 
 	// Test rollForTasks
 	test('rollForTasks', async () => {
-		// Call rollForTasks with a mock result
-		// Assert that the cardsToDraw in the gameStore is updated correctly
+		gameStore.set({});
+		services.getRandomNumber = () => 5;
+		const result = await rollForTasks();
+
+		// Assert that the tokens in the gameStore are updated correctly
+		const store = get(gameStore);
+		expect(store).toBeDefined();
+		expect(result).toBe(5);
+		expect(store.cardsToDraw).toBe(5);
+		expect(store.state).toBe('drawCard');
+		expect(get(currentScreen)).toBe('');
 	});
 
 	// Test drawCard

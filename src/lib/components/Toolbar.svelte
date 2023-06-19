@@ -1,14 +1,14 @@
 <script>
-	import { gameConfig, gameStore, exitGame } from '../stores/WAAStore.js';
+	import {  gameStore, exitGame } from '../stores/WAAStore.js';
 </script>
 
 <div class="dc-toolbar">
 	<div class="left">
-		<h3>{gameConfig?.title ?? 'Please select a game'}</h3>
+		<h3>{$gameStore.config?.title ?? 'Please select a game'}</h3>
 	</div>
 	<div class="center" />
 	<div class="right">
-		<button class="dc-exit-button" on:click={exitGame}>{gameConfig.labels.toolbarExitButtonText}</button>
+		<button class="dc-exit-button" on:click={exitGame}>{$gameStore.config.labels.toolbarExitButtonText}</button>
 	</div>
 </div>
 
