@@ -8,8 +8,8 @@
 	let rolling = false;
 	async function rollTaskDice() {
 		if (rolling) return;
-		const result = await taskDice.roll();
-		await rollForTasks(result);
+		const result = await rollForTasks();
+		await taskDice.roll(result);
 		rolled = true;
 	}
 	function confirm() {
@@ -22,7 +22,7 @@
 		else rollTaskDice();
 	}
 
-	$:header = rolled ? $gameStore.config.labels.rollForTasksResultHeader : $gameStore.config.labels.rollForTasksHeader;
+	$:header = rolled ? $gameStore.config?.labels.rollForTasksResultHeader : $gameStore.config.labels.rollForTasksHeader;
 </script>
 
 <div class="dc-roll-tasks-container">

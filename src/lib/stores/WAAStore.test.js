@@ -14,15 +14,10 @@ import {
 	restartGame,
 	exitGame,
 	currentScreen,
-	services
+	services,
+	confirmTaskRoll
 } from './WAAStore.js';
-
-// vi.mock('./WAAStore.js', () => {
-// 	return {
-// 		getRandomNumber: vi.fn(() => 5),
-// 		failure: vi.fn()
-// 	};
-// });
+import { StateMachine } from './WAAStateMachine.js';
 
 global.fetch = vi.fn();
 
@@ -141,14 +136,148 @@ describe('WAAStore', () => {
 		expect(store.cardsToDraw).toBe(5);
 		expect(store.state).toBe('drawCard');
 		expect(get(currentScreen)).toBe('');
+
+		confirmTaskRoll();
+		expect(get(currentScreen)).toBe('drawCard');
 	});
 
 	// Test drawCard
-	test('drawCard', () => {
-		// Call drawCard
-		// Assert that a card is drawn from the deck in the gameStore
+	test('drawCard - final king', () => {
+		const card = { card: 'K', suit: 'hearts' };
+		const initialState = {
+			kingsRevealed: 3,
+			cardsToDraw: 1,
+			log: [],
+			deck: [card]
+		};
+		services.stateMachine = new StateMachine('drawCard');
+		gameStore.set({ ...initialState });
+		drawCard();
+
+		validateDrawCard(initialState, card);
 	});
 
+	test('should draw a card and update the game state (even card)', () => {
+		const card = { card: '2', suit: 'hearts' };
+		const initialState = {
+			state: 'drawCard',
+			kingsRevealed: 3,
+			cardsToDraw: 1,
+			log: [],
+			deck: [card]
+		};
+		services.stateMachine = new StateMachine('drawCard');
+		gameStore.set({ ...initialState });
+		drawCard();
+
+		const updatedState = get(gameStore);
+
+		expect(updatedState.currentCard).toEqual(card);
+		expect(updatedState.cardsToDraw).toBe(initialState.cardsToDraw - 1);
+		expect(updatedState.log).toEqual([{ ...card, round: initialState.round }]);
+		expect(updatedState.kingsRevealed).toBe(initialState.kingsRevealed);
+		expect(updatedState.bonus).toBe(initialState.bonus);
+		expect(updatedState.aceOfHeartsRevealed).toBe(initialState.aceOfHeartsRevealed);
+		expect(updatedState.tower).toBe(initialState.tower);
+		expect(updatedState.state).toBe('log');
+	});
+
+	test('should draw a card and update the game state (odd card)', () => {
+		const card = { card: '7', suit: 'diamonds' };
+		const initialState = {
+			state: 'drawCard',
+			kingsRevealed: 3,
+			cardsToDraw: 1,
+			log: [],
+			deck: [card]
+		};
+		services.stateMachine = new StateMachine('drawCard');
+		gameStore.set({ ...initialState });
+		drawCard();
+
+		const updatedState = get(gameStore);
+
+		expect(updatedState.currentCard).toEqual(card);
+		expect(updatedState.cardsToDraw).toBe(initialState.cardsToDraw - 1);
+		expect(updatedState.log).toEqual([{ ...card, round: initialState.round }]);
+		expect(updatedState.kingsRevealed).toBe(initialState.kingsRevealed);
+		expect(updatedState.bonus).toBe(initialState.bonus);
+		expect(updatedState.aceOfHeartsRevealed).toBe(initialState.aceOfHeartsRevealed);
+		expect(updatedState.tower).toBe(initialState.tower);
+		expect(updatedState.state).toBe('failureCheck');
+	});
+	test('should draw a card and update the game state (final king)', () => {
+		const card = { card: 'K', suit: 'hearts' };
+		const initialState = {
+		  state: 'drawCard',
+		  kingsRevealed: 3,
+		  cardsToDraw: 1,
+		  log: [],
+		  deck: [card],
+		};
+		services.stateMachine = new StateMachine('drawCard');
+		gameStore.set({ ...initialState });
+		drawCard();
+	
+		const updatedState = get(gameStore);
+	
+		expect(updatedState.currentCard).toEqual(card);
+		expect(updatedState.cardsToDraw).toBe(initialState.cardsToDraw - 1);
+		expect(updatedState.log).toEqual([{ ...card, round: initialState.round }]);
+		expect(updatedState.kingsRevealed).toBe(initialState.kingsRevealed + 1);
+		expect(updatedState.bonus).toBe(initialState.bonus);
+		expect(updatedState.aceOfHeartsRevealed).toBe(initialState.aceOfHeartsRevealed);
+		expect(updatedState.tower).toBe(initialState.tower);
+		expect(updatedState.state).toBe('gameOver');
+	  });
+
+	  test('should draw a card and update the game state (ace of hearts)', () => {
+		const card = { card: 'A', suit: 'hearts' };
+		const initialState = {
+		  state: 'drawCard',
+		  kingsRevealed: 3,
+		  cardsToDraw: 1,
+		  log: [],
+		  deck: [card],
+		};
+		services.stateMachine = new StateMachine('drawCard');
+		gameStore.set({ ...initialState });
+		drawCard();
+	
+		const updatedState = get(gameStore);
+	
+		expect(updatedState.currentCard).toEqual(card);
+		expect(updatedState.cardsToDraw).toBe(initialState.cardsToDraw - 1);
+		expect(updatedState.log).toEqual([{ ...card, round: initialState.round }]);
+		expect(updatedState.kingsRevealed).toBe(initialState.kingsRevealed);
+		expect(updatedState.bonus).toBe(initialState.bonus + 1);
+		expect(updatedState.aceOfHeartsRevealed).toBe(true);
+		expect(updatedState.tower).toBe(initialState.tower);
+		expect(updatedState.state).toBe('log');
+	  });
+
+	  test('should draw a card and update the game state (game over)', () => {
+		
+		const initialState = {
+		  state: 'drawCard',
+		  kingsRevealed: 3,
+		  cardsToDraw: 1,
+		  log: [],
+		  deck: [],
+		};
+		services.stateMachine = new StateMachine('drawCard');
+		gameStore.set({ ...initialState });
+		drawCard();
+	
+		const updatedState = get(gameStore);
+	
+		expect(updatedState.gameOver).toBe(true);
+		expect(updatedState.cardsToDraw).toBe(initialState.cardsToDraw );		
+		expect(updatedState.bonus).toBe(initialState.bonus);
+		expect(updatedState.aceOfHeartsRevealed).toBe(initialState.aceOfHeartsRevealed);
+		expect(updatedState.tower).toBe(initialState.tower);
+		expect(updatedState.state).toBe('gameOver');
+	  });
 	// Test failureCheck
 	test('failureCheck', async () => {
 		// Call failureCheck with a mock result
@@ -179,3 +308,45 @@ describe('WAAStore', () => {
 		// Assert that the gameStore is reset to the initial state
 	});
 });
+function validateDrawCard(initialState, card) {
+	const updatedState = get(gameStore);
+
+	// Check if the current card is correct
+	expect(updatedState.currentCard).toEqual(card);
+
+	// Check if the cardsToDraw is decreased by 1
+	expect(updatedState.cardsToDraw).toBe(initialState.cardsToDraw - 1);
+
+	// Check if the log contains the drawn card
+	expect(updatedState.log).toEqual([{ ...card, round: initialState.round }]);
+
+	// Check if the kingsRevealed is incremented
+	if (card.card === 'K') {
+		expect(updatedState.kingsRevealed).toBe(initialState.kingsRevealed + 1);
+	} else {
+		expect(updatedState.kingsRevealed).toBe(initialState.kingsRevealed);
+	}
+
+	// Check if the bonus is updated correctly for an Ace
+	if (card.card === 'A') {
+		expect(updatedState.bonus).toBe(initialState.bonus + 1);
+		if (card.suit === 'hearts') {
+			expect(updatedState.aceOfHeartsRevealed).toBe(true);
+		}
+	} else {
+		expect(updatedState.bonus).toBe(initialState.bonus);
+		expect(updatedState.aceOfHeartsRevealed).toBe(initialState.aceOfHeartsRevealed);
+	}
+
+	// Check if the game state is updated correctly based on the drawn card
+	if (card.card === 'K' && updatedState.kingsRevealed === 4) {
+		expect(updatedState.gameOver).toBe(true);
+	} else if (parseInt(card.card) % 2 !== 0) {
+		// Odd card
+		expect(updatedState.state).toBe('failureCheck');
+	} else if (updatedState.cardsToDraw > 0) {
+		expect(updatedState.state).toBe('drawCard');
+	} else {
+		expect(updatedState.state).toBe('log');
+	}
+}

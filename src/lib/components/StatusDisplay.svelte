@@ -9,7 +9,7 @@
 	<div>
 		<h4>{$gameStore.player?.name}</h4>
 		<hr />
-		<h4>{$gameStore.config.labels.statusDisplayRoundText}{$gameStore?.round}</h4>
+		<h4>{$gameStore.config?.labels.statusDisplayRoundText}{$gameStore?.round}</h4>
 	</div>
 	<div class="failure-container">
 		<HealthMeter />

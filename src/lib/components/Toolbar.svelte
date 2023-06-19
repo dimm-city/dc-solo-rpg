@@ -8,7 +8,7 @@
 	</div>
 	<div class="center" />
 	<div class="right">
-		<button class="dc-exit-button" on:click={exitGame}>{$gameStore.config.labels.toolbarExitButtonText}</button>
+		<button class="dc-exit-button" on:click={exitGame}>{$gameStore.config?.labels.toolbarExitButtonText}</button>
 	</div>
 </div>
 

@@ -49,10 +49,12 @@
 		diceBox = new DiceBox('#dice-roller-container', config);
 		await diceBox.initialize();
 	});
-	export async function roll() {
+	export async function roll(values = null) {
 		if (rolling) return;
 		rolling = true;
-		let result = await diceBox.roll('1d6');
+		
+		const rollString = values ? `1d6@${values}` : '1d6';
+		let result = await diceBox.roll(rollString);
 
 		console.log('return', result);
 		rolling = false;

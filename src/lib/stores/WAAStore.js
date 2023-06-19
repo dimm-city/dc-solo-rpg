@@ -1,6 +1,6 @@
 import { writable, derived, get } from 'svelte/store';
 import { ConfigurationLoader } from '../configuration/ConfigurationLoader.js';
-import { StateMachine, transitions } from './WAAStateMachine.js';
+import { StateMachine } from './WAAStateMachine.js';
 
 let getRandomNumber = () => {
 	return Math.floor(Math.random() * 6) + 1;
@@ -27,9 +27,9 @@ function shuffle(array) {
 }
 export const nextScreen = (action) => {
 	currentScreen.update((screen) => {
-		if (action) stateMachine.next(action);
+		if (action) services.stateMachine.next(action);
 
-		screen = stateMachine.state;
+		screen = services.stateMachine.state;
 		return screen;
 	});
 };
@@ -92,10 +92,6 @@ const initialState = {
  */
 export const gameStore = writable(initialState);
 
-export const services = {
-	getRandomNumber: getRandomNumber
-}
-
 /**
  * Represents the game stylesheet store.
  * @type {Writable<string>}
@@ -116,17 +112,11 @@ export const currentEvents = derived(gameStore, ($gameStore) => {
  */
 export const currentScreen = writable('loadGame');
 
-/**
- * Represents the configuration loader instance.
- * @type {ConfigurationLoader}
- */
-export const configLoader = new ConfigurationLoader();
-
-/**
- * Represents the state machine instance.
- * @type {StateMachine}
- */
-export const stateMachine = new StateMachine('loadGame', transitions);
+export const services = {
+	stateMachine: new StateMachine('loadGame'),
+	configLoader: new ConfigurationLoader(),
+	getRandomNumber: getRandomNumber
+};
 
 /**
  * Loads the system configuration.
@@ -139,14 +129,14 @@ export const loadSystemConfig = async (systemConfig) => {
 		throw new Error('Must provide a valid game configuration and URL');
 	}
 
-	await configLoader.loadSystemSettings(systemConfig);
-	const gameConfig = await configLoader.loadGameSettings(systemConfig.gameConfigUrl);
+	await services.configLoader.loadSystemSettings(systemConfig);
+	const gameConfig = await services.configLoader.loadGameSettings(systemConfig.gameConfigUrl);
 
 	gameStylesheet.set(gameConfig.stylesheet);
 
 	gameStore.update((store) => {
 		store.config = gameConfig;
-		store.state = stateMachine.next('options');
+		store.state = services.stateMachine.next('options');
 		return store;
 	});
 
@@ -164,7 +154,7 @@ export const startGame = (player, options = {}) => {
 		throw new Error('Must provide a valid player');
 	}
 
-	const gameConfig = configLoader.loadUserSettings(options);
+	const gameConfig = services.configLoader.loadUserSettings(options);
 
 	gameStore.update((state) => {
 		state.config = gameConfig;
@@ -179,7 +169,7 @@ export const startGame = (player, options = {}) => {
 
 		state.deck = shuffle(state.deck);
 
-		state.state = stateMachine.next('intro');
+		state.state = services.stateMachine.next('intro');
 
 		return state;
 	});
@@ -194,7 +184,7 @@ export const startGame = (player, options = {}) => {
 export const startRound = () => {
 	gameStore.update((state) => {
 		state.round += 1;
-		state.state = stateMachine.next('rollForTasks');
+		state.state = services.stateMachine.next('rollForTasks');
 		nextScreen();
 		return state;
 	});
@@ -205,13 +195,13 @@ export const startRound = () => {
  * @param {number} result - The result of the dice roll.
  * @returns {Promise<number>}
  */
-export const rollForTasks = async (result) => {
+export const rollForTasks = async () => {
 	const roll = await services.getRandomNumber();
 
 	gameStore.update((store) => {
 		store.cardsToDraw = roll;
 		store.currentCard = null;
-		store.state = stateMachine.next('drawCard');
+		store.state = services.stateMachine.next('drawCard');
 		return store;
 	});
 	return roll;
@@ -233,7 +223,7 @@ export const drawCard = () => {
 	gameStore.update((state) => {
 		if (state.deck.length === 0) {
 			state.gameOver = true;
-			state.state = stateMachine.next('gameOver');
+			state.state = services.stateMachine.next('gameOver');
 			nextScreen();
 			return state;
 		}
@@ -258,18 +248,18 @@ export const drawCard = () => {
 
 		if (state.kingsRevealed === 4) {
 			state.gameOver = true;
-			state.state = stateMachine.next('gameOver');
+			state.state = services.stateMachine.next('gameOver');
 			return state;
 		}
 
-		if (parseInt(card.card) % 2 !== 0) {
-			stateMachine.next('failureCheck');
+		if (card.card != 'A' && parseInt(card.card) % 2 !== 0) {
+			services.stateMachine.next('failureCheck');
 		} else if (state.cardsToDraw > 0) {
-			stateMachine.next('drawCard');
+			services.stateMachine.next('drawCard');
 		} else {
-			stateMachine.next('log');
+			services.stateMachine.next('log');
 		}
-		state.state = stateMachine.state;
+		state.state = services.stateMachine.state;
 		return state;
 	});
 };
@@ -305,12 +295,12 @@ export const failureCheck = async (result) => {
 			state.tower = 0;
 			state.status = state.config.labels?.failureCheckLoss ?? 'The tower has fallen';
 			state.gameOver = true;
-			state.state = stateMachine.next('gameOver');
+			state.state = services.stateMachine.next('gameOver');
 		} else {
 			if (state.cardsToDraw > 0) {
-				state.state = stateMachine.next('drawCard');
+				state.state = services.stateMachine.next('drawCard');
 			} else {
-				state.state = stateMachine.next('log');
+				state.state = services.stateMachine.next('log');
 			}
 		}
 
@@ -347,9 +337,9 @@ export const recordRound = (journalEntry) => {
 
 		if (!state.gameOver) {
 			if (state.aceOfHeartsRevealed) {
-				state.state = stateMachine.next('successCheck');
+				state.state = services.stateMachine.next('successCheck');
 			} else {
-				state.state = stateMachine.next('startRound');
+				state.state = services.stateMachine.next('startRound');
 			}
 			nextScreen();
 		}
@@ -362,7 +352,8 @@ export const recordRound = (journalEntry) => {
  * @param {number} roll - The result of the dice roll.
  * @returns {Promise<number>}
  */
-export const successCheck = async (roll) => {
+export const successCheck = async () => {
+	const roll = await services.getRandomNumber();
 	gameStore.update((state) => {
 		state.diceRoll = roll;
 
@@ -374,9 +365,9 @@ export const successCheck = async (roll) => {
 			state.win = true;
 			state.status = state.config.labels?.successCheckWin ?? 'Salvation has arrived';
 			state.gameOver = true;
-			state.state = stateMachine.next('gameOver');
+			state.state = services.stateMachine.next('gameOver');
 		} else {
-			state.state = stateMachine.next('startRound');
+			state.state = services.stateMachine.next('startRound');
 		}
 
 		return state;
