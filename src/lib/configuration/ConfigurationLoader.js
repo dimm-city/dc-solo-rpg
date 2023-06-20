@@ -100,20 +100,17 @@ export class ConfigurationLoader {
 		const stylesheetUrl = gameConfigUrl.replace('config.yml', configJson.stylesheet ?? 'game.css');
 
 		//fetch stylesheet from the stylesheetUrl and convert it to a string
-		if (stylesheetUrl.startsWith('http')) {
-			const stylesheetResponse = await fetch(stylesheetUrl);
-			if (stylesheetResponse.status == 404) {
-				configJson.stylesheet = '';
-			} else {
-				configJson.stylesheet = stylesheetUrl;
-			}
-			// } else if (existsSync(stylesheetUrl)) {
-			// 	//const stylesheet = readFileSync(stylesheetUrl);
-			// 	configJson.stylesheet = stylesheetUrl;
+		//if (stylesheetUrl.startsWith('http')) {
+		const stylesheetResponse = await fetch(stylesheetUrl);
+		if (stylesheetResponse.status == 404) {
+			configJson.stylesheet = '';
 		} else {
 			configJson.stylesheet = stylesheetUrl;
-			console.error('stylesheetUrl', stylesheetUrl);
 		}
+
+		// } else {
+		// 	configJson.stylesheet = stylesheetUrl;
+		// }
 
 		//console.debug('gameSettings', gameConfigUrl, this.systemSettings, configJson);
 
@@ -122,6 +119,8 @@ export class ConfigurationLoader {
 		// This is to allow system settings to be changed by the user, but not changed by the game.
 
 		this.gameSettings = { ...this.systemSettings, ...configJson };
+
+		this.gameSettings.labels = {...this.systemSettings.labels, ...configJson.labels};
 		this.gameSettings.loaded = true;
 
 		return this.gameSettings;

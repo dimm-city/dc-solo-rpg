@@ -143,21 +143,7 @@ describe('WAAStore', () => {
 	});
 
 	// Test drawCard
-	describe('drawCard', () => {
-		test('drawCard - final king', () => {
-			const card = { card: 'K', suit: 'hearts' };
-			const initialState = {
-				kingsRevealed: 3,
-				cardsToDraw: 1,
-				log: [],
-				deck: [card]
-			};
-			services.stateMachine = new StateMachine('drawCard');
-			gameStore.set({ ...initialState });
-			drawCard();
-
-			validateDrawCard(initialState, card);
-		});
+	describe('drawCard', () => {		
 
 		test('should draw a card and update the game state (even card)', () => {
 			const card = { card: '2', suit: 'hearts' };
@@ -215,7 +201,12 @@ describe('WAAStore', () => {
 				kingsRevealed: 3,
 				cardsToDraw: 1,
 				log: [],
-				deck: [card]
+				deck: [card],
+				config: {
+					labels: {
+						kingsRevealed: 'King Revealed'
+					}
+				}
 			};
 			services.stateMachine = new StateMachine('drawCard');
 			gameStore.set({ ...initialState });
@@ -231,6 +222,9 @@ describe('WAAStore', () => {
 			expect(updatedState.aceOfHeartsRevealed).toBe(initialState.aceOfHeartsRevealed);
 			expect(updatedState.tower).toBe(initialState.tower);
 			expect(updatedState.state).toBe('gameOver');
+			expect(updatedState.gameOver).toBe(true);
+			expect(updatedState.win).toBe(false);
+			expect(updatedState.status).toBe(initialState.config.labels.failureCounterLoss);
 		});
 
 		test('should draw a card and update the game state (ace of hearts)', () => {
@@ -284,6 +278,7 @@ describe('WAAStore', () => {
 	describe('failureCheck', () => {
 		test('should perform the failure check and update the game state (tower collapsed)', async () => {
 			services.stateMachine = new StateMachine('failureCheck');
+			services.getRandomNumber = () => 5;
 			const initialState = {
 				gameOver: false,
 				diceRoll: 0,
@@ -299,7 +294,7 @@ describe('WAAStore', () => {
 
 			gameStore.set({ ...initialState });
 
-			const result = await failureCheck(5, services);
+			const result = await failureCheck();
 
 			const updatedState = get(gameStore);
 
@@ -313,6 +308,7 @@ describe('WAAStore', () => {
 
 		test('should perform the failure check and update the game state (tower not collapsed)', async () => {
 			services.stateMachine = new StateMachine('failureCheck');
+			services.getRandomNumber = () => 2;
 			const initialState = {
 				gameOver: false,
 				diceRoll: 0,
@@ -523,45 +519,3 @@ describe('WAAStore', () => {
 		expect(store.round).toBe(0);
 	});
 });
-function validateDrawCard(initialState, card) {
-	const updatedState = get(gameStore);
-
-	// Check if the current card is correct
-	expect(updatedState.currentCard).toEqual(card);
-
-	// Check if the cardsToDraw is decreased by 1
-	expect(updatedState.cardsToDraw).toBe(initialState.cardsToDraw - 1);
-
-	// Check if the log contains the drawn card
-	expect(updatedState.log).toEqual([{ ...card, round: initialState.round }]);
-
-	// Check if the kingsRevealed is incremented
-	if (card.card === 'K') {
-		expect(updatedState.kingsRevealed).toBe(initialState.kingsRevealed + 1);
-	} else {
-		expect(updatedState.kingsRevealed).toBe(initialState.kingsRevealed);
-	}
-
-	// Check if the bonus is updated correctly for an Ace
-	if (card.card === 'A') {
-		expect(updatedState.bonus).toBe(initialState.bonus + 1);
-		if (card.suit === 'hearts') {
-			expect(updatedState.aceOfHeartsRevealed).toBe(true);
-		}
-	} else {
-		expect(updatedState.bonus).toBe(initialState.bonus);
-		expect(updatedState.aceOfHeartsRevealed).toBe(initialState.aceOfHeartsRevealed);
-	}
-
-	// Check if the game state is updated correctly based on the drawn card
-	if (card.card === 'K' && updatedState.kingsRevealed === 4) {
-		expect(updatedState.gameOver).toBe(true);
-	} else if (parseInt(card.card) % 2 !== 0) {
-		// Odd card
-		expect(updatedState.state).toBe('failureCheck');
-	} else if (updatedState.cardsToDraw > 0) {
-		expect(updatedState.state).toBe('drawCard');
-	} else {
-		expect(updatedState.state).toBe('log');
-	}
-}

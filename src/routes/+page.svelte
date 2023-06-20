@@ -1,7 +1,7 @@
 <script>
 	import GameSelector from '../lib/components/GameSelector.svelte';
 	import { SystemSettings } from '$lib/configuration/SystemSettings.js';
-	import { gameStylesheet, currentScreen } from '$lib/stores/WAAStore.js';
+	import { currentScreen } from '$lib/stores/WAAStore.js';
 
 	import Game from '$lib/components/Game.svelte';
 
@@ -34,14 +34,27 @@
 	function onJournalSaved(journal) {
 		console.log('onJournalSaved', journal);
 	}
+	function onGameOver(params) {
+		console.log('onGameOver', params);
+	}
+	function onExitGame(params) {
+		console.log('onExitGame', params);
+		ready = false;
+	}
+	$:{
+		if($currentScreen === "gameOver") ready = true;
+		console.log('ready changed', ready, $currentScreen);
+	}
 </script>
-
+<!-- {@debug ready}
+{@debug $currentScreen} -->
 <div class:hidden={!ready || $currentScreen == 'loadGame'}>
 	<Game
 		bind:this={gameComponent}
 		{systemSettings}
 		on:dc-solo-rpg.journalSaved={onJournalSaved}
-		on:dc-solo-rpg.gameOver={() => (ready = false)}
+		on:dc-solo-rpg.gameOver={onGameOver}
+		on:dc-solo-rpg.exitGame={onExitGame}
 	/>
 </div>
 <div class:hidden={ready && $currentScreen != 'loadGame'}>

@@ -44,8 +44,15 @@ export const transitions = {
 		intro: 'intro'
 	},
 	finalLog: {
-		loadGame: 'loadGame',
+		exitGame: 'exitGame',
 		intro: 'intro'
+	},
+	exitGame: {
+		loadGame: 'loadGame',
+		options: 'options'
+	},
+	errorScreen: {
+		loadGame: 'loadGame'
 	}
 };
 
@@ -59,7 +66,7 @@ export class StateMachine {
 	next(action) {
 		const transition = this.transitions[this.state][action];
 
-		if (transition || action == "loadGame") {
+		if (transition || action == "exitGame" || action == "errorScreen") {
 			this.state = transition ?? action;
 			console.log('transition to:', action);
             return action; //this.state.toString();

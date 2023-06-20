@@ -29,8 +29,8 @@
 		<h4>{$gameStore.config.labels.journalEntryHeader}</h4>
 		<h5>{$gameStore.config.labels.journalEntrySubHeader}</h5>
 		<div />
-		{#each $currentEvents as event (event)}
-			<p>{event.description}</p>
+		{#each $currentEvents as event}
+			<p>{event.id}:{event.description}</p>
 		{/each}
 	</div>
 	<div class="text-entry-area">

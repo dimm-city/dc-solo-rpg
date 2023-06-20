@@ -160,6 +160,19 @@ export const startGame = (player, options = {}) => {
 		state.config = gameConfig;
 		state.round = 1;
 		state.player = player;
+		state.tokens = 10;
+		state.kingsRevealed = 0;
+		state.aceOfHeartsRevealed = false;
+		state.gameOver = false;
+		state.win = false;
+		state.tower = 54;
+		state.bonus = 0;
+		state.log = [];
+		state.journalEntries = [];
+		state.cardsToDraw = 0;
+		state.currentCard = null;
+		state.diceRoll = 0;
+		
 		state.deck = [...state.config.deck];
 
 		if (state.config.options.difficulty === 0) {
@@ -228,10 +241,15 @@ export const drawCard = () => {
 			return state;
 		}
 
-		const card = state.deck.pop();
+		//	const card = state.deck.pop();
+		const card = state.deck.some((c) => c.card == 'K')
+			? state.deck.filter((c) => c.card == 'K').pop()
+			: state.deck.pop();
+
 		state.currentCard = card;
 		state.cardsToDraw -= 1;
 
+		card.id = `${state.round}.${state.log.filter((l) => l.round === state.round).length + 1}`;
 		card.round = state.round;
 		state.log.push(card);
 
@@ -248,6 +266,8 @@ export const drawCard = () => {
 
 		if (state.kingsRevealed === 4) {
 			state.gameOver = true;
+			state.win = false;
+			state.status = state.config.labels.failureCounterLoss;
 			state.state = services.stateMachine.next('gameOver');
 			return state;
 		}
@@ -281,12 +301,24 @@ export const confirmCard = () => {
  * @param {number} result - The result of the dice roll.
  * @returns {Promise<number>}
  */
-export const failureCheck = async (result) => {
+export const failureCheck = async () => {
+	const result = services.getRandomNumber();
 	gameStore.update((state) => {
 		if (state.gameOver) {
 			throw new Error('The game is over, stop playing with the tower!');
 		}
 		state.diceRoll = result;
+
+		const lastLog = state.log?.at(state.log.length - 1);
+		if (lastLog) {
+			state.log = [
+				...state.log.slice(0, -1),
+				{
+					...lastLog,
+					diceRoll: result
+				}
+			];
+		}
 
 		const blocksToRemove = Math.max(result - state.bonus, 0);
 		state.tower -= blocksToRemove;
@@ -331,6 +363,7 @@ export const recordRound = (journalEntry) => {
 	}
 
 	gameStore.update((state) => {
+		journalEntry.id = state.round;
 		journalEntry.round = state.round;
 		journalEntry.dateRecorded = journalEntry.dateRecorded || new Date().toISOString();
 		state.journalEntries.push(journalEntry);
@@ -395,5 +428,5 @@ export const exitGame = async () => {
 	newState.player = currentState.player;
 	gameStore.set(newState);
 	gameStylesheet.set('');
-	nextScreen('loadGame');
+	nextScreen('exitGame');
 };

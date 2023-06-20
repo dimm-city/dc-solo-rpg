@@ -1,13 +1,13 @@
 <script>
-	import OptionsScreen from './OptionsScreen.svelte';
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { createEventDispatcher } from 'svelte';
 	import {
-		currentScreen,		
+		currentScreen,
 		gameStore,
 		gameStylesheet,
 		loadSystemConfig,
 		nextScreen
 	} from '../stores/WAAStore.js';
+	import OptionsScreen from './OptionsScreen.svelte';
 	import IntroScreen from './IntroScreen.svelte';
 	import SuccessCheck from './SuccessCheck.svelte';
 	import RollForTasks from './RollForTasks.svelte';
@@ -33,6 +33,8 @@
 
 	$: if ($currentScreen == 'gameOver') {
 		dispatcher('dc-solo-rpg.gameOver', $gameStore.state);
+	} else if ($currentScreen == 'exitGame') {
+		dispatcher('dc-solo-rpg.exitGame', $gameStore.state);
 	}
 </script>
 
@@ -78,24 +80,24 @@
 					</div>
 				{:else if $currentScreen == 'failureCheck'}
 					<div class="dc-fade-in dc-screen-container">
-						<FailureCheck />
-					</div>
-				{:else if $currentScreen == 'log'}
-					<div class="dc-fade-in dc-screen-container">
-						<JournalEntry on:dc-solo-rpg.journalSaved />
+						<FailureCheck on:dc-solo-rpg.failureCheckCompleted/>
 					</div>
 				{:else if $currentScreen == 'successCheck'}
 					<div class="dc-fade-in dc-screen-container">
 						<SuccessCheck />
 					</div>
-				{:else if $currentScreen == 'finalLog'}
-					<div class="dc-fade-in dc-screen-container">
-						<JournalEntry on:dc-solo-rpg.journalSaved />
-					</div>
 				{:else if $currentScreen == 'gameOver'}
 					<div class="dc-fade-in dc-screen-container">
 						<GameOver />
 					</div>
+				{:else if $currentScreen == 'finalLog'|| $currentScreen == 'log'}
+					<div class="dc-fade-in dc-screen-container">
+						<JournalEntry on:dc-solo-rpg.journalSaved />
+					</div>
+				{:else if $currentScreen == 'exitGame'}
+					<slot name="options-screen">
+						<div>Game Exited</div>
+					</slot>
 				{:else}
 					<div>error: {$currentScreen}</div>
 				{/if}
