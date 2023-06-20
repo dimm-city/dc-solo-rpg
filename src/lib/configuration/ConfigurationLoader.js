@@ -14,9 +14,7 @@ export class ConfigurationLoader {
 	 * @param {SystemSettings} systemSettings - The initial system settings.
 	 */
 	constructor(systemSettings = {}) {
-		// immutable system settings
 		this.systemSettings = new SystemSettings(systemSettings);
-		// mutable settings
 		this.gameSettings = {};
 		this.userSettings = {};
 	}
@@ -25,7 +23,6 @@ export class ConfigurationLoader {
 		return yaml.load(configYaml);
 	}
 
-	// /**
 	//  * Load system settings.
 	//  * @param {SystemSettings} systemSettings - The initial system settings.
 	//  */
@@ -64,7 +61,6 @@ export class ConfigurationLoader {
 			const deckUrl = gameConfigUrl.replace('config.yml', 'deck.csv');
 
 			//fetch deck csv from the deckUrl and convert it to a deck array
-
 			const deckCsv = await readUrlAsText(deckUrl);
 
 			if (deckCsv?.split) {
@@ -96,28 +92,21 @@ export class ConfigurationLoader {
 			configJson.introduction = introduction;
 		}
 
-		//check to see if config.url + "/game.css" exits via a fetch call. if so, assign config.stylesheet to the value of config.url + "/game.css"
+		//check to see if config.url + "/game.css" exits via a fetch call. 
 		const stylesheetUrl = gameConfigUrl.replace('config.yml', configJson.stylesheet ?? 'game.css');
 
-		//fetch stylesheet from the stylesheetUrl and convert it to a string
-		//if (stylesheetUrl.startsWith('http')) {
 		const stylesheetResponse = await fetch(stylesheetUrl);
+		//if so, assign config.stylesheet to the value of config.url + "/game.css"
 		if (stylesheetResponse.status == 404) {
 			configJson.stylesheet = '';
 		} else {
 			configJson.stylesheet = stylesheetUrl;
 		}
 
-		// } else {
-		// 	configJson.stylesheet = stylesheetUrl;
-		// }
-
-		//console.debug('gameSettings', gameConfigUrl, this.systemSettings, configJson);
 
 		// Merge system settings with game settings, overwriting system settings with game settings if necessary.
 		// This is to allow game settings to overwrite system settings, but not vice versa.
 		// This is to allow system settings to be changed by the user, but not changed by the game.
-
 		this.gameSettings = { ...this.systemSettings, ...configJson };
 
 		this.gameSettings.labels = {...this.systemSettings.labels, ...configJson.labels};
@@ -162,10 +151,8 @@ export class ConfigurationLoader {
 async function readUrlAsText(filePath) {
 	let text;
 
-	//if (filePath.startsWith('./') || filePath.startsWith('http')) {
 	const response = await fetch(filePath);
 	text = await response.text();
-	//}
 
 	if (!text?.split) console.warn('Loaded empty file:', filePath, text);
 	return text;

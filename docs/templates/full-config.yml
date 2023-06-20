@@ -39,5 +39,6 @@ labels:
   statusDisplayRoundText: 'Round: '
   healthMeterHeader: 'Health Meter'
   healthMeterSvg: null
+  failureCounterLoss: 'You have failed suffer a catastrophic failure.'
   failureCounterHeader: 'Failure Counters'
   failureCounterSvg: null
