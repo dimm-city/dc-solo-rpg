@@ -6,6 +6,7 @@ This CSS theme file uses CSS variables to apply styling to the DC Solo RPG web c
 
 - `--dc-default-font-family`: Sets the default font family for the web component. The font family is 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif.
 - `--dc-default-container-bg`: Sets the default background color for containers in the web component. The color is a semi-transparent white (rgba(255, 255, 255, 0.3)).
+- `--dc-default-game-bg`: Sets the background of the component.
 - `--dc-accent-color`: Sets the accent color used throughout the web component. The color is a shade of blue (rgb(58, 159, 199)).
 - `--dc-default-border-radius`: Sets the default border radius for elements in the web component. The border radius is 1rem.
 - `--dc-default-padding`: Sets the default padding for elements in the web component. The padding is 1rem.

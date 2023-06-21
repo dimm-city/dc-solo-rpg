@@ -89,7 +89,7 @@
 			</div>
 		{/if}
 	</div>
-	<div class="button-bar">
+	<div class="button-bar dc-game-bg">
 		<button on:click={back}>{backButtonText}</button>
 		<button on:click={next}>{nextButtonText}</button>
 	</div>
@@ -110,6 +110,7 @@
 		height: 100%;
 		overflow-y: auto;
 		padding: 0.5rem;
+		background-color: transparent;
 	}
 
 	.button-bar {

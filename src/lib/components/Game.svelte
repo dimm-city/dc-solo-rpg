@@ -41,21 +41,27 @@
 <svelte:head>
 	<link rel="stylesheet" href={$gameStylesheet} />
 </svelte:head>
-<div class="dc-game-container">
+<div class="dc-game-container dc-game-bg">
 	{#if $currentScreen == 'loadGame'}
-		<slot name="load-screen">
-			<LoadScreen />
-		</slot>
+		<div class="dc-game-bg">
+			<slot name="load-screen">
+				<LoadScreen />
+			</slot>
+		</div>
 	{:else if $currentScreen == 'options'}
-		<slot name="options-screen">
-			<OptionsScreen {systemSettings} />
-		</slot>
+		<div class="dc-game-bg">
+			<slot name="options-screen">
+				<OptionsScreen {systemSettings} />
+			</slot>
+		</div>
 	{:else if $currentScreen == 'intro'}
-		<slot name="intro-screen">
-			<IntroScreen />
-		</slot>
+		<div class="dc-game-bg">
+			<slot name="intro-screen">
+				<IntroScreen />
+			</slot>
+		</div>
 	{:else}
-		<div class="game-screen">
+		<div class="game-screen dc-game-bg">
 			<div class="toolbar-area">
 				<Toolbar />
 			</div>
@@ -80,7 +86,7 @@
 					</div>
 				{:else if $currentScreen == 'failureCheck'}
 					<div class="dc-fade-in dc-screen-container">
-						<FailureCheck on:dc-solo-rpg.failureCheckCompleted/>
+						<FailureCheck on:dc-solo-rpg.failureCheckCompleted />
 					</div>
 				{:else if $currentScreen == 'successCheck'}
 					<div class="dc-fade-in dc-screen-container">
@@ -90,7 +96,7 @@
 					<div class="dc-fade-in dc-screen-container">
 						<GameOver />
 					</div>
-				{:else if $currentScreen == 'finalLog'|| $currentScreen == 'log'}
+				{:else if $currentScreen == 'finalLog' || $currentScreen == 'log'}
 					<div class="dc-fade-in dc-screen-container">
 						<JournalEntry on:dc-solo-rpg.journalSaved />
 					</div>
@@ -113,6 +119,8 @@
 		--dc-default-border-radius: 1rem;
 		--dc-default-padding: 1rem;
 		--dc-default-boxshadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+
+		--dc-default-game-bg: rgba(145, 177, 248);
 		--dc-default-container-bg: rgba(255, 255, 255, 0.3);
 
 		--dc-accent-color: rgb(58, 159, 199);
@@ -133,12 +141,15 @@
 	* {
 		-webkit-tap-highlight-color: transparent;
 	}
+
 	.dc-game-container {
 		display: contents;
 		box-sizing: border-box;
 		font-family: var(--dc-default-font-family);
 	}
-
+	:global(.dc-game-bg) {
+		background: var(--dc-default-game-bg);
+	}
 	.game-screen {
 		position: relative;
 		align-items: center;
