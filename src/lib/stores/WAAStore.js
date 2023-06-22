@@ -172,7 +172,7 @@ export const startGame = (player, options = {}) => {
 		state.cardsToDraw = 0;
 		state.currentCard = null;
 		state.diceRoll = 0;
-		
+
 		state.deck = [...state.config.deck];
 
 		if (state.config.options.difficulty === 0) {
@@ -241,10 +241,10 @@ export const drawCard = () => {
 			return state;
 		}
 
-		//	const card = state.deck.pop();
-		const card = state.deck.some((c) => c.card == 'K')
-			? state.deck.filter((c) => c.card == 'K').pop()
-			: state.deck.pop();
+		const card = state.deck.pop();
+		// const card = state.deck.some((c) => c.card == 'K')
+		// 	? state.deck.filter((c) => c.card == 'K').pop()
+		// 	: state.deck.pop();
 
 		state.currentCard = card;
 		state.cardsToDraw -= 1;
