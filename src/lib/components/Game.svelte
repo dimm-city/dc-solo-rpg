@@ -144,8 +144,15 @@
 
 	.dc-game-container {
 		display: contents;
+		display: grid;
+		height: 100%;
 		box-sizing: border-box;
 		font-family: var(--dc-default-font-family);
+	}
+	.dc-game-container,
+	.dc-game-container > div,
+	:global(.dc-intro-container){
+		border-radius: var(--dc-default-border-radius);
 	}
 	:global(.dc-game-bg) {
 		background: var(--dc-default-game-bg);

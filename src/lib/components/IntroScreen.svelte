@@ -98,9 +98,10 @@
 <style>
 	.dc-intro-container {
 		display: grid;
-		grid-template-rows: 100% min-content;
-		min-height: 100%;
+		grid-template-rows: auto min-content;
+		height: 100%;
 		width: 100%;
+		border-radius: 1rem;
 	}
 	.content {
 		display: flex;
@@ -120,6 +121,7 @@
 		display: flex;
 		justify-content: space-between;
 		padding-block: 0.5rem;
+		border-radius: var(--dc-default-border-radius);
 	}
 	.button-bar button {
 		margin-inline: 0.25rem;

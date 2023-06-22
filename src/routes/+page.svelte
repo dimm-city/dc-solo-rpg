@@ -41,36 +41,68 @@
 		console.log('onExitGame', params);
 		ready = false;
 	}
-	$:{
-		if($currentScreen === "gameOver") ready = true;
+	$: {
+		if ($currentScreen === 'gameOver') ready = true;
 		console.log('ready changed', ready, $currentScreen);
 	}
 </script>
+
 <!-- {@debug ready}
 {@debug $currentScreen} -->
-<div class:hidden={!ready || $currentScreen == 'loadGame'}>
-	<Game
-		bind:this={gameComponent}
-		{systemSettings}
-		on:dc-solo-rpg.journalSaved={onJournalSaved}
-		on:dc-solo-rpg.gameOver={onGameOver}
-		on:dc-solo-rpg.exitGame={onExitGame}
-	/>
-</div>
-<div class:hidden={ready && $currentScreen != 'loadGame'}>
-	<GameSelector
-		{games}
-		{players}
-		bind:selectedPlayer
-		bind:selectedGame
-		on:dc-solo-rpg.gameSelected={loadGame}
-	/>
-</div>
+
+<section class="form-container">
+	<div class="game-container" class:hidden={!ready || $currentScreen == 'loadGame'}>
+		<Game
+			bind:this={gameComponent}
+			{systemSettings}
+			on:dc-solo-rpg.journalSaved={onJournalSaved}
+			on:dc-solo-rpg.gameOver={onGameOver}
+			on:dc-solo-rpg.exitGame={onExitGame}
+		/>
+	</div>
+	<div class="welcome-container" class:hidden={ready && $currentScreen != 'loadGame'}>
+		<section class="hero">
+			<h1>Dimm City Solo RPG</h1>
+			<p>Demo</p>
+		</section>
+		<GameSelector
+			{games}
+			{players}
+			bind:selectedPlayer
+			bind:selectedGame
+			on:dc-solo-rpg.gameSelected={loadGame}
+		/>
+	</div>
+	<!-- 	
+	<form>
+		<label for="name">Name</label>
+		<input type="text" id="name" placeholder="Your name">
+		
+		<label for="email">Email</label>
+		<input type="email" id="email" placeholder="Your email">
+		
+		<label for="select">Select an option</label>
+		<select id="select">
+			<option value="option1">Option 1</option>
+			<option value="option2">Option 2</option>
+			<option value="option3">Option 3</option>
+		</select>
+		
+		<label for="message">Message</label>
+		<textarea id="message" rows="4" placeholder="Your message"></textarea>
+		
+		<button type="submit">Submit</button>
+	</form> -->
+</section>
 
 <style>
-	div {
+	.game-container {
 		display: grid;
 		height: 100%;
+	}
+	.welcome-container {
+		display: flex;
+		flex-direction: column;
 	}
 	.hidden {
 		display: none;
