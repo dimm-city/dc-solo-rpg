@@ -116,6 +116,7 @@
 	:root {
 		--dc-default-font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande',
 			'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+		--dc-default-text-color: inherit;
 		--dc-default-border-radius: 1rem;
 		--dc-default-padding: 1rem;
 		--dc-default-boxshadow: 0 2px 5px rgba(0, 0, 0, 0.1);
@@ -134,6 +135,7 @@
 		--dc-card-back-color: white;
 		--dc-card-back-bg: #1387b9;
 		--dc-card-front-bg: rgb(235, 235, 235);
+		--dc-card-front-color: inherit;
 
 		--dc-status-display-padding: var(--dc-default-padding);
 	}
@@ -148,6 +150,7 @@
 		height: 100%;
 		box-sizing: border-box;
 		font-family: var(--dc-default-font-family);
+		color: var(--dc-default-text-color);
 	}
 	.dc-game-container,
 	.dc-game-container > div,

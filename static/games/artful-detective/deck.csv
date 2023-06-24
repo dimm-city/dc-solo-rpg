@@ -1,4 +1,4 @@
-card,suite,description,action
+card,suit,description,action
 A,hearts,"You stumble upon a crucial clue that brings you closer to the artifact.","primary-success"
 A,diamonds,"You manage to infiltrate the thieves' hideout unnoticed.","success-bonus"
 A,clubs,"You successfully tail a suspect without tripping over anything.","success-bonus"

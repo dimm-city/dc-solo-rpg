@@ -93,6 +93,7 @@
 		text-align: center;
 		padding: 0.25rem;
 		background-color: var(--dc-card-front-bg);
+		color: var(--dc-card-front-color);
 		transform: rotateY(180deg);
 	}
 	.card-front small{

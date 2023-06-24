@@ -6,6 +6,7 @@ This CSS theme file uses CSS variables to apply styling to the DC Solo RPG web c
 
 - `--dc-default-font-family`: Sets the default font family for the web component. The font family is 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif.
 - `--dc-default-container-bg`: Sets the default background color for containers in the web component. The color is a semi-transparent white (rgba(255, 255, 255, 0.3)).
+- `--dc-default-text-color`: Sets the default text color for the game. The default is set to: inherit;
 - `--dc-default-game-bg`: Sets the background of the component.
 - `--dc-accent-color`: Sets the accent color used throughout the web component. The color is a shade of blue (rgb(58, 159, 199)).
 - `--dc-default-border-radius`: Sets the default border radius for elements in the web component. The border radius is 1rem.
@@ -23,6 +24,7 @@ This CSS theme file uses CSS variables to apply styling to the DC Solo RPG web c
 
 - `--dc-card-back-color`: Sets the color for the back of the cards in the web component. The color is white.
 - `--dc-card-back-bg`: Sets the background color for the back of the cards in the web component. The color is #1387b9.
+- `--dc-card-back-color`: Sets the color for the front of the cards in the web component. The default value is `inherit`.
 - `--dc-card-front-bg`: Sets the background color for the front of the cards in the web component. The color is rgb(235, 235, 235).
 - `--dc-card-border`: Sets the border for the cards in the web component. The border is 1px solid #000000.
 - `--dc-card-border-radius`: Sets the border radius for the cards in the web component. The border radius is 1rem.

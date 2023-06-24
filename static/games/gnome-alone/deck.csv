@@ -1,4 +1,4 @@
-card,suite,description,action
+card,suit,description,action
 A,hearts,"You discover a mysterious gnome-sized portal. It might be a way home.",primary-success
 A,diamonds,"You find a tinkerer's kit washed ashore from the shipwreck.",success-bonus
 A,clubs,"A swarm of lightning bugs offers to help illuminate your way at night.",success-bonus

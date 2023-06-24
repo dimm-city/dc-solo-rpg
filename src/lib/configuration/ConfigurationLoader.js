@@ -1,5 +1,6 @@
 import { default as yaml } from 'js-yaml';
 import { SystemSettings } from './SystemSettings.js';
+import { parse } from 'csv-parse/browser/esm/sync';
 
 /**
  * This class handles loading and retrieving configuration settings for a web-based game.
@@ -57,26 +58,16 @@ export class ConfigurationLoader {
 		}
 
 		//if config.deck is null, fetch it from config.url but replace 'config.yml' with deck.csv
-		if (!configJson.deck) {
-			const deckUrl = gameConfigUrl.replace('config.yml', 'deck.csv');
+		if (!configJson.deck || typeof configJson.deck == 'string') {
+			const deckUrl = gameConfigUrl.replace('config.yml', configJson.deck ?? 'deck.csv');
 
 			//fetch deck csv from the deckUrl and convert it to a deck array
 			const deckCsv = await readUrlAsText(deckUrl);
 
-			if (deckCsv?.split) {
-				try {
-					const deckArray = deckCsv
-						.split('\n')
-						.map((line) => {
-							const [card, suit, description, action] = line.split(',');
-							return { card, suit, description: description?.replaceAll('"', ''), action };
-						})
-						.filter((line) => line.card && !line.card.includes('card'));
-					configJson.deck = deckArray;
-				} catch (error) {
-					throw new Error('Could not load deck', error);
-				}
-			} //else throw new Error('deckCsv is not a string', deckCsv);
+			const deckArray = parse(deckCsv, {
+				columns: true
+			});
+			configJson.deck = deckArray;
 		}
 
 		//if config.introduction ends with '.md', fetch it from config.url but replace 'config.yml' with the value of config.introduction
@@ -92,7 +83,7 @@ export class ConfigurationLoader {
 			configJson.introduction = introduction;
 		}
 
-		//check to see if config.url + "/game.css" exits via a fetch call. 
+		//check to see if config.url + "/game.css" exits via a fetch call.
 		const stylesheetUrl = gameConfigUrl.replace('config.yml', configJson.stylesheet ?? 'game.css');
 
 		const stylesheetResponse = await fetch(stylesheetUrl);
@@ -103,13 +94,12 @@ export class ConfigurationLoader {
 			configJson.stylesheet = stylesheetUrl;
 		}
 
-
 		// Merge system settings with game settings, overwriting system settings with game settings if necessary.
 		// This is to allow game settings to overwrite system settings, but not vice versa.
 		// This is to allow system settings to be changed by the user, but not changed by the game.
 		this.gameSettings = { ...this.systemSettings, ...configJson };
 
-		this.gameSettings.labels = {...this.systemSettings.labels, ...configJson.labels};
+		this.gameSettings.labels = { ...this.systemSettings.labels, ...configJson.labels };
 		this.gameSettings.loaded = true;
 
 		return this.gameSettings;

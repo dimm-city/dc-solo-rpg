@@ -30,18 +30,16 @@
 		"!dist/**/*.test.*",
 		"!dist/**/*.spec.*"
 	],
-	"peerDependencies": {
-		"svelte": "^4.0.0"
-	},
 	"devDependencies": {
 		"@playwright/test": "^1.28.1",
 		"@sveltejs/adapter-auto": "^2.0.0",
 		"@sveltejs/kit": "^1.20.4",
-		"@sveltejs/package": "^2.0.0",
+		"@sveltejs/package": "^2.1.0",
 		"@vitest/coverage-v8": "^0.32.2",
 		"eslint": "^8.28.0",
 		"eslint-config-prettier": "^8.5.0",
 		"eslint-plugin-svelte": "^2.30.0",
+		"csv-parse": "^5.4.0",
 		"js-yaml": "^4.1.0",
 		"marked": "^4.3.0",
 		"prettier": "^2.8.0",
