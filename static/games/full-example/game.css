@@ -1,4 +1,6 @@
 :root {
+
+	--dc-default-text-color: black;
 	--dc-default-border-radius: 1rem;
 	--dc-default-padding: 1rem;
 	--dc-default-boxshadow: 0 2px 5px rgba(0, 0, 0, 0.1);
@@ -13,8 +15,9 @@
 	--dc-card-border-radius: 1rem;
 	--dc-card-back-bg: #1387b9;
 	--dc-card-front-bg: rgb(235, 235, 235);
+	--dc-card-front-color: #1387b9;
 
-	--dc-status-display-padding: var(--dc-default-padding);
+	--dc-status-display-padding: #1387b9;;
 }
 
 

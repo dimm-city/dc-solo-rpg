@@ -4,8 +4,12 @@
 
 <div class="dc-game-over-container">
 	<div class="dc-game-over-header"><h1>Game Over</h1></div>
-	<div class="dc-game-over-content">
-		<h3>{$gameStore.status}</h3>
+	<div class="dc-game-over-content">		
+		{#if $gameStore.kingsRevealed == 4}
+			<p>{$gameStore.config.labels.failureCounterLoss}</p>
+		{:else}
+			<h3>{$gameStore.status}</h3>
+		{/if}
 	</div>
 	<div class="dc-game-over-toolbar">
 		<button on:click={() => nextScreen('finalLog')}>record your final log</button>

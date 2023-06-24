@@ -13,6 +13,6 @@
         "**/Thumbs.db": true,
         "**/.svelte*":true,
         "**/node_modules": true,
-        "**/dist": true
+        "**/dist": false
     }
 }

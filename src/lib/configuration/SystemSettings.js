@@ -84,33 +84,6 @@ export class SystemSettings {
 		 */
 		this.rollDuration = config.rollDuration;
 
-		this.labels = new GameLabels({
-			introNextButtonText: 'Next',
-			introBackButtonText: 'Back',
-			introStartButtonText: 'Start',
-			introExitButtonText: 'Exit',
-			toolbarExitButtonText: 'Exit',
-			journalEntryHeader: 'Record your journal entry',
-			journalEntrySubHeader: 'Summary of events',
-			journalEntryNextButtonText: 'Continue',
-			journalEntrySaveButtonText: 'Record',
-			journalEntryRestartButtonText: 'Restart',
-			journalEntryExitButtonText: 'New Game',
-			rollForTasksHeader: 'Roll for tasks',
-			rollForTasksResultHeader: 'Click to continue',
-			drawCardButtonText: 'Draw Card',
-			successCheckHeader: 'Roll success check',
-			successCheckResultHeader: 'Click to continue',
-			failureCheckHeader: 'Failure Check',
-			failureCheckLoss: 'You have failed to complete your quest.',
-			successCheckWin: 'Congratulations! You have succeeded in your quest!',
-			gameOverHeader: 'Game Over',
-			gameOverButtonText: 'Record your final log',
-			statusDisplayRoundText: 'Round: ',
-			healthMeterHeader: 'Health Meter',
-			healthMeterSvg: null,
-			failureCounterHeader: 'Failure Counters',
-			failureCounterSvg: null
-		});
+		this.labels = new GameLabels();
 	}
 }

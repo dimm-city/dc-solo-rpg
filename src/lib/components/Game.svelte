@@ -1,14 +1,13 @@
 <script>
-	import OptionsScreen from './OptionsScreen.svelte';
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { createEventDispatcher } from 'svelte';
 	import {
 		currentScreen,
-		gameConfig,
 		gameStore,
 		gameStylesheet,
 		loadSystemConfig,
 		nextScreen
 	} from '../stores/WAAStore.js';
+	import OptionsScreen from './OptionsScreen.svelte';
 	import IntroScreen from './IntroScreen.svelte';
 	import SuccessCheck from './SuccessCheck.svelte';
 	import RollForTasks from './RollForTasks.svelte';
@@ -34,27 +33,47 @@
 
 	$: if ($currentScreen == 'gameOver') {
 		dispatcher('dc-solo-rpg.gameOver', $gameStore.state);
+	} else if ($currentScreen == 'exitGame') {
+		dispatcher('dc-solo-rpg.exitGame', $gameStore.state);
 	}
 </script>
 
 <svelte:head>
 	<link rel="stylesheet" href={$gameStylesheet} />
 </svelte:head>
-<div class="dc-game-container">
+<div class="dc-game-container dc-game-bg">
 	{#if $currentScreen == 'loadGame'}
-		<slot name="load-screen">
-			<LoadScreen />
-		</slot>
+		<div class="dc-game-bg">
+			<slot name="load-screen">
+				<LoadScreen />
+			</slot>
+		</div>
 	{:else if $currentScreen == 'options'}
-		<slot name="options-screen">
-			<OptionsScreen {systemSettings} />
-		</slot>
+		<div class="dc-game-bg">
+			<slot name="options-screen">
+				<OptionsScreen {systemSettings} />
+			</slot>
+		</div>
 	{:else if $currentScreen == 'intro'}
-		<slot name="intro-screen">
-			<IntroScreen />
+		<div class="dc-game-bg">
+			<slot name="intro-screen">
+				<IntroScreen />
+			</slot>
+		</div>
+	{:else if $currentScreen == 'gameOver'}
+		<div class="dc-fade-in dc-screen-container">
+			<GameOver />
+		</div>
+	{:else if $currentScreen == 'finalLog' || $currentScreen == 'log'}
+		<div class="dc-fade-in dc-screen-container">
+			<JournalEntry on:dc-solo-rpg.journalSaved />
+		</div>
+	{:else if $currentScreen == 'exitGame'}
+		<slot name="options-screen">
+			<div>Game Exited</div>
 		</slot>
 	{:else}
-		<div class="game-screen">
+		<div class="game-screen dc-game-bg">
 			<div class="toolbar-area">
 				<Toolbar />
 			</div>
@@ -79,23 +98,11 @@
 					</div>
 				{:else if $currentScreen == 'failureCheck'}
 					<div class="dc-fade-in dc-screen-container">
-						<FailureCheck />
-					</div>
-				{:else if $currentScreen == 'log'}
-					<div class="dc-fade-in dc-screen-container">
-						<JournalEntry on:dc-solo-rpg.journalSaved />
+						<FailureCheck on:dc-solo-rpg.failureCheckCompleted />
 					</div>
 				{:else if $currentScreen == 'successCheck'}
 					<div class="dc-fade-in dc-screen-container">
 						<SuccessCheck />
-					</div>
-				{:else if $currentScreen == 'finalLog'}
-					<div class="dc-fade-in dc-screen-container">
-						<JournalEntry on:dc-solo-rpg.journalSaved />
-					</div>
-				{:else if $currentScreen == 'gameOver'}
-					<div class="dc-fade-in dc-screen-container">
-						<GameOver />
 					</div>
 				{:else}
 					<div>error: {$currentScreen}</div>
@@ -107,13 +114,16 @@
 
 <style>
 	:root {
-		--dc-default-font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande',
-			'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+		--dc-default-font-family: inherit;
+		--dc-default-text-color: inherit;
 		--dc-default-border-radius: 1rem;
 		--dc-default-padding: 1rem;
 		--dc-default-boxshadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+
+		--dc-default-game-bg: rgba(145, 177, 248);
 		--dc-default-container-bg: rgba(255, 255, 255, 0.3);
 
+		--dc-button-bg: #1387b9;
 		--dc-accent-color: rgb(58, 159, 199);
 		--dc-toolbar-height: 3rem;
 		--dc-header-block-margin: 0.25rem;
@@ -125,6 +135,7 @@
 		--dc-card-back-color: white;
 		--dc-card-back-bg: #1387b9;
 		--dc-card-front-bg: rgb(235, 235, 235);
+		--dc-card-front-color: inherit;
 
 		--dc-status-display-padding: var(--dc-default-padding);
 	}
@@ -132,12 +143,38 @@
 	* {
 		-webkit-tap-highlight-color: transparent;
 	}
+
 	.dc-game-container {
 		display: contents;
+		display: grid;
+		height: 100%;
 		box-sizing: border-box;
 		font-family: var(--dc-default-font-family);
+		color: var(--dc-default-text-color);
 	}
-
+	.dc-game-container,
+	.dc-game-container > div,
+	:global(.dc-intro-container) {
+		border-radius: var(--dc-default-border-radius);
+	}
+	:global(.dc-game-bg) {
+		background: var(--dc-default-game-bg);
+	}
+	:global(.dc-game-container select, .dc-game-container input, .dc-game-container textarea) {
+		color: var(--dc-default-text-color);
+		background: var(--dc-default-game-bg);
+		font-family: var(--dc-default-font-family);
+	}
+	:global(
+			.dc-game-container button,
+			.dc-game-container button:hover,
+			.dc-game-container button:focus-visible
+		) {
+		background: var(--dc-button-bg);
+		color: var(--dc-button-color);
+		text-shadow: none;
+		font-family: var(--dc-default-font-family);
+	}
 	.game-screen {
 		position: relative;
 		align-items: center;

@@ -1,18 +1,21 @@
 <script>
 	import DiceRoller from './ThreeJSDiceBoxRoller.svelte';
 	import { gameStore, failureCheck, confirmFailureCheck } from '../stores/WAAStore.js';
+	import { createEventDispatcher } from 'svelte';
 
 	let diceRoller;
 	let rolling;
 	let result;
 
+	const dispatcher = createEventDispatcher();
 	async function doCheck() {
 		console.log('doCheck', rolling);
 		if (rolling) return;
 		if ($gameStore.state == 'failureCheck') {
-			result = await diceRoller.roll();
+			result = await failureCheck();
 			console.log('dice rolled for failure', result);
-			await failureCheck(result);
+			await diceRoller.roll(result);
+			dispatcher('dc-solo-rpg.failureCheckCompleted', $gameStore.state);
 		} else {
 			await confirmFailureCheck();
 		}

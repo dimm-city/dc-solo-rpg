@@ -22,7 +22,7 @@ The game configuration is defined in a YAML file. This file contains several pro
   - `failureCheckLoss`: The message displayed when the player fails a check.
   - `successCheckWin`: The message displayed when the player successfully completes a check.
 
-## Example
+### Example
 
 Here is an example of a game configuration:
 
@@ -52,7 +52,7 @@ In this example, the game is titled "Future Lost" and it is a part of the "Dimm 
 The game labels are also defined in the configuration YAML file. There are several properties that can be used to customize the text labels used throughout the game. 
 
 
-## Example
+### Example
 
 Here is an example of a game labels configuration:
 
@@ -86,3 +86,7 @@ failureCounterSvg: "[coming soon...]"
 ```
 
 In this example, the 'Next' button on the intro screen will display "Next", the 'Back' button will display "Back", and so on.
+
+## Full Example
+
+A full example of all configuration options can be found here: [templates/full-config.yml](./templates/full-config.yml)

@@ -1,7 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	import DiceBox from '@3d-dice/dice-box-threejs';
-	import { gameConfig } from '../stores/WAAStore.js';
+	import { gameStore } from '../stores/WAAStore.js';
 
 	export let rolling = false;
 	export let header = '';
@@ -13,7 +13,7 @@
 		volume: 100,
 		color_spotlight: 0xefdfd5,
 		shadows: true,
-		theme_surface: 'default', //cyberpunk
+		theme_surface: 'default',
 		sound_dieMaterial: 'plastic',
 		theme_customColorset: null,
 		theme_colorset: '', // white  see available colorsets in https://github.com/3d-dice/dice-box-threejs/blob/main/src/const/colorsets.js
@@ -28,31 +28,38 @@
 
 	let diceBox;
 	onMount(async () => {
-		defaultConfig.theme_colorset = gameConfig.options?.dice ?? defaultConfig.theme_colorset;
+		defaultConfig.theme_colorset = $gameStore.config.options?.dice ?? defaultConfig.theme_colorset;
 
 		let config = {
 			assetPath: '/dice/',
 			sounds: true,
 			volume: 100,
-			//theme_colorset:  gameConfig.options?.dice?.key ?? 'pinkdreams',
-			//theme_customColorset: gameConfig.options?.dice,
-			baseScale: 140,
-			strength: 1
+			//theme_colorset:  $gameStore.config.options?.dice?.key ?? 'pinkdreams',
+			//theme_customColorset: $gameStore.config.options?.dice,
+			baseScale: 100,
+			strength: 1.5
 		};
 
-		if (gameConfig.options?.dice?.key) {
-			config.theme_colorset = gameConfig.options?.dice?.key ?? 'pinkdreams';
+		if ($gameStore.config.options?.dice?.key) {
+			config.theme_colorset = $gameStore.config.options?.dice?.key ?? 'pinkdreams';
 		} else {
-			config.theme_customColorset = gameConfig.options?.dice;
+			config.theme_customColorset = $gameStore.config.options?.dice;
 		}
-
+		
 		diceBox = new DiceBox('#dice-roller-container', config);
 		await diceBox.initialize();
+		diceBox.resizeWorld();
+	
+		return () => {
+			console.log('dispose roller', diceBox);
+		};
 	});
-	export async function roll() {
-		if (rolling) return;
+	export async function roll(values = null) {
+		if ( rolling) return;
 		rolling = true;
-		let result = await diceBox.roll('1d6');
+
+		const rollString = values ? `1d6@${values}` : '1d6';
+		let result = await diceBox.roll(rollString);
 
 		console.log('return', result);
 		rolling = false;
@@ -64,6 +71,8 @@
 	id="dice-roller-container"
 	class="dc-dice-roller-container"
 	disabled={rolling}
+	role="button"
+	tabindex="0"
 	on:click
 	on:keyup
 >

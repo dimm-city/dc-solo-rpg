@@ -1,16 +1,66 @@
-// Write a svelte component to allow a player to play the
-// wretched and alone solor RPG. Be sure to include all possible
-// win and loss conditions. Also write the store in such a way that
-// the play must click to draw cards and roll dice. instead of using
-// the block tower, implement a new mechanic that is statistically similiar
-// but uses six or 20 sided dice
-import { writable, get, derived } from 'svelte/store';
+import { writable, derived, get } from 'svelte/store';
 import { ConfigurationLoader } from '../configuration/ConfigurationLoader.js';
-import { StateMachine, transitions } from './WAAStateMachine.js';
+import { StateMachine } from './WAAStateMachine.js';
 
-const configLoader = new ConfigurationLoader();
+let getRandomNumber = () => {
+	return Math.floor(Math.random() * 6) + 1;
+};
 
-// Define the initial state of the game
+function shuffle(array) {
+	let currentIndex = array.length,
+		temporaryValue,
+		randomIndex;
+
+	// While there remain elements to shuffle...
+	while (0 !== currentIndex) {
+		// Pick a remaining element...
+		randomIndex = Math.floor(Math.random() * currentIndex);
+		currentIndex -= 1;
+
+		// And swap it with the current element.
+		temporaryValue = array[currentIndex];
+		array[currentIndex] = array[randomIndex];
+		array[randomIndex] = temporaryValue;
+	}
+
+	return array;
+}
+export const nextScreen = (action) => {
+	currentScreen.update((screen) => {
+		if (action) services.stateMachine.next(action);
+
+		screen = services.stateMachine.state;
+		return screen;
+	});
+};
+/**
+ * Represents the initial state of the game.
+ * @typedef {Object} InitialState
+ * @property {object} config - The game configuration.
+ * @property {object} player - The player object.
+ * @property {Array} deck - The deck of cards.
+ * @property {number} tokens - The number of tokens on the Ace of Hearts.
+ * @property {number} kingsRevealed - The number of Kings revealed.
+ * @property {boolean} aceOfHeartsRevealed - Indicates if the Ace of Hearts is revealed.
+ * @property {boolean} gameOver - Indicates if the game is over.
+ * @property {boolean} win - Indicates if the game is won.
+ * @property {number} tower - The number of blocks in the tower.
+ * @property {number} bonus - The bonus points.
+ * @property {Array} log - The log of drawn cards.
+ * @property {Array} journalEntries - The journal entries.
+ * @property {number} round - The current round.
+ * @property {string} state - The current state.
+ * @property {string} status - The status message for the player.
+ * @property {number} cardsToDraw - The number of cards to draw.
+ * @property {object|null} currentCard - The current card that was drawn.
+ * @property {number} diceRoll - The dice roll result.
+ * @function getRandomNumber
+ * @function
+ */
+
+/** Define the initial state of the game
+ * @type {InitialState}
+ */
 const initialState = {
 	config: {},
 	player: null,
@@ -32,207 +82,212 @@ const initialState = {
 	status: '', // Status message for the player
 	cardsToDraw: 0, // Number of cards to draw
 	currentCard: null, //The current card that was drawn
-	diceRoll: 0 // Dice roll result
+	diceRoll: 0, // Dice roll result,
+	getRandomNumber: getRandomNumber
 };
-const stateMachine = new StateMachine('loadGame', transitions);
 
-function shuffle(array) {
-	let currentIndex = array.length,
-		temporaryValue,
-		randomIndex;
+/**
+ * Represents the game store.
+ * @type {Writable<InitialState>}
+ */
+export const gameStore = writable(initialState);
 
-	// While there remain elements to shuffle...
-	while (0 !== currentIndex) {
-		// Pick a remaining element...
-		randomIndex = Math.floor(Math.random() * currentIndex);
-		currentIndex -= 1;
-
-		// And swap it with the current element.
-		temporaryValue = array[currentIndex];
-		array[currentIndex] = array[randomIndex];
-		array[randomIndex] = temporaryValue;
-	}
-
-	return array;
-}
-
+/**
+ * Represents the game stylesheet store.
+ * @type {Writable<string>}
+ */
 export const gameStylesheet = writable('');
 
-/** @property {GameSettings} gameConfig */
-export let gameConfig = {};
-export const gameStore = writable({ ...initialState });
-export const currentEvents = derived([gameStore], ([$gameStore]) => {
-	console.log('currentEvents');
-	return $gameStore.log.filter((l) => l.round == $gameStore.round);
+/**
+ * Represents the current events derived store.
+ * @type {Readable<Array>}
+ */
+export const currentEvents = derived(gameStore, ($gameStore) => {
+	return $gameStore.log.filter((l) => l.round === $gameStore.round);
 });
 
+/**
+ * Represents the current screen store.
+ * @type {Writable<string>}
+ */
 export const currentScreen = writable('loadGame');
 
-export const nextScreen = (action) => {
-	currentScreen.update((screen) => {
-		if (action) stateMachine.next(action);
-
-		screen = stateMachine.state;
-		return screen;
-	});
+export const services = {
+	stateMachine: new StateMachine('loadGame'),
+	configLoader: new ConfigurationLoader(),
+	getRandomNumber: getRandomNumber
 };
 
-// Define actions
+/**
+ * Loads the system configuration.
+ * @param {object} systemConfig - The system configuration object.
+ * @param {string} systemConfig.gameConfigUrl - The URL of the game configuration.
+ * @returns {Promise<void>}
+ */
 export const loadSystemConfig = async (systemConfig) => {
-	if (!systemConfig || !systemConfig.gameConfigUrl)
-		throw new Error('Must provide a valid game configuration and url');
+	if (!systemConfig || !systemConfig.gameConfigUrl) {
+		throw new Error('Must provide a valid game configuration and URL');
+	}
 
-	configLoader.loadSystemSettings(systemConfig);
-	console.log('system settings loaded', systemConfig);
+	await services.configLoader.loadSystemSettings(systemConfig);
+	const gameConfig = await services.configLoader.loadGameSettings(systemConfig.gameConfigUrl);
 
-	//Load configuration
-	gameConfig = await configLoader.loadGameSettings(systemConfig.gameConfigUrl);
 	gameStylesheet.set(gameConfig.stylesheet);
 
-	gameStore.update((state) => {
-		state.config = { ...gameConfig };
-		console.log('updating config', state.config);
-		return state;
+	gameStore.update((store) => {
+		store.config = gameConfig;
+		store.state = services.stateMachine.next('options');
+		return store;
 	});
-	//ToDo: add user settings screen
-	//stateMachine.next('options');
-	nextScreen('options');
 
-	//gameConfig = { ...systemConfig };
-};
-// export const loadGame = async (config, player) => {
-// 	if (!config || !config.url) throw new Error('Must provide a valid game configuration and url');
-
-// 	//Load configuration
-// 	gameConfig = await configLoader.loadGameSettings(config);
-// 	gameStylesheet.set(gameConfig.stylesheet);
-
-// 	//ToDo: add user settings screen
-// 	stateMachine.next('options');
-// 	startGame(player, config.options);
-// };
-
-export const startGame = (player, options = {}) => {
-	if (!player || !player.name) throw new Error('Must provide a valid player');
-	console.log('starting game', player, options);
-
-	//Set game options
-	// gameConfig.options = { ...gameConfig.options, ...options }');
-	//Set game options
-	// gameConfig.options = { ...gameConfig.options, ...options };
-	// gameConfig.options.difficulty = options?.difficulty ?? 0;
-
-	gameConfig = configLoader.loadUserSettings(options);
-
-	gameStore.update((state) => {
-		state.config = { ...gameConfig };
-		console.log('updating config', state.config);
-
-		state = { ...initialState };
-		state.round = 1;
-		state.player = player;
-
-		state.deck = [...gameConfig.deck];
-
-		if (gameConfig.options.difficulty === 0) {
-			state.aceOfHeartsRevealed = true;
-			state.deck = [...state.deck.filter((c) => c.card != 'A' && c.suit != 'hearts')];
-		}
-
-		//Shuffle deck
-		state.deck = shuffle(state.deck);
-
-		//Start intro
-		state.state = stateMachine.next('intro');
-
-		return state;
-	});
 	nextScreen();
 };
 
+/**
+ * Starts the game.
+ * @param {object} player - The player object.
+ * @param {object} options - The game options.
+ * @returns {void}
+ */
+export const startGame = (player, options = {}) => {
+	if (!player || !player.name) {
+		throw new Error('Must provide a valid player');
+	}
+
+	const gameConfig = services.configLoader.loadUserSettings(options);
+
+	gameStore.update((state) => {
+		state.config = gameConfig;
+		state.round = 1;
+		state.player = player;
+		state.tokens = 10;
+		state.kingsRevealed = 0;
+		state.aceOfHeartsRevealed = false;
+		state.gameOver = false;
+		state.win = false;
+		state.tower = 54;
+		state.bonus = 0;
+		state.log = [];
+		state.journalEntries = [];
+		state.cardsToDraw = 0;
+		state.currentCard = null;
+		state.diceRoll = 0;
+
+		state.deck = [...state.config.deck];
+
+		if (state.config.options.difficulty === 0) {
+			state.aceOfHeartsRevealed = true;
+			state.deck = state.deck.filter((c) => c.card !== 'A' && c.suit !== 'hearts');
+		}
+
+		state.deck = shuffle(state.deck);
+
+		state.state = services.stateMachine.next('intro');
+
+		return state;
+	});
+
+	nextScreen();
+};
+
+/**
+ * Starts the next round.
+ * @returns {void}
+ */
 export const startRound = () => {
 	gameStore.update((state) => {
-		console.log('starting round', state.round, get(currentScreen));
 		state.round += 1;
-		state.state = stateMachine.next('rollForTasks');
+		state.state = services.stateMachine.next('rollForTasks');
 		nextScreen();
 		return state;
 	});
 };
 
-export const rollForTasks = async (result) => {
-	//Roll dice
-	//let result = await rollDice();
-	gameStore.update((state) => {
-		state.cardsToDraw = result;
-		//Go to draw cards
-		state.currentCard = null;
-		state.state = stateMachine.next('drawCard');
-		console.log('task this round', state.cardsToDraw);
-		//nextScreen();
-		return state;
+/**
+ * Rolls for tasks.
+ * @param {number} result - The result of the dice roll.
+ * @returns {Promise<number>}
+ */
+export const rollForTasks = async () => {
+	const roll = await services.getRandomNumber();
+
+	gameStore.update((store) => {
+		store.cardsToDraw = roll;
+		store.currentCard = null;
+		store.state = services.stateMachine.next('drawCard');
+		return store;
 	});
-	return result;
+	return roll;
 };
 
+/**
+ * Confirms the task roll.
+ * @returns {void}
+ */
 export const confirmTaskRoll = () => {
 	nextScreen();
 };
 
+/**
+ * Draws a card.
+ * @returns {void}
+ */
 export const drawCard = () => {
 	gameStore.update((state) => {
 		if (state.deck.length === 0) {
 			state.gameOver = true;
-			state.state = stateMachine.next('gameOver');
+			state.state = services.stateMachine.next('gameOver');
 			nextScreen();
 			return state;
 		}
 
-		// Draw a card
-		//const cardIndex = Math.floor(Math.random() * state.deck.length);
-		const card = state.deck.pop(); // state.deck.splice(cardIndex, 1)[0];
-		state.currentCard = card;
-		console.debug('drew card', card);
+		const card = state.deck.pop();
+		// const card = state.deck.some((c) => c.card == 'K')
+		// 	? state.deck.filter((c) => c.card == 'K').pop()
+		// 	: state.deck.pop();
 
-		// Decrease the number of cards to draw
+		state.currentCard = card;
 		state.cardsToDraw -= 1;
 
-		// Add the card to the log
+		card.id = `${state.round}.${state.log.filter((l) => l.round === state.round).length + 1}`;
 		card.round = state.round;
 		state.log.push(card);
 
-		// Check if the card is a King
 		if (card.card === 'K') {
 			state.kingsRevealed += 1;
 		}
 
-		// Check if the card is an Ace
 		if (card.card === 'A') {
 			state.bonus += 1;
-			if (card.suit === 'hearts') state.aceOfHeartsRevealed = true;
+			if (card.suit === 'hearts') {
+				state.aceOfHeartsRevealed = true;
+			}
 		}
 
-		// Check if the game is over
 		if (state.kingsRevealed === 4) {
 			state.gameOver = true;
-			state.state = stateMachine.next('gameOver');
+			state.win = false;
+			state.status = state.config.labels.failureCounterLoss;
+			state.state = services.stateMachine.next('gameOver');
 			return state;
 		}
 
-		// If the card is odd, set the state to 'failureCheck'
-		if (parseInt(card.card) % 2 !== 0) {
-			stateMachine.next('failureCheck');
+		if (card.card != 'A' && parseInt(card.card) % 2 !== 0) {
+			services.stateMachine.next('failureCheck');
 		} else if (state.cardsToDraw > 0) {
-			stateMachine.next('drawCard');
+			services.stateMachine.next('drawCard');
 		} else {
-			stateMachine.next('log');
+			services.stateMachine.next('log');
 		}
-		state.state = stateMachine.state;
-		//nextScreen();
+		state.state = services.stateMachine.state;
 		return state;
 	});
 };
 
+/**
+ * Confirms the drawn card.
+ * @returns {void}
+ */
 export const confirmCard = () => {
 	gameStore.update((state) => {
 		state.currentCard = null;
@@ -241,88 +296,111 @@ export const confirmCard = () => {
 	nextScreen();
 };
 
-export const failureCheck = async (result) => {
-	// Roll a die
-	//let roll = await rollDice();
-
-	//Very short game
-	//result = 20;
-	
+/**
+ * Performs the failure check.
+ * @param {number} result - The result of the dice roll.
+ * @returns {Promise<number>}
+ */
+export const failureCheck = async () => {
+	const result = services.getRandomNumber();
 	gameStore.update((state) => {
-		if (state.gameOver) throw new Error('The game is over, stop playing with the tower!');
+		if (state.gameOver) {
+			throw new Error('The game is over, stop playing with the tower!');
+		}
 		state.diceRoll = result;
 
-		// Calculate the number of blocks to remove
-		const blocksToRemove = Math.max(result - state.bonus, 0);
+		const lastLog = state.log?.at(state.log.length - 1);
+		if (lastLog) {
+			state.log = [
+				...state.log.slice(0, -1),
+				{
+					...lastLog,
+					diceRoll: result
+				}
+			];
+		}
 
-		// Decrease the number of blocks in the tower
+		const blocksToRemove = Math.max(result - state.bonus, 0);
 		state.tower -= blocksToRemove;
 
-		console.log('current tower score', result, state.tower);
-		// Check if the tower has collapsed
 		if (state.tower <= 0) {
 			state.tower = 0;
-			state.status = gameConfig.labels?.failureCheckLoss ?? 'The tower has fallen';
+			state.status = state.config.labels?.failureCheckLoss ?? 'The tower has fallen';
 			state.gameOver = true;
-			state.state = stateMachine.next('gameOver');
+			state.state = services.stateMachine.next('gameOver');
 		} else {
 			if (state.cardsToDraw > 0) {
-				state.state = stateMachine.next('drawCard');
+				state.state = services.stateMachine.next('drawCard');
 			} else {
-				state.state = stateMachine.next('log');
+				state.state = services.stateMachine.next('log');
 			}
 		}
+
 		return state;
 	});
-	//nextScreen();
+
 	return result;
 };
 
+/**
+ * Confirms the failure check.
+ * @returns {void}
+ */
 export const confirmFailureCheck = () => {
 	nextScreen();
 };
+
+/**
+ * Records the round.
+ * @param {object} journalEntry - The journal entry object.
+ * @param {string} journalEntry.text - The journal entry text.
+ * @param {string} [journalEntry.dateRecorded] - The date the entry was recorded.
+ * @returns {void}
+ */
 export const recordRound = (journalEntry) => {
 	if (journalEntry == null || journalEntry.text == null) {
 		throw new Error('No journal entries provided for this round');
 	}
 
 	gameStore.update((state) => {
+		journalEntry.id = state.round;
 		journalEntry.round = state.round;
 		journalEntry.dateRecorded = journalEntry.dateRecorded || new Date().toISOString();
 		state.journalEntries.push(journalEntry);
 
 		if (!state.gameOver) {
-			if (state.aceOfHeartsRevealed) state.state = stateMachine.next('successCheck');
-			else state.state = stateMachine.next('startRound');
+			if (state.aceOfHeartsRevealed) {
+				state.state = services.stateMachine.next('successCheck');
+			} else {
+				state.state = services.stateMachine.next('startRound');
+			}
 			nextScreen();
 		}
 		return state;
 	});
 };
 
-export const successCheck = async (roll) => {
-	// Roll a die
-	//const roll = await rollDice();
-	console.log('success roll', roll);
+/**
+ * Performs the success check.
+ * @param {number} roll - The result of the dice roll.
+ * @returns {Promise<number>}
+ */
+export const successCheck = async () => {
+	const roll = await services.getRandomNumber();
 	gameStore.update((state) => {
-		//ToDo use random.org
-
-		// Store the dice roll result
 		state.diceRoll = roll;
 
-		// Check if the roll is a 6
-		if (roll === 6 || (gameConfig.difficulty > 0 && roll + state.bonus === 6)) {
+		if (roll === 6 || (state.config.difficulty > 0 && roll + state.bonus === 6)) {
 			state.tokens -= 1;
 		}
 
-		// Check if the game is won
 		if (state.tokens === 0) {
 			state.win = true;
-			state.status = gameConfig.labels?.successCheckWin ?? 'Salvation has arrived';
+			state.status = state.config.labels?.successCheckWin ?? 'Salvation has arrived';
 			state.gameOver = true;
-			state.state = stateMachine.next('gameOver');
+			state.state = services.stateMachine.next('gameOver');
 		} else {
-			state.state = stateMachine.next('startRound');
+			state.state = services.stateMachine.next('startRound');
 		}
 
 		return state;
@@ -331,16 +409,24 @@ export const successCheck = async (roll) => {
 	return roll;
 };
 
+/**
+ * Restarts the game.
+ * @returns {void}
+ */
 export const restartGame = () => {
 	const currentState = get(gameStore);
-	startGame(currentState.player, gameConfig.options);
+	startGame(currentState.player, currentState.config.options);
 };
+
+/**
+ * Exits the game.
+ * @returns {void}
+ */
 export const exitGame = async () => {
 	const currentState = get(gameStore);
 	const newState = { ...initialState };
 	newState.player = currentState.player;
-	gameStore.set({ ...newState });
-	gameConfig = {};
+	gameStore.set(newState);
 	gameStylesheet.set('');
-	nextScreen('loadGame');
+	nextScreen('exitGame');
 };

@@ -1,21 +1,3 @@
-export class StateMachine {
-	constructor(initialState, transitions) {
-		this.state = initialState;
-		this.transitions = transitions;
-	}
-
-	next(action) {
-		const transition = this.transitions[this.state][action];
-
-		if (transition || action == "loadGame") {
-			this.state = transition ?? action;
-			console.log('transition to:', action);
-            return action; //this.state.toString();
-		} else {
-			throw new Error(`Invalid transition from ${this.state} on ${action}`);
-		}
-	}
-}
 
 export const transitions = {
 	loadGame: {
@@ -58,13 +40,41 @@ export const transitions = {
 		gameOver: 'gameOver'
 	},
 	gameOver: {
-		finalLog: 'finalLog'
+		finalLog: 'finalLog',
+		intro: 'intro'
 	},
 	finalLog: {
-		loadGame: 'loadGame',
+		exitGame: 'exitGame',
 		intro: 'intro'
+	},
+	exitGame: {
+		loadGame: 'loadGame',
+		options: 'options'
+	},
+	errorScreen: {
+		loadGame: 'loadGame'
 	}
 };
+
+const defaultTransitions = transitions;
+export class StateMachine {
+	constructor(initialState, transitions) {
+		this.state = initialState;
+		this.transitions = transitions ?? defaultTransitions;
+	}
+
+	next(action) {
+		const transition = this.transitions[this.state][action];
+
+		if (transition || action == "exitGame" || action == "errorScreen") {
+			this.state = transition ?? action;
+			console.log('transition to:', action);
+            return action; //this.state.toString();
+		} else {
+			throw new Error(`Invalid transition from ${this.state} on ${action}`);
+		}
+	}
+}
 
 // const stateMachine = new StateMachine('loadGame', transitions, {});
 // stateMachine.next('start');

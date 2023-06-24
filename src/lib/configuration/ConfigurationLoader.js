@@ -1,5 +1,6 @@
 import { default as yaml } from 'js-yaml';
 import { SystemSettings } from './SystemSettings.js';
+import { parse } from 'csv-parse/browser/esm/sync';
 
 /**
  * This class handles loading and retrieving configuration settings for a web-based game.
@@ -14,24 +15,21 @@ export class ConfigurationLoader {
 	 * @param {SystemSettings} systemSettings - The initial system settings.
 	 */
 	constructor(systemSettings = {}) {
-		// immutable system settings
-		this.systemSettings =  new SystemSettings(systemSettings);
-		// mutable settings
+		this.systemSettings = new SystemSettings(systemSettings);
 		this.gameSettings = {};
 		this.userSettings = {};
 	}
 
-	loadYaml(configYaml){
+	loadYaml(configYaml) {
 		return yaml.load(configYaml);
 	}
 
-	// /**
 	//  * Load system settings.
 	//  * @param {SystemSettings} systemSettings - The initial system settings.
 	//  */
 	loadSystemSettings(systemSettings = {}) {
 		// Freeze the systemSettings object to prevent modification
-		this.systemSettings =  new SystemSettings(systemSettings);
+		this.systemSettings = new SystemSettings(systemSettings);
 		return this.systemSettings;
 	}
 
@@ -49,25 +47,26 @@ export class ConfigurationLoader {
 		if (!gameConfigUrl?.endsWith('config.yml')) {
 			gameConfigUrl += gameConfigUrl.endsWith('/') ? 'config.yml' : '/' + 'config.yml';
 		}
-		const response = await fetch(gameConfigUrl);
 
-		const configYaml = await response.text();
-		const configJson = this.loadYaml(configYaml);
+		let text = await readUrlAsText(gameConfigUrl);
+
+		const configJson = this.loadYaml(text);
+
+		//if configJson is not an object, throw an error
+		if (!configJson || typeof configJson !== 'object') {
+			throw new Error('Could not load config.yml');
+		}
 
 		//if config.deck is null, fetch it from config.url but replace 'config.yml' with deck.csv
-		if (!configJson.deck) {
-			const deckUrl = gameConfigUrl.replace('config.yml', 'deck.csv');
+		if (!configJson.deck || typeof configJson.deck == 'string') {
+			const deckUrl = gameConfigUrl.replace('config.yml', configJson.deck ?? 'deck.csv');
 
 			//fetch deck csv from the deckUrl and convert it to a deck array
-			const deckResponse = await fetch(deckUrl);
-			const deckCsv = await deckResponse.text();
-			const deckArray = deckCsv
-				.split('\n')
-				.map((line) => {
-					const [card, suit, description, action] = line.split(',');
-					return { card, suit, description: description?.replaceAll('"', ''), action };
-				})
-				.filter((line) => line.card && !line.card.includes('card'));
+			const deckCsv = await readUrlAsText(deckUrl);
+
+			const deckArray = parse(deckCsv, {
+				columns: true
+			});
 			configJson.deck = deckArray;
 		}
 
@@ -84,29 +83,23 @@ export class ConfigurationLoader {
 			configJson.introduction = introduction;
 		}
 
-		//check to see if config.url + "/game.css" exits via a fetch call. if so, assign config.stylesheet to the value of config.url + "/game.css"
-		const stylesheetUrl = gameConfigUrl.replace(
-			'config.yml',
-			configJson.stylesheet ?? 'game.css'
-		);
+		//check to see if config.url + "/game.css" exits via a fetch call.
+		const stylesheetUrl = gameConfigUrl.replace('config.yml', configJson.stylesheet ?? 'game.css');
 
-		//fetch stylesheet from the stylesheetUrl and convert it to a string
 		const stylesheetResponse = await fetch(stylesheetUrl);
+		//if so, assign config.stylesheet to the value of config.url + "/game.css"
 		if (stylesheetResponse.status == 404) {
 			configJson.stylesheet = '';
 		} else {
-			//const stylesheet = await stylesheetResponse.text();
 			configJson.stylesheet = stylesheetUrl;
 		}
-
-		
-		console.log('gameSettings', gameConfigUrl, this.systemSettings, configJson);
 
 		// Merge system settings with game settings, overwriting system settings with game settings if necessary.
 		// This is to allow game settings to overwrite system settings, but not vice versa.
 		// This is to allow system settings to be changed by the user, but not changed by the game.
-
 		this.gameSettings = { ...this.systemSettings, ...configJson };
+
+		this.gameSettings.labels = { ...this.systemSettings.labels, ...configJson.labels };
 		this.gameSettings.loaded = true;
 
 		return this.gameSettings;
@@ -122,7 +115,7 @@ export class ConfigurationLoader {
 
 		if (this.gameSettings.options.difficulty == undefined) this.gameSettings.options.difficulty = 0;
 
-		console.log('loadUserSettings', this.userSettings, this.gameSettings);
+		//console.debug('loadUserSettings', this.userSettings, this.gameSettings);
 		return this.gameSettings;
 	}
 
@@ -144,4 +137,13 @@ export class ConfigurationLoader {
 		// Merge all settings with priority: userSettings -> gameSettings -> systemSettings
 		return { ...this.systemSettings, ...this.gameSettings, ...this.userSettings };
 	}
+}
+async function readUrlAsText(filePath) {
+	let text;
+
+	const response = await fetch(filePath);
+	text = await response.text();
+
+	if (!text?.split) console.warn('Loaded empty file:', filePath, text);
+	return text;
 }

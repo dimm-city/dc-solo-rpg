@@ -1,5 +1,5 @@
 <script>
-	import { startGame, gameStore, gameConfig } from '../stores/WAAStore.js';
+	import { startGame, gameStore } from '../stores/WAAStore.js';
 	import { Difficulty } from '../configuration/DifficultyLevels.js';
 	export let systemSettings = {};
 	let options = {};
@@ -20,7 +20,7 @@
 </script>
 
 <div class="dc-start-screen-container">
-	<h2>{$gameStore.config.title ?? 'Game'} Options</h2>
+	<h2>{$gameStore.config.title ?? 'Game'}</h2>
 	<div>
 		<label for="diceSelect">Select a Dice Theme:</label>
 		<select id="diceSelect" bind:value={options.dice}>
@@ -29,9 +29,7 @@
 				<option value={theme}>{theme.name}</option>
 			{/each}
 		</select>
-	</div>
-
-	<div>
+	
 		<label for="difficulty">Select a difficulty:</label>
 		<select bind:value={options.difficulty}>
 			{#each Difficulty.getEntries() as entry (entry.value)}
@@ -40,16 +38,17 @@
 		</select>
 	</div>
 
-	<button on:click={() => setConfig()}>Start Game</button>
-	{status}
+	<button on:click={() => setConfig()}>Start Game</button>	
 </div>
 
 <style>
 	.dc-start-screen-container {
 		display: flex;
+		height: 100%;
 		flex-direction: column;
 		gap: 0.5rem;
 		padding: var(--dc-default-padding);
+		justify-content: space-between;
 	}
 
 	select {

@@ -1,14 +1,15 @@
 <script>
 	import DiceRoller from './ThreeJSDiceBoxRoller.svelte';
-	import { gameConfig, gameStore, startRound, successCheck } from '../stores/WAAStore.js';
+	import {  gameStore, startRound, successCheck } from '../stores/WAAStore.js';
 	let diceRoller;
 	let rolling = false;
 
 	async function doCheck() {
 		if (rolling) return;
 		if ($gameStore.state == 'successCheck') {
-			const result = await diceRoller.roll();
-			await successCheck(result);
+			const result = await successCheck();
+			await diceRoller.roll(result);
+			
 		} else {
 			startRound();
 		}
@@ -16,8 +17,8 @@
 
 	$: header =
 		$gameStore.state == 'successCheck'
-			? gameConfig.labels.successCheckHeader
-			: gameConfig.labels.successCheckResultHeader;
+			? $gameStore.config.labels.successCheckHeader
+			: $gameStore.config.labels.successCheckResultHeader;
 </script>
 
 <div class="dc-success-check-container">

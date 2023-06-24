@@ -1,6 +1,6 @@
 <script>
 	import { createEventDispatcher, onMount } from 'svelte';
-	import { gameConfig } from '../stores/WAAStore.js';
+	import { gameStore } from '../stores/WAAStore.js';
 
 	export let card = null;
 	let isFlipped = false;
@@ -29,7 +29,7 @@
 	<div class="card-inner">
 		<div class="card-back">
 			<slot name="card-back">
-				<h2>{gameConfig.labels?.cardBackText ?? gameConfig.title}</h2>
+				<h2>{$gameStore.config.labels?.cardBackText ?? $gameStore.config.title}</h2>
 			</slot>
 		</div>
 		<div class="card-front">
@@ -93,6 +93,7 @@
 		text-align: center;
 		padding: 0.25rem;
 		background-color: var(--dc-card-front-bg);
+		color: var(--dc-card-front-color);
 		transform: rotateY(180deg);
 	}
 	.card-front small{

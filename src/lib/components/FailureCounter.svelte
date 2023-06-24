@@ -1,12 +1,12 @@
 <script>
-	import { gameStore, gameConfig } from '../stores/WAAStore.js';
+	import { gameStore} from '../stores/WAAStore.js';
 
 	const numTokens = 4;
 	$: tokens = Array.from({ length: numTokens }, (_, index) => index < $gameStore.kingsRevealed);
 </script>
 
 <div class="success-counters-container">
-	<h4>{gameConfig?.labels?.failureCounters ?? 'Failure Counters'}</h4>
+	<h4>{$gameStore.config?.labels?.failureCounters ?? 'Failure Counters'}</h4>
 	<!-- Success: {$currentState.successCounter} -->
 	<div class="grid">
 		{#each tokens as token, index}
