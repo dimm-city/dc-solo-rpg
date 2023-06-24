@@ -14,17 +14,14 @@
 	];
 	const players = [
 		{
-			name: 'Ralph'
-		},
-		{
-			name: 'murmur'
+			name: 'Guest'
 		}
 	];
 
 	let gameComponent;
 	let ready = false;
 	let selectedGame;
-	let selectedPlayer;
+	let selectedPlayer = players.at(0);
 	function loadGame() {
 		ready = true;
 		systemSettings.gameConfigUrl = selectedGame.url;
