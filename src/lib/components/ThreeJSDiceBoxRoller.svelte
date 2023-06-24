@@ -66,6 +66,8 @@
 	id="dice-roller-container"
 	class="dc-dice-roller-container"
 	disabled={rolling}
+	role="button"
+	tabindex="0"
 	on:click
 	on:keyup
 >

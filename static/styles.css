@@ -81,6 +81,7 @@ nav ul li {
 .form-container {
 	width: 90%;
 	height: 100%;
+	overflow: hidden;
 	display: grid;
 	margin: 0 auto;
 	padding: 20px;
@@ -126,7 +127,8 @@ button {
 	font-weight: 300;
 }
 
-button:hover {
+button:hover, button:focus-visible {
+	border: none;
 	color: var(--accent-color);
 	background-color: var(--secondary-color);
 	text-shadow: 0 0 1px var(--accent-color), 0 0 1px var(--accent-color), 0 0 5px var(--accent-color),
@@ -151,4 +153,8 @@ footer div {
 	display: flex;
 	justify-content: space-between;
 	width: 100%;
+}
+footer p, footer small{
+	white-space: nowrap;
+	text-overflow: ellipsis;
 }

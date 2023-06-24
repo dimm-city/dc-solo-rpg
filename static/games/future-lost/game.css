@@ -26,7 +26,8 @@
 
 
 	/*WAA variables*/
-
+	--dc-button-bg: transparent;
+	--dc-default-game-bg: transparent;
 	--dc-default-border-radius: 0.175rem;
 	--dc-default-padding: 1rem;
 	--dc-default-boxshadow: 0 2px 5px rgba(0, 0, 0, 0.1);
@@ -38,7 +39,6 @@
 	--dc-toolbar-height: 3rem;
 	--dc-header-block-margin: 0.25rem;
 
-	--dc-dice-roller-bg: #cccfd1;
 	--dc-card-border: 1px solid var(--secondary-accent-muted);
 	--dc-card-border-radius: 1rem;
 	--dc-card-back-bg: linear-gradient(
@@ -52,6 +52,9 @@
 		var(--secondary-accent-muted)
 	);
 
+	--dc-dice-roller-bg: var(--dc-card-back-bg); 
+	 /* #cccfd1; */
+
 	/* #1387b9; */
 	--dc-card-front-bg: var(--dark);
 	--dc-card-front-color: var(--third-accent);
@@ -63,13 +66,13 @@
 	--dc-health-meter-med: var(--yellow);
 	--dc-health-meter-low: var(--secondary-accent-muted);
 }
-body {
+/* body {
 	background: var(--bg-main);
 	color: var(--third-accent);
 }
 *{
 	color: var(--third-accent);
-}
+} */
 h4 {
 	margin: 0;
 }
@@ -107,7 +110,7 @@ background: radial-gradient(circle, rgba(19,135,185,1) 0%, rgba(29,63,78,1) 71%,
 }
 
 .dc-fade-in {
-	animation: fadeIn 1s ease-in;
+	animation: fadeIn 200ms ease-in;
 }
 
 /*dc specific*/
@@ -115,16 +118,20 @@ background: radial-gradient(circle, rgba(19,135,185,1) 0%, rgba(29,63,78,1) 71%,
 .dc-game-container input,
 .dc-game-container textarea,
 .dc-game-container select,
-.dc-game-container button {
+.dc-game-container button,
+.dc-game-container button:hover{
 	width: 100%;
 	padding: 0.5rem 1rem;
 	background-color: rgba(17, 17, 17, 0.75);
 	border: 0;
 	color: var(--third-accent);
 	font-size: 1rem;
-	font-family: var(--main-font-family);
+	
+	
 }
 .dc-game-container button,
+.dc-game-container button:hover,
+.dc-game-container button:focus-visible,
 .dc-game-container textarea {
 	border: 1px var(--third-accent) solid;
 }

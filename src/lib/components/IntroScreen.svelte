@@ -98,7 +98,7 @@
 <style>
 	.dc-intro-container {
 		display: grid;
-		grid-template-rows: auto min-content;
+		grid-template-rows: minmax(100%, 70svh) min-content;
 		height: 100%;
 		width: 100%;
 		border-radius: 1rem;

@@ -17,7 +17,7 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		padding: 0.5rem;
+		padding-inline: 0.5rem;
 	}
 	.dc-toolbar h3 {
 		margin: 0;

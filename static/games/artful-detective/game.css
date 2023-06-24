@@ -1,9 +1,13 @@
 :root {
+	--dc-default-font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande',
+			'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+			
 	--dc-default-border-radius: 1rem;
 	--dc-default-padding: 1rem;
 	--dc-default-boxshadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 	--dc-default-container-bg: rgba(255, 255, 255, 0.5);
 
+	--dc-default-text-color: #1a237e;
 	--dc-accent-color: rgb(255, 210, 0); /* Bright yellow for a comedic touch */
 	--dc-toolbar-height: 3rem;
 	--dc-header-block-margin: 0.25rem;

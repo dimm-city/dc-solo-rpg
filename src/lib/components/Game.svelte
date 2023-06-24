@@ -114,8 +114,7 @@
 
 <style>
 	:root {
-		--dc-default-font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande',
-			'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+		--dc-default-font-family: inherit;
 		--dc-default-text-color: inherit;
 		--dc-default-border-radius: 1rem;
 		--dc-default-padding: 1rem;
@@ -124,6 +123,7 @@
 		--dc-default-game-bg: rgba(145, 177, 248);
 		--dc-default-container-bg: rgba(255, 255, 255, 0.3);
 
+		--dc-button-bg: #1387b9;
 		--dc-accent-color: rgb(58, 159, 199);
 		--dc-toolbar-height: 3rem;
 		--dc-header-block-margin: 0.25rem;
@@ -159,6 +159,17 @@
 	}
 	:global(.dc-game-bg) {
 		background: var(--dc-default-game-bg);
+	}
+	:global(.dc-game-container select, .dc-game-container input, .dc-game-container textarea){
+		color: var(--dc-default-text-color);
+		background: var(--dc-default-game-bg);
+		font-family: var(--dc-default-font-family);
+	}
+	:global(.dc-game-container button, .dc-game-container button:hover, .dc-game-container button:focus-visible){
+		background: var(--dc-button-bg);
+		color: var(--dc-button-color);
+		text-shadow: none;
+		font-family: var(--dc-default-font-family);
 	}
 	.game-screen {
 		position: relative;
