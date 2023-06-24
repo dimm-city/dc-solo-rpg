@@ -60,6 +60,18 @@
 				<IntroScreen />
 			</slot>
 		</div>
+	{:else if $currentScreen == 'gameOver'}
+		<div class="dc-fade-in dc-screen-container">
+			<GameOver />
+		</div>
+	{:else if $currentScreen == 'finalLog' || $currentScreen == 'log'}
+		<div class="dc-fade-in dc-screen-container">
+			<JournalEntry on:dc-solo-rpg.journalSaved />
+		</div>
+	{:else if $currentScreen == 'exitGame'}
+		<slot name="options-screen">
+			<div>Game Exited</div>
+		</slot>
 	{:else}
 		<div class="game-screen dc-game-bg">
 			<div class="toolbar-area">
@@ -92,18 +104,6 @@
 					<div class="dc-fade-in dc-screen-container">
 						<SuccessCheck />
 					</div>
-				{:else if $currentScreen == 'gameOver'}
-					<div class="dc-fade-in dc-screen-container">
-						<GameOver />
-					</div>
-				{:else if $currentScreen == 'finalLog' || $currentScreen == 'log'}
-					<div class="dc-fade-in dc-screen-container">
-						<JournalEntry on:dc-solo-rpg.journalSaved />
-					</div>
-				{:else if $currentScreen == 'exitGame'}
-					<slot name="options-screen">
-						<div>Game Exited</div>
-					</slot>
 				{:else}
 					<div>error: {$currentScreen}</div>
 				{/if}
@@ -154,18 +154,22 @@
 	}
 	.dc-game-container,
 	.dc-game-container > div,
-	:global(.dc-intro-container){
+	:global(.dc-intro-container) {
 		border-radius: var(--dc-default-border-radius);
 	}
 	:global(.dc-game-bg) {
 		background: var(--dc-default-game-bg);
 	}
-	:global(.dc-game-container select, .dc-game-container input, .dc-game-container textarea){
+	:global(.dc-game-container select, .dc-game-container input, .dc-game-container textarea) {
 		color: var(--dc-default-text-color);
 		background: var(--dc-default-game-bg);
 		font-family: var(--dc-default-font-family);
 	}
-	:global(.dc-game-container button, .dc-game-container button:hover, .dc-game-container button:focus-visible){
+	:global(
+			.dc-game-container button,
+			.dc-game-container button:hover,
+			.dc-game-container button:focus-visible
+		) {
 		background: var(--dc-button-bg);
 		color: var(--dc-button-color);
 		text-shadow: none;

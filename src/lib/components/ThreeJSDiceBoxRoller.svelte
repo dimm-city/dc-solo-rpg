@@ -13,7 +13,7 @@
 		volume: 100,
 		color_spotlight: 0xefdfd5,
 		shadows: true,
-		theme_surface: 'default', //cyberpunk
+		theme_surface: 'default',
 		sound_dieMaterial: 'plastic',
 		theme_customColorset: null,
 		theme_colorset: '', // white  see available colorsets in https://github.com/3d-dice/dice-box-threejs/blob/main/src/const/colorsets.js
@@ -36,8 +36,8 @@
 			volume: 100,
 			//theme_colorset:  $gameStore.config.options?.dice?.key ?? 'pinkdreams',
 			//theme_customColorset: $gameStore.config.options?.dice,
-			baseScale: 140,
-			strength: 1
+			baseScale: 100,
+			strength: 1.5
 		};
 
 		if ($gameStore.config.options?.dice?.key) {
@@ -45,14 +45,19 @@
 		} else {
 			config.theme_customColorset = $gameStore.config.options?.dice;
 		}
-
+		
 		diceBox = new DiceBox('#dice-roller-container', config);
 		await diceBox.initialize();
+		diceBox.resizeWorld();
+	
+		return () => {
+			console.log('dispose roller', diceBox);
+		};
 	});
 	export async function roll(values = null) {
-		if (rolling) return;
+		if ( rolling) return;
 		rolling = true;
-		
+
 		const rollString = values ? `1d6@${values}` : '1d6';
 		let result = await diceBox.roll(rollString);
 

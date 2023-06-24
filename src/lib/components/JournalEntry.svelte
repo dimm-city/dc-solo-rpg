@@ -26,9 +26,9 @@
 
 <div class="dc-journal-container">
 	<div class="journal-header-area">
-		<h4>{$gameStore.config.labels.journalEntryHeader}</h4>
-		<h5>{$gameStore.config.labels.journalEntrySubHeader}</h5>
-		<div />
+		<h2>{$gameStore.config.labels.journalEntryHeader}</h2>
+		<h3>{$gameStore.config.labels.journalEntrySubHeader}</h3>
+		
 		{#each $currentEvents as event}
 			<p>{event.id}:{event.description}</p>
 		{/each}
@@ -75,6 +75,13 @@
 		grid-area: text-entry-area;
 		display: flex;
 	}
+
+	h2{
+		margin-bottom: .75rem;
+	}
+	p{
+		padding-block: 0.25rem;
+	}
 	textarea,
 	button {
 		width: 100%;
@@ -87,5 +94,9 @@
 		grid-area: journal-tools-center-area;
 		justify-content: center;
 		display: flex;
+	}
+
+	.journal-tools-center-area button {
+		margin-inline: 0.25rem;
 	}
 </style>
