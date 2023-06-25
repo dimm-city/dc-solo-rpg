@@ -17,7 +17,7 @@ The web component is also highly configurable, allowing for customization of gam
 - **Configurable**: Allows for extensive customization of game rules, narrative content, and visual appearance.
 - **Selectable Dice Themes**: Designed for immersive, single-player RPG experiences.
 - **Svelte-based**: Utilizes the power of Svelte for efficient, high-performance web components.
-- **Web Component**: Easily integrated into any website, compatible with most sites.
+
 
 ## Easy Game Creation
 
@@ -28,10 +28,11 @@ The game creation process for the DC Solo RPG system is designed to be easy for 
 2. Modify the description of each card in the `deck.csv` file to provide the card text.
 3. Modify the `theme.css` file to achieve the desired visual style, such as colors, fonts, and layout.
 
+Read the full guide here: [How to build a game](./docs/how-to-build-a-game.md)
 
 ## Demo
 
-Check out our [Demo Site](https://yellow-moss-0be668010.3.azurestaticapps.net) to see some basic examples of game play.
+Check out our [Demo Site](https://demo.dimm.city) to see some basic examples of game play.
 
 ## Developing
 

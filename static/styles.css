@@ -25,6 +25,7 @@ body {
 	font-family: var(--font-family);
 	background-color: var(--background-color);
 	color: var(--text-color);
+	line-height: 1.5;
 }
 
 /* Header and Navigation */
@@ -71,10 +72,12 @@ nav ul li {
 	padding-bottom: 1rem;
 }
 
+.hero h1{
+	font-size: 2rem;
+}
 .hero h1,
 .hero p {
-	text-shadow: 0 0 5px var(--accent-color), 0 0 10px var(--accent-color),
-		0 0 20px var(--accent-color), 0 0 30px var(--accent-color), 0 0 40px var(--accent-color);
+	text-shadow: 0 0 3px var(--accent-color), 0 1px 3px var(--accent-color)
 }
 
 /* Form elements */
@@ -89,7 +92,29 @@ nav ul li {
 	border-radius: 5px;
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+article {
+	width: min(80%, 80ch);
+	margin: auto;
+	margin-top: 2rem;
+}
 
+
+
+p{
+	margin-bottom: .5rem;
+}
+ul,
+ol {
+	padding-left: 3rem;
+	margin-bottom: 1rem;
+}
+::marker {
+	color: var(--accent-color);
+}
+code{
+	font-size: 1rem;
+	color: var(--secondary-color);
+}
 input[type='text'],
 input[type='email'],
 input[type='password'],
@@ -111,7 +136,9 @@ label {
 	font-size: 14px;
 	margin-bottom: 5px;
 }
-
+a {
+	color: var(--accent-color);
+}
 button {
 	width: 100%;
 	font-family: var(--font-family);
@@ -127,7 +154,8 @@ button {
 	font-weight: 300;
 }
 
-button:hover, button:focus-visible {
+button:hover,
+button:focus-visible {
 	border: none;
 	color: var(--accent-color);
 	background-color: var(--secondary-color);
@@ -154,7 +182,8 @@ footer div {
 	justify-content: space-between;
 	width: 100%;
 }
-footer p, footer small{
+footer p,
+footer small {
 	white-space: nowrap;
 	text-overflow: ellipsis;
 }
