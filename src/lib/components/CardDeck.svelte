@@ -25,7 +25,8 @@
 	};
 </script>
 
-<div class="dc-card {isFlipped ? 'flipped' : ''} {isCleared ? 'cleared' : ''}" on:click on:keyup>
+
+<div class="dc-card {isFlipped ? 'flipped' : ''} {isCleared ? 'cleared' : ''}" on:click on:keyup role="button" tabindex="0">
 	<div class="card-inner">
 		<div class="card-back">
 			<slot name="card-back">
@@ -92,14 +93,15 @@
 	.card-front {
 		text-align: center;
 		padding: 0.25rem;
+		padding-top: 1rem;
 		background-color: var(--dc-card-front-bg);
 		color: var(--dc-card-front-color);
 		transform: rotateY(180deg);
 	}
 	.card-front small{
 		position: absolute;
-		bottom: 0;
-		right: 0;
-		padding: 0.25rem;
+		bottom: 0.25rem;
+		right: 0.5rem;
+		
 	}
 </style>

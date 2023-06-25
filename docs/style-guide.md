@@ -38,6 +38,14 @@ This CSS theme file uses CSS variables to apply styling to the DC Solo RPG web c
 - `--dc-health-meter-low`: Sets the color for the low health status in the health meter of the web component. The color is red.
 - `--dc-health-meter-stroke`: Sets the stroke color for the health meter in the web component. The color is a semi-transparent black (rgba(0, 0, 0, 0.8)).
 
+
+## Token Counters
+
+- `--dc-success-token-stroke: var(--dc-default-text-color);`: Sets the stroke for a success token
+- `--dc-success-token-fill: var(--dc-accent-color);`: Sets the fill for a success token
+- `--dc-failure-token-stroke: var(--dc-card-back-bg);`: Sets the stroke for a failure token
+- `--dc-failure-token-fill: var(--dc-accent-color);`: Sets the fill for a failure token
+
 These variables allow you to easily customize the appearance of the DC Solo RPG web component. You can override these variables in your own CSS to apply your custom styles.
 
 
@@ -78,6 +86,12 @@ These variables allow you to easily customize the appearance of the DC Solo RPG 
 	--dc-health-meter-med: orange;
 	--dc-health-meter-low: red;
 	--dc-health-meter-stroke: rgba(0, 0, 0, 0.8);
+
+    /*Counter Tokens*/
+    --dc-success-token-stroke: var(--dc-default-text-color);
+    --dc-success-token-fill: var(--dc-accent-color);
+    --dc-failure-token-stroke: var(--dc-card-back-bg);
+    --dc-failure-token-fill: var(--dc-accent-color);
 }
 
 ```
@@ -108,8 +122,6 @@ These variables allow you to easily customize the appearance of the DC Solo RPG 
 11. `health-score`: This class is likely used to style the health score element.
 
 12. `success-counters-container`: This class is likely used to style the container that holds the success counter elements.
-
-13. `grid`: This class is likely used to apply a grid layout to its elements.
 
 14. `token`: This class is likely used to style the token elements.
 

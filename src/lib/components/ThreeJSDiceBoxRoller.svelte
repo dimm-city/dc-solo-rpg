@@ -94,9 +94,7 @@
 		width: 100%;
 		justify-content: center;
 	}
-	.dc-dice-roller-header {
-		width: 100%;
-	}
+
 	:global(.dc-dice-roller-container > canvas) {
 		display: grid;
 		cursor: pointer;
@@ -110,5 +108,6 @@
 		display: grid;
 		justify-self: center;
 		align-self: center;
+		width: auto;
 	}
 </style>

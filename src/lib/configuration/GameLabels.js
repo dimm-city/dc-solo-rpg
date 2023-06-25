@@ -23,7 +23,7 @@ export class GameLabels {
 		this.introExitButtonText = labels?.introExitButtonText ?? 'Exit';
 
 		/** @property {string} toolbarExitButtonText - Text for the 'Exit' button on the toolbar. */
-		this.toolbarExitButtonText = labels?.toolbarExitButtonText ?? 'Exit';
+		this.toolbarExitButtonText = labels?.toolbarExitButtonText ?? '&#10005;'; //'Exit';
 
 		/** @property {string} journalEntryHeader - Header text for the journal entry section. */
 		this.journalEntryHeader = labels?.journalEntryHeader ?? 'Record your journal entry';

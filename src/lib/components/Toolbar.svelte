@@ -5,10 +5,12 @@
 <div class="dc-toolbar">
 	<div class="left">
 		<h3>{$gameStore.config?.title ?? 'Please select a game'}</h3>
+		<small>Player: {$gameStore.player.name}</small>
 	</div>
 	<div class="center" />
 	<div class="right">
-		<button class="dc-exit-button" on:click={exitGame}>{$gameStore.config?.labels.toolbarExitButtonText}</button>
+		<button class="dc-exit-button" on:click={exitGame}>{@html $gameStore.config?.labels.toolbarExitButtonText}</button>		
+		<!-- <small>{$gameStore.config?.labels.statusDisplayRoundText}{$gameStore?.round}</small> -->
 	</div>
 </div>
 
@@ -17,7 +19,7 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		padding-inline: 0.5rem;
+		margin-top: .5rem;
 	}
 	.dc-toolbar h3 {
 		margin: 0;
@@ -37,10 +39,15 @@
 		display: flex;
 		justify-content: flex-end;
 		align-items: center;
+		flex-direction: column;
+		align-self: start;
 	}
 
 	.right button {
-		margin-left: 1rem;
 		height: min-content;
+		width: min-content;
+		
+		margin: 0;
+		padding-block: 0.25rem;
 	}
 </style>

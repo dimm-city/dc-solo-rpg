@@ -29,7 +29,7 @@
 }
 
 /*utils*/
-.dc-header {
+/* .dc-header {
 	position: absolute;
 	display: grid;
 	justify-self: center;
@@ -37,4 +37,4 @@
 	border-radius: var(--dc-default-border-radius);
 	box-shadow: var(--dc-default-box-shadow);
 	background-color: var(--dc-default-container-bg);
-}
+} */
