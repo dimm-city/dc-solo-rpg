@@ -36,7 +36,5 @@
 		align-content: center;
 		text-align: center;
 	}
-	.dc-draw-card-header{
-		width: 100%;
-	}
+
 </style>

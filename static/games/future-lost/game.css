@@ -59,7 +59,6 @@
 	--dc-card-front-bg: var(--dark);
 	--dc-card-front-color: var(--third-accent);
 
-	--dc-status-display-padding: var(--dc-default-padding);
 
 	/*health meter*/
 	--dc-health-meter-high: var(--third-accent);
@@ -90,7 +89,7 @@ background: radial-gradient(circle, rgba(19,135,185,1) 0%, rgba(29,63,78,1) 71%,
 }
 
 /*utils*/
-.dc-header {
+/* .dc-header {
 	position: absolute;
 	display: grid;
 	justify-self: center;
@@ -98,7 +97,7 @@ background: radial-gradient(circle, rgba(19,135,185,1) 0%, rgba(29,63,78,1) 71%,
 	border-radius: var(--dc-default-border-radius);
 	box-shadow: var(--dc-default-box-shadow);
 	background-color: var(--dc-default-container-bg);
-}
+} */
 
 @keyframes fadeIn {
 	from {

@@ -117,7 +117,7 @@
 		--dc-default-font-family: inherit;
 		--dc-default-text-color: inherit;
 		--dc-default-border-radius: 1rem;
-		--dc-default-padding: 1rem;
+		--dc-default-padding: 0.25rem;
 		--dc-default-boxshadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 
 		--dc-default-game-bg: rgba(145, 177, 248);
@@ -138,6 +138,10 @@
 		--dc-card-front-color: inherit;
 
 		--dc-status-display-padding: var(--dc-default-padding);
+		--dc-success-token-stroke: var(--dc-default-text-color);
+		--dc-success-token-fill: var(--dc-accent-color);
+		--dc-failure-token-stroke: var(--dc-card-back-bg);
+		--dc-failure-token-fill: var(--dc-accent-color);
 	}
 
 	* {
@@ -182,7 +186,8 @@
 		height: 100%;
 		width: 100%;
 		grid-template-rows: min-content 1fr;
-		row-gap: 1rem;
+		row-gap: 0.2rem;
+		padding-inline: 0.5rem;
 		grid-template-areas:
 			'toolbar-area'
 			'main-screen-area';
@@ -194,7 +199,7 @@
 
 	.main-screen-area {
 		grid-area: main-screen-area;
-		width: calc(100% - var(--dc-default-padding));
+		width: 100%;
 		margin-inline: auto;
 		display: grid;
 		height: 99%;
@@ -223,7 +228,10 @@ background: radial-gradient(circle, rgba(19,135,185,1) 0%, rgba(29,63,78,1) 71%,
 		position: absolute;
 		display: grid;
 		justify-self: center;
-		width: calc(100% - var(--dc-default-padding));
+		width: auto;
+		bottom: 0.25rem;
+		padding: 0.5rem;
+		/* calc(100% - var(--dc-default-padding)); */
 		border-radius: var(--dc-default-border-radius);
 		box-shadow: var(--dc-default-box-shadow);
 		background-color: var(--dc-default-container-bg);
@@ -232,16 +240,14 @@ background: radial-gradient(circle, rgba(19,135,185,1) 0%, rgba(29,63,78,1) 71%,
 		position: absolute;
 		display: grid;
 		justify-content: center;
-		align-content: center;
-
+		align-content: start;
 		width: min-content;
-		right: 1.5rem;
+		margin-top: 0.25rem;
+		margin-right: 0.25rem;
 		z-index: 3;
 		opacity: 0.9;
-
 		top: 0;
-		bottom: 0;
-		margin: auto 0;
+		right: 0;
 	}
 	@keyframes fadeIn {
 		from {
@@ -253,19 +259,21 @@ background: radial-gradient(circle, rgba(19,135,185,1) 0%, rgba(29,63,78,1) 71%,
 	}
 
 	:global(.dc-fade-in) {
-		animation: fadeIn 1s ease-in;
+		animation: fadeIn 350ms ease-in;
 	}
 
 	@media (max-width: 768px) {
-		.status-display-area {
-			right: 0.5rem;
+		/* .status-display-area {
+			right: 0em;
 			font-size: 0.9rem;
-			bottom: 0;
-		}
+			top: 0;
+		} */
 	}
-	@media (max-width: 350px) {
+	@media (max-width: 450px) {
 		.status-display-area {
-			display: none;
+			width: 100%;
+			margin: auto;
+			justify-content: stretch;
 		}
 	}
 </style>

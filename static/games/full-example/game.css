@@ -17,7 +17,7 @@
 	--dc-card-front-bg: rgb(235, 235, 235);
 	--dc-card-front-color: #1387b9;
 
-	--dc-status-display-padding: #1387b9;;
+	--dc-status-display-padding: 0.25rem;
 }
 
 
