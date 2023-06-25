@@ -184,7 +184,7 @@
 		display: grid;
 		height: 100%;
 		width: 100%;
-		grid-template-rows: min-content min-content 1fr min-content;
+		grid-template-rows: min-content 1fr;
 		row-gap: 0.2rem;
 		padding-inline: 0.5rem;
 		grid-template-areas:
