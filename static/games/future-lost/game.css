@@ -59,7 +59,6 @@
 	--dc-card-front-bg: var(--dark);
 	--dc-card-front-color: var(--third-accent);
 
-	--dc-status-display-padding: var(--dc-default-padding);
 
 	/*health meter*/
 	--dc-health-meter-high: var(--third-accent);

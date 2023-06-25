@@ -137,6 +137,7 @@
 		--dc-card-front-bg: rgb(235, 235, 235);
 		--dc-card-front-color: inherit;
 
+		--dc-status-display-padding: var(--dc-default-padding);
 		--dc-success-token-stroke: var(--dc-default-text-color);
 		--dc-success-token-fill: var(--dc-accent-color);
 		--dc-failure-token-stroke: var(--dc-card-back-bg);
@@ -198,7 +199,7 @@
 
 	.main-screen-area {
 		grid-area: main-screen-area;
-		width: 100%; 
+		width: 100%;
 		margin-inline: auto;
 		display: grid;
 		height: 99%;
@@ -227,10 +228,10 @@ background: radial-gradient(circle, rgba(19,135,185,1) 0%, rgba(29,63,78,1) 71%,
 		position: absolute;
 		display: grid;
 		justify-self: center;
-		width: auto; 
-		margin-top: 0.25rem;
+		width: auto;
+		bottom: 0.25rem;
 		padding: 0.5rem;
-		 /* calc(100% - var(--dc-default-padding)); */
+		/* calc(100% - var(--dc-default-padding)); */
 		border-radius: var(--dc-default-border-radius);
 		box-shadow: var(--dc-default-box-shadow);
 		background-color: var(--dc-default-container-bg);
@@ -262,15 +263,17 @@ background: radial-gradient(circle, rgba(19,135,185,1) 0%, rgba(29,63,78,1) 71%,
 	}
 
 	@media (max-width: 768px) {
-		.status-display-area {
-			right: 0.5rem;
+		/* .status-display-area {
+			right: 0em;
 			font-size: 0.9rem;
-			bottom: 0;
-		}
+			top: 0;
+		} */
 	}
-	@media (max-width: 350px) {
+	@media (max-width: 450px) {
 		.status-display-area {
-			display: none;
+			width: 100%;
+			margin: auto;
+			justify-content: stretch;
 		}
 	}
 </style>

@@ -25,8 +25,13 @@
 	};
 </script>
 
-
-<div class="dc-card {isFlipped ? 'flipped' : ''} {isCleared ? 'cleared' : ''}" on:click on:keyup role="button" tabindex="0">
+<div
+	class="dc-card {isFlipped ? 'flipped' : ''} {isCleared ? 'cleared' : ''}"
+	on:click
+	on:keyup
+	role="button"
+	tabindex="0"
+>
 	<div class="card-inner">
 		<div class="card-back">
 			<slot name="card-back">
@@ -35,8 +40,8 @@
 		</div>
 		<div class="card-front">
 			{#if card}
-			<p>{card?.description ?? ''}</p>
-			<small>{card.card} {card.suit}</small>
+				<p>{card?.description ?? ''}</p>
+				<small>{card.card} {card.suit}</small>
 			{/if}
 		</div>
 	</div>
@@ -44,7 +49,7 @@
 
 <style>
 	:root {
-		--dc-card-width: 200px;
+		--dc-card-width: auto;
 		--dc-card-height: 300px;
 	}
 	.dc-card {
@@ -53,8 +58,23 @@
 		border: var(--dc-card-border);
 		border-radius: var(--dc-card-border-radius);
 		background: var(--dc-card-back-bg);
+		aspect-ratio: 2/3;
 		cursor: pointer;
 		perspective: 1000px;
+	}
+
+	@media (max-width: 768px) {
+		:root {
+			--dc-card-width: auto;
+			--dc-card-height: 220px;
+		}
+	}
+
+	@media (max-width: 450px) {
+		:root {
+			--dc-card-width: auto;
+			--dc-card-height: 250px;
+		}
 	}
 
 	.dc-card.flipped .card-inner {
@@ -98,10 +118,9 @@
 		color: var(--dc-card-front-color);
 		transform: rotateY(180deg);
 	}
-	.card-front small{
+	.card-front small {
 		position: absolute;
 		bottom: 0.25rem;
 		right: 0.5rem;
-		
 	}
 </style>

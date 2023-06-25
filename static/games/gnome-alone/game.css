@@ -17,7 +17,6 @@
     --dc-card-back-bg: #007a58; /* deep green representing the dense jungle of the island */
     --dc-card-front-bg: rgb(235, 235, 235); /* remaining as is for good readability */
     --dc-card-front-color: #007a58;
-    --dc-status-display-padding: var(--dc-default-padding);
 }
 
 .dc-table-bg {
