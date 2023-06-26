@@ -77,12 +77,12 @@
 			<div class="toolbar-area">
 				<Toolbar />
 			</div>
-			<div class="main-screen-area dc-table-bg">
+			<div class="status-display-area dc-fade-in">
 				{#if $currentScreen != 'log' && $currentScreen != 'finalLog'}
-					<div class="status-display-area dc-fade-in">
-						<StatusDisplay />
-					</div>
+					<StatusDisplay />
 				{/if}
+			</div>
+			<div class="main-screen-area dc-table-bg">
 				{#if $currentScreen == 'startRound'}
 					<div class="dc-fade-in dc-screen-container">
 						<h4>Round {$gameStore.round}</h4>
@@ -149,7 +149,6 @@
 	}
 
 	.dc-game-container {
-		display: contents;
 		display: grid;
 		height: 100%;
 		box-sizing: border-box;
@@ -185,11 +184,13 @@
 		display: grid;
 		height: 100%;
 		width: 100%;
-		grid-template-rows: min-content 1fr;
+		grid-template-rows: min-content min-content 1fr;
 		row-gap: 0.2rem;
 		padding-inline: 0.5rem;
+		padding-bottom: 0.25rem;
 		grid-template-areas:
 			'toolbar-area'
+			'status-area'
 			'main-screen-area';
 	}
 
@@ -237,17 +238,17 @@ background: radial-gradient(circle, rgba(19,135,185,1) 0%, rgba(29,63,78,1) 71%,
 		background-color: var(--dc-default-container-bg);
 	}
 	.status-display-area {
-		position: absolute;
+		/* position: absolute; */
 		display: grid;
-		justify-content: center;
+		justify-content: stretch;
 		align-content: start;
-		width: min-content;
+		width: 100%;
 		margin-top: 0.25rem;
 		margin-right: 0.25rem;
-		z-index: 3;
 		opacity: 0.9;
-		top: 0;
-		right: 0;
+		grid-area: status-area;
+		/* top: 0;
+		right: 0; */
 	}
 	@keyframes fadeIn {
 		from {
@@ -269,11 +270,15 @@ background: radial-gradient(circle, rgba(19,135,185,1) 0%, rgba(29,63,78,1) 71%,
 			top: 0;
 		} */
 	}
-	@media (max-width: 450px) {
+	@media (max-width: 450px) or (max-height: 600px) {
 		.status-display-area {
 			width: 100%;
 			margin: auto;
 			justify-content: stretch;
+		}
+
+		:global(.dc-header){
+			width: 90%;
 		}
 	}
 </style>

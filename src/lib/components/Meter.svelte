@@ -1,16 +1,17 @@
 <script>
 	import { gameStore } from '../stores/WAAStore.js';
 	let health = 100;
-	let text = '100';
-	let indicator = 'high';
+	export let text = '0';
+	export let enableIndicator = false;
+	export let indicator = 'high';
+	export let result = 0; //Math.floor(($gameStore.tower / 54) * 100);
 	$: {
-		const result = Math.floor(($gameStore.tower / 54) * 100);
 		if (health != result) {
 			text = '';
 			health = result;
 
 			setTimeout(() => {
-				indicator = health > 66 ? 'high' : health > 33 ? 'med' : 'low';
+				if (enableIndicator) indicator = health > 66 ? 'high' : health > 33 ? 'med' : 'low';
 				text = result;
 			}, 200);
 		}
@@ -24,18 +25,17 @@
 				points="50 1 95 25 95 75 50 99 5 75 5 25"
 				class="dc-health-meter-stroke {indicator}"
 			/>
-			<mask id="health-mask">
-				<rect class="mask-rect {indicator}" x="0" y="0" width="100" height={100 - health} />
-			</mask>
+			<!-- <mask id="health-mask">
+				<rect class="mask-rect {indicator}" x="0" y="0" width="100" height={enableIndicator ?  100 - health : 100} />
+			</mask> -->
 			<polygon
 				points="50 1 95 25 95 75 50 99 5 75 5 25"
-				mask="url(#health-mask)"
-				class="dc-health-meter-bg"
+				
+				class="dc-health-meter-bg {indicator}"
 			/>
 		</svg>
-		{#if text}
-			<span class="health-score dc-fade-in">{text}</span>
-		{/if}
+
+		<span class="health-score dc-fade-in">{text ?? '0'}</span>
 	</div>
 </div>
 
@@ -81,7 +81,7 @@
 		text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 	}
 	@media (max-width: 450px) {
-		small{
+		small {
 			display: none;
 		}
 		.health-score {

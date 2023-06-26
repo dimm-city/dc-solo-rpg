@@ -17,11 +17,17 @@
 </script>
 
 <div class="dc-draw-card-container">
-	<div class="dc-header dc-draw-card-header">
+	<div
+		class="dc-header dc-draw-card-header"
+		on:keyup={onDeckClicked}
+		on:click={onDeckClicked}
+		role="button"
+		tabindex="0"
+	>
 		{#if $gameStore?.currentCard != null}
 			<h4 class="dc-fade-in">Click to continue...</h4>
 		{:else}
-			<h4 class="dc-fade-in">Draw a card</h4>
+			<h4 class="dc-fade-in">Tap to draw a card</h4>
 		{/if}
 	</div>
 	<CardDeck bind:this={deck} on:click={onDeckClicked} />
@@ -36,5 +42,11 @@
 		align-content: center;
 		text-align: center;
 	}
-
+	@media (max-width: 450px) or (max-height: 600px) {
+		.dc-draw-card-container {
+			align-content: end;
+			padding-bottom: 3rem;
+		}
+		
+	}
 </style>

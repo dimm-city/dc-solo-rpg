@@ -1,7 +1,11 @@
 <script>
 	import { gameStore } from '../stores/WAAStore.js';
 	import HealthMeter from './HealthMeter.svelte';
+	import Meter from './Meter.svelte';
 
+	$: successPercent = (10 - $gameStore.tokens);
+	$: bonusPercent = $gameStore.bonus;
+	$: failurePercent = $gameStore.kingsRevealed;
 	$: successTokens = Array.from({ length: 10 }, (_, index) => index < $gameStore.tokens);
 	$: bonusTokens = Array.from({ length: 4 }, (_, index) => index < $gameStore.bonus);
 	$: failureTokens = Array.from({ length: 4 }, (_, index) => index < $gameStore.kingsRevealed);
@@ -13,37 +17,43 @@
 		<hr />
 	</div>
 	<div class="failure-container">
+		<small>Health</small>
 		<HealthMeter />
 	</div>
 	<div class="failure-counters-container">
 		<small>{$gameStore.config?.labels?.failureCounters ?? 'Failure'}</small>
-		<div class="token-wrapper">
+		<Meter result={failurePercent} />
+		<!-- <div class="token-wrapper">
 			{#each failureTokens as token, index}
 				<svg class="token" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
 					<polygon points="50,5 95,30 95,70 50,95 5,70 5,30" class:filled={token} />
 				</svg>
 			{/each}
-		</div>
+		</div> -->
 	</div>
 	<div class="bonus-counters-container">
 		<small>{$gameStore.config?.labels?.bonusCounters ?? 'Bonus'}</small>
-		<div class="token-wrapper">
+		<Meter result={bonusPercent} />
+		<!-- <div class="token-wrapper">
 			{#each bonusTokens as token, index}
 				<svg class="token" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
 					<polygon points="50,5 95,30 95,70 50,95 5,70 5,30" class:filled={token} />
 				</svg>
 			{/each}
-		</div>
+		</div> -->
 	</div>
 	<div class="success-counters-container">
 		<small>{$gameStore.config?.labels?.successCounters ?? 'Success'}</small>
+		<!--
 		<div class="token-wrapper">
 			{#each successTokens as token, index}
 				<svg class="token" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
 					<polygon points="50,5 95,30 95,70 50,95 5,70 5,30" class:filled={token} />
 				</svg>
 			{/each}
-		</div>
+		</div> -->
+		
+		<Meter result={successPercent}/>
 	</div>
 </div>
 
@@ -57,7 +67,8 @@
 		display: grid;
 		grid-template-rows: min-content repeat(4, 1fr);
 		grid-template-columns: 1fr;
-		grid-template-areas: 'round-area'
+		grid-template-areas:
+			'round-area'
 			'health-area'
 			'failure-area'
 			'bonus-area'
@@ -79,6 +90,12 @@
 		row-gap: 0.25rem;
 	}
 
+	.failure-counters-container,
+	.bonus-counters-container,
+	.success-counters-container {
+		display: flex;
+		flex-direction: column;
+	}
 	.token {
 		stroke: var(--dc-accent-color);
 		stroke-width: 3;
@@ -125,14 +142,21 @@
 		justify-content: center;
 	}
 
-	@media (max-width: 450px) {
-		.status-display-container {
-			width: 100%;
-			grid-template-columns: repeat(4, 1fr);
-			grid-template-rows: 0.4fr 1.6fr;
-			grid-template-areas:
-				'round-area round-area round-area round-area'
-				'health-area failure-area bonus-area success-area';
-		}
+	/* @media (max-width: 450px) or (max-height: 600px) { */
+	.status-display-container {
+		width: 100%;
+		padding-top: 0;
+		padding-bottom: 0.25rem;
+		grid-template-columns: repeat(4, 1fr);
+		grid-template-rows: 0.4fr 1.6fr;
+		grid-template-areas:
+			'round-area round-area round-area round-area'
+			'health-area failure-area bonus-area success-area';
 	}
+
+	/* .round-container h4{
+			font-size: 0.8rem;
+			margin:0;
+		} */
+	/* } */
 </style>

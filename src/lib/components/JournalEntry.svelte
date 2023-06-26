@@ -68,7 +68,7 @@
 	.journal-header-area {
 		grid-area: header-area;
 		margin-top: var(--dc-default-padding);
-		overflow-y: auto;
+		overflow-y: hidden;
 	}
 
 	.text-entry-area {
@@ -78,6 +78,7 @@
 
 	h2{
 		margin-bottom: .75rem;
+		font-size: clamp(0.8rem, 1.3rem, 1.5rem);
 	}
 	p{
 		padding-block: 0.25rem;
