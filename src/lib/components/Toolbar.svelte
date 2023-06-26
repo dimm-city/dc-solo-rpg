@@ -5,7 +5,7 @@
 <div class="dc-toolbar">
 	<div class="left">
 		<h3>{$gameStore.config?.title ?? 'Please select a game'}</h3>
-		<small>Player: {$gameStore.player.name}</small>
+		<!-- <small>Player: {$gameStore.player.name}</small> -->
 	</div>
 	<div class="center" />
 	<div class="right">
@@ -48,6 +48,7 @@
 		width: min-content;
 		
 		margin: 0;
-		padding-block: 0.25rem;
+		padding: 0.1rem;
+		background-color: transparent;
 	}
 </style>

@@ -17,7 +17,6 @@
 	}
 </script>
 
-<div>
 	<div class="health-meter">
 		<svg width="100%" height="100%" viewBox="0 0 100 100">
 			<polygon
@@ -37,7 +36,6 @@
 			<span class="health-score dc-fade-in">{text}</span>
 		{/if}
 	</div>
-</div>
 
 <style>
 	:root {
@@ -75,15 +73,13 @@
 		position: absolute;
 		top: 50%;
 		left: 50%;
-		transform: translate(-50%, -50%);
-		font-size: 2em;
+		transform: translate(-50%, -60%);
+		font-size: 1.25em;
 		color: white;
 		text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 	}
 	@media (max-width: 450px) {
-		small{
-			display: none;
-		}
+		
 		.health-score {
 			font-size: 1rem;
 		}

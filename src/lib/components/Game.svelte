@@ -116,7 +116,7 @@
 	:root {
 		--dc-default-font-family: inherit;
 		--dc-default-text-color: inherit;
-		--dc-default-border-radius: 1rem;
+		--dc-default-border-radius: 0.5rem;
 		--dc-default-padding: 0.25rem;
 		--dc-default-boxshadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 
@@ -196,6 +196,7 @@
 
 	.toolbar-area {
 		grid-area: toolbar-area;
+		padding-inline: 0.25rem;
 	}
 
 	.main-screen-area {
@@ -220,35 +221,33 @@
 background: radial-gradient(circle, rgba(19,135,185,1) 0%, rgba(29,63,78,1) 71%, rgba(136,136,136,1) 100%); */
 	}
 
-	/*.dc-table-bg {
-		 border-radius: var(--dc-default-border-radius);
-		background: var(--dc-dice-roller-bg); 
-	}*/
 
 	:global(.dc-header) {
 		position: absolute;
 		display: grid;
 		justify-self: center;
 		width: auto;
+		min-width: 80%;
 		bottom: 0.25rem;
 		padding: 0.5rem;
-		/* calc(100% - var(--dc-default-padding)); */
 		border-radius: var(--dc-default-border-radius);
 		box-shadow: var(--dc-default-box-shadow);
+	}
+	:global(.dc-header button) {
+		display: grid;
+		justify-self: center;
+		align-self: center;
+		width: 100%;
+		margin: 0;
 		background-color: var(--dc-default-container-bg);
 	}
 	.status-display-area {
-		/* position: absolute; */
 		display: grid;
 		justify-content: stretch;
 		align-content: start;
 		width: 100%;
-		margin-top: 0.25rem;
-		margin-right: 0.25rem;
 		opacity: 0.9;
 		grid-area: status-area;
-		/* top: 0;
-		right: 0; */
 	}
 	@keyframes fadeIn {
 		from {
@@ -263,13 +262,6 @@ background: radial-gradient(circle, rgba(19,135,185,1) 0%, rgba(29,63,78,1) 71%,
 		animation: fadeIn 350ms ease-in;
 	}
 
-	@media (max-width: 768px) {
-		/* .status-display-area {
-			right: 0em;
-			font-size: 0.9rem;
-			top: 0;
-		} */
-	}
 	@media (max-width: 450px) or (max-height: 600px) {
 		.status-display-area {
 			width: 100%;
@@ -277,7 +269,7 @@ background: radial-gradient(circle, rgba(19,135,185,1) 0%, rgba(29,63,78,1) 71%,
 			justify-content: stretch;
 		}
 
-		:global(.dc-header){
+		:global(.dc-header) {
 			width: 90%;
 		}
 	}

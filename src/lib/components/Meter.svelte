@@ -33,8 +33,9 @@
 				
 				class="dc-health-meter-bg {indicator}"
 			/>
+			
+		
 		</svg>
-
 		<span class="health-score dc-fade-in">{text ?? '0'}</span>
 	</div>
 </div>
@@ -65,9 +66,8 @@
 
 	.health-meter {
 		position: relative;
-		margin-top: 0.25rem;
-
-		margin: auto;
+		margin-block: 0;
+		margin-inline: auto;
 		max-width: 50px;
 	}
 
@@ -75,15 +75,13 @@
 		position: absolute;
 		top: 50%;
 		left: 50%;
-		transform: translate(-50%, -50%);
-		font-size: 2em;
+		transform: translate(-50%, -60%);
+		font-size: 1.25em;
 		color: white;
 		text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 	}
 	@media (max-width: 450px) {
-		small {
-			display: none;
-		}
+		
 		.health-score {
 			font-size: 1rem;
 		}

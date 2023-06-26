@@ -45,17 +45,17 @@
 		} else {
 			config.theme_customColorset = $gameStore.config.options?.dice;
 		}
-		
+
 		diceBox = new DiceBox('#dice-roller-container', config);
 		await diceBox.initialize();
 		diceBox.resizeWorld();
-	
+
 		return () => {
 			console.log('dispose roller', diceBox);
 		};
 	});
 	export async function roll(values = null) {
-		if ( rolling) return;
+		if (rolling) return;
 		rolling = true;
 
 		const rollString = values ? `1d6@${values}` : '1d6';
@@ -65,6 +65,7 @@
 		rolling = false;
 		return result.total;
 	}
+	
 </script>
 
 <div
@@ -76,13 +77,12 @@
 	on:click
 	on:keyup
 >
-	<div class="dc-dice-roller-header dc-header">
-		<slot>
-			<h4 class="dc-fade-in">{header}</h4>
-		</slot>
-	</div>
 	{#if !rolling}
-		<button class="dc-fade-in" on:click on:keyup>{header}</button>
+		<div class="dc-dice-roller-header dc-header">
+			<slot>
+				<button class="dc-fade-in" on:click on:keyup>{header}</button>
+			</slot>
+		</div>
 	{/if}
 </div>
 
@@ -104,10 +104,12 @@
 	}
 
 	.dc-dice-roller-container button {
-		position: absolute;
+		/* position: absolute; */
 		display: grid;
 		justify-self: center;
 		align-self: center;
-		width: auto;
+		width: 100%;
+		margin: 0;
+		background-color: var(--dc-default-container-bg);
 	}
 </style>

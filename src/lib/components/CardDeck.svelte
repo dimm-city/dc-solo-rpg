@@ -78,7 +78,7 @@
 	}
 
 	.dc-card.flipped .card-inner {
-		transform: rotateY(-180deg) translate3D(50px, 50px, 0);
+		transform: rotateY(-180deg) translate3D(25px, 10px, 0);
 	}
 	/* .card.cleared .card-inner {
 		transform: rotateY(-180deg) translate3D(100svw, 50px, 0);
