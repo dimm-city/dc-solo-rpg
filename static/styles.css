@@ -31,7 +31,7 @@ body {
 /* Header and Navigation */
 header {
 	background-color: var(--background-color);
-	padding: 10px 0;
+	padding: 0.25rem 0 0 0;
 }
 
 nav {
@@ -86,8 +86,7 @@ nav ul li {
 	height: 100%;
 	overflow: hidden;
 	display: grid;
-	margin: 0 auto;
-	padding: 20px;
+	margin: 0 auto;	
 	background-color: var(--background-color);
 	border-radius: 5px;
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);

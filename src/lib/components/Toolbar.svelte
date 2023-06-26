@@ -1,5 +1,5 @@
 <script>
-	import {  gameStore, exitGame } from '../stores/WAAStore.js';
+	import { gameStore, exitGame } from '../stores/WAAStore.js';
 </script>
 
 <div class="dc-toolbar">
@@ -9,7 +9,20 @@
 	</div>
 	<div class="center" />
 	<div class="right">
-		<button class="dc-exit-button" on:click={exitGame}>{@html $gameStore.config?.labels.toolbarExitButtonText}</button>		
+		<button class="dc-exit-button" on:click={exitGame}
+			>{@html $gameStore.config?.labels.toolbarExitButtonText}</button
+		>
+		<!-- <button class="toolbar-button" id="fullscreen">
+            &#x26F6;
+        </button>
+        <button class="toolbar-button" id="settings">
+            &#x2699;
+			&hellip;
+        </button>
+        <button class="toolbar-button" id="exit">
+            &#x2715;
+        </button> -->
+
 		<!-- <small>{$gameStore.config?.labels.statusDisplayRoundText}{$gameStore?.round}</small> -->
 	</div>
 </div>
@@ -19,7 +32,7 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		margin-top: .5rem;
+		margin-top: 0.5rem;
 	}
 	.dc-toolbar h3 {
 		margin: 0;
@@ -39,14 +52,15 @@
 		display: flex;
 		justify-content: flex-end;
 		align-items: center;
-		flex-direction: column;
+		flex-direction: row;
+		gap: 0.5rem;
 		align-self: start;
 	}
 
 	.right button {
 		height: min-content;
 		width: min-content;
-		
+
 		margin: 0;
 		padding: 0.1rem;
 		background-color: transparent;
