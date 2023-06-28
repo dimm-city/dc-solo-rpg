@@ -2,7 +2,6 @@ import { test, expect, describe } from 'vitest';
 import { ConfigurationLoader } from './ConfigurationLoader.js';
 import { SystemSettings } from './SystemSettings.js';
 import { GameOptions } from './GameOptions.js';
-import { GameLabels } from './GameLabels.js';
 
 describe('ConfigurationLoader', () => {
 	// Test constructor
