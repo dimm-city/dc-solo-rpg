@@ -20,7 +20,6 @@
 </script>
 
 <div class="dc-start-screen-container">
-	<h2>Load Game</h2>
 	<div>
 		<label for="player">Player:</label>
 		<select id="player" bind:value={selectedPlayer}>

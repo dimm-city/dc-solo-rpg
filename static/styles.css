@@ -13,6 +13,8 @@
 	--accent-color: #00f3ff;
 	--background-color: #121212;
 	--text-color: #d3d3d3;
+
+	--highlight-color: #f8f400da;
 	--header-font-family: 'Orbitron', sans-serif;
 	--font-family: 'Tomorrow', 'Droid Sans Mono', 'Comfortaa', 'Orbitron', sans-serif;
 }
@@ -41,18 +43,23 @@ nav {
 	justify-content: space-between;
 	align-items: center;
 	width: 90%;
-	margin: 0 auto;
+	margin-block: 0;
+	margin-inline: auto;
 	font-family: var(--header-font-family);
+	letter-spacing: 0.1rem;
 }
 
 nav a {
 	color: var(--text-color);
 	text-decoration: none;
+	text-wrap: balance;
 }
 
 nav ul {
 	display: flex;
 	list-style-type: none;
+	padding: 0;
+	margin: 0;
 }
 
 nav ul li {
@@ -78,6 +85,8 @@ nav ul li {
 .hero h1{
 	font-size: 2rem;
 	font-family: var(--header-font-family);
+	text-wrap: balance;
+	letter-spacing: 0.2rem;
 }
 .hero h1,
 .hero p {
@@ -112,7 +121,10 @@ ol {
 	margin-bottom: 1rem;
 }
 ::marker {
-	color: var(--accent-color);
+	color: var(--highlight-color);
+}
+li strong{
+	color: var(--highlight-color);
 }
 code{
 	font-size: 1rem;
