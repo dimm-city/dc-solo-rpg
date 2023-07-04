@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css?family=Tomorrow:400,700&display=swap');
 /* Reset some default browser styles */
 * {
 	margin: 0;
@@ -12,7 +13,8 @@
 	--accent-color: #00f3ff;
 	--background-color: #121212;
 	--text-color: #d3d3d3;
-	--font-family: 'Orbitron', sans-serif;
+	--header-font-family: 'Orbitron', sans-serif;
+	--font-family: 'Tomorrow', 'Droid Sans Mono', 'Comfortaa', 'Orbitron', sans-serif;
 }
 
 html {
@@ -40,6 +42,7 @@ nav {
 	align-items: center;
 	width: 90%;
 	margin: 0 auto;
+	font-family: var(--header-font-family);
 }
 
 nav a {
@@ -74,6 +77,7 @@ nav ul li {
 
 .hero h1{
 	font-size: 2rem;
+	font-family: var(--header-font-family);
 }
 .hero h1,
 .hero p {
