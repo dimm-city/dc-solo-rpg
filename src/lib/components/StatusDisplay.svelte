@@ -22,15 +22,15 @@
 	</div>
 	<div class="failure-counters-container">
 		<small>{$gameStore.config?.labels?.failureCounters ?? 'Failure'}</small>
-		<Meter result={failurePercent} />
+		<Meter result={failurePercent} meterType="failure" />
 	</div>
 	<div class="bonus-counters-container">
 		<small>{$gameStore.config?.labels?.bonusCounters ?? 'Bonus'}</small>
-		<Meter result={bonusPercent} />
+		<Meter result={bonusPercent} meterType="bonus" />
 	</div>
 	<div class="success-counters-container">
-		<small>{$gameStore.config?.labels?.successCounters ?? 'Success'}</small>	
-		<Meter result={successPercent}/>
+		<small>{$gameStore.config?.labels?.successCounters ?? 'Success'}</small>
+		<Meter result={successPercent} meterType="success" />
 	</div>
 </div>
 

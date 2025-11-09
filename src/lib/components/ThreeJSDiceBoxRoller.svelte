@@ -1,7 +1,9 @@
 <script>
-	import { onMount } from 'svelte';
+	import { createEventDispatcher, onMount } from 'svelte';
 	import DiceBox from '@3d-dice/dice-box-threejs';
 	import { gameStore } from '../stores/WAAStore.js';
+
+	const dispatch = createEventDispatcher();
 
 	export let rolling = false;
 	export let header = '';
@@ -54,10 +56,17 @@
 		if (rolling) return;
 		rolling = true;
 
+		// Dispatch roll start event
+		dispatch('rollstart');
+
 		const rollString = values ? `1d6@${values}` : '1d6';
 		let result = await diceBox.roll(rollString);
 
 		rolling = false;
+
+		// Dispatch roll complete event
+		dispatch('rollcomplete', { result: result.total });
+
 		return result.total;
 	}
 	
