@@ -185,9 +185,9 @@
 		height: 100%;
 		width: 100%;
 		grid-template-rows: min-content min-content 1fr;
-		row-gap: 0.2rem;
-		padding-inline: 0.5rem;
-		padding-bottom: 0.25rem;
+		row-gap: 0.5rem;
+		padding: 0.5rem;
+		box-sizing: border-box;
 		grid-template-areas:
 			'toolbar-area'
 			'status-area'
@@ -204,14 +204,17 @@
 		width: 100%;
 		margin-inline: auto;
 		display: grid;
-		height: 99%;
+		min-height: 0;
 		box-sizing: border-box;
 		position: relative;
+		overflow: hidden;
 	}
 
 	.main-screen-area > div.dc-screen-container {
 		width: 100%;
 		height: 100%;
+		overflow-y: auto;
+		box-sizing: border-box;
 	}
 	.dc-table-bg {
 		border-radius: var(--dc-default-border-radius);

@@ -142,7 +142,7 @@ h1, h2, h3, h4, h5, h6 {
 	color: var(--color-brand-yellow);
 	text-transform: uppercase;
 	letter-spacing: var(--letter-spacing-wider);
-	margin: 0 0 var(--space-lg) 0;
+	margin: 0 0 var(--space-md) 0;
 	line-height: var(--line-height-tight);
 }
 
@@ -201,7 +201,7 @@ nav {
 	align-items: center;
 	max-width: 1400px;
 	margin: 0 auto;
-	padding: 0 var(--space-xl);
+	padding: var(--space-md) var(--space-lg);
 }
 
 nav > a {
@@ -250,13 +250,14 @@ nav ul li a:hover {
 
 main {
 	margin: 0 auto;
-	padding: var(--space-2xl) var(--space-xl);
+	padding: var(--space-md);
+	max-width: 100%;
 }
 
 .main {
 	display: flex;
 	flex-direction: column;
-	gap: var(--space-2xl);
+	gap: var(--space-lg);
 }
 
 /* ============================================
@@ -265,13 +266,13 @@ main {
 
 .hero {
 	text-align: center;
-	padding: var(--space-3xl) var(--space-xl);
-	margin-bottom: var(--space-2xl);
+	padding: var(--space-lg) var(--space-md);
+	margin-bottom: var(--space-md);
 }
 
 .hero h1 {
 	font-size: clamp(2rem, 8vw, var(--text-4xl));
-	margin-bottom: var(--space-md);
+	margin-bottom: var(--space-sm);
 }
 
 .hero p {
@@ -288,8 +289,11 @@ main {
 .form-container {
 	background: var(--color-bg-secondary);
 	border: var(--border-width-thick) solid var(--color-cyber-magenta);
-	padding: var(--space-2xl);
+	padding: var(--space-md);
 	box-shadow: var(--shadow-lg);
+	min-height: calc(100vh - 120px); /* viewport minus header/footer/margins */
+	display: flex;
+	flex-direction: column;
 
 	/* Augmented UI for cyberpunk corners */
 	--aug-border-all: var(--border-width-thick);
@@ -310,13 +314,13 @@ input[type='password'],
 textarea,
 select {
 	width: 100%;
-	padding: var(--space-md);
+	padding: var(--space-sm) var(--space-md);
 	font-family: var(--font-body);
 	font-size: var(--text-base);
 	color: var(--color-text-primary);
 	background: var(--color-bg-primary);
 	border: var(--border-width-default) solid var(--color-cyber-magenta);
-	margin-bottom: var(--space-md);
+	margin-bottom: var(--space-sm);
 	transition: all var(--transition-fast);
 }
 
@@ -350,7 +354,7 @@ label {
 
 button {
 	width: 100%;
-	padding: var(--space-md) var(--space-xl);
+	padding: var(--space-sm) var(--space-lg);
 	font-family: var(--font-display);
 	font-size: var(--text-base);
 	font-weight: 700;
@@ -366,9 +370,9 @@ button {
 	);
 
 	border: none;
-	border-radius: var(--space-lg);
+	border-radius: var(--space-sm);
 	cursor: pointer;
-	margin-top: var(--space-md);
+	margin-top: var(--space-sm);
 
 	transition: all var(--transition-base);
 	filter: drop-shadow(0 0 8px rgba(217, 70, 239, 0.35));
@@ -395,8 +399,8 @@ button:disabled {
    ============================================ */
 
 footer {
-	margin: var(--space-3xl) auto 0;
-	padding: var(--space-xl);
+	margin: var(--space-lg) auto 0;
+	padding: var(--space-md) var(--space-lg);
 	border-top: var(--border-width-default) solid var(--color-cyber-magenta);
 	color: var(--color-text-muted);
 	font-size: var(--text-sm);
@@ -436,8 +440,8 @@ footer div {
 .cyber-box {
 	background: var(--color-bg-secondary);
 	border: var(--border-width-thick) solid var(--color-cyber-magenta);
-	padding: var(--space-xl);
-	margin-bottom: var(--space-xl);
+	padding: var(--space-md);
+	margin-bottom: var(--space-md);
 
 	/* Augmented UI */
 	--aug-border-all: var(--border-width-thick);
@@ -504,25 +508,29 @@ code {
 	:root {
 		--text-4xl: 2.5rem;
 		--text-3xl: 2rem;
-		--space-3xl: 3rem;
 	}
 
 	nav {
 		flex-direction: column;
-		gap: var(--space-md);
-		padding: 0 var(--space-md);
+		gap: var(--space-sm);
+		padding: var(--space-sm) var(--space-md);
 	}
 
 	nav ul {
-		gap: var(--space-md);
+		gap: var(--space-sm);
 	}
 
 	main {
-		padding: var(--space-xl) var(--space-md);
+		padding: var(--space-sm);
 	}
 
 	.form-container {
-		padding: var(--space-xl);
+		padding: var(--space-sm);
+		min-height: calc(100vh - 100px);
+	}
+
+	footer {
+		padding: var(--space-sm) var(--space-md);
 	}
 
 	footer div {
