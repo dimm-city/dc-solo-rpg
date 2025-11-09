@@ -143,6 +143,8 @@
 		padding: var(--space-md);
 		background: var(--color-bg-primary);
 		border-top: 2px solid var(--color-cyber-magenta);
+		position: relative; /* Ensure proper stacking */
+		z-index: 10; /* Above content */
 	}
 
 	.button-bar button {

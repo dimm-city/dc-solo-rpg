@@ -169,7 +169,7 @@
 		max-height: 100%; /* Prevent exceeding parent height */
 		display: flex;
 		flex-direction: column;
-		overflow: visible; /* Allow glows to extend */
+		overflow: hidden; /* IntroScreen handles its own overflow */
 		min-height: 0; /* Allow flex shrinking */
 	}
 	:global(.dc-game-bg) {
