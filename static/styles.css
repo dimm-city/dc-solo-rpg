@@ -128,8 +128,10 @@ body {
 	line-height: var(--line-height-base);
 	color: var(--color-text-primary);
 	background: var(--color-bg-primary);
-	overflow-x: hidden;
-	min-height: 100vh;
+	overflow-y: auto; /* CRITICAL FIX: Allow vertical scrolling (was overflow: hidden) */
+	min-height: 100vh; /* CRITICAL FIX: Ensure full viewport height (was height: 100vh) */
+	display: flex;
+	flex-direction: column;
 }
 
 /* ============================================
@@ -142,7 +144,7 @@ h1, h2, h3, h4, h5, h6 {
 	color: var(--color-brand-yellow);
 	text-transform: uppercase;
 	letter-spacing: var(--letter-spacing-wider);
-	margin: 0 0 var(--space-md) 0;
+	margin: 0; /* FIX #2: Reset */
 	line-height: var(--line-height-tight);
 }
 
@@ -150,21 +152,28 @@ h1 {
 	font-size: var(--text-4xl);
 	text-shadow: var(--text-glow-yellow);
 	letter-spacing: var(--letter-spacing-widest);
+	margin-bottom: var(--space-lg); /* FIX #2 */
 }
 
 h2 {
 	font-size: var(--text-3xl);
 	text-shadow: var(--text-glow-yellow);
+	margin-top: var(--space-2xl); /* FIX #2 */
+	margin-bottom: var(--space-md);
 }
 
 h3 {
 	font-size: var(--text-2xl);
 	letter-spacing: var(--letter-spacing-wide);
+	margin-top: var(--space-xl); /* FIX #2 */
+	margin-bottom: var(--space-md);
 }
 
 h4 {
 	font-size: var(--text-xl);
 	color: var(--color-text-primary);
+	margin-top: var(--space-lg); /* FIX #2 */
+	margin-bottom: var(--space-sm);
 }
 
 p {
@@ -189,9 +198,7 @@ small {
 header {
 	background: var(--color-bg-primary);
 	border-bottom: var(--border-width-default) solid var(--color-cyber-magenta);
-
-	position: sticky;
-	top: 0;
+	flex-shrink: 0;
 	z-index: 1000;
 }
 
@@ -201,12 +208,12 @@ nav {
 	align-items: center;
 	max-width: 1400px;
 	margin: 0 auto;
-	padding: var(--space-md) var(--space-lg);
+	padding: var(--space-sm) var(--space-lg);
 }
 
 nav > a {
 	font-family: var(--font-display);
-	font-size: var(--text-2xl);
+	font-size: var(--text-xl);
 	font-weight: 900;
 	color: var(--color-brand-yellow);
 	text-decoration: none;
@@ -229,14 +236,19 @@ nav ul {
 
 nav ul li a {
 	font-family: var(--font-display);
-	font-size: var(--text-base);
+	font-size: var(--text-sm);
 	font-weight: 700;
 	color: var(--color-brand-yellow);
 	text-decoration: none;
 	text-transform: uppercase;
 	letter-spacing: var(--letter-spacing-wide);
-	transition: all var(--transition-base); /* Smoother transition */
+	transition: all var(--transition-base);
 	padding: var(--space-sm) var(--space-md);
+	min-height: 44px;
+	min-width: 44px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
 }
 
 nav ul li a:hover {
@@ -245,13 +257,23 @@ nav ul li a:hover {
 	transform: translateY(-1px);
 }
 
+/* FIX #7: Reduced motion nav */
+@media (prefers-reduced-motion: reduce) {
+	nav ul li a:hover {
+		transform: none;
+	}
+}
+
 /* ============================================
    MAIN CONTENT
    ============================================ */
 
 main {
-	margin: 0 auto;
-	padding: var(--space-md);
+	flex: 1;
+	overflow-y: auto; /* CRITICAL FIX: Allow vertical scrolling for content (was overflow: hidden) */
+	display: flex;
+	flex-direction: column;
+	padding: 0;
 	max-width: 100%;
 }
 
@@ -267,13 +289,13 @@ main {
 
 .hero {
 	text-align: center;
-	padding: var(--space-lg) var(--space-md);
-	margin-bottom: var(--space-md);
+	padding: var(--space-md) var(--space-md);
+	margin-bottom: var(--space-sm);
 }
 
 .hero h1 {
 	font-size: clamp(2rem, 8vw, var(--text-4xl));
-	margin-bottom: var(--space-sm);
+	margin-bottom: var(--space-lg); /* FIX #1: 24px */
 }
 
 .hero p {
@@ -291,13 +313,14 @@ main {
 	position: relative;
 	background: var(--color-bg-secondary);
 	border: var(--border-width-thick) solid var(--color-cyber-magenta);
-	padding: var(--space-md);
+	padding: var(--space-lg); /* FIX #3: 24px */
 	box-shadow: var(--shadow-lg);
-	min-height: calc(100vh - 120px); /* viewport minus header/footer/margins */
+	flex: 1;
 	display: flex;
 	flex-direction: column;
-	justify-content: center; /* Center content vertically */
-	overflow: hidden;
+	justify-content: center;
+	overflow: auto;
+	margin: var(--space-sm);
 
 	/* Augmented UI for cyberpunk corners */
 	--aug-border-all: var(--border-width-thick);
@@ -324,14 +347,24 @@ select {
 	color: var(--color-text-primary);
 	background: var(--color-bg-primary);
 	border: var(--border-width-default) solid var(--color-cyber-magenta);
-	margin-bottom: var(--space-sm);
+	margin-bottom: var(--space-md); /* FIX #5 */
 	transition: all var(--transition-fast);
+}
+
+/* Select dropdown chevron indicator */
+select {
+	appearance: none;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2300FFFF' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 12px center;
+	padding-right: 36px;
 }
 
 input:hover,
 textarea:hover,
 select:hover {
 	border-color: var(--color-brand-yellow);
+	box-shadow: var(--glow-yellow); /* FIX #5 */
 	cursor: pointer;
 }
 
@@ -340,7 +373,7 @@ textarea:focus,
 select:focus {
 	outline: none;
 	border-color: var(--color-neon-cyan);
-	box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+	box-shadow: var(--glow-cyan); /* FIX #5 */
 	cursor: text;
 }
 
@@ -354,7 +387,7 @@ label {
 	font-family: var(--font-display);
 	font-size: var(--text-sm);
 	font-weight: 700;
-	color: var(--color-text-secondary);
+	color: #ffffff; /* FIX #4: WCAG AA */
 	text-transform: uppercase;
 	letter-spacing: var(--letter-spacing-wide);
 	margin-bottom: var(--space-sm);
@@ -366,12 +399,12 @@ label {
 
 button {
 	width: 100%;
-	padding: var(--space-sm) var(--space-lg);
+	padding: var(--space-sm) var(--space-md);
 	font-family: var(--font-display);
-	font-size: var(--text-base);
+	font-size: var(--text-sm);
 	font-weight: 700;
-	color: white; /* White text for better contrast across gradient */
-	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); /* Subtle shadow for crispness */
+	color: #000000; /* Black text for maximum contrast (WCAG AA: 4.5:1) */
+	text-shadow: none; /* Remove shadow to maintain contrast */
 	text-transform: uppercase;
 	letter-spacing: var(--letter-spacing-wide);
 
@@ -385,7 +418,7 @@ button {
 	border: none;
 	border-radius: var(--space-sm);
 	cursor: pointer;
-	margin-top: var(--space-sm);
+	margin-top: var(--space-md); /* FIX #7 */
 
 	transition: all var(--transition-base);
 	filter: drop-shadow(0 0 8px rgba(217, 70, 239, 0.35));
@@ -396,6 +429,13 @@ button:hover {
 	filter: brightness(1.2)
 	        drop-shadow(0 0 12px rgba(255, 215, 0, 0.4))
 	        drop-shadow(0 0 20px rgba(217, 70, 239, 0.3));
+}
+
+/* FIX #7: Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+	button:hover {
+		transform: none;
+	}
 }
 
 button:active {
@@ -410,20 +450,47 @@ button:disabled {
 }
 
 button.loading {
-	opacity: 0.7;
+	opacity: 0.8;
 	cursor: wait;
 	pointer-events: none;
+	position: relative;
 }
 
-button.loading::after {
-	content: "...";
-	animation: ellipsis 1s infinite;
+button.loading::before {
+	content: '';
+	display: inline-block;
+	width: 14px;
+	height: 14px;
+	margin-right: 8px;
+	border: 2px solid rgba(0, 0, 0, 0.3);
+	border-top-color: #000000;
+	border-radius: 50%;
+	animation: spinner-rotate 0.8s linear infinite;
+	vertical-align: middle;
 }
 
-@keyframes ellipsis {
-	0% { content: "."; }
-	33% { content: ".."; }
-	66% { content: "..."; }
+@keyframes spinner-rotate {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+/* Pulse glow effect for disabled/loading buttons */
+button[disabled],
+button.loading {
+	animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+	0%, 100% {
+		box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+	}
+	50% {
+		box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+	}
 }
 
 /* ============================================
@@ -431,11 +498,12 @@ button.loading::after {
    ============================================ */
 
 footer {
-	margin: var(--space-lg) auto 0;
-	padding: var(--space-md) var(--space-lg);
+	flex-shrink: 0;
+	padding: var(--space-sm) var(--space-lg);
 	border-top: var(--border-width-default) solid var(--color-cyber-magenta);
 	color: var(--color-text-muted);
-	font-size: var(--text-sm);
+	font-size: var(--text-xs);
+	background: var(--color-bg-primary);
 }
 
 footer div {
@@ -512,13 +580,21 @@ li strong {
 
 a {
 	color: var(--color-neon-cyan);
-	text-decoration: none;
+	text-decoration: underline;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 2px;
 	transition: color var(--transition-fast);
 }
 
 a:hover {
 	color: var(--color-brand-yellow);
 	text-shadow: var(--text-glow-yellow);
+	text-decoration-thickness: 2px;
+}
+
+/* Exception: Navigation links don't need underlines */
+nav a {
+	text-decoration: none;
 }
 
 /* ============================================
@@ -567,11 +643,40 @@ body::before {
 	}
 }
 
-/* Card deck atmospheric effect */
-.dc-card:hover {
+/* Card deck atmospheric effect with enhanced feedback */
+.dc-card {
+	position: relative;
+	transition: all var(--transition-base);
+}
+
+.dc-card:hover,
+.dc-card:focus-within {
 	cursor: pointer;
 	transform: translateY(-4px);
-	transition: transform var(--transition-base);
+	box-shadow: 0 8px 24px rgba(0, 255, 255, 0.3),
+	            0 0 20px rgba(217, 70, 239, 0.2);
+}
+
+.dc-card::before {
+	content: '';
+	position: absolute;
+	inset: -2px;
+	border: 2px solid var(--color-neon-cyan);
+	border-radius: inherit;
+	opacity: 0;
+	transition: opacity var(--transition-base);
+	pointer-events: none;
+	z-index: -1;
+}
+
+.dc-card:hover::before,
+.dc-card:focus-within::before {
+	opacity: 1;
+}
+
+.dc-card:active {
+	transform: translateY(-2px);
+	box-shadow: 0 4px 16px rgba(0, 255, 255, 0.4);
 }
 
 /* Add subtle glow to form containers */
@@ -638,7 +743,7 @@ body::before {
 
 	.form-container {
 		padding: var(--space-sm);
-		min-height: calc(100vh - 100px);
+		margin: var(--space-xs);
 	}
 
 	footer {
@@ -654,16 +759,19 @@ body::before {
 @media (max-width: 450px) {
 	nav > a {
 		font-size: var(--text-xl);
+		min-height: 48px;
 	}
 
 	nav ul li a {
 		font-size: var(--text-sm);
-		padding: var(--space-xs) var(--space-sm);
+		padding: 14px 20px;
+		min-height: 48px;
 	}
 
 	button {
 		padding: var(--space-sm) var(--space-md);
 		font-size: var(--text-sm);
+		min-height: 44px;
 	}
 }
 
@@ -701,4 +809,77 @@ body::before {
 		background: white;
 		color: black;
 	}
+}
+
+/* ============================================
+   ABOUT PAGE CRITICAL FIXES
+   ============================================ */
+
+/* CRITICAL FIX #1: Line Length Constraint (Issue #1)
+   Optimal readability: 45-75 characters per line
+   Using 65ch as the optimal target */
+article p,
+article li {
+	max-width: 65ch;
+}
+
+/* CRITICAL FIX #2: About Page Container Overflow (Issue #2)
+   Ensure all content is accessible with proper scrolling */
+article {
+	overflow-y: auto;
+	padding-bottom: var(--space-xl); /* Ensure bottom content is visible */
+}
+
+/* CRITICAL FIX #4: Restore Brand Yellow to About Page Headings (Issue #4)
+   Component-scoped styles override globals, need !important for specificity */
+article h1,
+article h2,
+article h3 {
+	color: var(--color-brand-yellow) !important;
+	text-shadow: var(--text-glow-yellow);
+}
+
+/* ============================================
+   FOCUS INDICATORS - WCAG 2.1 COMPLIANCE
+   ============================================ */
+
+/* CRITICAL FIX #5: Focus Indicators (Issue #5)
+   All interactive elements must have visible focus states
+   WCAG 2.1 Level AA requirement */
+
+/* Global focus indicator for all interactive elements */
+*:focus-visible {
+	outline: 3px solid var(--color-neon-cyan);
+	outline-offset: 2px;
+}
+
+/* Enhanced focus for buttons and links */
+button:focus-visible,
+a:focus-visible {
+	outline: 3px solid var(--color-neon-cyan);
+	outline-offset: 3px;
+	box-shadow: 0 0 0 6px rgba(0, 255, 255, 0.2);
+}
+
+/* Form input focus - already has custom focus styles,
+   but adding :focus-visible for keyboard-only focus */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+	outline: 3px solid var(--color-neon-cyan);
+	outline-offset: 2px;
+	border-color: var(--color-neon-cyan);
+	box-shadow: 0 0 10px rgba(0, 255, 255, 0.4), 0 0 0 3px rgba(0, 255, 255, 0.2);
+}
+
+/* Navigation links focus */
+nav a:focus-visible {
+	outline: 3px solid var(--color-brand-yellow);
+	outline-offset: 3px;
+	box-shadow: 0 0 0 6px rgba(255, 215, 0, 0.2);
+}
+
+/* Remove focus outline on mouse click, keep for keyboard navigation */
+*:focus:not(:focus-visible) {
+	outline: none;
 }
