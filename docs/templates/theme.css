@@ -1,145 +1,144 @@
 /* ============================================
    DC SOLO RPG - GAME THEME TEMPLATE
-   Dimm City Creaturepunk Design System
+   DIMM CITY CREATUREPUNK DESIGN SYSTEM
 
-   Customize these CSS variables to create unique
-   themed experiences for your solo RPG games.
+   Based on dimm.city website aesthetic
+   Customize these variables for your game theme
    ============================================ */
 
 :root {
-    /* ===== Core Game Theming ===== */
+    /* ===== CORE BRAND COLORS ===== */
+    /* These define the cyberpunk/creaturepunk aesthetic */
 
-    /* Typography - Professional & Readable */
-    --dc-default-font-family: 'Tomorrow', 'Droid Sans Mono', 'Comfortaa', sans-serif;
-    --dc-default-text-color: rgba(255, 255, 255, 0.9);
+    --dc-color-brand-yellow: #ffd700;    /* Primary headings, numbers */
+    --dc-color-cyber-magenta: #d946ef;   /* Borders, accents */
+    --dc-color-neon-cyan: #00ffff;       /* Interactive elements */
+    --dc-color-toxic-green: #00ff00;     /* Success states, code */
 
-    /* Layout & Spacing - Clean & Consistent */
-    --dc-default-border-radius: 0.175rem;
-    --dc-default-padding: 1rem;
-    --dc-default-boxshadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    --dc-status-display-padding: var(--dc-default-padding);
+    /* ===== BACKGROUNDS ===== */
 
-    /* ===== Color System - Creaturepunk Palette ===== */
+    --dc-color-bg-primary: #0a0a0a;      /* Main background */
+    --dc-color-bg-secondary: #1a1a1a;    /* Cards, boxes */
+    --dc-color-bg-tertiary: #2a2a2a;     /* Elevated elements */
+    --dc-color-bg-darker: #000000;       /* Pure black accents */
 
-    /* Primary Accent (Pink) - Main brand color */
-    --dc-accent-color: #ef1ebf;
-    --dc-accent-bright: #ff15cb;
-    --dc-accent-muted: rgba(239, 30, 191, 0.7);
+    /* ===== TEXT COLORS ===== */
 
-    /* Secondary Accent (Purple) - Supporting color */
-    --dc-secondary-accent: #c643ff;
-    --dc-secondary-muted: rgba(198, 67, 255, 0.7);
+    --dc-color-text-primary: #ffffff;
+    --dc-color-text-secondary: rgba(255, 255, 255, 0.85);
+    --dc-color-text-muted: rgba(255, 255, 255, 0.6);
 
-    /* Blue Accent - Cool tone variation */
-    --dc-blue-accent: #3e6ab3;
+    /* ===== TYPOGRAPHY ===== */
 
-    /* Backgrounds - Dark & Atmospheric */
-    --dc-default-game-bg: transparent;
-    --dc-default-container-bg: rgba(17, 17, 17, 0.75);
-    --dc-table-bg: transparent;
+    --dc-font-display: 'Orbitron', 'Tomorrow', sans-serif;
+    --dc-font-body: 'Inter', 'Tomorrow', sans-serif;
 
-    /* ===== Button System ===== */
-    --dc-button-bg: rgba(17, 17, 17, 0.75);
-    --dc-button-color: #ef1ebf;
-    --dc-button-border: 1px solid #ef1ebf;
-    --dc-button-hover-bg: rgba(239, 30, 191, 0.1);
-    --dc-button-hover-color: #ff15cb;
+    /* Font Sizes (8px baseline grid) */
+    --dc-text-xs: 0.75rem;    /* 12px */
+    --dc-text-sm: 0.875rem;   /* 14px */
+    --dc-text-base: 1rem;     /* 16px */
+    --dc-text-lg: 1.125rem;   /* 18px */
+    --dc-text-xl: 1.25rem;    /* 20px */
+    --dc-text-2xl: 1.75rem;   /* 28px */
+    --dc-text-3xl: 2.5rem;    /* 40px */
+    --dc-text-4xl: 3.5rem;    /* 56px */
 
-    /* ===== Card System - Gradient Animations ===== */
+    /* Letter Spacing */
+    --dc-letter-spacing-wide: 0.05em;
+    --dc-letter-spacing-wider: 0.1em;
+    --dc-letter-spacing-widest: 0.15em;
 
-    /* Card Dimensions */
-    --dc-card-width: 200px;
-    --dc-card-height: 300px;
+    /* ===== SPACING (8px Baseline Grid) ===== */
 
-    /* Card Back (Face Down) - Animated Gradient */
-    --dc-card-back-color: #ffffff;
-    --dc-card-back-bg: linear-gradient(
-        139deg,
-        #3e6ab3,           /* Blue start */
-        rgba(0, 0, 0, 0.975),  /* Dark middle */
-        rgba(0, 0, 0, 0.975),  /* Dark middle */
-        #c643ff            /* Purple end */
+    --dc-space-xs: 0.25rem;   /* 4px */
+    --dc-space-sm: 0.5rem;    /* 8px */
+    --dc-space-md: 1rem;      /* 16px */
+    --dc-space-lg: 1.5rem;    /* 24px */
+    --dc-space-xl: 2rem;      /* 32px */
+    --dc-space-2xl: 3rem;     /* 48px */
+    --dc-space-3xl: 4rem;     /* 64px */
+
+    /* ===== BORDERS ===== */
+
+    --dc-border-width-default: 2px;
+    --dc-border-width-thick: 3px;
+
+    /* ===== EFFECTS ===== */
+
+    /* Neon Glow Shadows */
+    --dc-glow-yellow: 0 0 10px rgba(255, 215, 0, 0.3);
+    --dc-glow-magenta: 0 0 10px rgba(217, 70, 239, 0.3);
+    --dc-glow-cyan: 0 0 10px rgba(0, 255, 255, 0.3);
+
+    /* Text Glows */
+    --dc-text-glow-yellow: 0 0 8px rgba(255, 215, 0, 0.4), 0 0 16px rgba(255, 215, 0, 0.2);
+    --dc-text-glow-cyan: 0 0 6px rgba(0, 255, 255, 0.4), 0 0 12px rgba(0, 255, 255, 0.2);
+
+    /* Drop Shadows */
+    --dc-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+
+    /* ===== TRANSITIONS ===== */
+
+    --dc-transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --dc-transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* ===== AUGMENTED UI (Cyberpunk Corners) ===== */
+
+    --dc-aug-clip-sm: 10px;
+    --dc-aug-clip-md: 12px;
+    --dc-aug-clip-lg: 14px;
+
+    /* ===== GAME-SPECIFIC VARIABLES ===== */
+
+    /* Game Container */
+    --dc-default-game-bg: var(--dc-color-bg-primary);
+    --dc-default-container-bg: var(--dc-color-bg-secondary);
+    --dc-default-border-radius: 0;  /* Sharp corners for cyberpunk */
+    --dc-default-padding: var(--dc-space-xl);
+
+    /* Dice Roller / Table */
+    --dc-dice-roller-bg: var(--dc-color-bg-secondary);
+    --dc-table-bg: var(--dc-color-bg-secondary);
+    --dc-table-border: var(--dc-border-width-thick) solid var(--dc-color-cyber-magenta);
+
+    /* Cards */
+    --dc-card-back-color: var(--dc-color-brand-yellow);
+    --dc-card-back-bg: linear-gradient(135deg,
+        var(--dc-color-cyber-magenta),
+        var(--dc-color-bg-darker),
+        var(--dc-color-neon-cyan)
     );
+    --dc-card-front-bg: var(--dc-color-bg-darker);
+    --dc-card-front-color: var(--dc-color-brand-yellow);
+    --dc-card-border: var(--dc-border-width-default) solid var(--dc-color-cyber-magenta);
+    --dc-card-border-radius: var(--dc-space-sm);
 
-    /* Card Front (Face Up) */
-    --dc-card-front-bg: rgba(0, 0, 0, 0.975);
-    --dc-card-front-color: #ef1ebf;
+    /* Health & Status */
+    --dc-health-meter-high: var(--dc-color-toxic-green);
+    --dc-health-meter-med: var(--dc-color-brand-yellow);
+    --dc-health-meter-low: var(--dc-color-cyber-magenta);
+    --dc-health-meter-stroke: var(--dc-color-bg-primary);
 
-    /* Card Styling */
-    --dc-card-border: 1px solid rgba(198, 67, 255, 0.7);
-    --dc-card-border-radius: 0.175rem;
-    --dc-card-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    /* Buttons */
+    --dc-button-bg: linear-gradient(90deg,
+        var(--dc-color-brand-yellow) 0%,
+        var(--dc-color-cyber-magenta) 50%,
+        var(--dc-color-neon-cyan) 100%
+    );
+    --dc-button-color: var(--dc-color-bg-primary);
+    --dc-button-border: none;
 
-    /* ===== Dice Roller / Table Area ===== */
-    --dc-dice-roller-bg: transparent;
-    --dc-table-border: 1px solid rgba(255, 255, 255, 0.05);
-    --dc-toolbar-height: 3rem;
+    /* Default text color */
+    --dc-default-text-color: var(--dc-color-text-primary);
 
-    /* ===== Health & Status System ===== */
-
-    /* Health Meter Colors - Traffic Light System */
-    --dc-health-meter-high: #00ff88;    /* Bright green */
-    --dc-health-meter-med: #f8f400;     /* Yellow warning */
-    --dc-health-meter-low: #ff3366;     /* Red danger */
-    --dc-health-meter-stroke: rgba(17, 17, 17, 0.8);
-
-    /* Token/Counter Colors */
-    --dc-success-token-stroke: #00ff88;
-    --dc-success-token-fill: rgba(0, 255, 136, 0.3);
-    --dc-failure-token-stroke: #ff3366;
-    --dc-failure-token-fill: rgba(255, 51, 102, 0.3);
-    --dc-bonus-token-stroke: #f8f400;
-    --dc-bonus-token-fill: rgba(248, 244, 0, 0.3);
-
-    /* ===== Animations & Timing ===== */
-    --dc-transition-speed: 200ms;
-    --dc-transition-ease: cubic-bezier(0.375, 0.5, 0.32, 0.9);
-    --dc-fade-duration: 200ms;
-    --dc-card-flip-duration: 600ms;
-    --dc-background-gradient-duration: 10s;
-}
-
-/* ============================================
-   CARD GRADIENT ANIMATION
-   Smooth, continuous color shift
-   ============================================ */
-.card,
-.card-back {
-    background: var(--dc-card-back-bg);
-    background-size: 150% 150%;
-    animation: backgroundGradient var(--dc-background-gradient-duration)
-               cubic-bezier(0.375, 0.5, 0.32, 0.9)
-               infinite alternate-reverse;
-}
-
-@keyframes backgroundGradient {
-    0% {
-        background-position: 0% 50%;
-    }
-    50% {
-        background-position: 100% 50%;
-    }
-    100% {
-        background-position: 0% 50%;
-    }
-}
-
-/* ============================================
-   FADE IN ANIMATION
-   Smooth entrance for game elements
-   ============================================ */
-.dc-fade-in {
-    animation: fadeIn var(--dc-fade-duration) ease-in;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    /* Accent color */
+    --dc-accent-color: var(--dc-color-cyber-magenta);
 }
 
 /* ============================================
    GAME CONTAINER STYLING
    ============================================ */
+
 .dc-game-bg {
     background: var(--dc-default-game-bg);
 }
@@ -147,89 +146,131 @@
 .dc-table-bg {
     background: var(--dc-table-bg);
     border: var(--dc-table-border);
-    border-radius: var(--dc-default-border-radius);
 }
 
 /* ============================================
-   BUTTON THEMING
-   Consistent with main site aesthetic
+   CYBERPUNK BORDERS (Augmented UI)
    ============================================ */
+
+.dc-game-container {
+    /* Add cyberpunk cut corners to game container */
+    --aug-border-all: var(--dc-border-width-thick);
+    --aug-border-bg: var(--dc-accent-color);
+    --aug-tl: var(--dc-aug-clip-lg);
+    --aug-tr: var(--dc-aug-clip-lg);
+    --aug-bl: var(--dc-aug-clip-lg);
+    --aug-br: var(--dc-aug-clip-lg);
+}
+
+/* ============================================
+   BUTTON STYLING - GRADIENT CYBERPUNK
+   ============================================ */
+
 .dc-game-container button,
 .dc-game-container button:hover,
 .dc-game-container button:focus-visible {
     background: var(--dc-button-bg);
     color: var(--dc-button-color);
     border: var(--dc-button-border);
-    transition: all var(--dc-transition-speed) var(--dc-transition-ease);
-    font-family: var(--dc-default-font-family);
+    border-radius: var(--dc-space-lg);
+    font-family: var(--dc-font-display);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--dc-letter-spacing-wide);
+    transition: all var(--dc-transition-base);
+    filter: drop-shadow(0 0 8px rgba(217, 70, 239, 0.35));
 }
 
 .dc-game-container button:hover,
 .dc-game-container button:focus-visible {
-    background: var(--dc-button-hover-bg);
-    color: var(--dc-button-hover-color);
+    transform: translateY(-2px);
+    filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.4))
+            drop-shadow(0 0 20px rgba(217, 70, 239, 0.3));
 }
 
 /* ============================================
    INPUT STYLING
    ============================================ */
+
 .dc-game-container input,
 .dc-game-container textarea,
 .dc-game-container select {
-    background: var(--dc-default-container-bg);
-    border: 1px solid var(--dc-accent-muted);
-    color: var(--dc-default-text-color);
-    font-family: var(--dc-default-font-family);
+    background: var(--dc-color-bg-primary);
+    border: var(--dc-border-width-default) solid var(--dc-color-cyber-magenta);
+    color: var(--dc-color-text-primary);
+    font-family: var(--dc-font-body);
+    transition: all var(--dc-transition-fast);
 }
 
 .dc-game-container input:focus,
 .dc-game-container textarea:focus,
 .dc-game-container select:focus {
-    border-color: var(--dc-accent-color);
+    border-color: var(--dc-color-neon-cyan);
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
     outline: none;
 }
 
 /* ============================================
-   THEME VARIATIONS
-   Uncomment and customize for different game moods
+   CARD STYLING
    ============================================ */
 
-/* === DARK HORROR THEME === */
+.dc-game-container .card-back {
+    background: var(--dc-card-back-bg);
+    border: var(--dc-card-border);
+    color: var(--dc-card-back-color);
+}
+
+.dc-game-container .card-front {
+    background: var(--dc-card-front-bg);
+    border: var(--dc-card-border);
+    color: var(--dc-card-front-color);
+}
+
+/* ============================================
+   THEME VARIATIONS
+   Uncomment to use different color schemes
+   ============================================ */
+
+/* === TOXIC GREEN THEME === */
 /*
 :root {
-    --dc-accent-color: #8b0000;
-    --dc-secondary-accent: #4a0000;
-    --dc-card-back-bg: linear-gradient(139deg, #2a0a0a, #000000, #000000, #4a0000);
-    --dc-table-bg: rgba(10, 0, 0, 0.5);
+    --dc-color-brand-yellow: #00ff00;
+    --dc-color-cyber-magenta: #39ff14;
+    --dc-color-neon-cyan: #ccff00;
+
+    --dc-button-bg: linear-gradient(90deg, #00ff00, #39ff14, #ccff00);
 }
 */
 
-/* === MYSTICAL FANTASY THEME === */
+/* === BLOOD RED THEME === */
 /*
 :root {
-    --dc-accent-color: #b366ff;
-    --dc-secondary-accent: #7a3fb3;
-    --dc-blue-accent: #4a1a6a;
-    --dc-card-back-bg: linear-gradient(139deg, #4a1a6a, #000000, #000000, #b366ff);
+    --dc-color-brand-yellow: #ff0000;
+    --dc-color-cyber-magenta: #8b0000;
+    --dc-color-neon-cyan: #ff4500;
+
+    --dc-button-bg: linear-gradient(90deg, #ff0000, #8b0000, #ff4500);
 }
 */
 
-/* === SCI-FI NEON THEME === */
+/* === ICE BLUE THEME === */
 /*
 :root {
-    --dc-accent-color: #00ffff;
-    --dc-secondary-accent: #ff00ff;
-    --dc-blue-accent: #0066cc;
-    --dc-card-back-bg: linear-gradient(139deg, #0066cc, #001a33, #001a33, #00ffff);
+    --dc-color-brand-yellow: #00ffff;
+    --dc-color-cyber-magenta: #4169e1;
+    --dc-color-neon-cyan: #87ceeb;
+
+    --dc-button-bg: linear-gradient(90deg, #00ffff, #4169e1, #87ceeb);
 }
 */
 
-/* === NATURE/EARTH THEME === */
+/* === PURPLE HAZE THEME === */
 /*
 :root {
-    --dc-accent-color: #00ff88;
-    --dc-secondary-accent: #66cc99;
-    --dc-blue-accent: #007a58;
-    --dc-card-back-bg: linear-gradient(139deg, #007a58, #001a0a, #001a0a, #00ff88);
+    --dc-color-brand-yellow: #9370db;
+    --dc-color-cyber-magenta: #8b008b;
+    --dc-color-neon-cyan: #da70d6;
+
+    --dc-button-bg: linear-gradient(90deg, #9370db, #8b008b, #da70d6);
 }
 */

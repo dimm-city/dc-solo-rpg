@@ -55,7 +55,8 @@
 	"types": "./dist/index.d.ts",
 	"type": "module",
 	"dependencies": {
-		"csv-parse": "^5.4.0",
-		"@3d-dice/dice-box-threejs": "^0.0.12"
+		"@3d-dice/dice-box-threejs": "^0.0.12",
+		"augmented-ui": "^2.0.0",
+		"csv-parse": "^5.4.0"
 	}
 }
