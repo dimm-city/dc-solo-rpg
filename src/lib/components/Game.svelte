@@ -5,7 +5,8 @@
 		gameStore,
 		gameStylesheet,
 		loadSystemConfig,
-		nextScreen
+		nextScreen,
+		transitionToScreen
 	} from '../stores/WAAStore.js';
 	import OptionsScreen from './OptionsScreen.svelte';
 	import IntroScreen from './IntroScreen.svelte';
@@ -86,7 +87,7 @@
 				{#if $currentScreen == 'startRound'}
 					<div class="dc-fade-in dc-screen-container">
 						<h4>Round {$gameStore.round}</h4>
-						<button on:click={() => nextScreen('rollForTasks')}>Roll for tasks</button>
+						<button on:click={async () => await transitionToScreen('rollForTasks')}>Roll for tasks</button>
 					</div>
 				{:else if $currentScreen == 'rollForTasks'}
 					<div class="dc-fade-in dc-screen-container">

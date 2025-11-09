@@ -12,10 +12,10 @@
 		await taskDice.roll(result);
 		rolled = true;
 	}
-	function confirm() {
+	async function confirm() {
 		if (rolling) return;
 		rolled = false;
-		confirmTaskRoll();
+		await confirmTaskRoll();
 	}
 	function action() {
 		if (rolled) confirm();

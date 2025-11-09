@@ -49,10 +49,6 @@
 		diceBox = new DiceBox('#dice-roller-container', config);
 		await diceBox.initialize();
 		diceBox.resizeWorld();
-
-		return () => {
-			console.log('dispose roller', diceBox);
-		};
 	});
 	export async function roll(values = null) {
 		if (rolling) return;
@@ -61,7 +57,6 @@
 		const rollString = values ? `1d6@${values}` : '1d6';
 		let result = await diceBox.roll(rollString);
 
-		console.log('return', result);
 		rolling = false;
 		return result.total;
 	}

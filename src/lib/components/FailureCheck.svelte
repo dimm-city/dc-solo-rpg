@@ -9,11 +9,9 @@
 
 	const dispatcher = createEventDispatcher();
 	async function doCheck() {
-		console.log('doCheck', rolling);
 		if (rolling) return;
 		if ($gameStore.state == 'failureCheck') {
 			result = await failureCheck();
-			console.log('dice rolled for failure', result);
 			await diceRoller.roll(result);
 			dispatcher('dc-solo-rpg.failureCheckCompleted', $gameStore.state);
 		} else {

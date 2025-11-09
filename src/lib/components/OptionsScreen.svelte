@@ -14,7 +14,6 @@
 			startGame(systemSettings.player, options);
 		} else {
 			status = 'Please select a player and a game';
-			console.log(systemSettings, options);
 		}
 	}
 </script>

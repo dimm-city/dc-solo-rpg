@@ -25,6 +25,66 @@ function shuffle(array) {
 
 	return array;
 }
+/**
+ * Helper to sleep for animation timing
+ * @param {number} ms - Milliseconds to sleep
+ * @returns {Promise<void>}
+ */
+function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Transition to a new screen with animation
+ * @param {string|null} action - The action to trigger state machine transition
+ * @param {'default' | 'round' | 'journal'} transitionType - Type of transition animation
+ * @returns {Promise<void>}
+ */
+export const transitionToScreen = async (action, transitionType = 'default') => {
+	// Get current screen element
+	const currentScreenEl = document.querySelector('.dc-screen-container');
+
+	// Exit animation for current screen
+	if (currentScreenEl) {
+		currentScreenEl.classList.add('screen-transition-out');
+		await sleep(300); // Match --anim-fast duration
+	}
+
+	// Change the screen (update state)
+	currentScreen.update((screen) => {
+		if (action) services.stateMachine.next(action);
+		screen = services.stateMachine.state;
+		return screen;
+	});
+
+	// Wait for new screen to render
+	await sleep(50);
+
+	// Enter animation for new screen
+	const newScreenEl = document.querySelector('.dc-screen-container');
+	if (newScreenEl instanceof HTMLElement) {
+		// Remove exit animation class if it exists
+		newScreenEl.classList.remove('screen-transition-out');
+
+		// Apply appropriate enter animation
+		if (transitionType === 'round') {
+			newScreenEl.classList.add('round-transition');
+			// Remove class after animation completes to allow re-triggering
+			setTimeout(() => newScreenEl.classList.remove('round-transition'), 800);
+		} else if (transitionType === 'journal') {
+			newScreenEl.classList.add('journal-transition');
+			setTimeout(() => newScreenEl.classList.remove('journal-transition'), 1200);
+		} else {
+			newScreenEl.classList.add('screen-transition-in');
+			setTimeout(() => newScreenEl.classList.remove('screen-transition-in'), 500);
+		}
+	}
+};
+
+/**
+ * Legacy nextScreen function - maintained for backward compatibility
+ * @param {string} action - The action to trigger state machine transition
+ */
 export const nextScreen = (action) => {
 	currentScreen.update((screen) => {
 		if (action) services.stateMachine.next(action);
@@ -191,16 +251,17 @@ export const startGame = (player, options = {}) => {
 };
 
 /**
- * Starts the next round.
- * @returns {void}
+ * Starts the next round with page-turn transition.
+ * @returns {Promise<void>}
  */
-export const startRound = () => {
+export const startRound = async () => {
 	gameStore.update((state) => {
 		state.round += 1;
-		state.state = services.stateMachine.next('rollForTasks');
-		nextScreen();
 		return state;
 	});
+
+	// Use page-turn transition for new rounds
+	await transitionToScreen('rollForTasks', 'round');
 };
 
 /**
@@ -221,11 +282,11 @@ export const rollForTasks = async () => {
 };
 
 /**
- * Confirms the task roll.
- * @returns {void}
+ * Confirms the task roll with smooth transition.
+ * @returns {Promise<void>}
  */
-export const confirmTaskRoll = () => {
-	nextScreen();
+export const confirmTaskRoll = async () => {
+	await transitionToScreen();
 };
 
 /**
@@ -285,15 +346,15 @@ export const drawCard = () => {
 };
 
 /**
- * Confirms the drawn card.
- * @returns {void}
+ * Confirms the drawn card with smooth transition.
+ * @returns {Promise<void>}
  */
-export const confirmCard = () => {
+export const confirmCard = async () => {
 	gameStore.update((state) => {
 		state.currentCard = null;
 		return state;
 	});
-	nextScreen();
+	await transitionToScreen();
 };
 
 /**
@@ -343,25 +404,26 @@ export const failureCheck = async () => {
 };
 
 /**
- * Confirms the failure check.
- * @returns {void}
+ * Confirms the failure check with smooth transition.
+ * @returns {Promise<void>}
  */
-export const confirmFailureCheck = () => {
-	nextScreen();
+export const confirmFailureCheck = async () => {
+	await transitionToScreen();
 };
 
 /**
- * Records the round.
+ * Records the round with smooth transition.
  * @param {object} journalEntry - The journal entry object.
  * @param {string} journalEntry.text - The journal entry text.
  * @param {string} [journalEntry.dateRecorded] - The date the entry was recorded.
- * @returns {void}
+ * @returns {Promise<void>}
  */
-export const recordRound = (journalEntry) => {
+export const recordRound = async (journalEntry) => {
 	if (journalEntry == null || journalEntry.text == null) {
 		throw new Error('No journal entries provided for this round');
 	}
 
+	let nextAction = null;
 	gameStore.update((state) => {
 		journalEntry.id = state.round;
 		journalEntry.round = state.round;
@@ -370,14 +432,20 @@ export const recordRound = (journalEntry) => {
 
 		if (!state.gameOver) {
 			if (state.aceOfHeartsRevealed) {
-				state.state = services.stateMachine.next('successCheck');
+				nextAction = 'successCheck';
 			} else {
-				state.state = services.stateMachine.next('startRound');
+				nextAction = 'startRound';
 			}
-			nextScreen();
 		}
 		return state;
 	});
+
+	// Apply transition if not game over
+	if (nextAction) {
+		// Use round transition for starting a new round, default for success check
+		const transitionType = nextAction === 'startRound' ? 'round' : 'default';
+		await transitionToScreen(nextAction, transitionType);
+	}
 };
 
 /**

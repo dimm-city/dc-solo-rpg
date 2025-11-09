@@ -12,8 +12,8 @@
 	const dispatcher = createEventDispatcher();
 	let saved = false;
 	const journal = { text: '' };
-	function save() {
-		recordRound(journal);
+	async function save() {
+		await recordRound(journal);
 		journal.text = '';
 		saved = true;
 		dispatcher('dc-solo-rpg.journalSaved', journal);
