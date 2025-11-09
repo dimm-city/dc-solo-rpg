@@ -235,13 +235,14 @@ nav ul li a {
 	text-decoration: none;
 	text-transform: uppercase;
 	letter-spacing: var(--letter-spacing-wide);
-	transition: all var(--transition-fast);
+	transition: all var(--transition-base); /* Smoother transition */
 	padding: var(--space-sm) var(--space-md);
 }
 
 nav ul li a:hover {
 	color: var(--color-neon-cyan);
 	text-shadow: var(--text-glow-cyan);
+	transform: translateY(-1px);
 }
 
 /* ============================================
@@ -287,6 +288,7 @@ main {
    ============================================ */
 
 .form-container {
+	position: relative;
 	background: var(--color-bg-secondary);
 	border: var(--border-width-thick) solid var(--color-cyber-magenta);
 	padding: var(--space-md);
@@ -294,6 +296,8 @@ main {
 	min-height: calc(100vh - 120px); /* viewport minus header/footer/margins */
 	display: flex;
 	flex-direction: column;
+	justify-content: center; /* Center content vertically */
+	overflow: hidden;
 
 	/* Augmented UI for cyberpunk corners */
 	--aug-border-all: var(--border-width-thick);
@@ -324,12 +328,20 @@ select {
 	transition: all var(--transition-fast);
 }
 
+input:hover,
+textarea:hover,
+select:hover {
+	border-color: var(--color-brand-yellow);
+	cursor: pointer;
+}
+
 input:focus,
 textarea:focus,
 select:focus {
 	outline: none;
 	border-color: var(--color-neon-cyan);
 	box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+	cursor: text;
 }
 
 input::placeholder,
@@ -358,7 +370,8 @@ button {
 	font-family: var(--font-display);
 	font-size: var(--text-base);
 	font-weight: 700;
-	color: var(--color-bg-primary);
+	color: white; /* White text for better contrast across gradient */
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); /* Subtle shadow for crispness */
 	text-transform: uppercase;
 	letter-spacing: var(--letter-spacing-wide);
 
@@ -380,18 +393,37 @@ button {
 
 button:hover {
 	transform: translateY(-2px);
-	filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.4))
+	filter: brightness(1.2)
+	        drop-shadow(0 0 12px rgba(255, 215, 0, 0.4))
 	        drop-shadow(0 0 20px rgba(217, 70, 239, 0.3));
 }
 
 button:active {
 	transform: translateY(0);
+	filter: brightness(0.9);
 }
 
 button:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
 	filter: none;
+}
+
+button.loading {
+	opacity: 0.7;
+	cursor: wait;
+	pointer-events: none;
+}
+
+button.loading::after {
+	content: "...";
+	animation: ellipsis 1s infinite;
+}
+
+@keyframes ellipsis {
+	0% { content: "."; }
+	33% { content: ".."; }
+	66% { content: "..."; }
 }
 
 /* ============================================
@@ -438,10 +470,12 @@ footer div {
    ============================================ */
 
 .cyber-box {
+	position: relative;
 	background: var(--color-bg-secondary);
 	border: var(--border-width-thick) solid var(--color-cyber-magenta);
 	padding: var(--space-md);
 	margin-bottom: var(--space-md);
+	overflow: hidden;
 
 	/* Augmented UI */
 	--aug-border-all: var(--border-width-thick);
@@ -498,6 +532,84 @@ code {
 	background: var(--color-bg-darker);
 	padding: var(--space-xs) var(--space-sm);
 	border: 1px solid var(--color-cyber-magenta);
+}
+
+/* ============================================
+   ATMOSPHERIC EFFECTS
+   ============================================ */
+
+/* Subtle scanline effect for cyberpunk atmosphere */
+body::before {
+	content: '';
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: repeating-linear-gradient(
+		0deg,
+		transparent,
+		transparent 2px,
+		rgba(217, 70, 239, 0.015) 2px,
+		rgba(217, 70, 239, 0.015) 4px
+	);
+	pointer-events: none;
+	z-index: 9999;
+}
+
+/* Subtle glow animation for interactive elements */
+@keyframes glow-pulse {
+	0%, 100% {
+		box-shadow: 0 0 8px rgba(217, 70, 239, 0.3);
+	}
+	50% {
+		box-shadow: 0 0 16px rgba(217, 70, 239, 0.5);
+	}
+}
+
+/* Card deck atmospheric effect */
+.dc-card:hover {
+	cursor: pointer;
+	transform: translateY(-4px);
+	transition: transform var(--transition-base);
+}
+
+/* Add subtle glow to form containers */
+.form-container::after {
+	content: '';
+	position: absolute;
+	inset: -2px;
+	border-radius: inherit;
+	background: linear-gradient(
+		45deg,
+		transparent 30%,
+		rgba(217, 70, 239, 0.1) 50%,
+		transparent 70%
+	);
+	opacity: 0;
+	transition: opacity var(--transition-base);
+	pointer-events: none;
+	z-index: -1;
+}
+
+.form-container:hover::after {
+	opacity: 1;
+}
+
+/* Atmospheric background pattern */
+.cyber-box::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background:
+		repeating-linear-gradient(
+			90deg,
+			transparent,
+			transparent 2px,
+			rgba(255, 215, 0, 0.02) 2px,
+			rgba(255, 215, 0, 0.02) 4px
+		);
+	pointer-events: none;
 }
 
 /* ============================================

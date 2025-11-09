@@ -1,22 +1,32 @@
+/* GNOME ALONE - Dimm City Design System Integration */
 :root {
-    --dc-default-font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande',
-			'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-    --dc-default-border-radius: 1rem;
+    /* Use Inter font from main design system */
+    --dc-default-font-family: var(--font-body, 'Inter', 'Tomorrow', sans-serif);
+
+    --dc-default-border-radius: 0.5rem;
     --dc-default-padding: 1rem;
-    --dc-default-boxshadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    --dc-default-container-bg: rgba(255, 250, 220, 0.5); /* parchment-like background */
-    --dc-default-text-color: #007a58;
-    --dc-accent-color: rgb(58, 122, 87); /* forest green for gnome nature affinity */
+    --dc-default-boxshadow: var(--shadow-md, 0 4px 16px rgba(0, 0, 0, 0.4));
+
+    /* Use dark Dimm City backgrounds */
+    --dc-default-container-bg: var(--color-bg-secondary, #1a1a1a);
+    --dc-default-game-bg: var(--color-bg-primary, #0a0a0a);
+
+    /* Use Dimm City text colors */
+    --dc-default-text-color: var(--color-text-primary, #ffffff);
+    --dc-accent-color: var(--color-toxic-green, #00ff00); /* Nature theme with toxic green */
     --dc-toolbar-height: 3rem;
     --dc-header-block-margin: 0.25rem;
-    --dc-button-color: rgb(5235,235,235);
-	--dc-button-bg: rgb(58, 122, 87);
-    --dc-dice-roller-bg: #7f3300; /* rich earthy brown reminiscent of gnome's tinkering tools */
-    --dc-card-border: 1px solid #000000;
-    --dc-card-border-radius: 1rem;
-    --dc-card-back-bg: #007a58; /* deep green representing the dense jungle of the island */
-    --dc-card-front-bg: rgb(235, 235, 235); /* remaining as is for good readability */
-    --dc-card-front-color: #007a58;
+
+    /* Use Dimm City color palette with green accent for nature theme */
+    --dc-button-color: var(--color-text-primary, #ffffff);
+    --dc-button-bg: var(--color-toxic-green, #00ff00);
+    --dc-dice-roller-bg: var(--color-bg-tertiary, #2a2a2a);
+    --dc-card-border: 2px solid var(--color-toxic-green, #00ff00);
+    --dc-card-border-radius: 0.5rem;
+    --dc-card-back-bg: var(--color-toxic-green, #00ff00);
+    --dc-card-back-color: var(--color-bg-primary, #0a0a0a);
+    --dc-card-front-bg: var(--color-bg-tertiary, #2a2a2a);
+    --dc-card-front-color: var(--color-text-primary, #ffffff);
 }
 
 .dc-table-bg {

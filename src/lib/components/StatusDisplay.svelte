@@ -44,7 +44,7 @@
 	.status-display-container {
 		text-align: center;
 		display: grid;
-	
+
 		box-shadow: var(--dc-default-box-shadow);
 		background-color: var(--dc-default-container-bg);
 		border-radius: var(--dc-default-border-radius);
@@ -52,11 +52,12 @@
 		padding-top: 0.5rem;
 
 		width: 100%;
-		grid-template-columns: repeat(4, 1fr);
+		grid-template-columns: 2fr 1fr 1fr 1fr; /* Health is 2x larger */
 		grid-template-rows: 0.4fr 1.6fr;
 		grid-template-areas:
 			'round-area round-area round-area round-area'
 			'health-area failure-area bonus-area success-area';
+		gap: 0.5rem;
 	}
 	.round-container {
 		grid-area: round-area;
@@ -68,6 +69,8 @@
 	.failure-container {
 		grid-area: health-area;
 		display: grid;
+		font-size: 1.1rem;
+		font-weight: bold;
 	}
 
 	.failure-counters-container,
@@ -76,7 +79,7 @@
 		display: flex;
 		flex-direction: column;
 	}
-	
+
 	.failure-counters-container {
 		grid-area: failure-area;
 	}
@@ -85,5 +88,23 @@
 	}
 	.bonus-counters-container {
 		grid-area: bonus-area;
+	}
+
+	/* Mobile responsive layout */
+	@media (max-width: 768px) {
+		.status-display-container {
+			grid-template-columns: repeat(2, 1fr);
+			grid-template-rows: auto;
+			grid-template-areas:
+				'round-area round-area'
+				'health-area health-area'
+				'failure-area bonus-area'
+				'success-area success-area';
+			gap: 0.75rem;
+		}
+
+		.failure-container {
+			font-size: 1.2rem;
+		}
 	}
 </style>

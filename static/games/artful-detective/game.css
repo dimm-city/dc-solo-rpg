@@ -1,20 +1,30 @@
+/* ARTFUL DETECTIVE - Dimm City Design System Integration */
 :root {
-	--dc-default-font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande',
-			'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-			
-	--dc-default-border-radius: 1rem;
-	--dc-default-padding: 1rem;
-	--dc-default-boxshadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-	--dc-default-container-bg: rgba(255, 255, 255, 0.5);
+	/* Use Inter font from main design system, fallback to system fonts */
+	--dc-default-font-family: var(--font-body, 'Inter', 'Tomorrow', sans-serif);
 
-	--dc-default-text-color: #1a237e;
-	--dc-accent-color: rgb(255, 210, 0); /* Bright yellow for a comedic touch */
+	--dc-default-border-radius: 0.5rem;
+	--dc-default-padding: 1rem;
+	--dc-default-boxshadow: var(--shadow-md, 0 4px 16px rgba(0, 0, 0, 0.4));
+
+	/* Use dark Dimm City backgrounds instead of light */
+	--dc-default-container-bg: var(--color-bg-secondary, #1a1a1a);
+	--dc-default-game-bg: var(--color-bg-primary, #0a0a0a);
+
+	/* Use Dimm City text colors */
+	--dc-default-text-color: var(--color-text-primary, #ffffff);
+	--dc-accent-color: var(--color-brand-yellow, #ffd700);
 	--dc-toolbar-height: 3rem;
 	--dc-header-block-margin: 0.25rem;
 
-	--dc-dice-roller-bg: #ff5722; /* A vibrant orange for the dice roller */
-	--dc-card-border: 1px solid #000000;
-	--dc-card-border-radius: 1rem;
-	--dc-card-back-bg: #1a237e; /* A deep blue for the mystery aspect */
-	--dc-card-front-bg: rgb(255, 255, 255); /* A clean white for the card front */
+	/* Use Dimm City color palette */
+	--dc-button-bg: var(--color-cyber-magenta, #d946ef);
+	--dc-button-color: var(--color-text-primary, #ffffff);
+	--dc-dice-roller-bg: var(--color-bg-tertiary, #2a2a2a);
+	--dc-card-border: 2px solid var(--color-cyber-magenta, #d946ef);
+	--dc-card-border-radius: 0.5rem;
+	--dc-card-back-bg: var(--color-cyber-magenta, #d946ef);
+	--dc-card-back-color: var(--color-text-primary, #ffffff);
+	--dc-card-front-bg: var(--color-bg-tertiary, #2a2a2a);
+	--dc-card-front-color: var(--color-text-primary, #ffffff);
 }
