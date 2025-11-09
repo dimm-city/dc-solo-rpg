@@ -364,7 +364,7 @@ main {
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
-	overflow: hidden; /* CRITICAL: Contain content within bounds */
+	overflow: visible; /* Allow neural effects and glows to extend */
 	margin: var(--space-xs);
 	min-height: 0; /* CRITICAL: Allow flex child to shrink */
 

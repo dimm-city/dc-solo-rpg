@@ -156,7 +156,7 @@
 		box-sizing: border-box;
 		font-family: var(--dc-default-font-family);
 		color: var(--dc-default-text-color);
-		overflow: hidden; /* Contain children */
+		overflow: visible; /* Allow glows to extend beyond bounds */
 	}
 	.dc-game-container,
 	.dc-game-container > div,
@@ -169,7 +169,7 @@
 		max-height: 100%; /* Prevent exceeding parent height */
 		display: flex;
 		flex-direction: column;
-		overflow: hidden;
+		overflow: visible; /* Allow glows to extend */
 		min-height: 0; /* Allow flex shrinking */
 	}
 	:global(.dc-game-bg) {
@@ -219,13 +219,13 @@
 		min-height: 100%;
 		box-sizing: border-box;
 		position: relative;
-		overflow: hidden;
+		overflow: visible; /* Allow glows and effects to extend */
 	}
 
 	.main-screen-area > div.dc-screen-container {
 		width: 100%;
 		height: 100%;
-		overflow: hidden; /* FIXED: Let child components handle their own scrolling */
+		overflow: visible; /* Allow glows and neural effects to extend beyond container */
 		box-sizing: border-box;
 	}
 	.dc-table-bg {

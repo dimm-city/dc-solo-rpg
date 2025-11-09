@@ -260,8 +260,10 @@ export const startRound = async () => {
 		return state;
 	});
 
-	// Use page-turn transition for new rounds
-	await transitionToScreen('rollForTasks', 'round');
+	// First transition to startRound state, then to rollForTasks with page-turn animation
+	await transitionToScreen('startRound', 'round');
+	await sleep(100); // Small delay for state machine
+	await transitionToScreen('rollForTasks', 'default');
 };
 
 /**

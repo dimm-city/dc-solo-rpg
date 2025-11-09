@@ -50,6 +50,7 @@
 		border-radius: var(--dc-default-border-radius);
 		padding-inline: var(--dc-status-display-padding);
 		padding-top: 0.5rem;
+		padding-bottom: 0.75rem; /* Extra padding for meter glows */
 
 		width: 100%;
 		grid-template-columns: 2fr 1fr 1fr 1fr; /* Health is 2x larger */
