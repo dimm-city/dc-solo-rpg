@@ -3,12 +3,17 @@
    Matching dimm.city website aesthetic EXACTLY
    ============================================ */
 
-/* Import Augmented UI for cyberpunk shapes */
-@import 'augmented-ui/augmented-ui.min.css';
 
 /* Import Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;500;600;700&display=swap');
 
+/* Load custom display font */
+@font-face {
+	font-family: 'lixdu';
+	src: url('/fonts/lixdu.woff') format('woff');
+	font-display: swap;
+	font-weight: 700 900;
+}
 /* ============================================
    CSS CUSTOM PROPERTIES - DIMM CITY SYSTEM
    ============================================ */
@@ -32,7 +37,7 @@
 	--color-text-muted: rgba(255, 255, 255, 0.6);
 
 	/* === TYPOGRAPHY === */
-	--font-display: 'Orbitron', 'Tomorrow', sans-serif;
+	--font-display: 'lixdu', 'Orbitron', 'Tomorrow', sans-serif;
 	--font-body: 'Inter', 'Tomorrow', sans-serif;
 
 	/* Font Sizes - 8px baseline grid */
@@ -184,7 +189,7 @@ small {
 header {
 	background: var(--color-bg-primary);
 	border-bottom: var(--border-width-default) solid var(--color-cyber-magenta);
-	padding: var(--space-lg) 0;
+
 	position: sticky;
 	top: 0;
 	z-index: 1000;
@@ -244,7 +249,6 @@ nav ul li a:hover {
    ============================================ */
 
 main {
-	max-width: 1400px;
 	margin: 0 auto;
 	padding: var(--space-2xl) var(--space-xl);
 }
@@ -391,7 +395,6 @@ button:disabled {
    ============================================ */
 
 footer {
-	max-width: 1400px;
 	margin: var(--space-3xl) auto 0;
 	padding: var(--space-xl);
 	border-top: var(--border-width-default) solid var(--color-cyber-magenta);
