@@ -35,7 +35,7 @@
 	<div class="card-inner">
 		<div class="card-back">
 			<slot name="card-back">
-				<h2>{$gameStore.config.labels?.cardBackText ?? $gameStore.config.title}</h2>
+				<h6>{$gameStore.config.labels?.cardBackText ?? $gameStore.config.title}</h6>
 			</slot>
 		</div>
 		<div class="card-front">

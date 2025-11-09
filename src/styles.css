@@ -14,6 +14,7 @@
 	font-display: swap;
 	font-weight: 700 900;
 }
+
 /* ============================================
    CSS CUSTOM PROPERTIES - DIMM CITY SYSTEM
    ============================================ */
@@ -41,14 +42,22 @@
 	--font-body: 'Inter', 'Tomorrow', sans-serif;
 
 	/* Font Sizes - 8px baseline grid */
-	--text-xs: 0.75rem;    /* 12px */
-	--text-sm: 0.875rem;   /* 14px */
-	--text-base: 1rem;     /* 16px */
-	--text-lg: 1.125rem;   /* 18px */
-	--text-xl: 1.25rem;    /* 20px */
-	--text-2xl: 1.75rem;   /* 28px */
-	--text-3xl: 2.5rem;    /* 40px */
-	--text-4xl: 3.5rem;    /* 56px */
+	--text-xs: 0.75rem;
+	/* 12px */
+	--text-sm: 0.875rem;
+	/* 14px */
+	--text-base: 1rem;
+	/* 16px */
+	--text-lg: 1.125rem;
+	/* 18px */
+	--text-xl: 1.25rem;
+	/* 20px */
+	--text-2xl: 1.75rem;
+	/* 28px */
+	--text-3xl: 2.5rem;
+	/* 40px */
+	--text-4xl: 3.5rem;
+	/* 56px */
 
 	/* Line Heights */
 	--line-height-tight: 1.25;
@@ -63,14 +72,22 @@
 	--letter-spacing-widest: 0.15em;
 
 	/* === SPACING - 8px Baseline Grid === */
-	--space-xs: 0.25rem;   /* 4px */
-	--space-sm: 0.5rem;    /* 8px */
-	--space-md: 1rem;      /* 16px */
-	--space-lg: 1.5rem;    /* 24px */
-	--space-xl: 2rem;      /* 32px */
-	--space-2xl: 3rem;     /* 48px */
-	--space-3xl: 4rem;     /* 64px */
-	--space-4xl: 6rem;     /* 96px */
+	--space-xs: 0.25rem;
+	/* 4px */
+	--space-sm: 0.5rem;
+	/* 8px */
+	--space-md: 1rem;
+	/* 16px */
+	--space-lg: 1.5rem;
+	/* 24px */
+	--space-xl: 2rem;
+	/* 32px */
+	--space-2xl: 3rem;
+	/* 48px */
+	--space-3xl: 4rem;
+	/* 64px */
+	--space-4xl: 6rem;
+	/* 96px */
 
 	/* === BORDERS === */
 	--border-width-thin: 1px;
@@ -110,7 +127,9 @@
    RESET & BASE STYLES
    ============================================ */
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
 	box-sizing: border-box;
 	margin: 0;
 	padding: 0;
@@ -128,8 +147,8 @@ body {
 	line-height: var(--line-height-base);
 	color: var(--color-text-primary);
 	background: var(--color-bg-primary);
-	overflow-y: auto; /* CRITICAL FIX: Allow vertical scrolling (was overflow: hidden) */
-	min-height: 100vh; /* CRITICAL FIX: Ensure full viewport height (was height: 100vh) */
+	overflow: hidden;
+	height: 100vh;
 	display: flex;
 	flex-direction: column;
 }
@@ -138,13 +157,19 @@ body {
    TYPOGRAPHY - DIMM CITY STYLE
    ============================================ */
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
 	font-family: var(--font-display);
 	font-weight: 900;
 	color: var(--color-brand-yellow);
 	text-transform: uppercase;
 	letter-spacing: var(--letter-spacing-wider);
-	margin: 0; /* FIX #2: Reset */
+	margin: 0;
+	/* FIX #2: Reset */
 	line-height: var(--line-height-tight);
 }
 
@@ -152,27 +177,31 @@ h1 {
 	font-size: var(--text-4xl);
 	text-shadow: var(--text-glow-yellow);
 	letter-spacing: var(--letter-spacing-widest);
-	margin-bottom: var(--space-lg); /* FIX #2 */
+	margin-bottom: var(--space-lg);
+	/* FIX #2 */
 }
 
 h2 {
 	font-size: var(--text-3xl);
 	text-shadow: var(--text-glow-yellow);
-	margin-top: var(--space-2xl); /* FIX #2 */
+	margin-top: var(--space-2xl);
+	/* FIX #2 */
 	margin-bottom: var(--space-md);
 }
 
 h3 {
 	font-size: var(--text-2xl);
 	letter-spacing: var(--letter-spacing-wide);
-	margin-top: var(--space-xl); /* FIX #2 */
+	margin-top: var(--space-xl);
+	/* FIX #2 */
 	margin-bottom: var(--space-md);
 }
 
 h4 {
 	font-size: var(--text-xl);
 	color: var(--color-text-primary);
-	margin-top: var(--space-lg); /* FIX #2 */
+	margin-top: var(--space-lg);
+	/* FIX #2 */
 	margin-bottom: var(--space-sm);
 }
 
@@ -181,7 +210,8 @@ p {
 	color: var(--color-text-secondary);
 }
 
-strong, b {
+strong,
+b {
 	font-weight: 700;
 	color: var(--color-text-primary);
 }
@@ -211,7 +241,7 @@ nav {
 	padding: var(--space-sm) var(--space-lg);
 }
 
-nav > a {
+nav>a {
 	font-family: var(--font-display);
 	font-size: var(--text-xl);
 	font-weight: 900;
@@ -223,7 +253,7 @@ nav > a {
 	transition: color var(--transition-fast);
 }
 
-nav > a:hover {
+nav>a:hover {
 	color: var(--color-neon-cyan);
 	text-shadow: var(--text-glow-cyan);
 }
@@ -270,11 +300,12 @@ nav ul li a:hover {
 
 main {
 	flex: 1;
-	overflow-y: auto; /* CRITICAL FIX: Allow vertical scrolling for content (was overflow: hidden) */
+	overflow-y: auto;
 	display: flex;
 	flex-direction: column;
 	padding: 0;
 	max-width: 100%;
+	min-height: 0; /* CRITICAL: Allow flex child to shrink below content size */
 }
 
 .main {
@@ -295,7 +326,8 @@ main {
 
 .hero h1 {
 	font-size: clamp(2rem, 8vw, var(--text-4xl));
-	margin-bottom: var(--space-lg); /* FIX #1: 24px */
+	margin-bottom: var(--space-lg);
+	/* FIX #1: 24px */
 }
 
 .hero p {
@@ -313,14 +345,14 @@ main {
 	position: relative;
 	background: var(--color-bg-secondary);
 	border: var(--border-width-thick) solid var(--color-cyber-magenta);
-	padding: var(--space-lg); /* FIX #3: 24px */
 	box-shadow: var(--shadow-lg);
 	flex: 1;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
-	overflow: auto;
-	margin: var(--space-sm);
+	overflow: hidden; /* CRITICAL: Contain content within bounds */
+	margin: var(--space-xs);
+	min-height: 0; /* CRITICAL: Allow flex child to shrink */
 
 	/* Augmented UI for cyberpunk corners */
 	--aug-border-all: var(--border-width-thick);
@@ -347,7 +379,8 @@ select {
 	color: var(--color-text-primary);
 	background: var(--color-bg-primary);
 	border: var(--border-width-default) solid var(--color-cyber-magenta);
-	margin-bottom: var(--space-md); /* FIX #5 */
+	margin-bottom: var(--space-md);
+	/* FIX #5 */
 	transition: all var(--transition-fast);
 }
 
@@ -364,7 +397,8 @@ input:hover,
 textarea:hover,
 select:hover {
 	border-color: var(--color-brand-yellow);
-	box-shadow: var(--glow-yellow); /* FIX #5 */
+	box-shadow: var(--glow-yellow);
+	/* FIX #5 */
 	cursor: pointer;
 }
 
@@ -373,7 +407,8 @@ textarea:focus,
 select:focus {
 	outline: none;
 	border-color: var(--color-neon-cyan);
-	box-shadow: var(--glow-cyan); /* FIX #5 */
+	box-shadow: var(--glow-cyan);
+	/* FIX #5 */
 	cursor: text;
 }
 
@@ -387,7 +422,8 @@ label {
 	font-family: var(--font-display);
 	font-size: var(--text-sm);
 	font-weight: 700;
-	color: #ffffff; /* FIX #4: WCAG AA */
+	color: #ffffff;
+	/* FIX #4: WCAG AA */
 	text-transform: uppercase;
 	letter-spacing: var(--letter-spacing-wide);
 	margin-bottom: var(--space-sm);
@@ -403,22 +439,24 @@ button {
 	font-family: var(--font-display);
 	font-size: var(--text-sm);
 	font-weight: 700;
-	color: #000000; /* Black text for maximum contrast (WCAG AA: 4.5:1) */
-	text-shadow: none; /* Remove shadow to maintain contrast */
+	color: #000000;
+	/* Black text for maximum contrast (WCAG AA: 4.5:1) */
+	text-shadow: none;
+	/* Remove shadow to maintain contrast */
 	text-transform: uppercase;
 	letter-spacing: var(--letter-spacing-wide);
 
 	/* Gradient: Yellow → Magenta → Cyan */
 	background: linear-gradient(90deg,
-		var(--color-brand-yellow) 0%,
-		var(--color-cyber-magenta) 50%,
-		var(--color-neon-cyan) 100%
-	);
+			var(--color-brand-yellow) 0%,
+			var(--color-cyber-magenta) 50%,
+			var(--color-neon-cyan) 100%);
 
 	border: none;
 	border-radius: var(--space-sm);
 	cursor: pointer;
-	margin-top: var(--space-md); /* FIX #7 */
+	margin-top: var(--space-md);
+	/* FIX #7 */
 
 	transition: all var(--transition-base);
 	filter: drop-shadow(0 0 8px rgba(217, 70, 239, 0.35));
@@ -426,9 +464,7 @@ button {
 
 button:hover {
 	transform: translateY(-2px);
-	filter: brightness(1.2)
-	        drop-shadow(0 0 12px rgba(255, 215, 0, 0.4))
-	        drop-shadow(0 0 20px rgba(217, 70, 239, 0.3));
+	filter: brightness(1.2) drop-shadow(0 0 12px rgba(255, 215, 0, 0.4)) drop-shadow(0 0 20px rgba(217, 70, 239, 0.3));
 }
 
 /* FIX #7: Reduced motion */
@@ -473,6 +509,7 @@ button.loading::before {
 	from {
 		transform: rotate(0deg);
 	}
+
 	to {
 		transform: rotate(360deg);
 	}
@@ -485,9 +522,12 @@ button.loading {
 }
 
 @keyframes pulse-glow {
-	0%, 100% {
+
+	0%,
+	100% {
 		box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
 	}
+
 	50% {
 		box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
 	}
@@ -556,7 +596,8 @@ footer div {
    LISTS
    ============================================ */
 
-ul, ol {
+ul,
+ol {
 	padding-left: var(--space-xl);
 	margin-bottom: var(--space-md);
 }
@@ -622,22 +663,23 @@ body::before {
 	left: 0;
 	width: 100%;
 	height: 100%;
-	background: repeating-linear-gradient(
-		0deg,
-		transparent,
-		transparent 2px,
-		rgba(217, 70, 239, 0.015) 2px,
-		rgba(217, 70, 239, 0.015) 4px
-	);
+	background: repeating-linear-gradient(0deg,
+			transparent,
+			transparent 2px,
+			rgba(217, 70, 239, 0.015) 2px,
+			rgba(217, 70, 239, 0.015) 4px);
 	pointer-events: none;
 	z-index: 9999;
 }
 
 /* Subtle glow animation for interactive elements */
 @keyframes glow-pulse {
-	0%, 100% {
+
+	0%,
+	100% {
 		box-shadow: 0 0 8px rgba(217, 70, 239, 0.3);
 	}
+
 	50% {
 		box-shadow: 0 0 16px rgba(217, 70, 239, 0.5);
 	}
@@ -654,7 +696,7 @@ body::before {
 	cursor: pointer;
 	transform: translateY(-4px);
 	box-shadow: 0 8px 24px rgba(0, 255, 255, 0.3),
-	            0 0 20px rgba(217, 70, 239, 0.2);
+		0 0 20px rgba(217, 70, 239, 0.2);
 }
 
 .dc-card::before {
@@ -685,12 +727,10 @@ body::before {
 	position: absolute;
 	inset: -2px;
 	border-radius: inherit;
-	background: linear-gradient(
-		45deg,
-		transparent 30%,
-		rgba(217, 70, 239, 0.1) 50%,
-		transparent 70%
-	);
+	background: linear-gradient(45deg,
+			transparent 30%,
+			rgba(217, 70, 239, 0.1) 50%,
+			transparent 70%);
 	opacity: 0;
 	transition: opacity var(--transition-base);
 	pointer-events: none;
@@ -707,13 +747,11 @@ body::before {
 	position: absolute;
 	inset: 0;
 	background:
-		repeating-linear-gradient(
-			90deg,
+		repeating-linear-gradient(90deg,
 			transparent,
 			transparent 2px,
 			rgba(255, 215, 0, 0.02) 2px,
-			rgba(255, 215, 0, 0.02) 4px
-		);
+			rgba(255, 215, 0, 0.02) 4px);
 	pointer-events: none;
 }
 
@@ -757,7 +795,7 @@ body::before {
 }
 
 @media (max-width: 450px) {
-	nav > a {
+	nav>a {
 		font-size: var(--text-xl);
 		min-height: 48px;
 	}
@@ -780,6 +818,7 @@ body::before {
    ============================================ */
 
 @media (prefers-reduced-motion: reduce) {
+
 	*,
 	*::before,
 	*::after {
@@ -827,7 +866,8 @@ article li {
    Ensure all content is accessible with proper scrolling */
 article {
 	overflow-y: auto;
-	padding-bottom: var(--space-xl); /* Ensure bottom content is visible */
+	padding-bottom: var(--space-xl);
+	/* Ensure bottom content is visible */
 }
 
 /* CRITICAL FIX #4: Restore Brand Yellow to About Page Headings (Issue #4)

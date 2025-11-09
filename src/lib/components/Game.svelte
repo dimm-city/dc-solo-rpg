@@ -55,7 +55,7 @@
 			</slot>
 		</div>
 	{:else if $currentScreen == 'intro'}
-		<div class="dc-game-bg">
+		<div class="dc-game-bg dc-intro-wrapper">
 			<slot name="intro-screen">
 				<IntroScreen />
 			</slot>
@@ -151,14 +151,25 @@
 	.dc-game-container {
 		display: grid;
 		height: 100%;
+		max-height: 100%; /* Prevent exceeding parent height */
 		box-sizing: border-box;
 		font-family: var(--dc-default-font-family);
 		color: var(--dc-default-text-color);
+		overflow: hidden; /* Contain children */
 	}
 	.dc-game-container,
 	.dc-game-container > div,
 	:global(.dc-intro-container) {
 		border-radius: var(--dc-default-border-radius);
+	}
+
+	.dc-intro-wrapper {
+		height: 100%;
+		max-height: 100%; /* Prevent exceeding parent height */
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+		min-height: 0; /* Allow flex shrinking */
 	}
 	:global(.dc-game-bg) {
 		background: var(--dc-default-game-bg);
@@ -204,7 +215,7 @@
 		width: 100%;
 		margin-inline: auto;
 		display: grid;
-		min-height: 0;
+		min-height: 100%;
 		box-sizing: border-box;
 		position: relative;
 		overflow: hidden;
@@ -213,7 +224,7 @@
 	.main-screen-area > div.dc-screen-container {
 		width: 100%;
 		height: 100%;
-		overflow-y: auto;
+		overflow: hidden; /* FIXED: Let child components handle their own scrolling */
 		box-sizing: border-box;
 	}
 	.dc-table-bg {

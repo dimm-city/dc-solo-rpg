@@ -95,54 +95,58 @@
 
 <style>
 	.dc-intro-container {
-		display: grid;
-		grid-template-rows: minmax(100%, 70svh) min-content;
-		height: 100%;
-		width: 100%;
-		border-radius: 1rem;
-	}
-	.content {
 		display: flex;
 		flex-direction: column;
-		justify-content: start;
-		align-items: start;
 		height: 100%;
+		width: 100%;
+		border-radius: 0;
+		position: relative;
+		overflow: hidden;
+	}
+
+	.content {
+		flex: 1;
 		overflow-y: auto;
-		padding: 0.75rem;
-		padding-bottom: 5rem;
+		overflow-x: hidden;
+		padding: var(--space-md);
 		background-color: transparent;
+		min-height: 0; /* CRITICAL: Allows flex item to shrink below content size */
 	}
 
 	:global(.content h1) {
-		padding-bottom: 1rem;
+		font-size: var(--text-2xl); /* Reduced from 4xl */
+		margin-bottom: var(--space-md);
 	}
 
 	:global(.content h2) {
-		padding-bottom: 0.3rem;
+		font-size: var(--text-xl); /* Reduced from 3xl */
+		margin-top: var(--space-lg);
+		margin-bottom: var(--space-xs);
 	}
 
 	:global(.content h3) {
-		padding-bottom: 0.2rem;
+		font-size: var(--text-lg); /* Reduced from 2xl */
+		margin-top: var(--space-md);
+		margin-bottom: var(--space-xs);
 	}
 
 	:global(.content p) {
-		padding-bottom: 0.75rem;
-	}
-
-	:global(.content:last-child) {
-		padding-bottom: 3rem;
+		margin-bottom: var(--space-sm);
+		line-height: 1.6;
 	}
 
 	.button-bar {
-		position: sticky;
-		bottom: 0;
+		flex-shrink: 0; /* Prevent button bar from shrinking */
 		width: 100%;
 		display: flex;
-		justify-content: space-between;
-		padding-block: 0.5rem;
-		border-radius: var(--dc-default-border-radius);
+		gap: var(--space-sm);
+		padding: var(--space-md);
+		background: var(--color-bg-primary);
+		border-top: 2px solid var(--color-cyber-magenta);
 	}
+
 	.button-bar button {
-		margin-inline: 0.25rem;
+		flex: 1;
+		margin: 0;
 	}
 </style>
