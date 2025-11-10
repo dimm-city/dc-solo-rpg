@@ -1,11 +1,11 @@
 <script>
-	import { gameStore } from '../stores/WAAStore.js';
+	import { gameState } from '../stores/gameStore.svelte.js';
 	import HealthMeter from './HealthMeter.svelte';
 	import Meter from './Meter.svelte';
 
-	$: successPercent = (10 - $gameStore.tokens);
-	$: bonusPercent = $gameStore.bonus;
-	$: failurePercent = $gameStore.kingsRevealed;
+	const successPercent = $derived(10 - gameState.tokens);
+	const bonusPercent = $derived(gameState.bonus);
+	const failurePercent = $derived(gameState.kingsRevealed);
 </script>
 
 <div class="status-display-container">
@@ -13,11 +13,11 @@
 	<div class="player-round-bar">
 		<div class="info-segment">
 			<span class="label">PLAYER:</span>
-			<span class="value">{$gameStore.player.name.toUpperCase()}</span>
+			<span class="value">{gameState.player.name.toUpperCase()}</span>
 		</div>
 		<div class="info-segment">
-			<span class="label">{$gameStore.config?.labels.statusDisplayRoundText ?? 'ROUND:' }</span>
-			<span class="value">{$gameStore?.round}</span>
+			<span class="label">{gameState.config?.labels.statusDisplayRoundText ?? 'ROUND:' }</span>
+			<span class="value">{gameState?.round}</span>
 		</div>
 	</div>
 
@@ -26,15 +26,15 @@
 		<div class="stat-item health-stat">
 			<div class="stat-label">HEALTH</div>
 			<div class="stat-value">
-				<span class="current">{$gameStore.tower}</span><span class="divider">/</span><span class="max">100</span>
+				<span class="current">{gameState.tower}</span><span class="divider">/</span><span class="max">100</span>
 			</div>
 			<div class="stat-bar">
-				<div class="stat-fill health-fill" style="width: {$gameStore.tower}%"></div>
+				<div class="stat-fill health-fill" style="width: {gameState.tower}%"></div>
 			</div>
 		</div>
 
 		<div class="stat-item failure-stat">
-			<div class="stat-label">{$gameStore.config?.labels?.failureCounters?.toUpperCase() ?? 'FAILURE'}</div>
+			<div class="stat-label">{gameState.config?.labels?.failureCounters?.toUpperCase() ?? 'FAILURE'}</div>
 			<div class="stat-value">
 				<span class="current">{failurePercent}</span><span class="divider">/</span><span class="max">4</span>
 			</div>
@@ -54,7 +54,7 @@
 		</div>
 
 		<div class="stat-item success-stat">
-			<div class="stat-label">{$gameStore.config?.labels?.successCounters?.toUpperCase() ?? 'SUCCESS'}</div>
+			<div class="stat-label">{gameState.config?.labels?.successCounters?.toUpperCase() ?? 'SUCCESS'}</div>
 			<div class="stat-value">
 				<span class="current">{successPercent}</span><span class="divider">/</span><span class="max">10</span>
 			</div>

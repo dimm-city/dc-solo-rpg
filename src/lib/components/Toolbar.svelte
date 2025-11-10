@@ -1,16 +1,17 @@
 <script>
-	import { gameStore, exitGame } from '../stores/WAAStore.js';
+	import { gameState } from '../stores/gameStore.svelte.js';
+	import { exitGame } from '../stores/gameActions.svelte.js';
 </script>
 
 <div class="dc-toolbar">
 	<div class="left">
-		<h3>{$gameStore.config?.title ?? 'Please select a game'}</h3>
-		<!-- <small>Player: {$gameStore.player.name}</small> -->
+		<h3>{gameState.config?.title ?? 'Please select a game'}</h3>
+		<!-- <small>Player: {gameState.player.name}</small> -->
 	</div>
 	<div class="center" />
 	<div class="right">
-		<button class="dc-exit-button" on:click={exitGame}
-			>{@html $gameStore.config?.labels.toolbarExitButtonText}</button
+		<button class="dc-exit-button" onclick={exitGame}
+			>{@html gameState.config?.labels.toolbarExitButtonText}</button
 		>
 		<!-- <button class="toolbar-button" id="fullscreen">
             &#x26F6;
@@ -23,7 +24,7 @@
             &#x2715;
         </button> -->
 
-		<!-- <small>{$gameStore.config?.labels.statusDisplayRoundText}{$gameStore?.round}</small> -->
+		<!-- <small>{gameState.config?.labels.statusDisplayRoundText}{gameState?.round}</small> -->
 	</div>
 </div>
 

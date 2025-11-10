@@ -1,6 +1,7 @@
 <script>
 	import CardDeck from './CardDeck.svelte';
-	import { confirmCard, drawCard, gameStore } from '../stores/WAAStore.js';
+	import { gameState } from '../stores/gameStore.svelte.js';
+	import { confirmCard, drawCard } from '../stores/gameActions.svelte.js';
 
 	/**
 	 * Handle card request from neural interface
@@ -32,9 +33,9 @@
 		Card is passed reactively from the game store
 	-->
 	<CardDeck
-		card={$gameStore.currentCard}
-		on:requestcard={onRequestCard}
-		on:confirmcard={onConfirmCardDeck}
+		bind:card={gameState.currentCard}
+		onrequestcard={onRequestCard}
+		onconfirmcard={onConfirmCardDeck}
 	/>
 </div>
 

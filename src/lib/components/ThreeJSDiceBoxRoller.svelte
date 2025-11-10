@@ -1,12 +1,16 @@
 <script>
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { onMount } from 'svelte';
 	import DiceBox from '@3d-dice/dice-box-threejs';
-	import { gameStore } from '../stores/WAAStore.js';
+	import { gameState } from '../stores/gameStore.svelte.js';
 
-	const dispatch = createEventDispatcher();
-
-	export let rolling = false;
-	export let header = '';
+	let {
+		rolling = $bindable(false),
+		header = '',
+		onrollstart = () => {},
+		onrollcomplete = () => {},
+		onclick = () => {},
+		onkeyup = () => {}
+	} = $props();
 
 	const defaultConfig = {
 		assetPath: '/dice',
@@ -28,24 +32,24 @@
 		onRollComplete: () => {}
 	};
 
-	let diceBox;
+	let diceBox = $state();
 	onMount(async () => {
-		defaultConfig.theme_colorset = $gameStore.config.options?.dice ?? defaultConfig.theme_colorset;
+		defaultConfig.theme_colorset = gameState.config.options?.dice ?? defaultConfig.theme_colorset;
 
 		let config = {
 			assetPath: '/dice/',
 			sounds: true,
 			volume: 100,
-			//theme_colorset:  $gameStore.config.options?.dice?.key ?? 'pinkdreams',
-			//theme_customColorset: $gameStore.config.options?.dice,
+			//theme_colorset:  gameState.config.options?.dice?.key ?? 'pinkdreams',
+			//theme_customColorset: gameState.config.options?.dice,
 			baseScale: 100,
 			strength: 1.5
 		};
 
-		if ($gameStore.config.options?.dice?.key) {
-			config.theme_colorset = $gameStore.config.options?.dice?.key ?? 'pinkdreams';
+		if (gameState.config.options?.dice?.key) {
+			config.theme_colorset = gameState.config.options?.dice?.key ?? 'pinkdreams';
 		} else {
-			config.theme_customColorset = $gameStore.config.options?.dice;
+			config.theme_customColorset = gameState.config.options?.dice;
 		}
 
 		diceBox = new DiceBox('#dice-roller-container', config);
@@ -56,20 +60,20 @@
 		if (rolling) return;
 		rolling = true;
 
-		// Dispatch roll start event
-		dispatch('rollstart');
+		// Call roll start callback
+		onrollstart();
 
 		const rollString = values ? `1d6@${values}` : '1d6';
 		let result = await diceBox.roll(rollString);
 
 		rolling = false;
 
-		// Dispatch roll complete event
-		dispatch('rollcomplete', { result: result.total });
+		// Call roll complete callback
+		onrollcomplete({ result: result.total });
 
 		return result.total;
 	}
-	
+
 </script>
 
 <div
@@ -78,13 +82,13 @@
 	disabled={rolling}
 	role="button"
 	tabindex="0"
-	on:click
-	on:keyup
+	{onclick}
+	{onkeyup}
 >
 	{#if !rolling}
 		<div class="dc-dice-roller-header dc-header">
 			<slot>
-				<button class="dc-fade-in" on:click on:keyup>{header}</button>
+				<button class="dc-fade-in" {onclick} {onkeyup}>{header}</button>
 			</slot>
 		</div>
 	{/if}

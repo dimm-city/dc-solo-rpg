@@ -1,17 +1,19 @@
 <script>
-	import { createEventDispatcher, onMount, onDestroy } from 'svelte';
-	import { gameStore } from '../stores/WAAStore.js';
+	import { onMount, onDestroy } from 'svelte';
 	import { sleep } from '../utils/timing.js';
 
-	export let card = null;
+	let {
+		card = $bindable(null),
+		onrequestcard = () => {},
+		onconfirmcard = () => {}
+	} = $props();
 
-	const dispatch = createEventDispatcher();
-	let animationStage = 'idle'; // 'idle', 'anticipating', 'materializing', 'revealed', 'dismissing'
-	let canvas;
-	let ctx;
-	let particles = [];
-	let animationFrameId;
-	let gridPulsePhase = 0;
+	let animationStage = $state('idle'); // 'idle', 'anticipating', 'materializing', 'revealed', 'dismissing'
+	let canvas = $state();
+	let ctx = $state();
+	let particles = $state([]);
+	let animationFrameId = $state();
+	let gridPulsePhase = $state(0);
 
 	/**
 	 * Particle class for data fragment effect
@@ -123,7 +125,7 @@
 
 		try {
 			// Request a new card from the parent
-			dispatch('requestcard');
+			onrequestcard();
 
 			// Anticipation phase - grid accelerates
 			animationStage = 'anticipating';
@@ -165,7 +167,7 @@
 		await sleep(600);
 
 		// Notify parent that card was confirmed
-		dispatch('confirmcard', { card });
+		onconfirmcard({ card });
 
 		// Reset state
 		animationStage = 'idle';
@@ -283,7 +285,7 @@
 	<!-- Neural CTA button -->
 	<button
 		class="neural-cta"
-		on:click={onButtonClick}
+		onclick={onButtonClick}
 		disabled={animationStage === 'anticipating' || animationStage === 'materializing' || animationStage === 'dismissing'}
 		type="button"
 	>

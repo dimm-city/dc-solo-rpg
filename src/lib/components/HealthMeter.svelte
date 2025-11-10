@@ -1,15 +1,15 @@
 <script>
-	import { gameStore } from '../stores/WAAStore.js';
+	import { gameState } from '../stores/gameStore.svelte.js';
 	import { onMount, onDestroy } from 'svelte';
 
-	let health = 100;
-	let text = '100';
-	let indicator = 'high';
-	let isChanging = false;
-	let canvas;
-	let ctx;
-	let particles = [];
-	let animationFrameId;
+	let health = $state(100);
+	let text = $state('100');
+	let indicator = $state('high');
+	let isChanging = $state(false);
+	let canvas = $state();
+	let ctx = $state();
+	let particles = $state([]);
+	let animationFrameId = $state();
 
 	/**
 	 * Particle class for critical state warning effect
@@ -79,10 +79,10 @@
 	}
 
 	/**
-	 * Reactive statement for health changes
+	 * Effect for health changes
 	 */
-	$: {
-		const result = Math.floor(($gameStore.tower / 54) * 100);
+	$effect(() => {
+		const result = Math.floor((gameState.tower / 54) * 100);
 		if (health != result) {
 			// Dematerialize phase
 			isChanging = true;
@@ -102,7 +102,7 @@
 				}
 			}, 200);
 		}
-	}
+	});
 
 	onMount(() => {
 		if (canvas) {

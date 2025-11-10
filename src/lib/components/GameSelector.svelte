@@ -1,18 +1,16 @@
 <script>
-    import { createEventDispatcher } from "svelte";
+	let {
+		players = [],
+		games = [],
+		selectedGame = $bindable(null), //games.find((g) => g.title == gameConfig.title);
+		selectedPlayer = $bindable(null), // players?.find((p) => p.name == gameState.player);
+		ongameselected = () => {}
+	} = $props();
 
-	export let players = [];
-	export let games = [];
-	export let selectedGame = null; //games.find((g) => g.title == gameConfig.title);
-	export let selectedPlayer = null; // players?.find((p) => p.name == $gameStore.player);
-
-
-    const dispatcher = createEventDispatcher();
-
-	let status = '';
+	let status = $state('');
 	async function setConfig() {
 		if (selectedGame && selectedPlayer) {
-            dispatcher('dc-solo-rpg.gameSelected', {selectedGame, selectedPlayer});
+			ongameselected({selectedGame, selectedPlayer});
 		} else {
 			status = 'Please select a player and a game';
 		}
@@ -39,7 +37,7 @@
 		</select>
 	</div>
 
-	<button on:click={() => setConfig()} data-augmented-ui="tl-clip br-clip both">Load Game</button>
+	<button onclick={() => setConfig()} data-augmented-ui="tl-clip br-clip both">Load Game</button>
 </div>
 
 <style>

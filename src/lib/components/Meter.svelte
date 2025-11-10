@@ -1,17 +1,19 @@
 <script>
-	export let text = '0';
-	export let enableIndicator = false;
-	export let indicator = 'high';
-	export let result = 0;
-	export let meterType = 'default'; // 'failure', 'bonus', 'success', or 'default'
+	let {
+		text = $bindable('0'),
+		enableIndicator = false,
+		indicator = $bindable('high'),
+		result = 0,
+		meterType = 'default' // 'failure', 'bonus', 'success', or 'default'
+	} = $props();
 
-	let currentValue = 0;
-	let isChanging = false;
+	let currentValue = $state(0);
+	let isChanging = $state(false);
 
 	/**
-	 * Reactive statement for value changes with dematerialize/materialize animation
+	 * Effect for value changes with dematerialize/materialize animation
 	 */
-	$: {
+	$effect(() => {
 		if (currentValue != result) {
 			// Dematerialize phase
 			isChanging = true;
@@ -28,7 +30,7 @@
 				isChanging = false;
 			}, 200);
 		}
-	}
+	});
 
 	/**
 	 * Get color class based on meter type

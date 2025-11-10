@@ -1,7 +1,7 @@
 <script>
 	import GameSelector from '../lib/components/GameSelector.svelte';
 	import { SystemSettings } from '$lib/configuration/SystemSettings.js';
-	import { currentScreen } from '$lib/stores/WAAStore.js';
+	import { gameState } from '$lib/stores/gameStore.svelte.js';
 
 	import Game from '$lib/components/Game.svelte';
 
@@ -18,10 +18,10 @@
 		}
 	];
 
-	let gameComponent;
-	let ready = false;
-	let selectedGame;
-	let selectedPlayer = players.at(0);
+	let gameComponent = $state();
+	let ready = $state(false);
+	let selectedGame = $state();
+	let selectedPlayer = $state(players.at(0));
 	function loadGame() {
 		ready = true;
 		systemSettings.gameConfigUrl = selectedGame.url;
@@ -38,26 +38,28 @@
 		console.log('onExitGame', params);
 		ready = false;
 	}
-	$: {
-		if ($currentScreen === 'gameOver') ready = true;
-		console.log('ready changed', ready, $currentScreen);
-	}
+	const currentScreen = $derived(gameState.state);
+
+	$effect(() => {
+		if (currentScreen === 'gameOver') ready = true;
+		console.log('ready changed', ready, currentScreen);
+	});
 </script>
 
 <!-- {@debug ready}
 {@debug $currentScreen} -->
 
 <section class="form-container">
-	<div class="game-container" class:hidden={!ready || $currentScreen == 'loadGame'}>
+	<div class="game-container" class:hidden={!ready || currentScreen == 'loadGame'}>
 		<Game
 			bind:this={gameComponent}
-			{systemSettings}
-			on:dc-solo-rpg.journalSaved={onJournalSaved}
-			on:dc-solo-rpg.gameOver={onGameOver}
-			on:dc-solo-rpg.exitGame={onExitGame}
+			bind:systemSettings
+			onjournalsaved={onJournalSaved}
+			ongameover={onGameOver}
+			onexitgame={onExitGame}
 		/>
 	</div>
-	<div class="welcome-container" class:hidden={ready && $currentScreen != 'loadGame'}>
+	<div class="welcome-container" class:hidden={ready && currentScreen != 'loadGame'}>
 		<section class="hero">
 			<h1>Dimm City: Solo RPG</h1>
 			<p>Demo</p>
@@ -67,7 +69,7 @@
 			{players}
 			bind:selectedPlayer
 			bind:selectedGame
-			on:dc-solo-rpg.gameSelected={loadGame}
+			ongameselected={loadGame}
 		/>
 	</div>
 	<!-- 	

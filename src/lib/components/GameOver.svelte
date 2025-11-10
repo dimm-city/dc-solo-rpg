@@ -1,18 +1,19 @@
 <script>
-	import { nextScreen, gameStore } from '../stores/WAAStore.js';
+	import { gameState } from '../stores/gameStore.svelte.js';
+	import { nextScreen } from '../stores/gameActions.svelte.js';
 </script>
 
 <div class="dc-game-over-container">
 	<div class="dc-game-over-header"><h1>Game Over</h1></div>
-	<div class="dc-game-over-content">		
-		{#if $gameStore.kingsRevealed == 4}
-			<p>{$gameStore.config.labels.failureCounterLoss}</p>
+	<div class="dc-game-over-content">
+		{#if gameState.kingsRevealed == 4}
+			<p>{gameState.config.labels.failureCounterLoss}</p>
 		{:else}
-			<h3>{$gameStore.status}</h3>
+			<h3>{gameState.status}</h3>
 		{/if}
 	</div>
 	<div class="dc-game-over-toolbar">
-		<button on:click={() => nextScreen('finalLog')}>record your final log</button>
+		<button onclick={() => nextScreen('finalLog')}>record your final log</button>
 	</div>
 </div>
 

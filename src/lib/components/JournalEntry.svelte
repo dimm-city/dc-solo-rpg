@@ -1,22 +1,25 @@
 <script>
-	import { createEventDispatcher } from 'svelte';
+	import { gameState } from '../stores/gameStore.svelte.js';
 	import {
 		recordRound,
-		gameStore,
-		currentEvents,
 		nextScreen,
 		restartGame,
-		exitGame		
-	} from '../stores/WAAStore.js';
+		exitGame
+	} from '../stores/gameActions.svelte.js';
 
-	const dispatcher = createEventDispatcher();
-	let saved = false;
-	const journal = { text: '' };
+	let {
+		onjournalsaved = () => {}
+	} = $props();
+
+	let saved = $state(false);
+	const journal = $state({ text: '' });
+	const currentEvents = $derived(gameState.log.filter((l) => l.round === gameState.round));
+
 	async function save() {
 		await recordRound(journal);
 		journal.text = '';
 		saved = true;
-		dispatcher('dc-solo-rpg.journalSaved', journal);
+		onjournalsaved(journal);
 	}
 
 	function next(action) {
@@ -26,10 +29,10 @@
 
 <div class="dc-journal-container">
 	<div class="journal-header-area">
-		<h2>{$gameStore.config.labels.journalEntryHeader}</h2>
-		<h3>{$gameStore.config.labels.journalEntrySubHeader}</h3>
-		
-		{#each $currentEvents as event}
+		<h2>{gameState.config.labels.journalEntryHeader}</h2>
+		<h3>{gameState.config.labels.journalEntrySubHeader}</h3>
+
+		{#each currentEvents as event}
 			<p>{event.id}:{event.description}</p>
 		{/each}
 	</div>
@@ -38,14 +41,14 @@
 	</div>
 	<div class="journal-tools-center-area">
 		{#if saved}
-			{#if $gameStore.gameOver}
-				<button on:click={restartGame}>{$gameStore.config.labels.journalEntryRestartButtonText}</button>
-				<button on:click={exitGame}>{$gameStore.config.labels.journalEntryExitButtonText}</button>
+			{#if gameState.gameOver}
+				<button onclick={restartGame}>{gameState.config.labels.journalEntryRestartButtonText}</button>
+				<button onclick={exitGame}>{gameState.config.labels.journalEntryExitButtonText}</button>
 			{:else}
-				<button on:click={next}>{$gameStore.config.labels.journalEntryNextButtonText}</button>
+				<button onclick={next}>{gameState.config.labels.journalEntryNextButtonText}</button>
 			{/if}
 		{:else}
-			<button on:click={save}>{$gameStore.config.labels.journalEntrySaveButtonText}</button>
+			<button onclick={save}>{gameState.config.labels.journalEntrySaveButtonText}</button>
 		{/if}
 	</div>
 </div>

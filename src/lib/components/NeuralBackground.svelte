@@ -1,10 +1,10 @@
 <script>
 	import { onMount, onDestroy } from 'svelte';
 
-	let canvas;
-	let ctx;
-	let particles = [];
-	let animationFrameId;
+	let canvas = $state();
+	let ctx = $state();
+	let particles = $state([]);
+	let animationFrameId = $state();
 
 	/**
 	 * Particle class for data fragment effect

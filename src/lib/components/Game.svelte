@@ -1,13 +1,10 @@
 <script>
-	import { createEventDispatcher } from 'svelte';
+	import { gameState } from '../stores/gameStore.svelte.js';
 	import {
-		currentScreen,
-		gameStore,
-		gameStylesheet,
 		loadSystemConfig,
 		nextScreen,
 		transitionToScreen
-	} from '../stores/WAAStore.js';
+	} from '../stores/gameActions.svelte.js';
 	import OptionsScreen from './OptionsScreen.svelte';
 	import IntroScreen from './IntroScreen.svelte';
 	import SuccessCheck from './SuccessCheck.svelte';
@@ -21,57 +18,68 @@
 	import LoadScreen from './LoadScreen.svelte';
 	import NeuralBackground from './NeuralBackground.svelte';
 
-	export let systemSettings = {};
+	let {
+		systemSettings = $bindable({}),
+		ongameloaded = () => {},
+		ongameover = () => {},
+		onexitgame = () => {},
+		onfailurecheckcompleted = () => {},
+		onjournalsaved = () => {}
+	} = $props();
+
 	export const startGame = async () => {
 		if (systemSettings.gameConfigUrl && systemSettings.player?.name) {
 			await loadSystemConfig(systemSettings);
-			dispatcher('dc-solo-rpg.gameLoaded', systemSettings);
+			ongameloaded(systemSettings);
 		} else {
-			$gameStore.status = 'Please select a player and a game';
+			gameState.status = 'Please select a player and a game';
 		}
 	};
 
-	const dispatcher = createEventDispatcher();
+	const gameStylesheet = $derived(gameState.stylesheet);
+	const currentScreen = $derived(gameState.state);
 
-	$: if ($currentScreen == 'gameOver') {
-		dispatcher('dc-solo-rpg.gameOver', $gameStore.state);
-	} else if ($currentScreen == 'exitGame') {
-		dispatcher('dc-solo-rpg.exitGame', $gameStore.state);
-	}
+	$effect(() => {
+		if (currentScreen == 'gameOver') {
+			ongameover(gameState.state);
+		} else if (currentScreen == 'exitGame') {
+			onexitgame(gameState.state);
+		}
+	});
 </script>
 
 <svelte:head>
-	<link rel="stylesheet" href={$gameStylesheet} />
+	<link rel="stylesheet" href={gameStylesheet} />
 </svelte:head>
 <div class="dc-game-container dc-game-bg">
-	{#if $currentScreen == 'loadGame'}
+	{#if currentScreen == 'loadGame'}
 		<div class="dc-game-bg">
 			<slot name="load-screen">
 				<LoadScreen />
 			</slot>
 		</div>
-	{:else if $currentScreen == 'options'}
+	{:else if currentScreen == 'options'}
 		<div class="dc-game-bg">
 			<slot name="options-screen">
 				<OptionsScreen {systemSettings} />
 			</slot>
 		</div>
-	{:else if $currentScreen == 'intro'}
+	{:else if currentScreen == 'intro'}
 		<div class="dc-game-bg dc-intro-wrapper">
 			<slot name="intro-screen">
 				<IntroScreen />
 			</slot>
 		</div>
-	{:else if $currentScreen == 'gameOver'}
+	{:else if currentScreen == 'gameOver'}
 		<div class="dc-fade-in dc-screen-container">
 			<GameOver />
 		</div>
-	{:else if $currentScreen == 'finalLog' || $currentScreen == 'log'}
+	{:else if currentScreen == 'finalLog' || currentScreen == 'log'}
 		<div class="dc-fade-in dc-screen-container dc-journal-screen">
 			<NeuralBackground />
-			<JournalEntry on:dc-solo-rpg.journalSaved />
+			<JournalEntry {onjournalsaved} />
 		</div>
-	{:else if $currentScreen == 'exitGame'}
+	{:else if currentScreen == 'exitGame'}
 		<slot name="options-screen">
 			<div>Game Exited</div>
 		</slot>
@@ -81,35 +89,35 @@
 				<Toolbar />
 			</div>
 			<div class="status-display-area dc-fade-in">
-				{#if $currentScreen != 'log' && $currentScreen != 'finalLog'}
+				{#if currentScreen != 'log' && currentScreen != 'finalLog'}
 					<StatusDisplay />
 				{/if}
 			</div>
 			<div class="main-screen-area dc-table-bg">
 				<NeuralBackground />
-				{#if $currentScreen == 'startRound'}
+				{#if currentScreen == 'startRound'}
 					<div class="dc-fade-in dc-screen-container">
-						<h4>Round {$gameStore.round}</h4>
-						<button on:click={async () => await transitionToScreen('rollForTasks')}>Roll for tasks</button>
+						<h4>Round {gameState.round}</h4>
+						<button onclick={async () => await transitionToScreen('rollForTasks')}>Roll for tasks</button>
 					</div>
-				{:else if $currentScreen == 'rollForTasks'}
+				{:else if currentScreen == 'rollForTasks'}
 					<div class="dc-fade-in dc-screen-container">
 						<RollForTasks />
 					</div>
-				{:else if $currentScreen == 'drawCard'}
+				{:else if currentScreen == 'drawCard'}
 					<div class="dc-fade-in dc-screen-container">
 						<DrawCard />
 					</div>
-				{:else if $currentScreen == 'failureCheck'}
+				{:else if currentScreen == 'failureCheck'}
 					<div class="dc-fade-in dc-screen-container">
-						<FailureCheck on:dc-solo-rpg.failureCheckCompleted />
+						<FailureCheck {onfailurecheckcompleted} />
 					</div>
-				{:else if $currentScreen == 'successCheck'}
+				{:else if currentScreen == 'successCheck'}
 					<div class="dc-fade-in dc-screen-container">
 						<SuccessCheck />
 					</div>
 				{:else}
-					<div>error: {$currentScreen}</div>
+					<div>error: {currentScreen}</div>
 				{/if}
 			</div>
 		</div>

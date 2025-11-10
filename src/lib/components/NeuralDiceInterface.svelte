@@ -1,19 +1,23 @@
 <script>
-	import { createEventDispatcher, onMount, onDestroy } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import { sleep } from '../utils/timing.js';
 	import ThreeJSDiceBoxRoller from './ThreeJSDiceBoxRoller.svelte';
 
-	export let header = 'INITIATE PROBABILITY SCAN';
+	let {
+		header = 'INITIATE PROBABILITY SCAN',
+		onrollstart = () => {},
+		onrollcomplete = () => {},
+		onresultacknowledged = () => {}
+	} = $props();
 
-	const dispatch = createEventDispatcher();
-	let animationStage = 'idle'; // 'idle', 'anticipating', 'rolling', 'settling', 'revealed'
-	let canvas;
-	let ctx;
-	let particles = [];
-	let animationFrameId;
-	let probabilityStreams = [];
-	let diceRoller;
-	let diceResult = null;
+	let animationStage = $state('idle'); // 'idle', 'anticipating', 'rolling', 'settling', 'revealed'
+	let canvas = $state();
+	let ctx = $state();
+	let particles = $state([]);
+	let animationFrameId = $state();
+	let probabilityStreams = $state([]);
+	let diceRoller = $state();
+	let diceResult = $state(null);
 
 	/**
 	 * Particle class for neural data field effect
@@ -201,8 +205,8 @@
 		if (animationStage !== 'idle') return null;
 
 		try {
-			// Dispatch roll start event
-			dispatch('rollstart');
+			// Call roll start callback
+			onrollstart();
 
 			// Anticipation phase - grid accelerates, particles speed up
 			animationStage = 'anticipating';
@@ -226,8 +230,8 @@
 			// Revealed phase - show result
 			animationStage = 'revealed';
 
-			// Dispatch roll complete event
-			dispatch('rollcomplete', { result });
+			// Call roll complete callback
+			onrollcomplete({ result });
 
 			return result;
 
@@ -247,7 +251,7 @@
 			await roll();
 		} else if (animationStage === 'revealed') {
 			// Acknowledge result
-			dispatch('resultacknowledged', { result: diceResult });
+			onresultacknowledged({ result: diceResult });
 			animationStage = 'idle';
 			diceResult = null;
 		}
@@ -340,8 +344,8 @@
 		<ThreeJSDiceBoxRoller
 			bind:this={diceRoller}
 			{header}
-			on:rollstart={handleDiceRollStart}
-			on:rollcomplete={handleDiceRollComplete}
+			onrollstart={handleDiceRollStart}
+			onrollcomplete={handleDiceRollComplete}
 		/>
 	</div>
 
@@ -351,7 +355,7 @@
 		class:pulsing={animationStage === 'idle'}
 		class:processing={animationStage === 'anticipating' || animationStage === 'rolling' || animationStage === 'settling'}
 		class:ready={animationStage === 'revealed'}
-		on:click={onButtonClick}
+		onclick={onButtonClick}
 		disabled={animationStage === 'anticipating' || animationStage === 'rolling' || animationStage === 'settling'}
 		type="button"
 	>

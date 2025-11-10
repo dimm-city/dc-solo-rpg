@@ -1,18 +1,18 @@
 <script>
-	import { loadSystemConfig, gameStore } from '../stores/WAAStore.js';
-	
+	import { loadSystemConfig } from '../stores/gameActions.svelte.js';
+
 	/**
 	 * @property  {SystemSettings} systemSettings - Current system settings
 	 */
-	export let systemSettings = {};
+	let {
+		systemSettings = $bindable({}),
+		players = [],
+		games = [],
+		selectedGame = $bindable(null), //games.find((g) => g.title == gameConfig.title);
+		selectedPlayer = $bindable(null) // players?.find((p) => p.name == gameState.player);
+	} = $props();
 
-	export let players = [];
-	export let games = [];
-	export let selectedGame = null; //games.find((g) => g.title == gameConfig.title);
-	export let selectedPlayer = null; // players?.find((p) => p.name == $gameStore.player);
-
-
-	let status = '';
+	let status = $state('');
 	async function setConfig() {
 		if (selectedGame && selectedPlayer) {
 			if (!selectedGame.options) selectedGame.options = {};
@@ -47,7 +47,7 @@
 		</select>
 	</div>
 
-	<button on:click={() => setConfig()}>Start Game</button>
+	<button onclick={() => setConfig()}>Start Game</button>
 </div>
 
 <style>

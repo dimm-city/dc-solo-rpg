@@ -1,10 +1,13 @@
 <script>
 	import { marked } from 'marked';
-	import { nextScreen, gameStore, exitGame } from '../stores/WAAStore.js';
-	let currentView = 'rules';
-	$: backButtonText = currentView == 'intro' ? 'back' : 'exit';
-	$: nextButtonText = currentView == 'intro' ? 'start' : 'continue';
-	$: intro = marked($gameStore.config?.introduction ?? '');
+	import { gameState } from '../stores/gameStore.svelte.js';
+	import { nextScreen, exitGame } from '../stores/gameActions.svelte.js';
+
+	let currentView = $state('rules');
+	const backButtonText = $derived(currentView == 'intro' ? 'back' : 'exit');
+	const nextButtonText = $derived(currentView == 'intro' ? 'start' : 'continue');
+	const intro = $derived(marked(gameState.config?.introduction ?? ''));
+
 	function next() {
 		if (currentView == 'rules') {
 			currentView = 'intro';
@@ -88,8 +91,8 @@
 		</div>
 	{/if}
 	<div class="button-bar dc-game-bg">
-		<button on:click={back}>{backButtonText}</button>
-		<button on:click={next}>{nextButtonText}</button>
+		<button onclick={back}>{backButtonText}</button>
+		<button onclick={next}>{nextButtonText}</button>
 	</div>
 </div>
 
