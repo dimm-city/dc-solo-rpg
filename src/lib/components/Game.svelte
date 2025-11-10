@@ -160,8 +160,7 @@
 		box-sizing: border-box;
 		font-family: var(--dc-default-font-family);
 		color: var(--dc-default-text-color);
-		overflow-x: hidden; /* CRITICAL: Prevent horizontal scrolling */
-		overflow-y: visible; /* Allow vertical glows to extend */
+		overflow: hidden; /* CRITICAL: Prevent all scrolling */
 	}
 	.dc-game-container,
 	.dc-game-container > div,
@@ -220,13 +219,14 @@
 	.main-screen-area {
 		grid-area: main-screen-area;
 		width: 100%;
+		min-width: 0;
 		margin-inline: auto;
 		display: grid;
 		min-height: 0; /* CRITICAL: Allow grid to shrink */
 		height: 100%; /* Take full available height */
 		box-sizing: border-box;
 		position: relative;
-		overflow: visible; /* Allow glows and effects to extend */
+		overflow: hidden; /* CRITICAL: Prevent scrolling */
 	}
 
 	.main-screen-area > div.dc-screen-container {
