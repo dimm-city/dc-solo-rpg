@@ -52,7 +52,10 @@ export const transitionToScreen = async (action, transitionType = 'default') => 
 
 	// Change the screen (update state)
 	currentScreen.update((screen) => {
-		if (action) services.stateMachine.next(action);
+		if (action && action !== services.stateMachine.state) {
+			// Only transition if we're not already in that state
+			services.stateMachine.next(action);
+		}
 		screen = services.stateMachine.state;
 		return screen;
 	});
@@ -255,15 +258,18 @@ export const startGame = (player, options = {}) => {
  * @returns {Promise<void>}
  */
 export const startRound = async () => {
+	console.log('[startRound] Called, current state:', services.stateMachine.state);
 	gameStore.update((state) => {
 		state.round += 1;
 		return state;
 	});
 
-	// Show the round screen (already in startRound state), then transition to rollForTasks
-	await transitionToScreen(null, 'round'); // Don't change state, just show screen with page-turn
+	// First transition to startRound state with page-turn animation
+	await transitionToScreen('startRound', 'round');
 	await sleep(100); // Small delay for visual feedback
+	// Then transition to rollForTasks (valid: startRound → rollForTasks)
 	await transitionToScreen('rollForTasks', 'default');
+	console.log('[startRound] Completed, new state:', services.stateMachine.state);
 };
 
 /**
@@ -289,7 +295,9 @@ export const rollForTasks = async () => {
  * @returns {Promise<void>}
  */
 export const confirmTaskRoll = async () => {
+	console.log('[confirmTaskRoll] Called');
 	await transitionToScreen();
+	console.log('[confirmTaskRoll] Completed');
 };
 
 /**
