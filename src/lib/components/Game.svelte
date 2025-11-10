@@ -90,7 +90,9 @@
 				{#if currentScreen == 'startRound'}
 					<div class="dc-fade-in dc-screen-container">
 						<h4>Round {gameState.round}</h4>
-						<button onclick={async () => await transitionToScreen('rollForTasks')}>Roll for tasks</button>
+						<button onclick={async () => await transitionToScreen('rollForTasks')}
+							>Roll for tasks</button
+						>
 					</div>
 				{:else if currentScreen == 'rollForTasks'}
 					<div class="dc-fade-in dc-screen-container">
@@ -187,10 +189,10 @@
 		font-family: var(--dc-default-font-family);
 	}
 	:global(
-			.dc-game-container button,
-			.dc-game-container button:hover,
-			.dc-game-container button:focus-visible
-		) {
+		.dc-game-container button,
+		.dc-game-container button:hover,
+		.dc-game-container button:focus-visible
+	) {
 		background: var(--dc-button-bg);
 		color: var(--dc-button-color);
 		text-shadow: none;
@@ -245,7 +247,6 @@
 		/* Background removed to show neural network animation on all screens */
 		background: transparent;
 	}
-
 
 	:global(.dc-header) {
 		position: absolute;

@@ -3,9 +3,7 @@
 	import { startGame } from '../stores/gameActions.svelte.js';
 	import { Difficulty } from '../configuration/DifficultyLevels.js';
 
-	let {
-		systemSettings = {}
-	} = $props();
+	let { systemSettings = {} } = $props();
 
 	let options = $state({});
 	// export let selectedGame = null; //games.find((g) => g.title == gameConfig.title);
@@ -37,7 +35,7 @@
 		<label for="difficulty">Select a difficulty:</label>
 		<select bind:value={options.difficulty}>
 			{#each Difficulty.getEntries() as entry (entry.value)}
-				<option value={entry.value}>{entry.key?.replaceAll("_", " ")}</option>
+				<option value={entry.value}>{entry.key?.replaceAll('_', ' ')}</option>
 			{/each}
 		</select>
 	</div>

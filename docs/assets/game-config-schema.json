@@ -1,42 +1,41 @@
 {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "title": "DC Solo RPG Campaign Configuration",
-    "description": "A schema for the Dimm City Solo RPG Campaign configuration",
-    "type": "object",
-    "properties": {
-      "title": { "type": "string" },
-      "subtitle": { "type": "string" },
-      "options": {
-        "type": "object",
-        "properties": {
-          "difficulty": { "type": "integer" },
-          "rollDuration": { "type": "integer" },
-          "dice": {
-            "type": "object",
-            "properties": {
-              "key": { "type": ["null", "string"] },
-              "name": { "type": "string" },
-              "category": { "type": "string" },
-              "foreground": { "type": "string" },
-              "background": {
-                "type": "array",
-                "items": { "type": "string" }
-              },
-              "outline": { "type": "string" },
-              "texture": { "type": "string" },
-              "description": { "type": "string" }
-            }
-          }
-        }
-      },
-      "labels": {
-        "type": "object",
-        "properties": {
-          "failureCheckLoss": { "type": "string" },
-          "successCheckWin": { "type": "string" }
-        }
-      }
-    },
-    "required": ["title"]
-  }
-  
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "DC Solo RPG Campaign Configuration",
+	"description": "A schema for the Dimm City Solo RPG Campaign configuration",
+	"type": "object",
+	"properties": {
+		"title": { "type": "string" },
+		"subtitle": { "type": "string" },
+		"options": {
+			"type": "object",
+			"properties": {
+				"difficulty": { "type": "integer" },
+				"rollDuration": { "type": "integer" },
+				"dice": {
+					"type": "object",
+					"properties": {
+						"key": { "type": ["null", "string"] },
+						"name": { "type": "string" },
+						"category": { "type": "string" },
+						"foreground": { "type": "string" },
+						"background": {
+							"type": "array",
+							"items": { "type": "string" }
+						},
+						"outline": { "type": "string" },
+						"texture": { "type": "string" },
+						"description": { "type": "string" }
+					}
+				}
+			}
+		},
+		"labels": {
+			"type": "object",
+			"properties": {
+				"failureCheckLoss": { "type": "string" },
+				"successCheckWin": { "type": "string" }
+			}
+		}
+	},
+	"required": ["title"]
+}

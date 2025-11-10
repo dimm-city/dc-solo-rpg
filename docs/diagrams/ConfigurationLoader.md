@@ -6,7 +6,7 @@ sequenceDiagram
     participant GS as GameSettings
     participant GL as GameLabels
     participant GO as GameOptions
-    
+
     Note over C,GO: System starts up
     C->>CL: Create ConfigurationLoader instance
     activate CL

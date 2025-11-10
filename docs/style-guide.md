@@ -38,7 +38,6 @@ This CSS theme file uses CSS variables to apply styling to the DC Solo RPG web c
 - `--dc-health-meter-low`: Sets the color for the low health status in the health meter of the web component. The color is red.
 - `--dc-health-meter-stroke`: Sets the stroke color for the health meter in the web component. The color is a semi-transparent black (rgba(0, 0, 0, 0.8)).
 
-
 ## Token Counters
 
 - `--dc-success-token-stroke: var(--dc-default-text-color);`: Sets the stroke for a success token
@@ -48,36 +47,34 @@ This CSS theme file uses CSS variables to apply styling to the DC Solo RPG web c
 
 These variables allow you to easily customize the appearance of the DC Solo RPG web component. You can override these variables in your own CSS to apply your custom styles.
 
-
 ## Example CSS
 
 ```css
-
-
 :root {
+	/*General*/
+	--dc-default-font-family:
+		'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana,
+		sans-serif;
+	--dc-default-container-bg: rgba(255, 255, 255, 0.3);
+	--dc-accent-color: rgb(58, 159, 199);
 
-    /*General*/
-    --dc-default-font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-    --dc-default-container-bg: rgba(255, 255, 255, 0.3);
-    --dc-accent-color: rgb(58, 159, 199);
-    
-    --dc-default-border-radius: 1rem;
-    --dc-default-padding: 1rem;
-    --dc-default-boxshadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    --dc-toolbar-height: 3rem;
-    --dc-header-block-margin: 0.25rem;
+	--dc-default-border-radius: 1rem;
+	--dc-default-padding: 1rem;
+	--dc-default-boxshadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+	--dc-toolbar-height: 3rem;
+	--dc-header-block-margin: 0.25rem;
 
-    --dc-status-display-padding: var(--dc-default-padding);
+	--dc-status-display-padding: var(--dc-default-padding);
 
-    /*Dice Roller*/
-    --dc-dice-roller-bg: #cccfd1;
+	/*Dice Roller*/
+	--dc-dice-roller-bg: #cccfd1;
 
 	/*Cards*/
 	--dc-card-back-color: white;
-    --dc-card-back-bg: #1387b9;
-    --dc-card-front-bg: rgb(235, 235, 235);
-    --dc-card-border: 1px solid #000000;
-    --dc-card-border-radius: 1rem;
+	--dc-card-back-bg: #1387b9;
+	--dc-card-front-bg: rgb(235, 235, 235);
+	--dc-card-border: 1px solid #000000;
+	--dc-card-border-radius: 1rem;
 	--dc-card-width: 200px;
 	--dc-card-height: 300px;
 
@@ -87,15 +84,13 @@ These variables allow you to easily customize the appearance of the DC Solo RPG 
 	--dc-health-meter-low: red;
 	--dc-health-meter-stroke: rgba(0, 0, 0, 0.8);
 
-    /*Counter Tokens*/
-    --dc-success-token-stroke: var(--dc-default-text-color);
-    --dc-success-token-fill: var(--dc-accent-color);
-    --dc-failure-token-stroke: var(--dc-card-back-bg);
-    --dc-failure-token-fill: var(--dc-accent-color);
+	/*Counter Tokens*/
+	--dc-success-token-stroke: var(--dc-default-text-color);
+	--dc-success-token-fill: var(--dc-accent-color);
+	--dc-failure-token-stroke: var(--dc-card-back-bg);
+	--dc-failure-token-fill: var(--dc-accent-color);
 }
-
 ```
-
 
 ## Additional Classes
 
@@ -123,31 +118,30 @@ These variables allow you to easily customize the appearance of the DC Solo RPG 
 
 12. `success-counters-container`: This class is likely used to style the container that holds the success counter elements.
 
-14. `token`: This class is likely used to style the token elements.
+13. `token`: This class is likely used to style the token elements.
 
-15. `filled`: This class could be used to indicate a filled or completed state, possibly changing the color or appearance of elements.
+14. `filled`: This class could be used to indicate a filled or completed state, possibly changing the color or appearance of elements.
 
-16. `toolbar-area`: This class is likely used to style the toolbar area.
+15. `toolbar-area`: This class is likely used to style the toolbar area.
 
-17. `toolbar`: This class is likely used to style the toolbar itself.
+16. `toolbar`: This class is likely used to style the toolbar itself.
 
-18. `left`: This class is likely used to style or position elements on the left.
+17. `left`: This class is likely used to style or position elements on the left.
 
-19. `center`: This class is likely used to style or position elements in the center.
+18. `center`: This class is likely used to style or position elements in the center.
 
-20. `right`: This class is likely used to style or position elements on the right.
+19. `right`: This class is likely used to style or position elements on the right.
 
-21. `dc-exit-button`: This class is likely used to style the exit button.
+20. `dc-exit-button`: This class is likely used to style the exit button.
 
-22. `main-screen-area`: This class is likely used to style the main screen area.
+21. `main-screen-area`: This class is likely used to style the main screen area.
 
-23. `dc-table-bg`: **NOTE**: As of the latest update, this class now has a transparent background instead of using `--dc-dice-roller-bg`. This allows the neural network animation background to be visible on all game screens (dice rolling, card drawing, journal entry). The background is controlled by the parent `.dc-game-bg` class.
+22. `dc-table-bg`: **NOTE**: As of the latest update, this class now has a transparent background instead of using `--dc-dice-roller-bg`. This allows the neural network animation background to be visible on all game screens (dice rolling, card drawing, journal entry). The background is controlled by the parent `.dc-game-bg` class.
 
-24. `dc-roll-tasks-container`: This class is likely used to style the container that holds the roll tasks.
+23. `dc-roll-tasks-container`: This class is likely used to style the container that holds the roll tasks.
 
-25. `dc-dice-roller-container`: This class is likely used to style the dice roller container.
+24. `dc-dice-roller-container`: This class is likely used to style the dice roller container.
 
-26. `dc-dice-roller-header`: This class is likely used to style the header of the dice roller.
+25. `dc-dice-roller-header`: This class is likely used to style the header of the dice roller.
 
-27. `dc-header`: This class is likely used to style headers in the game.
-
+26. `dc-header`: This class is likely used to style headers in the game.

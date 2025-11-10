@@ -62,16 +62,10 @@
 			</defs>
 
 			<!-- Main hexagon border with neon glow -->
-			<polygon
-				points="50 1 95 25 95 75 50 99 5 75 5 25"
-				class="meter-stroke neural-border"
-			/>
+			<polygon points="50 1 95 25 95 75 50 99 5 75 5 25" class="meter-stroke neural-border" />
 
 			<!-- Hexagon fill -->
-			<polygon
-				points="50 1 95 25 95 75 50 99 5 75 5 25"
-				class="meter-fill {indicator}"
-			/>
+			<polygon points="50 1 95 25 95 75 50 99 5 75 5 25" class="meter-fill {indicator}" />
 
 			<!-- Scan line overlay -->
 			<rect
@@ -179,7 +173,9 @@
 
 	/* Fill colors based on meter type */
 	.meter-fill {
-		transition: fill 0.4s ease-out, filter 0.4s ease-out;
+		transition:
+			fill 0.4s ease-out,
+			filter 0.4s ease-out;
 	}
 
 	/* Failure meter fill */
@@ -262,8 +258,9 @@
 		font-size: 1.1em;
 		font-weight: bold;
 		color: white;
-		text-shadow: 0 0 8px rgba(0, 0, 0, 0.9),
-		             2px 2px 4px rgba(0, 0, 0, 0.8);
+		text-shadow:
+			0 0 8px rgba(0, 0, 0, 0.9),
+			2px 2px 4px rgba(0, 0, 0, 0.8);
 		z-index: 2;
 		pointer-events: none;
 	}
@@ -306,21 +303,24 @@
 
 	/* Color-coded text glow based on meter type */
 	.meter-failure .meter-score {
-		text-shadow: 0 0 8px var(--meter-failure-glow),
-		             0 0 12px var(--meter-failure-glow),
-		             2px 2px 4px rgba(0, 0, 0, 0.9);
+		text-shadow:
+			0 0 8px var(--meter-failure-glow),
+			0 0 12px var(--meter-failure-glow),
+			2px 2px 4px rgba(0, 0, 0, 0.9);
 	}
 
 	.meter-bonus .meter-score {
-		text-shadow: 0 0 8px var(--meter-bonus-glow),
-		             0 0 12px var(--meter-bonus-glow),
-		             2px 2px 4px rgba(0, 0, 0, 0.9);
+		text-shadow:
+			0 0 8px var(--meter-bonus-glow),
+			0 0 12px var(--meter-bonus-glow),
+			2px 2px 4px rgba(0, 0, 0, 0.9);
 	}
 
 	.meter-success .meter-score {
-		text-shadow: 0 0 8px var(--meter-success-glow),
-		             0 0 12px var(--meter-success-glow),
-		             2px 2px 4px rgba(0, 0, 0, 0.9);
+		text-shadow:
+			0 0 8px var(--meter-success-glow),
+			0 0 12px var(--meter-success-glow),
+			2px 2px 4px rgba(0, 0, 0, 0.9);
 	}
 
 	/* Responsive sizing */

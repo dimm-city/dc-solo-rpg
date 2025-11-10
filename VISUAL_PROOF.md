@@ -28,27 +28,27 @@ svelte-check found 0 errors and 0 warnings
 ```javascript
 // Single source of truth with Svelte 5 $state rune
 let gameState = $state({
-    // Screen state
-    state: 'loadGame',
+	// Screen state
+	state: 'loadGame',
 
-    // Player state
-    playerName: '',
-    tower: 54,
-    tokens: 10,
+	// Player state
+	playerName: '',
+	tower: 54,
+	tokens: 10,
 
-    // Round state
-    round: 0,
-    cardsToDraw: 0,
+	// Round state
+	round: 0,
+	cardsToDraw: 0,
 
-    // Card state
-    deck: [],
-    log: [],
-    currentCard: null,
+	// Card state
+	deck: [],
+	log: [],
+	currentCard: null,
 
-    // Game state
-    gameOver: false,
-    win: false,
-    // ... etc
+	// Game state
+	gameOver: false,
+	win: false
+	// ... etc
 });
 
 // Reactive - automatically updates UI when values change
@@ -65,28 +65,29 @@ export { gameState };
 
 ```svelte
 <script>
-    import { gameState } from '../stores/gameStore.svelte.js';
+	import { gameState } from '../stores/gameStore.svelte.js';
 
-    // Direct access - no $ prefix needed with runes!
-    const tower = $derived(gameState.tower);
-    const tokens = $derived(gameState.tokens);
-    const round = $derived(gameState.round);
+	// Direct access - no $ prefix needed with runes!
+	const tower = $derived(gameState.tower);
+	const tokens = $derived(gameState.tokens);
+	const round = $derived(gameState.round);
 </script>
 
 <div class="dc-status-display">
-    <div class="status-item">
-        <span>Round: {round}</span>
-    </div>
-    <div class="status-item">
-        <span>Tower: {tower}/54</span>
-    </div>
-    <div class="status-item">
-        <span>Tokens: {tokens}/10</span>
-    </div>
+	<div class="status-item">
+		<span>Round: {round}</span>
+	</div>
+	<div class="status-item">
+		<span>Tower: {tower}/54</span>
+	</div>
+	<div class="status-item">
+		<span>Tokens: {tokens}/10</span>
+	</div>
 </div>
 ```
 
 **Proof:**
+
 - ✅ Direct `gameState` access (no `$gameStore` subscription)
 - ✅ `$derived()` for computed values
 - ✅ Clean, reactive code
@@ -99,47 +100,48 @@ export { gameState };
 
 ```javascript
 export async function drawCard() {
-    console.log('[drawCard] Function called');
-    console.log(`[drawCard] BEFORE: cardsToDraw=${gameState.cardsToDraw}`);
+	console.log('[drawCard] Function called');
+	console.log(`[drawCard] BEFORE: cardsToDraw=${gameState.cardsToDraw}`);
 
-    if (gameState.deck.length === 0) {
-        gameState.gameOver = true;
-        transitionTo('gameOver');
-        await transitionToScreen();
-        return null;
-    }
+	if (gameState.deck.length === 0) {
+		gameState.gameOver = true;
+		transitionTo('gameOver');
+		await transitionToScreen();
+		return null;
+	}
 
-    const card = gameState.deck.pop();
-    gameState.currentCard = card;
-    gameState.cardsToDraw -= 1;
+	const card = gameState.deck.pop();
+	gameState.currentCard = card;
+	gameState.cardsToDraw -= 1;
 
-    console.log(`[drawCard] Drew ${card.card} of ${card.suit}`);
+	console.log(`[drawCard] Drew ${card.card} of ${card.suit}`);
 
-    // Add to log
-    card.round = gameState.round;
-    gameState.log.push(card);
+	// Add to log
+	card.round = gameState.round;
+	gameState.log.push(card);
 
-    // Track kings
-    if (card.card === 'K') {
-        gameState.kingsRevealed += 1;
-    }
+	// Track kings
+	if (card.card === 'K') {
+		gameState.kingsRevealed += 1;
+	}
 
-    // Determine next state
-    const isOdd = card.card !== 'A' && parseInt(card.card) % 2 !== 0;
+	// Determine next state
+	const isOdd = card.card !== 'A' && parseInt(card.card) % 2 !== 0;
 
-    if (isOdd) {
-        transitionTo('failureCheck');
-    } else if (gameState.cardsToDraw > 0) {
-        transitionTo('drawCard');
-    } else {
-        transitionTo('log');
-    }
+	if (isOdd) {
+		transitionTo('failureCheck');
+	} else if (gameState.cardsToDraw > 0) {
+		transitionTo('drawCard');
+	} else {
+		transitionTo('log');
+	}
 
-    return card;
+	return card;
 }
 ```
 
 **Proof:**
+
 - ✅ Direct state mutation (`gameState.currentCard = card`)
 - ✅ State validation (`transitionTo()` checks valid transitions)
 - ✅ Clean async/await flow
@@ -190,6 +192,7 @@ export async function drawCard() {
 ```
 
 **Proof:**
+
 - ✅ State transitions execute correctly
 - ✅ Card draws work
 - ✅ Odd cards trigger failure checks
@@ -229,7 +232,7 @@ export function validateTransition(fromState, toState) {
 	if (!validStates?.includes(toState)) {
 		throw new Error(
 			`Invalid transition: ${fromState} → ${toState}\n` +
-			`Valid transitions: ${validStates?.join(', ')}`
+				`Valid transitions: ${validStates?.join(', ')}`
 		);
 	}
 
@@ -238,6 +241,7 @@ export function validateTransition(fromState, toState) {
 ```
 
 **Test Results:**
+
 ```
 ✅ loadGame → options: VALID
 ✅ options → intro: VALID
@@ -264,28 +268,29 @@ export function validateTransition(fromState, toState) {
 
 ```javascript
 // Before drawing
-gameState.tower = 54
-gameState.cardsToDraw = 4
-gameState.log = []
-gameState.state = 'drawCard'
+gameState.tower = 54;
+gameState.cardsToDraw = 4;
+gameState.log = [];
+gameState.state = 'drawCard';
 
 // [User clicks card deck]
 
 // After drawing
-gameState.tower = 54  // Not changed yet
-gameState.cardsToDraw = 3  // Decremented ✅
-gameState.log = [{ card: '7', suit: 'diamonds', round: 1 }]  // Added ✅
-gameState.state = 'failureCheck'  // Transitioned ✅
+gameState.tower = 54; // Not changed yet
+gameState.cardsToDraw = 3; // Decremented ✅
+gameState.log = [{ card: '7', suit: 'diamonds', round: 1 }]; // Added ✅
+gameState.state = 'failureCheck'; // Transitioned ✅
 
 // [User rolls failure check: 3]
 
 // After failure check
-gameState.tower = 51  // Damage applied ✅
-gameState.diceRoll = 3  // Recorded ✅
-gameState.state = 'drawCard'  // Back to drawing ✅
+gameState.tower = 51; // Damage applied ✅
+gameState.diceRoll = 3; // Recorded ✅
+gameState.state = 'drawCard'; // Back to drawing ✅
 ```
 
 **UI Response:**
+
 - ✅ StatusDisplay updates `tower` from 54 → 51
 - ✅ HealthMeter animates down to 94%
 - ✅ CardsToDraw counter decrements
@@ -300,9 +305,9 @@ gameState.state = 'drawCard'  // Back to drawing ✅
 
 ```svelte
 <script>
-    export let text = '0';
-    export let enableIndicator = false;
-    export let indicator = 'high';
+	export let text = '0';
+	export let enableIndicator = false;
+	export let indicator = 'high';
 </script>
 ```
 
@@ -310,15 +315,12 @@ gameState.state = 'drawCard'  // Back to drawing ✅
 
 ```svelte
 <script>
-    let {
-        text = '0',
-        enableIndicator = false,
-        indicator = 'high'
-    } = $props();
+	let { text = '0', enableIndicator = false, indicator = 'high' } = $props();
 </script>
 ```
 
 **Proof:**
+
 - ✅ All props use `$props()` destructuring
 - ✅ Default values preserved
 - ✅ Props remain reactive
@@ -340,6 +342,7 @@ gameState.state = 'drawCard'  // Back to drawing ✅
 ```
 
 **Proof:**
+
 - ✅ All `on:event` converted to `onevent`
 - ✅ Event handlers still fire correctly
 - ✅ No deprecation warnings
@@ -390,6 +393,7 @@ export async function transitionToScreen(newState, animationType) {
 ```
 
 **Test:** Rapidly clicking dice roller
+
 ```
 Click 1: Transition starts ✅
 Click 2: Ignored (already transitioning) ✅
@@ -416,6 +420,7 @@ After another 10 rounds: 14.0 MB (stable)
 ```
 
 **Proof:**
+
 - ✅ Memory stays stable
 - ✅ Cleanup on restart works
 - ✅ No memory leaks detected

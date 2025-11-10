@@ -2,11 +2,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { sleep } from '../utils/timing.js';
 
-	let {
-		card = $bindable(null),
-		onrequestcard = () => {},
-		onconfirmcard = () => {}
-	} = $props();
+	let { card = $bindable(null), onrequestcard = () => {}, onconfirmcard = () => {} } = $props();
 
 	let animationStage = $state('idle'); // 'idle', 'anticipating', 'materializing', 'revealed', 'dismissing'
 	let canvas = $state();
@@ -82,8 +78,8 @@
 		const centerY = canvas.height / 2;
 
 		// Update and filter particles
-		particles = particles.filter(p => p.life > 0);
-		particles.forEach(p => {
+		particles = particles.filter((p) => p.life > 0);
+		particles.forEach((p) => {
 			p.update(centerX, centerY);
 			p.draw(ctx);
 		});
@@ -97,7 +93,7 @@
 		} else if (animationStage === 'materializing') {
 			spawnRate = 0.5;
 			// Mark particles to rush to center
-			particles.forEach(p => {
+			particles.forEach((p) => {
 				if (!p.rushToCenter) {
 					p.rushToCenter = true;
 				}
@@ -105,10 +101,7 @@
 		}
 
 		if (particles.length < maxParticles && Math.random() < spawnRate) {
-			particles.push(new Particle(
-				Math.random() * canvas.width,
-				Math.random() * canvas.height
-			));
+			particles.push(new Particle(Math.random() * canvas.width, Math.random() * canvas.height));
 		}
 
 		// Update grid pulse phase
@@ -150,7 +143,6 @@
 
 			// Revealed phase - stable display
 			animationStage = 'revealed';
-
 		} catch (error) {
 			console.error('Intercept failed:', error);
 			animationStage = 'idle';
@@ -274,7 +266,7 @@
 					<div class="fragment-content">
 						<p class="fragment-data">{card.description || ''}</p>
 						<small class="fragment-id">
-							FRAGMENT-{card.card}-{card.suit?.slice(0,3).toUpperCase() || 'UNK'}
+							FRAGMENT-{card.card}-{card.suit?.slice(0, 3).toUpperCase() || 'UNK'}
 						</small>
 					</div>
 				{/if}
@@ -286,7 +278,9 @@
 	<button
 		class="neural-cta"
 		onclick={onButtonClick}
-		disabled={animationStage === 'anticipating' || animationStage === 'materializing' || animationStage === 'dismissing'}
+		disabled={animationStage === 'anticipating' ||
+			animationStage === 'materializing' ||
+			animationStage === 'dismissing'}
 		type="button"
 	>
 		<span class="cta-glow" aria-hidden="true"></span>
@@ -360,7 +354,8 @@
 	}
 
 	@keyframes grid-pulse {
-		0%, 100% {
+		0%,
+		100% {
 			opacity: 0.3;
 			background-size: 40px 40px;
 		}
@@ -413,7 +408,7 @@
 	}
 
 	.fragment-container.dismissing {
-		animation: fragment-dismiss 600ms cubic-bezier(0.4, 0.0, 1, 1) forwards;
+		animation: fragment-dismiss 600ms cubic-bezier(0.4, 0, 1, 1) forwards;
 	}
 
 	@keyframes fragment-materialize {
@@ -455,7 +450,8 @@
 		width: 100%;
 		min-height: 300px;
 		padding: var(--space-xl, 2rem);
-		background: linear-gradient(135deg,
+		background: linear-gradient(
+			135deg,
 			rgba(10, 10, 10, 0.95) 0%,
 			rgba(26, 26, 26, 0.9) 50%,
 			rgba(10, 10, 10, 0.95) 100%
@@ -474,7 +470,8 @@
 	}
 
 	@keyframes glitch-effect {
-		0%, 100% {
+		0%,
+		100% {
 			transform: translate(0);
 			filter: hue-rotate(0deg);
 		}
@@ -619,7 +616,8 @@
 	.neural-cta {
 		position: relative;
 		padding: var(--space-md, 1rem) var(--space-xl, 2rem);
-		background: linear-gradient(135deg,
+		background: linear-gradient(
+			135deg,
 			var(--color-cyber-magenta, #d946ef) 0%,
 			var(--color-neon-cyan, #00ffff) 100%
 		);
@@ -662,12 +660,7 @@
 		left: -100%;
 		width: 100%;
 		height: 100%;
-		background: linear-gradient(
-			90deg,
-			transparent,
-			rgba(255, 255, 255, 0.3),
-			transparent
-		);
+		background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
 		animation: cta-glow-sweep 2s ease-in-out infinite;
 	}
 
@@ -692,7 +685,8 @@
 	}
 
 	@keyframes ellipsis-pulse {
-		0%, 100% {
+		0%,
+		100% {
 			opacity: 0;
 		}
 		50% {

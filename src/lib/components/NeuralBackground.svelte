@@ -52,8 +52,8 @@
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 		// Update and filter particles
-		particles = particles.filter(p => p.life > 0);
-		particles.forEach(p => {
+		particles = particles.filter((p) => p.life > 0);
+		particles.forEach((p) => {
 			p.update();
 			p.draw(ctx);
 		});
@@ -63,10 +63,7 @@
 		const spawnRate = 0.1;
 
 		if (particles.length < maxParticles && Math.random() < spawnRate) {
-			particles.push(new Particle(
-				Math.random() * canvas.width,
-				Math.random() * canvas.height
-			));
+			particles.push(new Particle(Math.random() * canvas.width, Math.random() * canvas.height));
 		}
 
 		animationFrameId = requestAnimationFrame(animateParticles);

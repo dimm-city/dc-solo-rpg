@@ -70,9 +70,7 @@
 
 			<div class="control-section">
 				<h3>Programmatic Rolls</h3>
-				<button onclick={triggerRoll} class="test-button">
-					Trigger Roll
-				</button>
+				<button onclick={triggerRoll} class="test-button"> Trigger Roll </button>
 			</div>
 
 			<div class="control-section">

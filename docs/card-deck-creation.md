@@ -1,6 +1,6 @@
 # Game Card Configuration Documentation
 
-The game cards are defined in a CSV file. This file contains several properties that can be used to customize the cards used throughout the game. 
+The game cards are defined in a CSV file. This file contains several properties that can be used to customize the cards used throughout the game.
 
 ## Configuration Properties
 

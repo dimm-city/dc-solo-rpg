@@ -15,6 +15,7 @@ This plan has been reviewed by the **svelte5-expert-dev** agent against the offi
 All critical issues have been corrected. See `SVELTE_5_MIGRATION_CORRECTIONS.md` for details.
 
 **Key Corrections Made:**
+
 - ✅ Removed invalid compatibility wrapper pattern (`$effect` cannot be used at module scope)
 - ✅ Changed to sequential migration strategy (not parallel)
 - ✅ Clarified that `onMount`/`onDestroy` still work and are not deprecated
@@ -57,6 +58,7 @@ This migration plan upgrades the DC Solo RPG from Svelte 4/SvelteKit 1 to Svelte
 ### Expected Benefits
 
 **Technical Benefits:**
+
 - **35% reduction in state management code** (eliminate StateMachine class)
 - **Zero synchronization bugs** (single source of truth)
 - **Better performance** with Svelte 5's fine-grained reactivity
@@ -64,6 +66,7 @@ This migration plan upgrades the DC Solo RPG from Svelte 4/SvelteKit 1 to Svelte
 - **Type safety improvements** via better TypeScript integration
 
 **Business Benefits:**
+
 - Reduced maintenance burden
 - Faster feature development
 - Easier onboarding for new developers
@@ -71,32 +74,35 @@ This migration plan upgrades the DC Solo RPG from Svelte 4/SvelteKit 1 to Svelte
 
 ### Estimated Timeline
 
-| Phase | Duration | Description |
-|-------|----------|-------------|
-| **Phase 0: Preparation** | 2 hours | Backup, testing setup, dependency analysis |
-| **Phase 1: Dependency Upgrade** | 1 hour | Update to Svelte 5 + SvelteKit 2 |
-| **Phase 2: Core Refactor** | 4 hours | Eliminate StateMachine, refactor stores with runes |
-| **Phase 3: Component Migration** | 6 hours | Migrate all 15+ components to Svelte 5 syntax |
-| **Phase 4: Testing & QA** | 3 hours | Comprehensive testing and bug fixes |
-| **Phase 5: Optimization** | 2 hours | Performance tuning and cleanup |
-| **Total** | **20 hours** | ~2.5 days of focused work (includes correction time) |
+| Phase                            | Duration     | Description                                          |
+| -------------------------------- | ------------ | ---------------------------------------------------- |
+| **Phase 0: Preparation**         | 2 hours      | Backup, testing setup, dependency analysis           |
+| **Phase 1: Dependency Upgrade**  | 1 hour       | Update to Svelte 5 + SvelteKit 2                     |
+| **Phase 2: Core Refactor**       | 4 hours      | Eliminate StateMachine, refactor stores with runes   |
+| **Phase 3: Component Migration** | 6 hours      | Migrate all 15+ components to Svelte 5 syntax        |
+| **Phase 4: Testing & QA**        | 3 hours      | Comprehensive testing and bug fixes                  |
+| **Phase 5: Optimization**        | 2 hours      | Performance tuning and cleanup                       |
+| **Total**                        | **20 hours** | ~2.5 days of focused work (includes correction time) |
 
 ### Risk Assessment
 
 **Overall Risk: LOW-MEDIUM** (Reduced after corrections)
 
 **Low Risk Factors:**
+
 - Svelte 5 has excellent backward compatibility
 - Architecture simplification reduces complexity
 - Comprehensive testing strategy
 - Incremental rollback possible
 
 **Medium Risk Factors:**
+
 - Breaking changes in SvelteKit 2 routing (minor)
 - Component local state needs careful migration
 - Animation timing might need adjustment
 
 **Mitigation:**
+
 - Comprehensive test suite before migration
 - Git branch for easy rollback
 - Phase-by-phase implementation with validation
@@ -111,9 +117,9 @@ This migration plan upgrades the DC Solo RPG from Svelte 4/SvelteKit 1 to Svelte
 
 ```json
 {
-  "svelte": "^4.0.0",
-  "@sveltejs/kit": "^1.20.4",
-  "vite": "^4.3.0"
+	"svelte": "^4.0.0",
+	"@sveltejs/kit": "^1.20.4",
+	"vite": "^4.3.0"
 }
 ```
 
@@ -121,12 +127,12 @@ This migration plan upgrades the DC Solo RPG from Svelte 4/SvelteKit 1 to Svelte
 
 ```json
 {
-  "svelte": "^5.0.0",
-  "@sveltejs/kit": "^2.0.0",
-  "vite": "^5.0.0",
-  "@sveltejs/adapter-auto": "^3.0.0",
-  "@sveltejs/package": "^2.0.0",
-  "svelte-check": "^4.0.0"
+	"svelte": "^5.0.0",
+	"@sveltejs/kit": "^2.0.0",
+	"vite": "^5.0.0",
+	"@sveltejs/adapter-auto": "^3.0.0",
+	"@sveltejs/package": "^2.0.0",
+	"svelte-check": "^4.0.0"
 }
 ```
 
@@ -223,6 +229,7 @@ This migration follows the **Architecture Review's primary recommendation**: eli
 4. **Phase 4:** Delete old stores ONLY after all components migrated
 
 **Why Sequential?**
+
 - Eliminates complexity of maintaining two parallel systems
 - Prevents impossible "compatibility wrapper" attempts
 - Clearer migration path
@@ -318,43 +325,43 @@ import { transitionGraph } from './transitions.js';
 
 // Single source of truth for game state
 let gameState = $state({
-    // Screen state
-    state: 'loadGame',
+	// Screen state
+	state: 'loadGame',
 
-    // Player state
-    playerName: '',
-    tower: 54,
-    tokens: 10,
+	// Player state
+	playerName: '',
+	tower: 54,
+	tokens: 10,
 
-    // Round state
-    round: 0,
-    cardsToDraw: 0,
-    cardsDrawn: 0,
+	// Round state
+	round: 0,
+	cardsToDraw: 0,
+	cardsDrawn: 0,
 
-    // Card state
-    deck: [],
-    discard: [],
-    currentCard: null,
+	// Card state
+	deck: [],
+	discard: [],
+	currentCard: null,
 
-    // Roll state
-    diceRoll: 0,
+	// Roll state
+	diceRoll: 0,
 
-    // King tracking
-    kingsRevealed: 0,
-    kingOfHearts: false,
-    kingOfDiamonds: false,
-    kingOfClubs: false,
-    kingOfSpades: false,
+	// King tracking
+	kingsRevealed: 0,
+	kingOfHearts: false,
+	kingOfDiamonds: false,
+	kingOfClubs: false,
+	kingOfSpades: false,
 
-    // Journal
-    journalEntries: [],
+	// Journal
+	journalEntries: [],
 
-    // Config
-    config: null,
-    systemConfig: null,
+	// Config
+	config: null,
+	systemConfig: null,
 
-    // UI state
-    status: 'loading'
+	// UI state
+	status: 'loading'
 });
 
 /**
@@ -364,19 +371,15 @@ let gameState = $state({
 export const currentScreen = $derived(gameState.state);
 
 export const gameStats = $derived({
-    tower: gameState.tower,
-    tokens: gameState.tokens,
-    round: gameState.round,
-    cardsRemaining: gameState.deck.length
+	tower: gameState.tower,
+	tokens: gameState.tokens,
+	round: gameState.round,
+	cardsRemaining: gameState.deck.length
 });
 
-export const hasWon = $derived(
-    gameState.tokens === 0 && gameState.tower > 0
-);
+export const hasWon = $derived(gameState.tokens === 0 && gameState.tower > 0);
 
-export const hasLost = $derived(
-    gameState.tower <= 0 || gameState.kingsRevealed >= 4
-);
+export const hasLost = $derived(gameState.tower <= 0 || gameState.kingsRevealed >= 4);
 
 export const gameOver = $derived(hasWon || hasLost);
 
@@ -390,8 +393,8 @@ export { gameState };
  * State updater with validation
  */
 export function updateGameState(updates) {
-    // Merge updates into state
-    Object.assign(gameState, updates);
+	// Merge updates into state
+	Object.assign(gameState, updates);
 }
 
 /**
@@ -399,30 +402,30 @@ export function updateGameState(updates) {
  * Pure function - no side effects
  */
 export function validateTransition(fromState, toState) {
-    const validStates = transitionGraph[fromState];
+	const validStates = transitionGraph[fromState];
 
-    // Allow emergency exits
-    if (toState === 'exitGame' || toState === 'errorScreen') {
-        return true;
-    }
+	// Allow emergency exits
+	if (toState === 'exitGame' || toState === 'errorScreen') {
+		return true;
+	}
 
-    if (!validStates?.includes(toState)) {
-        const validList = validStates?.join(', ') || 'none';
-        throw new Error(
-            `Invalid transition: ${fromState} → ${toState}\n` +
-            `Valid transitions from ${fromState}: ${validList}`
-        );
-    }
+	if (!validStates?.includes(toState)) {
+		const validList = validStates?.join(', ') || 'none';
+		throw new Error(
+			`Invalid transition: ${fromState} → ${toState}\n` +
+				`Valid transitions from ${fromState}: ${validList}`
+		);
+	}
 
-    return true;
+	return true;
 }
 
 /**
  * Update screen state with validation
  */
 export function transitionTo(newState) {
-    validateTransition(gameState.state, newState);
-    gameState.state = newState;
+	validateTransition(gameState.state, newState);
+	gameState.state = newState;
 }
 ```
 
@@ -437,14 +440,14 @@ export function transitionTo(newState) {
 
 // Track transition state
 let transitionState = $state({
-    isTransitioning: false,
-    currentAnimation: null
+	isTransitioning: false,
+	currentAnimation: null
 });
 
 export { transitionState };
 
 export function setTransitioning(value) {
-    transitionState.isTransitioning = value;
+	transitionState.isTransitioning = value;
 }
 
 export const isTransitioning = $derived(transitionState.isTransitioning);
@@ -460,35 +463,35 @@ export const isTransitioning = $derived(transitionState.isTransitioning);
  * Pure data - no logic
  */
 export const transitionGraph = {
-    loadGame: ['options'],
-    options: ['intro'],
-    intro: ['rollForTasks'],
-    startRound: ['rollForTasks'],
-    rollForTasks: ['drawCard'],
-    drawCard: ['failureCheck', 'drawCard', 'endTurn', 'log', 'gameOver'],
-    failureCheck: ['drawCard', 'endTurn', 'log', 'gameOver'],
-    endTurn: ['log'],
-    log: ['successCheck', 'startRound'],
-    successCheck: ['startRound', 'gameOver'],
-    gameOver: ['finalLog', 'intro'],
-    finalLog: ['exitGame', 'intro'],
-    exitGame: ['loadGame', 'options'],
-    errorScreen: ['loadGame']
+	loadGame: ['options'],
+	options: ['intro'],
+	intro: ['rollForTasks'],
+	startRound: ['rollForTasks'],
+	rollForTasks: ['drawCard'],
+	drawCard: ['failureCheck', 'drawCard', 'endTurn', 'log', 'gameOver'],
+	failureCheck: ['drawCard', 'endTurn', 'log', 'gameOver'],
+	endTurn: ['log'],
+	log: ['successCheck', 'startRound'],
+	successCheck: ['startRound', 'gameOver'],
+	gameOver: ['finalLog', 'intro'],
+	finalLog: ['exitGame', 'intro'],
+	exitGame: ['loadGame', 'options'],
+	errorScreen: ['loadGame']
 };
 
 /**
  * Get valid next states for a given state
  */
 export function getValidNextStates(state) {
-    return transitionGraph[state] || [];
+	return transitionGraph[state] || [];
 }
 
 /**
  * Check if transition is valid
  */
 export function isValidTransition(from, to) {
-    const validStates = transitionGraph[from];
-    return validStates?.includes(to) || to === 'exitGame' || to === 'errorScreen';
+	const validStates = transitionGraph[from];
+	return validStates?.includes(to) || to === 'exitGame' || to === 'errorScreen';
 }
 ```
 
@@ -504,7 +507,7 @@ import { transitionState, setTransitioning } from './transitionStore.svelte.js';
  * Helper for animation timing
  */
 function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -512,228 +515,228 @@ function sleep(ms) {
  * Prevents race conditions via isTransitioning flag
  */
 export async function transitionToScreen(newState, animationType = 'default') {
-    // Prevent concurrent transitions
-    if (transitionState.isTransitioning) {
-        console.warn('Transition already in progress, ignoring');
-        return;
-    }
+	// Prevent concurrent transitions
+	if (transitionState.isTransitioning) {
+		console.warn('Transition already in progress, ignoring');
+		return;
+	}
 
-    setTransitioning(true);
+	setTransitioning(true);
 
-    try {
-        // Exit animation
-        const currentScreenEl = document.querySelector('.dc-screen-container');
-        if (currentScreenEl) {
-            currentScreenEl.classList.add('screen-transition-out');
-            await sleep(300);
-        }
+	try {
+		// Exit animation
+		const currentScreenEl = document.querySelector('.dc-screen-container');
+		if (currentScreenEl) {
+			currentScreenEl.classList.add('screen-transition-out');
+			await sleep(300);
+		}
 
-        // Update state (validates transition)
-        transitionTo(newState);
+		// Update state (validates transition)
+		transitionTo(newState);
 
-        // Wait for render
-        await sleep(50);
+		// Wait for render
+		await sleep(50);
 
-        // Enter animation
-        const newScreenEl = document.querySelector('.dc-screen-container');
-        if (newScreenEl) {
-            newScreenEl.classList.remove('screen-transition-out');
+		// Enter animation
+		const newScreenEl = document.querySelector('.dc-screen-container');
+		if (newScreenEl) {
+			newScreenEl.classList.remove('screen-transition-out');
 
-            const animClass = {
-                'round': 'round-transition',
-                'journal': 'journal-transition',
-                'default': 'screen-transition-in'
-            }[animationType] || 'screen-transition-in';
+			const animClass =
+				{
+					round: 'round-transition',
+					journal: 'journal-transition',
+					default: 'screen-transition-in'
+				}[animationType] || 'screen-transition-in';
 
-            newScreenEl.classList.add(animClass);
+			newScreenEl.classList.add(animClass);
 
-            const duration = animationType === 'round' ? 800 :
-                           animationType === 'journal' ? 1200 : 500;
+			const duration = animationType === 'round' ? 800 : animationType === 'journal' ? 1200 : 500;
 
-            setTimeout(() => newScreenEl.classList.remove(animClass), duration);
-        }
-    } finally {
-        setTransitioning(false);
-    }
+			setTimeout(() => newScreenEl.classList.remove(animClass), duration);
+		}
+	} finally {
+		setTransitioning(false);
+	}
 }
 
 /**
  * Roll for tasks action
  */
 export async function rollForTasks() {
-    const result = Math.floor(Math.random() * 6) + 1;
-    gameState.diceRoll = result;
-    gameState.cardsToDraw = result;
-    return result;
+	const result = Math.floor(Math.random() * 6) + 1;
+	gameState.diceRoll = result;
+	gameState.cardsToDraw = result;
+	return result;
 }
 
 /**
  * Confirm task roll and proceed
  */
 export async function confirmTaskRoll() {
-    await transitionToScreen('drawCard');
+	await transitionToScreen('drawCard');
 }
 
 /**
  * Draw a card from the deck
  */
 export async function drawCard() {
-    if (gameState.deck.length === 0) {
-        console.error('Deck is empty!');
-        await transitionToScreen('gameOver');
-        return null;
-    }
+	if (gameState.deck.length === 0) {
+		console.error('Deck is empty!');
+		await transitionToScreen('gameOver');
+		return null;
+	}
 
-    const card = gameState.deck.pop();
-    gameState.currentCard = card;
-    gameState.cardsDrawn++;
-    gameState.cardsToDraw--;
+	const card = gameState.deck.pop();
+	gameState.currentCard = card;
+	gameState.cardsDrawn++;
+	gameState.cardsToDraw--;
 
-    // Track kings
-    if (card.rank === 'K') {
-        gameState.kingsRevealed++;
-        const suitKey = `kingOf${card.suit.charAt(0).toUpperCase() + card.suit.slice(1)}`;
-        gameState[suitKey] = true;
-    }
+	// Track kings
+	if (card.rank === 'K') {
+		gameState.kingsRevealed++;
+		const suitKey = `kingOf${card.suit.charAt(0).toUpperCase() + card.suit.slice(1)}`;
+		gameState[suitKey] = true;
+	}
 
-    return card;
+	return card;
 }
 
 /**
  * Confirm drawn card and determine next action
  */
 export async function confirmCard() {
-    const card = gameState.currentCard;
+	const card = gameState.currentCard;
 
-    // Check for game over (4 kings)
-    if (gameState.kingsRevealed >= 4) {
-        await transitionToScreen('gameOver');
-        return;
-    }
+	// Check for game over (4 kings)
+	if (gameState.kingsRevealed >= 4) {
+		await transitionToScreen('gameOver');
+		return;
+	}
 
-    // Check if card is odd (failure check required)
-    const isOdd = ['A', '3', '5', '7', '9', 'J', 'K'].includes(card.rank);
+	// Check if card is odd (failure check required)
+	const isOdd = ['A', '3', '5', '7', '9', 'J', 'K'].includes(card.rank);
 
-    if (isOdd) {
-        await transitionToScreen('failureCheck');
-    } else if (gameState.cardsToDraw > 0) {
-        // More cards to draw
-        await transitionToScreen('drawCard');
-    } else {
-        // Round complete
-        await transitionToScreen('log', 'journal');
-    }
+	if (isOdd) {
+		await transitionToScreen('failureCheck');
+	} else if (gameState.cardsToDraw > 0) {
+		// More cards to draw
+		await transitionToScreen('drawCard');
+	} else {
+		// Round complete
+		await transitionToScreen('log', 'journal');
+	}
 }
 
 /**
  * Get failure check roll
  */
 export function getFailureCheckRoll() {
-    const result = Math.floor(Math.random() * 6) + 1;
-    return result;
+	const result = Math.floor(Math.random() * 6) + 1;
+	return result;
 }
 
 /**
  * Apply failure check result
  */
 export function applyFailureCheckResult(result) {
-    gameState.diceRoll = result;
+	gameState.diceRoll = result;
 
-    // Apply damage based on roll
-    const damage = result <= 2 ? 6 : result <= 4 ? 3 : 1;
-    gameState.tower = Math.max(0, gameState.tower - damage);
+	// Apply damage based on roll
+	const damage = result <= 2 ? 6 : result <= 4 ? 3 : 1;
+	gameState.tower = Math.max(0, gameState.tower - damage);
 }
 
 /**
  * Confirm failure check and proceed
  */
 export async function confirmFailureCheck() {
-    // Check for tower collapse
-    if (gameState.tower <= 0) {
-        await transitionToScreen('gameOver');
-        return;
-    }
+	// Check for tower collapse
+	if (gameState.tower <= 0) {
+		await transitionToScreen('gameOver');
+		return;
+	}
 
-    // Continue drawing or end turn
-    if (gameState.cardsToDraw > 0) {
-        await transitionToScreen('drawCard');
-    } else {
-        await transitionToScreen('log', 'journal');
-    }
+	// Continue drawing or end turn
+	if (gameState.cardsToDraw > 0) {
+		await transitionToScreen('drawCard');
+	} else {
+		await transitionToScreen('log', 'journal');
+	}
 }
 
 /**
  * Record journal entry
  */
 export async function recordRound(entry) {
-    gameState.journalEntries.push({
-        round: gameState.round,
-        text: entry.text,
-        timestamp: Date.now()
-    });
+	gameState.journalEntries.push({
+		round: gameState.round,
+		text: entry.text,
+		timestamp: Date.now()
+	});
 
-    await transitionToScreen('successCheck');
+	await transitionToScreen('successCheck');
 }
 
 /**
  * Perform success check
  */
 export async function successCheck() {
-    const result = Math.floor(Math.random() * 6) + 1;
-    gameState.diceRoll = result;
+	const result = Math.floor(Math.random() * 6) + 1;
+	gameState.diceRoll = result;
 
-    if (result === 6) {
-        // Success! Remove a token
-        gameState.tokens = Math.max(0, gameState.tokens - 1);
-    }
+	if (result === 6) {
+		// Success! Remove a token
+		gameState.tokens = Math.max(0, gameState.tokens - 1);
+	}
 
-    return result;
+	return result;
 }
 
 /**
  * Confirm success check and proceed
  */
 export async function confirmSuccessCheck() {
-    // Check for win condition
-    if (gameState.tokens === 0 && gameState.tower > 0) {
-        await transitionToScreen('gameOver');
-        return;
-    }
+	// Check for win condition
+	if (gameState.tokens === 0 && gameState.tower > 0) {
+		await transitionToScreen('gameOver');
+		return;
+	}
 
-    // Start next round
-    gameState.round++;
-    gameState.cardsToDraw = 0;
-    gameState.cardsDrawn = 0;
-    gameState.diceRoll = 0;
+	// Start next round
+	gameState.round++;
+	gameState.cardsToDraw = 0;
+	gameState.cardsDrawn = 0;
+	gameState.diceRoll = 0;
 
-    await transitionToScreen('rollForTasks', 'round');
+	await transitionToScreen('rollForTasks', 'round');
 }
 
 /**
  * Start a new game
  */
 export function startGame(options) {
-    gameState.playerName = options.name || 'Player';
-    gameState.tower = 54;
-    gameState.tokens = 10;
-    gameState.round = 1;
-    gameState.kingsRevealed = 0;
-    gameState.kingOfHearts = false;
-    gameState.kingOfDiamonds = false;
-    gameState.kingOfClubs = false;
-    gameState.kingOfSpades = false;
-    gameState.journalEntries = [];
+	gameState.playerName = options.name || 'Player';
+	gameState.tower = 54;
+	gameState.tokens = 10;
+	gameState.round = 1;
+	gameState.kingsRevealed = 0;
+	gameState.kingOfHearts = false;
+	gameState.kingOfDiamonds = false;
+	gameState.kingOfClubs = false;
+	gameState.kingOfSpades = false;
+	gameState.journalEntries = [];
 
-    transitionTo('intro');
+	transitionTo('intro');
 }
 
 /**
  * Load game configuration
  */
 export async function loadSystemConfig(systemSettings) {
-    // Implementation depends on ConfigurationLoader
-    // Update gameState.config and gameState.systemConfig
-    transitionTo('options');
+	// Implementation depends on ConfigurationLoader
+	// Update gameState.config and gameState.systemConfig
+	transitionTo('options');
 }
 ```
 
@@ -759,7 +762,7 @@ export const gameStore = writable(gameState);
 
 // Subscribe to rune changes and update store
 $effect(() => {
-    gameStore.set(gameState);
+	gameStore.set(gameState);
 });
 
 // Export currentScreen as derived store
@@ -767,25 +770,25 @@ export const currentScreen = derived(gameStore, () => runeCurrentScreen);
 
 // Re-export all actions
 export const {
-    transitionToScreen,
-    rollForTasks,
-    confirmTaskRoll,
-    drawCard,
-    confirmCard,
-    getFailureCheckRoll,
-    applyFailureCheckResult,
-    confirmFailureCheck,
-    recordRound,
-    successCheck,
-    confirmSuccessCheck,
-    startGame,
-    loadSystemConfig
+	transitionToScreen,
+	rollForTasks,
+	confirmTaskRoll,
+	drawCard,
+	confirmCard,
+	getFailureCheckRoll,
+	applyFailureCheckResult,
+	confirmFailureCheck,
+	recordRound,
+	successCheck,
+	confirmSuccessCheck,
+	startGame,
+	loadSystemConfig
 } = actions;
 
 // Legacy nextScreen function
 export const nextScreen = (action) => {
-    console.warn('nextScreen is deprecated, use transitionToScreen');
-    transitionToScreen(action);
+	console.warn('nextScreen is deprecated, use transitionToScreen');
+	transitionToScreen(action);
 };
 ```
 
@@ -812,27 +815,25 @@ For each component:
 
 ```svelte
 <script>
-    export let title;
-    export let count = 0;
+	export let title;
+	export let count = 0;
 
-    $: doubled = count * 2;
+	$: doubled = count * 2;
 </script>
 
-<h1>{title}</h1>
-<p>Count: {count}, Doubled: {doubled}</p>
+<h1>{title}</h1><p>Count: {count}, Doubled: {doubled}</p>
 ```
 
 #### After (Svelte 5)
 
 ```svelte
 <script>
-    let { title, count = 0 } = $props();
+	let { title, count = 0 } = $props();
 
-    let doubled = $derived(count * 2);
+	let doubled = $derived(count * 2);
 </script>
 
-<h1>{title}</h1>
-<p>Count: {count}, Doubled: {doubled}</p>
+<h1>{title}</h1><p>Count: {count}, Doubled: {doubled}</p>
 ```
 
 ### Pattern 1b: $derived vs $derived.by
@@ -850,31 +851,31 @@ let isValid = $derived(email.includes('@') && password.length > 8);
 ```javascript
 // ✅ GOOD - Complex logic with multiple statements
 let filteredCards = $derived.by(() => {
-    if (!gameState.deck) return [];
+	if (!gameState.deck) return [];
 
-    const filtered = gameState.deck.filter(card => {
-        if (card.suit === 'hearts') return true;
-        if (card.value > 10) return true;
-        return false;
-    });
+	const filtered = gameState.deck.filter((card) => {
+		if (card.suit === 'hearts') return true;
+		if (card.value > 10) return true;
+		return false;
+	});
 
-    return filtered.sort((a, b) => a.value - b.value);
+	return filtered.sort((a, b) => a.value - b.value);
 });
 
 // ✅ GOOD - Early returns
 let status = $derived.by(() => {
-    if (gameState.tower <= 0) return 'LOST';
-    if (gameState.kingsRevealed >= 4) return 'LOST';
-    if (gameState.win) return 'WON';
-    return 'PLAYING';
+	if (gameState.tower <= 0) return 'LOST';
+	if (gameState.kingsRevealed >= 4) return 'LOST';
+	if (gameState.win) return 'WON';
+	return 'PLAYING';
 });
 
 // ✅ GOOD - Intermediate variables
 let cardCount = $derived.by(() => {
-    const remaining = gameState.deck.length;
-    const drawn = gameState.discard.length;
-    const total = remaining + drawn;
-    return { remaining, drawn, total };
+	const remaining = gameState.deck.length;
+	const drawn = gameState.discard.length;
+	const total = remaining + drawn;
+	return { remaining, drawn, total };
 });
 ```
 
@@ -924,13 +925,13 @@ let cardCount = $derived.by(() => {
 
 ```svelte
 <script>
-    import { createEventDispatcher } from 'svelte';
+	import { createEventDispatcher } from 'svelte';
 
-    const dispatch = createEventDispatcher();
+	const dispatch = createEventDispatcher();
 
-    function handleClick() {
-        dispatch('click', { data: 'value' });
-    }
+	function handleClick() {
+		dispatch('click', { data: 'value' });
+	}
 </script>
 
 <button on:click={handleClick}>Click me</button>
@@ -940,11 +941,11 @@ let cardCount = $derived.by(() => {
 
 ```svelte
 <script>
-    let { onclick } = $props();
+	let { onclick } = $props();
 
-    function handleClick() {
-        onclick?.({ data: 'value' });
-    }
+	function handleClick() {
+		onclick?.({ data: 'value' });
+	}
 </script>
 
 <button onclick={handleClick}>Click me</button>
@@ -958,43 +959,45 @@ let cardCount = $derived.by(() => {
 
 ```svelte
 <script>
-    import { gameStore, currentScreen } from '../stores/WAAStore.js';
+	import { gameStore, currentScreen } from '../stores/WAAStore.js';
 
-    $: tower = $gameStore.tower;
-    $: screen = $currentScreen;
+	$: tower = $gameStore.tower;
+	$: screen = $currentScreen;
 </script>
 
-<p>Tower: {tower}</p>
-<p>Screen: {screen}</p>
+<p>Tower: {tower}</p><p>Screen: {screen}</p>
 ```
 
 #### After (Svelte 5 - Option A: Still use stores)
 
 ```svelte
 <script>
-    import { writable } from 'svelte/store';
+	import { writable } from 'svelte/store';
 
-    // ✅ WORKS - gameStore is an actual store object
-    const gameStore = writable({ tower: 54 });
+	// ✅ WORKS - gameStore is an actual store object
+	const gameStore = writable({ tower: 54 });
 </script>
 
-<p>Tower: {$gameStore.tower}</p>  <!-- ✅ $ prefix works -->
+<p>Tower: {$gameStore.tower}</p> <!-- ✅ $ prefix works -->
 ```
 
 #### After (Svelte 5 - Option B: Use runes directly)
 
 ```svelte
 <script>
-    import { gameState, currentScreen } from '../stores/gameState.svelte.js';
+	import { gameState, currentScreen } from '../stores/gameState.svelte.js';
 
-    // ❌ CANNOT use $ prefix - gameState is NOT a store, it's a rune object
+	// ❌ CANNOT use $ prefix - gameState is NOT a store, it's a rune object
 </script>
 
-<p>Tower: {gameState.tower}</p>     <!-- ✅ CORRECT: Direct access -->
-<p>Screen: {currentScreen}</p>       <!-- ✅ CORRECT: Derived is already reactive -->
+<p>Tower: {gameState.tower}</p>
+<!-- ✅ CORRECT: Direct access -->
+<p>Screen: {currentScreen}</p>
+<!-- ✅ CORRECT: Derived is already reactive -->
 
 <!-- ❌ WRONG: -->
-<p>Tower: {$gameState.tower}</p>    <!-- ERROR: Cannot use $ with runes -->
+<p>Tower: {$gameState.tower}</p>
+<!-- ERROR: Cannot use $ with runes -->
 ```
 
 **Key Takeaway:** When you migrate from stores to runes, you **lose** the `$` prefix. This is intentional—runes are already reactive without subscriptions.
@@ -1008,19 +1011,19 @@ let cardCount = $derived.by(() => {
 
 ```svelte
 <script>
-    import { onMount, onDestroy } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 
-    let intervalId;
+	let intervalId;
 
-    onMount(() => {
-        intervalId = setInterval(() => {
-            console.log('tick');
-        }, 1000);
-    });
+	onMount(() => {
+		intervalId = setInterval(() => {
+			console.log('tick');
+		}, 1000);
+	});
 
-    onDestroy(() => {
-        clearInterval(intervalId);
-    });
+	onDestroy(() => {
+		clearInterval(intervalId);
+	});
 </script>
 ```
 
@@ -1028,21 +1031,21 @@ let cardCount = $derived.by(() => {
 
 ```svelte
 <script>
-    import { onMount } from 'svelte';
+	import { onMount } from 'svelte';
 
-    let intervalId;
+	let intervalId;
 
-    // ✅ STILL WORKS - No need to change!
-    onMount(() => {
-        intervalId = setInterval(() => {
-            console.log('tick');
-        }, 1000);
+	// ✅ STILL WORKS - No need to change!
+	onMount(() => {
+		intervalId = setInterval(() => {
+			console.log('tick');
+		}, 1000);
 
-        // Return cleanup function
-        return () => {
-            clearInterval(intervalId);
-        };
-    });
+		// Return cleanup function
+		return () => {
+			clearInterval(intervalId);
+		};
+	});
 </script>
 ```
 
@@ -1050,20 +1053,20 @@ let cardCount = $derived.by(() => {
 
 ```svelte
 <script>
-    let intervalId;
+	let intervalId;
 
-    // Alternative using $effect
-    $effect(() => {
-        // Setup
-        intervalId = setInterval(() => {
-            console.log('tick');
-        }, 1000);
+	// Alternative using $effect
+	$effect(() => {
+		// Setup
+		intervalId = setInterval(() => {
+			console.log('tick');
+		}, 1000);
 
-        // Cleanup (runs when effect is destroyed)
-        return () => {
-            clearInterval(intervalId);
-        };
-    });
+		// Cleanup (runs when effect is destroyed)
+		return () => {
+			clearInterval(intervalId);
+		};
+	});
 </script>
 ```
 
@@ -1080,11 +1083,11 @@ This timing difference can cause bugs if not accounted for:
 
 ```svelte
 <script>
-    import { gameStore } from '../stores/WAAStore.js';
+	import { gameStore } from '../stores/WAAStore.js';
 
-    $: if ($gameStore.tower <= 0) {
-        console.log('Tower destroyed!');  // Runs BEFORE render
-    }
+	$: if ($gameStore.tower <= 0) {
+		console.log('Tower destroyed!'); // Runs BEFORE render
+	}
 </script>
 ```
 
@@ -1092,13 +1095,13 @@ This timing difference can cause bugs if not accounted for:
 
 ```svelte
 <script>
-    import { gameState } from '../stores/gameState.svelte.js';
+	import { gameState } from '../stores/gameState.svelte.js';
 
-    $effect(() => {
-        if (gameState.tower <= 0) {
-            console.log('Tower destroyed!');  // Runs AFTER render
-        }
-    });
+	$effect(() => {
+		if (gameState.tower <= 0) {
+			console.log('Tower destroyed!'); // Runs AFTER render
+		}
+	});
 </script>
 ```
 
@@ -1126,6 +1129,7 @@ This timing difference can cause bugs if not accounted for:
 ```
 
 **Rule of Thumb:**
+
 - Use **`$derived`** for immediate computations (replaces most `$: computed = ...`)
 - Use **`$effect`** only for side effects (logging, DOM manipulation, subscriptions)
 
@@ -1137,46 +1141,40 @@ This timing difference can cause bugs if not accounted for:
 
 ```svelte
 <script>
-    import DiceRoller from './ThreeJSDiceBoxRoller.svelte';
-    import { confirmTaskRoll, gameStore, rollForTasks } from '../stores/WAAStore.js';
+	import DiceRoller from './ThreeJSDiceBoxRoller.svelte';
+	import { confirmTaskRoll, gameStore, rollForTasks } from '../stores/WAAStore.js';
 
-    let taskDice;
-    let rolled = false;
-    let rolling = false;
-    let confirming = false;
+	let taskDice;
+	let rolled = false;
+	let rolling = false;
+	let confirming = false;
 
-    async function rollTaskDice() {
-        if (rolling || confirming) return;
-        const result = await rollForTasks();
-        await taskDice.roll(result);
-        rolled = true;
-    }
+	async function rollTaskDice() {
+		if (rolling || confirming) return;
+		const result = await rollForTasks();
+		await taskDice.roll(result);
+		rolled = true;
+	}
 
-    async function confirm() {
-        if (rolling || confirming) return;
-        confirming = true;
-        await confirmTaskRoll();
-        confirming = false;
-    }
+	async function confirm() {
+		if (rolling || confirming) return;
+		confirming = true;
+		await confirmTaskRoll();
+		confirming = false;
+	}
 
-    function action() {
-        if (rolled) confirm();
-        else rollTaskDice();
-    }
+	function action() {
+		if (rolled) confirm();
+		else rollTaskDice();
+	}
 
-    $: header = rolled
-        ? $gameStore.config?.labels.rollForTasksResultHeader
-        : $gameStore.config.labels.rollForTasksHeader;
+	$: header = rolled
+		? $gameStore.config?.labels.rollForTasksResultHeader
+		: $gameStore.config.labels.rollForTasksHeader;
 </script>
 
 <div class="dc-roll-tasks-container">
-    <DiceRoller
-        bind:this={taskDice}
-        bind:rolling
-        on:click={action}
-        on:keyup={action}
-        {header}
-    />
+	<DiceRoller bind:this={taskDice} bind:rolling on:click={action} on:keyup={action} {header} />
 </div>
 ```
 
@@ -1184,69 +1182,70 @@ This timing difference can cause bugs if not accounted for:
 
 ```svelte
 <script>
-    import DiceRoller from './ThreeJSDiceBoxRoller.svelte';
-    import { gameState } from '../stores/gameStore.svelte.js';
-    import { transitionState } from '../stores/transitionStore.svelte.js';
-    import { rollForTasks, confirmTaskRoll } from '../stores/gameActions.svelte.js';
+	import DiceRoller from './ThreeJSDiceBoxRoller.svelte';
+	import { gameState } from '../stores/gameStore.svelte.js';
+	import { transitionState } from '../stores/transitionStore.svelte.js';
+	import { rollForTasks, confirmTaskRoll } from '../stores/gameActions.svelte.js';
 
-    let taskDice;
-    let rolling = $state(false);
+	let taskDice;
+	let rolling = $state(false);
 
-    // Derive rolled state from gameStore (no local state!)
-    let rolled = $derived(gameState.cardsToDraw > 0);
+	// Derive rolled state from gameStore (no local state!)
+	let rolled = $derived(gameState.cardsToDraw > 0);
 
-    // Combine all interaction blockers
-    let canInteract = $derived(!rolling && !transitionState.isTransitioning);
+	// Combine all interaction blockers
+	let canInteract = $derived(!rolling && !transitionState.isTransitioning);
 
-    async function rollTaskDice() {
-        if (!canInteract || rolled) return;
+	async function rollTaskDice() {
+		if (!canInteract || rolled) return;
 
-        rolling = true;
-        const result = await rollForTasks();
-        await taskDice.roll(result);
-        rolling = false;
-    }
+		rolling = true;
+		const result = await rollForTasks();
+		await taskDice.roll(result);
+		rolling = false;
+	}
 
-    async function confirm() {
-        if (!canInteract || !rolled) return;
+	async function confirm() {
+		if (!canInteract || !rolled) return;
 
-        await confirmTaskRoll();
-    }
+		await confirmTaskRoll();
+	}
 
-    function action() {
-        if (rolled) confirm();
-        else rollTaskDice();
-    }
+	function action() {
+		if (rolled) confirm();
+		else rollTaskDice();
+	}
 
-    let header = $derived(
-        rolled
-            ? gameState.config?.labels.rollForTasksResultHeader
-            : gameState.config?.labels.rollForTasksHeader
-    );
+	let header = $derived(
+		rolled
+			? gameState.config?.labels.rollForTasksResultHeader
+			: gameState.config?.labels.rollForTasksHeader
+	);
 </script>
 
 <div class="dc-roll-tasks-container">
-    <DiceRoller
-        bind:this={taskDice}
-        bind:rolling
-        onclick={action}
-        onkeyup={action}
-        {header}
-        disabled={!canInteract}
-    />
+	<DiceRoller
+		bind:this={taskDice}
+		bind:rolling
+		onclick={action}
+		onkeyup={action}
+		{header}
+		disabled={!canInteract}
+	/>
 </div>
 
 <style>
-    .dc-roll-tasks-container {
-        width: 100%;
-        height: 100%;
-        display: grid;
-        text-align: center;
-    }
+	.dc-roll-tasks-container {
+		width: 100%;
+		height: 100%;
+		display: grid;
+		text-align: center;
+	}
 </style>
 ```
 
 **Key Changes:**
+
 - `rolled` derived from `gameState.cardsToDraw` instead of local state
 - `rolling` uses `$state()` rune
 - `canInteract` combines all interaction blockers
@@ -1259,24 +1258,24 @@ This timing difference can cause bugs if not accounted for:
 
 ```svelte
 <script>
-    import CardDeck from './CardDeck.svelte';
-    import { confirmCard, drawCard, gameStore } from '../stores/WAAStore.js';
+	import CardDeck from './CardDeck.svelte';
+	import { confirmCard, drawCard, gameStore } from '../stores/WAAStore.js';
 
-    async function onRequestCard() {
-        await drawCard();
-    }
+	async function onRequestCard() {
+		await drawCard();
+	}
 
-    async function onConfirmCardDeck() {
-        await confirmCard();
-    }
+	async function onConfirmCardDeck() {
+		await confirmCard();
+	}
 </script>
 
 <div class="dc-draw-card-container">
-    <CardDeck
-        card={$gameStore.currentCard}
-        on:requestcard={onRequestCard}
-        on:confirmcard={onConfirmCardDeck}
-    />
+	<CardDeck
+		card={$gameStore.currentCard}
+		on:requestcard={onRequestCard}
+		on:confirmcard={onConfirmCardDeck}
+	/>
 </div>
 ```
 
@@ -1284,46 +1283,47 @@ This timing difference can cause bugs if not accounted for:
 
 ```svelte
 <script>
-    import CardDeck from './CardDeck.svelte';
-    import { gameState } from '../stores/gameStore.svelte.js';
-    import { transitionState } from '../stores/transitionStore.svelte.js';
-    import { drawCard, confirmCard } from '../stores/gameActions.svelte.js';
+	import CardDeck from './CardDeck.svelte';
+	import { gameState } from '../stores/gameStore.svelte.js';
+	import { transitionState } from '../stores/transitionStore.svelte.js';
+	import { drawCard, confirmCard } from '../stores/gameActions.svelte.js';
 
-    async function onRequestCard() {
-        if (transitionState.isTransitioning) return;
-        await drawCard();
-    }
+	async function onRequestCard() {
+		if (transitionState.isTransitioning) return;
+		await drawCard();
+	}
 
-    async function onConfirmCardDeck() {
-        if (transitionState.isTransitioning) return;
-        await confirmCard();
-    }
+	async function onConfirmCardDeck() {
+		if (transitionState.isTransitioning) return;
+		await confirmCard();
+	}
 </script>
 
 <div class="dc-draw-card-container">
-    <CardDeck
-        card={gameState.currentCard}
-        onrequestcard={onRequestCard}
-        onconfirmcard={onConfirmCardDeck}
-        disabled={transitionState.isTransitioning}
-    />
+	<CardDeck
+		card={gameState.currentCard}
+		onrequestcard={onRequestCard}
+		onconfirmcard={onConfirmCardDeck}
+		disabled={transitionState.isTransitioning}
+	/>
 </div>
 
 <style>
-    .dc-draw-card-container {
-        display: grid;
-        height: 100%;
-        width: 100%;
-        justify-content: center;
-        align-content: center;
-        text-align: center;
-        background: var(--color-bg-darker, #000);
-        overflow: visible;
-    }
+	.dc-draw-card-container {
+		display: grid;
+		height: 100%;
+		width: 100%;
+		justify-content: center;
+		align-content: center;
+		text-align: center;
+		background: var(--color-bg-darker, #000);
+		overflow: visible;
+	}
 </style>
 ```
 
 **Key Changes:**
+
 - Direct access to `gameState.currentCard` (no `$`)
 - Events use `onrequestcard` format
 - Transition guard added
@@ -1335,44 +1335,38 @@ This timing difference can cause bugs if not accounted for:
 
 ```svelte
 <script>
-    import DiceRoller from './ThreeJSDiceBoxRoller.svelte';
-    import {
-        gameStore,
-        getFailureCheckRoll,
-        applyFailureCheckResult,
-        confirmFailureCheck
-    } from '../stores/WAAStore.js';
-    import { createEventDispatcher } from 'svelte';
+	import DiceRoller from './ThreeJSDiceBoxRoller.svelte';
+	import {
+		gameStore,
+		getFailureCheckRoll,
+		applyFailureCheckResult,
+		confirmFailureCheck
+	} from '../stores/WAAStore.js';
+	import { createEventDispatcher } from 'svelte';
 
-    let diceRoller;
-    let rolling;
-    let result;
+	let diceRoller;
+	let rolling;
+	let result;
 
-    const dispatcher = createEventDispatcher();
+	const dispatcher = createEventDispatcher();
 
-    async function doCheck() {
-        if (rolling) return;
-        if ($gameStore.state == 'failureCheck') {
-            result = getFailureCheckRoll();
-            await diceRoller.roll(result);
-            applyFailureCheckResult(result);
-            dispatcher('dc-solo-rpg.failureCheckCompleted', $gameStore.state);
-        } else {
-            await confirmFailureCheck();
-        }
-    }
+	async function doCheck() {
+		if (rolling) return;
+		if ($gameStore.state == 'failureCheck') {
+			result = getFailureCheckRoll();
+			await diceRoller.roll(result);
+			applyFailureCheckResult(result);
+			dispatcher('dc-solo-rpg.failureCheckCompleted', $gameStore.state);
+		} else {
+			await confirmFailureCheck();
+		}
+	}
 
-    $: header = result ? 'Click to continue' : 'Roll failure check';
+	$: header = result ? 'Click to continue' : 'Roll failure check';
 </script>
 
 <div class="dc-failure-check-container">
-    <DiceRoller
-        bind:this={diceRoller}
-        bind:rolling
-        on:click={doCheck}
-        on:keyup={doCheck}
-        {header}
-    />
+	<DiceRoller bind:this={diceRoller} bind:rolling on:click={doCheck} on:keyup={doCheck} {header} />
 </div>
 ```
 
@@ -1380,68 +1374,69 @@ This timing difference can cause bugs if not accounted for:
 
 ```svelte
 <script>
-    import DiceRoller from './ThreeJSDiceBoxRoller.svelte';
-    import { gameState } from '../stores/gameStore.svelte.js';
-    import { transitionState } from '../stores/transitionStore.svelte.js';
-    import {
-        getFailureCheckRoll,
-        applyFailureCheckResult,
-        confirmFailureCheck
-    } from '../stores/gameActions.svelte.js';
+	import DiceRoller from './ThreeJSDiceBoxRoller.svelte';
+	import { gameState } from '../stores/gameStore.svelte.js';
+	import { transitionState } from '../stores/transitionStore.svelte.js';
+	import {
+		getFailureCheckRoll,
+		applyFailureCheckResult,
+		confirmFailureCheck
+	} from '../stores/gameActions.svelte.js';
 
-    let { onfailurecheckcompleted } = $props();
+	let { onfailurecheckcompleted } = $props();
 
-    let diceRoller;
-    let rolling = $state(false);
-    let result = $state(null);
+	let diceRoller;
+	let rolling = $state(false);
+	let result = $state(null);
 
-    let hasRolled = $derived(result !== null);
-    let canInteract = $derived(!rolling && !transitionState.isTransitioning);
+	let hasRolled = $derived(result !== null);
+	let canInteract = $derived(!rolling && !transitionState.isTransitioning);
 
-    async function doCheck() {
-        if (!canInteract) return;
+	async function doCheck() {
+		if (!canInteract) return;
 
-        if (!hasRolled) {
-            // Roll phase
-            rolling = true;
-            result = getFailureCheckRoll();
-            await diceRoller.roll(result);
-            applyFailureCheckResult(result);
-            rolling = false;
+		if (!hasRolled) {
+			// Roll phase
+			rolling = true;
+			result = getFailureCheckRoll();
+			await diceRoller.roll(result);
+			applyFailureCheckResult(result);
+			rolling = false;
 
-            // Dispatch event
-            onfailurecheckcompleted?.(gameState.state);
-        } else {
-            // Confirm phase
-            await confirmFailureCheck();
-        }
-    }
+			// Dispatch event
+			onfailurecheckcompleted?.(gameState.state);
+		} else {
+			// Confirm phase
+			await confirmFailureCheck();
+		}
+	}
 
-    let header = $derived(hasRolled ? 'Click to continue' : 'Roll failure check');
+	let header = $derived(hasRolled ? 'Click to continue' : 'Roll failure check');
 </script>
 
 <div class="dc-failure-check-container">
-    <DiceRoller
-        bind:this={diceRoller}
-        bind:rolling
-        onclick={doCheck}
-        onkeyup={doCheck}
-        {header}
-        disabled={!canInteract}
-    />
+	<DiceRoller
+		bind:this={diceRoller}
+		bind:rolling
+		onclick={doCheck}
+		onkeyup={doCheck}
+		{header}
+		disabled={!canInteract}
+	/>
 </div>
 
 <style>
-    .dc-failure-check-container {
-        width: 100%;
-        height: 100%;
-        display: grid;
-        text-align: center;
-    }
+	.dc-failure-check-container {
+		width: 100%;
+		height: 100%;
+		display: grid;
+		text-align: center;
+	}
 </style>
 ```
 
 **Key Changes:**
+
 - `createEventDispatcher` replaced with callback prop
 - `result` uses `$state()`
 - `hasRolled` derived from result
@@ -1453,34 +1448,34 @@ This timing difference can cause bugs if not accounted for:
 
 ```svelte
 <script>
-    import { createEventDispatcher } from 'svelte';
-    import {
-        currentScreen,
-        gameStore,
-        gameStylesheet,
-        loadSystemConfig,
-        transitionToScreen
-    } from '../stores/WAAStore.js';
-    // ... component imports ...
+	import { createEventDispatcher } from 'svelte';
+	import {
+		currentScreen,
+		gameStore,
+		gameStylesheet,
+		loadSystemConfig,
+		transitionToScreen
+	} from '../stores/WAAStore.js';
+	// ... component imports ...
 
-    export let systemSettings = {};
+	export let systemSettings = {};
 
-    export const startGame = async () => {
-        if (systemSettings.gameConfigUrl && systemSettings.player?.name) {
-            await loadSystemConfig(systemSettings);
-            dispatcher('dc-solo-rpg.gameLoaded', systemSettings);
-        } else {
-            $gameStore.status = 'Please select a player and a game';
-        }
-    };
+	export const startGame = async () => {
+		if (systemSettings.gameConfigUrl && systemSettings.player?.name) {
+			await loadSystemConfig(systemSettings);
+			dispatcher('dc-solo-rpg.gameLoaded', systemSettings);
+		} else {
+			$gameStore.status = 'Please select a player and a game';
+		}
+	};
 
-    const dispatcher = createEventDispatcher();
+	const dispatcher = createEventDispatcher();
 
-    $: if ($currentScreen == 'gameOver') {
-        dispatcher('dc-solo-rpg.gameOver', $gameStore.state);
-    } else if ($currentScreen == 'exitGame') {
-        dispatcher('dc-solo-rpg.exitGame', $gameStore.state);
-    }
+	$: if ($currentScreen == 'gameOver') {
+		dispatcher('dc-solo-rpg.gameOver', $gameStore.state);
+	} else if ($currentScreen == 'exitGame') {
+		dispatcher('dc-solo-rpg.exitGame', $gameStore.state);
+	}
 </script>
 ```
 
@@ -1488,51 +1483,47 @@ This timing difference can cause bugs if not accounted for:
 
 ```svelte
 <script>
-    import { gameState, currentScreen } from '../stores/gameStore.svelte.js';
-    import { loadSystemConfig } from '../stores/gameActions.svelte.js';
-    import { transitionToScreen } from '../stores/gameActions.svelte.js';
-    // ... component imports ...
+	import { gameState, currentScreen } from '../stores/gameStore.svelte.js';
+	import { loadSystemConfig } from '../stores/gameActions.svelte.js';
+	import { transitionToScreen } from '../stores/gameActions.svelte.js';
+	// ... component imports ...
 
-    let {
-        systemSettings = {},
-        ongameloaded,
-        ongameover,
-        onexitgame
-    } = $props();
+	let { systemSettings = {}, ongameloaded, ongameover, onexitgame } = $props();
 
-    export const startGame = async () => {
-        if (systemSettings.gameConfigUrl && systemSettings.player?.name) {
-            await loadSystemConfig(systemSettings);
-            ongameloaded?.(systemSettings);
-        } else {
-            gameState.status = 'Please select a player and a game';
-        }
-    };
+	export const startGame = async () => {
+		if (systemSettings.gameConfigUrl && systemSettings.player?.name) {
+			await loadSystemConfig(systemSettings);
+			ongameloaded?.(systemSettings);
+		} else {
+			gameState.status = 'Please select a player and a game';
+		}
+	};
 
-    // Watch for screen changes and dispatch events
-    $effect(() => {
-        if (currentScreen === 'gameOver') {
-            ongameover?.(gameState);
-        } else if (currentScreen === 'exitGame') {
-            onexitgame?.(gameState);
-        }
-    });
+	// Watch for screen changes and dispatch events
+	$effect(() => {
+		if (currentScreen === 'gameOver') {
+			ongameover?.(gameState);
+		} else if (currentScreen === 'exitGame') {
+			onexitgame?.(gameState);
+		}
+	});
 </script>
 
 <svelte:head>
-    <link rel="stylesheet" href={gameState.stylesheet} />
+	<link rel="stylesheet" href={gameState.stylesheet} />
 </svelte:head>
 
 <div class="dc-game-container dc-game-bg">
-    {#if currentScreen === 'loadGame'}
-        <!-- ... -->
-    {:else if currentScreen === 'options'}
-        <!-- ... -->
-    {/if}
+	{#if currentScreen === 'loadGame'}
+		<!-- ... -->
+	{:else if currentScreen === 'options'}
+		<!-- ... -->
+	{/if}
 </div>
 ```
 
 **Key Changes:**
+
 - Props destructured with `$props()`
 - Event callbacks as props
 - `$effect` for side effects (screen change monitoring)
@@ -1610,15 +1601,15 @@ import adapter from '@sveltejs/adapter-auto';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-    kit: {
-        adapter: adapter(),
+	kit: {
+		adapter: adapter(),
 
-        // SvelteKit 2 new options (optional)
-        version: {
-            // Enable versioning for cache busting
-            name: process.env.npm_package_version
-        }
-    }
+		// SvelteKit 2 new options (optional)
+		version: {
+			// Enable versioning for cache busting
+			name: process.env.npm_package_version
+		}
+	}
 };
 
 export default config;
@@ -1630,18 +1621,18 @@ SvelteKit 2 generates better types automatically. Update `jsconfig.json`:
 
 ```json
 {
-    "extends": "./.svelte-kit/tsconfig.json",
-    "compilerOptions": {
-        "allowJs": true,
-        "checkJs": true,
-        "esModuleInterop": true,
-        "forceConsistentCasingInFileNames": true,
-        "resolveJsonModule": true,
-        "skipLibCheck": true,
-        "sourceMap": true,
-        "strict": false,
-        "moduleResolution": "bundler"
-    }
+	"extends": "./.svelte-kit/tsconfig.json",
+	"compilerOptions": {
+		"allowJs": true,
+		"checkJs": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"resolveJsonModule": true,
+		"skipLibCheck": true,
+		"sourceMap": true,
+		"strict": false,
+		"moduleResolution": "bundler"
+	}
 }
 ```
 
@@ -1681,56 +1672,53 @@ import { get } from 'svelte/store';
 import { gameStore, currentScreen, rollForTasks, confirmTaskRoll } from './WAAStore.js';
 
 describe('State Transitions (Baseline)', () => {
-    beforeEach(() => {
-        // Reset state before each test
-        gameStore.set({
-            state: 'loadGame',
-            tower: 54,
-            tokens: 10,
-            // ... full reset
-        });
-    });
+	beforeEach(() => {
+		// Reset state before each test
+		gameStore.set({
+			state: 'loadGame',
+			tower: 54,
+			tokens: 10
+			// ... full reset
+		});
+	});
 
-    test('rollForTasks sets cardsToDraw', async () => {
-        gameStore.update(s => ({ ...s, state: 'rollForTasks' }));
+	test('rollForTasks sets cardsToDraw', async () => {
+		gameStore.update((s) => ({ ...s, state: 'rollForTasks' }));
 
-        const result = await rollForTasks();
+		const result = await rollForTasks();
 
-        const state = get(gameStore);
-        expect(state.cardsToDraw).toBe(result);
-        expect(state.cardsToDraw).toBeGreaterThan(0);
-        expect(state.cardsToDraw).toBeLessThanOrEqual(6);
-    });
+		const state = get(gameStore);
+		expect(state.cardsToDraw).toBe(result);
+		expect(state.cardsToDraw).toBeGreaterThan(0);
+		expect(state.cardsToDraw).toBeLessThanOrEqual(6);
+	});
 
-    test('confirmTaskRoll transitions to drawCard', async () => {
-        gameStore.update(s => ({ ...s, state: 'rollForTasks', cardsToDraw: 3 }));
+	test('confirmTaskRoll transitions to drawCard', async () => {
+		gameStore.update((s) => ({ ...s, state: 'rollForTasks', cardsToDraw: 3 }));
 
-        await confirmTaskRoll();
+		await confirmTaskRoll();
 
-        const screen = get(currentScreen);
-        expect(screen).toBe('drawCard');
-    });
+		const screen = get(currentScreen);
+		expect(screen).toBe('drawCard');
+	});
 
-    test('double roll should not double cardsToDraw', async () => {
-        gameStore.update(s => ({ ...s, state: 'rollForTasks' }));
+	test('double roll should not double cardsToDraw', async () => {
+		gameStore.update((s) => ({ ...s, state: 'rollForTasks' }));
 
-        // Simulate rapid clicks
-        const [result1, result2] = await Promise.all([
-            rollForTasks(),
-            rollForTasks()
-        ]);
+		// Simulate rapid clicks
+		const [result1, result2] = await Promise.all([rollForTasks(), rollForTasks()]);
 
-        const state = get(gameStore);
-        // Should only execute once
-        expect(state.cardsToDraw).toBe(result1);
-    });
+		const state = get(gameStore);
+		// Should only execute once
+		expect(state.cardsToDraw).toBe(result1);
+	});
 });
 
 describe('Game Flow Integration', () => {
-    test('complete round flow', async () => {
-        // Load game → Options → Intro → Roll → Draw → Log → Success
-        // Full integration test
-    });
+	test('complete round flow', async () => {
+		// Load game → Options → Intro → Roll → Draw → Log → Success
+		// Full integration test
+	});
 });
 ```
 
@@ -1746,49 +1734,48 @@ import { gameState, transitionTo } from './gameStore.svelte.js';
 import { rollForTasks, confirmTaskRoll } from './gameActions.svelte.js';
 
 describe('Rune Store - State Transitions', () => {
-    beforeEach(() => {
-        // Reset rune state
-        Object.assign(gameState, {
-            state: 'loadGame',
-            tower: 54,
-            tokens: 10,
-            // ... full reset
-        });
-    });
+	beforeEach(() => {
+		// Reset rune state
+		Object.assign(gameState, {
+			state: 'loadGame',
+			tower: 54,
+			tokens: 10
+			// ... full reset
+		});
+	});
 
-    test('rollForTasks sets cardsToDraw', async () => {
-        gameState.state = 'rollForTasks';
+	test('rollForTasks sets cardsToDraw', async () => {
+		gameState.state = 'rollForTasks';
 
-        const result = await rollForTasks();
+		const result = await rollForTasks();
 
-        expect(gameState.cardsToDraw).toBe(result);
-        expect(gameState.cardsToDraw).toBeGreaterThan(0);
-        expect(gameState.cardsToDraw).toBeLessThanOrEqual(6);
-    });
+		expect(gameState.cardsToDraw).toBe(result);
+		expect(gameState.cardsToDraw).toBeGreaterThan(0);
+		expect(gameState.cardsToDraw).toBeLessThanOrEqual(6);
+	});
 
-    test('transitionTo validates transitions', () => {
-        gameState.state = 'loadGame';
+	test('transitionTo validates transitions', () => {
+		gameState.state = 'loadGame';
 
-        // Valid transition
-        expect(() => transitionTo('options')).not.toThrow();
+		// Valid transition
+		expect(() => transitionTo('options')).not.toThrow();
 
-        // Invalid transition
-        expect(() => transitionTo('drawCard'))
-            .toThrow('Invalid transition');
-    });
+		// Invalid transition
+		expect(() => transitionTo('drawCard')).toThrow('Invalid transition');
+	});
 
-    test('emergency exits always allowed', () => {
-        gameState.state = 'drawCard';
+	test('emergency exits always allowed', () => {
+		gameState.state = 'drawCard';
 
-        expect(() => transitionTo('exitGame')).not.toThrow();
-        expect(() => transitionTo('errorScreen')).not.toThrow();
-    });
+		expect(() => transitionTo('exitGame')).not.toThrow();
+		expect(() => transitionTo('errorScreen')).not.toThrow();
+	});
 });
 
 describe('Rune Store - Race Conditions', () => {
-    test('double roll prevented by transition lock', async () => {
-        // Test that isTransitioning prevents concurrent actions
-    });
+	test('double roll prevented by transition lock', async () => {
+		// Test that isTransitioning prevents concurrent actions
+	});
 });
 ```
 
@@ -1805,33 +1792,33 @@ import RollForTasks from './RollForTasks.svelte';
 import { gameState } from '../stores/gameStore.svelte.js';
 
 describe('RollForTasks Component (Svelte 5)', () => {
-    test('renders with correct header', () => {
-        gameState.config = {
-            labels: {
-                rollForTasksHeader: 'Roll for tasks'
-            }
-        };
+	test('renders with correct header', () => {
+		gameState.config = {
+			labels: {
+				rollForTasksHeader: 'Roll for tasks'
+			}
+		};
 
-        const { getByText } = render(RollForTasks);
+		const { getByText } = render(RollForTasks);
 
-        expect(getByText('Roll for tasks')).toBeInTheDocument();
-    });
+		expect(getByText('Roll for tasks')).toBeInTheDocument();
+	});
 
-    test('clicking rolls dice', async () => {
-        gameState.state = 'rollForTasks';
-        gameState.cardsToDraw = 0;
+	test('clicking rolls dice', async () => {
+		gameState.state = 'rollForTasks';
+		gameState.cardsToDraw = 0;
 
-        const { container } = render(RollForTasks);
-        const button = container.querySelector('button');
+		const { container } = render(RollForTasks);
+		const button = container.querySelector('button');
 
-        await fireEvent.click(button);
+		await fireEvent.click(button);
 
-        expect(gameState.cardsToDraw).toBeGreaterThan(0);
-    });
+		expect(gameState.cardsToDraw).toBeGreaterThan(0);
+	});
 
-    test('disables during transition', async () => {
-        // Test interaction blocking
-    });
+	test('disables during transition', async () => {
+		// Test interaction blocking
+	});
 });
 ```
 
@@ -1845,37 +1832,37 @@ describe('RollForTasks Component (Svelte 5)', () => {
 import { test, expect } from '@playwright/test';
 
 test.describe('Complete Game Flow', () => {
-    test('can play through a full round', async ({ page }) => {
-        await page.goto('/game');
+	test('can play through a full round', async ({ page }) => {
+		await page.goto('/game');
 
-        // Wait for load screen
-        await expect(page.locator('.dc-game-container')).toBeVisible();
+		// Wait for load screen
+		await expect(page.locator('.dc-game-container')).toBeVisible();
 
-        // Start game
-        await page.click('text=Start Game');
+		// Start game
+		await page.click('text=Start Game');
 
-        // Should see intro
-        await expect(page.locator('text=Intro')).toBeVisible();
+		// Should see intro
+		await expect(page.locator('text=Intro')).toBeVisible();
 
-        // Click to roll for tasks
-        await page.click('text=Roll for tasks');
+		// Click to roll for tasks
+		await page.click('text=Roll for tasks');
 
-        // Should see dice roller
-        await expect(page.locator('.dc-dice-roller')).toBeVisible();
+		// Should see dice roller
+		await expect(page.locator('.dc-dice-roller')).toBeVisible();
 
-        // Roll dice
-        await page.click('.dc-dice-roller button');
+		// Roll dice
+		await page.click('.dc-dice-roller button');
 
-        // Should transition to draw card
-        await expect(page.locator('text=Draw Card')).toBeVisible({ timeout: 5000 });
+		// Should transition to draw card
+		await expect(page.locator('text=Draw Card')).toBeVisible({ timeout: 5000 });
 
-        // Draw cards...
-        // (Continue full flow)
-    });
+		// Draw cards...
+		// (Continue full flow)
+	});
 
-    test('prevents double clicks during transitions', async ({ page }) => {
-        // Rapid click test
-    });
+	test('prevents double clicks during transitions', async ({ page }) => {
+		// Rapid click test
+	});
 });
 ```
 
@@ -1903,12 +1890,12 @@ import { defineConfig } from 'vitest/config';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 
 export default defineConfig({
-    plugins: [svelte({ hot: !process.env.VITEST })],
-    test: {
-        globals: true,
-        environment: 'happy-dom',
-        setupFiles: ['./tests/setup.js']
-    }
+	plugins: [svelte({ hot: !process.env.VITEST })],
+	test: {
+		globals: true,
+		environment: 'happy-dom',
+		setupFiles: ['./tests/setup.js']
+	}
 });
 ```
 
@@ -1972,6 +1959,7 @@ npm audit
 ```
 
 **Deliverables:**
+
 - Git branch created
 - Backup tags in place
 - Baseline tests written and passing
@@ -2007,16 +1995,16 @@ import adapter from '@sveltejs/adapter-auto';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-    kit: {
-        adapter: adapter(),
-        version: {
-            name: process.env.npm_package_version || 'development'
-        }
-    },
-    compilerOptions: {
-        // Svelte 5 runes mode
-        runes: true
-    }
+	kit: {
+		adapter: adapter(),
+		version: {
+			name: process.env.npm_package_version || 'development'
+		}
+	},
+	compilerOptions: {
+		// Svelte 5 runes mode
+		runes: true
+	}
 };
 
 export default config;
@@ -2029,7 +2017,7 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-    plugins: [sveltekit()]
+	plugins: [sveltekit()]
 });
 ```
 
@@ -2046,6 +2034,7 @@ npm run build
 ```
 
 **Expected Issues:**
+
 - Reactive statement warnings (expected, will fix in Phase 3)
 - Component prop warnings (expected, will fix in Phase 3)
 - Store usage warnings (expected, will fix in Phase 2)
@@ -2060,6 +2049,7 @@ npm run test:unit
 ```
 
 **Deliverables:**
+
 - All dependencies updated
 - Configuration files updated
 - Build succeeds (with warnings OK)
@@ -2081,6 +2071,7 @@ touch src/lib/stores/transitions.js
 **Implementation:** Copy transition graph from WAAStateMachine.js into pure data structure (see State Management Refactoring section).
 
 **Test:**
+
 ```javascript
 // Quick test in browser console or Node
 import { transitionGraph, isValidTransition } from './transitions.js';
@@ -2097,12 +2088,14 @@ touch src/lib/stores/gameStore.svelte.js
 **Implementation:** Create gameState using `$state()` rune (see State Management Refactoring section).
 
 **Key Points:**
+
 - Use `$state()` for all reactive state
 - Use `$derived()` for computed values
 - Export `gameState` object
 - Include validation function
 
 **Test:**
+
 ```bash
 # Run store tests
 npm run test:unit -- gameStore.svelte.test.js
@@ -2125,6 +2118,7 @@ touch src/lib/stores/gameActions.svelte.js
 **Implementation:** Move all game action functions from WAAStore.js into gameActions.svelte.js, update to use runes.
 
 **Test each action:**
+
 ```javascript
 // Test rollForTasks
 import { rollForTasks } from './gameActions.svelte.js';
@@ -2164,6 +2158,7 @@ npm run test:unit -- stores/
 **Fix any issues before proceeding to Phase 3.**
 
 **Deliverables:**
+
 - New rune-based stores created
 - All store tests passing
 - Compatibility wrapper in place
@@ -2186,6 +2181,7 @@ Migrate in this order to minimize breaking changes:
 #### Step 3.1: Migrate Simple Components (1 hour)
 
 **Components:**
+
 - StatusDisplay.svelte
 - HealthMeter.svelte
 - Meter.svelte
@@ -2206,6 +2202,7 @@ npm run dev
 ```
 
 **Common changes:**
+
 - `export let prop` → `let { prop } = $props()`
 - `$:` → `$derived()`
 - `$gameStore` → `gameState`
@@ -2214,10 +2211,12 @@ npm run dev
 #### Step 3.2: Migrate Dice Roller Components (1 hour)
 
 **Components:**
+
 - ThreeJSDiceBoxRoller.svelte
 - NeuralDiceInterface.svelte
 
 **Special considerations:**
+
 - These have complex bindings
 - Test dice rolling animations thoroughly
 - Verify bind:rolling works
@@ -2225,6 +2224,7 @@ npm run dev
 #### Step 3.3: Migrate Game Action Components (2 hours)
 
 **Components:**
+
 - RollForTasks.svelte
 - DrawCard.svelte
 - FailureCheck.svelte
@@ -2241,6 +2241,7 @@ npm run dev
 3. **Verify no double execution**
 
 **Critical:** These components had race condition bugs. Verify fixes:
+
 - No double rolls
 - No double confirms
 - Blocked during transitions
@@ -2248,6 +2249,7 @@ npm run dev
 #### Step 3.4: Migrate Screen Components (1 hour)
 
 **Components:**
+
 - IntroScreen.svelte
 - OptionsScreen.svelte
 - LoadScreen.svelte
@@ -2261,12 +2263,14 @@ npm run dev
 **Component:** Game.svelte
 
 **Special considerations:**
+
 - This is the main orchestrator
 - Handles screen routing
 - Dispatches lifecycle events
 - Test all screen transitions
 
 **Testing checklist:**
+
 - Load game flow
 - All screens render
 - Transitions animate correctly
@@ -2276,12 +2280,14 @@ npm run dev
 #### Step 3.6: Migrate Layouts
 
 **Files:**
+
 - src/routes/+layout.svelte
 - src/routes/game/+layout.svelte
 
 **Minimal changes needed - mostly imports.**
 
 **Deliverables:**
+
 - All components migrated to Svelte 5
 - No console warnings
 - All screens functional
@@ -2307,6 +2313,7 @@ npm run test:unit -- --coverage
 ```
 
 **Focus areas:**
+
 - Store state transitions
 - Game actions
 - Validation functions
@@ -2347,43 +2354,46 @@ npm run test:visual
 ```javascript
 // Test 1: Double roll prevention
 test('rapid clicks on roll button only execute once', async () => {
-    gameState.state = 'rollForTasks';
-    gameState.cardsToDraw = 0;
+	gameState.state = 'rollForTasks';
+	gameState.cardsToDraw = 0;
 
-    // Simulate 10 rapid clicks
-    const clicks = Array(10).fill(0).map(() => rollForTasks());
-    await Promise.all(clicks);
+	// Simulate 10 rapid clicks
+	const clicks = Array(10)
+		.fill(0)
+		.map(() => rollForTasks());
+	await Promise.all(clicks);
 
-    // Should only roll once
-    expect(gameState.cardsToDraw).toBeGreaterThan(0);
-    expect(gameState.cardsToDraw).toBeLessThanOrEqual(6);
+	// Should only roll once
+	expect(gameState.cardsToDraw).toBeGreaterThan(0);
+	expect(gameState.cardsToDraw).toBeLessThanOrEqual(6);
 });
 
 // Test 2: Transition blocking
 test('actions blocked during screen transitions', async () => {
-    gameState.state = 'rollForTasks';
-    gameState.cardsToDraw = 3;
+	gameState.state = 'rollForTasks';
+	gameState.cardsToDraw = 3;
 
-    // Start transition
-    const transition = transitionToScreen('drawCard');
+	// Start transition
+	const transition = transitionToScreen('drawCard');
 
-    // Try to roll during transition (should be blocked)
-    await rollForTasks();
+	// Try to roll during transition (should be blocked)
+	await rollForTasks();
 
-    await transition;
+	await transition;
 
-    // CardsToDraw should still be 3
-    expect(gameState.cardsToDraw).toBe(3);
+	// CardsToDraw should still be 3
+	expect(gameState.cardsToDraw).toBe(3);
 });
 
 // Test 3: Component state survival
 test('component remount during transition doesnt cause issues', async () => {
-    // This was the root cause of original bugs
-    // With runes, state is external so survives remount
+	// This was the root cause of original bugs
+	// With runes, state is external so survives remount
 });
 ```
 
 **Manual rapid-click testing:**
+
 - Rapidly click "Roll" button
 - Rapidly click "Confirm" button
 - Click during animations
@@ -2402,12 +2412,14 @@ npx playwright test --project=webkit
 ```
 
 **Full game flow test:**
+
 - Complete 3 rounds
 - Win a game
 - Lose a game
 - Restart and play again
 
 **Deliverables:**
+
 - All tests passing
 - No race conditions
 - Visual verification complete
@@ -2448,9 +2460,9 @@ Some derived values might be over-computing. Optimize:
 ```javascript
 // Before: Recomputes on ANY gameState change
 let stats = $derived({
-    tower: gameState.tower,
-    tokens: gameState.tokens,
-    round: gameState.round
+	tower: gameState.tower,
+	tokens: gameState.tokens,
+	round: gameState.round
 });
 
 // After: Only recompute when specific fields change
@@ -2466,10 +2478,10 @@ Ensure effects are efficient:
 ```javascript
 // Avoid effects that run too often
 $effect(() => {
-    // Only run when screen changes, not on every state change
-    if (currentScreen === 'gameOver') {
-        ongameover?.(gameState);
-    }
+	// Only run when screen changes, not on every state change
+	if (currentScreen === 'gameOver') {
+		ongameover?.(gameState);
+	}
 });
 ```
 
@@ -2487,6 +2499,7 @@ npm run check
 ```
 
 **Review warnings:**
+
 - Fix any remaining Svelte warnings
 - Address TypeScript issues
 - Remove unused imports
@@ -2508,24 +2521,29 @@ npm run check
 ## Completed: [Date]
 
 ## Changes Made:
+
 - Migrated from Svelte 4 to Svelte 5
 - Eliminated StateMachine class
 - Introduced rune-based state management
 - Fixed race conditions in RollForTasks, DrawCard, FailureCheck
 
 ## Breaking Changes:
+
 - WAAStateMachine.js removed
 - Store imports changed to gameStore.svelte.js
 - Components now use runes instead of stores
 
 ## Performance Improvements:
+
 - [Document improvements]
 
 ## Known Issues:
+
 - [Document any remaining issues]
 ```
 
 **Deliverables:**
+
 - Old code deleted
 - Performance optimized
 - Code quality checks pass
@@ -2543,23 +2561,23 @@ npm run check
 // Dual state tracking - PROBLEM
 export const currentScreen = writable('loadGame');
 export const services = {
-    stateMachine: new StateMachine('loadGame'),
+	stateMachine: new StateMachine('loadGame')
 };
 
 // Manual synchronization required
 export const transitionToScreen = async (action, transitionType = 'default') => {
-    currentScreen.update((screen) => {
-        if (action) services.stateMachine.next(action);
-        screen = services.stateMachine.state;
-        return screen;
-    });
+	currentScreen.update((screen) => {
+		if (action) services.stateMachine.next(action);
+		screen = services.stateMachine.state;
+		return screen;
+	});
 };
 
 // Game store - separate from screen state
 export const gameStore = writable({
-    state: 'loadGame', // Duplicates stateMachine.state!
-    tower: 54,
-    // ...
+	state: 'loadGame', // Duplicates stateMachine.state!
+	tower: 54
+	// ...
 });
 ```
 
@@ -2568,10 +2586,10 @@ export const gameStore = writable({
 ```javascript
 // Single source of truth
 let gameState = $state({
-    state: 'loadGame',
-    tower: 54,
-    tokens: 10,
-    // ... all state in one place
+	state: 'loadGame',
+	tower: 54,
+	tokens: 10
+	// ... all state in one place
 });
 
 // Automatically derived
@@ -2579,8 +2597,8 @@ export const currentScreen = $derived(gameState.state);
 
 // Pure function validation
 export function transitionTo(newState) {
-    validateTransition(gameState.state, newState);
-    gameState.state = newState;
+	validateTransition(gameState.state, newState);
+	gameState.state = newState;
 }
 ```
 
@@ -2592,23 +2610,24 @@ export function transitionTo(newState) {
 
 ```svelte
 <script>
-    import { gameStore, rollForTasks } from '../stores/WAAStore.js';
+	import { gameStore, rollForTasks } from '../stores/WAAStore.js';
 
-    let rolled = false;  // LOCAL STATE - survives across remounts?
-    let rolling = false;
+	let rolled = false; // LOCAL STATE - survives across remounts?
+	let rolling = false;
 
-    async function rollTaskDice() {
-        if (rolling) return;
-        const result = await rollForTasks();
-        await taskDice.roll(result);
-        rolled = true;  // Sets local state
-    }
+	async function rollTaskDice() {
+		if (rolling) return;
+		const result = await rollForTasks();
+		await taskDice.roll(result);
+		rolled = true; // Sets local state
+	}
 
-    $: header = rolled ? 'Continue' : 'Roll';
+	$: header = rolled ? 'Continue' : 'Roll';
 </script>
 ```
 
 **Problems:**
+
 - `rolled` is local component state
 - Component can remount during async transition
 - `rolled` resets to false → can roll again
@@ -2618,32 +2637,33 @@ export function transitionTo(newState) {
 
 ```svelte
 <script>
-    import { gameState } from '../stores/gameStore.svelte.js';
-    import { transitionState } from '../stores/transitionStore.svelte.js';
-    import { rollForTasks } from '../stores/gameActions.svelte.js';
+	import { gameState } from '../stores/gameStore.svelte.js';
+	import { transitionState } from '../stores/transitionStore.svelte.js';
+	import { rollForTasks } from '../stores/gameActions.svelte.js';
 
-    let rolling = $state(false);
+	let rolling = $state(false);
 
-    // Derive from store - always correct even after remount
-    let rolled = $derived(gameState.cardsToDraw > 0);
+	// Derive from store - always correct even after remount
+	let rolled = $derived(gameState.cardsToDraw > 0);
 
-    // Combine all blockers
-    let canInteract = $derived(!rolling && !transitionState.isTransitioning);
+	// Combine all blockers
+	let canInteract = $derived(!rolling && !transitionState.isTransitioning);
 
-    async function rollTaskDice() {
-        if (!canInteract || rolled) return;
+	async function rollTaskDice() {
+		if (!canInteract || rolled) return;
 
-        rolling = true;
-        const result = await rollForTasks();
-        await taskDice.roll(result);
-        rolling = false;
-    }
+		rolling = true;
+		const result = await rollForTasks();
+		await taskDice.roll(result);
+		rolling = false;
+	}
 
-    let header = $derived(rolled ? 'Continue' : 'Roll');
+	let header = $derived(rolled ? 'Continue' : 'Roll');
 </script>
 ```
 
 **Benefits:**
+
 - `rolled` derived from external state (survives remount)
 - `canInteract` prevents all race conditions
 - Cleaner, more explicit logic
@@ -2655,11 +2675,11 @@ export function transitionTo(newState) {
 ```javascript
 // WAAStore.js
 export async function confirmTaskRoll() {
-    // Start transition (async)
-    await transitionToScreen('drawCard');
+	// Start transition (async)
+	await transitionToScreen('drawCard');
 
-    // Meanwhile, user can click again!
-    // Or component can remount!
+	// Meanwhile, user can click again!
+	// Or component can remount!
 }
 ```
 
@@ -2668,38 +2688,39 @@ export async function confirmTaskRoll() {
 ```javascript
 // gameActions.svelte.js
 export async function confirmTaskRoll() {
-    // Check transition lock
-    if (transitionState.isTransitioning) {
-        console.warn('Transition in progress');
-        return;
-    }
+	// Check transition lock
+	if (transitionState.isTransitioning) {
+		console.warn('Transition in progress');
+		return;
+	}
 
-    await transitionToScreen('drawCard');
-    // Lock is released in finally block
+	await transitionToScreen('drawCard');
+	// Lock is released in finally block
 }
 
 // transitionToScreen handles locking
 export async function transitionToScreen(newState, animationType = 'default') {
-    if (transitionState.isTransitioning) {
-        console.warn('Already transitioning');
-        return;
-    }
+	if (transitionState.isTransitioning) {
+		console.warn('Already transitioning');
+		return;
+	}
 
-    setTransitioning(true);
+	setTransitioning(true);
 
-    try {
-        // Do transition
-        await animateOut();
-        transitionTo(newState);
-        await animateIn(animationType);
-    } finally {
-        // Always release lock
-        setTransitioning(false);
-    }
+	try {
+		// Do transition
+		await animateOut();
+		transitionTo(newState);
+		await animateIn(animationType);
+	} finally {
+		// Always release lock
+		setTransitioning(false);
+	}
 }
 ```
 
 **Key differences:**
+
 - Explicit lock checking
 - Lock released in finally block
 - Multiple guards (action + transition)
@@ -2716,12 +2737,14 @@ export async function transitionToScreen(newState, animationType = 'default') {
 **Severity:** MEDIUM-HIGH
 
 **Details:**
+
 - Runes are new syntax
 - Component props work differently
 - Event handling changed
 - Some patterns need rewriting
 
 **Mitigation:**
+
 1. Comprehensive testing before migration
 2. Keep old code in Git for rollback
 3. Migrate incrementally (component by component)
@@ -2729,6 +2752,7 @@ export async function transitionToScreen(newState, animationType = 'default') {
 5. Reference official Svelte 5 migration guide
 
 **Rollback Plan:**
+
 ```bash
 git checkout backup/pre-svelte5
 npm install
@@ -2741,17 +2765,20 @@ npm install
 **Severity:** LOW-MEDIUM
 
 **Details:**
+
 - `@3d-dice/dice-box-threejs` might not be compatible with Svelte 5
 - `augmented-ui` CSS library should be fine
 - Other dependencies are pure JS
 
 **Mitigation:**
+
 1. Test dice roller immediately after upgrade
 2. Check library GitHub for Svelte 5 issues
 3. Prepare to wrap in compatibility mode if needed
 4. Have fallback dice renderer ready
 
 **Contingency:**
+
 ```svelte
 <!-- Wrap in legacy mode if needed -->
 <svelte:options legacy={true} />
@@ -2765,11 +2792,13 @@ npm install
 **Severity:** MEDIUM
 
 **Details:**
+
 - Current game state is complex
 - Some state interactions might break
 - Timing of state updates could change
 
 **Mitigation:**
+
 1. Comprehensive unit tests for all state transitions
 2. Integration tests for full game flows
 3. Manual testing of all screens
@@ -2777,17 +2806,18 @@ npm install
 5. Add extensive logging during migration
 
 **Early Warning:**
+
 ```javascript
 // Add validation to catch issues early
 $effect(() => {
-    // Validate state consistency
-    if (gameState.cardsToDraw < 0) {
-        console.error('INVALID STATE: cardsToDraw negative');
-    }
-    if (gameState.tower < 0) {
-        console.error('INVALID STATE: tower negative');
-    }
-    // ... more validations
+	// Validate state consistency
+	if (gameState.cardsToDraw < 0) {
+		console.error('INVALID STATE: cardsToDraw negative');
+	}
+	if (gameState.tower < 0) {
+		console.error('INVALID STATE: tower negative');
+	}
+	// ... more validations
 });
 ```
 
@@ -2798,17 +2828,20 @@ $effect(() => {
 **Severity:** LOW
 
 **Details:**
+
 - Svelte 5 rendering timing might differ
 - Screen transitions might feel different
 - Animations might need adjustment
 
 **Mitigation:**
+
 1. Keep exact same timing values initially
 2. Test all animations after migration
 3. Adjust only if needed
 4. Document any timing changes
 
 **Testing:**
+
 ```javascript
 // Time critical animations
 console.time('screen-transition');
@@ -2824,11 +2857,13 @@ console.timeEnd('screen-transition');
 **Severity:** LOW
 
 **Details:**
+
 - Type generation might change
 - Some types might need updating
 - JSDoc comments might need adjustment
 
 **Mitigation:**
+
 1. Run `npm run check` frequently
 2. Update types as needed
 3. Don't block on type errors initially
@@ -2841,25 +2876,30 @@ console.timeEnd('screen-transition');
 **Severity:** MEDIUM
 
 **Details:**
+
 - The original bugs were tricky
 - New architecture should fix them
 - But could introduce new issues
 
 **Mitigation:**
+
 1. Dedicated race condition tests
 2. Manual rapid-click testing
 3. Stress testing with automation
 4. Monitor for duplicate actions in logs
 
 **Stress Test:**
+
 ```javascript
 // Automated rapid-click test
 test('stress test: 100 rapid clicks', async () => {
-    const clicks = Array(100).fill(0).map(() => rollForTasks());
-    await Promise.allSettled(clicks);
+	const clicks = Array(100)
+		.fill(0)
+		.map(() => rollForTasks());
+	await Promise.allSettled(clicks);
 
-    // Should only execute once
-    expect(rollForTasksCalls).toBe(1);
+	// Should only execute once
+	expect(rollForTasksCalls).toBe(1);
 });
 ```
 
@@ -2897,6 +2937,7 @@ test('stress test: 100 rapid clicks', async () => {
 ### Opportunity 1: TypeScript Migration
 
 **Why Now:**
+
 - Svelte 5 has excellent TypeScript support
 - Runes work great with types
 - Catch errors at compile time
@@ -2915,62 +2956,63 @@ mv src/lib/stores/gameActions.svelte.js src/lib/stores/gameActions.svelte.ts
 // src/lib/stores/gameStore.svelte.ts
 
 type GameScreen =
-    | 'loadGame'
-    | 'options'
-    | 'intro'
-    | 'rollForTasks'
-    | 'drawCard'
-    | 'failureCheck'
-    | 'log'
-    | 'successCheck'
-    | 'gameOver'
-    | 'finalLog'
-    | 'exitGame'
-    | 'errorScreen';
+	| 'loadGame'
+	| 'options'
+	| 'intro'
+	| 'rollForTasks'
+	| 'drawCard'
+	| 'failureCheck'
+	| 'log'
+	| 'successCheck'
+	| 'gameOver'
+	| 'finalLog'
+	| 'exitGame'
+	| 'errorScreen';
 
 interface Card {
-    rank: string;
-    suit: 'hearts' | 'diamonds' | 'clubs' | 'spades';
-    value: number;
+	rank: string;
+	suit: 'hearts' | 'diamonds' | 'clubs' | 'spades';
+	value: number;
 }
 
 interface GameState {
-    state: GameScreen;
-    tower: number;
-    tokens: number;
-    round: number;
-    cardsToDraw: number;
-    cardsDrawn: number;
-    deck: Card[];
-    discard: Card[];
-    currentCard: Card | null;
-    diceRoll: number;
-    kingsRevealed: number;
-    kingOfHearts: boolean;
-    kingOfDiamonds: boolean;
-    kingOfClubs: boolean;
-    kingOfSpades: boolean;
-    journalEntries: JournalEntry[];
-    config: GameConfig | null;
-    systemConfig: SystemConfig | null;
-    status: string;
+	state: GameScreen;
+	tower: number;
+	tokens: number;
+	round: number;
+	cardsToDraw: number;
+	cardsDrawn: number;
+	deck: Card[];
+	discard: Card[];
+	currentCard: Card | null;
+	diceRoll: number;
+	kingsRevealed: number;
+	kingOfHearts: boolean;
+	kingOfDiamonds: boolean;
+	kingOfClubs: boolean;
+	kingOfSpades: boolean;
+	journalEntries: JournalEntry[];
+	config: GameConfig | null;
+	systemConfig: SystemConfig | null;
+	status: string;
 }
 
 let gameState = $state<GameState>({
-    state: 'loadGame',
-    tower: 54,
-    tokens: 10,
-    // ... with full type checking
+	state: 'loadGame',
+	tower: 54,
+	tokens: 10
+	// ... with full type checking
 });
 
 // Type-safe transitions
 export function transitionTo(newState: GameScreen): void {
-    validateTransition(gameState.state, newState);
-    gameState.state = newState;
+	validateTransition(gameState.state, newState);
+	gameState.state = newState;
 }
 ```
 
 **Benefits:**
+
 - Autocomplete for state fields
 - Catch invalid transitions at compile time
 - Better IDE support
@@ -2984,7 +3026,9 @@ Svelte 5's runes enable extremely fine-grained reactivity. Optimize hot paths:
 
 ```javascript
 // Before: Entire gameState reactive
-let gameState = $state({ /* 20 fields */ });
+let gameState = $state({
+	/* 20 fields */
+});
 
 // After: Split into focused runes
 let gameScreen = $state('loadGame');
@@ -3002,12 +3046,12 @@ let rollState = $state({ diceRoll: 0, rolling: false });
 ```javascript
 // Expensive computation - only recalculate when needed
 let gameStats = $derived.by(() => {
-    // Complex calculation
-    const cardsRemaining = gameState.deck.length;
-    const discardSize = gameState.discard.length;
-    const completion = (54 - cardsRemaining) / 54;
+	// Complex calculation
+	const cardsRemaining = gameState.deck.length;
+	const discardSize = gameState.discard.length;
+	const completion = (54 - cardsRemaining) / 54;
 
-    return { cardsRemaining, discardSize, completion };
+	return { cardsRemaining, discardSize, completion };
 });
 ```
 
@@ -3016,15 +3060,15 @@ let gameStats = $derived.by(() => {
 ```javascript
 // Don't spam updates
 let debouncedSave = $derived.by(() => {
-    // Debounce expensive operations
-    const state = gameState;
+	// Debounce expensive operations
+	const state = gameState;
 
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => {
-        localStorage.setItem('gameState', JSON.stringify(state));
-    }, 1000);
+	clearTimeout(saveTimer);
+	saveTimer = setTimeout(() => {
+		localStorage.setItem('gameState', JSON.stringify(state));
+	}, 1000);
 
-    return state;
+	return state;
 });
 ```
 
@@ -3078,6 +3122,7 @@ export function undoLastAction() {
 ```
 
 **Benefits:**
+
 - Complete game history
 - Time-travel debugging
 - Undo/redo for free
@@ -3115,6 +3160,7 @@ src/lib/
 ```
 
 **Benefits:**
+
 - Clear separation of concerns
 - Easy to find code
 - Easier to test features in isolation
@@ -3128,23 +3174,23 @@ src/lib/
 // src/lib/stores/devTools.svelte.ts
 
 if (import.meta.env.DEV) {
-    // State change logger
-    $effect(() => {
-        console.log('%c STATE CHANGE', 'color: blue; font-weight: bold');
-        console.table({
-            screen: gameState.state,
-            tower: gameState.tower,
-            tokens: gameState.tokens,
-            round: gameState.round
-        });
-    });
+	// State change logger
+	$effect(() => {
+		console.log('%c STATE CHANGE', 'color: blue; font-weight: bold');
+		console.table({
+			screen: gameState.state,
+			tower: gameState.tower,
+			tokens: gameState.tokens,
+			round: gameState.round
+		});
+	});
 
-    // Expose for console debugging
-    window.__GAME_STATE__ = gameState;
+	// Expose for console debugging
+	window.__GAME_STATE__ = gameState;
 
-    // Time travel
-    window.__UNDO__ = undoLastAction;
-    window.__REPLAY__ = replayGame;
+	// Time travel
+	window.__UNDO__ = undoLastAction;
+	window.__REPLAY__ = replayGame;
 }
 ```
 
@@ -3153,14 +3199,14 @@ if (import.meta.env.DEV) {
 ```svelte
 <!-- src/lib/dev/StateInspector.svelte -->
 {#if import.meta.env.DEV}
-    <div class="state-inspector">
-        <h3>Game State Inspector</h3>
-        <div>Screen: {gameState.state}</div>
-        <div>Valid transitions: {getValidNextStates(gameState.state).join(', ')}</div>
-        <div>Tower: {gameState.tower}</div>
-        <div>Tokens: {gameState.tokens}</div>
-        <button onclick={() => transitionTo('gameOver')}>Force Game Over</button>
-    </div>
+	<div class="state-inspector">
+		<h3>Game State Inspector</h3>
+		<div>Screen: {gameState.state}</div>
+		<div>Valid transitions: {getValidNextStates(gameState.state).join(', ')}</div>
+		<div>Tower: {gameState.tower}</div>
+		<div>Tokens: {gameState.tokens}</div>
+		<button onclick={() => transitionTo('gameOver')}>Force Game Over</button>
+	</div>
 {/if}
 ```
 
@@ -3172,11 +3218,11 @@ if (import.meta.env.DEV) {
 import { gameState } from '../stores/gameStore.svelte.js';
 
 test('complete game state snapshot', () => {
-    // Set up specific game state
-    setupGameState();
+	// Set up specific game state
+	setupGameState();
 
-    // Take snapshot
-    expect(gameState).toMatchSnapshot();
+	// Take snapshot
+	expect(gameState).toMatchSnapshot();
 });
 ```
 
@@ -3211,21 +3257,21 @@ export async function playCompleteRound() {
 
 ```svelte
 <script>
-    function handleKeyDown(event: KeyboardEvent) {
-        switch (event.key) {
-            case 'Enter':
-            case ' ':
-                if (canInteract) action();
-                break;
-            case 'Escape':
-                // Cancel or go back
-                break;
-        }
-    }
+	function handleKeyDown(event: KeyboardEvent) {
+		switch (event.key) {
+			case 'Enter':
+			case ' ':
+				if (canInteract) action();
+				break;
+			case 'Escape':
+				// Cancel or go back
+				break;
+		}
+	}
 </script>
 
 <div role="button" tabindex="0" onkeydown={handleKeyDown}>
-    <!-- Interactive content -->
+	<!-- Interactive content -->
 </div>
 ```
 
@@ -3233,14 +3279,12 @@ export async function playCompleteRound() {
 
 ```svelte
 <div role="status" aria-live="polite">
-    {#if gameState.tower <= 10}
-        Tower critically low: {gameState.tower} floors remaining
-    {/if}
+	{#if gameState.tower <= 10}
+		Tower critically low: {gameState.tower} floors remaining
+	{/if}
 </div>
 
-<button aria-label="Roll dice for number of tasks (current: {gameState.diceRoll})">
-    Roll
-</button>
+<button aria-label="Roll dice for number of tasks (current: {gameState.diceRoll})"> Roll </button>
 ```
 
 ---

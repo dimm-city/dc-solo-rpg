@@ -1,6 +1,5 @@
 # Dimm City Solo RPG
 
-
 Welcome to the Dimm City Solo RPG project! This project provides a highly interactive and immersive web component that allows users to play Dimm City Solo RPG games in their browser. The Dimm City RPG is a variation of the Wretched and Alone game system. More information about the original game see the [License Attribution](#license-attribution) below.
 
 ## Overview
@@ -18,15 +17,14 @@ The web component is also highly configurable, allowing for customization of gam
 - **Selectable Dice Themes**: Designed for immersive, single-player RPG experiences.
 - **Svelte-based**: Utilizes the power of Svelte for efficient, high-performance web components.
 
-
 ## Easy Game Creation
 
 The game creation process for the DC Solo RPG system is designed to be easy for anyone. The three steps to create a game are:
 
 1. Download the game templates
 1. Modify the `config.yml` file that holds the game configuration, such as the title, subtitle, introduction, and more.
-2. Modify the description of each card in the `deck.csv` file to provide the card text.
-3. Modify the `theme.css` file to achieve the desired visual style, such as colors, fonts, and layout.
+1. Modify the description of each card in the `deck.csv` file to provide the card text.
+1. Modify the `theme.css` file to achieve the desired visual style, such as colors, fonts, and layout.
 
 Read the full guide here: [How to build a game](./docs/how-to-build-a-game.md)
 
@@ -59,7 +57,6 @@ You can preview the production build with `npm run preview`.
 
 > To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
 
-
 ## Contributing
 
 We will happily except feedback and pull requests are always welcome as well!
@@ -69,4 +66,5 @@ We will happily except feedback and pull requests are always welcome as well!
 This work is based on The Wretched (found at http://loottheroom.itch.io/wretched), product of Chris Bissette and Loot The Room, and licensed for our use under the Creative Commons Attribution 3.0 Unported license (http://creativecommons.org/licenses/by/3.0/).
 
 ### Please note
+
 If you use the Dimm City RPG in your project, you will need to include attributions as well. It is important to us that we support other developers, artists, and creators. Please see our [LICENSE](LICENSE) file for more information about providing proper attribution. Thank you for supporting the OSS and gaming communities!

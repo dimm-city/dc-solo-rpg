@@ -73,9 +73,9 @@ test.describe('Game Flow - Card Drawing', () => {
 			}
 
 			// Wait for the card drawing screen
-			await expect(
-				page.getByRole('button', { name: /INTERCEPT FRAGMENT/i })
-			).toBeVisible({ timeout: 5000 });
+			await expect(page.getByRole('button', { name: /INTERCEPT FRAGMENT/i })).toBeVisible({
+				timeout: 5000
+			});
 
 			// Track cards drawn by listening to console logs
 			const consoleMessages = [];
@@ -127,9 +127,7 @@ test.describe('Game Flow - Card Drawing', () => {
 						const failureContinueButton = page.getByRole('button', {
 							name: /CONTINUE/i
 						});
-						if (
-							await failureContinueButton.isVisible({ timeout: 5000 }).catch(() => false)
-						) {
+						if (await failureContinueButton.isVisible({ timeout: 5000 }).catch(() => false)) {
 							await failureContinueButton.click();
 							await page.waitForTimeout(1000);
 						}
@@ -158,9 +156,9 @@ test.describe('Game Flow - Card Drawing', () => {
 			console.log(`Round ${round}: Drew ${cardsDrawn} cards`);
 
 			// Verify we're at the journal entry screen
-			await expect(
-				page.getByRole('heading', { name: /RECORD YOUR JOURNAL ENTRY/i })
-			).toBeVisible({ timeout: 10000 });
+			await expect(page.getByRole('heading', { name: /RECORD YOUR JOURNAL ENTRY/i })).toBeVisible({
+				timeout: 10000
+			});
 
 			// Verify the summary shows the correct number of entries
 			const summaryEntries = await page.getByText(/^\d+\.\d+/).count();

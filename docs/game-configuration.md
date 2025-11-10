@@ -49,40 +49,39 @@ In this example, the game is titled "Future Lost" and it is a part of the "Dimm 
 
 ## Game Labels Configuration
 
-The game labels are also defined in the configuration YAML file. There are several properties that can be used to customize the text labels used throughout the game. 
-
+The game labels are also defined in the configuration YAML file. There are several properties that can be used to customize the text labels used throughout the game.
 
 ### Example
 
 Here is an example of a game labels configuration:
 
 ```yaml
-introNextButtonText: "Next"
-introBackButtonText: "Back"
-introStartButtonText: "Start Game"
-introExitButtonText: "Exit Game"
-toolbarExitButtonText: "Exit"
-journalEntryHeader: "Journal Entry"
-journalEntrySubHeader: "Summary of events"
-journalEntryNextButtonText: "Continue"
-journalEntrySaveButtonText: "Record"
-journalEntryRestartButtonText: "Restart"
-journalEntryExitButtonText: "New Game"
-rollForTasksHeader: "Roll for Tasks"
-rollForTasksResultHeader: "Click to continue..."
-drawCardButtonText: "Draw Card"
-successCheckHeader: "Roll Success Check"
-successCheckResultHeader: "Click to continue..."
-failureCheckHeader: "Failure Check"
-failureCheckLoss: "You have failed"
-successCheckWin: "You have succeeded"
-gameOverHeader: "Game Over"
-gameOverButtonText: "Record Final Log"
-statusDisplayRoundText: "Round: "
-healthMeterHeader: "Health Meter"
-healthMeterSvg: "[coming soon...]"
-failureCounterHeader: "Failure Counters"
-failureCounterSvg: "[coming soon...]"
+introNextButtonText: 'Next'
+introBackButtonText: 'Back'
+introStartButtonText: 'Start Game'
+introExitButtonText: 'Exit Game'
+toolbarExitButtonText: 'Exit'
+journalEntryHeader: 'Journal Entry'
+journalEntrySubHeader: 'Summary of events'
+journalEntryNextButtonText: 'Continue'
+journalEntrySaveButtonText: 'Record'
+journalEntryRestartButtonText: 'Restart'
+journalEntryExitButtonText: 'New Game'
+rollForTasksHeader: 'Roll for Tasks'
+rollForTasksResultHeader: 'Click to continue...'
+drawCardButtonText: 'Draw Card'
+successCheckHeader: 'Roll Success Check'
+successCheckResultHeader: 'Click to continue...'
+failureCheckHeader: 'Failure Check'
+failureCheckLoss: 'You have failed'
+successCheckWin: 'You have succeeded'
+gameOverHeader: 'Game Over'
+gameOverButtonText: 'Record Final Log'
+statusDisplayRoundText: 'Round: '
+healthMeterHeader: 'Health Meter'
+healthMeterSvg: '[coming soon...]'
+failureCounterHeader: 'Failure Counters'
+failureCounterSvg: '[coming soon...]'
 ```
 
 In this example, the 'Next' button on the intro screen will display "Next", the 'Back' button will display "Back", and so on.

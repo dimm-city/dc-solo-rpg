@@ -121,15 +121,15 @@
 		const centerY = canvas.height / 2;
 
 		// Update and filter particles
-		particles = particles.filter(p => p.life > 0);
-		particles.forEach(p => {
+		particles = particles.filter((p) => p.life > 0);
+		particles.forEach((p) => {
 			p.update(centerX, centerY);
 			p.draw(ctx);
 		});
 
 		// Update probability streams during rolling
 		if (animationStage === 'rolling') {
-			probabilityStreams.forEach(stream => {
+			probabilityStreams.forEach((stream) => {
 				stream.update();
 				stream.draw(ctx);
 			});
@@ -148,7 +148,7 @@
 		} else if (animationStage === 'settling') {
 			spawnRate = 0.5;
 			// Mark particles to rush to center during settling
-			particles.forEach(p => {
+			particles.forEach((p) => {
 				if (!p.rushToCenter) {
 					p.rushToCenter = true;
 				}
@@ -156,10 +156,7 @@
 		}
 
 		if (particles.length < maxParticles && Math.random() < spawnRate) {
-			particles.push(new Particle(
-				Math.random() * canvas.width,
-				Math.random() * canvas.height
-			));
+			particles.push(new Particle(Math.random() * canvas.width, Math.random() * canvas.height));
 		}
 
 		animationFrameId = requestAnimationFrame(animateParticles);
@@ -172,9 +169,7 @@
 		const streamCount = window.innerWidth < 450 ? 5 : 10;
 		probabilityStreams = [];
 		for (let i = 0; i < streamCount; i++) {
-			probabilityStreams.push(new ProbabilityStream(
-				Math.random() * canvas.width
-			));
+			probabilityStreams.push(new ProbabilityStream(Math.random() * canvas.width));
 		}
 	}
 
@@ -234,7 +229,6 @@
 			onrollcomplete({ result });
 
 			return result;
-
 		} catch (error) {
 			console.error('Neural dice roll failed:', error);
 			animationStage = 'idle';
@@ -299,11 +293,7 @@
 
 <div class="neural-dice-interface" class:active={animationStage !== 'idle'}>
 	<!-- Particle field canvas -->
-	<canvas
-		class="particle-field"
-		bind:this={canvas}
-		aria-hidden="true"
-	></canvas>
+	<canvas class="particle-field" bind:this={canvas} aria-hidden="true"></canvas>
 
 	<!-- Neural scan grid background -->
 	<div
@@ -353,10 +343,14 @@
 	<button
 		class="neural-cta"
 		class:pulsing={animationStage === 'idle'}
-		class:processing={animationStage === 'anticipating' || animationStage === 'rolling' || animationStage === 'settling'}
+		class:processing={animationStage === 'anticipating' ||
+			animationStage === 'rolling' ||
+			animationStage === 'settling'}
 		class:ready={animationStage === 'revealed'}
 		onclick={onButtonClick}
-		disabled={animationStage === 'anticipating' || animationStage === 'rolling' || animationStage === 'settling'}
+		disabled={animationStage === 'anticipating' ||
+			animationStage === 'rolling' ||
+			animationStage === 'settling'}
 		type="button"
 	>
 		<span class="cta-glow" aria-hidden="true"></span>
@@ -428,7 +422,8 @@
 	}
 
 	@keyframes grid-pulse {
-		0%, 100% {
+		0%,
+		100% {
 			opacity: 0.3;
 			background-size: 40px 40px;
 		}
@@ -605,7 +600,8 @@
 	}
 
 	.result-hud {
-		background: linear-gradient(135deg,
+		background: linear-gradient(
+			135deg,
 			rgba(10, 10, 10, 0.95) 0%,
 			rgba(26, 26, 26, 0.9) 50%,
 			rgba(10, 10, 10, 0.95) 100%
@@ -644,7 +640,8 @@
 	}
 
 	@keyframes result-pulse {
-		0%, 100% {
+		0%,
+		100% {
 			transform: scale(1);
 			filter: brightness(1);
 		}
@@ -694,7 +691,8 @@
 		left: 50%;
 		transform: translateX(-50%);
 		padding: var(--space-md, 1rem) var(--space-xl, 2rem);
-		background: linear-gradient(135deg,
+		background: linear-gradient(
+			135deg,
 			var(--color-cyber-magenta, #d946ef) 0%,
 			var(--color-neon-cyan, #00ffff) 100%
 		);
@@ -720,7 +718,8 @@
 	}
 
 	@keyframes button-pulse {
-		0%, 100% {
+		0%,
+		100% {
 			box-shadow:
 				0 4px 15px rgba(217, 70, 239, 0.4),
 				0 0 20px rgba(0, 255, 255, 0.3);
@@ -733,10 +732,7 @@
 	}
 
 	.neural-cta.processing {
-		background: linear-gradient(135deg,
-			rgba(217, 70, 239, 0.6) 0%,
-			rgba(0, 255, 255, 0.6) 100%
-		);
+		background: linear-gradient(135deg, rgba(217, 70, 239, 0.6) 0%, rgba(0, 255, 255, 0.6) 100%);
 	}
 
 	.neural-cta.ready {
@@ -746,7 +742,8 @@
 	}
 
 	@keyframes ready-pulse {
-		0%, 100% {
+		0%,
+		100% {
 			box-shadow:
 				0 4px 20px rgba(0, 255, 255, 0.6),
 				0 0 40px rgba(0, 255, 255, 0.8);
@@ -780,12 +777,7 @@
 		left: -100%;
 		width: 100%;
 		height: 100%;
-		background: linear-gradient(
-			90deg,
-			transparent,
-			rgba(255, 255, 255, 0.3),
-			transparent
-		);
+		background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
 		animation: cta-glow-sweep 2s ease-in-out infinite;
 	}
 
@@ -810,7 +802,8 @@
 	}
 
 	@keyframes ellipsis-pulse {
-		0%, 100% {
+		0%,
+		100% {
 			opacity: 0;
 		}
 		50% {

@@ -1,11 +1,13 @@
 <script>
 	import DiceRoller from './ThreeJSDiceBoxRoller.svelte';
 	import { gameState } from '../stores/gameStore.svelte.js';
-	import { getFailureCheckRoll, applyFailureCheckResult, confirmFailureCheck } from '../stores/gameActions.svelte.js';
+	import {
+		getFailureCheckRoll,
+		applyFailureCheckResult,
+		confirmFailureCheck
+	} from '../stores/gameActions.svelte.js';
 
-	let {
-		onfailurecheckcompleted = () => {}
-	} = $props();
+	let { onfailurecheckcompleted = () => {} } = $props();
 
 	let diceRoller = $state();
 	let rolling = $state();

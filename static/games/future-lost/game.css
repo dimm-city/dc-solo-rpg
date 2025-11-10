@@ -1,5 +1,6 @@
 .dc-game-container {
-	--main-font-family: 'dimm-city', 'Tomorrow', 'Droid Sans Mono', 'Comfortaa', Nunito, -apple-system,
+	--main-font-family:
+		'dimm-city', 'Tomorrow', 'Droid Sans Mono', 'Comfortaa', Nunito, -apple-system,
 		BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif, Apple Color Emoji,
 		Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
 
@@ -23,7 +24,6 @@
 	--fourth-accent: var(--yellow);
 	--disabled-color: rgb(196, 192, 192);
 	--disabled-color-dark: rgb(75, 75, 75);
-
 
 	/*WAA variables*/
 	--dc-button-bg: transparent;
@@ -52,13 +52,12 @@
 		var(--secondary-accent-muted)
 	);
 
-	--dc-dice-roller-bg: var(--dc-card-back-bg); 
-	 /* #cccfd1; */
+	--dc-dice-roller-bg: var(--dc-card-back-bg);
+	/* #cccfd1; */
 
 	/* #1387b9; */
 	--dc-card-front-bg: var(--dark);
 	--dc-card-front-color: var(--third-accent);
-
 
 	/*health meter*/
 	--dc-health-meter-high: var(--third-accent);
@@ -118,15 +117,13 @@ background: radial-gradient(circle, rgba(19,135,185,1) 0%, rgba(29,63,78,1) 71%,
 .dc-game-container textarea,
 .dc-game-container select,
 .dc-game-container button,
-.dc-game-container button:hover{
+.dc-game-container button:hover {
 	width: 100%;
 	padding: 0.5rem 1rem;
 	background-color: rgba(17, 17, 17, 0.75);
 	border: 0;
 	color: var(--third-accent);
 	font-size: 1rem;
-	
-	
 }
 .dc-game-container button,
 .dc-game-container button:hover,

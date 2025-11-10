@@ -73,7 +73,6 @@
 
 		return result.total;
 	}
-
 </script>
 
 <div

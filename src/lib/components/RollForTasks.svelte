@@ -18,7 +18,14 @@
 	}
 
 	async function confirm() {
-		console.log('[RollForTasks.confirm] Called, rolling:', rolling, 'rolled:', rolled, 'confirming:', confirming);
+		console.log(
+			'[RollForTasks.confirm] Called, rolling:',
+			rolling,
+			'rolled:',
+			rolled,
+			'confirming:',
+			confirming
+		);
 		if (rolling || confirming) return;
 		confirming = true;
 		// Don't reset rolled to false here - it causes rollForTasks() to be called again
@@ -33,13 +40,21 @@
 		else rollTaskDice();
 	}
 
-	const header = $derived(rolled ? gameState.config?.labels.rollForTasksResultHeader : gameState.config.labels.rollForTasksHeader);
+	const header = $derived(
+		rolled
+			? gameState.config?.labels.rollForTasksResultHeader
+			: gameState.config.labels.rollForTasksHeader
+	);
 </script>
 
 <div class="dc-roll-tasks-container">
-	<DiceRoller bind:this={taskDice} bind:rolling onclick={action} onkeyup={action} {header}>
-
-	</DiceRoller>
+	<DiceRoller
+		bind:this={taskDice}
+		bind:rolling
+		onclick={action}
+		onkeyup={action}
+		{header}
+	></DiceRoller>
 </div>
 
 <style>

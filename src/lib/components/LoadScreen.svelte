@@ -1,3 +1,1 @@
-<div>
-    No game loaded.
-</div>
+<div>No game loaded.</div>

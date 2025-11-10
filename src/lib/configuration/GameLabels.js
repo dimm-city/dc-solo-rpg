@@ -65,10 +65,12 @@ export class GameLabels {
 		this.failureCheckLoss = labels?.failureCheckLoss ?? 'You have failed to complete your quest.';
 
 		/** @property {string} failureCounterLoss - Text for the failure message when all kings are drawn. */
-		this.failureCounterLoss = labels?.failureCounterLoss ?? 'You have failed suffer a catastrophic failure.';
+		this.failureCounterLoss =
+			labels?.failureCounterLoss ?? 'You have failed suffer a catastrophic failure.';
 
 		/** @property {string} successCheckWin - Text for the win message. */
-		this.successCheckWin = labels?.successCheckWin ?? 'Congratulations! You have succeeded in your quest!';
+		this.successCheckWin =
+			labels?.successCheckWin ?? 'Congratulations! You have succeeded in your quest!';
 
 		/** @property {string} gameOverHeader - Header text for the game over section. */
 		this.gameOverHeader = labels?.gameOverHeader ?? 'Game Over';

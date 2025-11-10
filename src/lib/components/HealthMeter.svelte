@@ -58,8 +58,8 @@
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 		// Update and filter particles
-		particles = particles.filter(p => p.life > 0);
-		particles.forEach(p => {
+		particles = particles.filter((p) => p.life > 0);
+		particles.forEach((p) => {
 			p.update();
 			p.draw(ctx);
 		});
@@ -69,10 +69,12 @@
 		if (particles.length < maxParticles && Math.random() < 0.3) {
 			const centerX = canvas.width / 2;
 			const centerY = canvas.height / 2;
-			particles.push(new CriticalParticle(
-				centerX + (Math.random() - 0.5) * 30,
-				centerY + (Math.random() - 0.5) * 30
-			));
+			particles.push(
+				new CriticalParticle(
+					centerX + (Math.random() - 0.5) * 30,
+					centerY + (Math.random() - 0.5) * 30
+				)
+			);
 		}
 
 		animationFrameId = requestAnimationFrame(animateParticles);
@@ -91,7 +93,8 @@
 
 			setTimeout(() => {
 				// Update indicator and materialize phase
-				indicator = health >= 70 ? 'high' : health >= 40 ? 'medium' : health >= 20 ? 'low' : 'critical';
+				indicator =
+					health >= 70 ? 'high' : health >= 40 ? 'medium' : health >= 20 ? 'low' : 'critical';
 				text = result;
 				isChanging = false;
 
@@ -124,81 +127,81 @@
 	});
 </script>
 
-	<div class="health-meter">
-		<!-- Particle canvas for critical state -->
-		<canvas bind:this={canvas} class="particle-canvas"></canvas>
+<div class="health-meter">
+	<!-- Particle canvas for critical state -->
+	<canvas bind:this={canvas} class="particle-canvas"></canvas>
 
-		<svg width="100%" height="100%" viewBox="0 0 100 100" class="health-svg">
-			<!-- Neural scan line overlay -->
-			<defs>
-				<linearGradient id="scan-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-					<stop offset="0%" style="stop-color:#00ffff;stop-opacity:0" />
-					<stop offset="50%" style="stop-color:#00ffff;stop-opacity:0.6" />
-					<stop offset="100%" style="stop-color:#00ffff;stop-opacity:0" />
-				</linearGradient>
+	<svg width="100%" height="100%" viewBox="0 0 100 100" class="health-svg">
+		<!-- Neural scan line overlay -->
+		<defs>
+			<linearGradient id="scan-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+				<stop offset="0%" style="stop-color:#00ffff;stop-opacity:0" />
+				<stop offset="50%" style="stop-color:#00ffff;stop-opacity:0.6" />
+				<stop offset="100%" style="stop-color:#00ffff;stop-opacity:0" />
+			</linearGradient>
 
-				<linearGradient id="holographic-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-					<stop offset="0%" style="stop-color:rgba(255,255,255,0)" />
-					<stop offset="50%" style="stop-color:rgba(255,255,255,0.3)" />
-					<stop offset="100%" style="stop-color:rgba(255,255,255,0)" />
-				</linearGradient>
+			<linearGradient id="holographic-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+				<stop offset="0%" style="stop-color:rgba(255,255,255,0)" />
+				<stop offset="50%" style="stop-color:rgba(255,255,255,0.3)" />
+				<stop offset="100%" style="stop-color:rgba(255,255,255,0)" />
+			</linearGradient>
 
-				<mask id="health-mask">
-					<rect class="mask-rect {indicator}" x="0" y="0" width="100" height={100 - health} />
-				</mask>
-			</defs>
+			<mask id="health-mask">
+				<rect class="mask-rect {indicator}" x="0" y="0" width="100" height={100 - health} />
+			</mask>
+		</defs>
 
-			<!-- Main hexagon border (cyan neon glow) -->
-			<polygon
-				points="50 1 95 25 95 75 50 99 5 75 5 25"
-				class="dc-health-meter-stroke neural-border {indicator}"
-			/>
+		<!-- Main hexagon border (cyan neon glow) -->
+		<polygon
+			points="50 1 95 25 95 75 50 99 5 75 5 25"
+			class="dc-health-meter-stroke neural-border {indicator}"
+		/>
 
-			<!-- Health fill with mask -->
-			<polygon
-				points="50 1 95 25 95 75 50 99 5 75 5 25"
-				mask="url(#health-mask)"
-				class="dc-health-meter-bg fill-polygon {indicator}"
-			/>
+		<!-- Health fill with mask -->
+		<polygon
+			points="50 1 95 25 95 75 50 99 5 75 5 25"
+			mask="url(#health-mask)"
+			class="dc-health-meter-bg fill-polygon {indicator}"
+		/>
 
-			<!-- Scan line overlay (animated sweep) -->
-			<rect
-				class="scan-line {indicator}"
-				x="5"
-				y="0"
-				width="90"
-				height="15"
-				fill="url(#scan-gradient)"
-			/>
+		<!-- Scan line overlay (animated sweep) -->
+		<rect
+			class="scan-line {indicator}"
+			x="5"
+			y="0"
+			width="90"
+			height="15"
+			fill="url(#scan-gradient)"
+		/>
 
-			<!-- Holographic sheen overlay -->
-			<rect
-				class="holographic-sheen"
-				x="-100"
-				y="0"
-				width="50"
-				height="100"
-				fill="url(#holographic-gradient)"
-				opacity="0.4"
-			/>
-		</svg>
+		<!-- Holographic sheen overlay -->
+		<rect
+			class="holographic-sheen"
+			x="-100"
+			y="0"
+			width="50"
+			height="100"
+			fill="url(#holographic-gradient)"
+			opacity="0.4"
+		/>
+	</svg>
 
-		{#if text}
-			<span
-				class="health-score dc-fade-in"
-				class:materializing={!isChanging}
-				class:dematerializing={isChanging}
-				data-health-level={indicator}
-			>
-				{text}
-			</span>
-		{/if}
+	{#if text}
+		<span
+			class="health-score dc-fade-in"
+			class:materializing={!isChanging}
+			class:dematerializing={isChanging}
+			data-health-level={indicator}
+		>
+			{text}
+		</span>
+	{/if}
 
-		<!-- Critical state warning indicator -->
-		{#if indicator === 'critical'}
-			<div class="critical-warning">CRITICAL</div>
-		{/if}
-	</div>
+	<!-- Critical state warning indicator -->
+	{#if indicator === 'critical'}
+		<div class="critical-warning">CRITICAL</div>
+	{/if}
+</div>
 
 <style>
 	:root {
@@ -253,7 +256,8 @@
 	}
 
 	@keyframes border-pulse {
-		0%, 100% {
+		0%,
+		100% {
 			filter: drop-shadow(0 0 4px var(--neural-cyan-border));
 		}
 		50% {
@@ -263,7 +267,9 @@
 
 	/* Fill polygon colors with smooth transition */
 	.fill-polygon {
-		transition: fill 0.4s ease-out, filter 0.4s ease-out;
+		transition:
+			fill 0.4s ease-out,
+			filter 0.4s ease-out;
 	}
 
 	.fill-polygon.high {
@@ -398,41 +404,46 @@
 	}
 
 	/* High health: 70-100% - Green with glow */
-	.health-score[data-health-level="high"] {
+	.health-score[data-health-level='high'] {
 		color: var(--dc-health-meter-high);
-		text-shadow: 0 0 10px var(--dc-health-meter-high-glow),
-		             0 0 20px var(--dc-health-meter-high-glow),
-		             2px 2px 4px rgba(0, 0, 0, 0.8);
+		text-shadow:
+			0 0 10px var(--dc-health-meter-high-glow),
+			0 0 20px var(--dc-health-meter-high-glow),
+			2px 2px 4px rgba(0, 0, 0, 0.8);
 	}
 
 	/* Medium health: 40-69% - Yellow with glow */
-	.health-score[data-health-level="medium"] {
+	.health-score[data-health-level='medium'] {
 		color: var(--dc-health-meter-medium);
-		text-shadow: 0 0 10px var(--dc-health-meter-medium-glow),
-		             0 0 20px var(--dc-health-meter-medium-glow),
-		             2px 2px 4px rgba(0, 0, 0, 0.8);
+		text-shadow:
+			0 0 10px var(--dc-health-meter-medium-glow),
+			0 0 20px var(--dc-health-meter-medium-glow),
+			2px 2px 4px rgba(0, 0, 0, 0.8);
 	}
 
 	/* Low health: 20-39% - Orange with warning pulse */
-	.health-score[data-health-level="low"] {
+	.health-score[data-health-level='low'] {
 		color: var(--dc-health-meter-low);
-		text-shadow: 0 0 10px var(--dc-health-meter-low-glow),
-		             0 0 20px var(--dc-health-meter-low-glow),
-		             2px 2px 4px rgba(0, 0, 0, 0.8);
+		text-shadow:
+			0 0 10px var(--dc-health-meter-low-glow),
+			0 0 20px var(--dc-health-meter-low-glow),
+			2px 2px 4px rgba(0, 0, 0, 0.8);
 		animation: health-warning-pulse 1.5s ease-in-out infinite;
 	}
 
 	/* Critical health: 0-19% - Red with urgent pulse */
-	.health-score[data-health-level="critical"] {
+	.health-score[data-health-level='critical'] {
 		color: var(--dc-health-meter-critical);
-		text-shadow: 0 0 15px var(--dc-health-meter-critical-glow),
-		             0 0 30px var(--dc-health-meter-critical-glow),
-		             2px 2px 4px rgba(0, 0, 0, 0.8);
+		text-shadow:
+			0 0 15px var(--dc-health-meter-critical-glow),
+			0 0 30px var(--dc-health-meter-critical-glow),
+			2px 2px 4px rgba(0, 0, 0, 0.8);
 		animation: health-critical-pulse 1s ease-in-out infinite;
 	}
 
 	@keyframes health-warning-pulse {
-		0%, 100% {
+		0%,
+		100% {
 			opacity: 1;
 			filter: brightness(1);
 		}
@@ -443,7 +454,8 @@
 	}
 
 	@keyframes health-critical-pulse {
-		0%, 100% {
+		0%,
+		100% {
 			opacity: 1;
 			filter: brightness(1);
 		}
@@ -470,7 +482,8 @@
 	}
 
 	@keyframes critical-flash {
-		0%, 100% {
+		0%,
+		100% {
 			opacity: 1;
 		}
 		50% {
@@ -526,8 +539,8 @@
 	@media (prefers-reduced-motion: reduce) {
 		.scan-line,
 		.holographic-sheen,
-		.health-score[data-health-level="low"],
-		.health-score[data-health-level="critical"],
+		.health-score[data-health-level='low'],
+		.health-score[data-health-level='critical'],
 		.dc-health-meter-stroke.neural-border.critical,
 		.critical-warning {
 			animation: none;

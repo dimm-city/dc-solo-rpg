@@ -31,7 +31,7 @@ function shuffle(array) {
  * @returns {Promise<void>}
  */
 function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms));
+	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -323,7 +323,9 @@ export const drawCard = () => {
 		state.currentCard = card;
 		state.cardsToDraw -= 1;
 
-		console.log(`[drawCard] Drew ${card.card} of ${card.suit}, cardsToDrawRemaining: ${state.cardsToDraw}`);
+		console.log(
+			`[drawCard] Drew ${card.card} of ${card.suit}, cardsToDrawRemaining: ${state.cardsToDraw}`
+		);
 
 		card.id = `${state.round}.${state.log.filter((l) => l.round === state.round).length + 1}`;
 		card.round = state.round;

@@ -10,7 +10,7 @@
 	let status = $state('');
 	async function setConfig() {
 		if (selectedGame && selectedPlayer) {
-			ongameselected({selectedGame, selectedPlayer});
+			ongameselected({ selectedGame, selectedPlayer });
 		} else {
 			status = 'Please select a player and a game';
 		}

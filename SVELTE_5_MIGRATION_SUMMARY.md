@@ -13,11 +13,13 @@ Successfully migrated the DC Solo RPG application from Svelte 4 to Svelte 5 with
 ### 1. Dependency Upgrades
 
 **Core Framework:**
+
 - Svelte: `^4.0.0` → `^5.15.0`
 - SvelteKit: `^1.20.4` → `^2.15.0`
 - Vite: `^4.3.0` → `^6.0.0`
 
 **Supporting Packages:**
+
 - @sveltejs/adapter-auto: `^2.0.0` → `^3.3.0`
 - @sveltejs/package: `^2.1.0` → `^2.3.0`
 - svelte-check: `^3.4.3` → `^4.0.0`
@@ -30,12 +32,14 @@ Successfully migrated the DC Solo RPG application from Svelte 4 to Svelte 5 with
 ### 2. New Store Architecture (Runes-Based)
 
 **Created New Files:**
+
 - `src/lib/stores/transitions.js` - Pure transition graph data
 - `src/lib/stores/gameStore.svelte.js` - Core game state with `$state` rune
 - `src/lib/stores/transitionStore.svelte.js` - Transition/animation state
 - `src/lib/stores/gameActions.svelte.js` - All game logic and actions
 
 **Key Improvements:**
+
 - ✅ **Eliminated StateMachine class** - Simplified architecture
 - ✅ **Single source of truth** - No more dual state tracking
 - ✅ **Race condition fixes** - `isTransitioning` flag prevents concurrent transitions
@@ -68,6 +72,7 @@ Successfully migrated the DC Solo RPG application from Svelte 4 to Svelte 5 with
 20. NeuralBackground.svelte
 
 **Migration Patterns Applied:**
+
 - `export let prop` → `let { prop } = $props()`
 - `$:` reactive declarations → `$derived` or `$effect`
 - `$gameStore` subscriptions → direct `gameState` access (no $ prefix)
@@ -79,13 +84,15 @@ Successfully migrated the DC Solo RPG application from Svelte 4 to Svelte 5 with
 ### 4. Configuration Updates
 
 **svelte.config.js:**
+
 ```javascript
 compilerOptions: {
-  runes: true  // Enable Svelte 5 runes mode
+	runes: true; // Enable Svelte 5 runes mode
 }
 ```
 
 **package.json:**
+
 - Updated all dependencies to latest compatible versions
 - Updated export paths in library index
 
@@ -153,18 +160,23 @@ The migration fixed several critical race condition bugs:
 ## Testing
 
 ### Build Status
+
 ✅ **Production build successful**
+
 - No compilation errors
 - Bundle size maintained
 - All routes functional
 
 ### Dev Server Status
+
 ✅ **Dev server runs successfully**
+
 - Hot module replacement works
 - No runtime errors in console
 - All pages render correctly
 
 ### Known Issues
+
 - Some Vitest configuration issues (plugin compatibility)
 - Minor warnings about `<slot>` deprecation (non-breaking)
 - Some test files need updating for new store structure
@@ -174,26 +186,30 @@ The migration fixed several critical race condition bugs:
 ### For Library Users
 
 **Old Import:**
+
 ```javascript
-import { gameStore, currentScreen } from '@dimm-city/dc-solo-rpg'
+import { gameStore, currentScreen } from '@dimm-city/dc-solo-rpg';
 ```
 
 **New Import:**
+
 ```javascript
-import { gameState, getCurrentScreen } from '@dimm-city/dc-solo-rpg'
-import { transitionToScreen, rollForTasks, etc } from '@dimm-city/dc-solo-rpg'
+import { gameState, getCurrentScreen } from '@dimm-city/dc-solo-rpg';
+import { transitionToScreen, rollForTasks, etc } from '@dimm-city/dc-solo-rpg';
 ```
 
 **Store Access:**
+
 ```javascript
 // OLD (Svelte 4)
-$gameStore.tower  // With $ prefix
+$gameStore.tower; // With $ prefix
 
 // NEW (Svelte 5)
-gameState.tower   // Direct access, no $ prefix
+gameState.tower; // Direct access, no $ prefix
 ```
 
 ### Removed Files
+
 - `WAAStateMachine.js` - Replaced by pure function validation
 - Old `WAAStore.js` usage - Replaced by rune-based stores
 
@@ -215,6 +231,7 @@ gameState.tower   // Direct access, no $ prefix
 ## Migration Effort
 
 **Total Time:** ~4 hours
+
 - Phase 0: Preparation (30 min)
 - Phase 1: Dependency Upgrade (30 min)
 - Phase 2: Store Architecture (1 hour)

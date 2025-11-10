@@ -1,4 +1,3 @@
-
 export const transitions = {
 	loadGame: {
 		options: 'options'
@@ -66,9 +65,9 @@ export class StateMachine {
 	next(action) {
 		const transition = this.transitions[this.state][action];
 
-		if (transition || action == "exitGame" || action == "errorScreen") {
+		if (transition || action == 'exitGame' || action == 'errorScreen') {
 			this.state = transition ?? action;
-            return action; //this.state.toString();
+			return action; //this.state.toString();
 		} else {
 			throw new Error(`Invalid transition from ${this.state} on ${action}`);
 		}

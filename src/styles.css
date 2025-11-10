@@ -3,7 +3,6 @@
    Matching dimm.city website aesthetic EXACTLY
    ============================================ */
 
-
 /* Import Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;500;600;700&display=swap');
 
@@ -254,7 +253,7 @@ nav {
 	padding: var(--space-sm) var(--space-lg);
 }
 
-nav>a {
+nav > a {
 	font-family: var(--font-display);
 	font-size: var(--text-xl);
 	font-weight: 900;
@@ -266,7 +265,7 @@ nav>a {
 	transition: color var(--transition-fast);
 }
 
-nav>a:hover {
+nav > a:hover {
 	color: var(--color-neon-cyan);
 	text-shadow: var(--text-glow-cyan);
 }
@@ -463,10 +462,12 @@ button {
 	letter-spacing: var(--letter-spacing-wide);
 
 	/* Gradient: Yellow → Magenta → Cyan */
-	background: linear-gradient(90deg,
-			var(--color-brand-yellow) 0%,
-			var(--color-cyber-magenta) 50%,
-			var(--color-neon-cyan) 100%);
+	background: linear-gradient(
+		90deg,
+		var(--color-brand-yellow) 0%,
+		var(--color-cyber-magenta) 50%,
+		var(--color-neon-cyan) 100%
+	);
 
 	border: none;
 	border-radius: var(--space-sm);
@@ -480,7 +481,8 @@ button {
 
 button:hover {
 	transform: translateY(-2px);
-	filter: brightness(1.2) drop-shadow(0 0 12px rgba(255, 215, 0, 0.4)) drop-shadow(0 0 20px rgba(217, 70, 239, 0.3));
+	filter: brightness(1.2) drop-shadow(0 0 12px rgba(255, 215, 0, 0.4))
+		drop-shadow(0 0 20px rgba(217, 70, 239, 0.3));
 }
 
 /* FIX #7: Reduced motion */
@@ -538,7 +540,6 @@ button.loading {
 }
 
 @keyframes pulse-glow {
-
 	0%,
 	100% {
 		box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
@@ -679,18 +680,19 @@ body::before {
 	left: 0;
 	width: 100%;
 	height: 100%;
-	background: repeating-linear-gradient(0deg,
-			transparent,
-			transparent 2px,
-			rgba(217, 70, 239, 0.015) 2px,
-			rgba(217, 70, 239, 0.015) 4px);
+	background: repeating-linear-gradient(
+		0deg,
+		transparent,
+		transparent 2px,
+		rgba(217, 70, 239, 0.015) 2px,
+		rgba(217, 70, 239, 0.015) 4px
+	);
 	pointer-events: none;
 	z-index: 9999;
 }
 
 /* Subtle glow animation for interactive elements */
 @keyframes glow-pulse {
-
 	0%,
 	100% {
 		box-shadow: 0 0 8px rgba(217, 70, 239, 0.3);
@@ -711,7 +713,8 @@ body::before {
 .dc-card:focus-within {
 	cursor: pointer;
 	transform: translateY(-4px);
-	box-shadow: 0 8px 24px rgba(0, 255, 255, 0.3),
+	box-shadow:
+		0 8px 24px rgba(0, 255, 255, 0.3),
 		0 0 20px rgba(217, 70, 239, 0.2);
 }
 
@@ -743,10 +746,7 @@ body::before {
 	position: absolute;
 	inset: -2px;
 	border-radius: inherit;
-	background: linear-gradient(45deg,
-			transparent 30%,
-			rgba(217, 70, 239, 0.1) 50%,
-			transparent 70%);
+	background: linear-gradient(45deg, transparent 30%, rgba(217, 70, 239, 0.1) 50%, transparent 70%);
 	opacity: 0;
 	transition: opacity var(--transition-base);
 	pointer-events: none;
@@ -762,12 +762,13 @@ body::before {
 	content: '';
 	position: absolute;
 	inset: 0;
-	background:
-		repeating-linear-gradient(90deg,
-			transparent,
-			transparent 2px,
-			rgba(255, 215, 0, 0.02) 2px,
-			rgba(255, 215, 0, 0.02) 4px);
+	background: repeating-linear-gradient(
+		90deg,
+		transparent,
+		transparent 2px,
+		rgba(255, 215, 0, 0.02) 2px,
+		rgba(255, 215, 0, 0.02) 4px
+	);
 	pointer-events: none;
 }
 
@@ -811,7 +812,7 @@ body::before {
 }
 
 @media (max-width: 450px) {
-	nav>a {
+	nav > a {
 		font-size: var(--text-xl);
 		min-height: 48px;
 	}
@@ -834,7 +835,6 @@ body::before {
    ============================================ */
 
 @media (prefers-reduced-motion: reduce) {
-
 	*,
 	*::before,
 	*::after {
@@ -1016,7 +1016,9 @@ select:focus-visible {
 	outline: 3px solid var(--color-neon-cyan);
 	outline-offset: 2px;
 	border-color: var(--color-neon-cyan);
-	box-shadow: 0 0 10px rgba(0, 255, 255, 0.4), 0 0 0 3px rgba(0, 255, 255, 0.2);
+	box-shadow:
+		0 0 10px rgba(0, 255, 255, 0.4),
+		0 0 0 3px rgba(0, 255, 255, 0.2);
 }
 
 /* Navigation links focus */

@@ -141,7 +141,7 @@ export function validateTransition(fromState, toState) {
 		const validList = validStates?.join(', ') || 'none';
 		throw new Error(
 			`Invalid transition: ${fromState} → ${toState}\n` +
-			`Valid transitions from ${fromState}: ${validList}`
+				`Valid transitions from ${fromState}: ${validList}`
 		);
 	}
 

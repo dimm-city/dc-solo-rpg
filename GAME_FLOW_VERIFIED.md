@@ -334,6 +334,7 @@ exitGame ← finalLog ← gameOver ← log ← endTurn
 ## Reactive State Updates Verified
 
 ### gameState.$state Properties
+
 - ✅ `state` - Screen transitions
 - ✅ `tower` - Health meter updates
 - ✅ `tokens` - Status display updates
@@ -346,6 +347,7 @@ exitGame ← finalLog ← gameOver ← log ← endTurn
 - ✅ `gameOver` / `win` - Triggers end screen
 
 ### Computed Values ($derived)
+
 - ✅ `getCurrentScreen()` - Always matches gameState.state
 - ✅ `getGameStats()` - Real-time game statistics
 - ✅ `getCurrentEvents()` - Filters log by round
@@ -354,6 +356,7 @@ exitGame ← finalLog ← gameOver ← log ← endTurn
 ## Animation Timing Verified
 
 All animations work correctly:
+
 - ✅ Screen fade in/out: 300ms
 - ✅ Round page turn: 800ms
 - ✅ Journal entry: 1200ms
@@ -364,6 +367,7 @@ All animations work correctly:
 ## Race Condition Prevention
 
 The `transitionState.isTransitioning` flag prevents:
+
 - ✅ Double-clicking dice roller
 - ✅ Double-clicking cards
 - ✅ Multiple simultaneous transitions
@@ -372,6 +376,7 @@ The `transitionState.isTransitioning` flag prevents:
 ## Component Lifecycle
 
 All components properly:
+
 - ✅ Mount with correct initial state
 - ✅ Update reactively when gameState changes
 - ✅ Clean up on unmount (no memory leaks)
@@ -390,16 +395,19 @@ All components properly:
 ## Performance Metrics
 
 ### Load Times
+
 - Initial bundle download: < 500ms
 - First contentful paint: < 1s
 - Time to interactive: < 1.5s
 
 ### Memory Usage
+
 - Initial load: ~12MB
 - After 10 rounds: ~14MB (stable)
 - After restart: Returns to ~12MB
 
 ### CPU Usage
+
 - Idle: < 1%
 - During dice animation: 15-20%
 - During card draw: 10-15%

@@ -16,7 +16,7 @@
 			<span class="value">{gameState.player.name.toUpperCase()}</span>
 		</div>
 		<div class="info-segment">
-			<span class="label">{gameState.config?.labels.statusDisplayRoundText ?? 'ROUND:' }</span>
+			<span class="label">{gameState.config?.labels.statusDisplayRoundText ?? 'ROUND:'}</span>
 			<span class="value">{gameState?.round}</span>
 		</div>
 	</div>
@@ -26,7 +26,9 @@
 		<div class="stat-item health-stat">
 			<div class="stat-label">HEALTH</div>
 			<div class="stat-value">
-				<span class="current">{gameState.tower}</span><span class="divider">/</span><span class="max">100</span>
+				<span class="current">{gameState.tower}</span><span class="divider">/</span><span
+					class="max">100</span
+				>
 			</div>
 			<div class="stat-bar">
 				<div class="stat-fill health-fill" style="width: {gameState.tower}%"></div>
@@ -34,9 +36,13 @@
 		</div>
 
 		<div class="stat-item failure-stat">
-			<div class="stat-label">{gameState.config?.labels?.failureCounters?.toUpperCase() ?? 'FAILURE'}</div>
+			<div class="stat-label">
+				{gameState.config?.labels?.failureCounters?.toUpperCase() ?? 'FAILURE'}
+			</div>
 			<div class="stat-value">
-				<span class="current">{failurePercent}</span><span class="divider">/</span><span class="max">4</span>
+				<span class="current">{failurePercent}</span><span class="divider">/</span><span class="max"
+					>4</span
+				>
 			</div>
 			<div class="stat-bar">
 				<div class="stat-fill failure-fill" style="width: {(failurePercent / 4) * 100}%"></div>
@@ -46,7 +52,9 @@
 		<div class="stat-item bonus-stat">
 			<div class="stat-label">LUCK</div>
 			<div class="stat-value">
-				<span class="current">{bonusPercent}</span><span class="divider">/</span><span class="max">10</span>
+				<span class="current">{bonusPercent}</span><span class="divider">/</span><span class="max"
+					>10</span
+				>
 			</div>
 			<div class="stat-bar">
 				<div class="stat-fill bonus-fill" style="width: {(bonusPercent / 10) * 100}%"></div>
@@ -54,9 +62,13 @@
 		</div>
 
 		<div class="stat-item success-stat">
-			<div class="stat-label">{gameState.config?.labels?.successCounters?.toUpperCase() ?? 'SUCCESS'}</div>
+			<div class="stat-label">
+				{gameState.config?.labels?.successCounters?.toUpperCase() ?? 'SUCCESS'}
+			</div>
 			<div class="stat-value">
-				<span class="current">{successPercent}</span><span class="divider">/</span><span class="max">10</span>
+				<span class="current">{successPercent}</span><span class="divider">/</span><span class="max"
+					>10</span
+				>
 			</div>
 			<div class="stat-bar">
 				<div class="stat-fill success-fill" style="width: {(successPercent / 10) * 100}%"></div>

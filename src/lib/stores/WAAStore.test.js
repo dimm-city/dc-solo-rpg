@@ -160,7 +160,6 @@ describe('WAAStore', () => {
 
 	// Test drawCard
 	describe('drawCard', () => {
-
 		test('should draw a card and update the game state (even card)', async () => {
 			const card = { card: '2', suit: 'hearts' };
 			const initialState = {

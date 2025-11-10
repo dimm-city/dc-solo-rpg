@@ -56,7 +56,12 @@ test('Complete game playthrough with screenshots', async ({ page }) => {
 
 	// Check current state and take appropriate screenshot
 	const currentUrl = page.url();
-	if (await page.locator('.dc-failure-check-container').isVisible().catch(() => false)) {
+	if (
+		await page
+			.locator('.dc-failure-check-container')
+			.isVisible()
+			.catch(() => false)
+	) {
 		await page.screenshot({ path: 'screenshots/09-failure-check.png', fullPage: true });
 		console.log('Screenshot 9: Failure check screen');
 
@@ -93,7 +98,10 @@ test('Complete game playthrough with screenshots', async ({ page }) => {
 	console.log('Screenshot 11: Journal entry screen');
 
 	// Enter journal text
-	await page.fill('textarea', 'This is my journal entry for round 1. The game is working perfectly with Svelte 5!');
+	await page.fill(
+		'textarea',
+		'This is my journal entry for round 1. The game is working perfectly with Svelte 5!'
+	);
 	await page.screenshot({ path: 'screenshots/12-journal-filled.png', fullPage: true });
 	console.log('Screenshot 12: Journal entry filled');
 

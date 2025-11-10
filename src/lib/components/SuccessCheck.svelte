@@ -11,7 +11,6 @@
 		if (gameState.state == 'successCheck') {
 			const result = await successCheck();
 			await diceRoller.roll(result);
-
 		} else {
 			await startRound();
 		}

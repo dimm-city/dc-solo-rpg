@@ -1,15 +1,8 @@
 <script>
 	import { gameState } from '../stores/gameStore.svelte.js';
-	import {
-		recordRound,
-		nextScreen,
-		restartGame,
-		exitGame
-	} from '../stores/gameActions.svelte.js';
+	import { recordRound, nextScreen, restartGame, exitGame } from '../stores/gameActions.svelte.js';
 
-	let {
-		onjournalsaved = () => {}
-	} = $props();
+	let { onjournalsaved = () => {} } = $props();
 
 	let saved = $state(false);
 	const journal = $state({ text: '' });
@@ -42,7 +35,9 @@
 	<div class="journal-tools-center-area">
 		{#if saved}
 			{#if gameState.gameOver}
-				<button onclick={restartGame}>{gameState.config.labels.journalEntryRestartButtonText}</button>
+				<button onclick={restartGame}
+					>{gameState.config.labels.journalEntryRestartButtonText}</button
+				>
 				<button onclick={exitGame}>{gameState.config.labels.journalEntryExitButtonText}</button>
 			{:else}
 				<button onclick={next}>{gameState.config.labels.journalEntryNextButtonText}</button>
@@ -79,11 +74,11 @@
 		display: flex;
 	}
 
-	h2{
-		margin-bottom: .75rem;
+	h2 {
+		margin-bottom: 0.75rem;
 		font-size: clamp(0.8rem, 1.3rem, 1.5rem);
 	}
-	p{
+	p {
 		padding-block: 0.25rem;
 	}
 	textarea,

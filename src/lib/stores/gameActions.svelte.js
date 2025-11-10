@@ -15,7 +15,7 @@ const configLoader = new ConfigurationLoader();
  * @returns {Promise<void>}
  */
 function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms));
+	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -24,7 +24,9 @@ function sleep(ms) {
  * @returns {Array} Shuffled array
  */
 function shuffle(array) {
-	let currentIndex = array.length, temporaryValue, randomIndex;
+	let currentIndex = array.length,
+		temporaryValue,
+		randomIndex;
 
 	while (0 !== currentIndex) {
 		randomIndex = Math.floor(Math.random() * currentIndex);
@@ -75,16 +77,16 @@ export async function transitionToScreen(newState = null, animationType = 'defau
 		if (newScreenEl) {
 			newScreenEl.classList.remove('screen-transition-out');
 
-			const animClass = {
-				'round': 'round-transition',
-				'journal': 'journal-transition',
-				'default': 'screen-transition-in'
-			}[animationType] || 'screen-transition-in';
+			const animClass =
+				{
+					round: 'round-transition',
+					journal: 'journal-transition',
+					default: 'screen-transition-in'
+				}[animationType] || 'screen-transition-in';
 
 			newScreenEl.classList.add(animClass);
 
-			const duration = animationType === 'round' ? 800 :
-						   animationType === 'journal' ? 1200 : 500;
+			const duration = animationType === 'round' ? 800 : animationType === 'journal' ? 1200 : 500;
 
 			setTimeout(() => newScreenEl.classList.remove(animClass), duration);
 		}
@@ -239,7 +241,9 @@ export async function drawCard() {
 	gameState.currentCard = card;
 	gameState.cardsToDraw -= 1;
 
-	console.log(`[drawCard] Drew ${card.card} of ${card.suit}, cardsToDrawRemaining: ${gameState.cardsToDraw}`);
+	console.log(
+		`[drawCard] Drew ${card.card} of ${card.suit}, cardsToDrawRemaining: ${gameState.cardsToDraw}`
+	);
 
 	// Add to log
 	card.id = `${gameState.round}.${gameState.log.filter((l) => l.round === gameState.round).length + 1}`;
@@ -290,7 +294,9 @@ export async function drawCard() {
  */
 export async function confirmCard() {
 	console.log('[confirmCard] Called');
-	console.log(`[confirmCard] Current state: ${gameState.state}, cardsToDraw: ${gameState.cardsToDraw}`);
+	console.log(
+		`[confirmCard] Current state: ${gameState.state}, cardsToDraw: ${gameState.cardsToDraw}`
+	);
 
 	gameState.currentCard = null;
 	await transitionToScreen();
