@@ -290,7 +290,7 @@ test('COMPREHENSIVE: Full game validation with logic verification', async ({ pag
 
 	// Navigate to home
 	trackScreen('HomePage');
-	await page.goto('http://localhost:4173/');
+	await page.goto('/');
 	await page.waitForSelector('.dc-start-screen-container', { timeout: 5000 });
 	await page.screenshot({ path: 'screenshots/test-01-home.png', fullPage: true });
 	console.log('✓ Home page loaded');
@@ -573,7 +573,7 @@ test('COMPREHENSIVE: Full game validation with logic verification', async ({ pag
 test('SMOKE TEST: Game starts and first round works', async ({ page }) => {
 	console.log('\n🔥 Running smoke test...\n');
 
-	await page.goto('http://localhost:4173/');
+	await page.goto('/');
 	await page.waitForSelector('.dc-start-screen-container', { timeout: 5000 });
 
 	// Select and start game

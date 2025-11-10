@@ -115,7 +115,7 @@ test('Complete game flow - play until win or loss', async ({ page }) => {
 
 	// 1. HOME PAGE
 	trackScreen('HomePage');
-	await page.goto('http://localhost:4173/');
+	await page.goto('/');
 	await page.waitForSelector('.dc-start-screen-container', { timeout: 5000 });
 	await page.screenshot({ path: 'screenshots/flow-01-home.png', fullPage: true });
 	console.log('  → Game selector loaded');
@@ -349,7 +349,7 @@ test('Quick sanity check - game starts correctly', async ({ page }) => {
 	console.log('\n🔍 Running quick sanity check...\n');
 
 	// Navigate and start game
-	await page.goto('http://localhost:4173/');
+	await page.goto('/');
 	await page.waitForSelector('.dc-start-screen-container', { timeout: 5000 });
 
 	// Select game

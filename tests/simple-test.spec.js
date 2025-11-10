@@ -16,7 +16,7 @@ test('Debug - check page content', async ({ page }) => {
 		console.log(`[Page Error]: ${error.message}`);
 	});
 	
-	await page.goto('http://localhost:4173/');
+	await page.goto('/');
 	await page.waitForTimeout(5000); // Wait longer for JS to load
 	
 	// Take screenshot
