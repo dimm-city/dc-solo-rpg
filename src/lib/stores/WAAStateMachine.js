@@ -68,7 +68,6 @@ export class StateMachine {
 
 		if (transition || action == "exitGame" || action == "errorScreen") {
 			this.state = transition ?? action;
-			console.log('transition to:', action);
             return action; //this.state.toString();
 		} else {
 			throw new Error(`Invalid transition from ${this.state} on ${action}`);

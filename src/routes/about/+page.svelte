@@ -72,6 +72,11 @@
 	</p>
 </article>
 <style>
+article {
+	padding: var(--space-lg);
+	max-width: 800px;
+	margin: 0 auto;
+}
 
 h1 {
 	margin-bottom: 1rem;

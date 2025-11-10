@@ -1,36 +1,41 @@
 <script>
 	import CardDeck from './CardDeck.svelte';
 	import { confirmCard, drawCard, gameStore } from '../stores/WAAStore.js';
-	let deck;
-	async function onDrawCard() {
+
+	/**
+	 * Handle card request from neural interface
+	 * Triggered when user clicks "INTERCEPT FRAGMENT"
+	 */
+	async function onRequestCard() {
+		// Draw card from game store
 		await drawCard();
-		deck.drawCard($gameStore.currentCard);
 	}
-	async function onConfirmCard() {
-		deck.reset();
+
+	/**
+	 * Handle card confirmation from neural interface
+	 * Triggered when user clicks "CONTINUE" after seeing the card
+	 */
+	async function onConfirmCardDeck() {
+		// Confirm in the game store and proceed
 		await confirmCard();
-	}
-	async function onDeckClicked() {
-		if ($gameStore?.currentCard != null) await onConfirmCard();
-		else await onDrawCard();
 	}
 </script>
 
-<div
-	class="dc-draw-card-container"
-	on:keyup={onDeckClicked}
-	on:click={onDeckClicked}
-	role="button"
-	tabindex="0"
->
-	<div class="dc-header dc-draw-card-header">
-		{#if $gameStore?.currentCard != null}
-			<button>Click to continue...</button>
-		{:else}
-			<button>Click to draw a card...</button>
-		{/if}
-	</div>
-	<CardDeck bind:this={deck} />
+<!-- Neural Interface Container -->
+<div class="dc-draw-card-container">
+	<!--
+		The neural interface is now completely self-contained.
+		It dispatches two events:
+		- 'requestcard': When user wants to draw a new card
+		- 'confirmcard': When user confirms the revealed card
+
+		Card is passed reactively from the game store
+	-->
+	<CardDeck
+		card={$gameStore.currentCard}
+		on:requestcard={onRequestCard}
+		on:confirmcard={onConfirmCardDeck}
+	/>
 </div>
 
 <style>
@@ -41,6 +46,8 @@
 		justify-content: center;
 		align-content: center;
 		text-align: center;
+		background: var(--color-bg-darker, #000);
+		overflow: visible; /* Allow neural interface glows to extend beyond bounds */
 	}
 
 	@media (max-width: 450px) or (max-height: 600px) {

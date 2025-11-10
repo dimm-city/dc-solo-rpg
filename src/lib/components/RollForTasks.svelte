@@ -6,18 +6,29 @@
 	let taskDice;
 	let rolled = false;
 	let rolling = false;
+	let confirming = false;
+
 	async function rollTaskDice() {
-		if (rolling) return;
+		console.log('[RollForTasks.rollTaskDice] Called, rolling:', rolling, 'rolled:', rolled);
+		if (rolling || confirming) return;
 		const result = await rollForTasks();
 		await taskDice.roll(result);
 		rolled = true;
+		console.log('[RollForTasks.rollTaskDice] Completed, rolled is now:', rolled);
 	}
-	function confirm() {
-		if (rolling) return;
-		rolled = false;
-		confirmTaskRoll();
+
+	async function confirm() {
+		console.log('[RollForTasks.confirm] Called, rolling:', rolling, 'rolled:', rolled, 'confirming:', confirming);
+		if (rolling || confirming) return;
+		confirming = true;
+		// Don't reset rolled to false here - it causes rollForTasks() to be called again
+		// during the transition, overwriting the cardsToDraw value
+		await confirmTaskRoll();
+		confirming = false;
+		console.log('[RollForTasks.confirm] Completed, rolled is now:', rolled);
 	}
 	function action() {
+		console.log('[RollForTasks.action] Called, rolled:', rolled);
 		if (rolled) confirm();
 		else rollTaskDice();
 	}

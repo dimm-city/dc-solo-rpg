@@ -5,7 +5,8 @@
 		gameStore,
 		gameStylesheet,
 		loadSystemConfig,
-		nextScreen
+		nextScreen,
+		transitionToScreen
 	} from '../stores/WAAStore.js';
 	import OptionsScreen from './OptionsScreen.svelte';
 	import IntroScreen from './IntroScreen.svelte';
@@ -18,6 +19,7 @@
 	import JournalEntry from './JournalEntry.svelte';
 	import Toolbar from './Toolbar.svelte';
 	import LoadScreen from './LoadScreen.svelte';
+	import NeuralBackground from './NeuralBackground.svelte';
 
 	export let systemSettings = {};
 	export const startGame = async () => {
@@ -55,7 +57,7 @@
 			</slot>
 		</div>
 	{:else if $currentScreen == 'intro'}
-		<div class="dc-game-bg">
+		<div class="dc-game-bg dc-intro-wrapper">
 			<slot name="intro-screen">
 				<IntroScreen />
 			</slot>
@@ -65,7 +67,8 @@
 			<GameOver />
 		</div>
 	{:else if $currentScreen == 'finalLog' || $currentScreen == 'log'}
-		<div class="dc-fade-in dc-screen-container">
+		<div class="dc-fade-in dc-screen-container dc-journal-screen">
+			<NeuralBackground />
 			<JournalEntry on:dc-solo-rpg.journalSaved />
 		</div>
 	{:else if $currentScreen == 'exitGame'}
@@ -83,10 +86,11 @@
 				{/if}
 			</div>
 			<div class="main-screen-area dc-table-bg">
+				<NeuralBackground />
 				{#if $currentScreen == 'startRound'}
 					<div class="dc-fade-in dc-screen-container">
 						<h4>Round {$gameStore.round}</h4>
-						<button on:click={() => nextScreen('rollForTasks')}>Roll for tasks</button>
+						<button on:click={async () => await transitionToScreen('rollForTasks')}>Roll for tasks</button>
 					</div>
 				{:else if $currentScreen == 'rollForTasks'}
 					<div class="dc-fade-in dc-screen-container">
@@ -151,14 +155,28 @@
 	.dc-game-container {
 		display: grid;
 		height: 100%;
+		width: 100%; /* CRITICAL: Take full parent width */
+		max-width: 100%; /* CRITICAL: Prevent horizontal overflow */
+		min-width: 0; /* CRITICAL: Allow grid to shrink horizontally */
+		min-height: 0; /* CRITICAL: Allow grid to shrink below content size */
+		grid-template-rows: 100%; /* Constrain grid row to parent height */
 		box-sizing: border-box;
 		font-family: var(--dc-default-font-family);
 		color: var(--dc-default-text-color);
+		overflow: hidden; /* CRITICAL: Prevent all scrolling */
 	}
 	.dc-game-container,
 	.dc-game-container > div,
 	:global(.dc-intro-container) {
 		border-radius: var(--dc-default-border-radius);
+	}
+
+	.dc-intro-wrapper {
+		display: flex;
+		flex-direction: column;
+		overflow: visible; /* Allow glow effects to extend beyond bounds */
+		min-height: 0; /* Allow flex shrinking */
+		height: 100%; /* Fill parent */
 	}
 	:global(.dc-game-bg) {
 		background: var(--dc-default-game-bg);
@@ -184,10 +202,11 @@
 		display: grid;
 		height: 100%;
 		width: 100%;
+		min-width: 0; /* CRITICAL: Allow grid to shrink */
 		grid-template-rows: min-content min-content 1fr;
-		row-gap: 0.2rem;
-		padding-inline: 0.5rem;
-		padding-bottom: 0.25rem;
+		row-gap: 0.5rem;
+		padding: 0.5rem;
+		box-sizing: border-box;
 		grid-template-areas:
 			'toolbar-area'
 			'status-area'
@@ -197,28 +216,34 @@
 	.toolbar-area {
 		grid-area: toolbar-area;
 		padding-inline: 0.25rem;
+		min-width: 0; /* CRITICAL: Allow grid area to shrink */
 	}
 
 	.main-screen-area {
 		grid-area: main-screen-area;
 		width: 100%;
+		min-width: 0;
 		margin-inline: auto;
 		display: grid;
-		height: 99%;
+		min-height: 0; /* CRITICAL: Allow grid to shrink */
+		height: 100%; /* Take full available height */
 		box-sizing: border-box;
-		position: relative;
+		position: relative; /* CRITICAL: Position context for neural background */
+		overflow: hidden; /* CRITICAL: Prevent scrolling */
 	}
 
 	.main-screen-area > div.dc-screen-container {
 		width: 100%;
 		height: 100%;
+		overflow: visible; /* Allow glows and neural effects to extend beyond container */
+		box-sizing: border-box;
+		position: relative; /* Ensure content appears above neural background */
+		z-index: 1;
 	}
 	.dc-table-bg {
 		border-radius: var(--dc-default-border-radius);
-		background: var(--dc-dice-roller-bg);
-
-		/* background: rgb(19,135,185);
-background: radial-gradient(circle, rgba(19,135,185,1) 0%, rgba(29,63,78,1) 71%, rgba(136,136,136,1) 100%); */
+		/* Background removed to show neural network animation on all screens */
+		background: transparent;
 	}
 
 
@@ -232,6 +257,7 @@ background: radial-gradient(circle, rgba(19,135,185,1) 0%, rgba(29,63,78,1) 71%,
 		padding: 0.5rem;
 		border-radius: var(--dc-default-border-radius);
 		box-shadow: var(--dc-default-box-shadow);
+		overflow: visible; /* Allow button glows to extend beyond bounds */
 	}
 	:global(.dc-header button) {
 		display: grid;
@@ -260,6 +286,18 @@ background: radial-gradient(circle, rgba(19,135,185,1) 0%, rgba(29,63,78,1) 71%,
 
 	:global(.dc-fade-in) {
 		animation: fadeIn 350ms ease-in;
+	}
+
+	.dc-journal-screen {
+		position: relative;
+		width: 100%;
+		height: 100%;
+		overflow: hidden;
+	}
+
+	.dc-journal-screen :global(.dc-journal-container) {
+		position: relative;
+		z-index: 1;
 	}
 
 	@media (max-width: 450px) or (max-height: 600px) {

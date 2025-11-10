@@ -95,11 +95,17 @@
 <style>
 	.game-container {
 		display: grid;
+		flex: 1;
+		min-height: 0;
 		height: 100%;
+		max-width: 100%; /* CRITICAL: Prevent horizontal overflow */
+		box-sizing: border-box; /* Include padding/border in width */
+		overflow: visible; /* Allow glows and effects to extend beyond bounds */
 	}
 	.welcome-container {
 		display: flex;
 		flex-direction: column;
+		justify-content: flex-start; /* Align to top to prevent content overflow */
 	}
 	.hidden {
 		display: none;

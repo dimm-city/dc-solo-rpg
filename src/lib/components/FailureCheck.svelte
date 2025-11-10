@@ -1,6 +1,6 @@
 <script>
 	import DiceRoller from './ThreeJSDiceBoxRoller.svelte';
-	import { gameStore, failureCheck, confirmFailureCheck } from '../stores/WAAStore.js';
+	import { gameStore, getFailureCheckRoll, applyFailureCheckResult, confirmFailureCheck } from '../stores/WAAStore.js';
 	import { createEventDispatcher } from 'svelte';
 
 	let diceRoller;
@@ -9,12 +9,14 @@
 
 	const dispatcher = createEventDispatcher();
 	async function doCheck() {
-		console.log('doCheck', rolling);
 		if (rolling) return;
 		if ($gameStore.state == 'failureCheck') {
-			result = await failureCheck();
-			console.log('dice rolled for failure', result);
+			// Get roll result WITHOUT updating health yet
+			result = getFailureCheckRoll();
+			// Animate the dice
 			await diceRoller.roll(result);
+			// NOW apply the health consequences AFTER animation
+			applyFailureCheckResult(result);
 			dispatcher('dc-solo-rpg.failureCheckCompleted', $gameStore.state);
 		} else {
 			await confirmFailureCheck();

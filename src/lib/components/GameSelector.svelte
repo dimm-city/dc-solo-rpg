@@ -39,7 +39,7 @@
 		</select>
 	</div>
 
-	<button on:click={() => setConfig()}>Load Game</button>
+	<button on:click={() => setConfig()} data-augmented-ui="tl-clip br-clip both">Load Game</button>
 </div>
 
 <style>
@@ -48,6 +48,7 @@
 		flex-direction: column;
 		gap: 0.5rem;
 		padding: var(--dc-default-padding);
+		overflow: visible; /* Allow button glows to extend beyond bounds */
 	}
 
 	select {

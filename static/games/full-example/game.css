@@ -1,23 +1,34 @@
+/* FULL EXAMPLE - Dimm City Design System Integration */
 :root {
+	/* Use Inter font from main design system */
+	--dc-default-font-family: var(--font-body, 'Inter', 'Tomorrow', sans-serif);
 
-	--dc-default-text-color: black;
-	--dc-default-border-radius: 1rem;
+	--dc-default-border-radius: 0.5rem;
 	--dc-default-padding: 1rem;
-	--dc-default-boxshadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-	--dc-default-container-bg: rgba(255, 255, 255, 0.3);
+	--dc-default-boxshadow: var(--shadow-md, 0 4px 16px rgba(0, 0, 0, 0.4));
 
-	--dc-accent-color: rgb(58, 159, 199);
+	/* Use dark Dimm City backgrounds */
+	--dc-default-container-bg: var(--color-bg-secondary, #1a1a1a);
+	--dc-default-game-bg: var(--color-bg-primary, #0a0a0a);
+
+	/* Use Dimm City text colors */
+	--dc-default-text-color: var(--color-text-primary, #ffffff);
+	--dc-accent-color: var(--color-neon-cyan, #00ffff);
 	--dc-toolbar-height: 3rem;
 	--dc-header-block-margin: 0.25rem;
 
-	--dc-dice-roller-bg: #299eec;
-	--dc-card-border: 1px solid #000000;
-	--dc-card-border-radius: 1rem;
-	--dc-card-back-bg: #1387b9;
-	--dc-card-front-bg: rgb(235, 235, 235);
-	--dc-card-front-color: #1387b9;
+	/* Use Dimm City color palette with cyan accent */
+	--dc-button-bg: var(--color-neon-cyan, #00ffff);
+	--dc-button-color: var(--color-bg-primary, #0a0a0a);
+	--dc-dice-roller-bg: var(--color-bg-tertiary, #2a2a2a);
+	--dc-card-border: 2px solid var(--color-neon-cyan, #00ffff);
+	--dc-card-border-radius: 0.5rem;
+	--dc-card-back-bg: var(--color-neon-cyan, #00ffff);
+	--dc-card-back-color: var(--color-bg-primary, #0a0a0a);
+	--dc-card-front-bg: var(--color-bg-tertiary, #2a2a2a);
+	--dc-card-front-color: var(--color-text-primary, #ffffff);
 
-	--dc-status-display-padding: 0.25rem;
+	--dc-status-display-padding: 0.5rem;
 }
 
 

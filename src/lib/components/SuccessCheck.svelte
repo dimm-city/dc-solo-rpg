@@ -9,9 +9,9 @@
 		if ($gameStore.state == 'successCheck') {
 			const result = await successCheck();
 			await diceRoller.roll(result);
-			
+
 		} else {
-			startRound();
+			await startRound();
 		}
 	}
 
