@@ -111,6 +111,7 @@
 		padding: var(--space-md);
 		background-color: transparent;
 		min-height: 0; /* CRITICAL: Allows flex item to shrink below content size */
+		max-height: calc(100vh - 250px); /* Ensure space for buttons */
 	}
 
 	:global(.content h1) {

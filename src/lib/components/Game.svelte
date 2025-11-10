@@ -152,7 +152,7 @@
 	.dc-game-container {
 		display: grid;
 		height: 100%;
-		max-height: 100%; /* Prevent exceeding parent height */
+		grid-template-rows: 100%; /* Constrain grid row to parent height */
 		box-sizing: border-box;
 		font-family: var(--dc-default-font-family);
 		color: var(--dc-default-text-color);
@@ -165,12 +165,11 @@
 	}
 
 	.dc-intro-wrapper {
-		height: 100%;
-		max-height: 100%; /* Prevent exceeding parent height */
 		display: flex;
 		flex-direction: column;
 		overflow: hidden; /* IntroScreen handles its own overflow */
 		min-height: 0; /* Allow flex shrinking */
+		height: 100%; /* Fill parent */
 	}
 	:global(.dc-game-bg) {
 		background: var(--dc-default-game-bg);
