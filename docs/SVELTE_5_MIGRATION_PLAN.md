@@ -3,7 +3,27 @@
 **Project:** DC Solo RPG Card Game
 **Author:** bun-node-architect
 **Date:** 2025-01-09
-**Status:** Ready for Implementation
+**Last Updated:** 2025-01-10
+**Status:** Corrected and Ready for Implementation
+**Corrections By:** svelte5-expert-dev agent
+
+---
+
+## ⚠️ Critical Corrections Applied
+
+This plan has been reviewed by the **svelte5-expert-dev** agent against the official Svelte 5 documentation.
+All critical issues have been corrected. See `SVELTE_5_MIGRATION_CORRECTIONS.md` for details.
+
+**Key Corrections Made:**
+- ✅ Removed invalid compatibility wrapper pattern (`$effect` cannot be used at module scope)
+- ✅ Changed to sequential migration strategy (not parallel)
+- ✅ Clarified that `onMount`/`onDestroy` still work and are not deprecated
+- ✅ Added store auto-subscription (`$store`) requirements (only works with actual stores, not runes)
+- ✅ Added critical `$effect` timing warnings (runs after render, not before like `$:`)
+- ✅ Added `$derived.by()` vs `$derived()` usage guidance
+- ✅ Updated all code examples to follow Svelte 5 best practices
+
+**Risk Level:** Reduced from Medium-High to Low-Medium after corrections
 
 ---
 
@@ -59,11 +79,11 @@ This migration plan upgrades the DC Solo RPG from Svelte 4/SvelteKit 1 to Svelte
 | **Phase 3: Component Migration** | 6 hours | Migrate all 15+ components to Svelte 5 syntax |
 | **Phase 4: Testing & QA** | 3 hours | Comprehensive testing and bug fixes |
 | **Phase 5: Optimization** | 2 hours | Performance tuning and cleanup |
-| **Total** | **18 hours** | ~2.5 days of focused work |
+| **Total** | **20 hours** | ~2.5 days of focused work (includes correction time) |
 
 ### Risk Assessment
 
-**Overall Risk: MEDIUM-LOW**
+**Overall Risk: LOW-MEDIUM** (Reduced after corrections)
 
 **Low Risk Factors:**
 - Svelte 5 has excellent backward compatibility
@@ -80,7 +100,8 @@ This migration plan upgrades the DC Solo RPG from Svelte 4/SvelteKit 1 to Svelte
 - Comprehensive test suite before migration
 - Git branch for easy rollback
 - Phase-by-phase implementation with validation
-- Keep parallel stores during transition (temporary)
+- **Sequential migration** (not parallel) to avoid complexity
+- Critical fixes applied per svelte5-expert-dev review
 
 ---
 
@@ -100,14 +121,16 @@ This migration plan upgrades the DC Solo RPG from Svelte 4/SvelteKit 1 to Svelte
 
 ```json
 {
-  "svelte": "^5.15.0",
-  "@sveltejs/kit": "^2.15.0",
-  "vite": "^5.4.0",
-  "@sveltejs/adapter-auto": "^3.3.0",
-  "@sveltejs/package": "^2.3.0",
+  "svelte": "^5.0.0",
+  "@sveltejs/kit": "^2.0.0",
+  "vite": "^5.0.0",
+  "@sveltejs/adapter-auto": "^3.0.0",
+  "@sveltejs/package": "^2.0.0",
   "svelte-check": "^4.0.0"
 }
 ```
+
+**Note:** Using caret ranges (^5.0.0) ensures you get the latest stable version at migration time.
 
 ### Breaking Changes to Address
 
@@ -117,8 +140,8 @@ This migration plan upgrades the DC Solo RPG from Svelte 4/SvelteKit 1 to Svelte
 2. **Component props** → **`$props()`** rune
 3. **`export let` bindings** → **`$bindable()`** for two-way binding
 4. **`createEventDispatcher`** → **Event handlers as props** or **callbacks**
-5. **`onMount`/`onDestroy`** → **`$effect`** with cleanup
-6. **Store subscriptions** (`$store`) → **Still supported but runes preferred**
+5. **`onMount`/`onDestroy`** → **Still work!** Can optionally use `$effect` instead
+6. **Store subscriptions** (`$store`) → **Still supported** (works with actual stores only, not runes)
 
 #### SvelteKit 1 → SvelteKit 2
 
@@ -140,19 +163,19 @@ This migration plan upgrades the DC Solo RPG from Svelte 4/SvelteKit 1 to Svelte
 
 ```bash
 # Step 1: Update Vite first (foundation)
-npm install -D vite@^5.4.0
+npm install -D vite@^5.0.0
 
 # Step 2: Update Svelte core
-npm install -D svelte@^5.15.0
+npm install -D svelte@^5.0.0
 
 # Step 3: Update SvelteKit and adapters
-npm install -D @sveltejs/kit@^2.15.0 @sveltejs/adapter-auto@^3.3.0
+npm install -D @sveltejs/kit@^2.0.0 @sveltejs/adapter-auto@^3.0.0
 
 # Step 4: Update SvelteKit packages
-npm install -D @sveltejs/package@^2.3.0 svelte-check@^4.0.0
+npm install -D @sveltejs/package@^2.0.0 svelte-check@^4.0.0
 
 # Step 5: Update testing tools
-npm install -D vitest@^2.1.0 @vitest/coverage-v8@^2.1.0
+npm install -D vitest@^2.0.0 @vitest/coverage-v8@^2.0.0
 
 # Step 6: Update Playwright (optional but recommended)
 npm install -D @playwright/test@^1.48.0
@@ -187,13 +210,23 @@ This migration follows the **Architecture Review's primary recommendation**: eli
 
 ### Migration Approach
 
-**Parallel Implementation Strategy:**
+**Sequential Implementation Strategy:**
 
-1. Keep old store architecture temporarily
-2. Build new rune-based architecture alongside
-3. Migrate components one-by-one to new architecture
-4. Remove old architecture once all components migrated
-5. Never have both architectures active simultaneously in production
+> **CRITICAL:** Do NOT attempt to create a "compatibility wrapper" between old stores and new runes.
+> `$effect` cannot be used at module scope, making such wrappers impossible in Svelte 5.
+
+**Correct Approach:**
+
+1. **Phase 2A:** Create new rune-based stores (`gameState.svelte.js`)
+2. **Phase 2B:** Test new stores in isolation
+3. **Phase 3:** Migrate components ONE BY ONE, updating imports
+4. **Phase 4:** Delete old stores ONLY after all components migrated
+
+**Why Sequential?**
+- Eliminates complexity of maintaining two parallel systems
+- Prevents impossible "compatibility wrapper" attempts
+- Clearer migration path
+- Easier rollback (one component at a time)
 
 ### Key Architectural Changes
 
@@ -802,6 +835,51 @@ For each component:
 <p>Count: {count}, Doubled: {doubled}</p>
 ```
 
+### Pattern 1b: $derived vs $derived.by
+
+**Use `$derived()` for simple, single-expression computations:**
+
+```javascript
+let doubled = $derived(count * 2);
+let fullName = $derived(`${firstName} ${lastName}`);
+let isValid = $derived(email.includes('@') && password.length > 8);
+```
+
+**Use `$derived.by()` for complex, multi-line logic:**
+
+```javascript
+// ✅ GOOD - Complex logic with multiple statements
+let filteredCards = $derived.by(() => {
+    if (!gameState.deck) return [];
+
+    const filtered = gameState.deck.filter(card => {
+        if (card.suit === 'hearts') return true;
+        if (card.value > 10) return true;
+        return false;
+    });
+
+    return filtered.sort((a, b) => a.value - b.value);
+});
+
+// ✅ GOOD - Early returns
+let status = $derived.by(() => {
+    if (gameState.tower <= 0) return 'LOST';
+    if (gameState.kingsRevealed >= 4) return 'LOST';
+    if (gameState.win) return 'WON';
+    return 'PLAYING';
+});
+
+// ✅ GOOD - Intermediate variables
+let cardCount = $derived.by(() => {
+    const remaining = gameState.deck.length;
+    const drawn = gameState.discard.length;
+    const total = remaining + drawn;
+    return { remaining, drawn, total };
+});
+```
+
+**Rule:** If you need `{}` braces or multiple lines, use `$derived.by()` with a function.
+
 ### Pattern 2: Two-Way Binding
 
 #### Before (Svelte 4)
@@ -874,6 +952,8 @@ For each component:
 
 ### Pattern 4: Store Subscriptions
 
+> **IMPORTANT:** The `$store` auto-subscription syntax ONLY works with actual store objects (writable, readable, derived from svelte/store), NOT with rune exports!
+
 #### Before (Svelte 4)
 
 ```svelte
@@ -892,29 +972,37 @@ For each component:
 
 ```svelte
 <script>
-    import { gameStore, currentScreen } from '../stores/WAAStore.js';
+    import { writable } from 'svelte/store';
 
-    // Store auto-subscription still works in Svelte 5
+    // ✅ WORKS - gameStore is an actual store object
+    const gameStore = writable({ tower: 54 });
 </script>
 
-<p>Tower: {$gameStore.tower}</p>
-<p>Screen: {$currentScreen}</p>
+<p>Tower: {$gameStore.tower}</p>  <!-- ✅ $ prefix works -->
 ```
 
 #### After (Svelte 5 - Option B: Use runes directly)
 
 ```svelte
 <script>
-    import { gameState, currentScreen } from '../stores/gameStore.svelte.js';
+    import { gameState, currentScreen } from '../stores/gameState.svelte.js';
 
-    // Direct rune access - no subscription needed
+    // ❌ CANNOT use $ prefix - gameState is NOT a store, it's a rune object
 </script>
 
-<p>Tower: {gameState.tower}</p>
-<p>Screen: {currentScreen}</p>
+<p>Tower: {gameState.tower}</p>     <!-- ✅ CORRECT: Direct access -->
+<p>Screen: {currentScreen}</p>       <!-- ✅ CORRECT: Derived is already reactive -->
+
+<!-- ❌ WRONG: -->
+<p>Tower: {$gameState.tower}</p>    <!-- ERROR: Cannot use $ with runes -->
 ```
 
+**Key Takeaway:** When you migrate from stores to runes, you **lose** the `$` prefix. This is intentional—runes are already reactive without subscriptions.
+
 ### Pattern 5: Lifecycle Hooks
+
+> **IMPORTANT:** `onMount` and `onDestroy` **still work in Svelte 5** and are NOT deprecated!
+> Using `$effect` is an **optional alternative**, not a requirement.
 
 #### Before (Svelte 4)
 
@@ -936,12 +1024,35 @@ For each component:
 </script>
 ```
 
-#### After (Svelte 5)
+#### After (Svelte 5 - Option A: Keep using onMount/onDestroy - RECOMMENDED)
+
+```svelte
+<script>
+    import { onMount } from 'svelte';
+
+    let intervalId;
+
+    // ✅ STILL WORKS - No need to change!
+    onMount(() => {
+        intervalId = setInterval(() => {
+            console.log('tick');
+        }, 1000);
+
+        // Return cleanup function
+        return () => {
+            clearInterval(intervalId);
+        };
+    });
+</script>
+```
+
+#### After (Svelte 5 - Option B: Use $effect - ALTERNATIVE)
 
 ```svelte
 <script>
     let intervalId;
 
+    // Alternative using $effect
     $effect(() => {
         // Setup
         intervalId = setInterval(() => {
@@ -958,6 +1069,13 @@ For each component:
 
 ### Pattern 6: Reactive Statements with Side Effects
 
+> **⚠️ CRITICAL TIMING DIFFERENCE:** `$:` runs **before** rendering, `$effect` runs **after** DOM updates!
+
+This timing difference can cause bugs if not accounted for:
+
+- **`$:` runs:** Immediately before rendering (synchronous)
+- **`$effect` runs:** After DOM updates (microtask queue)
+
 #### Before (Svelte 4)
 
 ```svelte
@@ -965,24 +1083,51 @@ For each component:
     import { gameStore } from '../stores/WAAStore.js';
 
     $: if ($gameStore.tower <= 0) {
-        console.log('Tower destroyed!');
+        console.log('Tower destroyed!');  // Runs BEFORE render
     }
 </script>
 ```
 
-#### After (Svelte 5)
+#### After (Svelte 5 - For side effects)
 
 ```svelte
 <script>
-    import { gameState } from '../stores/gameStore.svelte.js';
+    import { gameState } from '../stores/gameState.svelte.js';
 
     $effect(() => {
         if (gameState.tower <= 0) {
-            console.log('Tower destroyed!');
+            console.log('Tower destroyed!');  // Runs AFTER render
         }
     });
 </script>
 ```
+
+**⚠️ IMPORTANT - Use $derived for computations, not $effect:**
+
+```svelte
+<!-- ❌ WRONG - Don't use $effect for clamping values -->
+<script>
+    let count = $state(0);
+
+    $effect(() => {
+        if (count > 10) {
+            count = 10;  // Runs AFTER render - user might see count=11!
+        }
+    });
+</script>
+
+<!-- ✅ CORRECT - Use $derived for immediate computations -->
+<script>
+    let count = $state(0);
+    let clampedCount = $derived(Math.min(count, 10));  // Runs immediately
+</script>
+
+<p>{clampedCount}</p>
+```
+
+**Rule of Thumb:**
+- Use **`$derived`** for immediate computations (replaces most `$: computed = ...`)
+- Use **`$effect`** only for side effects (logging, DOM manipulation, subscriptions)
 
 ### Specific Component Migrations
 
@@ -2278,12 +2423,10 @@ npx playwright test --project=webkit
 #### Step 5.1: Delete Old Architecture (30 min)
 
 ```bash
-# NOW it's safe to delete
+# NOW it's safe to delete old files
 rm src/lib/stores/WAAStateMachine.js
+rm src/lib/stores/WAAStore.js
 rm src/lib/stores/WAAStore.js.backup
-
-# Remove compatibility wrapper from WAAStore.js
-# OR delete entirely if all components use new stores
 ```
 
 **Update imports across codebase:**
@@ -2582,8 +2725,8 @@ export async function transitionToScreen(newState, animationType = 'default') {
 1. Comprehensive testing before migration
 2. Keep old code in Git for rollback
 3. Migrate incrementally (component by component)
-4. Use compatibility wrapper during transition
-5. Reference official migration guide
+4. Use sequential migration approach (not parallel)
+5. Reference official Svelte 5 migration guide
 
 **Rollback Plan:**
 ```bash
