@@ -19,34 +19,51 @@ test('Quick debug test', async ({ page }) => {
 	
 	console.log('Home page loaded');
 	
-	await page.selectOption('select#gameSelect', { index: 0 });
-	console.log('Game selected');
+	// Select a game by label
+	await page.selectOption('select#gameSelect', { label: 'Future Lost' });
+	console.log('Game selected: Future Lost');
 	
 	console.log('Clicking Load Game button...');
 	await page.click('button:has-text("Load Game")');
 	
-	console.log('Waiting 5 seconds for async operations...');
-	await page.waitForTimeout(5000);
+	console.log('Waiting for game page...');
+	await page.waitForTimeout(3000);
+	
+	// Check what's visible
+	const url = page.url();
+	console.log('Current URL:', url);
 	
 	// Get all button texts
-	const buttons = await page.$$eval('button', btns => btns.map(b => b.textContent));
+	const buttons = await page.$$eval('button', btns => btns.map(b => b.textContent)).catch(() => []);
 	console.log('Available buttons:', buttons);
 	
-	// Get visible elements
-	const visibleSelectors = [];
-	for (const selector of ['.dc-start-screen-container', '.dc-game-container', '.dc-intro-container', 'select#difficulty']) {
-		const isVisible = await page.isVisible(selector).catch(() => false);
-		if (isVisible) visibleSelectors.push(selector);
-	}
-	console.log('Visible selectors:', visibleSelectors);
-	
-	// If we have options screen, continue
-	if (buttons.includes('Start Game')) {
-		console.log('\n✓ Options screen loaded! Continuing...');
-		await page.click('button:has-text("Start Game")');
-		await page.waitForTimeout(1000);
+	// Check if we're on the game page
+	if (url.includes('/game/')) {
+		console.log('\n✅ Successfully navigated to game page!');
 		
-		const afterStartButtons = await page.$$eval('button', btns => btns.map(b => b.textContent));
-		console.log('Buttons after Start Game:', afterStartButtons);
+		// Wait for game to initialize
+		await page.waitForTimeout(2000);
+		
+		// Check for intro screen
+		const hasIntro = await page.locator('.dc-intro-container').isVisible().catch(() => false);
+		console.log('Intro screen visible:', hasIntro);
+		
+		if (hasIntro) {
+			console.log('Clicking continue to view intro...');
+			await page.click('button:has-text("continue")');
+			await page.waitForTimeout(500);
+			
+			console.log('Clicking start to begin game...');
+			await page.click('button:has-text("start")');
+			await page.waitForTimeout(1500);
+			
+			// Check for dice roller
+			const hasDice = await page.locator('.dc-dice-roller-container').isVisible().catch(() => false);
+			console.log('Dice roller visible:', hasDice);
+			
+			if (hasDice) {
+				console.log('\n🎉 SUCCESS! Game is playable!');
+			}
+		}
 	}
 });

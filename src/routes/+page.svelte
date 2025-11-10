@@ -1,115 +1,46 @@
 <script>
-	import GameSelector from '../lib/components/GameSelector.svelte';
-	import { SystemSettings } from '$lib/configuration/SystemSettings.js';
-	import { gameState } from '$lib/stores/gameStore.svelte.js';
+	import { goto } from '$app/navigation';
 
-	import Game from '$lib/components/Game.svelte';
+	/** @type {import('./$types').PageData} */
+	let { data } = $props();
 
-	let systemSettings = $state(new SystemSettings());
-	const games = [
-		{ title: 'Artful Detective', url: '/games/artful-detective' },
-		{ title: 'Gnome Alone', url: '/games/gnome-alone' },
-		{ title: 'Future Lost', url: '/games/future-lost/' },
-		{ title: 'WAA Game Template', url: '/games/full-example' }
-	];
-	const players = [
-		{
-			name: 'Guest'
-		}
-	];
-
-	let gameComponent = $state();
-	let ready = $state(false);
 	let selectedGame = $state(null);
-	let selectedPlayer = $state(players.at(0));
-	function loadGame() {
-		ready = true;
-		systemSettings.gameConfigUrl = selectedGame.url;
-		systemSettings.player = selectedPlayer;
-		gameComponent.startGame();
-	}
-	function onJournalSaved(journal) {
-		console.log('onJournalSaved', journal);
-	}
-	function onGameOver(params) {
-		console.log('onGameOver', params);
-	}
-	function onExitGame(params) {
-		console.log('onExitGame', params);
-		ready = false;
-	}
-	const currentScreen = $derived(gameState.state);
 
-	$effect(() => {
-		if (currentScreen === 'gameOver') ready = true;
-		console.log('ready changed', ready, currentScreen);
-	});
+	function loadGame() {
+		if (selectedGame) {
+			goto(`/game/${selectedGame.slug}`);
+		}
+	}
 </script>
 
-<!-- {@debug ready}
-{@debug $currentScreen} -->
-
 <section class="form-container">
-	<div class="game-container" class:hidden={!ready || currentScreen == 'loadGame'}>
-		<Game
-			bind:this={gameComponent}
-			bind:systemSettings
-			onjournalsaved={onJournalSaved}
-			ongameover={onGameOver}
-			onexitgame={onExitGame}
-		/>
-	</div>
-	<div class="welcome-container" class:hidden={ready && currentScreen != 'loadGame'}>
+	<div class="welcome-container">
 		<section class="hero">
 			<h1>Dimm City: Solo RPG</h1>
 			<p>Demo</p>
 		</section>
-		<GameSelector
-			{games}
-			{players}
-			bind:selectedPlayer
-			bind:selectedGame
-			ongameselected={loadGame}
-		/>
+		<div class="dc-start-screen-container">
+			<h2>Select a Game</h2>
+			<div>
+				<label for="gameSelect">Choose your game:</label>
+				<select id="gameSelect" bind:value={selectedGame}>
+					<option value={null}>Please select a game</option>
+					{#each data.games as game}
+						<option value={game}>{game.title}</option>
+					{/each}
+				</select>
+			</div>
+
+			<button onclick={loadGame} disabled={!selectedGame}>Load Game</button>
+		</div>
 	</div>
-	<!-- 	
-	<form>
-		<label for="name">Name</label>
-		<input type="text" id="name" placeholder="Your name">
-		
-		<label for="email">Email</label>
-		<input type="email" id="email" placeholder="Your email">
-		
-		<label for="select">Select an option</label>
-		<select id="select">
-			<option value="option1">Option 1</option>
-			<option value="option2">Option 2</option>
-			<option value="option3">Option 3</option>
-		</select>
-		
-		<label for="message">Message</label>
-		<textarea id="message" rows="4" placeholder="Your message"></textarea>
-		
-		<button type="submit">Submit</button>
-	</form> -->
 </section>
 
 <style>
-	.game-container {
-		display: grid;
-		flex: 1;
-		min-height: 0;
-		height: 100%;
-		max-width: 100%; /* CRITICAL: Prevent horizontal overflow */
-		box-sizing: border-box; /* Include padding/border in width */
-		overflow: visible; /* Allow glows and effects to extend beyond bounds */
-	}
 	.welcome-container {
 		display: flex;
 		flex-direction: column;
 		justify-content: flex-start; /* Align to top to prevent content overflow */
 	}
-	.hidden {
-		display: none;
-	}
 </style>
+

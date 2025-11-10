@@ -81,18 +81,17 @@ test.describe('Full Game Validation', () => {
 		console.log('PHASE 1: GAME SETUP');
 		console.log('-'.repeat(80));
 
-		await page.goto('http://localhost:4173/');
+		await page.goto('http://localhost:5173/');
 		await waitFor('.dc-start-screen-container');
 		console.log('✓ Home page loaded');
 
-		await page.selectOption('select#gameSelect', { index: 0 });
+		await page.selectOption('select#gameSelect', { label: 'Future Lost' });
 		await page.click('button:has-text("Load Game")');
-		await waitFor('.dc-game-container');
-		console.log('✓ Game loaded');
+		await page.waitForURL('**/game/future-lost');
+		console.log('✓ Game loaded via server routing');
 
-		await page.click('button:has-text("Start Game")');
-		await page.waitForTimeout(500);
-		console.log('✓ Options confirmed');
+		await waitFor('.dc-intro-container');
+		console.log('✓ Intro screen loaded');
 
 		// Navigate through intro screens
 		await page.click('button:has-text("continue")');
