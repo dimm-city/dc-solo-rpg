@@ -48,12 +48,7 @@
 </script>
 
 <div class="dc-roll-tasks-container">
-	<DiceRoller
-		bind:this={taskDice}
-		bind:rolling
-		onclick={action}
-		onkeyup={action}
-		{header}
+	<DiceRoller bind:this={taskDice} bind:rolling onclick={action} onkeyup={action} {header}
 	></DiceRoller>
 </div>
 

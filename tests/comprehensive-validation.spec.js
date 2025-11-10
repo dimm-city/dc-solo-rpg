@@ -40,26 +40,30 @@ test('COMPREHENSIVE: Full game validation with logic verification', async ({ pag
 
 	// Helper: Get game state from page
 	const getGameState = async () => {
-		return await page.evaluate(() => {
-			// Access the global game state from the Svelte app
-			const state = window.__GAME_STATE__ || {};
-			return {
-				tower: state.tower || 54,
-				tokens: state.tokens || 10,
-				round: state.round || 0,
-				kingsRevealed: state.kingsRevealed || 0,
-				bonus: state.bonus || 0,
-				aceOfHeartsRevealed: state.aceOfHeartsRevealed || false,
-				gameOver: state.gameOver || false,
-				win: state.win || false
-			};
-		}).catch(() => null);
+		return await page
+			.evaluate(() => {
+				// Access the global game state from the Svelte app
+				const state = window.__GAME_STATE__ || {};
+				return {
+					tower: state.tower || 54,
+					tokens: state.tokens || 10,
+					round: state.round || 0,
+					kingsRevealed: state.kingsRevealed || 0,
+					bonus: state.bonus || 0,
+					aceOfHeartsRevealed: state.aceOfHeartsRevealed || false,
+					gameOver: state.gameOver || false,
+					win: state.win || false
+				};
+			})
+			.catch(() => null);
 	};
 
 	// Helper: Extract visible game stats from UI
 	const extractUIStats = async () => {
 		try {
-			const statsText = await page.locator('.dc-status-display, .status-display-area').textContent();
+			const statsText = await page
+				.locator('.dc-status-display, .status-display-area')
+				.textContent();
 			const tower = statsText?.match(/Tower:\s*(\d+)/)?.[1];
 			const tokens = statsText?.match(/Tokens:\s*(\d+)/)?.[1];
 			const round = statsText?.match(/Round:\s*(\d+)/)?.[1];
@@ -85,7 +89,8 @@ test('COMPREHENSIVE: Full game validation with logic verification', async ({ pag
 			maxAttempts--;
 
 			// Check if card deck is visible
-			const cardDeckVisible = await page.locator('.dc-card-deck')
+			const cardDeckVisible = await page
+				.locator('.dc-card-deck')
 				.isVisible()
 				.catch(() => false);
 
@@ -100,7 +105,10 @@ test('COMPREHENSIVE: Full game validation with logic verification', async ({ pag
 			cardsDrawn++;
 
 			// Try to extract card info from UI
-			const cardInfo = await page.locator('.dc-card-container, .dc-current-card').textContent().catch(() => '');
+			const cardInfo = await page
+				.locator('.dc-card-container, .dc-current-card')
+				.textContent()
+				.catch(() => '');
 			console.log(`  → Card ${cardsDrawn}: ${cardInfo.substring(0, 50)}`);
 
 			// Confirm card
@@ -108,7 +116,8 @@ test('COMPREHENSIVE: Full game validation with logic verification', async ({ pag
 			await page.waitForTimeout(500);
 
 			// Check for failure check (odd card)
-			const failureCheckVisible = await page.locator('.dc-failure-check-container')
+			const failureCheckVisible = await page
+				.locator('.dc-failure-check-container')
 				.isVisible()
 				.catch(() => false);
 
@@ -125,7 +134,10 @@ test('COMPREHENSIVE: Full game validation with logic verification', async ({ pag
 				await page.waitForTimeout(2000);
 
 				// Try to extract dice result
-				const resultText = await page.locator('.dc-dice-result, .dc-dice-roller-container').textContent().catch(() => '');
+				const resultText = await page
+					.locator('.dc-dice-result, .dc-dice-roller-container')
+					.textContent()
+					.catch(() => '');
 				const diceRoll = resultText?.match(/(\d+)/)?.[1];
 
 				if (diceRoll) {
@@ -160,7 +172,8 @@ test('COMPREHENSIVE: Full game validation with logic verification', async ({ pag
 
 					// Validate calculation
 					if (diceRoll) {
-						const expectedTower = gameTracking.damageEvents[gameTracking.damageEvents.length - 1].towerAfter;
+						const expectedTower =
+							gameTracking.damageEvents[gameTracking.damageEvents.length - 1].towerAfter;
 						const actualTower = statsAfter.tower;
 
 						if (actualTower === expectedTower) {
@@ -214,7 +227,8 @@ test('COMPREHENSIVE: Full game validation with logic verification', async ({ pag
 
 	// Helper: Perform success check
 	const performSuccessCheck = async (roundNumber) => {
-		const successCheckVisible = await page.locator('.dc-success-check-container')
+		const successCheckVisible = await page
+			.locator('.dc-success-check-container')
 			.or(page.locator('text=Success Check'))
 			.or(page.locator('text=success check'))
 			.isVisible()
@@ -231,7 +245,10 @@ test('COMPREHENSIVE: Full game validation with logic verification', async ({ pag
 			await page.waitForTimeout(2000);
 
 			// Extract dice result
-			const resultText = await page.locator('.dc-dice-result, .dc-dice-roller-container').textContent().catch(() => '');
+			const resultText = await page
+				.locator('.dc-dice-result, .dc-dice-roller-container')
+				.textContent()
+				.catch(() => '');
 			const diceRoll = resultText?.match(/(\d+)/)?.[1];
 
 			if (diceRoll) {
@@ -327,7 +344,9 @@ test('COMPREHENSIVE: Full game validation with logic verification', async ({ pag
 		// Get current stats from UI
 		const currentStats = await extractUIStats();
 		if (currentStats.tower !== null) {
-			console.log(`📊 Game State: Tower: ${currentStats.tower}/54, Tokens: ${currentStats.tokens}/10, Round: ${currentStats.round}`);
+			console.log(
+				`📊 Game State: Tower: ${currentStats.tower}/54, Tokens: ${currentStats.tokens}/10, Round: ${currentStats.round}`
+			);
 		}
 
 		// Roll for tasks
@@ -336,7 +355,10 @@ test('COMPREHENSIVE: Full game validation with logic verification', async ({ pag
 		await page.waitForTimeout(2000);
 
 		// Try to get dice result
-		const taskRollText = await page.locator('.dc-dice-roller-container').textContent().catch(() => '');
+		const taskRollText = await page
+			.locator('.dc-dice-roller-container')
+			.textContent()
+			.catch(() => '');
 		const tasksRoll = taskRollText?.match(/(\d+)/)?.[1];
 		if (tasksRoll) {
 			console.log(`  Rolled: ${tasksRoll} - will draw ${tasksRoll} cards`);
@@ -355,7 +377,8 @@ test('COMPREHENSIVE: Full game validation with logic verification', async ({ pag
 		await drawAllCardsInRound(roundNumber);
 
 		// Check for game over (loss)
-		const gameOverVisible = await page.locator('text=Game Over')
+		const gameOverVisible = await page
+			.locator('text=Game Over')
 			.or(page.locator('text=VICTORY'))
 			.or(page.locator('text=Rescue has arrived'))
 			.or(page.locator('text=tower has fallen'))
@@ -375,7 +398,8 @@ test('COMPREHENSIVE: Full game validation with logic verification', async ({ pag
 			});
 
 			// Determine win or loss
-			const isWin = await page.locator('text=VICTORY')
+			const isWin = await page
+				.locator('text=VICTORY')
 				.or(page.locator('text=Rescue has arrived'))
 				.or(page.locator('text=Salvation'))
 				.isVisible()
@@ -383,13 +407,21 @@ test('COMPREHENSIVE: Full game validation with logic verification', async ({ pag
 
 			if (isWin) {
 				console.log('✅ RESULT: VICTORY!');
-				console.log(`   Final state: Tokens: ${gameTracking.tokens}/10, Tower: ${gameTracking.tower}/54`);
+				console.log(
+					`   Final state: Tokens: ${gameTracking.tokens}/10, Tower: ${gameTracking.tower}/54`
+				);
 			} else {
 				console.log('❌ RESULT: DEFEAT!');
-				const reason = gameTracking.tower <= 0 ? 'Tower collapsed' :
-							   gameTracking.kingsRevealed >= 4 ? '4 Kings revealed' : 'Unknown';
+				const reason =
+					gameTracking.tower <= 0
+						? 'Tower collapsed'
+						: gameTracking.kingsRevealed >= 4
+							? '4 Kings revealed'
+							: 'Unknown';
 				console.log(`   Reason: ${reason}`);
-				console.log(`   Final state: Tower: ${gameTracking.tower}/54, Kings: ${gameTracking.kingsRevealed}/4`);
+				console.log(
+					`   Final state: Tower: ${gameTracking.tower}/54, Kings: ${gameTracking.kingsRevealed}/4`
+				);
 			}
 
 			break;
@@ -411,7 +443,8 @@ test('COMPREHENSIVE: Full game validation with logic verification', async ({ pag
 			});
 
 			// Check for win after success check
-			const gameOverAfterSuccess = await page.locator('text=Game Over')
+			const gameOverAfterSuccess = await page
+				.locator('text=Game Over')
 				.or(page.locator('text=VICTORY'))
 				.or(page.locator('text=Rescue'))
 				.isVisible()
@@ -428,7 +461,8 @@ test('COMPREHENSIVE: Full game validation with logic verification', async ({ pag
 					fullPage: true
 				});
 
-				const isWin = await page.locator('text=VICTORY')
+				const isWin = await page
+					.locator('text=VICTORY')
 					.or(page.locator('text=Rescue'))
 					.isVisible()
 					.catch(() => false);
@@ -446,7 +480,8 @@ test('COMPREHENSIVE: Full game validation with logic verification', async ({ pag
 		await page.waitForTimeout(1500);
 
 		// Check if new round started
-		const rollTasksVisible = await page.locator('.dc-dice-roller-container')
+		const rollTasksVisible = await page
+			.locator('.dc-dice-roller-container')
 			.isVisible()
 			.catch(() => false);
 
@@ -483,7 +518,7 @@ test('COMPREHENSIVE: Full game validation with logic verification', async ({ pag
 	expect(gameTracking.screensVisited[3]).toBe('RollForTasks');
 	expect(gameTracking.screensVisited[4]).toBe('DrawCard');
 	expect(gameTracking.screensVisited).toContain('GameOver');
-	expect(gameTracking.screensVisited.filter(s => s === 'JournalEntry').length).toBeGreaterThan(0);
+	expect(gameTracking.screensVisited.filter((s) => s === 'JournalEntry').length).toBeGreaterThan(0);
 	console.log('✅ Screen sequence valid');
 
 	// Verify damage calculations
@@ -494,7 +529,9 @@ test('COMPREHENSIVE: Full game validation with logic verification', async ({ pag
 		const expectedTower = event.towerBefore - expectedDamage;
 		const isCorrect = event.damage === expectedDamage && event.towerAfter === expectedTower;
 
-		console.log(`  ${i + 1}. R${event.round} Card${event.card}: Roll ${event.roll} - Bonus ${event.bonus} = ${event.damage} damage → Tower ${event.towerBefore}→${event.towerAfter} ${isCorrect ? '✅' : '❌'}`);
+		console.log(
+			`  ${i + 1}. R${event.round} Card${event.card}: Roll ${event.roll} - Bonus ${event.bonus} = ${event.damage} damage → Tower ${event.towerBefore}→${event.towerAfter} ${isCorrect ? '✅' : '❌'}`
+		);
 
 		if (!isCorrect) mathErrors++;
 	});
@@ -507,7 +544,7 @@ test('COMPREHENSIVE: Full game validation with logic verification', async ({ pag
 
 	// Verify journal entries
 	console.log(`\n📖 JOURNAL ENTRIES (${gameTracking.journalEntries.length} entries):`);
-	gameTracking.journalEntries.forEach(entry => {
+	gameTracking.journalEntries.forEach((entry) => {
 		console.log(`  Round ${entry.round}: Tower ${entry.tower}, Tokens ${entry.tokens}`);
 	});
 	expect(gameTracking.journalEntries.length).toBeGreaterThan(0);
