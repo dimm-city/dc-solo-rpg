@@ -25,7 +25,9 @@
 	<div class="stats-grid">
 		<div class="stat-item health-stat">
 			<div class="stat-label">HEALTH</div>
-			<div class="stat-value">{$gameStore.tower}</div>
+			<div class="stat-value">
+				<span class="current">{$gameStore.tower}</span><span class="divider">/</span><span class="max">100</span>
+			</div>
 			<div class="stat-bar">
 				<div class="stat-fill health-fill" style="width: {$gameStore.tower}%"></div>
 			</div>
@@ -33,15 +35,19 @@
 
 		<div class="stat-item failure-stat">
 			<div class="stat-label">{$gameStore.config?.labels?.failureCounters?.toUpperCase() ?? 'FAILURE'}</div>
-			<div class="stat-value">{failurePercent}</div>
+			<div class="stat-value">
+				<span class="current">{failurePercent}</span><span class="divider">/</span><span class="max">4</span>
+			</div>
 			<div class="stat-bar">
 				<div class="stat-fill failure-fill" style="width: {(failurePercent / 4) * 100}%"></div>
 			</div>
 		</div>
 
 		<div class="stat-item bonus-stat">
-			<div class="stat-label">{$gameStore.config?.labels?.bonusCounters?.toUpperCase() ?? 'BONUS'}</div>
-			<div class="stat-value">{bonusPercent}</div>
+			<div class="stat-label">LUCK</div>
+			<div class="stat-value">
+				<span class="current">{bonusPercent}</span><span class="divider">/</span><span class="max">10</span>
+			</div>
 			<div class="stat-bar">
 				<div class="stat-fill bonus-fill" style="width: {(bonusPercent / 10) * 100}%"></div>
 			</div>
@@ -49,7 +55,9 @@
 
 		<div class="stat-item success-stat">
 			<div class="stat-label">{$gameStore.config?.labels?.successCounters?.toUpperCase() ?? 'SUCCESS'}</div>
-			<div class="stat-value">{successPercent}</div>
+			<div class="stat-value">
+				<span class="current">{successPercent}</span><span class="divider">/</span><span class="max">10</span>
+			</div>
 			<div class="stat-bar">
 				<div class="stat-fill success-fill" style="width: {(successPercent / 10) * 100}%"></div>
 			</div>
@@ -221,6 +229,24 @@
 		color: #fff;
 		text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
 		line-height: 1;
+		display: flex;
+		align-items: baseline;
+		gap: 0.1rem;
+		justify-content: center;
+	}
+
+	.stat-value .current {
+		font-size: 1.5rem;
+	}
+
+	.stat-value .divider {
+		font-size: 1rem;
+		opacity: 0.7;
+	}
+
+	.stat-value .max {
+		font-size: 0.9rem;
+		opacity: 0.8;
 	}
 
 	/* Stat Bars */
@@ -266,8 +292,16 @@
 			gap: 0.5rem;
 		}
 
-		.stat-value {
+		.stat-value .current {
 			font-size: 1.3rem;
+		}
+
+		.stat-value .divider {
+			font-size: 0.9rem;
+		}
+
+		.stat-value .max {
+			font-size: 0.8rem;
 		}
 
 		.player-round-bar {
@@ -290,8 +324,16 @@
 			font-size: 0.55rem;
 		}
 
-		.stat-value {
+		.stat-value .current {
 			font-size: 1.1rem;
+		}
+
+		.stat-value .divider {
+			font-size: 0.75rem;
+		}
+
+		.stat-value .max {
+			font-size: 0.7rem;
 		}
 
 		.stat-bar {

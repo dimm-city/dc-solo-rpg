@@ -19,6 +19,7 @@
 	import JournalEntry from './JournalEntry.svelte';
 	import Toolbar from './Toolbar.svelte';
 	import LoadScreen from './LoadScreen.svelte';
+	import NeuralBackground from './NeuralBackground.svelte';
 
 	export let systemSettings = {};
 	export const startGame = async () => {
@@ -66,7 +67,8 @@
 			<GameOver />
 		</div>
 	{:else if $currentScreen == 'finalLog' || $currentScreen == 'log'}
-		<div class="dc-fade-in dc-screen-container">
+		<div class="dc-fade-in dc-screen-container dc-journal-screen">
+			<NeuralBackground />
 			<JournalEntry on:dc-solo-rpg.journalSaved />
 		</div>
 	{:else if $currentScreen == 'exitGame'}
@@ -84,6 +86,7 @@
 				{/if}
 			</div>
 			<div class="main-screen-area dc-table-bg">
+				<NeuralBackground />
 				{#if $currentScreen == 'startRound'}
 					<div class="dc-fade-in dc-screen-container">
 						<h4>Round {$gameStore.round}</h4>
@@ -225,7 +228,7 @@
 		min-height: 0; /* CRITICAL: Allow grid to shrink */
 		height: 100%; /* Take full available height */
 		box-sizing: border-box;
-		position: relative;
+		position: relative; /* CRITICAL: Position context for neural background */
 		overflow: hidden; /* CRITICAL: Prevent scrolling */
 	}
 
@@ -234,13 +237,13 @@
 		height: 100%;
 		overflow: visible; /* Allow glows and neural effects to extend beyond container */
 		box-sizing: border-box;
+		position: relative; /* Ensure content appears above neural background */
+		z-index: 1;
 	}
 	.dc-table-bg {
 		border-radius: var(--dc-default-border-radius);
-		background: var(--dc-dice-roller-bg);
-
-		/* background: rgb(19,135,185);
-background: radial-gradient(circle, rgba(19,135,185,1) 0%, rgba(29,63,78,1) 71%, rgba(136,136,136,1) 100%); */
+		/* Background removed to show neural network animation on all screens */
+		background: transparent;
 	}
 
 
@@ -283,6 +286,18 @@ background: radial-gradient(circle, rgba(19,135,185,1) 0%, rgba(29,63,78,1) 71%,
 
 	:global(.dc-fade-in) {
 		animation: fadeIn 350ms ease-in;
+	}
+
+	.dc-journal-screen {
+		position: relative;
+		width: 100%;
+		height: 100%;
+		overflow: hidden;
+	}
+
+	.dc-journal-screen :global(.dc-journal-container) {
+		position: relative;
+		z-index: 1;
 	}
 
 	@media (max-width: 450px) or (max-height: 600px) {
