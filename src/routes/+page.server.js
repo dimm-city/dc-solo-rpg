@@ -1,10 +1,13 @@
 import { readdir } from 'fs/promises';
 import { join } from 'path';
 
+// Get the project root directory reliably
+const projectRoot = process.env.GAMES_BASE_DIR || process.cwd();
+
 /** @type {import('./$types').PageServerLoad} */
 export async function load() {
-	// Read the games directory
-	const gamesDir = join(process.cwd(), 'static', 'games');
+	// Read the games directory from static folder
+	const gamesDir = join(projectRoot, 'static', 'games');
 	
 	try {
 		const entries = await readdir(gamesDir, { withFileTypes: true });

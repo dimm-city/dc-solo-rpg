@@ -14,8 +14,9 @@ const config = {
 		timeout: 10000 // 10 second timeout for assertions
 	},
 	use: {
-		// Use Playwright's bundled Chromium with flags for headless environment
+		// Use system Chromium with flags for headless environment
 		launchOptions: {
+			executablePath: '/usr/bin/chromium',
 			args: [
 				'--headless=new', // Use new headless mode (doesn't require X11)
 				'--no-sandbox',
@@ -29,8 +30,8 @@ const config = {
 		viewport: { width: 1280, height: 1280 },
 		baseURL: 'http://localhost:5173',
 		screenshot: 'only-on-failure',
-		video: 'retain-on-failure',
-		trace: 'retain-on-failure'
+		video: 'off', // Disable video to avoid ffmpeg dependency
+		trace: 'off' // Disable trace to avoid ffmpeg dependency
 	},
 	// Configure different viewport projects
 	projects: [
