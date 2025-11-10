@@ -13,17 +13,17 @@
 	}
 </script>
 
-<section class="form-container">
+<section class="form-container" data-testid="home-page">
 	<div class="welcome-container">
 		<section class="hero">
-			<h1>Dimm City: Solo RPG</h1>
+			<h1 data-testid="page-title">Dimm City: Solo RPG</h1>
 			<p>Demo</p>
 		</section>
-		<div class="dc-start-screen-container">
+		<div class="dc-start-screen-container" data-testid="game-selector">
 			<h2>Select a Game</h2>
 			<div>
 				<label for="gameSelect">Choose your game:</label>
-				<select id="gameSelect" bind:value={selectedGame}>
+				<select id="gameSelect" bind:value={selectedGame} data-testid="game-select">
 					<option value={null}>Please select a game</option>
 					{#each data.games as game}
 						<option value={game}>{game.title}</option>
@@ -31,7 +31,9 @@
 				</select>
 			</div>
 
-			<button onclick={loadGame} disabled={!selectedGame}>Load Game</button>
+			<button onclick={loadGame} disabled={!selectedGame} data-testid="load-game-button">
+				Load Game
+			</button>
 		</div>
 	</div>
 </section>

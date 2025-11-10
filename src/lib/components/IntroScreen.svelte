@@ -91,8 +91,8 @@
 		</div>
 	{/if}
 	<div class="button-bar dc-game-bg">
-		<button onclick={back}>{backButtonText}</button>
-		<button onclick={next}>{nextButtonText}</button>
+		<button onclick={back} data-testid="intro-back-button">{backButtonText}</button>
+		<button onclick={next} data-testid="intro-next-button">{nextButtonText}</button>
 	</div>
 </div>
 

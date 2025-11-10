@@ -62,7 +62,7 @@
 	<link rel="stylesheet" href={data.gameConfig.stylesheet} />
 </svelte:head>
 
-<div class="game-page">
+<div class="game-page" data-testid="game-page">
 	<Game systemSettings={{ player: data.player }} />
 </div>
 

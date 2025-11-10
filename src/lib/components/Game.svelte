@@ -51,62 +51,63 @@
 <svelte:head>
 	<link rel="stylesheet" href={gameStylesheet} />
 </svelte:head>
-<div class="dc-game-container dc-game-bg">
+<div class="dc-game-container dc-game-bg" data-testid="game-container">
 	<NeuralBackground />
 	{#if currentScreen == 'loadGame'}
-		<div class="dc-game-bg">
+		<div class="dc-game-bg" data-testid="screen-loadGame">
 			<LoadScreen />
 		</div>
 	{:else if currentScreen == 'options'}
-		<div class="dc-game-bg">
+		<div class="dc-game-bg" data-testid="screen-options">
 			<OptionsScreen {systemSettings} />
 		</div>
 	{:else if currentScreen == 'intro'}
-		<div class="dc-game-bg dc-intro-wrapper">
+		<div class="dc-game-bg dc-intro-wrapper" data-testid="screen-intro">
 			<IntroScreen />
 		</div>
 	{:else if currentScreen == 'gameOver'}
-		<div class="dc-fade-in dc-screen-container">
+		<div class="dc-fade-in dc-screen-container" data-testid="screen-gameOver">
 			<GameOver />
 		</div>
 	{:else if currentScreen == 'finalLog' || currentScreen == 'log'}
-		<div class="dc-fade-in dc-screen-container dc-journal-screen">
+		<div class="dc-fade-in dc-screen-container dc-journal-screen" data-testid="screen-journal">
 			<JournalEntry {onjournalsaved} />
 		</div>
 	{:else if currentScreen == 'exitGame'}
-		<div>Game Exited</div>
+		<div data-testid="screen-exitGame">Game Exited</div>
 	{:else}
 		<div class="game-screen dc-game-bg">
 			<div class="toolbar-area">
 				<Toolbar />
 			</div>
-			<div class="status-display-area dc-fade-in">
+			<div class="status-display-area dc-fade-in" data-testid="status-display">
 				{#if currentScreen != 'log' && currentScreen != 'finalLog'}
 					<StatusDisplay />
 				{/if}
 			</div>
 			<div class="main-screen-area dc-table-bg">
 				{#if currentScreen == 'startRound'}
-					<div class="dc-fade-in dc-screen-container">
+					<div class="dc-fade-in dc-screen-container" data-testid="screen-startRound">
 						<h4>Round {gameState.round}</h4>
-						<button onclick={async () => await transitionToScreen('rollForTasks')}
-							>Roll for tasks</button
+						<button
+							onclick={async () => await transitionToScreen('rollForTasks')}
+							data-testid="start-round-button">Roll for tasks</button
 						>
 					</div>
 				{:else if currentScreen == 'rollForTasks'}
-					<div class="dc-fade-in dc-screen-container">
+					<div class="dc-fade-in dc-screen-container" data-testid="screen-rollForTasks">
 						<RollForTasks />
 					</div>
 				{:else if currentScreen == 'drawCard'}
-					<div class="dc-fade-in dc-screen-container">
+					<div class="dc-fade-in dc-screen-container" data-testid="screen-drawCard">
 						<DrawCard />
 					</div>
 				{:else if currentScreen == 'failureCheck'}
-					<div class="dc-fade-in dc-screen-container">
+					<div class="dc-fade-in dc-screen-container" data-testid="screen-failureCheck">
 						<FailureCheck {onfailurecheckcompleted} />
 					</div>
 				{:else if currentScreen == 'successCheck'}
-					<div class="dc-fade-in dc-screen-container">
+					<div class="dc-fade-in dc-screen-container" data-testid="screen-successCheck">
 						<SuccessCheck />
 					</div>
 				{:else}

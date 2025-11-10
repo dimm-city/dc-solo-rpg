@@ -282,6 +282,7 @@
 			animationStage === 'materializing' ||
 			animationStage === 'dismissing'}
 		type="button"
+		data-testid="card-deck-button"
 	>
 		<span class="cta-glow" aria-hidden="true"></span>
 		<span class="cta-text">
