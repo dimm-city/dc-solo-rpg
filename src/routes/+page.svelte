@@ -20,7 +20,7 @@
 
 	let gameComponent = $state();
 	let ready = $state(false);
-	let selectedGame = $state();
+	let selectedGame = $state(null);
 	let selectedPlayer = $state(players.at(0));
 	function loadGame() {
 		ready = true;

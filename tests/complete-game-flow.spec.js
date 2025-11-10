@@ -115,21 +115,21 @@ test('Complete game flow - play until win or loss', async ({ page }) => {
 
 	// 1. HOME PAGE
 	trackScreen('HomePage');
-	await page.goto('http://localhost:5173/');
-	await page.waitForSelector('.dc-game-selector', { timeout: 5000 });
+	await page.goto('http://localhost:4173/');
+	await page.waitForSelector('.dc-start-screen-container', { timeout: 5000 });
 	await page.screenshot({ path: 'screenshots/flow-01-home.png', fullPage: true });
 	console.log('  → Game selector loaded');
 
 	// Verify home page elements
-	await expect(page.locator('.dc-game-selector')).toBeVisible();
-	await expect(page.locator('select[name="game"]')).toBeVisible();
+	await expect(page.locator('.dc-start-screen-container')).toBeVisible();
+	await expect(page.locator('select#gameSelect')).toBeVisible();
 
 	// 2. SELECT GAME
-	await page.selectOption('select[name="game"]', { label: 'Future Lost' });
+	await page.selectOption('select#gameSelect', { label: 'Future Lost' });
 	console.log('  → Selected "Future Lost" game');
 
 	// 3. START GAME (to options)
-	await page.click('button:has-text("Start Game")');
+	await page.click('button:has-text("Load Game")');
 	await page.waitForSelector('.dc-game-container', { timeout: 5000 });
 	trackScreen('OptionsScreen');
 	await page.screenshot({ path: 'screenshots/flow-02-options.png', fullPage: true });
@@ -139,7 +139,7 @@ test('Complete game flow - play until win or loss', async ({ page }) => {
 	console.log('  → Options screen loaded');
 
 	// 4. START GAME FROM OPTIONS
-	await page.click('button:has-text("Start Game")');
+	await page.click('button:has-text("Load Game")');
 	await page.waitForTimeout(500);
 	trackScreen('IntroScreen');
 	await page.screenshot({ path: 'screenshots/flow-03-intro.png', fullPage: true });
@@ -349,18 +349,18 @@ test('Quick sanity check - game starts correctly', async ({ page }) => {
 	console.log('\n🔍 Running quick sanity check...\n');
 
 	// Navigate and start game
-	await page.goto('http://localhost:5173/');
-	await page.waitForSelector('.dc-game-selector', { timeout: 5000 });
+	await page.goto('http://localhost:4173/');
+	await page.waitForSelector('.dc-start-screen-container', { timeout: 5000 });
 
 	// Select game
-	await page.selectOption('select[name="game"]', { index: 0 });
+	await page.selectOption('select#gameSelect', { index: 0 });
 
 	// Start game
-	await page.click('button:has-text("Start Game")');
+	await page.click('button:has-text("Load Game")');
 	await page.waitForSelector('.dc-game-container', { timeout: 5000 });
 
 	// Start from options
-	await page.click('button:has-text("Start Game")');
+	await page.click('button:has-text("Load Game")');
 	await page.waitForTimeout(500);
 
 	// Verify intro screen
