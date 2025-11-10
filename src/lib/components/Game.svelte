@@ -52,6 +52,7 @@
 	<link rel="stylesheet" href={gameStylesheet} />
 </svelte:head>
 <div class="dc-game-container dc-game-bg">
+	<NeuralBackground />
 	{#if currentScreen == 'loadGame'}
 		<div class="dc-game-bg">
 			<LoadScreen />
@@ -70,7 +71,6 @@
 		</div>
 	{:else if currentScreen == 'finalLog' || currentScreen == 'log'}
 		<div class="dc-fade-in dc-screen-container dc-journal-screen">
-			<NeuralBackground />
 			<JournalEntry {onjournalsaved} />
 		</div>
 	{:else if currentScreen == 'exitGame'}
@@ -86,7 +86,6 @@
 				{/if}
 			</div>
 			<div class="main-screen-area dc-table-bg">
-				<NeuralBackground />
 				{#if currentScreen == 'startRound'}
 					<div class="dc-fade-in dc-screen-container">
 						<h4>Round {gameState.round}</h4>
@@ -166,11 +165,29 @@
 		font-family: var(--dc-default-font-family);
 		color: var(--dc-default-text-color);
 		overflow: hidden; /* CRITICAL: Prevent all scrolling */
+		position: relative; /* CRITICAL: Position context for neural background */
 	}
 	.dc-game-container,
 	.dc-game-container > div,
 	:global(.dc-intro-container) {
 		border-radius: var(--dc-default-border-radius);
+	}
+
+	/* Neural background at game container level */
+	.dc-game-container > :global(.neural-background) {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		z-index: 0;
+		pointer-events: none;
+	}
+
+	/* Ensure all child screens appear above neural background */
+	.dc-game-container > div {
+		position: relative;
+		z-index: 1;
 	}
 
 	.dc-intro-wrapper {
@@ -230,7 +247,7 @@
 		min-height: 0; /* CRITICAL: Allow grid to shrink */
 		height: 100%; /* Take full available height */
 		box-sizing: border-box;
-		position: relative; /* CRITICAL: Position context for neural background */
+		position: relative; /* CRITICAL: Position context for content */
 		overflow: hidden; /* CRITICAL: Prevent scrolling */
 	}
 

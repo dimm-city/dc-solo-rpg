@@ -279,17 +279,8 @@ export async function drawCard() {
 		return card;
 	}
 
-	// Determine next state
-	const isOdd = card.card !== 'A' && parseInt(card.card) % 2 !== 0;
-
-	if (isOdd) {
-		transitionTo('failureCheck');
-	} else if (gameState.cardsToDraw > 0) {
-		transitionTo('drawCard');
-	} else {
-		transitionTo('log');
-	}
-
+	// Stay in drawCard state to show the card to the user
+	// Transition will happen in confirmCard() after user sees it
 	return card;
 }
 
@@ -303,7 +294,27 @@ export async function confirmCard() {
 		`[confirmCard] Current state: ${gameState.state}, cardsToDraw: ${gameState.cardsToDraw}`
 	);
 
+	const card = gameState.currentCard;
+	
+	// Clear the current card
 	gameState.currentCard = null;
+
+	// Determine next state based on the card that was just confirmed
+	if (card) {
+		const isOdd = card.card !== 'A' && parseInt(card.card) % 2 !== 0;
+
+		if (isOdd) {
+			// Odd card requires failure check
+			transitionTo('failureCheck');
+		} else if (gameState.cardsToDraw > 0) {
+			// More cards to draw
+			transitionTo('drawCard');
+		} else {
+			// All cards drawn, go to journal
+			transitionTo('log');
+		}
+	}
+	
 	await transitionToScreen();
 }
 

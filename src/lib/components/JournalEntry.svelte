@@ -76,7 +76,11 @@
 
 	h2 {
 		margin-bottom: 0.75rem;
-		font-size: clamp(0.8rem, 1.3rem, 1.5rem);
+		font-size: var(--text-lg); /* Reduce from default h2 size */
+	}
+	h3 {
+		font-size: var(--text-base); /* Reduce from default h3 size */
+		margin-top: 0.5rem;
 	}
 	p {
 		padding-block: 0.25rem;

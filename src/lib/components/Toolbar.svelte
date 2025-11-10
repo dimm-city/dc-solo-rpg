@@ -37,6 +37,7 @@
 	}
 	.dc-toolbar h3 {
 		margin: 0;
+		font-size: var(--text-lg); /* Reduce from default h3 size */
 	}
 
 	.dc-toolbar .left {
