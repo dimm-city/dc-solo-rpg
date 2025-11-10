@@ -28,8 +28,8 @@ test('Complete game flow - single round', async ({ page }) => {
 	await page.waitForTimeout(2500);
 	await page.click('.dc-dice-roller-container');
 	
-	// Wait for card interface to appear
-	await page.waitForSelector('.neural-cta:has-text("INTERCEPT")', { timeout: 5000 });
+	// Wait for card interface to appear with longer timeout
+	await page.waitForSelector('.neural-cta:has-text("INTERCEPT")', { timeout: 10000 });
 	console.log('  ✓ Rolled for tasks');
 
 	// Draw all cards
@@ -102,7 +102,7 @@ test('Multiple rounds - stress test', async ({ page }) => {
 		await page.click('.dc-dice-roller-container');
 		await page.waitForTimeout(2500);
 		await page.click('.dc-dice-roller-container');
-		await page.waitForSelector('.neural-cta:has-text("INTERCEPT")', { timeout: 5000 });
+		await page.waitForSelector('.neural-cta:has-text("INTERCEPT")', { timeout: 10000 });
 
 		// Draw all cards
 		let cardsDrawn = 0;

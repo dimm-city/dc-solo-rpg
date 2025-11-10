@@ -222,7 +222,19 @@ export async function rollForTasks() {
  */
 export async function confirmTaskRoll() {
 	console.log('[confirmTaskRoll] Called');
+	
+	// Transition to drawCard state
 	transitionTo('drawCard');
+	
+	// Ensure we're not already transitioning before calling transitionToScreen
+	// Wait a bit for any pending transitions to complete
+	let attempts = 0;
+	while (transitionState.isTransitioning && attempts < 10) {
+		await sleep(100);
+		attempts++;
+	}
+	
+	// Now transition to the screen
 	await transitionToScreen();
 	console.log('[confirmTaskRoll] Completed');
 }
