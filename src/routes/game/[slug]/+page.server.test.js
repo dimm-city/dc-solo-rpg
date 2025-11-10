@@ -113,7 +113,7 @@ K,spades,King of Spades`;
 			expect(result.gameConfig.deck).toHaveLength(1);
 		});
 
-		it('should handle missing introduction gracefully', async () => {
+		it('should handle missing introduction file gracefully by treating as inline content', async () => {
 			const mockConfig = `
 title: Test Game
 deck: deck.csv
@@ -144,10 +144,45 @@ A,hearts,Ace`;
 
 			const result = await load({ params, fetch: mockFetch });
 
-			// Should have empty introduction
-			expect(result.gameConfig.introduction).toBe('');
+			// When file doesn't exist, treats filename as inline content (fallback behavior)
+			expect(result.gameConfig.introduction).toBe('intro.md');
 			// But still load everything else
 			expect(result.gameConfig.deck).toHaveLength(1);
+		});
+
+		it('should handle inline introduction content', async () => {
+			const mockConfig = `
+title: Test Game
+deck: deck.csv
+introduction: |
+  # Welcome
+  This is inline content
+`;
+
+			const mockDeck = `card,suit,description
+A,hearts,Ace`;
+
+			mockFetch.mockImplementation((url) => {
+				if (url.includes('config.yml')) {
+					return Promise.resolve({
+						ok: true,
+						text: () => Promise.resolve(mockConfig)
+					});
+				}
+				if (url.includes('deck.csv')) {
+					return Promise.resolve({
+						ok: true,
+						text: () => Promise.resolve(mockDeck)
+					});
+				}
+				return Promise.resolve({ ok: false, status: 404 });
+			});
+
+			const result = await load({ params, fetch: mockFetch });
+
+			// Should use inline content directly (contains newlines)
+			expect(result.gameConfig.introduction).toContain('# Welcome');
+			expect(result.gameConfig.introduction).toContain('This is inline content');
 		});
 
 		it('should use default stylesheet if not specified', async () => {
