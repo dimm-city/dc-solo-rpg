@@ -3,18 +3,14 @@ const config = {
 	webServer: {
 		command: 'npm run dev',
 		port: 5173,
-		reuseExistingServer: true
+		reuseExistingServer: !process.env.CI
 	},
 	testDir: 'tests',
 	testMatch: /(.+\.)?(test|spec)\.[jt]s/,
 	use: {
+		// Use Playwright's bundled Chromium instead of system Chrome
 		launchOptions: {
-			executablePath: '/usr/bin/google-chrome',
-			args: [
-				'--no-sandbox',
-				'--disable-setuid-sandbox',
-				'--disable-dev-shm-usage'
-			],
+			args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
 			headless: true
 		},
 		javaScriptEnabled: true,
