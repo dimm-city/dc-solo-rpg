@@ -39,16 +39,19 @@ npx playwright test tests/comprehensive-validation.spec.js --headed
 ### 1. Game Setup (Phase 1)
 
 ✅ **Home Page**
+
 - Game selector loads
 - Game list displays
 - Can select game
 
 ✅ **Options Screen**
+
 - Options screen appears
 - Can configure difficulty
 - Start button works
 
 ✅ **Intro Screen**
+
 - Game title and rules display
 - Start button transitions to gameplay
 
@@ -61,6 +64,7 @@ npx playwright test tests/comprehensive-validation.spec.js --headed
 #### Roll for Tasks
 
 ✅ **Dice Rolling**
+
 - Dice roller appears
 - Rolls 1-6 randomly
 - Number determines cards to draw
@@ -71,12 +75,14 @@ npx playwright test tests/comprehensive-validation.spec.js --headed
 #### Drawing Cards
 
 ✅ **Card Drawing**
+
 - Card deck appears
 - Can click to draw
 - Card info displays
 - Tracks odd vs even cards
 
 ✅ **Odd Cards (Failure Check)**
+
 - Automatically triggers failure check
 - Dice roller appears
 - Rolls 1-6
@@ -93,6 +99,7 @@ npx playwright test tests/comprehensive-validation.spec.js --headed
   ```
 
 ✅ **Even Cards**
+
 - No failure check
 - Continues to next card
 
@@ -117,6 +124,7 @@ The test tracks **every** damage event and validates the math:
 #### Journal Entry
 
 ✅ **Journal Recording**
+
 - Textarea appears after round
 - Can enter text
 - State tracks:
@@ -130,6 +138,7 @@ The test tracks **every** damage event and validates the math:
 #### Success Check (Ace of Hearts)
 
 ✅ **Success Check Mechanics**
+
 - Triggers when Ace of Hearts drawn
 - Dice roller appears
 - Rolls 1-6
@@ -150,6 +159,7 @@ The test tracks **every** damage event and validates the math:
 #### Game Over - Win Condition
 
 ✅ **Win Condition Check**
+
 - All 10 tokens removed
 - Tower > 0
 - "VICTORY" message displays
@@ -160,10 +170,12 @@ The test tracks **every** damage event and validates the math:
 #### Game Over - Loss Conditions
 
 ✅ **Tower Collapse**
+
 - Tower <= 0
 - "Tower has fallen" message
 
 ✅ **4 Kings Revealed**
+
 - Track each king drawn
 - Game over when 4th king appears
 - "4 Kings revealed" message
@@ -190,6 +202,7 @@ Expected flow:
 ```
 
 Test verifies:
+
 - ✅ All screens appear
 - ✅ Screens appear in correct order
 - ✅ No screens skipped
@@ -209,6 +222,7 @@ For every damage event, test validates:
 ```
 
 **Example Console Output:**
+
 ```
 🧮 DAMAGE CALCULATIONS (8 events):
   1. R1 Card1: Roll 3 - Bonus 0 = 3 damage → Tower 54→51 ✅
@@ -352,17 +366,20 @@ PHASE 3: TEST VERIFICATION
 The test captures screenshots at every major game phase:
 
 ### Setup Phase
+
 - `test-01-home.png` - Home page with game selector
 - `test-02-options.png` - Options configuration screen
 - `test-03-intro.png` - Intro screen with rules
 
 ### Each Round
+
 - `test-04-start-round-{N}.png` - Roll for tasks screen
 - `test-05-round-{N}-draw.png` - Drawing cards screen
 - `test-06-round-{N}-journal.png` - Journal entry screen
 - `test-07-round-{N}-success.png` - Success check (if Ace♥)
 
 ### Game Over
+
 - `test-gameover-round-{N}.png` - Loss condition
 - `test-victory-final.png` - Win condition
 - `test-final.png` - Final screenshot
@@ -372,12 +389,14 @@ The test captures screenshots at every major game phase:
 ## What Gets Validated
 
 ### ✅ Correct Math
+
 - Damage calculation: `Max(Roll - Bonus, 0)`
 - Tower health decrement
 - Token removal on success check
 - Bonus from aces applied
 
 ### ✅ Game Logic
+
 - Odd cards → Failure check
 - Even cards → Continue
 - Aces → +1 bonus
@@ -385,22 +404,26 @@ The test captures screenshots at every major game phase:
 - Ace of Hearts → Enable success checks
 
 ### ✅ Win Conditions
+
 - All 10 tokens removed
 - Tower > 0
 - Victory screen shows
 
 ### ✅ Loss Conditions
+
 - Tower <= 0 OR
 - 4 Kings revealed
 - Loss screen shows appropriate message
 
 ### ✅ State Transitions
+
 - All screens appear in correct order
 - No skipped screens
 - Invalid transitions caught
 - Smooth animations complete
 
 ### ✅ UI Consistency
+
 - Stats display updates
 - Cards display correctly
 - Dice animations work
@@ -440,16 +463,19 @@ Quick validation test (`SMOKE TEST: Game starts and first round works`):
 ## Running Locally
 
 1. **Start the app:**
+
    ```bash
    npm run dev
    ```
 
 2. **Run test (in another terminal):**
+
    ```bash
    npx playwright test tests/comprehensive-validation.spec.js --headed
    ```
 
 3. **View screenshots:**
+
    ```bash
    ls screenshots/
    ```
@@ -474,6 +500,7 @@ When you run this test, you should see:
 ✅ Test passes with green checkmarks
 
 If the test fails, it will show:
+
 - Which math calculation was wrong
 - Which screen didn't appear
 - Which validation failed
