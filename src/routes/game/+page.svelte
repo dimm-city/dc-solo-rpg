@@ -4,7 +4,7 @@
 	import { onMount } from 'svelte';
 
 	let systemSettings = new SystemSettings();
-	systemSettings.gameConfigUrl = '/games/artful-detective/config.yml';
+	systemSettings.gameConfigUrl = '/games/future-lost/config.yml';
 	systemSettings.player = { name: 'Guest' };
 
 	let gameComponent;

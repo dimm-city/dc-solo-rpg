@@ -39,7 +39,7 @@
 		</select>
 	</div>
 
-	<button on:click={() => setConfig()}>Load Game</button>
+	<button on:click={() => setConfig()} data-augmented-ui="tl-clip br-clip both">Load Game</button>
 </div>
 
 <style>

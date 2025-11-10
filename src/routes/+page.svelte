@@ -58,7 +58,7 @@
 		/>
 	</div>
 	<div class="welcome-container" class:hidden={ready && $currentScreen != 'loadGame'}>
-		<section class="hero" data-augmented-ui="tl-clip br-clip both">
+		<section class="hero">
 			<h1>Dimm City: Solo RPG</h1>
 			<p>Demo</p>
 		</section>
