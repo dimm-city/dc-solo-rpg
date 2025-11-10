@@ -13,4 +13,4 @@ vite.config.ts.timestamp-*
 .scripts/
 coverage/
 test-results/
-playwright-report/
+playwright-report/screenshots/
