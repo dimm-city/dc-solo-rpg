@@ -103,7 +103,7 @@
 	.welcome-container {
 		display: flex;
 		flex-direction: column;
-		justify-content: center;
+		justify-content: flex-start; /* Align to top to prevent content overflow */
 	}
 	.hidden {
 		display: none;

@@ -363,7 +363,7 @@ main {
 	flex: 1;
 	display: flex;
 	flex-direction: column;
-	justify-content: center;
+	justify-content: flex-start; /* Align to top to prevent content overflow */
 	overflow: visible; /* Allow neural effects and glows to extend */
 	margin: var(--space-xs);
 	min-height: 0; /* CRITICAL: Allow flex child to shrink */

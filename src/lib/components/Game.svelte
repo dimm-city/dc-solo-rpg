@@ -152,6 +152,7 @@
 	.dc-game-container {
 		display: grid;
 		height: 100%;
+		min-height: 0; /* CRITICAL: Allow grid to shrink below content size */
 		grid-template-rows: 100%; /* Constrain grid row to parent height */
 		box-sizing: border-box;
 		font-family: var(--dc-default-font-family);

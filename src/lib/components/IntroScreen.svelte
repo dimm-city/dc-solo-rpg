@@ -98,10 +98,12 @@
 		display: flex;
 		flex-direction: column;
 		height: 100%;
+		min-height: 0; /* CRITICAL: Allow flex item to shrink below content size */
 		width: 100%;
 		border-radius: 0;
 		position: relative;
 		overflow: hidden;
+		box-sizing: border-box;
 	}
 
 	.content {
@@ -111,7 +113,6 @@
 		padding: var(--space-md);
 		background-color: transparent;
 		min-height: 0; /* CRITICAL: Allows flex item to shrink below content size */
-		max-height: calc(100vh - 250px); /* Ensure space for buttons */
 	}
 
 	:global(.content h1) {
