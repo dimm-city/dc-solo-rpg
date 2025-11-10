@@ -330,7 +330,11 @@ export function getFailureCheckRoll() {
  * Apply failure check result and update health
  * @param {number} result - Dice roll result
  */
-export function applyFailureCheckResult(result) {
+/**
+ * Apply failure check result and update health
+ * @param {number} result - Dice roll result
+ */
+export async function applyFailureCheckResult(result) {
 	if (gameState.gameOver) {
 		throw new Error('The game is over, stop playing with the tower!');
 	}
@@ -367,6 +371,9 @@ export function applyFailureCheckResult(result) {
 			transitionTo('log');
 		}
 	}
+	
+	// Trigger screen transition after state change
+	await transitionToScreen();
 }
 
 /**

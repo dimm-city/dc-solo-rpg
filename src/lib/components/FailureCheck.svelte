@@ -21,7 +21,8 @@
 			// Animate the dice
 			await diceRoller.roll(result);
 			// NOW apply the health consequences AFTER animation
-			applyFailureCheckResult(result);
+			// This also triggers the screen transition
+			await applyFailureCheckResult(result);
 			onfailurecheckcompleted(gameState.state);
 		} else {
 			await confirmFailureCheck();

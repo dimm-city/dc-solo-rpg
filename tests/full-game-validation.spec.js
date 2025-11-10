@@ -52,8 +52,8 @@ test.describe('Full Game Validation', () => {
 		const getUIStats = async () => {
 			try {
 				const statsText = await page.locator('.dc-status-display, .status-display-area').textContent();
-				const tower = statsText?.match(/Tower:\s*(\d+)/)?.[1];
-				const tokens = statsText?.match(/Tokens:\s*(\d+)/)?.[1];
+				const tower = statsText?.match(/HEALTH\s*(\d+)\/100/)?.[1];
+				const tokens = statsText?.match(/SUCCESS\s*(\d+)\/10/)?.[1];
 				const round = statsText?.match(/Round:\s*(\d+)/)?.[1];
 
 				return {
@@ -69,7 +69,9 @@ test.describe('Full Game Validation', () => {
 		// Helper: Get dice roll result from UI
 		const getDiceResult = async () => {
 			try {
-				const diceText = await page.locator('.dc-dice-roller-container, .dc-dice-result').textContent();
+				const diceText = await page.locator('.dc-dice-roller-container').textContent();
+				// After rolling, the text changes from the roll number to "Click to continue"
+				// We need to extract it right after the animation but before clicking
 				const match = diceText?.match(/(\d+)/);
 				return match ? parseInt(match[1]) : null;
 			} catch {
