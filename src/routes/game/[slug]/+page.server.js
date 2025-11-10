@@ -28,8 +28,15 @@ export async function load({ params }) {
 		// Load introduction
 		let introduction = '';
 		if (config.introduction) {
-			const introPath = join(gameDir, config.introduction);
-			introduction = await readFile(introPath, 'utf-8');
+			// Check if introduction is inline content (contains newlines) or a filename
+			if (config.introduction.includes('\n')) {
+				// Inline content - use as-is
+				introduction = config.introduction;
+			} else {
+				// File reference - load from file
+				const introPath = join(gameDir, config.introduction);
+				introduction = await readFile(introPath, 'utf-8');
+			}
 		}
 		
 		// Return the complete game configuration
