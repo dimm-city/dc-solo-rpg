@@ -317,7 +317,7 @@
 		align-items: center;
 		justify-content: center;
 		gap: var(--space-xl, 2rem);
-		overflow: hidden;
+		overflow: visible; /* Allow button glows and effects to extend beyond bounds */
 		background: var(--color-bg-darker, #000);
 	}
 

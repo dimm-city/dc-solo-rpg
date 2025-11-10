@@ -152,12 +152,16 @@
 	.dc-game-container {
 		display: grid;
 		height: 100%;
+		width: 100%; /* CRITICAL: Take full parent width */
+		max-width: 100%; /* CRITICAL: Prevent horizontal overflow */
+		min-width: 0; /* CRITICAL: Allow grid to shrink horizontally */
 		min-height: 0; /* CRITICAL: Allow grid to shrink below content size */
 		grid-template-rows: 100%; /* Constrain grid row to parent height */
 		box-sizing: border-box;
 		font-family: var(--dc-default-font-family);
 		color: var(--dc-default-text-color);
-		overflow: visible; /* Allow glows to extend beyond bounds */
+		overflow-x: hidden; /* CRITICAL: Prevent horizontal scrolling */
+		overflow-y: visible; /* Allow vertical glows to extend */
 	}
 	.dc-game-container,
 	.dc-game-container > div,
@@ -168,7 +172,7 @@
 	.dc-intro-wrapper {
 		display: flex;
 		flex-direction: column;
-		overflow: hidden; /* IntroScreen handles its own overflow */
+		overflow: visible; /* Allow glow effects to extend beyond bounds */
 		min-height: 0; /* Allow flex shrinking */
 		height: 100%; /* Fill parent */
 	}
@@ -196,6 +200,7 @@
 		display: grid;
 		height: 100%;
 		width: 100%;
+		min-width: 0; /* CRITICAL: Allow grid to shrink */
 		grid-template-rows: min-content min-content 1fr;
 		row-gap: 0.5rem;
 		padding: 0.5rem;
@@ -209,6 +214,7 @@
 	.toolbar-area {
 		grid-area: toolbar-area;
 		padding-inline: 0.25rem;
+		min-width: 0; /* CRITICAL: Allow grid area to shrink */
 	}
 
 	.main-screen-area {
@@ -216,7 +222,8 @@
 		width: 100%;
 		margin-inline: auto;
 		display: grid;
-		min-height: 100%;
+		min-height: 0; /* CRITICAL: Allow grid to shrink */
+		height: 100%; /* Take full available height */
 		box-sizing: border-box;
 		position: relative;
 		overflow: visible; /* Allow glows and effects to extend */
@@ -247,6 +254,7 @@ background: radial-gradient(circle, rgba(19,135,185,1) 0%, rgba(29,63,78,1) 71%,
 		padding: 0.5rem;
 		border-radius: var(--dc-default-border-radius);
 		box-shadow: var(--dc-default-box-shadow);
+		overflow: visible; /* Allow button glows to extend beyond bounds */
 	}
 	:global(.dc-header button) {
 		display: grid;

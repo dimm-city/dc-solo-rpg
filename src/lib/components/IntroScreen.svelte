@@ -102,7 +102,7 @@
 		width: 100%;
 		border-radius: 0;
 		position: relative;
-		overflow: hidden;
+		overflow: visible; /* Allow glow effects to extend beyond bounds */
 		box-sizing: border-box;
 	}
 

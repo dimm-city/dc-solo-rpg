@@ -48,6 +48,7 @@
 		flex-direction: column;
 		gap: 0.5rem;
 		padding: var(--dc-default-padding);
+		overflow: visible; /* Allow button glows to extend beyond bounds */
 	}
 
 	select {

@@ -47,6 +47,7 @@
 		align-content: center;
 		text-align: center;
 		background: var(--color-bg-darker, #000);
+		overflow: visible; /* Allow neural interface glows to extend beyond bounds */
 	}
 
 	@media (max-width: 450px) or (max-height: 600px) {

@@ -48,17 +48,17 @@
 		box-shadow: var(--dc-default-box-shadow);
 		background-color: var(--dc-default-container-bg);
 		border-radius: var(--dc-default-border-radius);
-		padding-inline: var(--dc-status-display-padding);
-		padding-top: 0.5rem;
-		padding-bottom: 0.75rem; /* Extra padding for meter glows */
+		padding: 0.75rem; /* Equal padding all around for meter glows */
 
 		width: 100%;
-		grid-template-columns: 2fr 1fr 1fr 1fr; /* Health is 2x larger */
-		grid-template-rows: 0.4fr 1.6fr;
+		grid-template-columns: repeat(4, 1fr); /* Equal width columns */
+		grid-template-rows: auto auto;
 		grid-template-areas:
 			'round-area round-area round-area round-area'
 			'health-area failure-area bonus-area success-area';
-		gap: 0.5rem;
+		gap: 0.75rem; /* Increased gap for better spacing */
+		align-items: center;
+		overflow: visible; /* Allow hexagon glow effects to extend beyond bounds */
 	}
 	.round-container {
 		grid-area: round-area;
@@ -69,9 +69,14 @@
 	}
 	.failure-container {
 		grid-area: health-area;
-		display: grid;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
 		font-size: 1.1rem;
 		font-weight: bold;
+		overflow: visible; /* Allow health meter glow to extend */
+		min-height: 0; /* Allow shrinking */
 	}
 
 	.failure-counters-container,
@@ -79,6 +84,10 @@
 	.success-counters-container {
 		display: flex;
 		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+		overflow: visible; /* Allow meter glows to extend beyond bounds */
+		min-height: 0; /* Allow shrinking */
 	}
 
 	.failure-counters-container {
@@ -91,21 +100,33 @@
 		grid-area: bonus-area;
 	}
 
-	/* Mobile responsive layout */
-	@media (max-width: 768px) {
+	/* Tablet and smaller - 2 columns */
+	@media (max-width: 900px) {
 		.status-display-container {
 			grid-template-columns: repeat(2, 1fr);
-			grid-template-rows: auto;
+			grid-template-rows: auto auto auto;
 			grid-template-areas:
 				'round-area round-area'
-				'health-area health-area'
-				'failure-area bonus-area'
-				'success-area success-area';
+				'health-area failure-area'
+				'bonus-area success-area';
 			gap: 0.75rem;
+			padding: 0.5rem;
 		}
+	}
 
-		.failure-container {
-			font-size: 1.2rem;
+	/* Small screens - single column */
+	@media (max-width: 600px) {
+		.status-display-container {
+			grid-template-columns: 1fr;
+			grid-template-rows: auto;
+			grid-template-areas:
+				'round-area'
+				'health-area'
+				'failure-area'
+				'bonus-area'
+				'success-area';
+			gap: 0.5rem;
+			padding: 0.5rem;
 		}
 	}
 </style>

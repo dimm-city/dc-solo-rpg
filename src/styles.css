@@ -367,6 +367,8 @@ main {
 	overflow: visible; /* Allow neural effects and glows to extend */
 	margin: var(--space-xs);
 	min-height: 0; /* CRITICAL: Allow flex child to shrink */
+	max-width: 100%; /* CRITICAL: Prevent horizontal overflow */
+	box-sizing: border-box; /* Include padding/border in width */
 
 	/* Augmented UI for cyberpunk corners */
 	--aug-border-all: var(--border-width-thick);

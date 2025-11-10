@@ -58,7 +58,7 @@
 		/>
 	</div>
 	<div class="welcome-container" class:hidden={ready && $currentScreen != 'loadGame'}>
-		<section class="hero">
+		<section class="hero" data-augmented-ui="tl-clip br-clip both">
 			<h1>Dimm City: Solo RPG</h1>
 			<p>Demo</p>
 		</section>
@@ -98,7 +98,9 @@
 		flex: 1;
 		min-height: 0;
 		height: 100%;
-		overflow: hidden; /* Contain children within bounds */
+		max-width: 100%; /* CRITICAL: Prevent horizontal overflow */
+		box-sizing: border-box; /* Include padding/border in width */
+		overflow: visible; /* Allow glows and effects to extend beyond bounds */
 	}
 	.welcome-container {
 		display: flex;
