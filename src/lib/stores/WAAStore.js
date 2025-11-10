@@ -260,9 +260,9 @@ export const startRound = async () => {
 		return state;
 	});
 
-	// First transition to startRound state, then to rollForTasks with page-turn animation
-	await transitionToScreen('startRound', 'round');
-	await sleep(100); // Small delay for state machine
+	// Show the round screen (already in startRound state), then transition to rollForTasks
+	await transitionToScreen(null, 'round'); // Don't change state, just show screen with page-turn
+	await sleep(100); // Small delay for visual feedback
 	await transitionToScreen('rollForTasks', 'default');
 };
 
@@ -278,6 +278,7 @@ export const rollForTasks = async () => {
 		store.cardsToDraw = roll;
 		store.currentCard = null;
 		store.state = services.stateMachine.next('drawCard');
+		console.log(`[rollForTasks] Dice rolled: ${roll}, setting cardsToDraw to ${roll}`);
 		return store;
 	});
 	return roll;
@@ -296,7 +297,9 @@ export const confirmTaskRoll = async () => {
  * @returns {void}
  */
 export const drawCard = () => {
+	console.log('[drawCard] Function called');
 	gameStore.update((state) => {
+		console.log(`[drawCard] BEFORE: cardsToDraw=${state.cardsToDraw}, state=${state.state}`);
 		if (state.deck.length === 0) {
 			state.gameOver = true;
 			state.state = services.stateMachine.next('gameOver');
@@ -311,6 +314,8 @@ export const drawCard = () => {
 
 		state.currentCard = card;
 		state.cardsToDraw -= 1;
+
+		console.log(`[drawCard] Drew ${card.card} of ${card.suit}, cardsToDrawRemaining: ${state.cardsToDraw}`);
 
 		card.id = `${state.round}.${state.log.filter((l) => l.round === state.round).length + 1}`;
 		card.round = state.round;
@@ -352,7 +357,9 @@ export const drawCard = () => {
  * @returns {Promise<void>}
  */
 export const confirmCard = async () => {
+	console.log('[confirmCard] Called');
 	gameStore.update((state) => {
+		console.log(`[confirmCard] Current state: ${state.state}, cardsToDraw: ${state.cardsToDraw}`);
 		state.currentCard = null;
 		return state;
 	});
@@ -360,12 +367,19 @@ export const confirmCard = async () => {
 };
 
 /**
- * Performs the failure check.
- * @param {number} result - The result of the dice roll.
- * @returns {Promise<number>}
+ * Gets the failure check dice roll result WITHOUT updating health.
+ * @returns {number} The dice roll result
  */
-export const failureCheck = async () => {
-	const result = services.getRandomNumber();
+export const getFailureCheckRoll = () => {
+	return services.getRandomNumber();
+};
+
+/**
+ * Applies the failure check result and updates health AFTER dice animation.
+ * @param {number} result - The dice roll result
+ * @returns {void}
+ */
+export const applyFailureCheckResult = (result) => {
 	gameStore.update((state) => {
 		if (state.gameOver) {
 			throw new Error('The game is over, stop playing with the tower!');
@@ -401,7 +415,16 @@ export const failureCheck = async () => {
 
 		return state;
 	});
+};
 
+/**
+ * Performs the failure check (legacy - kept for compatibility).
+ * @deprecated Use getFailureCheckRoll + applyFailureCheckResult for better timing
+ * @returns {Promise<number>}
+ */
+export const failureCheck = async () => {
+	const result = getFailureCheckRoll();
+	applyFailureCheckResult(result);
 	return result;
 };
 

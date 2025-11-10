@@ -18,7 +18,7 @@ This CSS theme file uses CSS variables to apply styling to the DC Solo RPG web c
 
 ## Dice Roller
 
-- `--dc-dice-roller-bg`: Sets the background color for the dice roller in the web component. The color is #cccfd1.
+- `--dc-dice-roller-bg`: ~~Sets the background color for the dice roller in the web component.~~ **DEPRECATED**: This variable is no longer used. The game board background (`.dc-table-bg`) is now transparent to allow the neural network animation to be visible on all screens (dice rolling, card drawing, journal entry, etc.).
 
 ## Cards
 
@@ -141,7 +141,7 @@ These variables allow you to easily customize the appearance of the DC Solo RPG 
 
 22. `main-screen-area`: This class is likely used to style the main screen area.
 
-23. `dc-table-bg`: This class is likely used to style the background of the table.
+23. `dc-table-bg`: **NOTE**: As of the latest update, this class now has a transparent background instead of using `--dc-dice-roller-bg`. This allows the neural network animation background to be visible on all game screens (dice rolling, card drawing, journal entry). The background is controlled by the parent `.dc-game-bg` class.
 
 24. `dc-roll-tasks-container`: This class is likely used to style the container that holds the roll tasks.
 
