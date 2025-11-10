@@ -22,8 +22,12 @@
 			await diceRoller.roll(result);
 			// NOW apply the health consequences AFTER animation
 			applyFailureCheckResult(result);
+			// The state has now changed - trigger the screen transition
+			// to the new screen (drawCard, log, or gameOver)
+			await confirmFailureCheck();
 			onfailurecheckcompleted(gameState.state);
 		} else {
+			// This branch is for when user clicks "continue" after seeing result
 			await confirmFailureCheck();
 		}
 	}

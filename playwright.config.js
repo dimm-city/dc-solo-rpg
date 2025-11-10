@@ -1,8 +1,8 @@
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
 const config = {
 	webServer: {
-		command: 'npm run preview',
-		port: 4173,
+		command: 'npm run dev',
+		port: 5173,
 		reuseExistingServer: true
 	},
 	testDir: 'tests',
@@ -18,7 +18,8 @@ const config = {
 			headless: true
 		},
 		javaScriptEnabled: true,
-		viewport: { width: 1280, height: 720 }
+		viewport: { width: 1280, height: 720 },
+		baseURL: 'http://localhost:5173'
 	}
 };
 

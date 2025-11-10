@@ -222,7 +222,19 @@ export async function rollForTasks() {
  */
 export async function confirmTaskRoll() {
 	console.log('[confirmTaskRoll] Called');
+	
+	// Transition to drawCard state
 	transitionTo('drawCard');
+	
+	// Ensure we're not already transitioning before calling transitionToScreen
+	// Wait a bit for any pending transitions to complete
+	let attempts = 0;
+	while (transitionState.isTransitioning && attempts < 10) {
+		await sleep(100);
+		attempts++;
+	}
+	
+	// Now transition to the screen
 	await transitionToScreen();
 	console.log('[confirmTaskRoll] Completed');
 }
@@ -404,19 +416,15 @@ export async function recordRound(journalEntry) {
 	journalEntry.dateRecorded = journalEntry.dateRecorded || new Date().toISOString();
 	gameState.journalEntries.push(journalEntry);
 
-	let nextAction = null;
+	// Determine and execute next action
 	if (!gameState.gameOver) {
 		if (gameState.aceOfHeartsRevealed) {
-			nextAction = 'successCheck';
+			// Go to success check screen
+			await transitionToScreen('successCheck');
 		} else {
-			nextAction = 'startRound';
+			// Start next round (this function handles the transition)
+			await startRound();
 		}
-	}
-
-	// Apply transition if not game over
-	if (nextAction) {
-		const transitionType = nextAction === 'startRound' ? 'round' : 'default';
-		await transitionToScreen(nextAction, transitionType);
 	}
 }
 
