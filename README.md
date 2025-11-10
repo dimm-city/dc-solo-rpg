@@ -32,6 +32,13 @@ Read the full guide here: [How to build a game](./docs/how-to-build-a-game.md)
 
 Check out our [Demo Site](https://demo.dimm.city) to see some basic examples of game play.
 
+## Requirements
+
+- **Node.js**: Version 20 or higher is required
+- **npm**: Version 10 or higher (comes with Node.js 20+)
+
+> **Note**: If you're using [nvm](https://github.com/nvm-sh/nvm), simply run `nvm use` in the project directory to switch to the correct Node version.
+
 ## Developing
 
 If you would like to run this project locally and make modifications to it, you can follow these steps to get started.
