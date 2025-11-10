@@ -330,11 +330,7 @@ export function getFailureCheckRoll() {
  * Apply failure check result and update health
  * @param {number} result - Dice roll result
  */
-/**
- * Apply failure check result and update health
- * @param {number} result - Dice roll result
- */
-export async function applyFailureCheckResult(result) {
+export function applyFailureCheckResult(result) {
 	if (gameState.gameOver) {
 		throw new Error('The game is over, stop playing with the tower!');
 	}
@@ -371,9 +367,6 @@ export async function applyFailureCheckResult(result) {
 			transitionTo('log');
 		}
 	}
-	
-	// Trigger screen transition after state change
-	await transitionToScreen();
 }
 
 /**
@@ -411,19 +404,15 @@ export async function recordRound(journalEntry) {
 	journalEntry.dateRecorded = journalEntry.dateRecorded || new Date().toISOString();
 	gameState.journalEntries.push(journalEntry);
 
-	let nextAction = null;
+	// Determine and execute next action
 	if (!gameState.gameOver) {
 		if (gameState.aceOfHeartsRevealed) {
-			nextAction = 'successCheck';
+			// Go to success check screen
+			await transitionToScreen('successCheck');
 		} else {
-			nextAction = 'startRound';
+			// Start next round (this function handles the transition)
+			await startRound();
 		}
-	}
-
-	// Apply transition if not game over
-	if (nextAction) {
-		const transitionType = nextAction === 'startRound' ? 'round' : 'default';
-		await transitionToScreen(nextAction, transitionType);
 	}
 }
 
