@@ -159,7 +159,7 @@
 		await sleep(600);
 
 		// Notify parent that card was confirmed
-		onconfirmcard({ card });
+		onconfirmcard();
 
 		// Reset state
 		animationStage = 'idle';
@@ -307,7 +307,7 @@
 		position: relative;
 		width: 100%;
 		height: 100%;
-		min-height: 500px;
+		min-height: 400px;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -315,6 +315,7 @@
 		gap: var(--space-xl, 2rem);
 		overflow: visible; /* Allow button glows and effects to extend beyond bounds */
 		background: var(--color-bg-darker, #000);
+		box-sizing: border-box;
 	}
 
 	/* ============================================
@@ -700,17 +701,18 @@
 
 	@media (max-width: 768px) {
 		.neural-interface {
-			min-height: 400px;
-			gap: var(--space-lg, 1.5rem);
+			min-height: 350px;
+			gap: var(--space-md, 1rem);
+			padding: var(--space-sm, 0.5rem);
 		}
 
 		.fragment-container {
 			max-width: 95%;
-			min-height: 250px;
+			min-height: 200px;
 		}
 
 		.fragment-shell {
-			min-height: 250px;
+			min-height: 200px;
 			padding: var(--space-lg, 1.5rem);
 		}
 
@@ -721,6 +723,7 @@
 		.neural-cta {
 			padding: var(--space-sm, 0.5rem) var(--space-lg, 1.5rem);
 			font-size: var(--text-sm, 0.875rem);
+			min-height: 44px; /* Ensure touch target size */
 		}
 
 		.scan-grid {
@@ -728,22 +731,46 @@
 		}
 	}
 
-	@media (max-width: 450px) {
+	@media (max-width: 450px) or (max-height: 667px) {
 		.neural-interface {
-			min-height: 350px;
+			min-height: 180px;
+			gap: 0;
+			padding: var(--space-xs, 0.25rem);
+			justify-content: space-between;
+			padding-top: var(--space-sm, 0.5rem);
+			padding-bottom: var(--space-xs, 0.25rem);
 		}
 
 		.fragment-container {
-			min-height: 220px;
+			min-height: 100px;
+			max-width: 98%;
+			margin: 0;
 		}
 
 		.fragment-shell {
-			min-height: 220px;
-			padding: var(--space-md, 1rem);
+			min-height: 100px;
+			padding: var(--space-sm, 0.5rem) var(--space-md, 1rem);
 		}
 
 		.scan-grid {
 			background-size: 25px 25px;
+		}
+
+		.fragment-data {
+			font-size: var(--text-sm, 0.875rem);
+			line-height: var(--line-height-base, 1.5);
+		}
+
+		.fragment-id {
+			font-size: 0.625rem;
+		}
+
+		.neural-cta {
+			padding: var(--space-xs, 0.25rem) var(--space-md, 1rem);
+			font-size: var(--text-xs, 0.75rem);
+			min-height: 44px; /* Ensure touch target size */
+			min-width: 44px;
+			flex-shrink: 0; /* Prevent button from shrinking */
 		}
 	}
 

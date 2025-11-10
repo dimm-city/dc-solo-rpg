@@ -10,7 +10,7 @@
 	let { onfailurecheckcompleted = () => {} } = $props();
 
 	let diceRoller = $state();
-	let rolling = $state();
+	let rolling = $state(false);
 	let result = $state();
 
 	async function doCheck() {
