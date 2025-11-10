@@ -143,6 +143,9 @@ describe('WAAStore', () => {
 
 	// Test rollForTasks
 	test('rollForTasks', async () => {
+		// Set initial state for this test
+		gameState.state = 'rollForTasks';
+		
 		// Mock the getRandomNumber function
 		gameState.getRandomNumber = vi.fn(() => 5);
 
@@ -152,8 +155,10 @@ describe('WAAStore', () => {
 		expect(gameState).toBeDefined();
 		expect(result).toBe(5);
 		expect(gameState.cardsToDraw).toBe(5);
-		expect(gameState.state).toBe('drawCard');
+		// rollForTasks() no longer transitions state - it just updates cardsToDraw
+		expect(gameState.state).toBe('rollForTasks');
 
+		// confirmTaskRoll() transitions to drawCard
 		await confirmTaskRoll();
 		expect(gameState.state).toBe('drawCard');
 	});

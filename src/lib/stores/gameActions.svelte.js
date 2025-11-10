@@ -57,11 +57,16 @@ export async function transitionToScreen(newState = null, animationType = 'defau
 	setTransitioning(true);
 
 	try {
+		// Check if we're in a browser environment (not in tests)
+		const hasDom = typeof document !== 'undefined';
+
 		// Exit animation
-		const currentScreenEl = document.querySelector('.dc-screen-container');
-		if (currentScreenEl) {
-			currentScreenEl.classList.add('screen-transition-out');
-			await sleep(300);
+		if (hasDom) {
+			const currentScreenEl = document.querySelector('.dc-screen-container');
+			if (currentScreenEl) {
+				currentScreenEl.classList.add('screen-transition-out');
+				await sleep(300);
+			}
 		}
 
 		// Update state (validated) only if newState is provided
@@ -73,22 +78,24 @@ export async function transitionToScreen(newState = null, animationType = 'defau
 		await sleep(50);
 
 		// Enter animation
-		const newScreenEl = document.querySelector('.dc-screen-container');
-		if (newScreenEl) {
-			newScreenEl.classList.remove('screen-transition-out');
+		if (hasDom) {
+			const newScreenEl = document.querySelector('.dc-screen-container');
+			if (newScreenEl) {
+				newScreenEl.classList.remove('screen-transition-out');
 
-			const animClass =
-				{
-					round: 'round-transition',
-					journal: 'journal-transition',
-					default: 'screen-transition-in'
-				}[animationType] || 'screen-transition-in';
+				const animClass =
+					{
+						round: 'round-transition',
+						journal: 'journal-transition',
+						default: 'screen-transition-in'
+					}[animationType] || 'screen-transition-in';
 
-			newScreenEl.classList.add(animClass);
+				newScreenEl.classList.add(animClass);
 
-			const duration = animationType === 'round' ? 800 : animationType === 'journal' ? 1200 : 500;
+				const duration = animationType === 'round' ? 800 : animationType === 'journal' ? 1200 : 500;
 
-			setTimeout(() => newScreenEl.classList.remove(animClass), duration);
+				setTimeout(() => newScreenEl.classList.remove(animClass), duration);
+			}
 		}
 	} finally {
 		setTransitioning(false);
@@ -205,9 +212,6 @@ export async function rollForTasks() {
 	gameState.diceRoll = roll;
 	gameState.currentCard = null;
 
-	// Update state to drawCard
-	transitionTo('drawCard');
-
 	console.log(`[rollForTasks] Dice rolled: ${roll}, setting cardsToDraw to ${roll}`);
 	return roll;
 }
@@ -218,6 +222,7 @@ export async function rollForTasks() {
  */
 export async function confirmTaskRoll() {
 	console.log('[confirmTaskRoll] Called');
+	transitionTo('drawCard');
 	await transitionToScreen();
 	console.log('[confirmTaskRoll] Completed');
 }
