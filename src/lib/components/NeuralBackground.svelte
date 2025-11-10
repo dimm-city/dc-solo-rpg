@@ -26,10 +26,12 @@
 			this.life -= 0.01;
 			this.vy += 0.05; // Gentle float upward
 
-			// Wrap around edges
-			if (this.x < 0) this.x = canvas.width;
-			if (this.x > canvas.width) this.x = 0;
-			if (this.y > canvas.height) this.y = 0;
+			// Wrap around edges (with safety check)
+			if (canvas) {
+				if (this.x < 0) this.x = canvas.width;
+				if (this.x > canvas.width) this.x = 0;
+				if (this.y > canvas.height) this.y = 0;
+			}
 		}
 
 		draw(ctx) {
@@ -49,36 +51,62 @@
 	function animateParticles() {
 		if (!ctx || !canvas) return;
 
-		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		try {
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-		// Update and filter particles
-		particles = particles.filter((p) => p.life > 0);
-		particles.forEach((p) => {
-			p.update();
-			p.draw(ctx);
-		});
+			// Update and filter particles
+			particles = particles.filter((p) => p.life > 0);
+			particles.forEach((p) => {
+				p.update();
+				p.draw(ctx);
+			});
 
-		// Spawn particles
-		const maxParticles = window.innerWidth < 768 ? 20 : 50;
-		const spawnRate = 0.1;
+			// Spawn particles (with safety check for window)
+			const maxParticles =
+				typeof window !== 'undefined' && window.innerWidth < 768 ? 20 : 50;
+			const spawnRate = 0.1;
 
-		if (particles.length < maxParticles && Math.random() < spawnRate) {
-			particles.push(new Particle(Math.random() * canvas.width, Math.random() * canvas.height));
+			if (particles.length < maxParticles && Math.random() < spawnRate) {
+				particles.push(
+					new Particle(Math.random() * canvas.width, Math.random() * canvas.height)
+				);
+			}
+
+			animationFrameId = requestAnimationFrame(animateParticles);
+		} catch (err) {
+			console.warn('Animation frame error, stopping animations:', err);
+			if (animationFrameId) {
+				cancelAnimationFrame(animationFrameId);
+			}
 		}
-
-		animationFrameId = requestAnimationFrame(animateParticles);
 	}
 
 	onMount(() => {
-		if (canvas) {
-			ctx = canvas.getContext('2d');
+		// Skip animations in test environment or if canvas is unavailable
+		if (!canvas || typeof window === 'undefined') {
+			return;
+		}
+
+		try {
+			ctx = canvas.getContext('2d', {
+				willReadFrequently: false,
+				alpha: true
+			});
+
+			if (!ctx) {
+				console.warn('Failed to get canvas 2D context, skipping animations');
+				return;
+			}
+
 			canvas.width = canvas.offsetWidth;
 			canvas.height = canvas.offsetHeight;
 
 			// Handle window resize
 			const handleResize = () => {
-				canvas.width = canvas.offsetWidth;
-				canvas.height = canvas.offsetHeight;
+				if (canvas) {
+					canvas.width = canvas.offsetWidth;
+					canvas.height = canvas.offsetHeight;
+				}
 			};
 			window.addEventListener('resize', handleResize);
 
@@ -88,6 +116,8 @@
 			return () => {
 				window.removeEventListener('resize', handleResize);
 			};
+		} catch (err) {
+			console.warn('Canvas initialization failed, skipping animations:', err);
 		}
 	});
 

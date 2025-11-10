@@ -14,13 +14,19 @@ const config = {
 		timeout: 10000 // 10 second timeout for assertions
 	},
 	use: {
-		// Use Playwright's bundled Chromium instead of system Chrome
+		// Use Playwright's bundled Chromium with flags for headless environment
 		launchOptions: {
-			args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+			args: [
+				'--headless=new', // Use new headless mode (doesn't require X11)
+				'--no-sandbox',
+				'--disable-setuid-sandbox',
+				'--disable-dev-shm-usage',
+				'--disable-gpu'
+			],
 			headless: true
 		},
 		javaScriptEnabled: true,
-		viewport: { width: 1280, height: 720 },
+		viewport: { width: 1280, height: 1280 },
 		baseURL: 'http://localhost:5173',
 		screenshot: 'only-on-failure',
 		video: 'retain-on-failure',
