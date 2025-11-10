@@ -4,12 +4,16 @@ import { error } from '@sveltejs/kit';
 import yaml from 'js-yaml';
 import { parse } from 'csv-parse/sync';
 
+// Get the project root directory reliably
+// This works in both dev and production
+const projectRoot = process.env.GAMES_BASE_DIR || process.cwd();
+
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ params }) {
 	const { slug } = params;
 	
-	// Path to game directory
-	const gameDir = join(process.cwd(), 'static', 'games', slug);
+	// Path to game directory in static folder
+	const gameDir = join(projectRoot, 'static', 'games', slug);
 	
 	try {
 		// Load config.yml
@@ -29,13 +33,19 @@ export async function load({ params }) {
 		let introduction = '';
 		if (config.introduction) {
 			// Check if introduction is inline content (contains newlines) or a filename
-			if (config.introduction.includes('\n')) {
-				// Inline content - use as-is
+			if (config.introduction.includes('\n') || !config.introduction.includes('.')) {
+				// Inline content (has newlines or no file extension) - use as-is
 				introduction = config.introduction;
 			} else {
-				// File reference - load from file
-				const introPath = join(gameDir, config.introduction);
-				introduction = await readFile(introPath, 'utf-8');
+				// File reference (has file extension like .md) - load from file
+				try {
+					const introPath = join(gameDir, config.introduction);
+					introduction = await readFile(introPath, 'utf-8');
+				} catch (err) {
+					// If file doesn't exist, treat as inline content
+					console.warn(`Could not load introduction file "${config.introduction}", using as inline content`);
+					introduction = config.introduction;
+				}
 			}
 		}
 		
