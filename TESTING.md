@@ -35,14 +35,18 @@ npm test
 Unit tests are located alongside the source files with `.test.js` extension:
 
 ```
-src/lib/
-├── stores/
-│   ├── gameStore.svelte.js
-│   ├── gameStore.test.js          # 38 tests ✓
-│   ├── transitions.js
-│   └── transitions.test.js        # 45 tests ✓
-└── components/
-    └── [component tests - TBD]
+src/
+├── lib/
+│   └── stores/
+│       ├── gameStore.svelte.js
+│       ├── gameStore.test.js          # 38 tests ✓
+│       ├── transitions.js
+│       └── transitions.test.js        # 45 tests ✓
+└── routes/
+    └── game/
+        └── [slug]/
+            ├── +page.server.js
+            └── +page.server.test.js   # 12 tests ✓
 ```
 
 ### E2E Tests
@@ -85,6 +89,19 @@ Tests the pure state transition graph:
 - **Edge Cases** - Tests undefined/null/unknown states
 - **Complex Game Flows** - Tests complete game scenarios
 - **State Machine Integrity** - Tests for orphaned states and circular dependencies
+
+### Server-Side Data Loading Tests (12 tests - All passing ✓)
+
+#### +page.server.test.js (12 tests)
+Tests the SvelteKit server-side game configuration loading using fetch:
+
+- **Successful Loading** - Tests loading config.yml, deck.csv, and intro files
+- **Default Values** - Tests default deck filename and stylesheet
+- **Missing Files** - Tests graceful handling of missing intro files
+- **Error Handling** - Tests 404 errors, YAML parsing errors, CSV parsing errors
+- **Different Slugs** - Tests loading games with different identifiers
+- **Deck Parsing** - Tests CSV parsing with various formats and empty lines
+- **Config Properties** - Tests preservation of complex YAML structures
 
 ### Component Tests (Future Work)
 
