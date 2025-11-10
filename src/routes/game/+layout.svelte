@@ -1,4 +1,4 @@
-<slot />
+{@render children()}
 
 <style>
 	:global(body) {

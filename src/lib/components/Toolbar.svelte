@@ -8,7 +8,7 @@
 		<h3>{gameState.config?.title ?? 'Please select a game'}</h3>
 		<!-- <small>Player: {gameState.player.name}</small> -->
 	</div>
-	<div class="center" />
+	<div class="center"></div>
 	<div class="right">
 		<button class="dc-exit-button" onclick={exitGame}
 			>{@html gameState.config?.labels.toolbarExitButtonText}</button

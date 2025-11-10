@@ -37,7 +37,7 @@
 		{/each}
 	</div>
 	<div class="text-entry-area">
-		<textarea bind:value={journal.text} rows="5" />
+		<textarea bind:value={journal.text} rows="5"></textarea>
 	</div>
 	<div class="journal-tools-center-area">
 		{#if saved}

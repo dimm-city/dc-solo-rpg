@@ -5,7 +5,7 @@
 
 	import Game from '$lib/components/Game.svelte';
 
-	let systemSettings = new SystemSettings();
+	let systemSettings = $state(new SystemSettings());
 	const games = [
 		{ title: 'Artful Detective', url: '/games/artful-detective' },
 		{ title: 'Gnome Alone', url: '/games/gnome-alone' },

@@ -2,4 +2,4 @@
     import '../styles.css';
 </script>
 
-<slot />
+{@render children()}

@@ -2,8 +2,8 @@
 	import NeuralDiceInterface from '$lib/components/NeuralDiceInterface.svelte';
 
 	let diceInterface;
-	let eventLog = [];
-	let lastResult = null;
+	let eventLog = $state([]);
+	let lastResult = $state(null);
 
 	function logEvent(message) {
 		eventLog = [...eventLog, `${new Date().toLocaleTimeString()}: ${message}`];
@@ -70,7 +70,7 @@
 
 			<div class="control-section">
 				<h3>Programmatic Rolls</h3>
-				<button on:click={triggerRoll} class="test-button">
+				<button onclick={triggerRoll} class="test-button">
 					Trigger Roll
 				</button>
 			</div>
@@ -79,7 +79,7 @@
 				<h3>Forced Results (Testing)</h3>
 				<div class="button-group">
 					{#each [1, 2, 3, 4, 5, 6] as value}
-						<button on:click={() => triggerForcedRoll(value)} class="test-button small">
+						<button onclick={() => triggerForcedRoll(value)} class="test-button small">
 							Force {value}
 						</button>
 					{/each}

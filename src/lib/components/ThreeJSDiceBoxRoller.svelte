@@ -87,9 +87,7 @@
 >
 	{#if !rolling}
 		<div class="dc-dice-roller-header dc-header">
-			<slot>
-				<button class="dc-fade-in" {onclick} {onkeyup}>{header}</button>
-			</slot>
+			<button class="dc-fade-in" {onclick} {onkeyup}>{header}</button>
 		</div>
 	{/if}
 </div>

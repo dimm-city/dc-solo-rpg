@@ -54,21 +54,15 @@
 <div class="dc-game-container dc-game-bg">
 	{#if currentScreen == 'loadGame'}
 		<div class="dc-game-bg">
-			<slot name="load-screen">
-				<LoadScreen />
-			</slot>
+			<LoadScreen />
 		</div>
 	{:else if currentScreen == 'options'}
 		<div class="dc-game-bg">
-			<slot name="options-screen">
-				<OptionsScreen {systemSettings} />
-			</slot>
+			<OptionsScreen {systemSettings} />
 		</div>
 	{:else if currentScreen == 'intro'}
 		<div class="dc-game-bg dc-intro-wrapper">
-			<slot name="intro-screen">
-				<IntroScreen />
-			</slot>
+			<IntroScreen />
 		</div>
 	{:else if currentScreen == 'gameOver'}
 		<div class="dc-fade-in dc-screen-container">
@@ -80,9 +74,7 @@
 			<JournalEntry {onjournalsaved} />
 		</div>
 	{:else if currentScreen == 'exitGame'}
-		<slot name="options-screen">
-			<div>Game Exited</div>
-		</slot>
+		<div>Game Exited</div>
 	{:else}
 		<div class="game-screen dc-game-bg">
 			<div class="toolbar-area">
