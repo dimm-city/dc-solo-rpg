@@ -205,9 +205,6 @@ export async function rollForTasks() {
 	gameState.diceRoll = roll;
 	gameState.currentCard = null;
 
-	// Update state to drawCard
-	transitionTo('drawCard');
-
 	console.log(`[rollForTasks] Dice rolled: ${roll}, setting cardsToDraw to ${roll}`);
 	return roll;
 }
@@ -218,6 +215,7 @@ export async function rollForTasks() {
  */
 export async function confirmTaskRoll() {
 	console.log('[confirmTaskRoll] Called');
+	transitionTo('drawCard');
 	await transitionToScreen();
 	console.log('[confirmTaskRoll] Completed');
 }
