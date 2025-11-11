@@ -14,3 +14,4 @@ vite.config.ts.timestamp-*
 coverage/
 test-results/
 playwright-report/screenshots/
+.private/

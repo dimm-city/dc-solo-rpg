@@ -10,10 +10,6 @@ const config = {
 		version: {
 			name: process.env.npm_package_version || 'development'
 		}
-	},
-	compilerOptions: {
-		// Enable Svelte 5 runes mode
-		runes: true
 	}
 };
 
