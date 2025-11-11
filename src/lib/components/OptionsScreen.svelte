@@ -13,7 +13,7 @@
 
 	let status = $state('');
 	function setConfig() {
-		if (systemSettings.player && gameState.config.loaded) {
+		if (systemSettings.player && gameState.config?.loaded) {
 			startGame(systemSettings.player, options);
 		} else {
 			status = 'Please select a player and a game';
@@ -22,7 +22,7 @@
 </script>
 
 <div class="dc-start-screen-container">
-	<h2>{gameState.config.title ?? 'Game'}</h2>
+	<h2>{gameState.config?.title ?? 'Game'}</h2>
 	<div>
 		<label for="diceSelect">Select a Dice Theme:</label>
 		<select id="diceSelect" bind:value={options.dice}>

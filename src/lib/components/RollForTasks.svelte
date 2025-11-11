@@ -2,6 +2,7 @@
 	import DiceRoller from './ThreeJSDiceBoxRoller.svelte';
 	import { gameState } from '../stores/gameStore.svelte.js';
 	import { confirmTaskRoll, rollForTasks } from '../stores/gameActions.svelte.js';
+	import { logger } from '../utils/logger.js';
 
 	let taskDice = $state();
 	let rolled = $state(false);
@@ -9,16 +10,16 @@
 	let confirming = $state(false);
 
 	async function rollTaskDice() {
-		console.log('[RollForTasks.rollTaskDice] Called, rolling:', rolling, 'rolled:', rolled);
+		logger.debug('[RollForTasks.rollTaskDice] Called, rolling:', rolling, 'rolled:', rolled);
 		if (rolling || confirming) return;
 		const result = await rollForTasks();
 		await taskDice.roll(result);
 		rolled = true;
-		console.log('[RollForTasks.rollTaskDice] Completed, rolled is now:', rolled);
+		logger.debug('[RollForTasks.rollTaskDice] Completed, rolled is now:', rolled);
 	}
 
 	async function confirm() {
-		console.log(
+		logger.debug(
 			'[RollForTasks.confirm] Called, rolling:',
 			rolling,
 			'rolled:',
@@ -32,18 +33,18 @@
 		// during the transition, overwriting the cardsToDraw value
 		await confirmTaskRoll();
 		confirming = false;
-		console.log('[RollForTasks.confirm] Completed, rolled is now:', rolled);
+		logger.debug('[RollForTasks.confirm] Completed, rolled is now:', rolled);
 	}
 	function action() {
-		console.log('[RollForTasks.action] Called, rolled:', rolled);
+		logger.debug('[RollForTasks.action] Called, rolled:', rolled);
 		if (rolled) confirm();
 		else rollTaskDice();
 	}
 
 	const header = $derived(
 		rolled
-			? gameState.config?.labels.rollForTasksResultHeader
-			: gameState.config.labels.rollForTasksHeader
+			? gameState.config?.labels?.rollForTasksResultHeader ?? 'Result'
+			: gameState.config?.labels?.rollForTasksHeader ?? 'Roll for Tasks'
 	);
 </script>
 

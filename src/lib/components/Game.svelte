@@ -1,23 +1,7 @@
 <script>
 	import { gameState } from '../stores/gameStore.svelte.js';
-	import {
-		loadSystemConfig,
-		nextScreen,
-		transitionToScreen
-	} from '../stores/gameActions.svelte.js';
-	import OptionsScreen from './OptionsScreen.svelte';
-	import IntroScreen from './IntroScreen.svelte';
-	import SuccessCheck from './SuccessCheck.svelte';
-	import RollForTasks from './RollForTasks.svelte';
-	import DrawCard from './DrawCard.svelte';
-	import FailureCheck from './FailureCheck.svelte';
-	import GameOver from './GameOver.svelte';
-	import StatusDisplay from './StatusDisplay.svelte';
-	import JournalEntry from './JournalEntry.svelte';
-	import Toolbar from './Toolbar.svelte';
-	import LoadScreen from './LoadScreen.svelte';
 	import NeuralBackground from './NeuralBackground.svelte';
-	import AugmentedButton from './AugmentedButton.svelte';
+	import GameScreen from './GameScreen.svelte';
 
 	let {
 		systemSettings = $bindable({}),
@@ -27,15 +11,6 @@
 		onfailurecheckcompleted = () => {},
 		onjournalsaved = () => {}
 	} = $props();
-
-	export const startGame = async () => {
-		if (systemSettings.gameConfigUrl && systemSettings.player?.name) {
-			await loadSystemConfig(systemSettings);
-			ongameloaded(systemSettings);
-		} else {
-			gameState.status = 'Please select a player and a game';
-		}
-	};
 
 	const gameStylesheet = $derived(gameState.stylesheet);
 	const currentScreen = $derived(gameState.state);
@@ -54,70 +29,11 @@
 </svelte:head>
 <div class="dc-game-container dc-game-bg" data-testid="game-container">
 	<NeuralBackground />
-	{#if currentScreen == 'loadGame'}
-		<div class="dc-game-bg" data-testid="screen-loadGame">
-			<LoadScreen />
-		</div>
-	{:else if currentScreen == 'options'}
-		<div class="dc-game-bg" data-testid="screen-options">
-			<OptionsScreen {systemSettings} />
-		</div>
-	{:else if currentScreen == 'intro'}
-		<div class="dc-game-bg dc-intro-wrapper" data-testid="screen-intro">
-			<IntroScreen />
-		</div>
-	{:else if currentScreen == 'gameOver'}
-		<div class="dc-fade-in dc-screen-container" data-testid="screen-gameOver">
-			<GameOver />
-		</div>
-	{:else if currentScreen == 'finalLog' || currentScreen == 'log'}
-		<div class="dc-fade-in dc-screen-container dc-journal-screen" data-testid="screen-journal">
-			<JournalEntry {onjournalsaved} />
-		</div>
-	{:else if currentScreen == 'exitGame'}
-		<div data-testid="screen-exitGame">Game Exited</div>
-	{:else}
-		<div class="game-screen dc-game-bg">
-			<div class="toolbar-area">
-				<Toolbar />
-			</div>
-			<div class="status-display-area dc-fade-in" data-testid="status-display">
-				{#if currentScreen != 'log' && currentScreen != 'finalLog'}
-					<StatusDisplay />
-				{/if}
-			</div>
-			<div class="main-screen-area dc-table-bg">
-				{#if currentScreen == 'startRound'}
-					<div class="dc-fade-in dc-screen-container" data-testid="screen-startRound">
-						<h4>Round {gameState.round}</h4>
-						<AugmentedButton
-							text="Roll for tasks"
-							onclick={async () => await transitionToScreen('rollForTasks')}
-							testid="start-round-button"
-						/>
-					</div>
-				{:else if currentScreen == 'rollForTasks'}
-					<div class="dc-fade-in dc-screen-container" data-testid="screen-rollForTasks">
-						<RollForTasks />
-					</div>
-				{:else if currentScreen == 'drawCard'}
-					<div class="dc-fade-in dc-screen-container" data-testid="screen-drawCard">
-						<DrawCard />
-					</div>
-				{:else if currentScreen == 'failureCheck'}
-					<div class="dc-fade-in dc-screen-container" data-testid="screen-failureCheck">
-						<FailureCheck {onfailurecheckcompleted} />
-					</div>
-				{:else if currentScreen == 'successCheck'}
-					<div class="dc-fade-in dc-screen-container" data-testid="screen-successCheck">
-						<SuccessCheck />
-					</div>
-				{:else}
-					<div>error: {currentScreen}</div>
-				{/if}
-			</div>
-		</div>
-	{/if}
+	<GameScreen
+		{systemSettings}
+		{onfailurecheckcompleted}
+		{onjournalsaved}
+	/>
 </div>
 
 <style>
@@ -171,7 +87,6 @@
 		position: relative; /* CRITICAL: Position context for neural background */
 	}
 	.dc-game-container,
-	.dc-game-container > div,
 	:global(.dc-intro-container) {
 		border-radius: var(--dc-default-border-radius);
 	}
@@ -187,19 +102,13 @@
 		pointer-events: none;
 	}
 
-	/* Ensure all child screens appear above neural background */
-	.dc-game-container > div {
+	/* GameScreen component appears above neural background */
+	.dc-game-container > :global(*:not(.neural-background)) {
 		position: relative;
 		z-index: 1;
 	}
 
-	.dc-intro-wrapper {
-		display: flex;
-		flex-direction: column;
-		overflow: visible; /* Allow glow effects to extend beyond bounds */
-		min-height: 0; /* Allow flex shrinking */
-		height: 100%; /* Fill parent */
-	}
+	/* Screen-specific styles moved to GameScreen.svelte */
 	:global(.dc-game-bg) {
 		background: var(--dc-default-game-bg);
 	}
@@ -217,55 +126,6 @@
 		color: var(--dc-button-color);
 		text-shadow: none;
 		font-family: var(--dc-default-font-family);
-	}
-	.game-screen {
-		position: relative;
-		align-items: center;
-		display: grid;
-		height: 100%;
-		width: 100%;
-		min-width: 0; /* CRITICAL: Allow grid to shrink */
-		grid-template-rows: min-content min-content 1fr;
-		row-gap: 0.5rem;
-		padding: 0.5rem;
-		box-sizing: border-box;
-		grid-template-areas:
-			'toolbar-area'
-			'status-area'
-			'main-screen-area';
-	}
-
-	.toolbar-area {
-		grid-area: toolbar-area;
-		padding-inline: 0.25rem;
-		min-width: 0; /* CRITICAL: Allow grid area to shrink */
-	}
-
-	.main-screen-area {
-		grid-area: main-screen-area;
-		width: 100%;
-		min-width: 0;
-		margin-inline: auto;
-		display: grid;
-		min-height: 0; /* CRITICAL: Allow grid to shrink */
-		height: 100%; /* Take full available height */
-		box-sizing: border-box;
-		position: relative; /* CRITICAL: Position context for content */
-		overflow: hidden; /* CRITICAL: Prevent scrolling */
-	}
-
-	.main-screen-area > div.dc-screen-container {
-		width: 100%;
-		height: 100%;
-		overflow: visible; /* Allow glows and neural effects to extend beyond container */
-		box-sizing: border-box;
-		position: relative; /* Ensure content appears above neural background */
-		z-index: 1;
-	}
-	.dc-table-bg {
-		border-radius: var(--dc-default-border-radius);
-		/* Background removed to show neural network animation on all screens */
-		background: transparent;
 	}
 
 	:global(.dc-header) {
@@ -289,14 +149,7 @@
 		width: 100%;
 		margin: 0;
 	}
-	.status-display-area {
-		display: grid;
-		justify-content: stretch;
-		align-content: start;
-		width: 100%;
-		opacity: 0.9;
-		grid-area: status-area;
-	}
+	/* Animations and media queries remain global for all screens */
 	@keyframes fadeIn {
 		from {
 			opacity: 0;
@@ -310,25 +163,7 @@
 		animation: fadeIn 350ms ease-in;
 	}
 
-	.dc-journal-screen {
-		position: relative;
-		width: 100%;
-		height: 100%;
-		overflow: hidden;
-	}
-
-	.dc-journal-screen :global(.dc-journal-container) {
-		position: relative;
-		z-index: 1;
-	}
-
 	@media (max-width: 450px) or (max-height: 600px) {
-		.status-display-area {
-			width: 100%;
-			margin: auto;
-			justify-content: stretch;
-		}
-
 		:global(.dc-header) {
 			width: 90%;
 			bottom: 0.5rem; /* Slightly higher on small screens for better thumb access */

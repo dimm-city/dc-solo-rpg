@@ -1,6 +1,5 @@
 <script>
-	import { gameState } from '../stores/gameStore.svelte.js';
-	import { nextScreen } from '../stores/gameActions.svelte.js';
+	import { gameState, transitionTo } from '../stores/gameStore.svelte.js';
 	import AugmentedButton from './AugmentedButton.svelte';
 </script>
 
@@ -8,13 +7,13 @@
 	<div class="dc-game-over-header"><h1>Game Over</h1></div>
 	<div class="dc-game-over-content">
 		{#if gameState.kingsRevealed == 4}
-			<p>{gameState.config.labels.failureCounterLoss}</p>
+			<p>{gameState.config?.labels?.failureCounterLoss ?? 'Four kings revealed - the game is over'}</p>
 		{:else}
 			<h3>{gameState.status}</h3>
 		{/if}
 	</div>
 	<div class="dc-game-over-toolbar">
-		<AugmentedButton text="record your final log" onclick={() => nextScreen('finalLog')} />
+		<AugmentedButton text="record your final log" onclick={() => transitionTo('finalLog')} />
 	</div>
 </div>
 

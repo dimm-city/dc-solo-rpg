@@ -33,6 +33,9 @@
 		"!dist/**/*.test.*",
 		"!dist/**/*.spec.*"
 	],
+	"peerDependencies": {
+		"svelte": "5.43.5"
+	},
 	"devDependencies": {
 		"@eslint/js": "^9.39.1",
 		"@playwright/test": "^1.48.0",
@@ -54,7 +57,7 @@
 		"prettier-plugin-svelte": "^3.0.0",
 		"publint": "^0.3.15",
 		"puppeteer-core": "^24.29.1",
-		"svelte": "^5.15.0",
+		"svelte": "^5.43.5",
 		"svelte-check": "^4.0.0",
 		"tslib": "^2.4.1",
 		"typescript": "^5.0.0",

@@ -1,5 +1,6 @@
 import { readdir } from 'fs/promises';
 import { join } from 'path';
+import { logger } from '$lib/utils/logger.js';
 
 // Get the project root directory reliably
 const projectRoot = process.env.GAMES_BASE_DIR || process.cwd();
@@ -27,8 +28,8 @@ export async function load() {
 		return {
 			games
 		};
-	} catch (error) {
-		console.error('Error loading games:', error);
+	} catch (err) {
+		logger.error('Error loading games:', err);
 		return {
 			games: []
 		};

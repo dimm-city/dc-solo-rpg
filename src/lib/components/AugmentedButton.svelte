@@ -161,7 +161,7 @@
 
 		/* Layout & Typography - defaults for secondary */
 		display: inline-block;
-	padding: .75rem;
+		padding: 0.75rem;
 		font-size: 1.25rem;
 		font-weight: 700;
 		text-transform: uppercase;
@@ -194,9 +194,9 @@
 		-moz-appearance: none;
 		appearance: none;
 	}
-.aug-button.large{
+	.aug-button.large {
 		padding: 1.25rem 3rem;
-}
+	}
 	/* Disabled state for buttons */
 	.aug-button:disabled {
 		opacity: 0.5;

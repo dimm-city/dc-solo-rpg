@@ -3,202 +3,58 @@
  * All game logic and state mutations
  */
 import { gameState, transitionTo } from './gameStore.svelte.js';
-import { transitionState, setTransitioning } from './transitionStore.svelte.js';
-import { ConfigurationLoader } from '../configuration/ConfigurationLoader.js';
-
-// Create a single instance of the configuration loader
-const configLoader = new ConfigurationLoader();
+import { initializeGame } from './gameInit.js';
+import { logger } from '../utils/logger.js';
 
 /**
- * Helper for animation timing
- * @param {number} ms - Milliseconds to sleep
- * @returns {Promise<void>}
+ * Mock services object for test compatibility
+ * Tests can set services.gameSettings to provide config
  */
-function sleep(ms) {
-	return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-/**
- * Shuffle array helper
- * @param {Array} array - Array to shuffle
- * @returns {Array} Shuffled array
- */
-function shuffle(array) {
-	let currentIndex = array.length,
-		temporaryValue,
-		randomIndex;
-
-	while (0 !== currentIndex) {
-		randomIndex = Math.floor(Math.random() * currentIndex);
-		currentIndex -= 1;
-
-		temporaryValue = array[currentIndex];
-		array[currentIndex] = array[randomIndex];
-		array[randomIndex] = temporaryValue;
-	}
-
-	return array;
-}
-
-/**
- * Transition to screen with animation
- * Prevents race conditions via isTransitioning flag
- * @param {string|null} newState - Target state (null uses current state)
- * @param {'default' | 'round' | 'journal'} animationType - Type of animation
- * @returns {Promise<void>}
- */
-export async function transitionToScreen(newState = null, animationType = 'default') {
-	// Prevent concurrent transitions
-	if (transitionState.isTransitioning) {
-		console.warn('Transition already in progress, ignoring');
-		return;
-	}
-
-	setTransitioning(true);
-
-	try {
-		// Check if we're in a browser environment (not in tests)
-		const hasDom = typeof document !== 'undefined';
-
-		// Exit animation
-		if (hasDom) {
-			const currentScreenEl = document.querySelector('.dc-screen-container');
-			if (currentScreenEl) {
-				currentScreenEl.classList.add('screen-transition-out');
-				await sleep(300);
-			}
-		}
-
-		// Update state (validated) only if newState is provided
-		if (newState && newState !== gameState.state) {
-			transitionTo(newState);
-		}
-
-		// Wait for render
-		await sleep(50);
-
-		// Enter animation
-		if (hasDom) {
-			const newScreenEl = document.querySelector('.dc-screen-container');
-			if (newScreenEl) {
-				newScreenEl.classList.remove('screen-transition-out');
-
-				const animClass =
-					{
-						round: 'round-transition',
-						journal: 'journal-transition',
-						default: 'screen-transition-in'
-					}[animationType] || 'screen-transition-in';
-
-				newScreenEl.classList.add(animClass);
-
-				const duration = animationType === 'round' ? 800 : animationType === 'journal' ? 1200 : 500;
-
-				setTimeout(() => newScreenEl.classList.remove(animClass), duration);
-			}
-		}
-	} finally {
-		setTransitioning(false);
-	}
-}
-
-/**
- * Legacy nextScreen function for compatibility
- * @param {string|null} action - State to transition to
- */
-export const nextScreen = (action) => {
-	if (action) {
-		transitionTo(action);
-	}
-};
-
-/**
- * Load system configuration
- * @param {object} systemConfig - System configuration
- * @param {string} systemConfig.gameConfigUrl - URL to game config
- * @returns {Promise<void>}
- */
-export const loadSystemConfig = async (systemConfig) => {
-	if (!systemConfig || !systemConfig.gameConfigUrl) {
-		throw new Error('Must provide a valid game configuration and URL');
-	}
-
-	await configLoader.loadSystemSettings(systemConfig);
-	const gameConfig = await configLoader.loadGameSettings(systemConfig.gameConfigUrl);
-
-	gameState.config = gameConfig;
-	gameState.stylesheet = gameConfig.stylesheet;
-	gameState.systemConfig = systemConfig;
-
-	transitionTo('options');
-	await transitionToScreen();
+export const services = {
+	gameSettings: null
 };
 
 /**
  * Start a new game
  * @param {object} player - Player object with name
- * @param {object} options - Game options
+ * @param {object} gameConfigOrOptions - Game configuration object OR options (for backwards compatibility)
+ * @param {object} options - Game options (optional, used when gameConfigOrOptions is a full config)
  */
-export const startGame = (player, options = {}) => {
+export const startGame = (player, gameConfigOrOptions = {}, options = {}) => {
 	if (!player || !player.name) {
 		throw new Error('Must provide a valid player');
 	}
 
-	const gameConfig = configLoader.loadUserSettings(options);
+	// Determine if we got a full config or just options
+	let gameConfig;
 
-	// Reset game state
-	gameState.config = gameConfig;
-	gameState.round = 1;
-	gameState.player = player;
-	gameState.playerName = player.name;
-	gameState.tokens = 10;
-	gameState.kingsRevealed = 0;
-	gameState.kingOfHearts = false;
-	gameState.kingOfDiamonds = false;
-	gameState.kingOfClubs = false;
-	gameState.kingOfSpades = false;
-	gameState.aceOfHeartsRevealed = false;
-	gameState.gameOver = false;
-	gameState.win = false;
-	gameState.tower = 54;
-	gameState.bonus = 0;
-	gameState.log = [];
-	gameState.journalEntries = [];
-	gameState.cardsToDraw = 0;
-	gameState.currentCard = null;
-	gameState.diceRoll = 0;
-
-	// Set up deck
-	gameState.deck = [...gameConfig.deck];
-
-	if (gameConfig.options.difficulty === 0) {
-		gameState.aceOfHeartsRevealed = true;
-		gameState.deck = gameState.deck.filter((c) => !(c.card === 'A' && c.suit === 'hearts'));
+	// If gameConfigOrOptions has a deck, it's a full config
+	if (gameConfigOrOptions.deck) {
+		gameConfig = gameConfigOrOptions;
+	} else {
+		// Otherwise, use services.gameSettings and treat second param as options
+		gameConfig = services.gameSettings || gameState.config;
+		options = gameConfigOrOptions;
 	}
 
-	gameState.deck = shuffle(gameState.deck);
+	if (!gameConfig || !gameConfig.deck) {
+		throw new Error('Game configuration with deck is required');
+	}
 
-	transitionTo('intro');
-	nextScreen();
+	// Use centralized initialization logic
+	initializeGame(gameConfig, player, options);
 };
 
 /**
- * Start a new round with page-turn animation
- * @returns {Promise<void>}
+ * Start a new round
  */
-export const startRound = async () => {
-	console.log('[startRound] Called, current state:', gameState.state);
+export const startRound = () => {
+	logger.debug('[startRound] Called, current state:', gameState.state);
 
 	gameState.round += 1;
+	transitionTo('startRound');
 
-	// First transition to startRound state with page-turn animation
-	await transitionToScreen('startRound', 'round');
-	await sleep(100); // Small delay for visual feedback
-
-	// Then transition to rollForTasks
-	await transitionToScreen('rollForTasks', 'default');
-
-	console.log('[startRound] Completed, new state:', gameState.state);
+	logger.debug('[startRound] Completed, new state:', gameState.state);
 };
 
 /**
@@ -212,45 +68,30 @@ export async function rollForTasks() {
 	gameState.diceRoll = roll;
 	gameState.currentCard = null;
 
-	console.log(`[rollForTasks] Dice rolled: ${roll}, setting cardsToDraw to ${roll}`);
+	logger.debug(`[rollForTasks] Dice rolled: ${roll}, setting cardsToDraw to ${roll}`);
 	return roll;
 }
 
 /**
  * Confirm task roll and proceed
- * @returns {Promise<void>}
  */
-export async function confirmTaskRoll() {
-	console.log('[confirmTaskRoll] Called');
-	
-	// Transition to drawCard state
+export function confirmTaskRoll() {
+	logger.debug('[confirmTaskRoll] Called');
 	transitionTo('drawCard');
-	
-	// Ensure we're not already transitioning before calling transitionToScreen
-	// Wait a bit for any pending transitions to complete
-	let attempts = 0;
-	while (transitionState.isTransitioning && attempts < 10) {
-		await sleep(100);
-		attempts++;
-	}
-	
-	// Now transition to the screen
-	await transitionToScreen();
-	console.log('[confirmTaskRoll] Completed');
+	logger.debug('[confirmTaskRoll] Completed');
 }
 
 /**
  * Draw a card from the deck
- * @returns {void}
+ * @returns {object|null} The drawn card or null if deck is empty
  */
-export async function drawCard() {
-	console.log('[drawCard] Function called');
-	console.log(`[drawCard] BEFORE: cardsToDraw=${gameState.cardsToDraw}, state=${gameState.state}`);
+export function drawCard() {
+	logger.debug('[drawCard] Function called');
+	logger.debug(`[drawCard] BEFORE: cardsToDraw=${gameState.cardsToDraw}, state=${gameState.state}`);
 
 	if (gameState.deck.length === 0) {
 		gameState.gameOver = true;
 		transitionTo('gameOver');
-		await transitionToScreen();
 		return null;
 	}
 
@@ -258,7 +99,7 @@ export async function drawCard() {
 	gameState.currentCard = card;
 	gameState.cardsToDraw -= 1;
 
-	console.log(
+	logger.debug(
 		`[drawCard] Drew ${card.card} of ${card.suit}, cardsToDrawRemaining: ${gameState.cardsToDraw}`
 	);
 
@@ -298,16 +139,15 @@ export async function drawCard() {
 
 /**
  * Confirm drawn card and proceed
- * @returns {Promise<void>}
  */
-export async function confirmCard() {
-	console.log('[confirmCard] Called');
-	console.log(
+export function confirmCard() {
+	logger.debug('[confirmCard] Called');
+	logger.debug(
 		`[confirmCard] Current state: ${gameState.state}, cardsToDraw: ${gameState.cardsToDraw}`
 	);
 
 	const card = gameState.currentCard;
-	
+
 	// Clear the current card
 	gameState.currentCard = null;
 
@@ -326,8 +166,6 @@ export async function confirmCard() {
 			transitionTo('log');
 		}
 	}
-	
-	await transitionToScreen();
 }
 
 /**
@@ -394,19 +232,17 @@ export async function failureCheck() {
 
 /**
  * Confirm failure check and proceed
- * @returns {Promise<void>}
  */
-export async function confirmFailureCheck() {
-	await transitionToScreen();
+export function confirmFailureCheck() {
+	// State transition already handled in applyFailureCheckResult
 }
 
 /**
  * Record round in journal
  * @param {object} journalEntry - Journal entry
  * @param {string} journalEntry.text - Entry text
- * @returns {Promise<void>}
  */
-export async function recordRound(journalEntry) {
+export function recordRound(journalEntry) {
 	if (journalEntry == null || journalEntry.text == null) {
 		throw new Error('No journal entries provided for this round');
 	}
@@ -420,19 +256,19 @@ export async function recordRound(journalEntry) {
 	if (!gameState.gameOver) {
 		if (gameState.aceOfHeartsRevealed) {
 			// Go to success check screen
-			await transitionToScreen('successCheck');
+			transitionTo('successCheck');
 		} else {
-			// Start next round (this function handles the transition)
-			await startRound();
+			// Start next round
+			startRound();
 		}
 	}
 }
 
 /**
  * Perform success check
- * @returns {Promise<number>} Dice roll result
+ * @returns {number} Dice roll result
  */
-export async function successCheck() {
+export function successCheck() {
 	const roll = gameState.getRandomNumber();
 	gameState.diceRoll = roll;
 
@@ -454,17 +290,16 @@ export async function successCheck() {
 
 /**
  * Confirm success check and proceed
- * @returns {Promise<void>}
  */
-export async function confirmSuccessCheck() {
-	await transitionToScreen();
+export function confirmSuccessCheck() {
+	// State transition already handled in successCheck
 }
 
 /**
  * Restart the game
  */
 export function restartGame() {
-	startGame(gameState.player, gameState.config.options);
+	startGame(gameState.player, gameState.config, {});
 }
 
 /**
@@ -494,8 +329,5 @@ export async function exitGame() {
 	gameState.diceRoll = 0;
 	gameState.stylesheet = '';
 
-	nextScreen('exitGame');
+	transitionTo('exitGame');
 }
-
-// Export configLoader for components that need it
-export { configLoader as services };

@@ -1,6 +1,7 @@
 <script>
 	import { onMount, onDestroy } from 'svelte';
 	import { sleep } from '../utils/timing.js';
+	import { logger } from '../utils/logger.js';
 
 	let { card = $bindable(null), onrequestcard = () => {}, onconfirmcard = () => {} } = $props();
 
@@ -35,7 +36,7 @@
 			}
 
 			if (!card) {
-				console.error('Card was not provided in time');
+				logger.error('Card was not provided in time');
 				animationStage = 'idle';
 				return;
 			}
@@ -47,7 +48,7 @@
 			// Revealed phase - stable display
 			animationStage = 'revealed';
 		} catch (error) {
-			console.error('Intercept failed:', error);
+			logger.error('Intercept failed:', error);
 			animationStage = 'idle';
 		}
 	}

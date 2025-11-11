@@ -18,8 +18,8 @@
 
 	const header = $derived(
 		gameState.state == 'successCheck'
-			? gameState.config.labels.successCheckHeader
-			: gameState.config.labels.successCheckResultHeader
+			? gameState.config?.labels?.successCheckHeader ?? 'Success Check'
+			: gameState.config?.labels?.successCheckResultHeader ?? 'Result'
 	);
 </script>
 

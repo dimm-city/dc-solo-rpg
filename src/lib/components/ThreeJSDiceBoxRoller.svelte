@@ -1,7 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
-	import DiceBox from '@3d-dice/dice-box-threejs';
-	import { gameState } from '../stores/gameStore.svelte.js';
+	import { initializeDiceBox, rollDice, resizeDiceBox } from '../stores/diceStore.svelte.js';
 	import AugmentedButton from './AugmentedButton.svelte';
 
 	let {
@@ -13,50 +12,18 @@
 		onkeyup = () => {}
 	} = $props();
 
-	const defaultConfig = {
-		assetPath: '/dice',
-		framerate: 1 / 60,
-		sounds: false,
-		volume: 100,
-		color_spotlight: 0xefdfd5,
-		shadows: true,
-		theme_surface: 'default',
-		sound_dieMaterial: 'plastic',
-		theme_customColorset: null,
-		theme_colorset: '', // white  see available colorsets in https://github.com/3d-dice/dice-box-threejs/blob/main/src/const/colorsets.js
-		theme_texture: '', // see available textures in https://github.com/3d-dice/dice-box-threejs/blob/main/src/const/texturelist.js
-		theme_material: 'glass', // "none" | "metal" | "wood" | "glass" | "plastic"
-		gravity_multiplier: 400,
-		light_intensity: 0.7,
-		baseScale: 100,
-		strength: 1, // toss strength of dice
-		onRollComplete: () => {}
-	};
+	let containerElement = $state();
 
-	let diceBox = $state();
 	onMount(async () => {
-		defaultConfig.theme_colorset = gameState.config.options?.dice ?? defaultConfig.theme_colorset;
+		// Initialize or reattach the shared DiceBox instance
+		await initializeDiceBox(containerElement);
 
-		let config = {
-			assetPath: '/dice/',
-			sounds: true,
-			volume: 100,
-			//theme_colorset:  gameState.config.options?.dice?.key ?? 'pinkdreams',
-			//theme_customColorset: gameState.config.options?.dice,
-			baseScale: 100,
-			strength: 1.5
-		};
-
-		if (gameState.config.options?.dice?.key) {
-			config.theme_colorset = gameState.config.options?.dice?.key ?? 'pinkdreams';
-		} else {
-			config.theme_customColorset = gameState.config.options?.dice;
-		}
-
-		diceBox = new DiceBox('#dice-roller-container', config);
-		await diceBox.initialize();
-		diceBox.resizeWorld();
+		// Trigger resize after a delay to account for layout settling
+		setTimeout(() => {
+			resizeDiceBox();
+		}, 600);
 	});
+
 	export async function roll(values = null) {
 		if (rolling) return;
 		rolling = true;
@@ -64,19 +31,25 @@
 		// Call roll start callback
 		onrollstart();
 
-		const rollString = values ? `1d6@${values}` : '1d6';
-		let result = await diceBox.roll(rollString);
+		try {
+			const result = await rollDice(values);
 
-		rolling = false;
+			rolling = false;
 
-		// Call roll complete callback
-		onrollcomplete({ result: result.total });
+			// Call roll complete callback
+			onrollcomplete({ result });
 
-		return result.total;
+			return result;
+		} catch (error) {
+			console.error('[ThreeJSDiceBoxRoller] Error rolling dice:', error);
+			rolling = false;
+			throw error;
+		}
 	}
 </script>
 
 <div
+	bind:this={containerElement}
 	id="dice-roller-container"
 	class="dc-dice-roller-container"
 	disabled={rolling}
@@ -102,11 +75,13 @@
 	}
 
 	:global(.dc-dice-roller-container > canvas) {
-		display: grid;
+		display: block;
 		cursor: pointer;
-		height: 99%;
+		height: 100%;
 		width: 100%;
 		box-sizing: border-box;
+		grid-row: 1;
+		grid-column: 1;
 	}
 
 	.dc-dice-roller-container :global(.aug-button-wrapper) {

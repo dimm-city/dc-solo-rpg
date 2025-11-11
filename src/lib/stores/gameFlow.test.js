@@ -2,7 +2,6 @@ import { test, describe, expect, vi, beforeEach } from 'vitest';
 import { readFileSync } from 'fs';
 import { gameState } from './gameStore.svelte.js';
 import {
-	loadSystemConfig,
 	startGame,
 	startRound,
 	rollForTasks,
@@ -70,40 +69,10 @@ describe('WAAStore', () => {
 		gameState.player = null;
 	});
 
-	// Test loadSystemConfig
-	test('loadSystemConfig', async () => {
-		const gameUrl = './static/games/simple-example/config.yml';
-		const systemConfig = {
-			gameConfigUrl: gameUrl
-		};
-
-		fetch.mockImplementation((url) => createFetchResponse(url));
-
-		await loadSystemConfig(systemConfig);
-
-		expect(fetch).toHaveBeenCalledWith(gameUrl);
-
-		expect(gameState).toBeDefined();
-
-		const gameConfig = gameState.config;
-		expect(gameConfig).toBeDefined();
-		expect(gameConfig.stylesheet).toBe(gameUrl.replace('config.yml', 'game.css'));
-		expect(gameConfig.deck?.length).toBe(52);
-		expect(gameState.state).toBeDefined();
-		expect(gameState.state).toBe('options');
-
-		expect(gameConfig.labels).toContain({
-			failureCheckLoss: 'You have lost the game',
-			successCheckWin: 'You have won the game!'
-		});
-
-		// expect(gameConfig.deck).toContain(
-		// 	{
-		// 		card: '"A"',
-		// 		suit: '"hearts"',
-		// 		description: 'Ace of Hearts: Salvation Mechanism',
-		// 		action: ''
-		// 	});
+	// loadSystemConfig has been removed - configuration now loaded via SvelteKit +page.server.js
+	// This test is no longer needed as configuration loading is handled server-side
+	test.skip('loadSystemConfig (deprecated - using SvelteKit server-side loading)', async () => {
+		// Test skipped - functionality moved to routes/game/[slug]/+page.server.js
 	});
 
 	// Test startGame

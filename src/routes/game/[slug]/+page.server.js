@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 import yaml from 'js-yaml';
 import { parse } from 'csv-parse/sync';
+import { logger } from '$lib/utils/logger.js';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ params, fetch }) {
@@ -48,7 +49,7 @@ export async function load({ params, fetch }) {
 					introduction = await introResponse.text();
 				} else {
 					// If file doesn't exist, treat as inline content
-					console.warn(
+					logger.warn(
 						`Could not load introduction file "${config.introduction}", using as inline content`
 					);
 					introduction = config.introduction;
@@ -71,7 +72,7 @@ export async function load({ params, fetch }) {
 			}
 		};
 	} catch (err) {
-		console.error(`Error loading game "${slug}":`, err);
+		logger.error(`Error loading game "${slug}":`, err);
 		throw error(404, `Game "${slug}" not found`);
 	}
 }

@@ -1,6 +1,6 @@
 <script>
-	import { gameState } from '../stores/gameStore.svelte.js';
-	import { recordRound, nextScreen, restartGame, exitGame } from '../stores/gameActions.svelte.js';
+	import { gameState, transitionTo } from '../stores/gameStore.svelte.js';
+	import { recordRound, restartGame, exitGame } from '../stores/gameActions.svelte.js';
 	import AugmentedButton from './AugmentedButton.svelte';
 
 	let { onjournalsaved = () => {} } = $props();
@@ -16,15 +16,15 @@
 		onjournalsaved(journal);
 	}
 
-	function next(action) {
-		nextScreen(action);
+	function next() {
+		// recordRound already handles the state transition
 	}
 </script>
 
 <div class="dc-journal-container">
 	<div class="journal-header-area">
-		<h2>{gameState.config.labels.journalEntryHeader}</h2>
-		<h3>{gameState.config.labels.journalEntrySubHeader}</h3>
+		<h2>{gameState.config?.labels?.journalEntryHeader ?? 'Journal Entry'}</h2>
+		<h3>{gameState.config?.labels?.journalEntrySubHeader ?? 'Record your progress'}</h3>
 
 		{#each currentEvents as event}
 			<p>{event.id}:{event.description}</p>
@@ -37,18 +37,18 @@
 		{#if saved}
 			{#if gameState.gameOver}
 				<AugmentedButton
-					text={gameState.config.labels.journalEntryRestartButtonText}
+					text={gameState.config?.labels?.journalEntryRestartButtonText ?? 'Restart'}
 					onclick={restartGame}
 				/>
 				<AugmentedButton
-					text={gameState.config.labels.journalEntryExitButtonText}
+					text={gameState.config?.labels?.journalEntryExitButtonText ?? 'Exit'}
 					onclick={exitGame}
 				/>
 			{:else}
-				<AugmentedButton text={gameState.config.labels.journalEntryNextButtonText} onclick={next} />
+				<AugmentedButton text={gameState.config?.labels?.journalEntryNextButtonText ?? 'Next'} onclick={next} />
 			{/if}
 		{:else}
-			<AugmentedButton text={gameState.config.labels.journalEntrySaveButtonText} onclick={save} />
+			<AugmentedButton text={gameState.config?.labels?.journalEntrySaveButtonText ?? 'Save'} onclick={save} />
 		{/if}
 	</div>
 </div>

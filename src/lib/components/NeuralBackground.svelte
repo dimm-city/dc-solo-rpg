@@ -9,7 +9,7 @@
 	let particles = $state([]);
 	let animationFrameId = $state();
 
-	
+
 	/**
 	 * Particle class for data fragment effect
 	 */
@@ -142,8 +142,7 @@
 
 		<!-- Scan grid background -->
 	<div
-		class="scan-grid"
-		class:accelerating={animationStage === 'anticipating'}
+		class="scan-grid {animationStage}"
 		aria-hidden="true"
 	></div>
 </div>
@@ -196,6 +195,9 @@
 		/* Grid animation removed to avoid distraction during dice rolls */
 	}
 
+	.scan-grid.idle{
+		animation: none;
+	}
 	.scan-grid.accelerating {
 		animation: grid-accelerate 0.8s ease-in-out;
 	}

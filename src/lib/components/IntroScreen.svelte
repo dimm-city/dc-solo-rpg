@@ -1,7 +1,7 @@
 <script>
 	import { marked } from 'marked';
-	import { gameState } from '../stores/gameStore.svelte.js';
-	import { nextScreen, exitGame } from '../stores/gameActions.svelte.js';
+	import { gameState, transitionTo } from '../stores/gameStore.svelte.js';
+	import { exitGame } from '../stores/gameActions.svelte.js';
 	import AugmentedButton from './AugmentedButton.svelte';
 
 	let currentView = $state('rules');
@@ -13,7 +13,7 @@
 		if (currentView == 'rules') {
 			currentView = 'intro';
 		} else {
-			nextScreen('rollForTasks');
+			transitionTo('rollForTasks');
 		}
 	}
 	function back() {
