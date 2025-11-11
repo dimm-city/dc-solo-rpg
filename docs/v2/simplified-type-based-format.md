@@ -55,10 +55,10 @@ Based on the **Wretched and Alone SRD** mechanics:
 ### 5. Narrative (Bonus/Help Cards)
 - **Count**: 3 cards (remaining Aces: A♦, A♣, A♠)
 - **SRD Term**: "Bonus or help in your plight"
-- **Mechanics**: Provides some advantage or relief; triggers damage check despite providing bonus
+- **Mechanics**: Provides some advantage or relief; does NOT trigger damage checks unless modified
 - **Purpose**: Reflective moments, emotional beats, and small victories that help sustain hope
 - **Special**: Writers can use these for character development, connections, or moments of beauty amid despair
-- **Note**: Aces are odd-ranked (A=1) and trigger damage checks even though they provide bonuses - this creates tension between hope and risk
+- **Note**: Standard Narrative cards are safe moments of respite. They only trigger damage if explicitly given a damage-trigger modifier (future feature)
 
 ---
 
@@ -77,7 +77,7 @@ Per the Wretched and Alone SRD, some cards can have **special one-time effects**
 
 **Example:**
 ```markdown
-## Narrative: skip-damage
+#### Narrative: skip-damage
 
 **A stroke of incredible luck protects you**
 
@@ -94,7 +94,7 @@ pull from the tower, you may choose not to.
 
 **Example:**
 ```markdown
-## Narrative: return-king
+#### Narrative: return-king
 
 **A second chance emerges from the darkness**
 
@@ -107,7 +107,7 @@ previously drawn the King of Spades, you may shuffle it back into the deck.
 You can combine explicit card assignment with special modifiers:
 
 ```markdown
-## Narrative: A-clubs, skip-damage
+#### Narrative: A-clubs, skip-damage
 
 **A moment of perfect timing saves you**
 
@@ -154,7 +154,7 @@ attention, and failure means being lost in time forever.
 
 # Card Deck
 
-## Primary Success
+### Primary Success
 
 **You find a survivor who knows how to repair the time machine**
 
@@ -169,7 +169,7 @@ Finding you, and your machine, has reignited something in her eyes - purpose.
 
 ---
 
-## Failure Counter
+### Failure Counter
 
 **A group of hostile survivors has spotted you**
 
@@ -179,7 +179,7 @@ as their next target.
 
 ---
 
-## Failure Counter
+### Failure Counter
 
 **Your stash of resources is stolen**
 
@@ -189,19 +189,19 @@ you to leave. The violation leaves you vulnerable and paranoid.
 
 ---
 
-## Failure Counter
+### Failure Counter
 
 **You get lost in a dangerous part of the city**
 
 ---
 
-## Failure Counter
+### Failure Counter
 
 **The time machine suffers a major malfunction**
 
 ---
 
-## Narrative
+### Narrative
 
 **A moment of hope amid the ruins**
 
@@ -215,7 +215,7 @@ tears stream down your face. You will survive this. You will make it home.
 
 ---
 
-## Narrative
+### Narrative
 
 **The weight of displacement**
 
@@ -231,13 +231,13 @@ The questions haunt you as you carefully pocket the photograph.
 
 ---
 
-## Narrative
+### Narrative
 
 **A connection across time**
 
 ---
 
-## Challenge
+### Challenge
 
 **You're betrayed by a survivor you trusted**
 
@@ -250,7 +250,7 @@ Trust, you realize, is the rarest resource in this world.
 
 ---
 
-## Challenge
+### Challenge
 
 **A group of survivors tries to steal your supplies**
 
@@ -261,127 +261,127 @@ not worth the risk. They back off, but you know you'll need to be more careful.
 
 ---
 
-## Challenge
+### Challenge
 
 **You're injured in a fight with a survivor**
 
 ---
 
-## Challenge
+### Challenge
 
 **You fall into a trap set by other survivors**
 
 ---
 
-## Challenge
+### Challenge
 
 **You're caught in a dispute between survivor factions**
 
 ---
 
-## Challenge
+### Challenge
 
 **You're exposed to harmful radiation while scavenging**
 
 ---
 
-## Challenge
+### Challenge
 
 **You're trapped in a collapsed building**
 
 ---
 
-## Challenge
+### Challenge
 
 **You're chased by a pack of mutated animals**
 
 ---
 
-## Challenge
+### Challenge
 
 **A piece of your time machine malfunctions**
 
 ---
 
-## Challenge
+### Challenge
 
 **A malfunctioning robot attacks you**
 
 ---
 
-## Challenge
+### Challenge
 
 **You're pursued by a rogue AI**
 
 ---
 
-## Challenge
+### Challenge
 
 **You're caught in a toxic gas leak**
 
 ---
 
-## Challenge
+### Challenge
 
 **A valuable item you found turns out to be useless**
 
 ---
 
-## Challenge
+### Challenge
 
 **A valuable item you found breaks**
 
 ---
 
-## Challenge
+### Challenge
 
 **You accidentally lose some of your supplies**
 
 ---
 
-## Challenge
+### Challenge
 
 **You find a stash of spoiled food**
 
 ---
 
-## Challenge
+### Challenge
 
 **You accidentally wander into a dangerous part of the city**
 
 ---
 
-## Challenge
+### Challenge
 
 **A piece of your time machine breaks down**
 
 ---
 
-## Challenge
+### Challenge
 
 **You're caught in a territorial dispute between survivor groups**
 
 ---
 
-## Challenge
+### Challenge
 
 **A survivor you trusted betrays you**
 
 ---
 
-## Challenge
+### Challenge
 
 **You get lost and wander into danger**
 
 ---
 
-## Challenge
+### Challenge
 
 **Equipment failure at a critical moment**
 
 ---
 
-## Event
+### Event
 
 **You discover a hidden stash of resources**
 
@@ -392,7 +392,7 @@ to survive while working on the time machine.
 
 ---
 
-## Event
+### Event
 
 **You find a map of the city, helping you navigate safely**
 
@@ -403,145 +403,145 @@ dangers and find the parts you need more efficiently.
 
 ---
 
-## Event
+### Event
 
 **You encounter a helpful survivor**
 
 ---
 
-## Event
+### Event
 
 **A survivor offers to trade useful items**
 
 ---
 
-## Event
+### Event
 
 **A survivor shares valuable information about the city**
 
 ---
 
-## Event
+### Event
 
 **A survivor helps you find a safe route through a dangerous area**
 
 ---
 
-## Event
+### Event
 
 **You meet a survivor who offers to help you**
 
 ---
 
-## Event
+### Event
 
 **You find a survivor who can repair a part of your time machine**
 
 ---
 
-## Event
+### Event
 
 **You discover a cache of useful tools**
 
 ---
 
-## Event
+### Event
 
 **You find a map of the city**
 
 ---
 
-## Event
+### Event
 
 **You find a working vehicle**
 
 ---
 
-## Event
+### Event
 
 **You find a source of clean water**
 
 ---
 
-## Event
+### Event
 
 **You find a well-stocked abandoned shop**
 
 ---
 
-## Event
+### Event
 
 **You're given food by another survivor while scavenging**
 
 ---
 
-## Event
+### Event
 
 **You find an abandoned house with some food still inside**
 
 ---
 
-## Event
+### Event
 
 **You discover a shortcut through the city**
 
 ---
 
-## Event
+### Event
 
 **You find a safe hideout**
 
 ---
 
-## Event
+### Event
 
 **You discover a safe route through a dangerous part of the city**
 
 ---
 
-## Event
+### Event
 
 **You find a safe route through a dangerous area**
 
 ---
 
-## Event
+### Event
 
 **You find a hidden underground bunker**
 
 ---
 
-## Event
+### Event
 
 **You find a working computer**
 
 ---
 
-## Event
+### Event
 
 **You manage to deactivate a dangerous AI**
 
 ---
 
-## Event
+### Event
 
 **You find a piece of technology that can aid in your repair**
 
 ---
 
-## Event
+### Event
 
 **You find a complete toolkit for your time machine**
 
 ---
 
-## Event
+### Event
 
 **You find some helpful parts among ruined buildings**
 
 ---
 
-## Event
+### Event
 
 **You find a blueprint of the time machine**
 ```
@@ -567,7 +567,7 @@ Within each type, cards are assigned to suits in order: ♥ ♦ ♣ ♠, then ra
 For advanced creators who want specific cards in specific positions:
 
 ```markdown
-## Challenge: 7-hearts
+### Challenge: 7-hearts
 
 **Specific event for seven of hearts**
 
@@ -837,7 +837,7 @@ The format is designed to easily extend with custom modifiers as the engine evol
 ### Future Custom Modifiers Examples
 
 ```markdown
-## Challenge: environmental-hazard
+### Challenge: environmental-hazard
 
 **You discover a hidden cache**
 
@@ -845,7 +845,7 @@ Gain 1d6 resources immediately.
 
 ---
 
-## Event: tech-boost
+### Event: tech-boost
 
 **You find advanced technology**
 
@@ -853,7 +853,7 @@ Provides a temporary advantage against future challenges.
 
 ---
 
-## Challenge: 7-hearts, radiation-zone
+### Challenge: 7-hearts, radiation-zone
 
 **A toxic gas leak fills the corridor**
 
@@ -977,21 +977,21 @@ This progressive teaching respects player intelligence while ensuring they under
 
 ## Card Type Guidelines (Aligned with SRD)
 
-### Primary Success (Salvation)
+#### Primary Success (Salvation)
 - **SRD Context**: This represents the ultimate hope - the slim chance of escape or victory
 - The turning point where genuine salvation becomes possible
 - Should feel monumental and earned when revealed
 - Consider making this a person (ally/mentor), discovery (crucial knowledge), or breakthrough (final piece needed)
 - Remember: Even with this card revealed, winning requires removing 10 tokens at 1/6 chance per round
 
-### Failure Counter (4 cards)
+#### Failure Counter (4 cards)
 - **SRD Context**: These are the inexorable forces driving toward defeat
 - Escalating threats or catastrophic setbacks
 - Each should feel substantial, dangerous, and world-changing
 - Consider the progression: 1st King = external threat emerges, 2nd King = resources/safety lost, 3rd King = lost/trapped, 4th King = final catastrophic failure
 - Each King revealed should deepen the sense that defeat is inevitable
 
-### Narrative (3 cards - Bonus/Help)
+#### Narrative (3 cards - Bonus/Help)
 - **SRD Context**: Small mercies and moments of grace that sustain you
 - Reflective moments that don't drive immediate action
 - Brief respites that remind you why you're fighting
@@ -1001,7 +1001,7 @@ This progressive teaching respects player intelligence while ensuring they under
 - These provide emotional fuel to continue the doomed journey
 - **Special Mechanics**: Optionally assign `skip-damage` or `return-king` to ONE Narrative card each (see Multiple Mechanics section)
 
-### Challenge (16 cards - Tower Pulls)
+#### Challenge (16 cards - Tower Pulls)
 - **SRD Context**: "Usually requires you to pull from the tower" - moments where fate is tested
 - Immediate dangers that physically threaten through tower mechanics
 - Conflicts, accidents, hostile encounters, disasters
@@ -1010,7 +1010,7 @@ This progressive teaching respects player intelligence while ensuring they under
 - Each tower pull increases instability - the more you draw, the closer to collapse
 - Remember: The tower falling is often how these games end
 
-### Event (28 cards - Safe Cards)
+#### Event (28 cards - Safe Cards)
 - **SRD Context**: "Usually safe" - no tower pull, but not necessarily positive
 - Can be neutral, positive, or even bittersweet
 - Resource discoveries, helpful encounters, information gained
@@ -1049,7 +1049,7 @@ What are they trying to achieve? What's at stake?
 
 # Card Deck
 
-## Primary Success
+### Primary Success
 
 **[Short description]**
 
@@ -1057,7 +1057,7 @@ What are they trying to achieve? What's at stake?
 
 ---
 
-## Failure Counter
+### Failure Counter
 
 **[Short description for first king]**
 
@@ -1065,25 +1065,25 @@ What are they trying to achieve? What's at stake?
 
 ---
 
-## Failure Counter
+### Failure Counter
 
 **[Short description for second king]**
 
 ---
 
-## Failure Counter
+### Failure Counter
 
 **[Short description for third king]**
 
 ---
 
-## Failure Counter
+### Failure Counter
 
 **[Short description for fourth king]**
 
 ---
 
-## Narrative: skip-damage
+#### Narrative: skip-damage
 
 **[Short description - one-time protection from danger]**
 
@@ -1092,7 +1092,7 @@ the next danger. Use this mechanic strategically when resources are low.]
 
 ---
 
-## Narrative: return-king
+#### Narrative: return-king
 
 **[Short description - undo a catastrophic setback]**
 
@@ -1101,7 +1101,7 @@ a King before, you can return it to the deck - once.]
 
 ---
 
-## Narrative
+### Narrative
 
 **[Short description for third narrative card]**
 
@@ -1109,7 +1109,7 @@ a King before, you can return it to the deck - once.]
 
 ---
 
-## Challenge
+### Challenge
 
 **[Short description - this triggers a failure check]**
 
@@ -1121,7 +1121,7 @@ a King before, you can return it to the deck - once.]
 
 ---
 
-## Event
+### Event
 
 **[Short description - safe or positive]**
 

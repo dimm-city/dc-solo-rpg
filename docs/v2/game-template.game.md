@@ -34,7 +34,7 @@ Example: "You must gather the necessary components and knowledge to repair your 
 ## Card Deck
 
 <!-- ============================================================================
-CARD TYPE OVERVIEW (DO NOT DELETE THIS REFERENCE)
+CARD TYPE OVERVIEW (YOU MAY DELETE THIS REFERENCE)
 ================================================================================
 
 Based on Wretched and Alone SRD mechanics:
@@ -55,10 +55,10 @@ Based on Wretched and Alone SRD mechanics:
    - SRD term: "Bonus or help in your plight"
    - Reflective moments, emotional beats, small victories
    - Each Ace adds +1 to bonus counter (reduces damage)
-   - Odd-ranked (A=1) - triggers damage checks despite providing bonuses
    - Optional: Assign special one-time modifiers to up to 2 cards:
      * "skip-damage" - skip next damage check once
      * "return-king" - shuffle a previously drawn King back into deck once
+   - Optional: May assign a challenge modifier to for a failure check along with another optional modifier
 
 4. CHALLENGE (16 cards - odd ranks: 3, 5, 7, 9)
    - Usually trigger damage checks (tower pulls)
@@ -88,9 +88,7 @@ WRITING TIPS:
   * Diamonds = resources, discoveries
   * Clubs = places, environments
   * Spades = technology, systems
-- Progressive tutorial: Early cards can gently explain mechanics in narrative
-- Embed learning organically - don't break immersion with rules text
-
+  
 ============================================================================ -->
 
 ### Primary Success

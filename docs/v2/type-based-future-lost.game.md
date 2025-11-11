@@ -5,8 +5,6 @@ win-message: You have managed to repair the time machine and return home!
 lose-message: The time machine has been damaged beyond repair
 ---
 
-# Introduction
-
 ## Who You Are
 
 You are a time traveler stranded in a dystopian future, desperately trying to repair your damaged time machine before the authorities discover you.
@@ -23,7 +21,7 @@ You must gather the necessary components and knowledge to repair your time machi
 
 # Card Deck
 
-## Primary Success
+### Primary Success
 
 **You find a survivor who knows how to repair the time machine**
 
@@ -35,7 +33,7 @@ Her name is Dr. Chen, and she was part of the team that first theorized temporal
 
 ---
 
-## Failure Counter
+### Failure Counter
 
 **A group of hostile survivors has spotted you**
 
@@ -45,7 +43,7 @@ You have minutes, maybe less, to escape. They're coordinating, surrounding you. 
 
 ---
 
-## Failure Counter
+### Failure Counter
 
 **Your stash of resources is stolen**
 
@@ -55,7 +53,7 @@ The violation leaves you vulnerable and paranoid. How long were they observing? 
 
 ---
 
-## Failure Counter
+### Failure Counter
 
 **You get lost in a dangerous part of the city**
 
@@ -65,7 +63,7 @@ The radiation detector in your pocket is clicking faster. You need to find your 
 
 ---
 
-## Failure Counter
+### Failure Counter
 
 **The time machine suffers a major malfunction**
 
@@ -75,7 +73,7 @@ This will require miracles. Or at least, very specific pre-collapse technology t
 
 ---
 
-## Narrative: skip-damage
+#### Narrative: skip-damage
 
 **A moment of perfect timing saves you**
 
@@ -87,7 +85,7 @@ But for now, you're alive. And sometimes, in this broken world, that's the only 
 
 ---
 
-## Narrative: return-king
+#### Narrative: return-king
 
 **A second chance manifests from the darkness**
 
@@ -99,7 +97,7 @@ Sometimes the universe gives you a chance to rewrite your failures. This is your
 
 ---
 
-## Narrative
+### Narrative
 
 **A connection across time**
 
@@ -111,7 +109,7 @@ Time isn't a line - it's a web, connecting moments and people across centuries. 
 
 ---
 
-## Challenge
+### Challenge
 
 **You're betrayed by a survivor you trusted**
 
@@ -121,7 +119,7 @@ You managed to escape, but the betrayal stings worse than your injuries. Trust, 
 
 ---
 
-## Challenge
+### Challenge
 
 **A group of survivors tries to steal your supplies**
 
@@ -131,7 +129,7 @@ The confrontation is tense, weapons drawn, until they realize you're not worth t
 
 ---
 
-## Challenge
+### Challenge
 
 **You're injured in a fight with a survivor**
 
@@ -141,7 +139,7 @@ The wound isn't fatal, but it's serious. You need to clean it, bind it, and hope
 
 ---
 
-## Challenge
+### Challenge
 
 **You fall into a trap set by other survivors**
 
@@ -151,7 +149,7 @@ They don't take your supplies - they just leave you there. It takes hours to cli
 
 ---
 
-## Challenge
+### Challenge
 
 **You're caught in a dispute between survivor factions**
 
@@ -161,7 +159,7 @@ When the shooting stops, both sides are watching you. You have seconds to convin
 
 ---
 
-## Challenge
+### Challenge
 
 **You're exposed to harmful radiation while scavenging**
 
@@ -171,7 +169,7 @@ Your hands shake as you retreat. How much did you absorb? Enough to matter? You 
 
 ---
 
-## Challenge
+### Challenge
 
 **You're trapped in a collapsed building**
 
@@ -181,7 +179,7 @@ You can move, barely. You can breathe. But getting out will require strength you
 
 ---
 
-## Challenge
+### Challenge
 
 **You're chased by a pack of mutated animals**
 
@@ -191,7 +189,7 @@ You run through the ruins, heart pounding, trying to reach somewhere they can't 
 
 ---
 
-## Challenge
+### Challenge
 
 **A piece of your time machine malfunctions**
 
@@ -201,7 +199,7 @@ You tear it apart to find the problem, but the damage is extensive. This is goin
 
 ---
 
-## Challenge
+### Challenge
 
 **A malfunctioning robot attacks you**
 
@@ -211,7 +209,7 @@ Its movements are jerky but fast, and its tools are deadly. You need to shut it 
 
 ---
 
-## Challenge
+### Challenge
 
 **You're pursued by a rogue AI**
 
@@ -221,7 +219,7 @@ You need to reach the dead zone where it can't follow, but it's learning your pa
 
 ---
 
-## Challenge
+### Challenge
 
 **You're caught in a toxic gas leak**
 
@@ -231,7 +229,7 @@ You hold your breath and run, but your vision is already blurring. You need to f
 
 ---
 
-## Challenge
+### Challenge
 
 **A valuable item you found turns out to be useless**
 
@@ -241,7 +239,7 @@ All that work, all that danger, for nothing.
 
 ---
 
-## Challenge
+### Challenge
 
 **A valuable item you found breaks**
 
@@ -251,7 +249,7 @@ You pick up the pieces, but you know it's done. The lattice structure is shatter
 
 ---
 
-## Challenge
+### Challenge
 
 **You accidentally lose some of your supplies**
 
@@ -261,7 +259,7 @@ Days of gathered food, tools, spare parts - all gone. You'll have to start over.
 
 ---
 
-## Challenge
+### Challenge
 
 **You find a stash of spoiled food**
 
@@ -271,7 +269,7 @@ Your stomach twists with hunger and disappointment. You'll need to keep looking.
 
 ---
 
-## Challenge
+### Challenge
 
 **You accidentally wander into a dangerous part of the city**
 
@@ -281,7 +279,7 @@ Getting out quickly is your only option, but which way is safe?
 
 ---
 
-## Challenge
+### Challenge
 
 **A piece of your time machine breaks down**
 
@@ -291,7 +289,7 @@ Without it, the time machine is just an expensive paperweight. You need to repai
 
 ---
 
-## Challenge
+### Challenge
 
 **You're caught in a territorial dispute between survivor groups**
 
@@ -301,7 +299,7 @@ You need to escape before they decide you're working for the other side.
 
 ---
 
-## Challenge
+### Challenge
 
 **A survivor you trusted betrays you again**
 
@@ -311,7 +309,7 @@ This time, the betrayal comes with a deeper cut - not just to your resources, bu
 
 ---
 
-## Challenge
+### Challenge
 
 **You get lost and wander into danger**
 
@@ -321,7 +319,7 @@ The graffiti here is ominous. The silence is wrong. You need to find your way ba
 
 ---
 
-## Challenge
+### Challenge
 
 **Equipment failure at a critical moment**
 
@@ -331,7 +329,7 @@ You have backup light sources, but finding them without alerting whatever shares
 
 ---
 
-## Challenge
+### Challenge
 
 **You're trapped by rising floodwater**
 
@@ -341,7 +339,7 @@ It's rising fast, and your exit is blocked. You need to find another way out bef
 
 ---
 
-## Challenge
+### Challenge
 
 **A security system activates unexpectedly**
 
@@ -351,7 +349,7 @@ Whatever automated defenses this place has, they're coming for you now.
 
 ---
 
-## Event
+### Event
 
 **You discover a hidden stash of resources**
 
@@ -361,7 +359,7 @@ Everything is still sealed and usable. This discovery gives you the resources yo
 
 ---
 
-## Event
+### Event
 
 **You find a map of the city, helping you navigate safely**
 
@@ -371,7 +369,7 @@ With this knowledge, you can avoid the worst dangers and find the parts you need
 
 ---
 
-## Event
+### Event
 
 **You encounter a helpful survivor**
 
@@ -381,7 +379,7 @@ For a modest exchange of supplies, they mark several useful locations on your ma
 
 ---
 
-## Event
+### Event
 
 **A survivor offers to trade useful items**
 
@@ -391,7 +389,7 @@ In this world, honest trading is rare enough to restore a little faith in humani
 
 ---
 
-## Event
+### Event
 
 **A survivor shares valuable information about the city**
 
@@ -401,7 +399,7 @@ It's dangerous to reach, they warn, but if anyone could make use of it, you coul
 
 ---
 
-## Event
+### Event
 
 **A survivor helps you find a safe route through a dangerous area**
 
@@ -411,7 +409,7 @@ They've been watching you struggle with the map, trying to plot a course through
 
 ---
 
-## Event
+### Event
 
 **You meet a survivor who offers to help you**
 
@@ -421,7 +419,7 @@ You work together for a few hours, and when you part ways, you both feel a littl
 
 ---
 
-## Event
+### Event
 
 **You find a survivor who can repair a part of your time machine**
 
@@ -431,7 +429,7 @@ It takes them an hour, but they solve a problem that had you stumped for days.
 
 ---
 
-## Event
+### Event
 
 **You discover a cache of useful tools**
 
@@ -441,7 +439,7 @@ You take what you need and leave the rest, grateful for the craftsperson who car
 
 ---
 
-## Event
+### Event
 
 **You find a map of the city**
 
@@ -451,7 +449,7 @@ You compare it to the destroyed landscape around you, slowly piecing together wh
 
 ---
 
-## Event
+### Event
 
 **You find a working vehicle**
 
@@ -461,7 +459,7 @@ You'll need to be careful - noise attracts attention - but the mobility is inval
 
 ---
 
-## Event
+### Event
 
 **You find a source of clean water**
 
@@ -471,7 +469,7 @@ You mark the location carefully. Clean water is life in this world.
 
 ---
 
-## Event
+### Event
 
 **You find a well-stocked abandoned shop**
 
@@ -481,7 +479,7 @@ You take what you can carry and note the location for future trips.
 
 ---
 
-## Event
+### Event
 
 **You're given food by another survivor while scavenging**
 
@@ -491,7 +489,7 @@ When you try to thank them, they just shake their head and move on. Kindness sti
 
 ---
 
-## Event
+### Event
 
 **You find an abandoned house with some food still inside**
 
@@ -501,7 +499,7 @@ You load up your pack, grateful for the family who never returned to claim it.
 
 ---
 
-## Event
+### Event
 
 **You discover a shortcut through the city**
 
@@ -511,7 +509,7 @@ You mark both entrances carefully for future use.
 
 ---
 
-## Event
+### Event
 
 **You find a safe hideout**
 
@@ -521,7 +519,7 @@ You leave some supplies cached here for emergencies.
 
 ---
 
-## Event
+### Event
 
 **You discover a safe route through a dangerous part of the city**
 
@@ -531,7 +529,7 @@ It takes careful navigation, but it works. You mark it on your map.
 
 ---
 
-## Event
+### Event
 
 **You find a safe route through a dangerous area**
 
@@ -541,7 +539,7 @@ Now you can move through this sector without confrontation.
 
 ---
 
-## Event
+### Event
 
 **You find a hidden underground bunker**
 
@@ -551,7 +549,7 @@ Some of this technology is exactly what you need.
 
 ---
 
-## Event
+### Event
 
 **You find a working computer**
 
@@ -561,7 +559,7 @@ The data it contains about pre-collapse technology is invaluable.
 
 ---
 
-## Event
+### Event
 
 **You manage to deactivate a dangerous AI**
 
@@ -571,7 +569,7 @@ The sudden silence is almost eerie after so long hearing its electronic voice.
 
 ---
 
-## Event
+### Event
 
 **You find a piece of technology that can aid in your repair**
 
@@ -581,7 +579,7 @@ You add it to your growing collection of salvaged components.
 
 ---
 
-## Event
+### Event
 
 **You find a complete toolkit for your time machine**
 
@@ -591,7 +589,7 @@ The toolkit is beautiful - precision instruments designed specifically for quant
 
 ---
 
-## Event
+### Event
 
 **You find some helpful parts among ruined buildings**
 
@@ -601,7 +599,7 @@ Each piece brings you closer to going home.
 
 ---
 
-## Event
+### Event
 
 **You find a blueprint of the time machine**
 

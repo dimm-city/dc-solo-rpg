@@ -39,9 +39,9 @@ The format uses five card types that map directly to the standard 52-card deck:
 
 1. **Primary Success** (1 card) - Ace of Hearts (salvation mechanism)
 2. **Failure Counter** (4 cards) - All Kings (escalating threat)
-3. **Narrative** (3 cards) - Remaining Aces (bonus/help cards, may include special modifiers)
-4. **Challenge** (16 cards) - Odd-numbered cards: 3, 5, 7, 9 (usually trigger damage checks)
-5. **Event** (28 cards) - Even-numbered cards: 2, 4, 6, 8, 10, J, Q (usually safe)
+3. **Narrative** (3 cards) - Remaining Aces (bonus/help cards, do NOT trigger damage unless modified)
+4. **Challenge** (16 cards) - Odd-numbered cards: 3, 5, 7, 9 (trigger damage checks)
+5. **Event** (28 cards) - Even-numbered cards: 2, 4, 6, 8, 10, J, Q (safe from damage)
 
 **Total:** 1 + 4 + 3 + 16 + 28 = 52 cards ✓
 
@@ -106,7 +106,7 @@ attention, and failure means being lost in time forever.
 
 # Card Deck
 
-## Primary Success
+### Primary Success
 
 **You find a survivor who knows how to repair the time machine**
 
@@ -116,7 +116,7 @@ chance of getting home.
 
 ---
 
-## Failure Counter
+### Failure Counter
 
 **A group of hostile survivors has spotted you**
 
@@ -125,25 +125,25 @@ in their eyes - they've survived by taking from others.
 
 ---
 
-## Failure Counter
+### Failure Counter
 
 **Your stash of resources is stolen**
 
 ---
 
-## Failure Counter
+### Failure Counter
 
 **You get lost in a dangerous part of the city**
 
 ---
 
-## Failure Counter
+### Failure Counter
 
 **The time machine suffers a major malfunction**
 
 ---
 
-## Narrative: skip-damage
+### Narrative: skip-damage
 
 **A moment of perfect timing saves you**
 
@@ -153,7 +153,7 @@ your favor, just this once, shielding you from the next danger.
 
 ---
 
-## Narrative: return-king
+### Narrative: return-king
 
 **A second chance manifests**
 
@@ -163,7 +163,7 @@ you a chance to rewrite your failures.
 
 ---
 
-## Narrative
+### Narrative
 
 **A connection across time**
 
@@ -173,7 +173,7 @@ across centuries.
 
 ---
 
-## Challenge
+### Challenge
 
 **You're betrayed by a survivor you trusted**
 
@@ -186,7 +186,7 @@ But they led you into an ambush.
 
 ---
 
-## Event
+### Event
 
 **You discover a hidden stash of resources**
 
@@ -227,10 +227,10 @@ Supports **full Markdown** formatting.
 
 ### 3. Card Deck (Required)
 
-Cards are organized by type using H2 headings:
+Cards are organized by type using H3 headings:
 
 ```markdown
-## [Card Type]
+### [Card Type]
 
 **[Short description shown in game log]**
 
@@ -254,7 +254,7 @@ Total = 52 cards
 Narrative cards can include special one-time modifiers:
 
 ```markdown
-## Narrative: skip-damage
+### Narrative: skip-damage
 
 **A moment of perfect timing saves you**
 
@@ -262,7 +262,7 @@ Story here...
 
 ---
 
-## Narrative: return-king
+### Narrative: return-king
 
 **A second chance manifests**
 
@@ -273,14 +273,14 @@ Story here...
 - `skip-damage` - Skip next damage check (max 1 per game)
 - `return-king` - Return King to deck (max 1 per game)
 
-These are **optional** - standard `## Narrative` cards are valid without modifiers.
+These are **optional** - standard `### Narrative` cards are valid without modifiers.
 
 ### 5. Optional Manual Card Assignment
 
 For advanced creators who want specific cards in specific positions:
 
 ```markdown
-## Challenge: 7-hearts
+### Challenge: 7-hearts
 
 **Specific event for seven of hearts**
 
@@ -290,7 +290,7 @@ Story here...
 Can be combined with modifiers:
 
 ```markdown
-## Narrative: A-clubs, skip-damage
+### Narrative: A-clubs, skip-damage
 
 **Assigned to Ace of Clubs with skip-damage modifier**
 
@@ -354,14 +354,13 @@ These simplifications apply to the V2 system:
 
 - **Primary Success** - Ace of Hearts only (activates salvation countdown)
 - **Failure Counter** - All Kings (4 revealed = instant game over)
-- **Narrative** - Remaining Aces (bonus/help cards, optional special modifiers)
+- **Narrative** - Remaining Aces (bonus/help cards, do NOT trigger damage unless modified)
   - Each Ace adds +1 to bonus counter (reduces damage)
   - May include `skip-damage` or `return-king` modifiers (max 1 each)
-  - Aces may or may not trigger damage checks (designer flexibility per SRD)
-- **Challenge** - Odd-numbered cards: 3, 5, 7, 9 (usually trigger damage checks)
-- **Event** - Even-numbered cards: 2, 4, 6, 8, 10, J, Q (usually safe)
-
-**Note:** The "usually" qualifier preserves designer flexibility per SRD intent
+  - Standard Narrative cards are safe - no damage checks
+  - Only trigger damage if explicitly given a damage-trigger modifier (future feature)
+- **Challenge** - Odd-numbered cards: 3, 5, 7, 9 (trigger damage checks)
+- **Event** - Even-numbered cards: 2, 4, 6, 8, 10, J, Q (safe from damage)
 
 ### 4. Smart Validation
 

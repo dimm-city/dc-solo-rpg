@@ -92,9 +92,12 @@ graph TB
 
 **Card Classification:**
 
-- **Odd Ranks:** A, 3, 5, 7, 9 (**usually** trigger damage checks per SRD)
-- **Even Ranks:** 2, 4, 6, 8, 10, J, Q, K (**usually** safe from damage per SRD)
-- **Note**: The "usually" qualifier preserves designer flexibility as per the Wretched and Alone SRD
+- **Damage Ranks:** 3, 5, 7, 9 (trigger damage checks)
+- **Safe Ranks:** 2, 4, 6, 8, 10, J, Q (safe from damage)
+- **Kings (K):** 4 total - Failure counters (even-ranked, no damage)
+- **Narrative Cards (Aces):** A♦, A♣, A♠ (bonus cards, do NOT trigger damage unless modified)
+- **Primary Success:** A♥ (Ace of Hearts - special win condition, no automatic damage)
+- **Note**: Aces are treated as "bonus/help" cards and provide moments of respite
 
 ### 2.3 Resource System
 
@@ -357,13 +360,9 @@ graph TB
 **Implementation:**
 
 ```typescript
-function isOddRank(rank: string): boolean {
-  const oddRanks = ['A', '3', '5', '7', '9'];
-  return oddRanks.includes(rank);
-}
-
 function requiresDamageCheck(card: Card): boolean {
-  return isOddRank(card.rank);
+  const damageRanks = ['3', '5', '7', '9'];
+  return damageRanks.includes(card.rank);
 }
 ```
 
@@ -371,24 +370,24 @@ function requiresDamageCheck(card: Card): boolean {
 
 | Rank | Count | Triggers Damage? | Notes |
 |------|-------|------------------|-------|
-| A | 4 | ✅ Yes | Odd-ranked (A=1), triggers damage despite being bonus cards |
+| A | 4 | ❌ No | Bonus/help cards - provide respite and reduce damage |
 | 2 | 4 | ❌ No | Even-ranked |
-| 3 | 4 | ✅ Yes | Odd-ranked |
+| 3 | 4 | ✅ Yes | Odd-ranked challenge |
 | 4 | 4 | ❌ No | Even-ranked |
-| 5 | 4 | ✅ Yes | Odd-ranked |
+| 5 | 4 | ✅ Yes | Odd-ranked challenge |
 | 6 | 4 | ❌ No | Even-ranked |
-| 7 | 4 | ✅ Yes | Odd-ranked |
+| 7 | 4 | ✅ Yes | Odd-ranked challenge |
 | 8 | 4 | ❌ No | Even-ranked |
-| 9 | 4 | ✅ Yes | Odd-ranked |
+| 9 | 4 | ✅ Yes | Odd-ranked challenge |
 | 10 | 4 | ❌ No | Even-ranked |
 | J | 4 | ❌ No | Even-valued face card |
 | Q | 4 | ❌ No | Even-valued face card |
 | K | 4 | ❌ No | Even-valued, Tracker cards (see Special Cards) |
 
-**Total Damage-Triggering Cards:** 20 out of 52 (~38%)
+**Total Damage-Triggering Cards:** 16 out of 52 (~31%)
 
 **Important Note on Aces:**
-Aces are odd-ranked (A=1) and **trigger damage checks even though they provide bonuses**. This creates narrative tension - moments of hope and help still carry risk. The SRD describes Aces as "bonus or help in your plight" but does not exempt them from tower pulls, creating a bittersweet duality.
+Aces are "bonus or help in your plight" per the SRD and do NOT trigger damage checks. They provide pure respite - adding to the bonus counter to reduce future damage. This creates moments of genuine hope where help doesn't come with immediate risk.
 
 ---
 
@@ -427,29 +426,31 @@ graph TB
    - Bonus counter reduces damage taken
    - Max bonus: +4 (all four Aces)
 
-**IMPORTANT: Aces and Tower Pulls**
+**IMPORTANT: Aces Do NOT Trigger Damage**
 
-Per the Wretched and Alone SRD, **Aces MAY OR MAY NOT trigger tower pulls** depending on the specific game implementation:
+Per the Wretched and Alone SRD, **Aces are "bonus or help" cards and do NOT trigger tower pulls**:
 
-- The SRD states odd-numbered cards "**usually** require you to pull from the tower"
-- This "usually" qualifier provides **designer flexibility** for special cards
-- Aces are unique: they provide "bonus or help" while also being odd-ranked (A=1)
-- **Game designers decide** whether Aces trigger tower pulls in their specific game
+- Aces provide pure moments of respite and hope
+- Each Ace adds +1 to bonus counter (reduces future damage)
+- Standard damage-triggering cards: 3, 5, 7, 9 only (16 cards total, ~31%)
+- This creates a balanced mix of danger (16 cards) and safety/help (36 cards)
 
-**Design Consideration:**
+**Design Philosophy:**
 
-- If Aces trigger pulls: Creates tension between hope and risk (20 damage cards total)
-- If Aces don't trigger pulls: Aces are pure relief/help (16 damage cards: 3, 5, 7, 9 only)
-- Both approaches are valid per SRD; choose based on desired difficulty and theme
+Aces represent moments of genuine help without immediate cost. While the game is difficult and failure is expected, these cards provide:
+- Breathing room between challenges
+- Narrative space for reflection and character development
+- Mechanical relief through bonus accumulation
+- Hope that sustains the player through darker moments
 
-**Cards Can Have Multiple Mechanics:**
+**Cards Can Have Special Modifiers:**
 
-Cards in Wretched & Alone games can combine multiple mechanical functions simultaneously:
+Narrative cards (Aces) can optionally have special one-time effects through modifiers:
 
-- **Example 1**: Ace of Hearts can BOTH activate salvation countdown AND trigger a tower pull
-- **Example 2**: Special Aces can provide bonuses AND have unique one-time effects
+- **Example 1**: Ace with skip-damage modifier allows skipping next damage check
+- **Example 2**: Ace with return-king modifier allows shuffling a King back into deck
 
-This layering of mechanics creates richer gameplay and narrative depth.
+These modifiers are optional enhancements, not core mechanics.
 
 **Special One-Time Ace Mechanics:**
 
@@ -818,8 +819,9 @@ function calculateDamage(roll: number, bonusCounter: number): number {
 }
 
 function performDamageCheck(card: Card, gameState: GameState): void {
-  // Only odd cards trigger damage
-  if (!isOddRank(card.rank)) {
+  // Only challenge cards (3, 5, 7, 9) trigger damage
+  const damageRanks = ['3', '5', '7', '9'];
+  if (!damageRanks.includes(card.rank)) {
     return;
   }
 
@@ -898,11 +900,11 @@ function performDamageCheck(card: Card, gameState: GameState): void {
 
 **Game Balance:**
 
-- ~38% of cards trigger damage (20 odd cards)
+- ~31% of cards trigger damage (16 challenge cards: 3, 5, 7, 9)
 - Average game draws ~30-40 cards
-- Expected damage checks: 11-15 per game
-- With 0 bonus: ~38-52 total damage (fatal)
-- With 4 bonus: ~6-8 total damage (survivable)
+- Expected damage checks: 9-12 per game
+- With 0 bonus: ~31-42 total damage (survivable but difficult)
+- With 4 bonus: ~5-6 total damage (very survivable)
 
 ### 9.5 Balancing Variables
 
