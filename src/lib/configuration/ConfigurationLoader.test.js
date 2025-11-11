@@ -69,7 +69,7 @@ describe('ConfigurationLoader', () => {
 		expect(loader.gameSettings.deck?.length).toBe(1);
 
 		//Verify custom labels are loaded
-		expect(loader.gameSettings.labels).toContain({ ...exampleConfig.labels });
+		expect(loader.gameSettings.labels).toMatchObject({ ...exampleConfig.labels });
 
 		//Verify default labels are loaded
 		//expect(loader.gameSettings.labels).toContain({ ...new GameLabels()});
