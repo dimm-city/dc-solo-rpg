@@ -161,6 +161,7 @@
 		class:materializing={animationStage === 'materializing'}
 		class:revealed={animationStage === 'revealed'}
 		class:dismissing={animationStage === 'dismissing'}
+		data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
 	>
 		{#if animationStage !== 'idle' && animationStage !== 'anticipating'}
 			<div class="byte-shell">
@@ -215,9 +216,10 @@
 
 	.byte-container {
 		position: relative;
-		width: 90%;
-		max-width: 500px;
-		min-height: 300px;
+		width: 95%;
+		max-width: 900px;
+		height: 100%;
+		min-height: 400px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -225,6 +227,14 @@
 		opacity: 0;
 		transform: scale(0.8);
 		transition: none;
+
+		/* Augmented UI Configuration */
+		--aug-border-all: 2px;
+		--aug-border-bg: linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta));
+		--aug-tl: 16px;
+		--aug-tr: 16px;
+		--aug-br: 16px;
+		--aug-bl: 16px;
 	}
 
 	.byte-container.materializing {
@@ -277,15 +287,14 @@
 	.byte-shell {
 		position: relative;
 		width: 100%;
-		min-height: 300px;
+		height: 100%;
+		min-height: 400px;
 		padding: var(--space-xl, 2rem);
 
-		border: 2px solid var(--color-neon-cyan, #00ffff);
-		border-radius: 8px;
-		box-shadow:
-			0 0 20px rgba(0, 255, 255, 0.3),
-			0 0 40px rgba(217, 70, 239, 0.2),
-			inset 0 0 30px rgba(0, 255, 255, 0.05);
+		/* Remove border/box-shadow since augmented-ui handles it on parent */
+		background: linear-gradient(135deg, rgba(10, 10, 20, 0.8), rgba(15, 15, 25, 0.7));
+		backdrop-filter: blur(10px) saturate(150%);
+		-webkit-backdrop-filter: blur(10px) saturate(150%);
 		overflow: hidden;
 	}
 
@@ -524,12 +533,17 @@
 
 	@media (max-width: 768px) {
 		.byte-container {
+			width: 95%;
 			max-width: 95%;
-			min-height: 200px;
+			min-height: 350px;
+			--aug-tl: 12px;
+			--aug-tr: 12px;
+			--aug-br: 12px;
+			--aug-bl: 12px;
 		}
 
 		.byte-shell {
-			min-height: 200px;
+			min-height: 350px;
 			padding: var(--space-lg, 1.5rem);
 		}
 
@@ -546,14 +560,19 @@
 
 	@media (max-width: 450px) or (max-height: 667px) {
 		.byte-container {
-			min-height: 100px;
+			min-height: 250px;
+			width: 98%;
 			max-width: 98%;
 			margin: 0;
+			--aug-tl: 8px;
+			--aug-tr: 8px;
+			--aug-br: 8px;
+			--aug-bl: 8px;
 		}
 
 		.byte-shell {
-			min-height: 100px;
-			padding: var(--space-sm, 0.5rem) var(--space-md, 1rem);
+			min-height: 250px;
+			padding: var(--space-md, 1rem);
 		}
 
 		.byte-data {
