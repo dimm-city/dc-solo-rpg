@@ -1,7 +1,7 @@
 <script>
-	import { gameState, transitionTo } from '../stores/gameStore.svelte.js';
+	import { gameState } from '../stores/gameStore.svelte.js';
 	import { recordRound, restartGame, exitGame } from '../stores/gameActions.svelte.js';
-	import AugmentedButton from './AugmentedButton.svelte';
+	import ContinueButton from './ContinueButton.svelte';
 
 	let { onjournalsaved = () => {} } = $props();
 
@@ -26,7 +26,7 @@
 		<h2>{gameState.config?.labels?.journalEntryHeader ?? 'Journal Entry'}</h2>
 		<h3>{gameState.config?.labels?.journalEntrySubHeader ?? 'Record your progress'}</h3>
 
-		{#each currentEvents as event}
+		{#each currentEvents as event (event.id)}
 			<p>{event.id}:{event.description}</p>
 		{/each}
 	</div>
@@ -36,19 +36,29 @@
 	<div class="journal-tools-center-area">
 		{#if saved}
 			{#if gameState.gameOver}
-				<AugmentedButton
+				<ContinueButton
 					text={gameState.config?.labels?.journalEntryRestartButtonText ?? 'Restart'}
 					onclick={restartGame}
+					testid="journal-restart-button"
 				/>
-				<AugmentedButton
+				<ContinueButton
 					text={gameState.config?.labels?.journalEntryExitButtonText ?? 'Exit'}
 					onclick={exitGame}
+					testid="journal-exit-button"
 				/>
 			{:else}
-				<AugmentedButton text={gameState.config?.labels?.journalEntryNextButtonText ?? 'Next'} onclick={next} />
+				<ContinueButton
+					text={gameState.config?.labels?.journalEntryNextButtonText ?? 'Next'}
+					onclick={next}
+					testid="journal-next-button"
+				/>
 			{/if}
 		{:else}
-			<AugmentedButton text={gameState.config?.labels?.journalEntrySaveButtonText ?? 'Save'} onclick={save} />
+			<ContinueButton
+				text={gameState.config?.labels?.journalEntrySaveButtonText ?? 'Save'}
+				onclick={save}
+				testid="journal-save-button"
+			/>
 		{/if}
 	</div>
 </div>
@@ -56,27 +66,30 @@
 <style>
 	.dc-journal-container {
 		display: grid;
-		height: calc(100% - var(--dc-default-padding));
-		margin-inline: var(--dc-default-padding);
+		height: 100%;
+		padding: var(--dc-default-padding);
 		grid-template-columns: 1fr;
-		grid-template-rows: 1fr min-content;
+		grid-template-rows: auto 1fr auto;
 		row-gap: 0.5rem;
 		grid-auto-flow: row;
 		grid-template-areas:
 			'header-area'
 			'text-entry-area'
 			'journal-tools-center-area';
+		box-sizing: border-box;
 	}
 
 	.journal-header-area {
 		grid-area: header-area;
-		margin-top: var(--dc-default-padding);
-		overflow-y: hidden;
+		overflow-y: auto;
+		max-height: 40vh; /* Limit header height to prevent overflow */
 	}
 
 	.text-entry-area {
 		grid-area: text-entry-area;
 		display: flex;
+		flex-direction: column;
+		min-height: 0; /* Allow flex shrinking */
 	}
 
 	h2 {
@@ -92,9 +105,13 @@
 	}
 	textarea {
 		width: 100%;
-		height: min(5rem, min-content);
+		flex: 1;
+		min-height: 8rem; /* Minimum comfortable size */
 		box-sizing: border-box;
-		resize: none;
+		resize: vertical; /* Allow vertical resizing */
+		font-family: inherit;
+		font-size: 1rem;
+		padding: 0.5rem;
 	}
 
 	.journal-tools-center-area {

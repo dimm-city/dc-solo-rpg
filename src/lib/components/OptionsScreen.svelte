@@ -2,6 +2,7 @@
 	import { gameState } from '../stores/gameStore.svelte.js';
 	import { startGame } from '../stores/gameActions.svelte.js';
 	import { Difficulty } from '../configuration/DifficultyLevels.js';
+	import ContinueButton from './ContinueButton.svelte';
 
 	let { systemSettings = {} } = $props();
 
@@ -40,7 +41,9 @@
 		</select>
 	</div>
 
-	<button onclick={() => setConfig()}>Start Game</button>
+	<div class="button-container">
+		<ContinueButton text="Start Game" onclick={setConfig} testid="options-start-button" />
+	</div>
 </div>
 
 <style>
@@ -54,6 +57,12 @@
 	}
 
 	select {
+		width: 100%;
+	}
+
+	.button-container {
+		display: flex;
+		justify-content: center;
 		width: 100%;
 	}
 </style>

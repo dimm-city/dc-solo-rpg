@@ -3,7 +3,7 @@
 	import { gameState } from '../stores/gameStore.svelte.js';
 	import { confirmTaskRoll, rollForTasks } from '../stores/gameActions.svelte.js';
 	import { logger } from '../utils/logger.js';
-	import AugmentedButton from './AugmentedButton.svelte';
+	import ContinueButton from './ContinueButton.svelte';
 
 	let rolled = $state(false);
 	let rolling = $state(false);
@@ -55,14 +55,19 @@
 
 	const header = $derived(
 		rolled
-			? gameState.config?.labels?.rollForTasksResultHeader ?? 'Result'
-			: gameState.config?.labels?.rollForTasksHeader ?? 'Roll for Tasks'
+			? (gameState.config?.labels?.rollForTasksResultHeader ?? 'Result')
+			: (gameState.config?.labels?.rollForTasksHeader ?? 'Roll for Tasks')
 	);
 </script>
 
 <div class="dc-roll-tasks-container">
 	<div class="dc-dice-roller-header dc-header">
-		<AugmentedButton text={header} onclick={action} disabled={rolling || confirming} class="dc-fade-in" />
+		<ContinueButton
+			text={header}
+			onclick={action}
+			disabled={rolling || confirming}
+			testid="roll-tasks-button"
+		/>
 	</div>
 </div>
 

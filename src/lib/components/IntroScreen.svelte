@@ -2,7 +2,7 @@
 	import { marked } from 'marked';
 	import { gameState, transitionTo } from '../stores/gameStore.svelte.js';
 	import { exitGame } from '../stores/gameActions.svelte.js';
-	import AugmentedButton from './AugmentedButton.svelte';
+	import ContinueButton from './ContinueButton.svelte';
 
 	let currentView = $state('rules');
 	const backButtonText = $derived(currentView == 'intro' ? 'back' : 'exit');
@@ -92,8 +92,8 @@
 		</div>
 	{/if}
 	<div class="button-bar dc-game-bg">
-		<AugmentedButton text={backButtonText} onclick={back} testid="intro-back-button" />
-		<AugmentedButton text={nextButtonText} onclick={next} testid="intro-next-button" />
+		<ContinueButton text={backButtonText} onclick={back} testid="intro-back-button" />
+		<ContinueButton text={nextButtonText} onclick={next} testid="intro-next-button" />
 	</div>
 </div>
 
@@ -160,4 +160,6 @@
 	.button-bar :global(.aug-button) {
 		width: 100%;
 	}
+
+	/* ContinueButton inherits AugmentedButton styles, so same selectors apply */
 </style>

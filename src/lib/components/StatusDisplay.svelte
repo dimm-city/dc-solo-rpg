@@ -1,6 +1,9 @@
 <script>
 	import { gameState } from '../stores/gameStore.svelte.js';
 
+	import { exitGame } from '../stores/gameActions.svelte.js';
+
+	import AugmentedButton from './AugmentedButton.svelte';
 	const successPercent = $derived(10 - gameState.tokens);
 	const bonusPercent = $derived(gameState.bonus);
 	const failurePercent = $derived(gameState.kingsRevealed);
@@ -16,18 +19,36 @@
 			<span class="label">PLAYER:</span>
 			<span class="value">{gameState.player.name.toUpperCase()}</span>
 		</div>
+		<div>
+			<h6>{gameState.config?.title}</h6>
+		</div>
 		<div class="info-segment">
 			<span class="label">{gameState.config?.labels.statusDisplayRoundText ?? 'ROUND:'}</span>
 			<span class="value">{gameState?.round}</span>
+
+			<button class="dc-exit-button" onclick={exitGame} aria-label="Exit game">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="20"
+					height="20"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					aria-hidden="true"
+				>
+					<path d="M18 6 6 18" />
+					<path d="m6 6 12 12" />
+				</svg>
+			</button>
 		</div>
 	</div>
 
 	<!-- Stats Grid -->
 	<div class="stats-grid">
-		<div
-			class="stat-item health-stat"
-			data-augmented-ui="tr-clip tl-clip-x br-2-clip-x border"
-		>
+		<div class="stat-item health-stat" data-augmented-ui="tr-clip tl-clip-x br-2-clip-x border">
 			<div class="stat-label">HEALTH</div>
 			<div class="stat-value">
 				<span class="current">{gameState.tower}</span><span class="divider">/</span><span
@@ -39,10 +60,7 @@
 			</div>
 		</div>
 
-		<div
-			class="stat-item failure-stat"
-			data-augmented-ui="tl-2-clip-y tr-clip bl-clip-x border"
-		>
+		<div class="stat-item failure-stat" data-augmented-ui="tl-2-clip-y tr-clip bl-clip-x border">
 			<div class="stat-label">
 				{gameState.config?.labels?.failureCounters?.toUpperCase() ?? 'FAILURE'}
 			</div>
@@ -88,6 +106,15 @@
 </div>
 
 <style>
+	.dc-exit-button {
+		background: transparent;
+		border: none;
+		color: #fff;
+		cursor: pointer;
+		padding: 0.25rem;
+		margin-left: 1rem;
+		transition: color var(--transition-base);
+	}
 	.status-display-container {
 		width: 100%;
 		display: flex;
@@ -110,7 +137,7 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		padding: 0.75rem 1.5rem;
+		padding: 0.75rem 0rem;
 		position: relative;
 
 		/* Glassmorphism Effect */
@@ -181,7 +208,9 @@
 			0 0 10px rgba(255, 255, 255, 1),
 			0 0 20px rgba(255, 255, 255, 0.5);
 	}
-
+	.info-segment .label:first-of-type {
+		padding-inline-start: 0.5rem;
+	}
 	/* Stats Grid */
 	.stats-grid {
 		display: grid;

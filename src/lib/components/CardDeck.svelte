@@ -2,6 +2,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { sleep } from '../utils/timing.js';
 	import { logger } from '../utils/logger.js';
+	import ContinueButton from './ContinueButton.svelte';
 
 	let { card = $bindable(null), onrequestcard = () => {}, onconfirmcard = () => {} } = $props();
 
@@ -12,7 +13,21 @@
 	let animationFrameId = $state();
 	let gridPulsePhase = $state(0);
 
+	// Derived state for button text
+	let buttonText = $derived.by(() => {
+		if (animationStage === 'idle') return 'INTERCEPT FRAGMENT';
+		if (animationStage === 'anticipating' || animationStage === 'materializing')
+			return 'INTERCEPTING...';
+		if (animationStage === 'revealed') return 'CONTINUE';
+		return 'UPLOADING...';
+	});
 
+	// Derived state for button disabled condition
+	let isButtonDisabled = $derived(
+		animationStage === 'anticipating' ||
+			animationStage === 'materializing' ||
+			animationStage === 'dismissing'
+	);
 
 	/**
 	 * Handle intercept button click - request card draw and start animation
@@ -74,7 +89,7 @@
 	/**
 	 * Handle button click based on current stage
 	 */
-	async function onButtonClick() {
+	export async function onButtonClick() {
 		if (animationStage === 'idle') {
 			await onIntercept();
 		} else if (animationStage === 'revealed') {
@@ -167,34 +182,32 @@
 			</div>
 		{/if}
 	</div>
-
-	<!-- Neural CTA button -->
-	<button
-		class="neural-cta"
-		onclick={onButtonClick}
-		disabled={animationStage === 'anticipating' ||
-			animationStage === 'materializing' ||
-			animationStage === 'dismissing'}
-		type="button"
-		data-testid="card-deck-button"
-	>
-		<span class="cta-glow" aria-hidden="true"></span>
-		<span class="cta-text">
-			{#if animationStage === 'idle'}
-				INTERCEPT FRAGMENT
-			{:else if animationStage === 'anticipating' || animationStage === 'materializing'}
-				INTERCEPTING<span class="ellipsis">...</span>
-			{:else if animationStage === 'revealed'}
-				CONTINUE
-			{:else}
-				UPLOADING...
-			{/if}
-		</span>
-	</button>
+	<div class="dc-dice-roller-header dc-header">
+		<!-- Neural CTA button -->
+		<ContinueButton
+			text={buttonText}
+			onclick={onButtonClick}
+			disabled={isButtonDisabled}
+			testid="card-deck-button"
+			class="neural-cta-wrapper"
+		/>
+	</div>
 </div>
 
 <style>
+	/* ============================================
+	   CARD DECK CONTAINER
+	   ============================================ */
 
+	.dc-card-deck {
+		display: grid;
+		grid-template-rows: 1fr auto;
+		width: 100%;
+		height: 100%;
+		align-items: center;
+		justify-items: center;
+		gap: 1rem;
+	}
 
 	/* ============================================
 	   FRAGMENT CONTAINER
@@ -266,7 +279,7 @@
 		width: 100%;
 		min-height: 300px;
 		padding: var(--space-xl, 2rem);
-	
+
 		border: 2px solid var(--color-neon-cyan, #00ffff);
 		border-radius: 8px;
 		box-shadow:
@@ -422,9 +435,29 @@
 
 	/* ============================================
 	   NEURAL CTA BUTTON
+	   Override ContinueButton/AugmentedButton styling for cyberpunk aesthetic
 	   ============================================ */
 
-	.neural-cta {
+	/* Wrapper positioning and z-index */
+	:global(.neural-cta-wrapper) {
+		z-index: 3;
+	}
+
+	/* Override the AugmentedButton wrapper glow with neural styling */
+	:global(.neural-cta-wrapper .aug-button-wrapper) {
+		/* Enhanced cyberpunk glow */
+		filter: drop-shadow(0 4px 15px rgba(217, 70, 239, 0.4))
+			drop-shadow(0 0 20px rgba(0, 255, 255, 0.3));
+		transition: all 0.3s ease;
+	}
+
+	:global(.neural-cta-wrapper .aug-button-wrapper:hover) {
+		filter: drop-shadow(0 6px 25px rgba(217, 70, 239, 0.6))
+			drop-shadow(0 0 30px rgba(0, 255, 255, 0.5));
+	}
+
+	/* Override the button itself with neural gradient */
+	:global(.neural-cta-wrapper .aug-button) {
 		position: relative;
 		padding: var(--space-md, 1rem) var(--space-xl, 2rem);
 		background: linear-gradient(
@@ -432,50 +465,46 @@
 			var(--color-cyber-magenta, #d946ef) 0%,
 			var(--color-neon-cyan, #00ffff) 100%
 		);
-		border: none;
-		border-radius: 4px;
-		font-family: var(--font-display, 'Orbitron', sans-serif);
-		font-size: var(--text-base, 1rem);
-		font-weight: 700;
-		letter-spacing: var(--letter-spacing-wide, 0.05em);
 		color: var(--color-text-primary, #fff);
-		text-transform: uppercase;
-		cursor: pointer;
-		z-index: 3;
+		font-size: var(--text-base, 1rem);
 		overflow: hidden;
-		transition: all 0.3s ease;
 		box-shadow:
-			0 4px 15px rgba(217, 70, 239, 0.4),
-			0 0 20px rgba(0, 255, 255, 0.3);
+			inset 0 0 20px rgba(0, 255, 255, 0.1),
+			0 0 15px rgba(217, 70, 239, 0.2);
 	}
 
-	.neural-cta:hover:not(:disabled) {
+	:global(.neural-cta-wrapper .aug-button:hover:not(:disabled)) {
 		transform: translateY(-2px);
 		box-shadow:
-			0 6px 25px rgba(217, 70, 239, 0.6),
-			0 0 30px rgba(0, 255, 255, 0.5);
+			inset 0 0 30px rgba(0, 255, 255, 0.15),
+			0 0 25px rgba(217, 70, 239, 0.3);
 	}
 
-	.neural-cta:active:not(:disabled) {
+	:global(.neural-cta-wrapper .aug-button:active:not(:disabled)) {
 		transform: translateY(0);
 	}
 
-	.neural-cta:disabled {
+	:global(.neural-cta-wrapper .aug-button:disabled) {
 		opacity: 0.6;
 		cursor: not-allowed;
+		filter: grayscale(0.3);
 	}
 
-	.cta-glow {
+	/* Add glow sweep animation effect */
+	:global(.neural-cta-wrapper .aug-button)::before {
+		content: '';
 		position: absolute;
 		top: 0;
 		left: -100%;
 		width: 100%;
 		height: 100%;
 		background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-		animation: cta-glow-sweep 2s ease-in-out infinite;
+		animation: neural-glow-sweep 2s ease-in-out infinite;
+		pointer-events: none;
+		z-index: 1;
 	}
 
-	@keyframes cta-glow-sweep {
+	@keyframes neural-glow-sweep {
 		0% {
 			left: -100%;
 		}
@@ -484,25 +513,9 @@
 		}
 	}
 
-	.cta-text {
+	/* Ensure text is above the glow sweep */
+	:global(.neural-cta-wrapper .aug-button) {
 		position: relative;
-		z-index: 1;
-		display: inline-block;
-	}
-
-	.ellipsis {
-		display: inline-block;
-		animation: ellipsis-pulse 1.5s steps(4) infinite;
-	}
-
-	@keyframes ellipsis-pulse {
-		0%,
-		100% {
-			opacity: 0;
-		}
-		50% {
-			opacity: 1;
-		}
 	}
 
 	/* ============================================
@@ -510,8 +523,6 @@
 	   ============================================ */
 
 	@media (max-width: 768px) {
-
-
 		.fragment-container {
 			max-width: 95%;
 			min-height: 200px;
@@ -526,17 +537,14 @@
 			font-size: var(--text-base, 1rem);
 		}
 
-		.neural-cta {
+		:global(.neural-cta-wrapper .aug-button) {
 			padding: var(--space-sm, 0.5rem) var(--space-lg, 1.5rem);
 			font-size: var(--text-sm, 0.875rem);
 			min-height: 44px; /* Ensure touch target size */
 		}
-
 	}
 
 	@media (max-width: 450px) or (max-height: 667px) {
-		
-
 		.fragment-container {
 			min-height: 100px;
 			max-width: 98%;
@@ -548,8 +556,6 @@
 			padding: var(--space-sm, 0.5rem) var(--space-md, 1rem);
 		}
 
-	
-
 		.fragment-data {
 			font-size: var(--text-sm, 0.875rem);
 			line-height: var(--line-height-base, 1.5);
@@ -559,7 +565,7 @@
 			font-size: 0.625rem;
 		}
 
-		.neural-cta {
+		:global(.neural-cta-wrapper .aug-button) {
 			padding: var(--space-xs, 0.25rem) var(--space-md, 1rem);
 			font-size: var(--text-xs, 0.75rem);
 			min-height: 44px; /* Ensure touch target size */
@@ -573,12 +579,14 @@
 	   ============================================ */
 
 	@media (prefers-reduced-motion: reduce) {
-	
 		.bio-pulse::before,
 		.bio-pulse::after,
-		.corruption-overlay,
-		.cta-glow,
-		.ellipsis {
+		.corruption-overlay {
+			animation: none !important;
+		}
+
+		/* Disable neural glow sweep animation */
+		:global(.neural-cta-wrapper .aug-button)::before {
 			animation: none !important;
 		}
 
@@ -614,7 +622,7 @@
 			opacity: 1 !important;
 		}
 
-		.neural-cta:hover:not(:disabled) {
+		:global(.neural-cta-wrapper .aug-button:hover:not(:disabled)) {
 			transform: none;
 		}
 	}

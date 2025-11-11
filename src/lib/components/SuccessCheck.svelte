@@ -2,7 +2,7 @@
 	import { rollDice } from '../stores/diceStore.svelte.js';
 	import { gameState } from '../stores/gameStore.svelte.js';
 	import { startRound, successCheck } from '../stores/gameActions.svelte.js';
-	import AugmentedButton from './AugmentedButton.svelte';
+	import ContinueButton from './ContinueButton.svelte';
 
 	let rolling = $state(false);
 	let result = $state();
@@ -39,7 +39,12 @@
 
 <div class="dc-success-check-container">
 	<div class="dc-dice-roller-header dc-header">
-		<AugmentedButton text={header} onclick={doCheck} disabled={rolling} class="dc-fade-in" />
+		<ContinueButton
+			text={header}
+			onclick={doCheck}
+			disabled={rolling}
+			testid="success-check-button"
+		/>
 	</div>
 </div>
 

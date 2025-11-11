@@ -13,8 +13,7 @@
 	import DrawCard from './DrawCard.svelte';
 	import FailureCheck from './FailureCheck.svelte';
 	import StatusDisplay from './StatusDisplay.svelte';
-	import Toolbar from './Toolbar.svelte';
-	import AugmentedButton from './AugmentedButton.svelte';
+	import ContinueButton from './ContinueButton.svelte';
 
 	let {
 		systemSettings = {},
@@ -38,27 +37,41 @@
 </script>
 
 {#if currentScreen == 'loadGame'}
-	<div class="dc-game-bg" data-testid="screen-loadGame" transition:fade={{ duration: TRANSITION_DURATION }}>
+	<div
+		class="dc-game-bg"
+		data-testid="screen-loadGame"
+		transition:fade={{ duration: TRANSITION_DURATION }}
+	>
 		<LoadScreen />
 	</div>
 {:else if currentScreen == 'options'}
-	<div class="dc-game-bg" data-testid="screen-options" transition:fade={{ duration: TRANSITION_DURATION }}>
+	<div
+		class="dc-game-bg"
+		data-testid="screen-options"
+		transition:fade={{ duration: TRANSITION_DURATION }}
+	>
 		<OptionsScreen {systemSettings} />
 	</div>
 {:else if currentScreen == 'intro'}
-	<div class="dc-game-bg dc-intro-wrapper" data-testid="screen-intro" transition:fade={{ duration: TRANSITION_DURATION }}>
+	<div
+		class="dc-game-bg dc-intro-wrapper"
+		data-testid="screen-intro"
+		transition:fade={{ duration: TRANSITION_DURATION }}
+	>
 		<IntroScreen />
 	</div>
 {:else if currentScreen == 'gameOver'}
-	<div class="dc-fade-in dc-screen-container" data-testid="screen-gameOver" transition:fade={{ duration: TRANSITION_DURATION }}>
+	<div
+		class="dc-fade-in dc-screen-container"
+		data-testid="screen-gameOver"
+		transition:fade={{ duration: TRANSITION_DURATION }}
+	>
 		<GameOver />
 	</div>
-{:else if currentScreen == 'finalLog' || currentScreen == 'log'}
-	<div class="dc-fade-in dc-screen-container dc-journal-screen" data-testid="screen-journal" transition:fade={{ duration: TRANSITION_DURATION }}>
-		<JournalEntry {onjournalsaved} />
-	</div>
 {:else if currentScreen == 'exitGame'}
-	<div data-testid="screen-exitGame" transition:fade={{ duration: TRANSITION_DURATION }}>Game Exited</div>
+	<div data-testid="screen-exitGame" transition:fade={{ duration: TRANSITION_DURATION }}>
+		Game Exited
+	</div>
 {:else}
 	<div class="game-screen dc-game-bg">
 		<!-- Dice Box Background Layer - fills entire viewport -->
@@ -66,43 +79,71 @@
 
 		<!-- UI Content Layer - on top of dice -->
 		<div class="ui-content-layer">
-			<div class="toolbar-area">
+			<!-- <div class="toolbar-area">
 				<Toolbar />
-			</div>
+			</div> -->
 			<div class="status-display-area dc-fade-in" data-testid="status-display">
-				{#if currentScreen != 'log' && currentScreen != 'finalLog'}
-					<StatusDisplay />
-				{/if}
+				<StatusDisplay />
 			</div>
 			<div class="main-screen-area dc-table-bg">
+				{#key currentScreen}
 				{#if currentScreen == 'startRound'}
-					<div class="dc-fade-in dc-screen-container" data-testid="screen-startRound" transition:fade={{ duration: TRANSITION_DURATION }}>
+					<div
+						class="dc-fade-in dc-screen-container"
+						data-testid="screen-startRound"
+						transition:fade={{ duration: TRANSITION_DURATION }}
+					>
 						<h4>Round {gameState.round}</h4>
-						<AugmentedButton
+						<ContinueButton
 							text="Roll for tasks"
 							onclick={() => transitionTo('rollForTasks')}
 							testid="start-round-button"
 						/>
 					</div>
 				{:else if currentScreen == 'rollForTasks'}
-					<div class="dc-fade-in dc-screen-container" data-testid="screen-rollForTasks" transition:fade={{ duration: TRANSITION_DURATION }}>
+					<div
+						class="dc-fade-in dc-screen-container"
+						data-testid="screen-rollForTasks"
+						transition:fade={{ duration: TRANSITION_DURATION }}
+					>
 						<RollForTasks />
 					</div>
 				{:else if currentScreen == 'drawCard'}
-					<div class="dc-fade-in dc-screen-container" data-testid="screen-drawCard" transition:fade={{ duration: TRANSITION_DURATION }}>
+					<div
+						class="dc-fade-in dc-screen-container"
+						data-testid="screen-drawCard"
+						transition:fade={{ duration: TRANSITION_DURATION }}
+					>
 						<DrawCard />
 					</div>
 				{:else if currentScreen == 'failureCheck'}
-					<div class="dc-fade-in dc-screen-container" data-testid="screen-failureCheck" transition:fade={{ duration: TRANSITION_DURATION }}>
+					<div
+						class="dc-fade-in dc-screen-container"
+						data-testid="screen-failureCheck"
+						transition:fade={{ duration: TRANSITION_DURATION }}
+					>
 						<FailureCheck {onfailurecheckcompleted} />
 					</div>
 				{:else if currentScreen == 'successCheck'}
-					<div class="dc-fade-in dc-screen-container" data-testid="screen-successCheck" transition:fade={{ duration: TRANSITION_DURATION }}>
+					<div
+						class="dc-fade-in dc-screen-container"
+						data-testid="screen-successCheck"
+						transition:fade={{ duration: TRANSITION_DURATION }}
+					>
 						<SuccessCheck />
+					</div>
+				{:else if currentScreen == 'finalLog' || currentScreen == 'log'}
+					<div
+						class="dc-fade-in dc-screen-container dc-journal-screen"
+						data-testid="screen-journal"
+						transition:fade={{ duration: TRANSITION_DURATION }}
+					>
+						<JournalEntry {onjournalsaved} />
 					</div>
 				{:else}
 					<div transition:fade={{ duration: TRANSITION_DURATION }}>error: {currentScreen}</div>
 				{/if}
+				{/key}
 			</div>
 		</div>
 	</div>
@@ -166,13 +207,6 @@
 	.ui-content-layer > * {
 		pointer-events: auto;
 	}
-
-	.toolbar-area {
-		grid-area: toolbar-area;
-		padding-inline: 0.25rem;
-		min-width: 0; /* CRITICAL: Allow grid area to shrink */
-	}
-
 	.main-screen-area {
 		grid-area: main-screen-area;
 		width: 100%;
@@ -214,12 +248,14 @@
 		position: relative;
 		width: 100%;
 		height: 100%;
-		overflow: hidden;
+		overflow-y: auto; /* Allow scrolling if content overflows */
+		overflow-x: hidden;
 	}
 
 	.dc-journal-screen :global(.dc-journal-container) {
 		position: relative;
 		z-index: 1;
+		height: 100%; /* Fill available space */
 	}
 
 	@media (max-width: 450px) or (max-height: 600px) {

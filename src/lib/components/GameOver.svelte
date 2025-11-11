@@ -1,6 +1,6 @@
 <script>
 	import { gameState, transitionTo } from '../stores/gameStore.svelte.js';
-	import AugmentedButton from './AugmentedButton.svelte';
+	import ContinueButton from './ContinueButton.svelte';
 </script>
 
 <div class="dc-game-over-container">
@@ -13,7 +13,11 @@
 		{/if}
 	</div>
 	<div class="dc-game-over-toolbar">
-		<AugmentedButton text="record your final log" onclick={() => transitionTo('finalLog')} />
+		<ContinueButton
+			text="record your final log"
+			onclick={() => transitionTo('finalLog')}
+			testid="game-over-final-log-button"
+		/>
 	</div>
 </div>
 

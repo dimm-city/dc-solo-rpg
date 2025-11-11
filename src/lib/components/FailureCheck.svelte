@@ -6,7 +6,7 @@
 		applyFailureCheckResult,
 		confirmFailureCheck
 	} from '../stores/gameActions.svelte.js';
-	import AugmentedButton from './AugmentedButton.svelte';
+	import ContinueButton from './ContinueButton.svelte';
 
 	let { onfailurecheckcompleted = () => {} } = $props();
 
@@ -61,7 +61,12 @@
 		</div>
 	{/if}
 	<div class="dc-dice-roller-header dc-header">
-		<AugmentedButton text={header} onclick={doCheck} disabled={rolling} class="dc-fade-in" />
+		<ContinueButton
+			text={header}
+			onclick={doCheck}
+			disabled={rolling}
+			testid="failure-check-button"
+		/>
 	</div>
 </div>
 
