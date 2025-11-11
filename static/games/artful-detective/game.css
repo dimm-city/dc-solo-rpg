@@ -42,13 +42,13 @@
 		radial-gradient(circle at 20% 80%, rgba(217, 70, 239, 0.03) 0%, transparent 50%),
 		radial-gradient(circle at 80% 20%, rgba(255, 215, 0, 0.02) 0%, transparent 50%),
 		/* Subtle grid suggesting detective's evidence board */
-		repeating-linear-gradient(
-			0deg,
-			transparent,
-			transparent 40px,
-			rgba(217, 70, 239, 0.03) 40px,
-			rgba(217, 70, 239, 0.03) 41px
-		),
+			repeating-linear-gradient(
+				0deg,
+				transparent,
+				transparent 40px,
+				rgba(217, 70, 239, 0.03) 40px,
+				rgba(217, 70, 239, 0.03) 41px
+			),
 		repeating-linear-gradient(
 			90deg,
 			transparent,
@@ -78,8 +78,13 @@
 }
 
 @keyframes subtle-pulse {
-	0%, 100% { opacity: 0.3; }
-	50% { opacity: 0.5; }
+	0%,
+	100% {
+		opacity: 0.3;
+	}
+	50% {
+		opacity: 0.5;
+	}
 }
 
 /* Respect reduced motion preference */

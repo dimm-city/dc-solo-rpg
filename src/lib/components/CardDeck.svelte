@@ -1,129 +1,43 @@
 <script>
-	import { createEventDispatcher, onMount, onDestroy } from 'svelte';
-	import { gameStore } from '../stores/WAAStore.js';
+	import { onMount, onDestroy } from 'svelte';
 	import { sleep } from '../utils/timing.js';
+	import { logger } from '../utils/logger.js';
+	import ContinueButton from './ContinueButton.svelte';
 
-	export let card = null;
+	let { card = $bindable(null), onrequestcard = () => {}, onconfirmcard = () => {} } = $props();
 
-	const dispatch = createEventDispatcher();
-	let animationStage = 'idle'; // 'idle', 'anticipating', 'materializing', 'revealed', 'dismissing'
-	let canvas;
-	let ctx;
-	let particles = [];
-	let animationFrameId;
-	let gridPulsePhase = 0;
+	let animationStage = $state('idle'); // 'idle', 'anticipating', 'materializing', 'revealed', 'dismissing'
+	let canvas = $state();
+	let ctx = $state();
+	let particles = $state([]);
+	let animationFrameId = $state();
+	let gridPulsePhase = $state(0);
 
-	/**
-	 * Particle class for data fragment effect
-	 */
-	class Particle {
-		constructor(x, y) {
-			this.x = x;
-			this.y = y;
-			this.vx = (Math.random() - 0.5) * 2;
-			this.vy = (Math.random() - 0.5) * 2;
-			this.life = 1.0;
-			this.size = Math.random() * 2 + 1;
-			this.color = Math.random() > 0.5 ? '#00ffff' : '#d946ef';
-			this.rushToCenter = false;
-		}
+	// Derived state for button text
+	let buttonText = $derived.by(() => {
+		if (animationStage === 'idle') return 'PROCEED TO NEXT BYTE';
+		if (animationStage === 'anticipating' || animationStage === 'materializing')
+			return 'LOADING...';
+		if (animationStage === 'revealed') return 'CONTINUE';
+		return 'UPLOADING...';
+	});
 
-		update(centerX, centerY) {
-			if (this.rushToCenter) {
-				// Rush to center during materialization
-				const dx = centerX - this.x;
-				const dy = centerY - this.y;
-				const dist = Math.sqrt(dx * dx + dy * dy);
-
-				if (dist > 5) {
-					this.vx = (dx / dist) * 8;
-					this.vy = (dy / dist) * 8;
-				} else {
-					this.life -= 0.05; // Fade out when reaching center
-				}
-			}
-
-			this.x += this.vx;
-			this.y += this.vy;
-			this.life -= animationStage === 'materializing' ? 0.02 : 0.01;
-
-			if (!this.rushToCenter) {
-				this.vy += 0.05; // Gentle float upward
-
-				// Wrap around edges
-				if (this.x < 0) this.x = canvas.width;
-				if (this.x > canvas.width) this.x = 0;
-				if (this.y > canvas.height) this.y = 0;
-			}
-		}
-
-		draw(ctx) {
-			ctx.save();
-			ctx.globalAlpha = this.life * 0.6;
-			ctx.fillStyle = this.color;
-			ctx.shadowBlur = 10;
-			ctx.shadowColor = this.color;
-			ctx.fillRect(this.x, this.y, this.size, this.size);
-			ctx.restore();
-		}
-	}
+	// Derived state for button disabled condition
+	let isButtonDisabled = $derived(
+		animationStage === 'anticipating' ||
+			animationStage === 'materializing' ||
+			animationStage === 'dismissing'
+	);
 
 	/**
-	 * Animate particle field with dynamic behavior based on stage
+	 * Handle proceed button click - request card draw and start animation
 	 */
-	function animateParticles() {
-		if (!ctx || !canvas) return;
-
-		ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-		const centerX = canvas.width / 2;
-		const centerY = canvas.height / 2;
-
-		// Update and filter particles
-		particles = particles.filter(p => p.life > 0);
-		particles.forEach(p => {
-			p.update(centerX, centerY);
-			p.draw(ctx);
-		});
-
-		// Spawn particles based on stage
-		const maxParticles = window.innerWidth < 768 ? 20 : 50;
-		let spawnRate = 0.1;
-
-		if (animationStage === 'anticipating') {
-			spawnRate = 0.3;
-		} else if (animationStage === 'materializing') {
-			spawnRate = 0.5;
-			// Mark particles to rush to center
-			particles.forEach(p => {
-				if (!p.rushToCenter) {
-					p.rushToCenter = true;
-				}
-			});
-		}
-
-		if (particles.length < maxParticles && Math.random() < spawnRate) {
-			particles.push(new Particle(
-				Math.random() * canvas.width,
-				Math.random() * canvas.height
-			));
-		}
-
-		// Update grid pulse phase
-		gridPulsePhase += animationStage === 'anticipating' ? 0.05 : 0.02;
-
-		animationFrameId = requestAnimationFrame(animateParticles);
-	}
-
-	/**
-	 * Handle intercept button click - request card draw and start animation
-	 */
-	async function onIntercept() {
+	async function onProceed() {
 		if (animationStage !== 'idle') return;
 
 		try {
 			// Request a new card from the parent
-			dispatch('requestcard');
+			onrequestcard();
 
 			// Anticipation phase - grid accelerates
 			animationStage = 'anticipating';
@@ -137,20 +51,19 @@
 			}
 
 			if (!card) {
-				console.error('Card was not provided in time');
+				logger.error('Card was not provided in time');
 				animationStage = 'idle';
 				return;
 			}
 
-			// Materialization phase - fragment appears with glitch
+			// Materialization phase - byte appears with glitch
 			animationStage = 'materializing';
 			await sleep(1000);
 
 			// Revealed phase - stable display
 			animationStage = 'revealed';
-
 		} catch (error) {
-			console.error('Intercept failed:', error);
+			logger.error('Proceed to byte failed:', error);
 			animationStage = 'idle';
 		}
 	}
@@ -165,7 +78,7 @@
 		await sleep(600);
 
 		// Notify parent that card was confirmed
-		dispatch('confirmcard', { card });
+		onconfirmcard();
 
 		// Reset state
 		animationStage = 'idle';
@@ -176,9 +89,9 @@
 	/**
 	 * Handle button click based on current stage
 	 */
-	async function onButtonClick() {
+	export async function onButtonClick() {
 		if (animationStage === 'idle') {
-			await onIntercept();
+			await onProceed();
 		} else if (animationStage === 'revealed') {
 			await onDismiss();
 		}
@@ -225,8 +138,8 @@
 			};
 			window.addEventListener('resize', handleResize);
 
-			// Start animation loop
-			animateParticles();
+			// // Start animation loop
+			// animateParticles();
 
 			return () => {
 				window.removeEventListener('resize', handleResize);
@@ -241,157 +154,72 @@
 	});
 </script>
 
-<div class="neural-interface" class:active={animationStage !== 'idle'}>
-	<!-- Particle field canvas -->
-	<canvas class="particle-field" bind:this={canvas} aria-hidden="true"></canvas>
-
-	<!-- Scan grid background -->
+<div class="dc-card-deck" class:active={animationStage !== 'idle'}>
+	<!-- Byte container -->
 	<div
-		class="scan-grid"
-		class:accelerating={animationStage === 'anticipating'}
-		aria-hidden="true"
-	></div>
-
-	<!-- Fragment container -->
-	<div
-		class="fragment-container"
+		class="byte-container"
 		class:materializing={animationStage === 'materializing'}
 		class:revealed={animationStage === 'revealed'}
 		class:dismissing={animationStage === 'dismissing'}
+		data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
 	>
 		{#if animationStage !== 'idle' && animationStage !== 'anticipating'}
-			<div class="fragment-shell">
+			<div class="byte-shell">
 				<!-- Bio-pulse rings -->
 				<div class="bio-pulse" aria-hidden="true"></div>
 
 				<!-- Corruption overlay for glitch effect -->
 				<div class="corruption-overlay" aria-hidden="true"></div>
 
-				<!-- Fragment content -->
+				<!-- Byte content -->
 				{#if card}
-					<div class="fragment-content">
-						<p class="fragment-data">{card.description || ''}</p>
-						<small class="fragment-id">
-							FRAGMENT-{card.card}-{card.suit?.slice(0,3).toUpperCase() || 'UNK'}
+					<div class="byte-content">
+						<p class="byte-data">{card.description || ''}</p>
+						<small class="byte-id">
+							BYTE-{card.card}-{card.suit?.slice(0, 3).toUpperCase() || 'UNK'}
 						</small>
 					</div>
 				{/if}
 			</div>
 		{/if}
 	</div>
-
-	<!-- Neural CTA button -->
-	<button
-		class="neural-cta"
-		on:click={onButtonClick}
-		disabled={animationStage === 'anticipating' || animationStage === 'materializing' || animationStage === 'dismissing'}
-		type="button"
-	>
-		<span class="cta-glow" aria-hidden="true"></span>
-		<span class="cta-text">
-			{#if animationStage === 'idle'}
-				INTERCEPT FRAGMENT
-			{:else if animationStage === 'anticipating' || animationStage === 'materializing'}
-				INTERCEPTING<span class="ellipsis">...</span>
-			{:else if animationStage === 'revealed'}
-				CONTINUE
-			{:else}
-				UPLOADING...
-			{/if}
-		</span>
-	</button>
+	<div class="dc-dice-roller-header dc-header">
+		<!-- Neural CTA button -->
+		<ContinueButton
+			text={buttonText}
+			onclick={onButtonClick}
+			disabled={isButtonDisabled}
+			testid="card-deck-button"
+			class="neural-cta-wrapper"
+		/>
+	</div>
 </div>
 
 <style>
 	/* ============================================
-	   NEURAL INTERFACE - CONTAINER
+	   CARD DECK CONTAINER
 	   ============================================ */
 
-	.neural-interface {
-		position: relative;
+	.dc-card-deck {
+		display: grid;
+		grid-template-rows: 1fr auto;
 		width: 100%;
 		height: 100%;
-		min-height: 500px;
-		display: flex;
-		flex-direction: column;
 		align-items: center;
-		justify-content: center;
-		gap: var(--space-xl, 2rem);
-		overflow: visible; /* Allow button glows and effects to extend beyond bounds */
-		background: var(--color-bg-darker, #000);
+		justify-items: center;
+		gap: 1rem;
 	}
 
 	/* ============================================
-	   PARTICLE FIELD - CANVAS LAYER
+	   BYTE CONTAINER
 	   ============================================ */
 
-	.particle-field {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		pointer-events: none;
-		z-index: 1;
-	}
-
-	/* ============================================
-	   SCAN GRID - ANIMATED BACKGROUND
-	   ============================================ */
-
-	.scan-grid {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		background-image:
-			linear-gradient(0deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px),
-			linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
-		background-size: 40px 40px;
-		animation: grid-pulse 4s ease-in-out infinite;
-		z-index: 0;
-	}
-
-	.scan-grid.accelerating {
-		animation: grid-accelerate 0.8s ease-in-out;
-	}
-
-	@keyframes grid-pulse {
-		0%, 100% {
-			opacity: 0.3;
-			background-size: 40px 40px;
-		}
-		50% {
-			opacity: 0.5;
-			background-size: 42px 42px;
-		}
-	}
-
-	@keyframes grid-accelerate {
-		0% {
-			background-size: 40px 40px;
-			opacity: 0.3;
-		}
-		50% {
-			background-size: 30px 30px;
-			opacity: 0.7;
-		}
-		100% {
-			background-size: 40px 40px;
-			opacity: 0.5;
-		}
-	}
-
-	/* ============================================
-	   FRAGMENT CONTAINER
-	   ============================================ */
-
-	.fragment-container {
+	.byte-container {
 		position: relative;
-		width: 90%;
-		max-width: 500px;
-		min-height: 300px;
+		width: 95%;
+		max-width: 900px;
+		height: 100%;
+		min-height: 400px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -399,22 +227,30 @@
 		opacity: 0;
 		transform: scale(0.8);
 		transition: none;
+
+		/* Augmented UI Configuration */
+		--aug-border-all: 2px;
+		--aug-border-bg: linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta));
+		--aug-tl: 16px;
+		--aug-tr: 16px;
+		--aug-br: 16px;
+		--aug-bl: 16px;
 	}
 
-	.fragment-container.materializing {
-		animation: fragment-materialize 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+	.byte-container.materializing {
+		animation: byte-materialize 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 	}
 
-	.fragment-container.revealed {
+	.byte-container.revealed {
 		opacity: 1;
 		transform: scale(1);
 	}
 
-	.fragment-container.dismissing {
-		animation: fragment-dismiss 600ms cubic-bezier(0.4, 0.0, 1, 1) forwards;
+	.byte-container.dismissing {
+		animation: byte-dismiss 600ms cubic-bezier(0.4, 0, 1, 1) forwards;
 	}
 
-	@keyframes fragment-materialize {
+	@keyframes byte-materialize {
 		0% {
 			opacity: 0;
 			transform: scale(0.8) rotateX(20deg);
@@ -432,7 +268,7 @@
 		}
 	}
 
-	@keyframes fragment-dismiss {
+	@keyframes byte-dismiss {
 		0% {
 			opacity: 1;
 			transform: translateY(0) scale(1);
@@ -445,34 +281,30 @@
 	}
 
 	/* ============================================
-	   FRAGMENT SHELL - MAIN CARD
+	   BYTE SHELL - MAIN CARD
 	   ============================================ */
 
-	.fragment-shell {
+	.byte-shell {
 		position: relative;
 		width: 100%;
-		min-height: 300px;
+		height: 100%;
+		min-height: 400px;
 		padding: var(--space-xl, 2rem);
-		background: linear-gradient(135deg,
-			rgba(10, 10, 10, 0.95) 0%,
-			rgba(26, 26, 26, 0.9) 50%,
-			rgba(10, 10, 10, 0.95) 100%
-		);
-		border: 2px solid var(--color-neon-cyan, #00ffff);
-		border-radius: 8px;
-		box-shadow:
-			0 0 20px rgba(0, 255, 255, 0.3),
-			0 0 40px rgba(217, 70, 239, 0.2),
-			inset 0 0 30px rgba(0, 255, 255, 0.05);
+
+		/* Remove border/box-shadow since augmented-ui handles it on parent */
+		background: linear-gradient(135deg, rgba(10, 10, 20, 0.8), rgba(15, 15, 25, 0.7));
+		backdrop-filter: blur(10px) saturate(150%);
+		-webkit-backdrop-filter: blur(10px) saturate(150%);
 		overflow: hidden;
 	}
 
-	.fragment-container.materializing .fragment-shell {
+	.byte-container.materializing .byte-shell {
 		animation: glitch-effect 200ms steps(2) 3;
 	}
 
 	@keyframes glitch-effect {
-		0%, 100% {
+		0%,
+		100% {
 			transform: translate(0);
 			filter: hue-rotate(0deg);
 		}
@@ -565,10 +397,10 @@
 	}
 
 	/* ============================================
-	   FRAGMENT CONTENT
+	   BYTE CONTENT
 	   ============================================ */
 
-	.fragment-content {
+	.byte-content {
 		position: relative;
 		z-index: 2;
 		display: flex;
@@ -577,7 +409,7 @@
 		color: var(--color-text-primary, #fff);
 	}
 
-	.fragment-data {
+	.byte-data {
 		font-family: var(--font-body, 'Inter', sans-serif);
 		font-size: var(--text-lg, 1.125rem);
 		line-height: var(--line-height-relaxed, 1.75);
@@ -587,7 +419,7 @@
 		animation: text-materialize 800ms ease-out 200ms forwards;
 	}
 
-	.fragment-id {
+	.byte-id {
 		font-family: var(--font-display, 'Orbitron', monospace);
 		font-size: var(--text-xs, 0.75rem);
 		letter-spacing: var(--letter-spacing-wider, 0.1em);
@@ -612,64 +444,76 @@
 
 	/* ============================================
 	   NEURAL CTA BUTTON
+	   Override ContinueButton/AugmentedButton styling for cyberpunk aesthetic
 	   ============================================ */
 
-	.neural-cta {
+	/* Wrapper positioning and z-index */
+	:global(.neural-cta-wrapper) {
+		z-index: 3;
+	}
+
+	/* Override the AugmentedButton wrapper glow with neural styling */
+	:global(.neural-cta-wrapper .aug-button-wrapper) {
+		/* Enhanced cyberpunk glow */
+		filter: drop-shadow(0 4px 15px rgba(217, 70, 239, 0.4))
+			drop-shadow(0 0 20px rgba(0, 255, 255, 0.3));
+		transition: all 0.3s ease;
+	}
+
+	:global(.neural-cta-wrapper .aug-button-wrapper:hover) {
+		filter: drop-shadow(0 6px 25px rgba(217, 70, 239, 0.6))
+			drop-shadow(0 0 30px rgba(0, 255, 255, 0.5));
+	}
+
+	/* Override the button itself with neural gradient */
+	:global(.neural-cta-wrapper .aug-button) {
 		position: relative;
 		padding: var(--space-md, 1rem) var(--space-xl, 2rem);
-		background: linear-gradient(135deg,
+		background: linear-gradient(
+			135deg,
 			var(--color-cyber-magenta, #d946ef) 0%,
 			var(--color-neon-cyan, #00ffff) 100%
 		);
-		border: none;
-		border-radius: 4px;
-		font-family: var(--font-display, 'Orbitron', sans-serif);
-		font-size: var(--text-base, 1rem);
-		font-weight: 700;
-		letter-spacing: var(--letter-spacing-wide, 0.05em);
 		color: var(--color-text-primary, #fff);
-		text-transform: uppercase;
-		cursor: pointer;
-		z-index: 3;
+		font-size: var(--text-base, 1rem);
 		overflow: hidden;
-		transition: all 0.3s ease;
 		box-shadow:
-			0 4px 15px rgba(217, 70, 239, 0.4),
-			0 0 20px rgba(0, 255, 255, 0.3);
+			inset 0 0 20px rgba(0, 255, 255, 0.1),
+			0 0 15px rgba(217, 70, 239, 0.2);
 	}
 
-	.neural-cta:hover:not(:disabled) {
+	:global(.neural-cta-wrapper .aug-button:hover:not(:disabled)) {
 		transform: translateY(-2px);
 		box-shadow:
-			0 6px 25px rgba(217, 70, 239, 0.6),
-			0 0 30px rgba(0, 255, 255, 0.5);
+			inset 0 0 30px rgba(0, 255, 255, 0.15),
+			0 0 25px rgba(217, 70, 239, 0.3);
 	}
 
-	.neural-cta:active:not(:disabled) {
+	:global(.neural-cta-wrapper .aug-button:active:not(:disabled)) {
 		transform: translateY(0);
 	}
 
-	.neural-cta:disabled {
+	:global(.neural-cta-wrapper .aug-button:disabled) {
 		opacity: 0.6;
 		cursor: not-allowed;
+		filter: grayscale(0.3);
 	}
 
-	.cta-glow {
+	/* Add glow sweep animation effect */
+	:global(.neural-cta-wrapper .aug-button)::before {
+		content: '';
 		position: absolute;
 		top: 0;
 		left: -100%;
 		width: 100%;
 		height: 100%;
-		background: linear-gradient(
-			90deg,
-			transparent,
-			rgba(255, 255, 255, 0.3),
-			transparent
-		);
-		animation: cta-glow-sweep 2s ease-in-out infinite;
+		background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+		animation: neural-glow-sweep 2s ease-in-out infinite;
+		pointer-events: none;
+		z-index: 1;
 	}
 
-	@keyframes cta-glow-sweep {
+	@keyframes neural-glow-sweep {
 		0% {
 			left: -100%;
 		}
@@ -678,24 +522,9 @@
 		}
 	}
 
-	.cta-text {
+	/* Ensure text is above the glow sweep */
+	:global(.neural-cta-wrapper .aug-button) {
 		position: relative;
-		z-index: 1;
-		display: inline-block;
-	}
-
-	.ellipsis {
-		display: inline-block;
-		animation: ellipsis-pulse 1.5s steps(4) infinite;
-	}
-
-	@keyframes ellipsis-pulse {
-		0%, 100% {
-			opacity: 0;
-		}
-		50% {
-			opacity: 1;
-		}
 	}
 
 	/* ============================================
@@ -703,51 +532,64 @@
 	   ============================================ */
 
 	@media (max-width: 768px) {
-		.neural-interface {
-			min-height: 400px;
-			gap: var(--space-lg, 1.5rem);
-		}
-
-		.fragment-container {
+		.byte-container {
+			width: 95%;
 			max-width: 95%;
-			min-height: 250px;
+			min-height: 350px;
+			--aug-tl: 12px;
+			--aug-tr: 12px;
+			--aug-br: 12px;
+			--aug-bl: 12px;
 		}
 
-		.fragment-shell {
-			min-height: 250px;
+		.byte-shell {
+			min-height: 350px;
 			padding: var(--space-lg, 1.5rem);
 		}
 
-		.fragment-data {
+		.byte-data {
 			font-size: var(--text-base, 1rem);
 		}
 
-		.neural-cta {
+		:global(.neural-cta-wrapper .aug-button) {
 			padding: var(--space-sm, 0.5rem) var(--space-lg, 1.5rem);
 			font-size: var(--text-sm, 0.875rem);
-		}
-
-		.scan-grid {
-			background-size: 30px 30px;
+			min-height: 44px; /* Ensure touch target size */
 		}
 	}
 
-	@media (max-width: 450px) {
-		.neural-interface {
-			min-height: 350px;
+	@media (max-width: 450px) or (max-height: 667px) {
+		.byte-container {
+			min-height: 250px;
+			width: 98%;
+			max-width: 98%;
+			margin: 0;
+			--aug-tl: 8px;
+			--aug-tr: 8px;
+			--aug-br: 8px;
+			--aug-bl: 8px;
 		}
 
-		.fragment-container {
-			min-height: 220px;
-		}
-
-		.fragment-shell {
-			min-height: 220px;
+		.byte-shell {
+			min-height: 250px;
 			padding: var(--space-md, 1rem);
 		}
 
-		.scan-grid {
-			background-size: 25px 25px;
+		.byte-data {
+			font-size: var(--text-sm, 0.875rem);
+			line-height: var(--line-height-base, 1.5);
+		}
+
+		.byte-id {
+			font-size: 0.625rem;
+		}
+
+		:global(.neural-cta-wrapper .aug-button) {
+			padding: var(--space-xs, 0.25rem) var(--space-md, 1rem);
+			font-size: var(--text-xs, 0.75rem);
+			min-height: 44px; /* Ensure touch target size */
+			min-width: 44px;
+			flex-shrink: 0; /* Prevent button from shrinking */
 		}
 	}
 
@@ -756,24 +598,26 @@
 	   ============================================ */
 
 	@media (prefers-reduced-motion: reduce) {
-		.scan-grid,
 		.bio-pulse::before,
 		.bio-pulse::after,
-		.corruption-overlay,
-		.cta-glow,
-		.ellipsis {
+		.corruption-overlay {
 			animation: none !important;
 		}
 
-		.fragment-container.materializing {
-			animation: fragment-materialize-reduced 300ms ease forwards;
+		/* Disable neural glow sweep animation */
+		:global(.neural-cta-wrapper .aug-button)::before {
+			animation: none !important;
 		}
 
-		.fragment-container.dismissing {
-			animation: fragment-dismiss-reduced 200ms ease forwards;
+		.byte-container.materializing {
+			animation: byte-materialize-reduced 300ms ease forwards;
 		}
 
-		@keyframes fragment-materialize-reduced {
+		.byte-container.dismissing {
+			animation: byte-dismiss-reduced 200ms ease forwards;
+		}
+
+		@keyframes byte-materialize-reduced {
 			from {
 				opacity: 0;
 			}
@@ -782,7 +626,7 @@
 			}
 		}
 
-		@keyframes fragment-dismiss-reduced {
+		@keyframes byte-dismiss-reduced {
 			from {
 				opacity: 1;
 			}
@@ -791,13 +635,13 @@
 			}
 		}
 
-		.fragment-data,
-		.fragment-id {
+		.byte-data,
+		.byte-id {
 			animation: none !important;
 			opacity: 1 !important;
 		}
 
-		.neural-cta:hover:not(:disabled) {
+		:global(.neural-cta-wrapper .aug-button:hover:not(:disabled)) {
 			transform: none;
 		}
 	}

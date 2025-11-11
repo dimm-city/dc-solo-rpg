@@ -1,18 +1,23 @@
 <script>
-	import { nextScreen, gameStore } from '../stores/WAAStore.js';
+	import { gameState, transitionTo } from '../stores/gameStore.svelte.js';
+	import ContinueButton from './ContinueButton.svelte';
 </script>
 
 <div class="dc-game-over-container">
 	<div class="dc-game-over-header"><h1>Game Over</h1></div>
-	<div class="dc-game-over-content">		
-		{#if $gameStore.kingsRevealed == 4}
-			<p>{$gameStore.config.labels.failureCounterLoss}</p>
+	<div class="dc-game-over-content">
+		{#if gameState.kingsRevealed == 4}
+			<p>{gameState.config?.labels?.failureCounterLoss ?? 'Four kings revealed - the game is over'}</p>
 		{:else}
-			<h3>{$gameStore.status}</h3>
+			<h3>{gameState.status}</h3>
 		{/if}
 	</div>
 	<div class="dc-game-over-toolbar">
-		<button on:click={() => nextScreen('finalLog')}>record your final log</button>
+		<ContinueButton
+			text="record your final log"
+			onclick={() => transitionTo('finalLog')}
+			testid="game-over-final-log-button"
+		/>
 	</div>
 </div>
 

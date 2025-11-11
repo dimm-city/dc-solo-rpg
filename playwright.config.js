@@ -1,11 +1,62 @@
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
 const config = {
 	webServer: {
-		command: 'npm run build && npm run preview',
-		port: 4173
+		// Use dev server (separate from preview on 4173)
+		command: 'npm run dev',
+		port: 5173,
+		reuseExistingServer: !process.env.CI,
+		timeout: 120000
 	},
 	testDir: 'tests',
-	testMatch: /(.+\.)?(test|spec)\.[jt]s/
+	testMatch: /(.+\.)?(test|spec)\.[jt]s/,
+	timeout: 30000, // 30 second timeout per test
+	expect: {
+		timeout: 10000 // 10 second timeout for assertions
+	},
+	use: {
+		// Use Playwright's bundled Chromium
+		launchOptions: {
+			args: [
+				'--headless=new', // Use new headless mode (doesn't require X11)
+				'--no-sandbox',
+				'--disable-setuid-sandbox',
+				'--disable-dev-shm-usage',
+				'--disable-gpu'
+			],
+			headless: true
+		},
+		javaScriptEnabled: true,
+		viewport: { width: 1280, height: 1280 },
+		baseURL: 'http://localhost:5173',
+		screenshot: 'only-on-failure',
+		video: 'off', // Disable video to avoid ffmpeg dependency
+		trace: 'off' // Disable trace to avoid ffmpeg dependency
+	},
+	// Configure different viewport projects
+	projects: [
+		{
+			name: 'Desktop Chrome',
+			use: {
+				viewport: { width: 1280, height: 720 }
+			}
+		},
+		{
+			name: 'Mobile Chrome',
+			use: {
+				viewport: { width: 375, height: 667 },
+				isMobile: true,
+				hasTouch: true
+			}
+		},
+		{
+			name: 'Tablet',
+			use: {
+				viewport: { width: 768, height: 1024 },
+				isMobile: true,
+				hasTouch: true
+			}
+		}
+	]
 };
 
 export default config;

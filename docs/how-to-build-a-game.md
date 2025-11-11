@@ -40,11 +40,11 @@ title: Simple Example Game
 subtitle: A game used for demo purposes
 introduction: |
   # The Simple Example
-  
+
   ## Who
 
   You are a person playing a game...
-  
+
   ## What
 
   The game revolves around you playing games...
@@ -58,7 +58,7 @@ Don't worry, you will not need to understand all of the details of YAML formatti
 
 ### Updating the configuration file
 
-Every DC Solo RPG game consists of a group of files contained in a folder. So the first step to creating a game is to create a new folder on your computer to hold your game files if you haven't already. 
+Every DC Solo RPG game consists of a group of files contained in a folder. So the first step to creating a game is to create a new folder on your computer to hold your game files if you haven't already.
 
 Once you have your game folder created, and the templates extracted, you can open the `config.yml` file using a text editor of your choice (e.g., Notepad, Sublime Text, Visual Studio Code) and make any necessary edits to the configuration.
 
@@ -66,10 +66,9 @@ We recommend spending time and effort defining the introduction and adjust label
 
 After making the desired changes, save the file.
 
-
 ## Card Deck
 
-The game cards in the DC Solo RPG system are defined in a CSV file. This file contains several properties that can be used to customize the cards used throughout the game. 
+The game cards in the DC Solo RPG system are defined in a CSV file. This file contains several properties that can be used to customize the cards used throughout the game.
 
 Here are the properties that can be defined in the CSV file:
 
@@ -88,13 +87,11 @@ A,hearts,"primary-success","You find an important item that will help you..."
 
 This card triggers a primary success action in the game, allowing the player to roll for success at the end of each round.
 
-
 ### Card Actions
 
 Card actions are currently controlled by the game engine and cannot be configured via the deck.csv. However, we have included the column for future use. This will allow creators to further customize the game by adjusting actual gameplay.
 
 For now, leave this column set to the default value to ensure your game continues to work in the future. More information on these options will be include once that feature is ready.
-
 
 ### Creating the deck
 
@@ -107,8 +104,6 @@ To create your own card decks, follow these steps:
 1. Open the `deck.csv` file in a text editor or spreadsheet program.
 2. Replace the existing card description with an event that is relevant to your game.
 3. Save the modified CSV file into the same folder as your configuration file.
-
-
 
 ## Styling the Game
 
@@ -126,7 +121,6 @@ You can customize various aspects of the game's appearance, such as colors, font
 
 (Source: [Style Guide](style-guide.md))
 
-
 ## Packaging the Game
 
 To package your game to be loaded into the DC Solo RPG system, you can simply zip the files in your game folder into a zip file.
@@ -136,4 +130,3 @@ To package your game to be loaded into the DC Solo RPG system, you can simply zi
 That's it! You have now learned how to build a new game for the DC Solo RPG system. Remember to use the provided resources and examples as references, and feel free to experiment and customize to create unique and exciting games.
 
 Happy game creation!
-

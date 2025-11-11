@@ -1,28 +1,51 @@
 <script>
-	import DiceRoller from './ThreeJSDiceBoxRoller.svelte';
-	import {  gameStore, startRound, successCheck } from '../stores/WAAStore.js';
-	let diceRoller;
-	let rolling = false;
+	import { rollDice } from '../stores/diceStore.svelte.js';
+	import { gameState } from '../stores/gameStore.svelte.js';
+	import { startRound, successCheck } from '../stores/gameActions.svelte.js';
+	import ContinueButton from './ContinueButton.svelte';
+
+	let rolling = $state(false);
+	let result = $state();
+
+	// Reset state when entering successCheck screen
+	$effect(() => {
+		if (gameState.state === 'successCheck') {
+			result = undefined;
+			rolling = false;
+		}
+	});
 
 	async function doCheck() {
 		if (rolling) return;
-		if ($gameStore.state == 'successCheck') {
-			const result = await successCheck();
-			await diceRoller.roll(result);
+		if (gameState.state == 'successCheck' && !result) {
+			rolling = true;
 
-		} else {
+			// Get roll result
+			const rollResult = await successCheck();
+			result = rollResult;
+
+			// Animate the dice
+			await rollDice(rollResult);
+
+			rolling = false;
+		} else if (result) {
+			// This branch is for when user clicks "continue" after seeing result
 			await startRound();
 		}
 	}
 
-	$: header =
-		$gameStore.state == 'successCheck'
-			? $gameStore.config.labels.successCheckHeader
-			: $gameStore.config.labels.successCheckResultHeader;
+	const header = $derived(result ? 'Click to continue' : 'Roll success check');
 </script>
 
 <div class="dc-success-check-container">
-	<DiceRoller bind:this={diceRoller} bind:rolling on:click={doCheck} on:keyup={doCheck} {header} />
+	<div class="dc-dice-roller-header dc-header">
+		<ContinueButton
+			text={header}
+			onclick={doCheck}
+			disabled={rolling}
+			testid="success-check-button"
+		/>
+	</div>
 </div>
 
 <style>

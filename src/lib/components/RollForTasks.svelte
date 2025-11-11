@@ -1,45 +1,74 @@
 <script>
-	import DiceRoller from './ThreeJSDiceBoxRoller.svelte';
+	import { rollDice } from '../stores/diceStore.svelte.js';
+	import { gameState } from '../stores/gameStore.svelte.js';
+	import { confirmTaskRoll, rollForTasks } from '../stores/gameActions.svelte.js';
+	import { logger } from '../utils/logger.js';
+	import ContinueButton from './ContinueButton.svelte';
 
-	import { confirmTaskRoll, gameStore, rollForTasks } from '../stores/WAAStore.js';
+	let rolled = $state(false);
+	let rolling = $state(false);
+	let confirming = $state(false);
 
-	let taskDice;
-	let rolled = false;
-	let rolling = false;
-	let confirming = false;
+	// Reset state when entering rollForTasks screen
+	$effect(() => {
+		if (gameState.state === 'rollForTasks') {
+			rolled = false;
+			rolling = false;
+			confirming = false;
+		}
+	});
 
 	async function rollTaskDice() {
-		console.log('[RollForTasks.rollTaskDice] Called, rolling:', rolling, 'rolled:', rolled);
+		logger.debug('[RollForTasks.rollTaskDice] Called, rolling:', rolling, 'rolled:', rolled);
 		if (rolling || confirming) return;
+		rolling = true;
+
 		const result = await rollForTasks();
-		await taskDice.roll(result);
+		await rollDice(result);
+
+		rolling = false;
 		rolled = true;
-		console.log('[RollForTasks.rollTaskDice] Completed, rolled is now:', rolled);
+		logger.debug('[RollForTasks.rollTaskDice] Completed, rolled is now:', rolled);
 	}
 
 	async function confirm() {
-		console.log('[RollForTasks.confirm] Called, rolling:', rolling, 'rolled:', rolled, 'confirming:', confirming);
+		logger.debug(
+			'[RollForTasks.confirm] Called, rolling:',
+			rolling,
+			'rolled:',
+			rolled,
+			'confirming:',
+			confirming
+		);
 		if (rolling || confirming) return;
 		confirming = true;
-		// Don't reset rolled to false here - it causes rollForTasks() to be called again
-		// during the transition, overwriting the cardsToDraw value
 		await confirmTaskRoll();
 		confirming = false;
-		console.log('[RollForTasks.confirm] Completed, rolled is now:', rolled);
+		logger.debug('[RollForTasks.confirm] Completed, rolled is now:', rolled);
 	}
+
 	function action() {
-		console.log('[RollForTasks.action] Called, rolled:', rolled);
+		logger.debug('[RollForTasks.action] Called, rolled:', rolled);
 		if (rolled) confirm();
 		else rollTaskDice();
 	}
 
-	$:header = rolled ? $gameStore.config?.labels.rollForTasksResultHeader : $gameStore.config.labels.rollForTasksHeader;
+	const header = $derived(
+		rolled
+			? (gameState.config?.labels?.rollForTasksResultHeader ?? 'Result')
+			: (gameState.config?.labels?.rollForTasksHeader ?? 'Roll for Tasks')
+	);
 </script>
 
 <div class="dc-roll-tasks-container">
-	<DiceRoller bind:this={taskDice} bind:rolling on:click={action} on:keyup={action} {header}>
-		
-	</DiceRoller>
+	<div class="dc-dice-roller-header dc-header">
+		<ContinueButton
+			text={header}
+			onclick={action}
+			disabled={rolling || confirming}
+			testid="roll-tasks-button"
+		/>
+	</div>
 </div>
 
 <style>
@@ -48,5 +77,7 @@
 		height: 100%;
 		display: grid;
 		text-align: center;
+		align-items: center;
+		justify-content: center;
 	}
 </style>

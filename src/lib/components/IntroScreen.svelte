@@ -1,15 +1,19 @@
 <script>
 	import { marked } from 'marked';
-	import { nextScreen, gameStore, exitGame } from '../stores/WAAStore.js';
-	let currentView = 'rules';
-	$: backButtonText = currentView == 'intro' ? 'back' : 'exit';
-	$: nextButtonText = currentView == 'intro' ? 'start' : 'continue';
-	$: intro = marked($gameStore.config?.introduction ?? '');
+	import { gameState, transitionTo } from '../stores/gameStore.svelte.js';
+	import { exitGame } from '../stores/gameActions.svelte.js';
+	import ContinueButton from './ContinueButton.svelte';
+
+	let currentView = $state('rules');
+	const backButtonText = $derived(currentView == 'intro' ? 'back' : 'exit');
+	const nextButtonText = $derived(currentView == 'intro' ? 'start' : 'continue');
+	const intro = $derived(marked(gameState.config?.introduction ?? ''));
+
 	function next() {
 		if (currentView == 'rules') {
 			currentView = 'intro';
 		} else {
-			nextScreen('rollForTasks');
+			transitionTo('rollForTasks');
 		}
 	}
 	function back() {
@@ -88,8 +92,8 @@
 		</div>
 	{/if}
 	<div class="button-bar dc-game-bg">
-		<button on:click={back}>{backButtonText}</button>
-		<button on:click={next}>{nextButtonText}</button>
+		<ContinueButton text={backButtonText} onclick={back} testid="intro-back-button" />
+		<ContinueButton text={nextButtonText} onclick={next} testid="intro-next-button" />
 	</div>
 </div>
 
@@ -149,8 +153,13 @@
 		z-index: 10; /* Above content */
 	}
 
-	.button-bar button {
+	.button-bar :global(.aug-button-wrapper) {
 		flex: 1;
-		margin: 0;
 	}
+
+	.button-bar :global(.aug-button) {
+		width: 100%;
+	}
+
+	/* ContinueButton inherits AugmentedButton styles, so same selectors apply */
 </style>

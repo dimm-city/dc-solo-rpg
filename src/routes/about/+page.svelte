@@ -1,6 +1,6 @@
 <script>
 	/** @type {import('./$types').PageData} */
-	export let data;
+	let { data } = $props();
 </script>
 
 <article>
@@ -44,7 +44,11 @@
 	</p>
 
 	<ol>
-		<li><a href="https://github.com/dimm-city/dc-solo-rpg/raw/main/docs/templates.zip">Download the game templates</a></li>
+		<li>
+			<a href="https://github.com/dimm-city/dc-solo-rpg/raw/main/docs/templates.zip"
+				>Download the game templates</a
+			>
+		</li>
 		<li>
 			Modify the <code>config.yml</code> file that holds the game configuration, such as the title, subtitle,
 			introduction, and more.
@@ -58,7 +62,12 @@
 		</li>
 	</ol>
 
-	<p>If you would like more information about building a game, you can read the full guide here: <a href="https://github.com/dimm-city/dc-solo-rpg/blob/main/docs/how-to-build-a-game.md" target="_blank">How to build a game</a></p>
+	<p>
+		If you would like more information about building a game, you can read the full guide here: <a
+			href="https://github.com/dimm-city/dc-solo-rpg/blob/main/docs/how-to-build-a-game.md"
+			target="_blank">How to build a game</a
+		>
+	</p>
 
 	<h2>License Attribution</h2>
 
@@ -71,19 +80,20 @@
 		>).
 	</p>
 </article>
-<style>
-article {
-	padding: var(--space-lg);
-	max-width: 800px;
-	margin: 0 auto;
-}
 
-h1 {
-	margin-bottom: 1rem;
-	color: var(--accent-color);
-}
-h2 {
-	margin-top: 1.25rem;
-	color: var(--secondary-color);
-}
+<style>
+	article {
+		padding: var(--space-lg);
+		max-width: 800px;
+		margin: 0 auto;
+	}
+
+	h1 {
+		margin-bottom: 1rem;
+		color: var(--accent-color);
+	}
+	h2 {
+		margin-top: 1.25rem;
+		color: var(--secondary-color);
+	}
 </style>

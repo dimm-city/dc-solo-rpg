@@ -32,12 +32,14 @@ After extensive gameplay testing and code review, significant opportunities exis
 ### Key Findings
 
 **Strengths:**
+
 - Excellent cyberpunk visual system with cohesive color palette
 - Strong typography with lixdu display font and Orbitron backup
 - Well-structured, maintainable codebase with good design token system
 - Functional game mechanics properly implemented
 
 **Critical Gaps:**
+
 - **Atmospheric Tension**: Lacks the visceral anxiety that makes W&A games compelling
 - **Tactile Satisfaction**: Digital interactions feel clinical rather than emotionally weighted
 - **Immersion Deficit**: Feels like a utility app rather than an emotional journey
@@ -64,6 +66,7 @@ Wretched & Alone games succeed through:
 ### Digital Translation Challenge
 
 The physical game's power comes from:
+
 - **Touch**: Texture of cards, weight of dice, precarious tower
 - **Sound**: Shuffle of deck, clatter of dice, scratch of pen
 - **Visual Ritual**: Laying out cards, watching tower wobble
@@ -78,17 +81,20 @@ The physical game's power comes from:
 ### Visual Design Assessment
 
 **Game Selector Screen:**
+
 - Clean but sterile presentation
 - "DEMO" label undermines immersion immediately
 - No atmospheric introduction or mood setting
 - Dropdown menus feel administrative, not mystical
 
 **Options Screen:**
+
 - Difficulty selection lacks emotional weight
 - Dice theme selection feels cosmetic rather than thematic
 - No sense of consequence to choices
 
 **Gameplay Screens:**
+
 - Vast empty dark spaces feel like UI bugs, not atmospheric voids
 - 3D dice animation is good but happens in isolation
 - Card flip animation exists but needs more impact
@@ -135,13 +141,13 @@ The physical game's power comes from:
 		radial-gradient(circle at 20% 80%, rgba(217, 70, 239, 0.03) 0%, transparent 50%),
 		radial-gradient(circle at 80% 20%, rgba(255, 215, 0, 0.02) 0%, transparent 50%),
 		/* Subtle grid suggesting detective's evidence board */
-		repeating-linear-gradient(
-			0deg,
-			transparent,
-			transparent 40px,
-			rgba(217, 70, 239, 0.03) 40px,
-			rgba(217, 70, 239, 0.03) 41px
-		),
+			repeating-linear-gradient(
+				0deg,
+				transparent,
+				transparent 40px,
+				rgba(217, 70, 239, 0.03) 40px,
+				rgba(217, 70, 239, 0.03) 41px
+			),
 		repeating-linear-gradient(
 			90deg,
 			transparent,
@@ -171,8 +177,13 @@ The physical game's power comes from:
 }
 
 @keyframes subtle-pulse {
-	0%, 100% { opacity: 0.3; }
-	50% { opacity: 0.5; }
+	0%,
+	100% {
+		opacity: 0.3;
+	}
+	50% {
+		opacity: 0.5;
+	}
 }
 ```
 
@@ -266,7 +277,7 @@ class SoundManager {
 	}
 
 	fadeVolume(audioElement, targetVolume, durationMs) {
-		return new Promise(resolve => {
+		return new Promise((resolve) => {
 			const startVolume = audioElement.volume;
 			const volumeDelta = targetVolume - startVolume;
 			const steps = 60;
@@ -275,7 +286,7 @@ class SoundManager {
 
 			const interval = setInterval(() => {
 				currentStep++;
-				audioElement.volume = startVolume + (volumeDelta * (currentStep / steps));
+				audioElement.volume = startVolume + volumeDelta * (currentStep / steps);
 
 				if (currentStep >= steps) {
 					clearInterval(interval);
@@ -329,7 +340,7 @@ export const ARTFUL_DETECTIVE_SOUNDS = {
 	// Atmospheric moments
 	'round-start': '/sounds/clock-chime.mp3',
 	'journal-open': '/sounds/paper-rustle.mp3',
-	'journal-write': '/sounds/pen-scratch.mp3',
+	'journal-write': '/sounds/pen-scratch.mp3'
 };
 ```
 
@@ -354,6 +365,7 @@ async function onDrawCard() {
 ```
 
 **Sound Sourcing:**
+
 - **freesound.org** (CC0 license)
 - **zapsplat.com** (free tier)
 - **myNoise.net** for custom ambience
@@ -394,9 +406,15 @@ async function onDrawCard() {
 }
 
 @keyframes card-lift-pulse {
-	0% { transform: translateY(0) scale(1); }
-	50% { transform: translateY(-5px) scale(1.02); }
-	100% { transform: translateY(-20px) scale(1.05); }
+	0% {
+		transform: translateY(0) scale(1);
+	}
+	50% {
+		transform: translateY(-5px) scale(1.02);
+	}
+	100% {
+		transform: translateY(-20px) scale(1.05);
+	}
 }
 
 /* STAGE 2: Flip - Card rotates to reveal face */
@@ -423,10 +441,18 @@ async function onDrawCard() {
 }
 
 @keyframes card-settle {
-	0% { transform: translateY(-20px) scale(1.05); }
-	60% { transform: translateY(0) scale(1.02); }
-	80% { transform: translateY(-3px) scale(1.01); }
-	100% { transform: translateY(0) scale(1); }
+	0% {
+		transform: translateY(-20px) scale(1.05);
+	}
+	60% {
+		transform: translateY(0) scale(1.02);
+	}
+	80% {
+		transform: translateY(-3px) scale(1.01);
+	}
+	100% {
+		transform: translateY(0) scale(1);
+	}
 }
 
 /* Revealed card glow pulse */
@@ -438,7 +464,8 @@ async function onDrawCard() {
 }
 
 @keyframes card-revealed-glow {
-	0%, 100% {
+	0%,
+	100% {
 		box-shadow:
 			0 8px 24px rgba(0, 0, 0, 0.4),
 			0 0 15px rgba(217, 70, 239, 0.2);
@@ -497,11 +524,12 @@ export async function drawCard(cardData) {
 }
 
 function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms));
+	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 ```
 
 **Why This Works:** Respects 12 principles of animation:
+
 - Anticipation (lift before flip)
 - Follow-through (settle bounce)
 - Timing (slow out, fast through, slow in)
@@ -534,19 +562,24 @@ Total: ~1.7 seconds - matches contemplative pace of physical card drawing.
 	content: '';
 	position: absolute;
 	inset: -40px;
-	background: radial-gradient(
-		circle at center,
-		rgba(0, 255, 255, 0.15) 0%,
-		transparent 70%
-	);
+	background: radial-gradient(circle at center, rgba(0, 255, 255, 0.15) 0%, transparent 70%);
 	animation: spotlight-pulse 0.8s ease-in-out;
 	pointer-events: none;
 }
 
 @keyframes spotlight-pulse {
-	0% { opacity: 0; transform: scale(0.8); }
-	50% { opacity: 1; transform: scale(1.1); }
-	100% { opacity: 0; transform: scale(1); }
+	0% {
+		opacity: 0;
+		transform: scale(0.8);
+	}
+	50% {
+		opacity: 1;
+		transform: scale(1.1);
+	}
+	100% {
+		opacity: 0;
+		transform: scale(1);
+	}
 }
 
 /* Result emphasis */
@@ -585,7 +618,8 @@ Total: ~1.7 seconds - matches contemplative pace of physical card drawing.
 }
 
 @keyframes critical-pulse {
-	0%, 100% {
+	0%,
+	100% {
 		transform: scale(1);
 		opacity: 0.5;
 		box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
@@ -652,9 +686,23 @@ Total: ~1.7 seconds - matches contemplative pace of physical card drawing.
 
 /* Screen shake on damage */
 @keyframes screen-shake {
-	0%, 100% { transform: translate(0, 0); }
-	10%, 30%, 50%, 70%, 90% { transform: translate(-4px, 2px); }
-	20%, 40%, 60%, 80% { transform: translate(4px, -2px); }
+	0%,
+	100% {
+		transform: translate(0, 0);
+	}
+	10%,
+	30%,
+	50%,
+	70%,
+	90% {
+		transform: translate(-4px, 2px);
+	}
+	20%,
+	40%,
+	60%,
+	80% {
+		transform: translate(4px, -2px);
+	}
 }
 
 .game-screen.taking-damage {
@@ -666,26 +714,26 @@ Total: ~1.7 seconds - matches contemplative pace of physical card drawing.
 	transition: all 0.5s ease-out;
 }
 
-.health-value[data-percent="high"] {
+.health-value[data-percent='high'] {
 	/* 70-100% */
 	color: var(--color-toxic-green);
 	text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
 }
 
-.health-value[data-percent="medium"] {
+.health-value[data-percent='medium'] {
 	/* 40-69% */
 	color: var(--color-brand-yellow);
 	text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
 }
 
-.health-value[data-percent="low"] {
+.health-value[data-percent='low'] {
 	/* 20-39% */
 	color: #ff6b00;
 	text-shadow: 0 0 10px rgba(255, 107, 0, 0.6);
 	animation: health-warning-pulse 1.5s ease-in-out infinite;
 }
 
-.health-value[data-percent="critical"] {
+.health-value[data-percent='critical'] {
 	/* 1-19% */
 	color: #ff0000;
 	text-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
@@ -693,12 +741,20 @@ Total: ~1.7 seconds - matches contemplative pace of physical card drawing.
 }
 
 @keyframes health-warning-pulse {
-	0%, 100% { opacity: 1; transform: scale(1); }
-	50% { opacity: 0.7; transform: scale(1.05); }
+	0%,
+	100% {
+		opacity: 1;
+		transform: scale(1);
+	}
+	50% {
+		opacity: 0.7;
+		transform: scale(1.05);
+	}
 }
 
 @keyframes health-critical-pulse {
-	0%, 100% {
+	0%,
+	100% {
 		opacity: 1;
 		transform: scale(1);
 		filter: brightness(1);
@@ -711,7 +767,7 @@ Total: ~1.7 seconds - matches contemplative pace of physical card drawing.
 }
 
 /* Heartbeat visual at critical health */
-.health-meter[data-percent="critical"]::before {
+.health-meter[data-percent='critical']::before {
 	content: '';
 	position: absolute;
 	inset: -10px;
@@ -722,7 +778,8 @@ Total: ~1.7 seconds - matches contemplative pace of physical card drawing.
 }
 
 @keyframes heartbeat-ring {
-	0%, 100% {
+	0%,
+	100% {
 		transform: scale(1);
 		opacity: 0;
 	}
@@ -738,7 +795,8 @@ Total: ~1.7 seconds - matches contemplative pace of physical card drawing.
 		transform: scale(1.1);
 		opacity: 1;
 	}
-	40%, 60% {
+	40%,
+	60% {
 		transform: scale(1.15);
 		opacity: 0;
 	}
@@ -837,7 +895,8 @@ $: healthPercent = (() => {
 }
 
 @keyframes failure-ominous-pulse {
-	0%, 100% {
+	0%,
+	100% {
 		box-shadow:
 			0 8px 32px rgba(0, 0, 0, 0.6),
 			0 0 20px rgba(255, 0, 0, 0.2);
@@ -852,8 +911,12 @@ $: healthPercent = (() => {
 
 /* Screen darkens with failure card */
 @keyframes screen-darken {
-	0% { filter: brightness(1); }
-	100% { filter: brightness(0.85); }
+	0% {
+		filter: brightness(1);
+	}
+	100% {
+		filter: brightness(0.85);
+	}
 }
 
 .game-screen.failure-active {
@@ -861,33 +924,41 @@ $: healthPercent = (() => {
 }
 
 /* Failure counter escalation */
-.failure-meter[data-count="1"] {
+.failure-meter[data-count='1'] {
 	color: var(--color-brand-yellow);
 }
 
-.failure-meter[data-count="2"] {
+.failure-meter[data-count='2'] {
 	color: #ff6b00;
 	animation: failure-escalation 1.5s ease-in-out infinite;
 }
 
-.failure-meter[data-count="3"] {
+.failure-meter[data-count='3'] {
 	color: #ff0000;
 	animation: failure-imminent 1s ease-in-out infinite;
 }
 
 @keyframes failure-escalation {
-	0%, 100% { transform: scale(1); }
-	50% { transform: scale(1.08); }
+	0%,
+	100% {
+		transform: scale(1);
+	}
+	50% {
+		transform: scale(1.08);
+	}
 }
 
 @keyframes failure-imminent {
-	0%, 100% {
+	0%,
+	100% {
 		transform: scale(1);
 		text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
 	}
 	50% {
 		transform: scale(1.12);
-		text-shadow: 0 0 20px rgba(255, 0, 0, 0.8), 0 0 30px rgba(255, 0, 0, 0.4);
+		text-shadow:
+			0 0 20px rgba(255, 0, 0, 0.8),
+			0 0 30px rgba(255, 0, 0, 0.4);
 	}
 }
 ```
@@ -1035,19 +1106,20 @@ export async function nextScreen(screenName) {
 ```css
 /* Magnifying glass cursor on interactive elements */
 .dc-draw-card-container:hover {
-	cursor: url('/cursors/magnifying-glass.png') 12 12, pointer;
+	cursor:
+		url('/cursors/magnifying-glass.png') 12 12,
+		pointer;
 }
 
 /* Detective notebook aesthetic for journal */
 .journal-container {
 	background-image:
-		/* Ruled lines like detective notebook */
-		repeating-linear-gradient(
-			transparent,
-			transparent 29px,
-			rgba(0, 255, 255, 0.1) 29px,
-			rgba(0, 255, 255, 0.1) 30px
-		);
+		/* Ruled lines like detective notebook */ repeating-linear-gradient(
+		transparent,
+		transparent 29px,
+		rgba(0, 255, 255, 0.1) 29px,
+		rgba(0, 255, 255, 0.1) 30px
+	);
 	background-color: rgba(26, 26, 26, 0.95);
 	box-shadow:
 		/* Notebook binding shadow */
@@ -1082,24 +1154,20 @@ export async function nextScreen(screenName) {
 	position: absolute;
 	inset: 0;
 	background:
-		radial-gradient(
-			ellipse at 20% 20%,
-			rgba(255, 215, 0, 0.03) 0%,
-			transparent 50%
-		),
-		radial-gradient(
-			ellipse at 80% 80%,
-			rgba(0, 255, 255, 0.02) 0%,
-			transparent 50%
-		);
+		radial-gradient(ellipse at 20% 20%, rgba(255, 215, 0, 0.03) 0%, transparent 50%),
+		radial-gradient(ellipse at 80% 80%, rgba(0, 255, 255, 0.02) 0%, transparent 50%);
 	pointer-events: none;
 	z-index: 0;
 }
 
 /* Typewriter effect for titles */
 @keyframes typewriter {
-	from { width: 0; }
-	to { width: 100%; }
+	from {
+		width: 0;
+	}
+	to {
+		width: 100%;
+	}
 }
 
 .game-title {
@@ -1112,7 +1180,9 @@ export async function nextScreen(screenName) {
 }
 
 @keyframes blink-caret {
-	50% { border-color: transparent; }
+	50% {
+		border-color: transparent;
+	}
 }
 ```
 
@@ -1221,17 +1291,20 @@ export async function nextScreen(screenName) {
 ### Performance Budget
 
 **Sound Files:**
+
 - Keep total under 5MB
 - Use MP3 at 128kbps
 - Mono for effects, stereo for ambient
 - Lazy load game-specific sounds
 
 **Animations:**
+
 - Use `transform` and `opacity` (GPU-accelerated)
 - Avoid `width`, `height`, `top`, `left` (causes reflow)
 - Use `will-change` sparingly and only during animation
 
 **Background Effects:**
+
 - Static images where possible
 - CSS gradients for patterns
 - Limit to 2-3 layered gradients per element
@@ -1239,16 +1312,19 @@ export async function nextScreen(screenName) {
 ### Browser Compatibility
 
 **CSS Features:**
+
 - All animations use well-supported properties
 - Tested in Chrome 90+, Firefox 88+, Safari 14+
 - Fallbacks for older browsers
 
 **JavaScript:**
+
 - Web Audio API: 97%+ support
 - Async/await: 96%+ support
 - Optional chaining used with transpilation
 
 **Accessibility:**
+
 - All animations respect `prefers-reduced-motion`
 - Screen reader friendly (ARIA labels maintained)
 - Keyboard navigation preserved
@@ -1256,16 +1332,19 @@ export async function nextScreen(screenName) {
 ### Code Quality
 
 **CSS Organization:**
+
 - Keep animations in dedicated section
 - Use CSS custom properties for timing values
 - Comment complex keyframes
 
 **JavaScript Patterns:**
+
 - Async functions for animation sequences
 - Cleanup event listeners
 - Error handling for sound loading
 
 **Performance Monitoring:**
+
 - Watch for animation jank (maintain 60fps)
 - Monitor sound memory usage
 - Test on mid-range devices
@@ -1277,11 +1356,13 @@ export async function nextScreen(screenName) {
 ### Quantitative Metrics
 
 **Engagement:**
+
 - Average time per decision increases by 30%
 - Session completion rate increases by 25%
 - Time to first card draw decreases (better onboarding)
 
 **Technical:**
+
 - Maintains 60fps during all animations
 - Sound assets load in under 3 seconds on 3G
 - No layout shift during state changes (CLS score)
@@ -1289,12 +1370,14 @@ export async function nextScreen(screenName) {
 ### Qualitative Feedback
 
 **User Testimonials:**
+
 - "It feels like I'm really there"
 - "The card draws are so satisfying"
 - "I got genuinely nervous when my health was low"
 - "The atmosphere is incredible"
 
 **Design Goals Achieved:**
+
 - ✅ Tactile satisfaction (animations provide weight and feedback)
 - ✅ Atmospheric tension (sound + visuals create mood)
 - ✅ Emotional progression (mounting dread, celebration, desperation)
@@ -1304,6 +1387,7 @@ export async function nextScreen(screenName) {
 ### A/B Testing Opportunities
 
 **Test Variations:**
+
 - Card flip duration (1.5s vs 2s vs 2.5s)
 - Ambient volume levels (20% vs 30% vs 40%)
 - Screen transition styles (fade vs slide vs page-turn)
@@ -1318,9 +1402,11 @@ export async function nextScreen(screenName) {
 Implement these THREE changes for immediate impact:
 
 #### Quick Win #1: Background Atmosphere (15 min)
+
 Update `.dc-table-bg` in `/static/games/artful-detective/game.css` with layered background from Section 1.1
 
 **Before:**
+
 ```css
 .dc-table-bg {
 	background: var(--dc-dice-roller-bg);
@@ -1334,6 +1420,7 @@ Update `.dc-table-bg` in `/static/games/artful-detective/game.css` with layered 
 ---
 
 #### Quick Win #2: Card Hover State (10 min)
+
 Add to `/src/lib/components/CardDeck.svelte`:
 
 ```css
@@ -1357,44 +1444,59 @@ Add to `/src/lib/components/CardDeck.svelte`:
 ---
 
 #### Quick Win #3: Health Color Progression (30 min)
+
 Update `/src/lib/components/HealthMeter.svelte`:
 
 **CSS:**
+
 ```css
-.health-value[data-percent="high"] {
+.health-value[data-percent='high'] {
 	color: var(--color-toxic-green);
 	text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
 }
 
-.health-value[data-percent="medium"] {
+.health-value[data-percent='medium'] {
 	color: var(--color-brand-yellow);
 	text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
 }
 
-.health-value[data-percent="low"] {
+.health-value[data-percent='low'] {
 	color: #ff6b00;
 	text-shadow: 0 0 10px rgba(255, 107, 0, 0.6);
 	animation: health-warning-pulse 1.5s ease-in-out infinite;
 }
 
-.health-value[data-percent="critical"] {
+.health-value[data-percent='critical'] {
 	color: #ff0000;
 	text-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
 	animation: health-critical-pulse 1s ease-in-out infinite;
 }
 
 @keyframes health-warning-pulse {
-	0%, 100% { opacity: 1; }
-	50% { opacity: 0.7; }
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.7;
+	}
 }
 
 @keyframes health-critical-pulse {
-	0%, 100% { opacity: 1; filter: brightness(1); }
-	50% { opacity: 0.8; filter: brightness(1.3); }
+	0%,
+	100% {
+		opacity: 1;
+		filter: brightness(1);
+	}
+	50% {
+		opacity: 0.8;
+		filter: brightness(1.3);
+	}
 }
 ```
 
 **JavaScript:**
+
 ```javascript
 $: healthPercent = (() => {
 	const percent = ($gameStore.health / maxHealth) * 100;
@@ -1406,10 +1508,9 @@ $: healthPercent = (() => {
 ```
 
 **HTML:**
+
 ```html
-<div class="health-value" data-percent={healthPercent}>
-	{$gameStore.health}
-</div>
+<div class="health-value" data-percent="{healthPercent}">{$gameStore.health}</div>
 ```
 
 **Expected Result:** Health feels urgent and consequential
@@ -1486,7 +1587,7 @@ Create consistent timing:
 ```javascript
 // Useful for animation sequencing
 export function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms));
+	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 // Usage
@@ -1508,6 +1609,7 @@ The digital version of Dimm City Solo RPG has all the mechanical pieces in place
 ### Core Philosophy
 
 Every implementation should ask:
+
 1. **Does this feel weighted?** (animations have physics, interactions have consequence)
 2. **Does this build tension?** (progression creates mounting dread or hope)
 3. **Does this create ritual?** (pacing allows contemplation)
@@ -1520,6 +1622,7 @@ Every implementation should ask:
 ### Measure Success
 
 The app succeeds when players report:
+
 - Feeling genuinely nervous during critical moments
 - Wanting to complete games even when failing
 - Remembering specific moments vividly

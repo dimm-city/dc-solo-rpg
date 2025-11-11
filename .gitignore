@@ -12,3 +12,8 @@ vite.config.ts.timestamp-*
 .remove
 .scripts/
 coverage/
+test-results/
+playwright-report/screenshots/
+.private/
+.references/
+screenshots/

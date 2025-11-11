@@ -72,7 +72,7 @@ The tests use Playwright's API to:
 
 1. **Navigate the game** - Clicks through intro screens and game flow
 2. **Monitor console logs** - Captures `[rollForTasks]` and `[drawCard]` debug logs
-3. **Interact with UI elements** - Clicks buttons like "ROLL FOR TASKS", "INTERCEPT FRAGMENT", "CONTINUE"
+3. **Interact with UI elements** - Clicks buttons like "ROLL FOR TASKS", "PROCEED TO NEXT BYTE", "CONTINUE"
 4. **Handle dynamic flow** - Manages failure checks that occur with odd cards
 5. **Validate results** - Compares card count with dice roll and journal entries
 
@@ -89,6 +89,7 @@ The tests use Playwright's API to:
 If tests fail:
 
 1. **Run in headed mode** to see what's happening:
+
    ```bash
    npx playwright test --headed
    ```
@@ -96,6 +97,7 @@ If tests fail:
 2. **Check console output** - The test logs console messages for debugging
 
 3. **Use debug mode** to step through:
+
    ```bash
    npx playwright test --debug
    ```
@@ -107,6 +109,7 @@ If tests fail:
 Test configuration is in `playwright.config.js` at the project root.
 
 The config specifies:
+
 - Test directory: `tests/`
 - Web server command: Builds and previews the app
 - Port: 4173

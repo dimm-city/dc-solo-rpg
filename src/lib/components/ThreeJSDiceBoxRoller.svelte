@@ -1,91 +1,66 @@
 <script>
-	import { createEventDispatcher, onMount } from 'svelte';
-	import DiceBox from '@3d-dice/dice-box-threejs';
-	import { gameStore } from '../stores/WAAStore.js';
+	import { onMount } from 'svelte';
+	import { initializeDiceBox, rollDice, resizeDiceBox } from '../stores/diceStore.svelte.js';
+	import AugmentedButton from './AugmentedButton.svelte';
 
-	const dispatch = createEventDispatcher();
+	let {
+		rolling = $bindable(false),
+		header = '',
+		onrollstart = () => {},
+		onrollcomplete = () => {},
+		onclick = () => {},
+		onkeyup = () => {}
+	} = $props();
 
-	export let rolling = false;
-	export let header = '';
+	let containerElement = $state();
 
-	const defaultConfig = {
-		assetPath: '/dice',
-		framerate: 1 / 60,
-		sounds: false,
-		volume: 100,
-		color_spotlight: 0xefdfd5,
-		shadows: true,
-		theme_surface: 'default',
-		sound_dieMaterial: 'plastic',
-		theme_customColorset: null,
-		theme_colorset: '', // white  see available colorsets in https://github.com/3d-dice/dice-box-threejs/blob/main/src/const/colorsets.js
-		theme_texture: '', // see available textures in https://github.com/3d-dice/dice-box-threejs/blob/main/src/const/texturelist.js
-		theme_material: 'glass', // "none" | "metal" | "wood" | "glass" | "plastic"
-		gravity_multiplier: 400,
-		light_intensity: 0.7,
-		baseScale: 100,
-		strength: 1, // toss strength of dice
-		onRollComplete: () => {}
-	};
-
-	let diceBox;
 	onMount(async () => {
-		defaultConfig.theme_colorset = $gameStore.config.options?.dice ?? defaultConfig.theme_colorset;
+		// Initialize or reattach the shared DiceBox instance
+		await initializeDiceBox(containerElement);
 
-		let config = {
-			assetPath: '/dice/',
-			sounds: true,
-			volume: 100,
-			//theme_colorset:  $gameStore.config.options?.dice?.key ?? 'pinkdreams',
-			//theme_customColorset: $gameStore.config.options?.dice,
-			baseScale: 100,
-			strength: 1.5
-		};
-
-		if ($gameStore.config.options?.dice?.key) {
-			config.theme_colorset = $gameStore.config.options?.dice?.key ?? 'pinkdreams';
-		} else {
-			config.theme_customColorset = $gameStore.config.options?.dice;
-		}
-
-		diceBox = new DiceBox('#dice-roller-container', config);
-		await diceBox.initialize();
-		diceBox.resizeWorld();
+		// Trigger resize after a delay to account for layout settling
+		setTimeout(() => {
+			resizeDiceBox();
+		}, 600);
 	});
+
 	export async function roll(values = null) {
 		if (rolling) return;
 		rolling = true;
 
-		// Dispatch roll start event
-		dispatch('rollstart');
+		// Call roll start callback
+		onrollstart();
 
-		const rollString = values ? `1d6@${values}` : '1d6';
-		let result = await diceBox.roll(rollString);
+		try {
+			const result = await rollDice(values);
 
-		rolling = false;
+			rolling = false;
 
-		// Dispatch roll complete event
-		dispatch('rollcomplete', { result: result.total });
+			// Call roll complete callback
+			onrollcomplete({ result });
 
-		return result.total;
+			return result;
+		} catch (error) {
+			console.error('[ThreeJSDiceBoxRoller] Error rolling dice:', error);
+			rolling = false;
+			throw error;
+		}
 	}
-	
 </script>
 
 <div
+	bind:this={containerElement}
 	id="dice-roller-container"
 	class="dc-dice-roller-container"
 	disabled={rolling}
 	role="button"
 	tabindex="0"
-	on:click
-	on:keyup
+	{onclick}
+	{onkeyup}
 >
 	{#if !rolling}
 		<div class="dc-dice-roller-header dc-header">
-			<slot>
-				<button class="dc-fade-in" on:click on:keyup>{header}</button>
-			</slot>
+			<AugmentedButton text={header} {onclick} class="dc-fade-in" />
 		</div>
 	{/if}
 </div>
@@ -100,20 +75,24 @@
 	}
 
 	:global(.dc-dice-roller-container > canvas) {
-		display: grid;
+		display: block;
 		cursor: pointer;
-		height: 99%;
+		height: 100%;
 		width: 100%;
 		box-sizing: border-box;
+		grid-row: 1;
+		grid-column: 1;
 	}
 
-	.dc-dice-roller-container button {
-		/* position: absolute; */
+	.dc-dice-roller-container :global(.aug-button-wrapper) {
+		width: 100%;
+	}
+
+	.dc-dice-roller-container :global(.aug-button) {
 		display: grid;
 		justify-self: center;
 		align-self: center;
 		width: 100%;
 		margin: 0;
-		background-color: var(--dc-default-container-bg);
 	}
 </style>

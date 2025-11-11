@@ -7,132 +7,134 @@
    ============================================ */
 
 :root {
-    /* ===== CORE BRAND COLORS ===== */
-    /* These define the cyberpunk/creaturepunk aesthetic */
+	/* ===== CORE BRAND COLORS ===== */
+	/* These define the cyberpunk/creaturepunk aesthetic */
 
-    --dc-color-brand-yellow: #ffd700;    /* Primary headings, numbers */
-    --dc-color-cyber-magenta: #d946ef;   /* Borders, accents */
-    --dc-color-neon-cyan: #00ffff;       /* Interactive elements */
-    --dc-color-toxic-green: #00ff00;     /* Success states, code */
+	--dc-color-brand-yellow: #ffd700; /* Primary headings, numbers */
+	--dc-color-cyber-magenta: #d946ef; /* Borders, accents */
+	--dc-color-neon-cyan: #00ffff; /* Interactive elements */
+	--dc-color-toxic-green: #00ff00; /* Success states, code */
 
-    /* ===== BACKGROUNDS ===== */
+	/* ===== BACKGROUNDS ===== */
 
-    --dc-color-bg-primary: #0a0a0a;      /* Main background */
-    --dc-color-bg-secondary: #1a1a1a;    /* Cards, boxes */
-    --dc-color-bg-tertiary: #2a2a2a;     /* Elevated elements */
-    --dc-color-bg-darker: #000000;       /* Pure black accents */
+	--dc-color-bg-primary: #0a0a0a; /* Main background */
+	--dc-color-bg-secondary: #1a1a1a; /* Cards, boxes */
+	--dc-color-bg-tertiary: #2a2a2a; /* Elevated elements */
+	--dc-color-bg-darker: #000000; /* Pure black accents */
 
-    /* ===== TEXT COLORS ===== */
+	/* ===== TEXT COLORS ===== */
 
-    --dc-color-text-primary: #ffffff;
-    --dc-color-text-secondary: rgba(255, 255, 255, 0.85);
-    --dc-color-text-muted: rgba(255, 255, 255, 0.6);
+	--dc-color-text-primary: #ffffff;
+	--dc-color-text-secondary: rgba(255, 255, 255, 0.85);
+	--dc-color-text-muted: rgba(255, 255, 255, 0.6);
 
-    /* ===== TYPOGRAPHY ===== */
+	/* ===== TYPOGRAPHY ===== */
 
-    --dc-font-display: 'Orbitron', 'Tomorrow', sans-serif;
-    --dc-font-body: 'Inter', 'Tomorrow', sans-serif;
+	--dc-font-display: 'Orbitron', 'Tomorrow', sans-serif;
+	--dc-font-body: 'Inter', 'Tomorrow', sans-serif;
 
-    /* Font Sizes (8px baseline grid) */
-    --dc-text-xs: 0.75rem;    /* 12px */
-    --dc-text-sm: 0.875rem;   /* 14px */
-    --dc-text-base: 1rem;     /* 16px */
-    --dc-text-lg: 1.125rem;   /* 18px */
-    --dc-text-xl: 1.25rem;    /* 20px */
-    --dc-text-2xl: 1.75rem;   /* 28px */
-    --dc-text-3xl: 2.5rem;    /* 40px */
-    --dc-text-4xl: 3.5rem;    /* 56px */
+	/* Font Sizes (8px baseline grid) */
+	--dc-text-xs: 0.75rem; /* 12px */
+	--dc-text-sm: 0.875rem; /* 14px */
+	--dc-text-base: 1rem; /* 16px */
+	--dc-text-lg: 1.125rem; /* 18px */
+	--dc-text-xl: 1.25rem; /* 20px */
+	--dc-text-2xl: 1.75rem; /* 28px */
+	--dc-text-3xl: 2.5rem; /* 40px */
+	--dc-text-4xl: 3.5rem; /* 56px */
 
-    /* Letter Spacing */
-    --dc-letter-spacing-wide: 0.05em;
-    --dc-letter-spacing-wider: 0.1em;
-    --dc-letter-spacing-widest: 0.15em;
+	/* Letter Spacing */
+	--dc-letter-spacing-wide: 0.05em;
+	--dc-letter-spacing-wider: 0.1em;
+	--dc-letter-spacing-widest: 0.15em;
 
-    /* ===== SPACING (8px Baseline Grid) ===== */
+	/* ===== SPACING (8px Baseline Grid) ===== */
 
-    --dc-space-xs: 0.25rem;   /* 4px */
-    --dc-space-sm: 0.5rem;    /* 8px */
-    --dc-space-md: 1rem;      /* 16px */
-    --dc-space-lg: 1.5rem;    /* 24px */
-    --dc-space-xl: 2rem;      /* 32px */
-    --dc-space-2xl: 3rem;     /* 48px */
-    --dc-space-3xl: 4rem;     /* 64px */
+	--dc-space-xs: 0.25rem; /* 4px */
+	--dc-space-sm: 0.5rem; /* 8px */
+	--dc-space-md: 1rem; /* 16px */
+	--dc-space-lg: 1.5rem; /* 24px */
+	--dc-space-xl: 2rem; /* 32px */
+	--dc-space-2xl: 3rem; /* 48px */
+	--dc-space-3xl: 4rem; /* 64px */
 
-    /* ===== BORDERS ===== */
+	/* ===== BORDERS ===== */
 
-    --dc-border-width-default: 2px;
-    --dc-border-width-thick: 3px;
+	--dc-border-width-default: 2px;
+	--dc-border-width-thick: 3px;
 
-    /* ===== EFFECTS ===== */
+	/* ===== EFFECTS ===== */
 
-    /* Neon Glow Shadows */
-    --dc-glow-yellow: 0 0 10px rgba(255, 215, 0, 0.3);
-    --dc-glow-magenta: 0 0 10px rgba(217, 70, 239, 0.3);
-    --dc-glow-cyan: 0 0 10px rgba(0, 255, 255, 0.3);
+	/* Neon Glow Shadows */
+	--dc-glow-yellow: 0 0 10px rgba(255, 215, 0, 0.3);
+	--dc-glow-magenta: 0 0 10px rgba(217, 70, 239, 0.3);
+	--dc-glow-cyan: 0 0 10px rgba(0, 255, 255, 0.3);
 
-    /* Text Glows */
-    --dc-text-glow-yellow: 0 0 8px rgba(255, 215, 0, 0.4), 0 0 16px rgba(255, 215, 0, 0.2);
-    --dc-text-glow-cyan: 0 0 6px rgba(0, 255, 255, 0.4), 0 0 12px rgba(0, 255, 255, 0.2);
+	/* Text Glows */
+	--dc-text-glow-yellow: 0 0 8px rgba(255, 215, 0, 0.4), 0 0 16px rgba(255, 215, 0, 0.2);
+	--dc-text-glow-cyan: 0 0 6px rgba(0, 255, 255, 0.4), 0 0 12px rgba(0, 255, 255, 0.2);
 
-    /* Drop Shadows */
-    --dc-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+	/* Drop Shadows */
+	--dc-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
 
-    /* ===== TRANSITIONS ===== */
+	/* ===== TRANSITIONS ===== */
 
-    --dc-transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-    --dc-transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+	--dc-transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+	--dc-transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
 
-    /* ===== AUGMENTED UI (Cyberpunk Corners) ===== */
+	/* ===== AUGMENTED UI (Cyberpunk Corners) ===== */
 
-    --dc-aug-clip-sm: 10px;
-    --dc-aug-clip-md: 12px;
-    --dc-aug-clip-lg: 14px;
+	--dc-aug-clip-sm: 10px;
+	--dc-aug-clip-md: 12px;
+	--dc-aug-clip-lg: 14px;
 
-    /* ===== GAME-SPECIFIC VARIABLES ===== */
+	/* ===== GAME-SPECIFIC VARIABLES ===== */
 
-    /* Game Container */
-    --dc-default-game-bg: var(--dc-color-bg-primary);
-    --dc-default-container-bg: var(--dc-color-bg-secondary);
-    --dc-default-border-radius: 0;  /* Sharp corners for cyberpunk */
-    --dc-default-padding: var(--dc-space-xl);
+	/* Game Container */
+	--dc-default-game-bg: var(--dc-color-bg-primary);
+	--dc-default-container-bg: var(--dc-color-bg-secondary);
+	--dc-default-border-radius: 0; /* Sharp corners for cyberpunk */
+	--dc-default-padding: var(--dc-space-xl);
 
-    /* Dice Roller / Table */
-    --dc-dice-roller-bg: var(--dc-color-bg-secondary);
-    --dc-table-bg: var(--dc-color-bg-secondary);
-    --dc-table-border: var(--dc-border-width-thick) solid var(--dc-color-cyber-magenta);
+	/* Dice Roller / Table */
+	--dc-dice-roller-bg: var(--dc-color-bg-secondary);
+	--dc-table-bg: var(--dc-color-bg-secondary);
+	--dc-table-border: var(--dc-border-width-thick) solid var(--dc-color-cyber-magenta);
 
-    /* Cards */
-    --dc-card-back-color: var(--dc-color-brand-yellow);
-    --dc-card-back-bg: linear-gradient(135deg,
-        var(--dc-color-cyber-magenta),
-        var(--dc-color-bg-darker),
-        var(--dc-color-neon-cyan)
-    );
-    --dc-card-front-bg: var(--dc-color-bg-darker);
-    --dc-card-front-color: var(--dc-color-brand-yellow);
-    --dc-card-border: var(--dc-border-width-default) solid var(--dc-color-cyber-magenta);
-    --dc-card-border-radius: var(--dc-space-sm);
+	/* Cards */
+	--dc-card-back-color: var(--dc-color-brand-yellow);
+	--dc-card-back-bg: linear-gradient(
+		135deg,
+		var(--dc-color-cyber-magenta),
+		var(--dc-color-bg-darker),
+		var(--dc-color-neon-cyan)
+	);
+	--dc-card-front-bg: var(--dc-color-bg-darker);
+	--dc-card-front-color: var(--dc-color-brand-yellow);
+	--dc-card-border: var(--dc-border-width-default) solid var(--dc-color-cyber-magenta);
+	--dc-card-border-radius: var(--dc-space-sm);
 
-    /* Health & Status */
-    --dc-health-meter-high: var(--dc-color-toxic-green);
-    --dc-health-meter-med: var(--dc-color-brand-yellow);
-    --dc-health-meter-low: var(--dc-color-cyber-magenta);
-    --dc-health-meter-stroke: var(--dc-color-bg-primary);
+	/* Health & Status */
+	--dc-health-meter-high: var(--dc-color-toxic-green);
+	--dc-health-meter-med: var(--dc-color-brand-yellow);
+	--dc-health-meter-low: var(--dc-color-cyber-magenta);
+	--dc-health-meter-stroke: var(--dc-color-bg-primary);
 
-    /* Buttons */
-    --dc-button-bg: linear-gradient(90deg,
-        var(--dc-color-brand-yellow) 0%,
-        var(--dc-color-cyber-magenta) 50%,
-        var(--dc-color-neon-cyan) 100%
-    );
-    --dc-button-color: var(--dc-color-bg-primary);
-    --dc-button-border: none;
+	/* Buttons */
+	--dc-button-bg: linear-gradient(
+		90deg,
+		var(--dc-color-brand-yellow) 0%,
+		var(--dc-color-cyber-magenta) 50%,
+		var(--dc-color-neon-cyan) 100%
+	);
+	--dc-button-color: var(--dc-color-bg-primary);
+	--dc-button-border: none;
 
-    /* Default text color */
-    --dc-default-text-color: var(--dc-color-text-primary);
+	/* Default text color */
+	--dc-default-text-color: var(--dc-color-text-primary);
 
-    /* Accent color */
-    --dc-accent-color: var(--dc-color-cyber-magenta);
+	/* Accent color */
+	--dc-accent-color: var(--dc-color-cyber-magenta);
 }
 
 /* ============================================
@@ -140,12 +142,12 @@
    ============================================ */
 
 .dc-game-bg {
-    background: var(--dc-default-game-bg);
+	background: var(--dc-default-game-bg);
 }
 
 .dc-table-bg {
-    background: var(--dc-table-bg);
-    border: var(--dc-table-border);
+	background: var(--dc-table-bg);
+	border: var(--dc-table-border);
 }
 
 /* ============================================
@@ -153,13 +155,13 @@
    ============================================ */
 
 .dc-game-container {
-    /* Add cyberpunk cut corners to game container */
-    --aug-border-all: var(--dc-border-width-thick);
-    --aug-border-bg: var(--dc-accent-color);
-    --aug-tl: var(--dc-aug-clip-lg);
-    --aug-tr: var(--dc-aug-clip-lg);
-    --aug-bl: var(--dc-aug-clip-lg);
-    --aug-br: var(--dc-aug-clip-lg);
+	/* Add cyberpunk cut corners to game container */
+	--aug-border-all: var(--dc-border-width-thick);
+	--aug-border-bg: var(--dc-accent-color);
+	--aug-tl: var(--dc-aug-clip-lg);
+	--aug-tr: var(--dc-aug-clip-lg);
+	--aug-bl: var(--dc-aug-clip-lg);
+	--aug-br: var(--dc-aug-clip-lg);
 }
 
 /* ============================================
@@ -169,23 +171,22 @@
 .dc-game-container button,
 .dc-game-container button:hover,
 .dc-game-container button:focus-visible {
-    background: var(--dc-button-bg);
-    color: var(--dc-button-color);
-    border: var(--dc-button-border);
-    border-radius: var(--dc-space-lg);
-    font-family: var(--dc-font-display);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: var(--dc-letter-spacing-wide);
-    transition: all var(--dc-transition-base);
-    filter: drop-shadow(0 0 8px rgba(217, 70, 239, 0.35));
+	background: var(--dc-button-bg);
+	color: var(--dc-button-color);
+	border: var(--dc-button-border);
+	border-radius: var(--dc-space-lg);
+	font-family: var(--dc-font-display);
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: var(--dc-letter-spacing-wide);
+	transition: all var(--dc-transition-base);
+	filter: drop-shadow(0 0 8px rgba(217, 70, 239, 0.35));
 }
 
 .dc-game-container button:hover,
 .dc-game-container button:focus-visible {
-    transform: translateY(-2px);
-    filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.4))
-            drop-shadow(0 0 20px rgba(217, 70, 239, 0.3));
+	transform: translateY(-2px);
+	filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.4)) drop-shadow(0 0 20px rgba(217, 70, 239, 0.3));
 }
 
 /* ============================================
@@ -195,19 +196,19 @@
 .dc-game-container input,
 .dc-game-container textarea,
 .dc-game-container select {
-    background: var(--dc-color-bg-primary);
-    border: var(--dc-border-width-default) solid var(--dc-color-cyber-magenta);
-    color: var(--dc-color-text-primary);
-    font-family: var(--dc-font-body);
-    transition: all var(--dc-transition-fast);
+	background: var(--dc-color-bg-primary);
+	border: var(--dc-border-width-default) solid var(--dc-color-cyber-magenta);
+	color: var(--dc-color-text-primary);
+	font-family: var(--dc-font-body);
+	transition: all var(--dc-transition-fast);
 }
 
 .dc-game-container input:focus,
 .dc-game-container textarea:focus,
 .dc-game-container select:focus {
-    border-color: var(--dc-color-neon-cyan);
-    box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
-    outline: none;
+	border-color: var(--dc-color-neon-cyan);
+	box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+	outline: none;
 }
 
 /* ============================================
@@ -215,15 +216,15 @@
    ============================================ */
 
 .dc-game-container .card-back {
-    background: var(--dc-card-back-bg);
-    border: var(--dc-card-border);
-    color: var(--dc-card-back-color);
+	background: var(--dc-card-back-bg);
+	border: var(--dc-card-border);
+	color: var(--dc-card-back-color);
 }
 
 .dc-game-container .card-front {
-    background: var(--dc-card-front-bg);
-    border: var(--dc-card-border);
-    color: var(--dc-card-front-color);
+	background: var(--dc-card-front-bg);
+	border: var(--dc-card-border);
+	color: var(--dc-card-front-color);
 }
 
 /* ============================================

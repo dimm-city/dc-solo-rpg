@@ -1,6 +1,5 @@
 /** @type {import('./$types').LayoutLoad} */
 export async function load() {
-
 	const games = [
 		{ title: 'Artful Detective', url: '/games/artful-detective' },
 		{ title: 'Gnome Alone', url: '/games/gnome-alone' },
@@ -12,7 +11,5 @@ export async function load() {
 			name: 'Guest'
 		}
 	];
-    return {
-       
-    };
+	return {};
 }

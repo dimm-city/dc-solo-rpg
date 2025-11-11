@@ -1,119 +1,39 @@
 <script>
-	import { createEventDispatcher } from 'svelte';
-	import {
-		currentScreen,
-		gameStore,
-		gameStylesheet,
-		loadSystemConfig,
-		nextScreen,
-		transitionToScreen
-	} from '../stores/WAAStore.js';
-	import OptionsScreen from './OptionsScreen.svelte';
-	import IntroScreen from './IntroScreen.svelte';
-	import SuccessCheck from './SuccessCheck.svelte';
-	import RollForTasks from './RollForTasks.svelte';
-	import DrawCard from './DrawCard.svelte';
-	import FailureCheck from './FailureCheck.svelte';
-	import GameOver from './GameOver.svelte';
-	import StatusDisplay from './StatusDisplay.svelte';
-	import JournalEntry from './JournalEntry.svelte';
-	import Toolbar from './Toolbar.svelte';
-	import LoadScreen from './LoadScreen.svelte';
+	import { gameState } from '../stores/gameStore.svelte.js';
 	import NeuralBackground from './NeuralBackground.svelte';
+	import GameScreen from './GameScreen.svelte';
 
-	export let systemSettings = {};
-	export const startGame = async () => {
-		if (systemSettings.gameConfigUrl && systemSettings.player?.name) {
-			await loadSystemConfig(systemSettings);
-			dispatcher('dc-solo-rpg.gameLoaded', systemSettings);
-		} else {
-			$gameStore.status = 'Please select a player and a game';
+	let {
+		systemSettings = $bindable({}),
+		ongameloaded = () => {},
+		ongameover = () => {},
+		onexitgame = () => {},
+		onfailurecheckcompleted = () => {},
+		onjournalsaved = () => {}
+	} = $props();
+
+	const gameStylesheet = $derived(gameState.stylesheet);
+	const currentScreen = $derived(gameState.state);
+
+	$effect(() => {
+		if (currentScreen == 'gameOver') {
+			ongameover(gameState.state);
+		} else if (currentScreen == 'exitGame') {
+			onexitgame(gameState.state);
 		}
-	};
-
-	const dispatcher = createEventDispatcher();
-
-	$: if ($currentScreen == 'gameOver') {
-		dispatcher('dc-solo-rpg.gameOver', $gameStore.state);
-	} else if ($currentScreen == 'exitGame') {
-		dispatcher('dc-solo-rpg.exitGame', $gameStore.state);
-	}
+	});
 </script>
 
 <svelte:head>
-	<link rel="stylesheet" href={$gameStylesheet} />
+	<link rel="stylesheet" href={gameStylesheet} />
 </svelte:head>
-<div class="dc-game-container dc-game-bg">
-	{#if $currentScreen == 'loadGame'}
-		<div class="dc-game-bg">
-			<slot name="load-screen">
-				<LoadScreen />
-			</slot>
-		</div>
-	{:else if $currentScreen == 'options'}
-		<div class="dc-game-bg">
-			<slot name="options-screen">
-				<OptionsScreen {systemSettings} />
-			</slot>
-		</div>
-	{:else if $currentScreen == 'intro'}
-		<div class="dc-game-bg dc-intro-wrapper">
-			<slot name="intro-screen">
-				<IntroScreen />
-			</slot>
-		</div>
-	{:else if $currentScreen == 'gameOver'}
-		<div class="dc-fade-in dc-screen-container">
-			<GameOver />
-		</div>
-	{:else if $currentScreen == 'finalLog' || $currentScreen == 'log'}
-		<div class="dc-fade-in dc-screen-container dc-journal-screen">
-			<NeuralBackground />
-			<JournalEntry on:dc-solo-rpg.journalSaved />
-		</div>
-	{:else if $currentScreen == 'exitGame'}
-		<slot name="options-screen">
-			<div>Game Exited</div>
-		</slot>
-	{:else}
-		<div class="game-screen dc-game-bg">
-			<div class="toolbar-area">
-				<Toolbar />
-			</div>
-			<div class="status-display-area dc-fade-in">
-				{#if $currentScreen != 'log' && $currentScreen != 'finalLog'}
-					<StatusDisplay />
-				{/if}
-			</div>
-			<div class="main-screen-area dc-table-bg">
-				<NeuralBackground />
-				{#if $currentScreen == 'startRound'}
-					<div class="dc-fade-in dc-screen-container">
-						<h4>Round {$gameStore.round}</h4>
-						<button on:click={async () => await transitionToScreen('rollForTasks')}>Roll for tasks</button>
-					</div>
-				{:else if $currentScreen == 'rollForTasks'}
-					<div class="dc-fade-in dc-screen-container">
-						<RollForTasks />
-					</div>
-				{:else if $currentScreen == 'drawCard'}
-					<div class="dc-fade-in dc-screen-container">
-						<DrawCard />
-					</div>
-				{:else if $currentScreen == 'failureCheck'}
-					<div class="dc-fade-in dc-screen-container">
-						<FailureCheck on:dc-solo-rpg.failureCheckCompleted />
-					</div>
-				{:else if $currentScreen == 'successCheck'}
-					<div class="dc-fade-in dc-screen-container">
-						<SuccessCheck />
-					</div>
-				{:else}
-					<div>error: {$currentScreen}</div>
-				{/if}
-			</div>
-		</div>
-	{/if}
+<div class="dc-game-container dc-game-bg" data-testid="game-container">
+	<NeuralBackground />
+	<GameScreen
+		{systemSettings}
+		{onfailurecheckcompleted}
+		{onjournalsaved}
+	/>
 </div>
 
 <style>
@@ -164,20 +84,31 @@
 		font-family: var(--dc-default-font-family);
 		color: var(--dc-default-text-color);
 		overflow: hidden; /* CRITICAL: Prevent all scrolling */
+		position: relative; /* CRITICAL: Position context for neural background */
 	}
 	.dc-game-container,
-	.dc-game-container > div,
 	:global(.dc-intro-container) {
 		border-radius: var(--dc-default-border-radius);
 	}
 
-	.dc-intro-wrapper {
-		display: flex;
-		flex-direction: column;
-		overflow: visible; /* Allow glow effects to extend beyond bounds */
-		min-height: 0; /* Allow flex shrinking */
-		height: 100%; /* Fill parent */
+	/* Neural background at game container level */
+	.dc-game-container > :global(.neural-background) {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		z-index: 0;
+		pointer-events: none;
 	}
+
+	/* GameScreen component appears above neural background */
+	.dc-game-container > :global(*:not(.neural-background)) {
+		position: relative;
+		z-index: 1;
+	}
+
+	/* Screen-specific styles moved to GameScreen.svelte */
 	:global(.dc-game-bg) {
 		background: var(--dc-default-game-bg);
 	}
@@ -187,65 +118,15 @@
 		font-family: var(--dc-default-font-family);
 	}
 	:global(
-			.dc-game-container button,
-			.dc-game-container button:hover,
-			.dc-game-container button:focus-visible
-		) {
+		.dc-game-container button:not(.aug-button),
+		.dc-game-container button:not(.aug-button):hover,
+		.dc-game-container button:not(.aug-button):focus-visible
+	) {
 		background: var(--dc-button-bg);
 		color: var(--dc-button-color);
 		text-shadow: none;
 		font-family: var(--dc-default-font-family);
 	}
-	.game-screen {
-		position: relative;
-		align-items: center;
-		display: grid;
-		height: 100%;
-		width: 100%;
-		min-width: 0; /* CRITICAL: Allow grid to shrink */
-		grid-template-rows: min-content min-content 1fr;
-		row-gap: 0.5rem;
-		padding: 0.5rem;
-		box-sizing: border-box;
-		grid-template-areas:
-			'toolbar-area'
-			'status-area'
-			'main-screen-area';
-	}
-
-	.toolbar-area {
-		grid-area: toolbar-area;
-		padding-inline: 0.25rem;
-		min-width: 0; /* CRITICAL: Allow grid area to shrink */
-	}
-
-	.main-screen-area {
-		grid-area: main-screen-area;
-		width: 100%;
-		min-width: 0;
-		margin-inline: auto;
-		display: grid;
-		min-height: 0; /* CRITICAL: Allow grid to shrink */
-		height: 100%; /* Take full available height */
-		box-sizing: border-box;
-		position: relative; /* CRITICAL: Position context for neural background */
-		overflow: hidden; /* CRITICAL: Prevent scrolling */
-	}
-
-	.main-screen-area > div.dc-screen-container {
-		width: 100%;
-		height: 100%;
-		overflow: visible; /* Allow glows and neural effects to extend beyond container */
-		box-sizing: border-box;
-		position: relative; /* Ensure content appears above neural background */
-		z-index: 1;
-	}
-	.dc-table-bg {
-		border-radius: var(--dc-default-border-radius);
-		/* Background removed to show neural network animation on all screens */
-		background: transparent;
-	}
-
 
 	:global(.dc-header) {
 		position: absolute;
@@ -256,25 +137,19 @@
 		bottom: 0.25rem;
 		padding: 0.5rem;
 		border-radius: var(--dc-default-border-radius);
-		box-shadow: var(--dc-default-box-shadow);
 		overflow: visible; /* Allow button glows to extend beyond bounds */
 	}
-	:global(.dc-header button) {
+	:global(.dc-header .aug-button-wrapper) {
+		width: 100%;
+	}
+	:global(.dc-header .aug-button) {
 		display: grid;
 		justify-self: center;
 		align-self: center;
 		width: 100%;
 		margin: 0;
-		background-color: var(--dc-default-container-bg);
 	}
-	.status-display-area {
-		display: grid;
-		justify-content: stretch;
-		align-content: start;
-		width: 100%;
-		opacity: 0.9;
-		grid-area: status-area;
-	}
+	/* Animations and media queries remain global for all screens */
 	@keyframes fadeIn {
 		from {
 			opacity: 0;
@@ -288,27 +163,19 @@
 		animation: fadeIn 350ms ease-in;
 	}
 
-	.dc-journal-screen {
-		position: relative;
-		width: 100%;
-		height: 100%;
-		overflow: hidden;
-	}
-
-	.dc-journal-screen :global(.dc-journal-container) {
-		position: relative;
-		z-index: 1;
-	}
-
 	@media (max-width: 450px) or (max-height: 600px) {
-		.status-display-area {
-			width: 100%;
-			margin: auto;
-			justify-content: stretch;
-		}
-
 		:global(.dc-header) {
 			width: 90%;
+			bottom: 0.5rem; /* Slightly higher on small screens for better thumb access */
+			padding: 0.25rem;
+		}
+	}
+
+	/* Ensure button always stays at bottom on very small screens */
+	@media (max-height: 500px) {
+		:global(.dc-header) {
+			bottom: 0.25rem;
+			min-width: 85%;
 		}
 	}
 </style>
