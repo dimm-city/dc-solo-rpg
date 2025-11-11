@@ -1,15 +1,16 @@
-# Wretched & Alone Game Mechanics Guide
-## Digital Implementation Reference
+# Wretched & Alone Framework - Game Mechanics Guide
+## Digital Implementation Reference (Story-Agnostic)
 
-**Version:** 1.0
+**Version:** 2.0
 **Date:** 2025-11-11
-**Purpose:** Complete game mechanics specification for implementation and testing
+**Purpose:** Complete framework mechanics specification for implementation and testing
+**Damage System:** Option A - Failure Check System (Odd Cards + Damage Roll)
 
 ---
 
 ## Table of Contents
 
-1. [Game Overview](#1-game-overview)
+1. [Framework Overview](#1-framework-overview)
 2. [Core Components](#2-core-components)
 3. [Game Setup](#3-game-setup)
 4. [Game Flow](#4-game-flow)
@@ -17,57 +18,58 @@
 6. [Special Cards](#6-special-cards)
 7. [Win & Loss Conditions](#7-win--loss-conditions)
 8. [State Machine](#8-state-machine)
-9. [Digital Adaptations](#9-digital-adaptations)
+9. [Damage System (Option A)](#9-damage-system-option-a)
 10. [Test Specifications](#10-test-specifications)
 
 ---
 
-## 1. Game Overview
+## 1. Framework Overview
 
-### 1.1 Premise
+### 1.1 Framework Concept
 
-You are the last surviving crew member of the salvage ship **The Wretched**. After an engine failure, your ship was attacked by a hostile alien creature. The crew is dead. The creature survived being jettisoned into space and now crawls on the hull, seeking entry.
+The Wretched & Alone framework is a **solo journaling RPG system** that creates:
 
-### 1.2 Core Themes
+- **Escalating Tension**: Progressive threat through resource depletion
+- **Inevitable Doom**: High difficulty with low win rate (~10-20%)
+- **Narrative Emergence**: Story created through card prompts and journaling
+- **Simple Mechanics**: Card draws, dice rolls, and resource tracking
+- **Dual-Phase Structure**: Action phase + reflection phase
 
-- **Isolation**: You are completely alone
-- **Survival**: Fighting against inevitable doom
-- **Tension**: Every action risks catastrophe
-- **Narrative**: Journaling creates your story
-- **Mortality**: High likelihood of failure
+### 1.2 Core Objectives
 
-### 1.3 Game Objectives
+**Primary Win Path:**
+- Activate special win condition (Ace of designated suit)
+- Complete countdown mechanic (10 → 0 tokens)
+- Survive final risk check with resources intact
 
-**Primary Win Path:** Repair and activate distress beacon, survive until rescue arrives
-**Secondary Win Path:** Repair engines and escape (rare/difficult)
-**Expected Outcome:** Death (90%+ of games)
+**Expected Outcome:** Failure (80-90% of games)
 
-### 1.4 Play Time
+### 1.3 Play Time
 
 - **Typical Game:** 20-30 minutes
-- **Short Game:** 10-15 minutes (Ace of Hearts on top)
+- **Short Game:** 10-15 minutes (win card on top)
 - **Long Game:** 45-60 minutes (lucky draws)
 
 ---
 
 ## 2. Core Components
 
-### 2.1 Materials Needed
+### 2.1 Materials Required
 
 ```mermaid
 graph TB
-    subgraph Physical["Physical Version"]
+    subgraph Physical["Physical Table Version"]
         A[Standard 52-Card Deck<br/>No Jokers]
         B[Six-Sided Die<br/>1d6]
-        C[Tumbling Block Tower<br/>Jenga-style, 54 blocks]
-        D[10 Tokens<br/>Nuts/bolts/screws]
+        C[Resource Tracker<br/>Physical tower/54 blocks]
+        D[10 Success Tokens<br/>Any small objects]
         E[Recording Method<br/>Audio/video/journal]
     end
 
-    subgraph Digital["Digital Version"]
+    subgraph Digital["Digital Implementation"]
         A2[Virtual Card Deck<br/>52 cards shuffled]
         B2[Random Number Generator<br/>1-6]
-        C2[Ship Integrity Counter<br/>54 → 0 HP]
+        C2[Resource Counter<br/>54 → 0 HP]
         D2[Success Token Counter<br/>10 → 0]
         E2[Text Journal<br/>Database storage]
     end
@@ -77,33 +79,38 @@ graph TB
 
 **Total Cards:** 52 (4 suits × 13 ranks)
 
-| Suit | Symbol | Represents | Count |
-|------|--------|------------|-------|
-| Hearts | ♥ | Ship Systems | 13 |
-| Diamonds | ♦ | Ship Structures | 13 |
-| Clubs | ♣ | Dead Crew | 13 |
-| Spades | ♠ | The Creature | 13 |
+| Suit | Symbol | Thematic Category | Count |
+|------|--------|-------------------|-------|
+| Suit A (Hearts) | ♥ | Category 1 | 13 |
+| Suit B (Diamonds) | ♦ | Category 2 | 13 |
+| Suit C (Clubs) | ♣ | Category 3 | 13 |
+| Suit D (Spades) | ♠ | Category 4 | 13 |
 
 **Ranks:** A, 2, 3, 4, 5, 6, 7, 8, 9, 10, J, Q, K
 
-### 2.3 Tower/Ship Integrity
+**Card Classification:**
+- **Odd Ranks:** A, 3, 5, 7, 9 (trigger damage checks)
+- **Even Ranks:** 2, 4, 6, 8, 10, J, Q, K (safe from damage)
+
+### 2.3 Resource System
 
 ```mermaid
 graph LR
-    A[54 Blocks<br/>Pristine Ship] -->|Damage| B[40-53<br/>Operational]
-    B -->|More Damage| C[20-39<br/>Critical]
-    C -->|More Damage| D[1-19<br/>Failing]
-    D -->|Final Damage| E[0<br/>DESTROYED<br/>Game Over]
+    A[54 Resources<br/>Optimal State] -->|Damage| B[40-53<br/>Functional]
+    B -->|More Damage| C[20-39<br/>Degraded]
+    C -->|More Damage| D[1-19<br/>Critical]
+    D -->|Final Damage| E[0<br/>FAILURE<br/>Game Over]
 ```
 
-**Physical:** Jenga tower that can collapse unpredictably
-**Digital:** HP counter from 54 to 0
+**Resource Tracking:**
+- **Physical:** Tower that collapses on critical failure
+- **Digital:** HP counter from 54 to 0
 
 ### 2.4 Token System
 
 - **Starting Tokens:** 10
-- **Purpose:** Track progress toward rescue after beacon activated
-- **Win Condition:** Reduce to 0 while ship survives
+- **Purpose:** Track progress toward win condition
+- **Win Requirement:** Reduce to 0 while resources remain > 0
 
 ---
 
@@ -115,52 +122,49 @@ graph LR
 sequenceDiagram
     participant P as Player
     participant D as Deck
-    participant T as Tower/HP
+    participant R as Resources
     participant S as State
 
     P->>D: Shuffle 52-card deck
     P->>D: Place face-down
-    Note over D: Optional: Ace of Hearts on top<br/>for shorter game
+    Note over D: Optional: Place win card on top<br/>for shorter game
 
-    P->>T: Build tower OR Set HP = 54
+    P->>R: Initialize resources to 54
     P->>P: Roll 1d6
-    P->>T: Remove/damage that many blocks/HP
-    Note over T: Initial instability
+    P->>R: Reduce resources by roll result
+    Note over R: Initial resource depletion
 
-    P->>S: Place 10 tokens nearby
-    P->>S: Prepare recording method
-    P->>P: Record first log entry
-    Note over P: Day 1 script provided
+    P->>S: Set 10 tokens
+    P->>S: Prepare journal/recording
+    P->>P: Record opening entry
+    Note over P: Day 1 begins
 ```
 
 ### 3.2 Initial State
 
-```javascript
-{
-  day: 1,
-  shipIntegrity: 54 - initialDamage, // initialDamage = 1d6
-  tokens: 10,
-  deck: shuffledDeck, // 52 cards
-  cardsDrawn: 0,
-  kingsRevealed: 0,
-  beaconActive: false,
-  aceDiamondsDrawn: false,
-  gameState: 'active'
+```typescript
+interface GameState {
+  day: number;                    // Starts at 1
+  resources: number;              // 54 - initialDamage (1d6)
+  tokens: number;                 // Starts at 10
+  deck: Card[];                   // Shuffled 52 cards
+  cardsDrawn: number;             // Starts at 0
+  trackersRevealed: number;       // Tracker cards (e.g., Kings) revealed (0-4)
+  winConditionActive: boolean;    // Win card drawn? (false)
+  bonusCounter: number;           // Bonus cards drawn (0-4)
+  gameStatus: GameStatus;         // 'active' | 'victory' | 'defeat'
 }
 ```
 
-### 3.3 First Log Script
+### 3.3 Opening Journal Entry
 
-**Required Opening:**
-```
-Day 1, salvage ship The Wretched. Flight Engineer [YOUR NAME] reporting.
-The other members of the crew are dead and the engines remain non-operational,
-though ship integrity remains good and life support systems are still active.
-I successfully jettisoned the intruder from the airlock, but it remains alive
-and continues to try to access the ship. With a little luck I can repair the
-distress beacon and somebody will pick me up. This is [YOUR NAME], the last
-survivor of the Wretched, signing off.
-```
+Players should record an opening entry that establishes:
+- Character identity
+- Current situation
+- Initial state of resources
+- Goals and objectives
+
+This is **story-specific** and not defined by the framework.
 
 ---
 
@@ -174,12 +178,12 @@ stateDiagram-v2
     Setup --> Day1
 
     Day1 --> PhaseOne: Start Day
-    PhaseOne --> PhaseTwo: Tasks Complete
-    PhaseTwo --> CheckWin: Log Recorded
+    PhaseOne --> PhaseTwo: Actions Complete
+    PhaseTwo --> CheckOutcome: Journal Entry Recorded
 
-    CheckWin --> PhaseOne: Continue (Next Day)
-    CheckWin --> Victory: Beacon Complete & Ship Intact
-    CheckWin --> Defeat: Tower Falls / 4 Kings
+    CheckOutcome --> PhaseOne: Continue (Next Day)
+    CheckOutcome --> Victory: Win Condition Met
+    CheckOutcome --> Defeat: Resources Depleted / Trackers Complete
 
     Victory --> [*]
     Defeat --> [*]
@@ -189,56 +193,58 @@ stateDiagram-v2
 
 ```mermaid
 flowchart TD
-    Start([Start of Day X]) --> Phase1[Phase One: The Tasks]
+    Start([Start of Day X]) --> Phase1[Phase One: Actions]
 
     Phase1 --> Roll[Roll 1d6]
     Roll --> Draw[Draw that many cards face-down]
 
     Draw --> Turn1{Turn over<br/>next card}
-    Turn1 --> Consult[Consult Operations Manual]
-    Consult --> Execute[Execute card instructions]
+    Turn1 --> Process[Process card]
+    Process --> CheckDamage{Is card<br/>odd rank?}
 
-    Execute --> TowerCheck{Does card say<br/>Pull from Tower?}
-    TowerCheck -->|Yes| Pull[Pull block from tower<br/>OR roll for damage]
-    TowerCheck -->|No| MoreCards
-    Pull --> FallCheck{Tower fall?<br/>HP ≤ 0?}
+    CheckDamage -->|Yes<br/>A,3,5,7,9| DamageRoll[Roll 1d6 for damage]
+    CheckDamage -->|No<br/>2,4,6,8,10,J,Q,K| NextCheck
 
-    FallCheck -->|Yes| GameOver[GAME OVER]
-    FallCheck -->|No| MoreCards{More cards<br/>to turn?}
+    DamageRoll --> ApplyDamage[Damage = roll - bonusCounter<br/>resources -= max damage, 0]
+    ApplyDamage --> ResourceCheck{Resources<br/>≤ 0?}
 
+    ResourceCheck -->|Yes| GameOver[GAME OVER]
+    ResourceCheck -->|No| NextCheck
+
+    NextCheck --> MoreCards{More cards<br/>to process?}
     MoreCards -->|Yes| Turn1
     MoreCards -->|No| Discard[Discard used cards]
 
-    Discard --> Phase2[Phase Two: The Log]
-    Phase2 --> Reflect[Reflect on the day]
-    Phase2 --> Record[Record audio/video log<br/>or journal entry]
-    Record --> CheckBeacon{Beacon<br/>active?}
+    Discard --> Phase2[Phase Two: Journal]
+    Phase2 --> Reflect[Reflect on events]
+    Phase2 --> Record[Record journal entry]
+    Record --> CheckWin{Win condition<br/>active?}
 
-    CheckBeacon -->|Yes| RollBeacon[Roll 1d6 for rescue]
-    CheckBeacon -->|No| NextDay
+    CheckWin -->|Yes| RollWin[Roll 1d6 for progress]
+    CheckWin -->|No| NextDay
 
-    RollBeacon --> RescueCheck{Rolled<br/>success?}
-    RescueCheck -->|Yes| RemoveToken[Remove 1 token]
-    RescueCheck -->|No| NextDay
+    RollWin --> WinProgress{Success?}
+    WinProgress -->|Yes| RemoveToken[Remove 1 token]
+    WinProgress -->|No| NextDay
 
     RemoveToken --> TokenCheck{All tokens<br/>removed?}
-    TokenCheck -->|Yes| FinalPull[Final tower pull<br/>OR damage roll]
+    TokenCheck -->|Yes| FinalCheck[Final damage roll]
     TokenCheck -->|No| NextDay
 
-    FinalPull --> FinalCheck{Tower<br/>stand?}
-    FinalCheck -->|Yes| Victory[RESCUED<br/>YOU WIN]
-    FinalCheck -->|No| GameOver
+    FinalCheck --> FinalResource{Resources<br/>> 0?}
+    FinalResource -->|Yes| Victory[YOU WIN]
+    FinalResource -->|No| GameOver
 
     NextDay([Next Day])
     Victory([Victory!])
     GameOver([Defeat])
 ```
 
-### 4.3 Phase One: The Tasks
+### 4.3 Phase One: Actions
 
 **Step-by-Step:**
 
-1. **Roll for Tasks**
+1. **Roll for Card Count**
    - Roll 1d6
    - Result = number of cards to draw (1-6)
 
@@ -248,39 +254,47 @@ flowchart TD
 
 3. **Process Each Card**
    - Turn over first card
-   - Read suit and rank
-   - Consult Operations Manual for that specific card
-   - Follow all instructions on the card
-   - If card says "Pull from the tower", do so
+   - Note suit and rank
+   - Display card's narrative prompt (story-specific)
+   - Apply card mechanics
 
-4. **Tower Pulls** (Physical)
-   - Remove one block from anywhere below top completed layer
-   - Place block on top to complete the top layer
-   - If tower falls at ANY TIME → Game Over
+4. **Damage Check** (Option A - Failure Check System)
+   - **If card rank is ODD (A, 3, 5, 7, 9):**
+     - Roll 1d6
+     - Calculate: `damage = max(roll - bonusCounter, 0)`
+     - Apply: `resources -= damage`
+     - If resources ≤ 0 → Game Over
+   - **If card rank is EVEN (2, 4, 6, 8, 10, J, Q, K):**
+     - No damage check required
+     - Continue to next card
 
-5. **Complete Tasks**
+5. **Special Card Checks**
+   - Check for special mechanics (Aces, Kings, etc.)
+   - Apply effects immediately
+
+6. **Complete Actions**
    - Continue until all cards processed
-   - Discard used cards (unless told otherwise)
+   - Discard used cards
 
-### 4.4 Phase Two: The Log
+### 4.4 Phase Two: Journal
 
 **Step-by-Step:**
 
 1. **Reflect**
    - Consider events of the day
-   - Think about ship state
-   - Consider creature's actions
+   - Think about resource state
    - Note emotional state
+   - Plan next actions
 
-2. **Record Log Entry**
-   - Begin with: "Day [X], salvage ship The Wretched, Flight Engineer [name] reporting"
-   - Summarize the day's events
-   - Sign off
+2. **Record Entry**
+   - Write/record journal entry
+   - Summarize day's events
+   - This is **story-specific**
 
-3. **Beacon Check** (If Active)
+3. **Win Condition Check** (If Active)
    - Roll 1d6
    - **Base:** 6 = success (remove 1 token)
-   - **With Ace♦:** 5 or 6 = success
+   - **With Bonus (optional):** 5-6 = success
    - If all tokens removed → Proceed to finale
 
 4. **Continue or End**
@@ -291,298 +305,282 @@ flowchart TD
 
 ## 5. Card Mechanics
 
-### 5.1 Card Categorization
-
-```mermaid
-graph TB
-    Deck[52-Card Deck] --> Hearts[Hearts ♥<br/>Ship Systems]
-    Deck --> Diamonds[Diamonds ♦<br/>Ship Structures]
-    Deck --> Clubs[Clubs ♣<br/>Dead Crew]
-    Deck --> Spades[Spades ♠<br/>The Creature]
-
-    Hearts --> H_Face[A♥: Beacon<br/>K♥: Sound in vents<br/>Q♥: Door locks fail<br/>J♥: Engine maintenance]
-    Hearts --> H_Num[2-10: Various systems<br/>life support, water,<br/>oxygen, comms, etc.]
-
-    Diamonds --> D_Face[A♦: Boost antenna<br/>K♦: Airlock issue<br/>Q♦: Engine damage<br/>J♦: Power failure]
-    Diamonds --> D_Num[2-10: Hull damage,<br/>modules, gravity,<br/>structural issues]
-
-    Clubs --> C_Face[A♣: Find useful tool<br/>K♣: Movement in mess<br/>Q♣: Clear bodies<br/>J♣: Gather bodies]
-    Clubs --> C_Num[2-10: Journals,<br/>memories, remains,<br/>relationships]
-
-    Spades --> S_Face[A♠: Distract creature<br/>K♠: Creature dreams<br/>Q♠: Name the creature<br/>J♠: Creature's domain]
-    Spades --> S_Num[2-10: Sounds, tracks,<br/>mental toll, physical<br/>evidence, despair]
-```
-
-### 5.2 Card Properties
-
-Each card has the following properties:
+### 5.1 Card Properties
 
 ```typescript
 interface Card {
   suit: 'hearts' | 'diamonds' | 'clubs' | 'spades';
   rank: 'A' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | 'J' | 'Q' | 'K';
-  promptText: string;        // The narrative prompt
-  requiresTowerPull: boolean; // Does this card say "Pull from the tower"?
-  specialMechanic?: string;   // Special effects (e.g., Ace of Hearts)
-  keepVisible?: boolean;      // Keep card out (e.g., Kings)
+  promptText: string;           // Story-specific narrative
+  requiresDamageCheck: boolean; // TRUE if odd rank
+  specialMechanic?: string;     // Special card effects
+  keepVisible?: boolean;        // Keep card displayed (e.g., tracker cards)
 }
 ```
 
-### 5.3 Tower Pull Distribution
+### 5.2 Odd vs Even Classification
 
-**Cards that require tower pulls:**
+```mermaid
+graph TB
+    Cards[52 Cards] --> Odd[ODD RANKS<br/>Trigger Damage]
+    Cards --> Even[EVEN RANKS<br/>Safe]
 
-| Suit | Cards with "Pull from tower" | Total |
-|------|------------------------------|-------|
-| Hearts | 3, 5, 7, 9, 10 | 5 |
-| Diamonds | 2, 3, 4, 5, 6, 7, 8, 9, 10, Q, J | 11 |
-| Clubs | Q, J | 2 |
-| Spades | 2, 3, 4, 5, 6, 7, 8, 9, 10, Q, J | 11 |
-| **Total** | | **29/52** |
+    Odd --> OddList[A, 3, 5, 7, 9<br/>20 cards total<br/>~38% of deck]
+    Even --> EvenList[2, 4, 6, 8, 10<br/>J, Q, K<br/>32 cards total<br/>~62% of deck]
 
-**Approximately 56% of cards require tower pulls.**
+    OddList --> Damage[Roll 1d6<br/>Apply damage]
+    EvenList --> Safe[No damage<br/>Continue]
+```
 
-### 5.4 Sample Card Prompts
+**Implementation:**
 
-#### Hearts (Ship Systems)
+```typescript
+function isOddRank(rank: string): boolean {
+  const oddRanks = ['A', '3', '5', '7', '9'];
+  return oddRanks.includes(rank);
+}
 
-**H2:** "The water purification system still works, but it's noticeably less efficient. What does it feel like to drink water that smells faintly of ammonia?"
+function requiresDamageCheck(card: Card): boolean {
+  return isOddRank(card.rank);
+}
+```
 
-**H5:** "You've been finding it harder and harder to catch your breath, and eventually it dawned on you that the oxygen system had shut itself off. You fixed it, but what caused it to break? **Pull from the tower.**"
+### 5.3 Card Distribution
 
-**H10:** "The life support system keeps making an unhealthy grinding noise, and you don't know what the problem is. What will you do if it fails?"
+| Rank | Count | Triggers Damage? | Notes |
+|------|-------|------------------|-------|
+| A | 4 | ✅ Yes | Also special mechanics |
+| 2 | 4 | ❌ No | |
+| 3 | 4 | ✅ Yes | |
+| 4 | 4 | ❌ No | |
+| 5 | 4 | ✅ Yes | |
+| 6 | 4 | ❌ No | |
+| 7 | 4 | ✅ Yes | |
+| 8 | 4 | ❌ No | |
+| 9 | 4 | ✅ Yes | |
+| 10 | 4 | ❌ No | |
+| J | 4 | ❌ No | Potential special mechanics |
+| Q | 4 | ❌ No | Potential special mechanics |
+| K | 4 | ❌ No | Tracker cards (see Special Cards) |
 
-#### Diamonds (Ship Structures)
-
-**D3:** "After you threw the creature out of the airlock it spent hours trying to get through the windows of the observatory deck. You fear their integrity has been compromised, so you spend an hour reinforcing them by welding sheets of metal over the inside. **Pull from the tower.**"
-
-**D9:** "Your gravity drive fails. It's a long, slow process dragging yourself over to it with no gravity, and a long day fixing it, but you manage to get it back up and running. **Pull from the tower.**"
-
-#### Clubs (Dead Crew)
-
-**C2:** "You found the journal of one of your crewmates. What thing from home were they missing the most?"
-
-**C7:** "Before the creature came you were in the very early stages of pursuing a relationship with another member of the crew. What was the last thing you said to them, and why do you regret it?"
-
-**CQ:** "You spend a day clearing bodies out of a small room that you intend to hole up in if the creature gets aboard again. What was its purpose before this happened, and why were there so many people here when the creature came? **Pull from the tower.**"
-
-#### Spades (The Creature)
-
-**S3:** "Describe the way the creature moves across the outside of the ship. **Pull from the tower.**"
-
-**S7:** "The creature whispers to you through the ship's comms. You don't know how it does it. What do you hear before you kill the audio? **Pull from the tower.**"
-
-**S10:** "You find something left behind by the creature - blood, or a body part, or something you can't quite explain. Describe it. **Pull from the tower.**"
+**Total Damage-Triggering Cards:** 20 out of 52 (~38%)
 
 ---
 
 ## 6. Special Cards
 
-### 6.1 Aces
+### 6.1 Card Type Categories
 
 ```mermaid
 graph TB
-    Aces[Four Aces] --> AH[Ace of Hearts ♥<br/>BEACON ACTIVATION]
-    Aces --> AD[Ace of Diamonds ♦<br/>ANTENNA BOOST]
-    Aces --> AC[Ace of Clubs ♣<br/>USEFUL TOOL]
-    Aces --> AS[Ace of Spades ♠<br/>DISTRACTION]
+    Special[Special Cards] --> Aces[Aces<br/>Win & Bonus]
+    Special --> Trackers[Tracker Cards<br/>Usually Kings]
+    Special --> Modifiers[Modifier Cards<br/>Optional Queens/Jacks]
 
-    AH --> AH1[Pull from tower]
-    AH --> AH2[Place card aside<br/>with 10 tokens on it]
-    AH --> AH3[At end of each day:<br/>Roll 1d6]
-    AH --> AH4[On 6: Remove 1 token]
-    AH --> AH5[When all tokens removed:<br/>Final tower pull]
-    AH --> AH6[If tower stands: WIN]
+    Aces --> WinCard[Win Card<br/>Activates win condition]
+    Aces --> BonusCards[Bonus Cards<br/>Reduce damage taken]
 
-    AD --> AD1[EVA to boost antenna]
-    AD --> AD2[Pull from tower]
-    AD --> AD3[Keep card visible]
-    AD --> AD4[When beacon active:<br/>5 or 6 removes token]
+    Trackers --> Track1[1st Tracker: Continue]
+    Trackers --> Track2[2nd Tracker: Continue]
+    Trackers --> Track3[3rd Tracker: Continue]
+    Trackers --> Track4[4th Tracker: INSTANT LOSS]
 
-    AC --> AC1[Find a useful tool]
-    AC --> AC2[Next tower pull:<br/>May choose not to]
-
-    AS --> AS1[Distract creature]
-    AS --> AS2[If King of Spades drawn:<br/>May shuffle it back]
+    Modifiers --> Enhanced[Enhanced Effects<br/>Story-specific]
 ```
 
-### 6.2 Kings
+### 6.2 Ace Mechanics
+
+**Ace Classification:**
+
+1. **Win Condition Card** (typically Ace of designated suit)
+   - Activates win condition pathway
+   - Places 10 tokens
+   - Begins countdown mechanic
+
+2. **Bonus Counter Cards** (all Aces)
+   - Each Ace drawn adds +1 to bonus counter
+   - Bonus counter reduces damage taken
+   - Max bonus: +4 (all four Aces)
+
+**Example:**
+
+```typescript
+function processAce(card: Card, gameState: GameState): void {
+  // All Aces add to bonus counter
+  gameState.bonusCounter++;
+
+  // Check if this is the win condition card
+  if (card.suit === 'hearts' && card.rank === 'A') {
+    gameState.winConditionActive = true;
+    gameState.tokens = 10;
+  }
+
+  // Ace is odd, so still triggers damage check
+  if (isOddRank(card.rank)) {
+    performDamageCheck(card, gameState);
+  }
+}
+```
+
+### 6.3 Tracker Cards (Kings)
 
 ```mermaid
 sequenceDiagram
     participant P as Player
     participant D as Deck
-    participant K as King Tracker
+    participant T as Tracker Count
     participant G as Game State
 
     P->>D: Draw card
-    D->>P: King of [suit]
-    P->>K: Place King visible
-    K->>K: Count Kings
+    D->>P: Tracker Card (King)
+    P->>T: Place card visible
+    T->>T: Increment count
 
-    alt First, Second, or Third King
-        K->>P: Read King's prompt
-        Note over P: "Sound in vents" or<br/>"Airlock scratching" etc.
-        P->>G: Continue game
-    else Fourth King
-        K->>G: Trigger game over
-        Note over G: "The creature has gained<br/>access to the Wretched<br/>and it has finally found you.<br/>The game is over."
-        G->>P: DEFEAT
+    alt First, Second, or Third Tracker
+        T->>P: Continue game
+        Note over P: Game continues
+    else Fourth Tracker
+        T->>G: Trigger instant loss
+        Note over G: GAME OVER
+        G->>P: Defeat
     end
 ```
 
-**King Prompts:**
+**Tracker Card Rules:**
 
-- **K♥:** "You hear a skittering, scraping sound in the air vents and you fear the creature - or something else - may have got aboard the ship. How will you make sure you don't attract its attention?"
+- **Keep Visible:** All tracker cards must remain displayed
+- **Count Tracks:** Track total number revealed (0-4)
+- **Instant Loss:** When 4th tracker revealed → immediate defeat
+- **No Damage:** Tracker cards are even rank (King = no damage check)
 
-- **K♦:** "When you launched the creature out of the airlock you couldn't seal it again. Every now and then the creature comes back to that hole in the side of your ship, scratching and prying at the single internal door that separates you from the cold black of space. How do you react to this?"
+**Implementation:**
 
-- **K♣:** "As you were passing the Officer's Mess you tried to avert your eyes from the carnage inside, but you're sure you saw something move amongst the bodies of your crewmates. What do you think it was?"
+```typescript
+function processTrackerCard(card: Card, gameState: GameState): void {
+  // Increment tracker count
+  gameState.trackersRevealed++;
 
-- **K♠:** "The past few nights you have been dreaming about the creature. What happens in your dreams?"
+  // Keep card visible
+  gameState.visibleCards.push(card);
 
-**Critical Rule:** All Kings must be kept visible. When the 4th King is drawn, game immediately ends in defeat.
-
-### 6.3 Face Cards (Q, J)
-
-Face cards (Queen, Jack) are treated as **even-numbered** cards in terms of odd/even mechanics, but have specific prompts.
-
-**Queens:**
-- **Q♥:** Door lock system fails (tower pull)
-- **Q♦:** Engine damage from attempted repair (tower pull, remove block from game)
-- **Q♣:** Clear bodies from room (tower pull)
-- **Q♠:** Name the creature (tower pull)
-
-**Jacks:**
-- **J♥:** Engine maintenance (tower pull)
-- **J♦:** Power failure, backup generator fails (tower pull, remove block from game)
-- **J♣:** Gather bodies for burial (tower pull)
-- **J♠:** Creature's domain (tower pull)
+  // Check for instant loss
+  if (gameState.trackersRevealed >= 4) {
+    gameState.gameStatus = 'defeat';
+    gameState.defeatReason = 'tracker_limit';
+  }
+}
+```
 
 ### 6.4 Special Mechanics Summary
 
-| Card | Effect | Mechanic |
-|------|--------|----------|
-| A♥ | Beacon activation | Place 10 tokens, roll each day, win condition |
-| A♦ | Antenna boost | 5 or 6 removes token (instead of just 6) |
-| A♣ | Useful tool | Skip next tower pull |
-| A♠ | Distract creature | May shuffle K♠ back into deck |
-| K (any) | Creature intrusion | 4th King = instant loss |
-| Q♦ | Severe engine damage | Tower pull, remove block permanently |
-| J♦ | Backup generator fail | Tower pull, remove block permanently |
+| Card Type | Effect | Mechanic |
+|-----------|--------|----------|
+| Win Ace | Activate win condition | Place 10 tokens, begin countdown |
+| All Aces | Increase bonus counter | +1 damage reduction per Ace |
+| Tracker Cards | Progress toward loss | 4th tracker = instant defeat |
+| Modifier Cards | Enhanced effects | Story-specific, optional |
+
+**Optional Ace Enhancements:**
+
+- **Bonus Ace:** Win condition rolls succeed on 5-6 instead of just 6
+- **Skip Ace:** Next damage check can be skipped once
+- **Reversal Ace:** Can remove one tracker card from game (once)
 
 ---
 
 ## 7. Win & Loss Conditions
 
-### 7.1 Victory Conditions
+### 7.1 Victory Path
 
 ```mermaid
 flowchart TB
-    Start([Game in Progress]) --> DrawAH{Draw<br/>Ace of Hearts?}
-    DrawAH -->|No| Continue1[Continue playing]
-    DrawAH -->|Yes| Activate[Beacon Activated<br/>10 tokens placed]
+    Start([Game in Progress]) --> DrawWin{Draw<br/>Win Card?}
+    DrawWin -->|No| Continue1[Continue playing]
+    DrawWin -->|Yes| Activate[Win Condition Activated<br/>10 tokens placed]
 
-    Continue1 --> DrawAH
+    Continue1 --> DrawWin
 
     Activate --> EndDay1[End of day]
     EndDay1 --> Roll1[Roll 1d6]
 
-    Roll1 --> Check1{Roll = 6?<br/>Or 5-6 with A♦?}
+    Roll1 --> Check1{Roll = 6?<br/>Or 5-6 with bonus?}
     Check1 -->|No| EndDay2[Next day]
     Check1 -->|Yes| Remove[Remove 1 token]
 
-    EndDay2 --> DrawAH
+    EndDay2 --> DrawWin
     Remove --> TokenCheck{All 10 tokens<br/>removed?}
 
     TokenCheck -->|No| EndDay3[Next day]
-    TokenCheck -->|Yes| FinalPull[Make final<br/>tower pull OR<br/>damage roll]
+    TokenCheck -->|Yes| FinalRoll[Make final<br/>damage roll]
 
     EndDay3 --> Roll1
 
-    FinalPull --> TowerCheck{Tower<br/>still standing?<br/>HP > 0?}
+    FinalRoll --> ResourceCheck{Resources<br/>> 0?}
 
-    TowerCheck -->|Yes| Win[🎉 VICTORY 🎉<br/>You are rescued!]
-    TowerCheck -->|No| Lose[💀 DEFEAT 💀<br/>Arrived too late]
+    ResourceCheck -->|Yes| Win[🎉 VICTORY 🎉]
+    ResourceCheck -->|No| Lose[💀 DEFEAT 💀]
 
     Win([Victory!])
     Lose([Game Over])
 ```
 
-**Primary Win Path:**
-1. Draw Ace of Hearts → Beacon activated
-2. Survive each day's tasks without tower falling
-3. Roll for rescue at end of each day (6 = success, or 5-6 with A♦)
-4. Remove all 10 tokens
-5. Make final tower pull/damage roll
-6. Tower still standing → **YOU WIN**
+**Victory Requirements:**
 
-**Probability:**
-- Without A♦: (1/6)^10 = 0.00000165% per sequential rolls
-- In practice: ~10-20% win rate due to multiple chances per game
+1. Draw win condition card (designated Ace)
+2. Survive with resources > 0
+3. Roll for progress at end of each day
+4. Successfully remove all 10 tokens
+5. Make final damage roll
+6. Resources still > 0 → **WIN**
 
-**Secondary Win Path:**
-- Fix engines and escape (mentioned but no mechanical path provided)
-- Considered **impossible** per the Debrief section
+**Win Probability:**
+- Base chance per roll: 1/6 (16.67%)
+- With bonus: 2/6 (33.33%)
+- Typical win rate: 10-20% of games
 
 ### 7.2 Defeat Conditions
 
 ```mermaid
 flowchart TB
-    Playing([Game in Progress]) --> Condition1{Tower falls<br/>during pull?}
-    Playing --> Condition2{HP reaches<br/>0 or below?}
-    Playing --> Condition3{4th King<br/>revealed?}
-    Playing --> Condition4{Deck runs out<br/>before beacon?}
-    Playing --> Condition5{Final rescue<br/>roll fails?}
+    Playing([Game in Progress]) --> Condition1{Resources<br/>reach 0?}
+    Playing --> Condition2{4 Tracker Cards<br/>revealed?}
+    Playing --> Condition3{Deck runs out<br/>before win?}
+    Playing --> Condition4{Final roll<br/>depletes resources?}
 
-    Condition1 -->|Yes| Loss1[💀 Ship destroyed<br/>Catastrophic failure]
-    Condition2 -->|Yes| Loss2[💀 Ship destroyed<br/>Systems failure]
-    Condition3 -->|Yes| Loss3[💀 Creature enters<br/>You are killed]
-    Condition4 -->|Yes| Loss4[💀 Died before rescue<br/>Time ran out]
-    Condition5 -->|Yes| Loss5[💀 Arrived too late<br/>Ship collapses]
+    Condition1 -->|Yes| Loss1[💀 Resources Depleted<br/>Critical Failure]
+    Condition2 -->|Yes| Loss2[💀 Tracker Limit<br/>Instant Loss]
+    Condition3 -->|Yes| Loss3[💀 Time Expired<br/>Deck Exhausted]
+    Condition4 -->|Yes| Loss4[💀 Final Roll Failed<br/>Too Late]
 
     Loss1 --> GameOver[GAME OVER]
     Loss2 --> GameOver
     Loss3 --> GameOver
     Loss4 --> GameOver
-    Loss5 --> GameOver
 ```
 
-**Loss Condition 1: Tower Collapse**
-- Physical: Tower falls during any pull
-- Digital: HP ≤ 0 after any damage
-- **Result:** Catastrophic systems failure
+**Loss Conditions:**
 
-**Loss Condition 2: Four Kings**
-- Draw all 4 Kings (any order)
-- **Result:** Creature gains access and kills you
-- Instant game over
+1. **Resources Depleted:** Resources ≤ 0 after any damage check
+2. **Tracker Limit:** 4 tracker cards (Kings) revealed
+3. **Deck Exhaustion:** All cards drawn before win condition met (rare)
+4. **Final Roll Failure:** Win countdown complete, but final damage depletes resources
 
-**Loss Condition 3: Deck Exhausted**
-- Rare, but possible if beacon not drawn
-- **Result:** Died before rescue possible
-
-**Loss Condition 4: Final Pull Fails**
-- Beacon countdown complete
-- Final tower pull causes collapse
-- **Result:** Rescue arrives too late
-
-### 7.3 Outcome Probability
+### 7.3 Expected Outcome Distribution
 
 ```mermaid
-pie title Expected Game Outcomes
-    "Death by Tower Collapse" : 60
-    "Death by 4 Kings" : 15
-    "Death by Final Pull" : 10
+pie title Game Outcome Probability
+    "Resource Depletion" : 60
+    "Tracker Limit (4 Kings)" : 15
+    "Final Roll Failure" : 10
     "Deck Exhaustion" : 5
-    "Victory (Rescued)" : 10
+    "Victory" : 10
 ```
 
 **Typical Distribution:**
-- **60%** - Tower/HP reaches 0 before rescue
-- **15%** - 4 Kings revealed
-- **10%** - Final pull fails
-- **5%** - Deck runs out
+- **60%** - Resources depleted before win
+- **15%** - Tracker limit reached
+- **10%** - Final roll fails
+- **5%** - Deck exhaustion
 - **10%** - Victory
 
 ---
@@ -596,58 +594,60 @@ stateDiagram-v2
     [*] --> Initialization
 
     Initialization --> Setup: Create game
-    Setup --> FirstLog: Record Day 1
-    FirstLog --> DayStart: Begin Day 1
+    Setup --> FirstEntry: Record opening
+    FirstEntry --> DayStart: Begin Day 1
 
-    DayStart --> RollForTasks: Phase One
-    RollForTasks --> DrawCards: Roll complete
+    DayStart --> RollForCards: Phase One
+    RollForCards --> DrawCards: Roll complete
     DrawCards --> ProcessCard: Draw N cards
 
     ProcessCard --> ShowPrompt: Turn over card
-    ShowPrompt --> EvaluateCard: Read prompt
+    ShowPrompt --> CheckCard: Evaluate card
 
-    EvaluateCard --> TowerPullRequired: Check mechanics
-    TowerPullRequired --> TowerPull: Yes, pull tower
-    TowerPullRequired --> CardComplete: No, continue
+    CheckCard --> DamageCheck: Odd rank?
+    DamageCheck --> RollDamage: Yes, roll 1d6
+    DamageCheck --> CardComplete: No, continue
 
-    TowerPull --> TowerFell: Check stability
-    TowerFell --> GameOverState: Tower collapsed
-    TowerFell --> CardComplete: Tower stands
+    RollDamage --> ApplyDamage: Calculate damage
+    ApplyDamage --> ResourceCheck: Check resources
+
+    ResourceCheck --> GameOverState: Resources ≤ 0
+    ResourceCheck --> CardComplete: Resources > 0
 
     CardComplete --> MoreCards: Check remaining
     MoreCards --> ProcessCard: Yes, next card
     MoreCards --> DiscardCards: No, done
 
     DiscardCards --> SpecialChecks: Check special cards
-    SpecialChecks --> KingCheck: Count Kings
-    KingCheck --> GameOverState: 4 Kings drawn
-    KingCheck --> BeaconCheck: < 4 Kings
+    SpecialChecks --> TrackerCheck: Count trackers
+    TrackerCheck --> GameOverState: 4 trackers
+    TrackerCheck --> WinCheck: < 4 trackers
 
-    BeaconCheck --> BeaconActive: A♥ drawn this game
-    BeaconCheck --> JournalPhase: No beacon yet
+    WinCheck --> WinActive: Win card drawn?
+    WinCheck --> JournalPhase: Not yet
 
-    BeaconActive --> BeaconRoll: Roll for rescue
-    BeaconRoll --> RescueSuccess: Check result
-    RescueSuccess --> RemoveToken: Success!
-    RescueSuccess --> JournalPhase: Failed roll
+    WinActive --> WinRoll: Roll for progress
+    WinRoll --> TokenSuccess: Check result
+    TokenSuccess --> RemoveToken: Success!
+    TokenSuccess --> JournalPhase: Failed roll
 
     RemoveToken --> AllTokensGone: Check count
-    AllTokensGone --> FinalPull: All removed
+    AllTokensGone --> FinalDamage: All removed
     AllTokensGone --> JournalPhase: Tokens remain
 
-    FinalPull --> FinalStability: Tower pull/damage
-    FinalStability --> VictoryState: Tower stands
-    FinalStability --> GameOverState: Tower fell
+    FinalDamage --> FinalResourceCheck: Check resources
+    FinalResourceCheck --> VictoryState: Resources > 0
+    FinalResourceCheck --> GameOverState: Resources ≤ 0
 
-    JournalPhase --> RecordLog: Phase Two
-    RecordLog --> DeckCheck: Log recorded
+    JournalPhase --> RecordEntry: Phase Two
+    RecordEntry --> DeckCheck: Entry recorded
     DeckCheck --> DayStart: Cards remain
     DeckCheck --> GameOverState: Deck empty
 
-    GameOverState --> FinalLog: Record final entry
-    FinalLog --> [*]: Exit game
+    GameOverState --> FinalEntry: Record final
+    FinalEntry --> [*]: Exit game
 
-    VictoryState --> FinalLog: Record victory
+    VictoryState --> FinalEntry: Record victory
 ```
 
 ### 8.2 State Definitions
@@ -655,467 +655,246 @@ stateDiagram-v2
 ```typescript
 type GameState =
   | 'initialization'    // Creating new game
-  | 'setup'             // Building tower, shuffling deck
-  | 'firstLog'          // Recording opening log
+  | 'setup'             // Initializing resources
+  | 'firstEntry'        // Recording opening
   | 'dayStart'          // Beginning new day
-  | 'rollForTasks'      // Rolling 1d6 for card count
-  | 'drawCards'         // Drawing N cards face-down
-  | 'processCard'       // Turning over next card
+  | 'rollForCards'      // Rolling 1d6 for card count
+  | 'drawCards'         // Drawing N cards
+  | 'processCard'       // Processing next card
   | 'showPrompt'        // Displaying card prompt
-  | 'towerPull'         // Pulling block / rolling damage
+  | 'damageCheck'       // Checking if odd rank
+  | 'rollDamage'        // Rolling damage
+  | 'applyDamage'       // Applying damage to resources
   | 'cardComplete'      // Card resolved
   | 'discardCards'      // Moving cards to discard
-  | 'specialChecks'     // Checking Kings, Aces, etc.
-  | 'beaconActive'      // Beacon countdown active
-  | 'beaconRoll'        // Rolling for rescue
-  | 'removeToken'       // Token removed from count
-  | 'finalPull'         // Last tower pull before rescue
-  | 'journalPhase'      // Writing log entry
-  | 'recordLog'         // Saving journal
+  | 'specialChecks'     // Checking Aces, Kings, etc.
+  | 'winActive'         // Win condition countdown
+  | 'winRoll'           // Rolling for progress
+  | 'removeToken'       // Token removed
+  | 'finalDamage'       // Final damage roll
+  | 'journalPhase'      // Writing entry
+  | 'recordEntry'       // Saving journal
   | 'gameOverState'     // Defeat
   | 'victoryState'      // Victory
-  | 'finalLog'          // Closing entry
+  | 'finalEntry'        // Closing entry
   | 'exit';             // Game complete
 
 interface GameContext {
   day: number;
-  shipIntegrity: number;      // 54 → 0
-  tokens: number;             // 10 → 0
-  deck: Card[];               // Remaining cards
-  hand: Card[];               // Current day's cards
-  discard: Card[];            // Used cards
-  kingsRevealed: number;      // 0 → 4
-  beaconActive: boolean;
-  aceDiamondsDrawn: boolean;
-  aceClubsDrawn: boolean;
-  aceHeartsDrawn: boolean;
-  aceSpadesDrawn: boolean;
-  kingOfSpadesDrawn: boolean;
+  resources: number;            // 54 → 0
+  tokens: number;               // 10 → 0
+  deck: Card[];                 // Remaining cards
+  hand: Card[];                 // Current day's cards
+  discard: Card[];              // Used cards
+  trackersRevealed: number;     // 0 → 4
+  bonusCounter: number;         // 0 → 4
+  winConditionActive: boolean;
   journal: JournalEntry[];
-  cardsThisTurn: number;      // From roll
+  cardsThisTurn: number;
   currentCardIndex: number;
+  gameStatus: 'active' | 'victory' | 'defeat';
+  defeatReason?: string;
 }
-```
-
-### 8.3 Transition Rules
-
-```typescript
-const transitions = {
-  initialization: {
-    CREATE_GAME: 'setup'
-  },
-
-  setup: {
-    SETUP_COMPLETE: 'firstLog'
-  },
-
-  firstLog: {
-    LOG_RECORDED: 'dayStart'
-  },
-
-  dayStart: {
-    START_PHASE_ONE: 'rollForTasks'
-  },
-
-  rollForTasks: {
-    ROLL_COMPLETE: 'drawCards'
-  },
-
-  drawCards: {
-    CARDS_DRAWN: 'processCard'
-  },
-
-  processCard: {
-    CARD_TURNED: 'showPrompt'
-  },
-
-  showPrompt: {
-    PROMPT_READ: 'evaluateCard'
-  },
-
-  evaluateCard: {
-    TOWER_PULL_REQUIRED: 'towerPull',
-    NO_TOWER_PULL: 'cardComplete'
-  },
-
-  towerPull: {
-    TOWER_FELL: 'gameOverState',
-    TOWER_STANDS: 'cardComplete'
-  },
-
-  cardComplete: {
-    MORE_CARDS: 'processCard',
-    ALL_CARDS_DONE: 'discardCards'
-  },
-
-  discardCards: {
-    CARDS_DISCARDED: 'specialChecks'
-  },
-
-  specialChecks: {
-    FOUR_KINGS: 'gameOverState',
-    BEACON_ACTIVE: 'beaconActive',
-    CONTINUE: 'journalPhase'
-  },
-
-  beaconActive: {
-    ROLL_FOR_RESCUE: 'beaconRoll'
-  },
-
-  beaconRoll: {
-    RESCUE_SUCCESS: 'removeToken',
-    RESCUE_FAILED: 'journalPhase'
-  },
-
-  removeToken: {
-    ALL_TOKENS_REMOVED: 'finalPull',
-    TOKENS_REMAIN: 'journalPhase'
-  },
-
-  finalPull: {
-    TOWER_STANDS: 'victoryState',
-    TOWER_FELL: 'gameOverState'
-  },
-
-  journalPhase: {
-    START_LOG: 'recordLog'
-  },
-
-  recordLog: {
-    LOG_COMPLETE_CONTINUE: 'dayStart',
-    LOG_COMPLETE_DECK_EMPTY: 'gameOverState'
-  },
-
-  gameOverState: {
-    RECORD_FINAL_LOG: 'finalLog'
-  },
-
-  victoryState: {
-    RECORD_FINAL_LOG: 'finalLog'
-  },
-
-  finalLog: {
-    EXIT_GAME: 'exit'
-  }
-};
 ```
 
 ---
 
-## 9. Digital Adaptations
+## 9. Damage System (Option A)
 
-### 9.1 Physical vs Digital Comparison
+### 9.1 Failure Check System Overview
 
-| Physical Mechanic | Challenge | Digital Solution |
-|-------------------|-----------|------------------|
-| **Jenga Tower** | Requires physical tower, unpredictable collapse | Ship Integrity HP (54 → 0) + damage rolls |
-| **Tower Pulls** | Manual dexterity, tension | Failure check: roll 1d6, take damage |
-| **Card Shuffling** | Manual shuffle | Fisher-Yates algorithm |
-| **Token Placement** | Physical nuts/bolts | Counter variable (10 → 0) |
-| **Audio Recording** | Microphone/camera | Text journal with timestamps |
-| **Unpredictability** | Tower can fall at any pull | Damage formula creates variance |
-
-### 9.2 Tower Replacement Mechanics
-
-#### Option A: Failure Check System (Recommended)
+**Core Concept:** Odd-ranked cards trigger a damage roll, creating tension without physical components.
 
 ```mermaid
 flowchart TB
-    CardDrawn[Card Drawn] --> CheckType{Card type?}
+    CardDrawn[Card Drawn] --> CheckRank{Card rank?}
 
-    CheckType -->|Even card<br/>2,4,6,8,10,Q,J,K| Safe[No damage<br/>Continue]
-    CheckType -->|Odd card<br/>1,3,5,7,9,A| Failure[Trigger Failure Check]
+    CheckRank -->|EVEN<br/>2,4,6,8,10,J,Q,K| Safe[No damage check<br/>Continue]
+    CheckRank -->|ODD<br/>A,3,5,7,9| DamageCheck[Trigger Damage Check]
 
-    Failure --> Roll[Roll 1d6]
-    Roll --> Calc[Damage = max roll - bonus, 0]
-    Calc --> Apply[shipIntegrity -= damage]
+    DamageCheck --> Roll[Roll 1d6]
+    Roll --> Calculate[damage = max roll - bonusCounter, 0]
+    Calculate --> Apply[resources -= damage]
 
-    Apply --> Check{shipIntegrity<br/>≤ 0?}
-    Check -->|Yes| GameOver[GAME OVER<br/>Ship destroyed]
+    Apply --> Check{resources<br/>≤ 0?}
+    Check -->|Yes| GameOver[GAME OVER<br/>Resources depleted]
     Check -->|No| Continue[Continue]
 
     Safe --> Continue
     Continue --> NextCard[Next card or phase]
 ```
 
-**Failure Check Formula:**
-```javascript
-function failureCheck(bonusCounter) {
-  const roll = Math.floor(Math.random() * 6) + 1; // 1-6
+### 9.2 Damage Formula
+
+```typescript
+function calculateDamage(roll: number, bonusCounter: number): number {
   const damage = Math.max(roll - bonusCounter, 0);
   return damage;
 }
 
-// Usage
-if (card.isOdd) {
-  const damage = failureCheck(gameState.bonusCounter);
-  gameState.shipIntegrity -= damage;
+function performDamageCheck(card: Card, gameState: GameState): void {
+  // Only odd cards trigger damage
+  if (!isOddRank(card.rank)) {
+    return;
+  }
 
-  if (gameState.shipIntegrity <= 0) {
-    gameState.status = 'defeat';
+  // Roll 1d6
+  const roll = rollD6(); // Returns 1-6
+
+  // Calculate damage
+  const damage = calculateDamage(roll, gameState.bonusCounter);
+
+  // Apply damage
+  gameState.resources -= damage;
+
+  // Log event
+  gameState.journal.push({
+    type: 'damage',
+    day: gameState.day,
+    card: card.id,
+    roll: roll,
+    bonusCounter: gameState.bonusCounter,
+    damage: damage,
+    resourcesRemaining: gameState.resources
+  });
+
+  // Check for game over
+  if (gameState.resources <= 0) {
+    gameState.gameStatus = 'defeat';
+    gameState.defeatReason = 'resources_depleted';
   }
 }
 ```
 
-**Bonus Counter:**
-- Starts at 0
-- Each Ace drawn adds +1
-- Max damage reduction: 4 (if all Aces drawn)
+### 9.3 Damage Tables
 
-**Odd/Even Classification:**
-```javascript
-const oddCards = ['A', '3', '5', '7', '9'];
-const evenCards = ['2', '4', '6', '8', '10', 'J', 'Q', 'K'];
+**Without Bonus Counter (bonusCounter = 0):**
 
-function isOdd(rank) {
-  return oddCards.includes(rank);
-}
-```
+| Roll | Damage | Resources After (from 54) |
+|------|--------|---------------------------|
+| 1 | 1 | 53 |
+| 2 | 2 | 52 |
+| 3 | 3 | 51 |
+| 4 | 4 | 50 |
+| 5 | 5 | 49 |
+| 6 | 6 | 48 |
 
-#### Option B: Danger Level System
+**With Bonus Counter +2 (bonusCounter = 2):**
 
-```javascript
-interface Card {
-  dangerLevel: 0 | 1 | 2 | 3; // Based on source material
-}
+| Roll | Damage | Resources After (from 54) |
+|------|--------|---------------------------|
+| 1 | 0 | 54 (no damage) |
+| 2 | 0 | 54 (no damage) |
+| 3 | 1 | 53 |
+| 4 | 2 | 52 |
+| 5 | 3 | 51 |
+| 6 | 4 | 50 |
 
-function processDanger(card) {
-  if (card.dangerLevel === 0) {
-    // No check needed
-    return 0;
-  }
+**With Bonus Counter +4 (bonusCounter = 4 - all Aces):**
 
-  const roll = Math.floor(Math.random() * 6) + 1;
-  const threshold = 7 - card.dangerLevel; // 7, 6, 5, 4
+| Roll | Damage | Resources After (from 54) |
+|------|--------|---------------------------|
+| 1 | 0 | 54 (no damage) |
+| 2 | 0 | 54 (no damage) |
+| 3 | 0 | 54 (no damage) |
+| 4 | 0 | 54 (no damage) |
+| 5 | 1 | 53 |
+| 6 | 2 | 52 |
 
-  if (roll >= threshold) {
-    return 0; // Success, no damage
-  } else {
-    return card.dangerLevel; // Failed, take damage
-  }
-}
-```
+### 9.4 Expected Damage Per Check
 
-**Danger Level Assignment:**
-- **0:** Reflective cards (no tower pull in source)
-- **1:** Minor systems (H2, C2, C4, etc.)
-- **2:** Major systems (H5, D6, S4, etc.)
-- **3:** Critical events (Q♦, J♦, etc.)
+| Bonus Counter | Average Damage | Expected Resource Loss |
+|---------------|----------------|------------------------|
+| 0 | 3.5 | High attrition |
+| 1 | 2.5 | Moderate attrition |
+| 2 | 1.67 | Reduced attrition |
+| 3 | 1.0 | Minimal attrition |
+| 4 | 0.5 | Very low attrition |
 
-#### Option C: Direct Damage Values
+**Game Balance:**
+- ~38% of cards trigger damage (20 odd cards)
+- Average game draws ~30-40 cards
+- Expected damage checks: 11-15 per game
+- With 0 bonus: ~38-52 total damage (fatal)
+- With 4 bonus: ~6-8 total damage (survivable)
 
-Assign fixed damage to cards that require tower pulls:
+### 9.5 Balancing Variables
 
-```javascript
-const cardDamage = {
-  'H3': 1,
-  'H5': 2,
-  'H7': 1,
-  'H9': 2,
-  'H10': 1,
-  'D2': 1,
-  'D3': 2,
-  // ... etc.
-  'Q♦': 3, // Severe damage
-  'J♦': 3  // Severe damage
+```typescript
+// Configuration for tuning difficulty
+const GAME_CONFIG = {
+  INITIAL_RESOURCES: 54,        // Starting resource pool
+  INITIAL_DAMAGE_ROLL: true,    // Apply 1d6 damage at start?
+  BONUS_PER_ACE: 1,             // Damage reduction per Ace
+  WIN_TOKENS: 10,               // Tokens required for win
+  WIN_ROLL_BASE: 6,             // Roll needed without bonus Ace
+  WIN_ROLL_ENHANCED: 5,         // Roll needed with bonus Ace
+  TRACKER_LIMIT: 4              // Number of trackers before loss
 };
-
-function applyCardDamage(card) {
-  const damage = cardDamage[card.id] || 0;
-  gameState.shipIntegrity -= damage;
-}
-```
-
-### 9.3 Recommended Digital Implementation
-
-**Core Approach:** Hybrid Failure Check System
-
-```mermaid
-flowchart TB
-    Draw[Draw Card] --> HasPrompt{Card has<br/>pull requirement?}
-
-    HasPrompt -->|Yes| DetermineType{Card type?}
-    HasPrompt -->|No| Display[Display prompt only]
-
-    DetermineType -->|Standard| Standard[Roll 1d6<br/>Damage = roll - bonus]
-    DetermineType -->|Severe<br/>Q♦, J♦| Severe[Roll 1d6 + 1<br/>Damage = roll - bonus<br/>Min 1]
-
-    Standard --> ApplyDmg[shipIntegrity -= damage]
-    Severe --> ApplyDmg
-
-    ApplyDmg --> CheckHP{HP ≤ 0?}
-    CheckHP -->|Yes| Loss[Game Over]
-    CheckHP -->|No| Display
-
-    Display --> Continue[Continue]
-```
-
-**Implementation:**
-
-```javascript
-function processCard(card, gameState) {
-  // Display prompt
-  showPrompt(card.promptText);
-
-  // Check for tower pull requirement
-  if (card.requiresTowerPull) {
-    const damage = calculateDamage(card, gameState);
-    gameState.shipIntegrity -= damage;
-
-    // Log event
-    gameState.journal.push({
-      type: 'damage',
-      card: card.id,
-      damage: damage,
-      integrity: gameState.shipIntegrity
-    });
-
-    // Check for game over
-    if (gameState.shipIntegrity <= 0) {
-      return triggerDefeat('ship_destroyed');
-    }
-  }
-
-  // Handle special mechanics
-  if (card.specialMechanic) {
-    applySpecialMechanic(card, gameState);
-  }
-
-  return 'continue';
-}
-
-function calculateDamage(card, gameState) {
-  const roll = rollD6();
-  let baseDamage = roll - gameState.bonusCounter;
-
-  // Severe damage cards (Q♦, J♦)
-  if (card.rank === 'Q' && card.suit === 'diamonds' ||
-      card.rank === 'J' && card.suit === 'diamonds') {
-    baseDamage = (roll + 1) - gameState.bonusCounter;
-    baseDamage = Math.max(baseDamage, 1); // Minimum 1 damage
-  }
-
-  return Math.max(baseDamage, 0);
-}
-```
-
-### 9.4 Balancing Considerations
-
-**Target Metrics:**
-- **Average Game Length:** 20-30 minutes (15-25 rounds)
-- **Win Rate:** 10-20%
-- **Average HP at Victory:** 10-20 (out of 54)
-- **4 Kings Loss Rate:** ~15%
-
-**Tuning Variables:**
-```javascript
-const INITIAL_HP = 54;          // Starting ship integrity
-const INITIAL_DAMAGE_ROLL = true; // Roll 1d6 damage at start
-const BONUS_PER_ACE = 1;        // Damage reduction per Ace
-const SEVERE_DAMAGE_BONUS = 1;  // Extra damage for Q♦, J♦
-const BEACON_BASE_CHANCE = 6;   // Roll needed without A♦
-const BEACON_BOOSTED_CHANCE = 5; // Roll needed with A♦
 ```
 
 **Difficulty Modes:**
 
-| Mode | Initial HP | Initial Damage | Bonus per Ace | Win Rate |
-|------|-----------|----------------|---------------|----------|
-| Easy | 60 | No | 2 | ~30% |
+| Mode | Initial Resources | Initial Damage | Bonus per Ace | Expected Win Rate |
+|------|------------------|----------------|---------------|-------------------|
+| Easy | 65 | No | 2 | ~30% |
 | Normal | 54 | Yes (1d6) | 1 | ~15% |
 | Hard | 48 | Yes (1d6+2) | 1 | ~5% |
 | Nightmare | 40 | Yes (2d6) | 0 | ~1% |
 
-### 9.5 Audio Recording Alternative
+### 9.6 Implementation Example
 
-**Browser Implementation:**
+```typescript
+// Complete card processing with damage system
+function processCard(card: Card, gameState: GameState): GameResult {
+  // 1. Display narrative prompt (story-specific)
+  displayPrompt(card.promptText);
 
-```javascript
-// Optional audio log recording
-class AudioLogger {
-  constructor() {
-    this.mediaRecorder = null;
-    this.audioChunks = [];
-  }
+  // 2. Check if card triggers damage
+  if (isOddRank(card.rank)) {
+    performDamageCheck(card, gameState);
 
-  async startRecording() {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: true
-    });
-    this.mediaRecorder = new MediaRecorder(stream);
-
-    this.mediaRecorder.ondataavailable = (event) => {
-      this.audioChunks.push(event.data);
-    };
-
-    this.mediaRecorder.start();
-  }
-
-  stopRecording() {
-    return new Promise((resolve) => {
-      this.mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(this.audioChunks, {
-          type: 'audio/webm'
-        });
-        const audioUrl = URL.createObjectURL(audioBlob);
-        resolve(audioUrl);
+    // Check if game over
+    if (gameState.resources <= 0) {
+      return {
+        status: 'defeat',
+        reason: 'resources_depleted'
       };
-
-      this.mediaRecorder.stop();
-    });
+    }
   }
+
+  // 3. Handle special mechanics
+  if (card.rank === 'A') {
+    processAce(card, gameState);
+  }
+
+  if (card.rank === 'K') {
+    processTrackerCard(card, gameState);
+
+    if (gameState.trackersRevealed >= 4) {
+      return {
+        status: 'defeat',
+        reason: 'tracker_limit'
+      };
+    }
+  }
+
+  // 4. Continue game
+  return {
+    status: 'continue'
+  };
 }
 ```
-
-**Text Journal Alternative:**
-```javascript
-interface JournalEntry {
-  day: number;
-  timestamp: Date;
-  content: string;
-  cardsDrawn: string[];    // e.g., ['H5', 'D3', 'S7']
-  events: string[];        // Auto-generated summary
-  shipIntegrity: number;
-  tokensRemaining: number;
-}
-```
-
-### 9.6 Visual Enhancements
-
-**Ship Integrity Visualization:**
-
-```mermaid
-graph LR
-    A[54-45<br/>🟢 Pristine] --> B[44-35<br/>🟢 Operational]
-    B --> C[34-25<br/>🟡 Damaged]
-    C --> D[24-15<br/>🟠 Critical]
-    D --> E[14-5<br/>🔴 Failing]
-    E --> F[4-0<br/>💀 Destroyed]
-```
-
-**Card Animation Sequence:**
-1. Deck shuffles with animation
-2. Card draws with slide effect
-3. Card flips to reveal face
-4. Prompt fades in with typewriter effect
-5. Damage numbers float upward
-6. HP bar depletes with shake effect
-
-**Creature Presence Indicators:**
-- Background darkens with each Spade
-- Ambient sounds intensify
-- Screen edges flash red on King draws
-- Subtle scratch marks appear on UI
 
 ---
 
 ## 10. Test Specifications
 
-### 10.1 Unit Test Requirements
+### 10.1 Core Mechanics Tests
 
-#### Deck Management Tests
+#### Deck Management
 
-```javascript
+```typescript
 describe('Deck Management', () => {
   test('should create 52-card deck', () => {
     const deck = createDeck();
@@ -1124,586 +903,257 @@ describe('Deck Management', () => {
 
   test('should have 4 suits with 13 cards each', () => {
     const deck = createDeck();
-    const hearts = deck.filter(c => c.suit === 'hearts');
-    const diamonds = deck.filter(c => c.suit === 'diamonds');
-    const clubs = deck.filter(c => c.suit === 'clubs');
-    const spades = deck.filter(c => c.suit === 'spades');
-
-    expect(hearts).toHaveLength(13);
-    expect(diamonds).toHaveLength(13);
-    expect(clubs).toHaveLength(13);
-    expect(spades).toHaveLength(13);
-  });
-
-  test('should have all ranks A-K', () => {
-    const deck = createDeck();
-    const ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
-
-    ranks.forEach(rank => {
-      const cardsOfRank = deck.filter(c => c.rank === rank);
-      expect(cardsOfRank).toHaveLength(4);
+    ['hearts', 'diamonds', 'clubs', 'spades'].forEach(suit => {
+      const suitCards = deck.filter(c => c.suit === suit);
+      expect(suitCards).toHaveLength(13);
     });
   });
 
-  test('should shuffle deck randomly', () => {
-    const deck1 = shuffleDeck(createDeck());
-    const deck2 = shuffleDeck(createDeck());
+  test('should classify odd and even ranks correctly', () => {
+    const oddRanks = ['A', '3', '5', '7', '9'];
+    const evenRanks = ['2', '4', '6', '8', '10', 'J', 'Q', 'K'];
 
-    const different = deck1.some((card, i) =>
-      card.id !== deck2[i].id
-    );
-    expect(different).toBe(true);
+    oddRanks.forEach(rank => {
+      expect(isOddRank(rank)).toBe(true);
+    });
+
+    evenRanks.forEach(rank => {
+      expect(isOddRank(rank)).toBe(false);
+    });
   });
 
-  test('should draw specified number of cards', () => {
-    const gameState = initializeGame();
-    drawCards(gameState, 3);
-
-    expect(gameState.hand).toHaveLength(3);
-    expect(gameState.deck).toHaveLength(49);
-  });
-
-  test('should not draw more cards than remain', () => {
-    const gameState = initializeGame();
-    gameState.deck = createDeck().slice(0, 2);
-
-    drawCards(gameState, 5);
-    expect(gameState.hand).toHaveLength(2);
+  test('should have 20 damage-triggering cards', () => {
+    const deck = createDeck();
+    const damageCards = deck.filter(c => isOddRank(c.rank));
+    expect(damageCards).toHaveLength(20);
   });
 });
 ```
 
-#### Game Initialization Tests
+#### Game Initialization
 
-```javascript
+```typescript
 describe('Game Initialization', () => {
-  test('should start with correct initial state', () => {
-    const gameState = initializeGame();
+  test('should initialize with correct starting state', () => {
+    const game = initializeGame();
 
-    expect(gameState.day).toBe(1);
-    expect(gameState.tokens).toBe(10);
-    expect(gameState.kingsRevealed).toBe(0);
-    expect(gameState.beaconActive).toBe(false);
-    expect(gameState.deck).toHaveLength(52);
+    expect(game.day).toBe(1);
+    expect(game.tokens).toBe(10);
+    expect(game.trackersRevealed).toBe(0);
+    expect(game.bonusCounter).toBe(0);
+    expect(game.winConditionActive).toBe(false);
+    expect(game.gameStatus).toBe('active');
   });
 
-  test('should apply initial damage to ship integrity', () => {
-    const gameState = initializeGame({ initialDamage: true });
+  test('should apply initial damage when enabled', () => {
+    const game = initializeGame({ initialDamage: true });
 
-    expect(gameState.shipIntegrity).toBeLessThan(54);
-    expect(gameState.shipIntegrity).toBeGreaterThanOrEqual(48); // 54 - 6 max
+    expect(game.resources).toBeLessThan(54);
+    expect(game.resources).toBeGreaterThanOrEqual(48); // 54 - 6 max
   });
 
   test('should not apply initial damage when disabled', () => {
-    const gameState = initializeGame({ initialDamage: false });
+    const game = initializeGame({ initialDamage: false });
 
-    expect(gameState.shipIntegrity).toBe(54);
-  });
-
-  test('should place Ace of Hearts on top for short game', () => {
-    const gameState = initializeGame({ shortGame: true });
-
-    expect(gameState.deck[0].rank).toBe('A');
-    expect(gameState.deck[0].suit).toBe('hearts');
+    expect(game.resources).toBe(54);
   });
 });
 ```
 
 #### Damage Calculation Tests
 
-```javascript
-describe('Damage Calculation', () => {
-  test('should calculate damage correctly with no bonus', () => {
-    const gameState = { bonusCounter: 0 };
-    const roll = 4;
-
-    const damage = calculateDamage({ requiresTowerPull: true }, gameState, roll);
-    expect(damage).toBe(4);
+```typescript
+describe('Damage Calculation (Option A)', () => {
+  test('should calculate damage with no bonus', () => {
+    expect(calculateDamage(1, 0)).toBe(1);
+    expect(calculateDamage(4, 0)).toBe(4);
+    expect(calculateDamage(6, 0)).toBe(6);
   });
 
-  test('should apply bonus counter to reduce damage', () => {
-    const gameState = { bonusCounter: 2 };
-    const roll = 4;
-
-    const damage = calculateDamage({ requiresTowerPull: true }, gameState, roll);
-    expect(damage).toBe(2); // 4 - 2
+  test('should apply bonus counter correctly', () => {
+    expect(calculateDamage(4, 2)).toBe(2); // 4 - 2
+    expect(calculateDamage(5, 3)).toBe(2); // 5 - 3
+    expect(calculateDamage(6, 4)).toBe(2); // 6 - 4
   });
 
   test('should not deal negative damage', () => {
-    const gameState = { bonusCounter: 5 };
-    const roll = 3;
-
-    const damage = calculateDamage({ requiresTowerPull: true }, gameState, roll);
-    expect(damage).toBe(0);
+    expect(calculateDamage(1, 5)).toBe(0);
+    expect(calculateDamage(3, 4)).toBe(0);
   });
 
-  test('should apply severe damage modifier for Q♦', () => {
-    const card = { rank: 'Q', suit: 'diamonds', requiresTowerPull: true };
-    const gameState = { bonusCounter: 0 };
-    const roll = 4;
+  test('should only trigger on odd cards', () => {
+    const evenCard = { rank: '2', suit: 'hearts' };
+    const oddCard = { rank: '3', suit: 'hearts' };
 
-    const damage = calculateDamage(card, gameState, roll);
-    expect(damage).toBe(5); // 4 + 1
-  });
-
-  test('should apply severe damage modifier for J♦', () => {
-    const card = { rank: 'J', suit: 'diamonds', requiresTowerPull: true };
-    const gameState = { bonusCounter: 0 };
-    const roll = 4;
-
-    const damage = calculateDamage(card, gameState, roll);
-    expect(damage).toBe(5); // 4 + 1
-  });
-
-  test('severe damage should have minimum of 1', () => {
-    const card = { rank: 'Q', suit: 'diamonds', requiresTowerPull: true };
-    const gameState = { bonusCounter: 5 };
-    const roll = 1;
-
-    const damage = calculateDamage(card, gameState, roll);
-    expect(damage).toBe(1); // Minimum for severe
+    expect(requiresDamageCheck(evenCard)).toBe(false);
+    expect(requiresDamageCheck(oddCard)).toBe(true);
   });
 });
 ```
 
 #### Special Card Tests
 
-```javascript
+```typescript
 describe('Special Cards', () => {
-  describe('Ace of Hearts', () => {
-    test('should activate beacon when drawn', () => {
-      const gameState = initializeGame();
-      processCard({ rank: 'A', suit: 'hearts' }, gameState);
+  describe('Aces - Bonus Counter', () => {
+    test('should increment bonus counter for each Ace', () => {
+      const game = initializeGame();
 
-      expect(gameState.beaconActive).toBe(true);
-      expect(gameState.aceHeartsDrawn).toBe(true);
-    });
+      processAce({ rank: 'A', suit: 'diamonds' }, game);
+      expect(game.bonusCounter).toBe(1);
 
-    test('should place 10 tokens', () => {
-      const gameState = initializeGame();
-      processCard({ rank: 'A', suit: 'hearts' }, gameState);
+      processAce({ rank: 'A', suit: 'clubs' }, game);
+      expect(game.bonusCounter).toBe(2);
 
-      expect(gameState.tokens).toBe(10);
-    });
-  });
+      processAce({ rank: 'A', suit: 'spades' }, game);
+      expect(game.bonusCounter).toBe(3);
 
-  describe('Ace of Diamonds', () => {
-    test('should mark antenna boosted', () => {
-      const gameState = initializeGame();
-      processCard({ rank: 'A', suit: 'diamonds' }, gameState);
-
-      expect(gameState.aceDiamondsDrawn).toBe(true);
-    });
-
-    test('should allow 5 or 6 for rescue when boosted', () => {
-      const gameState = initializeGame();
-      gameState.beaconActive = true;
-      gameState.aceDiamondsDrawn = true;
-      gameState.tokens = 5;
-
-      const result = beaconRoll(gameState, 5);
-      expect(result).toBe('success');
-      expect(gameState.tokens).toBe(4);
-    });
-
-    test('should require 6 for rescue without boost', () => {
-      const gameState = initializeGame();
-      gameState.beaconActive = true;
-      gameState.aceDiamondsDrawn = false;
-      gameState.tokens = 5;
-
-      const result = beaconRoll(gameState, 5);
-      expect(result).toBe('failure');
-      expect(gameState.tokens).toBe(5);
+      processAce({ rank: 'A', suit: 'hearts' }, game);
+      expect(game.bonusCounter).toBe(4);
     });
   });
 
-  describe('Ace of Clubs', () => {
-    test('should grant skip next tower pull', () => {
-      const gameState = initializeGame();
-      processCard({ rank: 'A', suit: 'clubs' }, gameState);
+  describe('Win Condition Ace', () => {
+    test('should activate win condition', () => {
+      const game = initializeGame();
 
-      expect(gameState.aceClubsDrawn).toBe(true);
+      processCard({ rank: 'A', suit: 'hearts' }, game);
+
+      expect(game.winConditionActive).toBe(true);
+      expect(game.tokens).toBe(10);
     });
 
-    test('should allow player to skip one tower pull', () => {
-      const gameState = initializeGame();
-      gameState.aceClubsDrawn = true;
+    test('should allow token removal on successful roll', () => {
+      const game = initializeGame();
+      game.winConditionActive = true;
+      game.tokens = 10;
 
-      const canSkip = canSkipTowerPull(gameState);
-      expect(canSkip).toBe(true);
+      winRoll(game, 6); // Success
 
-      skipTowerPull(gameState);
-      expect(gameState.aceClubsDrawn).toBe(false);
-    });
-  });
-
-  describe('Ace of Spades', () => {
-    test('should allow shuffling K♠ back into deck', () => {
-      const gameState = initializeGame();
-      gameState.kingsRevealed = 1;
-      gameState.kingOfSpadesDrawn = true;
-
-      processCard({ rank: 'A', suit: 'spades' }, gameState);
-
-      const canShuffle = canShuffleKingOfSpades(gameState);
-      expect(canShuffle).toBe(true);
+      expect(game.tokens).toBe(9);
     });
 
-    test('should shuffle K♠ back and reduce king count', () => {
-      const gameState = initializeGame();
-      gameState.kingsRevealed = 2;
-      gameState.kingOfSpadesDrawn = true;
+    test('should not remove token on failed roll', () => {
+      const game = initializeGame();
+      game.winConditionActive = true;
+      game.tokens = 10;
 
-      shuffleKingOfSpadesBack(gameState);
+      winRoll(game, 3); // Failure
 
-      expect(gameState.kingOfSpadesDrawn).toBe(false);
-      expect(gameState.kingsRevealed).toBe(1);
+      expect(game.tokens).toBe(10);
     });
   });
 
-  describe('Kings', () => {
-    test('should track king count', () => {
-      const gameState = initializeGame();
+  describe('Tracker Cards (Kings)', () => {
+    test('should track count correctly', () => {
+      const game = initializeGame();
 
-      processCard({ rank: 'K', suit: 'hearts' }, gameState);
-      expect(gameState.kingsRevealed).toBe(1);
+      processTrackerCard({ rank: 'K', suit: 'hearts' }, game);
+      expect(game.trackersRevealed).toBe(1);
 
-      processCard({ rank: 'K', suit: 'diamonds' }, gameState);
-      expect(gameState.kingsRevealed).toBe(2);
+      processTrackerCard({ rank: 'K', suit: 'diamonds' }, game);
+      expect(game.trackersRevealed).toBe(2);
     });
 
-    test('should trigger game over on 4th king', () => {
-      const gameState = initializeGame();
-      gameState.kingsRevealed = 3;
+    test('should trigger instant loss on 4th tracker', () => {
+      const game = initializeGame();
+      game.trackersRevealed = 3;
 
-      const result = processCard({ rank: 'K', suit: 'spades' }, gameState);
+      processTrackerCard({ rank: 'K', suit: 'spades' }, game);
 
-      expect(result).toBe('defeat');
-      expect(gameState.status).toBe('defeat');
-      expect(gameState.defeatReason).toBe('four_kings');
-    });
-
-    test('should not trigger game over before 4th king', () => {
-      const gameState = initializeGame();
-      gameState.kingsRevealed = 2;
-
-      const result = processCard({ rank: 'K', suit: 'clubs' }, gameState);
-
-      expect(result).toBe('continue');
-      expect(gameState.status).toBe('active');
+      expect(game.gameStatus).toBe('defeat');
+      expect(game.defeatReason).toBe('tracker_limit');
     });
   });
 });
 ```
 
-#### Win/Loss Condition Tests
+#### Win/Loss Conditions
 
-```javascript
+```typescript
 describe('Win Conditions', () => {
-  test('should not win without beacon activation', () => {
-    const gameState = initializeGame();
-    gameState.tokens = 0;
-    gameState.shipIntegrity = 30;
+  test('should require win condition active', () => {
+    const game = initializeGame();
+    game.tokens = 0;
+    game.resources = 30;
 
-    const result = checkWinCondition(gameState);
-    expect(result).toBe(false);
+    expect(checkWinCondition(game)).toBe(false);
   });
 
-  test('should not win with tokens remaining', () => {
-    const gameState = initializeGame();
-    gameState.beaconActive = true;
-    gameState.tokens = 3;
-    gameState.shipIntegrity = 30;
+  test('should require all tokens removed', () => {
+    const game = initializeGame();
+    game.winConditionActive = true;
+    game.tokens = 3;
+    game.resources = 30;
 
-    const result = checkWinCondition(gameState);
-    expect(result).toBe(false);
+    expect(checkWinCondition(game)).toBe(false);
   });
 
-  test('should not win if ship destroyed', () => {
-    const gameState = initializeGame();
-    gameState.beaconActive = true;
-    gameState.tokens = 0;
-    gameState.shipIntegrity = 0;
+  test('should require resources > 0', () => {
+    const game = initializeGame();
+    game.winConditionActive = true;
+    game.tokens = 0;
+    game.resources = 0;
 
-    const result = checkWinCondition(gameState);
-    expect(result).toBe(false);
+    expect(checkWinCondition(game)).toBe(false);
   });
 
-  test('should win when beacon complete and ship intact', () => {
-    const gameState = initializeGame();
-    gameState.beaconActive = true;
-    gameState.tokens = 0;
-    gameState.shipIntegrity = 15;
+  test('should win when all conditions met', () => {
+    const game = initializeGame();
+    game.winConditionActive = true;
+    game.tokens = 0;
+    game.resources = 20;
 
-    const result = checkWinCondition(gameState);
-    expect(result).toBe(true);
-  });
-
-  test('should require final pull before victory', () => {
-    const gameState = initializeGame();
-    gameState.beaconActive = true;
-    gameState.tokens = 1;
-
-    beaconRoll(gameState, 6); // Remove last token
-
-    expect(gameState.tokens).toBe(0);
-    expect(gameState.status).toBe('final_pull_required');
-  });
-
-  test('final pull success should trigger victory', () => {
-    const gameState = initializeGame();
-    gameState.beaconActive = true;
-    gameState.tokens = 0;
-    gameState.shipIntegrity = 20;
-    gameState.status = 'final_pull_required';
-
-    finalPull(gameState, 2); // Low damage
-
-    expect(gameState.shipIntegrity).toBeGreaterThan(0);
-    expect(gameState.status).toBe('victory');
-  });
-
-  test('final pull failure should trigger defeat', () => {
-    const gameState = initializeGame();
-    gameState.beaconActive = true;
-    gameState.tokens = 0;
-    gameState.shipIntegrity = 2;
-    gameState.status = 'final_pull_required';
-
-    finalPull(gameState, 6); // High damage
-
-    expect(gameState.shipIntegrity).toBeLessThanOrEqual(0);
-    expect(gameState.status).toBe('defeat');
+    expect(checkWinCondition(game)).toBe(true);
   });
 });
 
 describe('Loss Conditions', () => {
-  test('should lose when ship integrity reaches 0', () => {
-    const gameState = initializeGame();
-    gameState.shipIntegrity = 2;
+  test('should lose when resources reach 0', () => {
+    const game = initializeGame();
+    game.resources = 1;
 
-    const card = { requiresTowerPull: true };
-    processCard(card, gameState, 6); // 6 damage
+    const card = { rank: '5', suit: 'hearts' };
+    performDamageCheck(card, game); // Will roll damage
 
-    expect(gameState.shipIntegrity).toBeLessThanOrEqual(0);
-    expect(gameState.status).toBe('defeat');
-    expect(gameState.defeatReason).toBe('ship_destroyed');
+    if (game.resources <= 0) {
+      expect(game.gameStatus).toBe('defeat');
+      expect(game.defeatReason).toBe('resources_depleted');
+    }
   });
 
-  test('should lose when 4 kings revealed', () => {
-    const gameState = initializeGame();
-    gameState.kingsRevealed = 3;
+  test('should lose when 4 trackers revealed', () => {
+    const game = initializeGame();
+    game.trackersRevealed = 3;
 
-    processCard({ rank: 'K', suit: 'spades' }, gameState);
+    processTrackerCard({ rank: 'K', suit: 'spades' }, game);
 
-    expect(gameState.status).toBe('defeat');
-    expect(gameState.defeatReason).toBe('four_kings');
+    expect(game.gameStatus).toBe('defeat');
+    expect(game.defeatReason).toBe('tracker_limit');
   });
 
-  test('should lose when deck exhausted without beacon', () => {
-    const gameState = initializeGame();
-    gameState.deck = [];
-    gameState.beaconActive = false;
+  test('should lose when deck exhausted without win', () => {
+    const game = initializeGame();
+    game.deck = [];
+    game.winConditionActive = false;
 
-    const result = checkEndOfRound(gameState);
+    const result = checkEndOfDay(game);
 
     expect(result).toBe('defeat');
-    expect(gameState.defeatReason).toBe('deck_exhausted');
   });
 });
 ```
 
-#### Round Progression Tests
+### 10.2 Balance Testing
 
-```javascript
-describe('Round Progression', () => {
-  test('should start on day 1', () => {
-    const gameState = initializeGame();
-    expect(gameState.day).toBe(1);
-  });
-
-  test('should increment day after journal phase', () => {
-    const gameState = initializeGame();
-    completeRound(gameState);
-
-    expect(gameState.day).toBe(2);
-  });
-
-  test('should draw 1-6 cards based on roll', () => {
-    const gameState = initializeGame();
-
-    for (let roll = 1; roll <= 6; roll++) {
-      const state = initializeGame();
-      rollForTasks(state, roll);
-
-      expect(state.cardsThisTurn).toBe(roll);
-    }
-  });
-
-  test('should process all cards in hand', () => {
-    const gameState = initializeGame();
-    rollForTasks(gameState, 3);
-    drawCards(gameState);
-
-    const initialHand = [...gameState.hand];
-    processAllCards(gameState);
-
-    expect(gameState.hand).toHaveLength(0);
-    expect(gameState.discard.length).toBeGreaterThanOrEqual(3);
-  });
-
-  test('should record journal entry', () => {
-    const gameState = initializeGame();
-    const entry = "Today was difficult...";
-
-    recordJournal(gameState, entry);
-
-    expect(gameState.journal).toHaveLength(1);
-    expect(gameState.journal[0].content).toBe(entry);
-    expect(gameState.journal[0].day).toBe(1);
-  });
-});
-```
-
-#### Beacon Countdown Tests
-
-```javascript
-describe('Beacon Countdown', () => {
-  test('should roll for rescue at end of each day', () => {
-    const gameState = initializeGame();
-    gameState.beaconActive = true;
-    gameState.tokens = 8;
-
-    const rolled = jest.fn(() => 4);
-    beaconRoll(gameState, rolled());
-
-    expect(rolled).toHaveBeenCalled();
-  });
-
-  test('should remove token on roll of 6', () => {
-    const gameState = initializeGame();
-    gameState.beaconActive = true;
-    gameState.tokens = 10;
-
-    beaconRoll(gameState, 6);
-
-    expect(gameState.tokens).toBe(9);
-  });
-
-  test('should not remove token on roll < 6 without boost', () => {
-    const gameState = initializeGame();
-    gameState.beaconActive = true;
-    gameState.tokens = 10;
-    gameState.aceDiamondsDrawn = false;
-
-    beaconRoll(gameState, 5);
-
-    expect(gameState.tokens).toBe(10);
-  });
-
-  test('should remove token on roll 5-6 with boost', () => {
-    const gameState = initializeGame();
-    gameState.beaconActive = true;
-    gameState.tokens = 10;
-    gameState.aceDiamondsDrawn = true;
-
-    beaconRoll(gameState, 5);
-    expect(gameState.tokens).toBe(9);
-
-    beaconRoll(gameState, 6);
-    expect(gameState.tokens).toBe(8);
-  });
-
-  test('should track token removal over multiple days', () => {
-    const gameState = initializeGame();
-    gameState.beaconActive = true;
-    gameState.tokens = 10;
-
-    const rolls = [6, 3, 6, 2, 6, 6, 1, 6, 6, 6];
-    rolls.forEach(roll => beaconRoll(gameState, roll));
-
-    expect(gameState.tokens).toBe(3); // 7 sixes rolled
-  });
-});
-```
-
-### 10.2 Integration Test Requirements
-
-```javascript
-describe('Full Game Integration', () => {
-  test('should complete full winning game', () => {
-    const gameState = initializeGame({ seed: 'winning-game' });
-
-    // Simulate optimal gameplay
-    while (gameState.status === 'active') {
-      rollForTasks(gameState, 3); // Moderate pace
-      drawCards(gameState);
-      processAllCards(gameState);
-      recordJournal(gameState, `Day ${gameState.day} log`);
-
-      if (gameState.beaconActive) {
-        beaconRoll(gameState, 6); // Always succeed
-      }
-
-      if (gameState.day > 100) break; // Safety
-    }
-
-    expect(gameState.status).toBe('victory');
-  });
-
-  test('should trigger tower collapse defeat', () => {
-    const gameState = initializeGame();
-    gameState.shipIntegrity = 1;
-    gameState.bonusCounter = 0;
-
-    const card = { requiresTowerPull: true };
-    processCard(card, gameState, 6);
-
-    expect(gameState.status).toBe('defeat');
-    expect(gameState.defeatReason).toBe('ship_destroyed');
-  });
-
-  test('should trigger four kings defeat', () => {
-    const gameState = initializeGame();
-
-    processCard({ rank: 'K', suit: 'hearts' }, gameState);
-    processCard({ rank: 'K', suit: 'diamonds' }, gameState);
-    processCard({ rank: 'K', suit: 'clubs' }, gameState);
-    processCard({ rank: 'K', suit: 'spades' }, gameState);
-
-    expect(gameState.status).toBe('defeat');
-    expect(gameState.defeatReason).toBe('four_kings');
-  });
-
-  test('should handle complete beacon countdown', () => {
-    const gameState = initializeGame();
-    processCard({ rank: 'A', suit: 'hearts' }, gameState);
-
-    expect(gameState.beaconActive).toBe(true);
-    expect(gameState.tokens).toBe(10);
-
-    // Simulate 10 successful rescue rolls
-    for (let i = 0; i < 10; i++) {
-      beaconRoll(gameState, 6);
-    }
-
-    expect(gameState.tokens).toBe(0);
-    expect(gameState.status).toBe('final_pull_required');
-  });
-});
-```
-
-### 10.3 Balance Testing
-
-```javascript
+```typescript
 describe('Game Balance', () => {
   test('should achieve target win rate', () => {
     const iterations = 1000;
     let wins = 0;
 
     for (let i = 0; i < iterations; i++) {
-      const result = simulateGame({ strategy: 'optimal' });
+      const result = simulateGame();
       if (result === 'victory') wins++;
     }
 
@@ -1712,206 +1162,94 @@ describe('Game Balance', () => {
     expect(winRate).toBeLessThan(0.30);     // Less than 30%
   });
 
-  test('should last 15-30 rounds on average', () => {
+  test('should last 15-30 days on average', () => {
     const iterations = 100;
-    let totalRounds = 0;
+    let totalDays = 0;
 
     for (let i = 0; i < iterations; i++) {
-      const result = simulateGame({ trackRounds: true });
-      totalRounds += result.rounds;
+      const result = simulateGame({ trackDays: true });
+      totalDays += result.days;
     }
 
-    const avgRounds = totalRounds / iterations;
-    expect(avgRounds).toBeGreaterThan(10);
-    expect(avgRounds).toBeLessThan(40);
+    const avgDays = totalDays / iterations;
+    expect(avgDays).toBeGreaterThan(10);
+    expect(avgDays).toBeLessThan(40);
   });
 
-  test('four kings should account for ~15% of losses', () => {
+  test('tracker limit should account for ~15% of losses', () => {
     const iterations = 500;
-    let fourKingsDefeats = 0;
+    let trackerDefeats = 0;
     let totalDefeats = 0;
 
     for (let i = 0; i < iterations; i++) {
       const result = simulateGame();
       if (result.status === 'defeat') {
         totalDefeats++;
-        if (result.reason === 'four_kings') {
-          fourKingsDefeats++;
+        if (result.reason === 'tracker_limit') {
+          trackerDefeats++;
         }
       }
     }
 
-    const kingDefeats = fourKingsDefeats / totalDefeats;
-    expect(kingDefeats).toBeGreaterThan(0.10);
-    expect(kingDefeats).toBeLessThan(0.25);
+    const trackerRate = trackerDefeats / totalDefeats;
+    expect(trackerRate).toBeGreaterThan(0.10);
+    expect(trackerRate).toBeLessThan(0.25);
   });
 });
 ```
 
-### 10.4 Card Prompt Tests
+### 10.3 Edge Cases
 
-```javascript
-describe('Card Prompts', () => {
-  test('should have prompt for all 52 cards', () => {
-    const prompts = loadCardPrompts();
-
-    expect(Object.keys(prompts)).toHaveLength(52);
-  });
-
-  test('should have valid prompt text', () => {
-    const prompts = loadCardPrompts();
-
-    Object.values(prompts).forEach(prompt => {
-      expect(prompt.text).toBeTruthy();
-      expect(prompt.text.length).toBeGreaterThan(10);
-    });
-  });
-
-  test('should correctly identify cards requiring tower pulls', () => {
-    const prompts = loadCardPrompts();
-
-    // Count cards with requiresTowerPull: true
-    const pullCards = Object.values(prompts).filter(
-      p => p.requiresTowerPull
-    );
-
-    // Should be approximately 29 cards
-    expect(pullCards.length).toBeGreaterThan(25);
-    expect(pullCards.length).toBeLessThan(35);
-  });
-
-  test('should have special mechanics for aces', () => {
-    const prompts = loadCardPrompts();
-
-    expect(prompts['HA'].specialMechanic).toBe('beacon_activation');
-    expect(prompts['DA'].specialMechanic).toBe('antenna_boost');
-    expect(prompts['CA'].specialMechanic).toBe('skip_tower_pull');
-    expect(prompts['SA'].specialMechanic).toBe('shuffle_king_spades');
-  });
-
-  test('should mark kings as keep visible', () => {
-    const prompts = loadCardPrompts();
-
-    expect(prompts['HK'].keepVisible).toBe(true);
-    expect(prompts['DK'].keepVisible).toBe(true);
-    expect(prompts['CK'].keepVisible).toBe(true);
-    expect(prompts['SK'].keepVisible).toBe(true);
-  });
-});
-```
-
-### 10.5 Performance Tests
-
-```javascript
-describe('Performance', () => {
-  test('should initialize game in < 100ms', () => {
-    const start = performance.now();
-    const gameState = initializeGame();
-    const end = performance.now();
-
-    expect(end - start).toBeLessThan(100);
-  });
-
-  test('should process card in < 10ms', () => {
-    const gameState = initializeGame();
-    const card = { rank: '5', suit: 'hearts', requiresTowerPull: true };
-
-    const start = performance.now();
-    processCard(card, gameState);
-    const end = performance.now();
-
-    expect(end - start).toBeLessThan(10);
-  });
-
-  test('should handle 1000 games without memory leak', () => {
-    const initialMemory = performance.memory?.usedJSHeapSize || 0;
-
-    for (let i = 0; i < 1000; i++) {
-      simulateGame({ fast: true });
-    }
-
-    const finalMemory = performance.memory?.usedJSHeapSize || 0;
-    const growth = finalMemory - initialMemory;
-
-    // Memory should not grow by more than 10MB
-    expect(growth).toBeLessThan(10 * 1024 * 1024);
-  });
-});
-```
-
-### 10.6 Edge Case Tests
-
-```javascript
+```typescript
 describe('Edge Cases', () => {
-  test('should handle drawing last card in deck', () => {
-    const gameState = initializeGame();
-    gameState.deck = [createCard('H', 'A')];
+  test('should handle drawing last card', () => {
+    const game = initializeGame();
+    game.deck = [{ rank: 'A', suit: 'hearts' }];
 
-    drawCards(gameState, 1);
+    drawCards(game, 1);
 
-    expect(gameState.hand).toHaveLength(1);
-    expect(gameState.deck).toHaveLength(0);
+    expect(game.hand).toHaveLength(1);
+    expect(game.deck).toHaveLength(0);
   });
 
-  test('should handle Ace of Hearts as first card', () => {
-    const gameState = initializeGame({ shortGame: true });
+  test('should handle win card as first card', () => {
+    const game = initializeGame();
+    game.deck[0] = { rank: 'A', suit: 'hearts' };
 
-    rollForTasks(gameState, 1);
-    drawCards(gameState);
-    processAllCards(gameState);
+    rollForCards(game, 1);
+    drawCards(game);
+    processCards(game);
 
-    expect(gameState.beaconActive).toBe(true);
-    expect(gameState.day).toBe(1);
+    expect(game.winConditionActive).toBe(true);
+    expect(game.day).toBe(1);
   });
 
-  test('should handle all aces drawn before beacon', () => {
-    const gameState = initializeGame();
+  test('should handle all Aces drawn before win card', () => {
+    const game = initializeGame();
 
-    processCard({ rank: 'A', suit: 'diamonds' }, gameState);
-    processCard({ rank: 'A', suit: 'clubs' }, gameState);
-    processCard({ rank: 'A', suit: 'spades' }, gameState);
+    processAce({ rank: 'A', suit: 'diamonds' }, game);
+    processAce({ rank: 'A', suit: 'clubs' }, game);
+    processAce({ rank: 'A', suit: 'spades' }, game);
 
-    expect(gameState.bonusCounter).toBe(3);
+    expect(game.bonusCounter).toBe(3);
 
-    processCard({ rank: 'A', suit: 'hearts' }, gameState);
+    processAce({ rank: 'A', suit: 'hearts' }, game);
 
-    expect(gameState.bonusCounter).toBe(4);
-    expect(gameState.beaconActive).toBe(true);
+    expect(game.bonusCounter).toBe(4);
+    expect(game.winConditionActive).toBe(true);
   });
 
-  test('should handle taking exactly lethal damage', () => {
-    const gameState = initializeGame();
-    gameState.shipIntegrity = 3;
-    gameState.bonusCounter = 0;
+  test('should handle exactly lethal damage', () => {
+    const game = initializeGame();
+    game.resources = 3;
+    game.bonusCounter = 0;
 
-    const card = { requiresTowerPull: true };
-    processCard(card, gameState, 3); // Exactly 3 damage
+    // Simulate roll of 3
+    const damage = calculateDamage(3, game.bonusCounter);
+    game.resources -= damage;
 
-    expect(gameState.shipIntegrity).toBe(0);
-    expect(gameState.status).toBe('defeat');
-  });
-
-  test('should handle Ace of Clubs after already used', () => {
-    const gameState = initializeGame();
-    processCard({ rank: 'A', suit: 'clubs' }, gameState);
-
-    expect(gameState.aceClubsDrawn).toBe(true);
-
-    skipTowerPull(gameState);
-    expect(gameState.aceClubsDrawn).toBe(false);
-
-    const canSkipAgain = canSkipTowerPull(gameState);
-    expect(canSkipAgain).toBe(false);
-  });
-
-  test('should handle Ace of Spades with no King of Spades drawn', () => {
-    const gameState = initializeGame();
-    gameState.kingOfSpadesDrawn = false;
-
-    processCard({ rank: 'A', suit: 'spades' }, gameState);
-
-    const canShuffle = canShuffleKingOfSpades(gameState);
-    expect(canShuffle).toBe(false);
+    expect(game.resources).toBe(0);
+    expect(game.gameStatus).toBe('defeat');
   });
 });
 ```
@@ -1920,82 +1258,78 @@ describe('Edge Cases', () => {
 
 ## Appendix A: Quick Reference
 
-### Card ID Format
+### Card Classification
 
 ```
-Format: [Suit][Rank]
-Examples:
-  H5  = Five of Hearts
-  DA  = Ace of Diamonds
-  CK  = King of Clubs
-  S10 = Ten of Spades
+ODD RANKS (Damage Check):  A, 3, 5, 7, 9  (20 cards)
+EVEN RANKS (Safe):         2, 4, 6, 8, 10, J, Q, K  (32 cards)
+```
+
+### Damage Formula
+
+```
+damage = max(roll - bonusCounter, 0)
+
+Where:
+- roll = 1d6 (1-6)
+- bonusCounter = number of Aces drawn (0-4)
+- damage is applied to resources
 ```
 
 ### State Variables
 
-```javascript
+```typescript
 {
   day: number,                    // Current day (1+)
-  shipIntegrity: number,          // HP (54 → 0)
-  tokens: number,                 // Rescue countdown (10 → 0)
+  resources: number,              // HP (54 → 0)
+  tokens: number,                 // Win countdown (10 → 0)
   deck: Card[],                   // Remaining cards
-  hand: Card[],                   // Current turn cards
+  hand: Card[],                   // Current day cards
   discard: Card[],                // Used cards
-  kingsRevealed: number,          // Kings drawn (0-4)
+  trackersRevealed: number,       // Trackers drawn (0-4)
   bonusCounter: number,           // Aces drawn (0-4)
-  beaconActive: boolean,          // Ace♥ drawn?
-  aceDiamondsDrawn: boolean,      // A♦ drawn?
-  aceClubsDrawn: boolean,         // A♣ available?
-  aceSpadesDrawn: boolean,        // A♠ drawn?
-  kingOfSpadesDrawn: boolean,     // K♠ drawn?
-  status: GameStatus,             // Current state
-  defeatReason?: string,          // Why lost
+  winConditionActive: boolean,    // Win card drawn?
+  gameStatus: GameStatus,         // Current state
   journal: JournalEntry[]         // Log entries
 }
 ```
 
-### Roll Outcomes
-
-| Roll | Damage (no bonus) | With +1 Bonus | With +4 Bonus |
-|------|-------------------|---------------|---------------|
-| 1 | 1 | 0 | 0 |
-| 2 | 2 | 1 | 0 |
-| 3 | 3 | 2 | 0 |
-| 4 | 4 | 3 | 0 |
-| 5 | 5 | 4 | 1 |
-| 6 | 6 | 5 | 2 |
-
-### Rescue Roll Success
+### Win Condition Rolls
 
 | Condition | Success On |
 |-----------|------------|
-| Base (no A♦) | 6 only |
-| With A♦ | 5 or 6 |
-| Probability (no A♦) | 16.67% |
-| Probability (with A♦) | 33.33% |
+| Base (no bonus) | 6 only (16.67%) |
+| With bonus Ace | 5-6 (33.33%) |
+
+### Expected Damage Per Roll
+
+| Bonus Counter | Avg Damage |
+|---------------|------------|
+| 0 | 3.5 |
+| 1 | 2.5 |
+| 2 | 1.67 |
+| 3 | 1.0 |
+| 4 | 0.5 |
 
 ---
 
 ## Appendix B: Glossary
 
-**Beacon:** Distress signal activated by Ace of Hearts
-**Bonus Counter:** Damage reduction from Aces (max +4)
-**Creature:** Hostile alien entity hunting the player
+**Bonus Counter:** Damage reduction from Aces (0-4)
+**Damage Check:** Roll triggered by odd-ranked cards
+**Day:** One complete round of gameplay
 **Deck Exhaustion:** Running out of cards before winning
-**Failure Check:** Roll for damage when card requires it
-**Final Pull:** Last damage roll before rescue arrives
-**Four Kings:** Instant loss condition
-**Operations Manual:** Card prompt reference (pages 14-21)
-**Phase One:** Task phase (draw and process cards)
-**Phase Two:** Log phase (journal entry)
-**Salvage Ship:** The Wretched spacecraft
-**Ship Integrity:** Health/durability of spacecraft (54 HP)
-**Tower:** Physical Jenga tower or digital HP equivalent
-**Tower Pull:** Removing block or rolling for damage
-**Win Condition:** Beacon complete + ship intact
+**Failure Check System:** Option A damage mechanic using odd/even cards
+**Final Roll:** Last damage check before victory
+**Phase One:** Action phase (draw and process cards)
+**Phase Two:** Reflection phase (journal entry)
+**Resources:** Health/durability pool (54 → 0)
+**Tokens:** Win condition countdown (10 → 0)
+**Tracker Cards:** Special cards that count toward instant loss (usually Kings)
+**Win Condition Card:** Card that activates victory pathway (designated Ace)
 
 ---
 
 **End of Document**
 
-*This guide is based on The Wretched by Chris Bissette (Loot The Room) and the Wretched & Alone SRD. All mechanics described are derived from the source material for digital implementation purposes.*
+*This guide describes the core Wretched & Alone framework mechanics. Narrative elements, themes, and specific story content are implementation-specific and should be customized for each game using this framework.*
