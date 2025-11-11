@@ -13,7 +13,7 @@
 	<!-- Player and Round Info Bar with Augmented UI -->
 	<div
 		class="player-round-bar"
-		data-augmented-ui="tl-clip-x tr-2-clip-x br-clip bl-2-clip-x border"
+		data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
 	>
 		<div class="info-segment">
 			<span class="label">PLAYER:</span>
@@ -48,7 +48,7 @@
 
 	<!-- Stats Grid -->
 	<div class="stats-grid">
-		<div class="stat-item health-stat" data-augmented-ui="tr-clip tl-clip-x br-2-clip-x border">
+		<div class="stat-item health-stat" data-augmented-ui="tl-clip tr-clip-x br-clip-x border">
 			<div class="stat-label">HEALTH</div>
 			<div class="stat-value">
 				<span class="current">{gameState.tower}</span><span class="divider">/</span><span
@@ -60,7 +60,7 @@
 			</div>
 		</div>
 
-		<div class="stat-item failure-stat" data-augmented-ui="tl-2-clip-y tr-clip bl-clip-x border">
+		<div class="stat-item failure-stat" data-augmented-ui="tl-clip-y tr-clip br-clip-y border">
 			<div class="stat-label">
 				{gameState.config?.labels?.failureCounters?.toUpperCase() ?? 'FAILURE'}
 			</div>
@@ -74,7 +74,7 @@
 			</div>
 		</div>
 
-		<div class="stat-item bonus-stat" data-augmented-ui="tr-clip-y tl-clip br-2-clip-x border">
+		<div class="stat-item bonus-stat" data-augmented-ui="tl-clip tr-clip-y br-clip border">
 			<div class="stat-label">LUCK</div>
 			<div class="stat-value">
 				<span class="current">{bonusPercent}</span><span class="divider">/</span><span class="max"
@@ -88,7 +88,7 @@
 
 		<div
 			class="stat-item success-stat"
-			data-augmented-ui="tl-clip-x tr-2-clip bl-clip-y br-clip border"
+			data-augmented-ui="tl-clip-x tr-clip br-clip-x bl-clip border"
 		>
 			<div class="stat-label">
 				{gameState.config?.labels?.successCounters?.toUpperCase() ?? 'SUCCESS'}
@@ -145,13 +145,13 @@
 
 	/* Player/Round Info Bar - Augmented UI with Glassmorphism */
 	.player-round-bar {
-		/* Augmented UI Configuration */
+		/* Augmented UI Configuration - Uniform corner clips */
 		--aug-border-all: 2px;
 		--aug-border-bg: linear-gradient(135deg, #00eeff 0%, #ff00ff 50%, #00ffaa 100%);
-		--aug-tl: 10px;
-		--aug-tr: 10px;
-		--aug-br: 10px;
-		--aug-bl: 10px;
+		--aug-tl: 14px;
+		--aug-tr: 14px;
+		--aug-br: 14px;
+		--aug-bl: 14px;
 
 		/* Layout */
 		display: flex;
@@ -264,12 +264,11 @@
 	}
 
 	.health-stat {
-		/* Augmented UI Configuration - Top-left clips form arrow pointing right */
+		/* Augmented UI Configuration - Left start with sharp right edge */
 		--aug-border-bg: linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta));
-		--aug-tl: var(--aug-clip-md);
-		--aug-tr: 0px;
-		--aug-br: var(--aug-clip-md);
-		--aug-bl: 0px;
+		--aug-tl: 8px;
+		--aug-tr: 14px;
+		--aug-br: 14px;
 
 		/* Enhanced Glow with Animation */
 		box-shadow:
@@ -299,12 +298,11 @@
 	}
 
 	.failure-stat {
-		/* Augmented UI Configuration - Top-right clips form arrow pointing left */
+		/* Augmented UI Configuration - Left arrow with vertical clips */
 		--aug-border-bg: linear-gradient(135deg, var(--color-cyber-magenta), var(--color-brand-yellow));
-		--aug-tl: 0px;
-		--aug-tr: var(--aug-clip-md);
-		--aug-br: 0px;
-		--aug-bl: var(--aug-clip-md);
+		--aug-tl: 14px;
+		--aug-tr: 8px;
+		--aug-br: 14px;
 
 		/* Enhanced Glow with Animation */
 		box-shadow:
@@ -334,12 +332,11 @@
 	}
 
 	.bonus-stat {
-		/* Augmented UI Configuration - Bottom-left clips form arrow pointing right */
+		/* Augmented UI Configuration - Right arrow with pointed left side */
 		--aug-border-bg: linear-gradient(135deg, var(--color-brand-yellow), var(--color-neon-cyan));
-		--aug-tl: var(--aug-clip-md);
-		--aug-tr: 0px;
-		--aug-br: var(--aug-clip-md);
-		--aug-bl: 0px;
+		--aug-tl: 8px;
+		--aug-tr: 14px;
+		--aug-br: 8px;
 
 		/* Enhanced Glow with Animation */
 		box-shadow:
@@ -369,12 +366,12 @@
 	}
 
 	.success-stat {
-		/* Augmented UI Configuration - Bottom-right clips form arrow pointing left */
+		/* Augmented UI Configuration - Right end with sharp left edge */
 		--aug-border-bg: linear-gradient(135deg, var(--color-neon-cyan), var(--color-brand-yellow));
-		--aug-tl: 0px;
-		--aug-tr: var(--aug-clip-md);
-		--aug-br: 0px;
-		--aug-bl: var(--aug-clip-md);
+		--aug-tl: 14px;
+		--aug-tr: 8px;
+		--aug-br: 14px;
+		--aug-bl: 8px;
 
 		/* Enhanced Glow with Animation */
 		box-shadow:
@@ -415,6 +412,8 @@
 		flex: 0 0 auto;
 		white-space: nowrap;
 		min-width: 65px;
+		/* Add padding to avoid clip zones */
+		padding-left: 4px;
 	}
 
 	.health-stat .stat-label {
@@ -487,6 +486,8 @@
 		flex: 1 1 auto;
 		min-width: 40px;
 		border-radius: 2px;
+		/* Add margin to avoid clip zones */
+		margin-right: 4px;
 	}
 
 	.stat-fill {
