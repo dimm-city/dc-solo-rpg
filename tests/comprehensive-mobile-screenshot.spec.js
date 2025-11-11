@@ -9,14 +9,14 @@ await page.waitForSelector('.dc-start-screen-container', { timeout: 5000 });
 await page.screenshot({ path: 'screenshots/mobile-01-home.png', fullPage: true });
 console.log('✓ Screenshot 1: Home page');
 
-// 2. Game selected
-await page.selectOption('select#gameSelect', { label: 'Future Lost' });
+// 2. Game selected (click the game card)
+await page.click('[data-testid="game-card-future-lost"]');
 await page.waitForTimeout(500);
 await page.screenshot({ path: 'screenshots/mobile-02-game-selected.png', fullPage: true });
 console.log('✓ Screenshot 2: Game selected');
 
 // 3. Intro screen
-await page.click('button[data-testid="load-game-button"]');
+await page.click('[data-testid="load-game-button"]');
 await page.waitForTimeout(3000);
 await expect(page.getByTestId('screen-intro')).toBeVisible({ timeout: 10000 });
 await page.screenshot({ path: 'screenshots/mobile-03-intro.png', fullPage: true });

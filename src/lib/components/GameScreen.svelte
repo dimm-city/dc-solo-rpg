@@ -9,6 +9,7 @@
 	import GameOver from './GameOver.svelte';
 	import JournalEntry from './JournalEntry.svelte';
 	import SuccessCheck from './SuccessCheck.svelte';
+	import FinalDamageRoll from './FinalDamageRoll.svelte';
 	import RollForTasks from './RollForTasks.svelte';
 	import DrawCard from './DrawCard.svelte';
 	import FailureCheck from './FailureCheck.svelte';
@@ -133,6 +134,14 @@
 							transition:fade={{ duration: TRANSITION_DURATION }}
 						>
 							<SuccessCheck />
+						</div>
+					{:else if currentScreen == 'finalDamageRoll'}
+						<div
+							class="dc-fade-in dc-screen-container"
+							data-testid="screen-finalDamageRoll"
+							transition:fade={{ duration: TRANSITION_DURATION }}
+						>
+							<FinalDamageRoll />
 						</div>
 					{:else if currentScreen == 'finalLog' || currentScreen == 'log'}
 						<div

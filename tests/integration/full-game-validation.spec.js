@@ -87,19 +87,23 @@ test.describe('Full Game Validation', () => {
 		await waitFor('.dc-start-screen-container');
 		console.log('✓ Home page loaded');
 
-		await page.selectOption('select#gameSelect', { label: 'Future Lost' });
-		await page.click('button:has-text("Load Game")');
+		await page.click('[data-testid="game-card-future-lost"]');
+		await page.click('[data-testid="load-game-button"]');
 		await page.waitForURL('**/game/future-lost');
 		console.log('✓ Game loaded via server routing');
 
-		await waitFor('.dc-intro-container');
+		// Navigate through rules screen
+		const continueVisible = await page.locator('button:has-text("CONTINUE")').isVisible().catch(() => false);
+		if (continueVisible) {
+			await page.click('button:has-text("CONTINUE")');
+			await page.waitForTimeout(500);
+			console.log('✓ Rules screen navigated');
+		}
+
+		await waitFor('.dc-intro-container, .dc-game-container');
 		console.log('✓ Intro screen loaded');
 
-		// Navigate through intro screens
-		await page.click('button:has-text("continue")');
-		await page.waitForTimeout(500);
-		console.log('✓ Rules viewed');
-
+		// Start the game
 		await page.click('button:has-text("start")');
 		await page.waitForTimeout(1500);
 		console.log('✓ Game started\n');

@@ -92,7 +92,9 @@ describe('gameActions - Core Game Mechanics', () => {
 			expect(gameState.player).toEqual(player);
 			expect(gameState.playerName).toBe('Test Player');
 			expect(gameState.round).toBe(1);
-			expect(gameState.tower).toBe(54);
+			// Tower starts at 54 minus initial 1d6 roll (48-53)
+			expect(gameState.tower).toBeGreaterThanOrEqual(48);
+			expect(gameState.tower).toBeLessThanOrEqual(53);
 			expect(gameState.tokens).toBe(10);
 			expect(gameState.deck.length).toBeGreaterThan(0);
 		});
@@ -130,8 +132,12 @@ describe('gameActions - Core Game Mechanics', () => {
 			startGame(player, {});
 
 			expect(gameState.kingsRevealed).toBe(0);
-			expect(gameState.tower).toBe(54);
-			expect(gameState.log).toEqual([]);
+			// Tower resets to 48-53 (54 minus initial 1d6 damage)
+			expect(gameState.tower).toBeGreaterThanOrEqual(48);
+			expect(gameState.tower).toBeLessThanOrEqual(53);
+			// Log should have one entry for initial damage
+			expect(gameState.log.length).toBe(1);
+			expect(gameState.log[0].type).toBe('system');
 		});
 	});
 
@@ -448,15 +454,15 @@ describe('gameActions - Core Game Mechanics', () => {
 			expect(gameState.tokens).toBe(9);
 		});
 
-		it('should trigger win when all tokens removed', async () => {
+		it('should transition to finalDamageRoll when all tokens removed', async () => {
 			gameState.tokens = 1;
 			gameState.getRandomNumber = vi.fn().mockReturnValue(6);
 
 			await successCheck();
 
 			expect(gameState.tokens).toBe(0);
-			expect(gameState.win).toBe(true);
-			expect(gameState.state).toBe('gameOver');
+			expect(gameState.win).toBe(false); // Not won yet - must pass final damage roll
+			expect(gameState.state).toBe('finalDamageRoll');
 		});
 
 		it('should continue to startRound if tokens remain', async () => {
