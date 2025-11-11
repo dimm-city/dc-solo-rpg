@@ -1,6 +1,7 @@
 <script>
 	import { gameState, transitionTo } from '../stores/gameStore.svelte.js';
 	import { fade } from 'svelte/transition';
+	import { initializeDiceBox } from '../stores/diceStore.svelte.js';
 
 	import LoadScreen from './LoadScreen.svelte';
 	import OptionsScreen from './OptionsScreen.svelte';
@@ -23,6 +24,17 @@
 
 	const currentScreen = $derived(gameState.state);
 	const TRANSITION_DURATION = 300;
+
+	let diceContainer = $state();
+	let diceInitialized = $state(false);
+
+	// Initialize dice box when container becomes available
+	$effect(() => {
+		if (diceContainer && !diceInitialized) {
+			diceInitialized = true;
+			initializeDiceBox(diceContainer);
+		}
+	});
 </script>
 
 {#if currentScreen == 'loadGame'}
@@ -49,43 +61,49 @@
 	<div data-testid="screen-exitGame" transition:fade={{ duration: TRANSITION_DURATION }}>Game Exited</div>
 {:else}
 	<div class="game-screen dc-game-bg">
-		<div class="toolbar-area">
-			<Toolbar />
-		</div>
-		<div class="status-display-area dc-fade-in" data-testid="status-display">
-			{#if currentScreen != 'log' && currentScreen != 'finalLog'}
-				<StatusDisplay />
-			{/if}
-		</div>
-		<div class="main-screen-area dc-table-bg">
-			{#if currentScreen == 'startRound'}
-				<div class="dc-fade-in dc-screen-container" data-testid="screen-startRound" transition:fade={{ duration: TRANSITION_DURATION }}>
-					<h4>Round {gameState.round}</h4>
-					<AugmentedButton
-						text="Roll for tasks"
-						onclick={() => transitionTo('rollForTasks')}
-						testid="start-round-button"
-					/>
-				</div>
-			{:else if currentScreen == 'rollForTasks'}
-				<div class="dc-fade-in dc-screen-container" data-testid="screen-rollForTasks" transition:fade={{ duration: TRANSITION_DURATION }}>
-					<RollForTasks />
-				</div>
-			{:else if currentScreen == 'drawCard'}
-				<div class="dc-fade-in dc-screen-container" data-testid="screen-drawCard" transition:fade={{ duration: TRANSITION_DURATION }}>
-					<DrawCard />
-				</div>
-			{:else if currentScreen == 'failureCheck'}
-				<div class="dc-fade-in dc-screen-container" data-testid="screen-failureCheck" transition:fade={{ duration: TRANSITION_DURATION }}>
-					<FailureCheck {onfailurecheckcompleted} />
-				</div>
-			{:else if currentScreen == 'successCheck'}
-				<div class="dc-fade-in dc-screen-container" data-testid="screen-successCheck" transition:fade={{ duration: TRANSITION_DURATION }}>
-					<SuccessCheck />
-				</div>
-			{:else}
-				<div transition:fade={{ duration: TRANSITION_DURATION }}>error: {currentScreen}</div>
-			{/if}
+		<!-- Dice Box Background Layer - fills entire viewport -->
+		<div bind:this={diceContainer} id="dice-roller-container" class="dice-background-layer"></div>
+
+		<!-- UI Content Layer - on top of dice -->
+		<div class="ui-content-layer">
+			<div class="toolbar-area">
+				<Toolbar />
+			</div>
+			<div class="status-display-area dc-fade-in" data-testid="status-display">
+				{#if currentScreen != 'log' && currentScreen != 'finalLog'}
+					<StatusDisplay />
+				{/if}
+			</div>
+			<div class="main-screen-area dc-table-bg">
+				{#if currentScreen == 'startRound'}
+					<div class="dc-fade-in dc-screen-container" data-testid="screen-startRound" transition:fade={{ duration: TRANSITION_DURATION }}>
+						<h4>Round {gameState.round}</h4>
+						<AugmentedButton
+							text="Roll for tasks"
+							onclick={() => transitionTo('rollForTasks')}
+							testid="start-round-button"
+						/>
+					</div>
+				{:else if currentScreen == 'rollForTasks'}
+					<div class="dc-fade-in dc-screen-container" data-testid="screen-rollForTasks" transition:fade={{ duration: TRANSITION_DURATION }}>
+						<RollForTasks />
+					</div>
+				{:else if currentScreen == 'drawCard'}
+					<div class="dc-fade-in dc-screen-container" data-testid="screen-drawCard" transition:fade={{ duration: TRANSITION_DURATION }}>
+						<DrawCard />
+					</div>
+				{:else if currentScreen == 'failureCheck'}
+					<div class="dc-fade-in dc-screen-container" data-testid="screen-failureCheck" transition:fade={{ duration: TRANSITION_DURATION }}>
+						<FailureCheck {onfailurecheckcompleted} />
+					</div>
+				{:else if currentScreen == 'successCheck'}
+					<div class="dc-fade-in dc-screen-container" data-testid="screen-successCheck" transition:fade={{ duration: TRANSITION_DURATION }}>
+						<SuccessCheck />
+					</div>
+				{:else}
+					<div transition:fade={{ duration: TRANSITION_DURATION }}>error: {currentScreen}</div>
+				{/if}
+			</div>
 		</div>
 	</div>
 {/if}
@@ -101,6 +119,33 @@
 
 	.game-screen {
 		position: relative;
+		height: 100%;
+		width: 100%;
+		overflow: hidden;
+	}
+
+	/* Dice Background Layer - behind everything */
+	.dice-background-layer {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		z-index: 0;
+		pointer-events: none; /* Don't block clicks on UI elements */
+	}
+
+	/* Canvas from DiceBox should fill the container */
+	:global(.dice-background-layer > canvas) {
+		width: 100% !important;
+		height: 100% !important;
+		display: block;
+	}
+
+	/* UI Content Layer - on top of dice */
+	.ui-content-layer {
+		position: relative;
+		z-index: 1;
 		align-items: center;
 		display: grid;
 		height: 100%;
@@ -114,6 +159,12 @@
 			'toolbar-area'
 			'status-area'
 			'main-screen-area';
+		pointer-events: none; /* Allow dice clicks through */
+	}
+
+	/* Re-enable pointer events for interactive UI elements */
+	.ui-content-layer > * {
+		pointer-events: auto;
 	}
 
 	.toolbar-area {

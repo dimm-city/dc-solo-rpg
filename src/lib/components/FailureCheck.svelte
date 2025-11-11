@@ -1,32 +1,48 @@
 <script>
-	import DiceRoller from './ThreeJSDiceBoxRoller.svelte';
+	import { rollDice } from '../stores/diceStore.svelte.js';
 	import { gameState } from '../stores/gameStore.svelte.js';
 	import {
 		getFailureCheckRoll,
 		applyFailureCheckResult,
 		confirmFailureCheck
 	} from '../stores/gameActions.svelte.js';
+	import AugmentedButton from './AugmentedButton.svelte';
 
 	let { onfailurecheckcompleted = () => {} } = $props();
 
-	let diceRoller = $state();
 	let rolling = $state(false);
 	let result = $state();
 
+	// Reset state when entering failureCheck screen
+	$effect(() => {
+		if (gameState.state === 'failureCheck') {
+			result = undefined;
+			rolling = false;
+		}
+	});
+
 	async function doCheck() {
 		if (rolling) return;
-		if (gameState.state == 'failureCheck') {
+		if (gameState.state == 'failureCheck' && !result) {
+			rolling = true;
+
 			// Get roll result WITHOUT updating health yet
-			result = getFailureCheckRoll();
+			const rollResult = getFailureCheckRoll();
+			result = rollResult;
+
 			// Animate the dice
-			await diceRoller.roll(result);
+			await rollDice(rollResult);
+
+			rolling = false;
+
 			// NOW apply the health consequences AFTER animation
-			applyFailureCheckResult(result);
+			applyFailureCheckResult(rollResult);
+
 			// The state has now changed - trigger the screen transition
 			// to the new screen (drawCard, log, or gameOver)
 			await confirmFailureCheck();
 			onfailurecheckcompleted(gameState.state);
-		} else {
+		} else if (result) {
 			// This branch is for when user clicks "continue" after seeing result
 			await confirmFailureCheck();
 		}
@@ -44,7 +60,9 @@
 			</small>
 		</div>
 	{/if}
-	<DiceRoller bind:this={diceRoller} bind:rolling onclick={doCheck} onkeyup={doCheck} {header} />
+	<div class="dc-dice-roller-header dc-header">
+		<AugmentedButton text={header} onclick={doCheck} disabled={rolling} class="dc-fade-in" />
+	</div>
 </div>
 
 <style>
@@ -55,6 +73,8 @@
 		text-align: center;
 		grid-template-rows: auto 1fr;
 		gap: 1rem;
+		align-items: center;
+		justify-content: center;
 	}
 
 	.card-info {

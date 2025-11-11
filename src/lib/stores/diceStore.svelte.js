@@ -17,6 +17,11 @@ let containerElement = $state(null);
  * Should be called once when the game starts
  */
 export async function initializeDiceBox(container) {
+	if (!container) {
+		console.warn('[diceStore] No container provided to initializeDiceBox');
+		return null;
+	}
+
 	if (isInitialized && diceBoxInstance) {
 		// Already initialized, just update container and resize
 		containerElement = container;
@@ -43,8 +48,11 @@ export async function initializeDiceBox(container) {
 		config.theme_customColorset = gameState.config.options.dice;
 	}
 
+	console.log('[diceStore] Initializing DiceBox with container:', container);
+	// DiceBox expects a CSS selector string, not a DOM element
 	diceBoxInstance = new DiceBox('#dice-roller-container', config);
 	await diceBoxInstance.initialize();
+	console.log('[diceStore] DiceBox initialized successfully');
 
 	// Call resizeWorld initially
 	diceBoxInstance.resizeWorld();
