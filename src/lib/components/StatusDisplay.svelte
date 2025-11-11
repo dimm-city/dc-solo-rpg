@@ -243,243 +243,163 @@
 		/* Augmented UI Base Configuration */
 		--aug-border-all: 2px;
 
-		/* Compact Layout */
-		display: grid;
-		grid-template-columns: 1fr;
-		grid-template-rows: auto auto auto;
+		/* Truly Compact Layout */
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
 		gap: var(--space-xs);
-		padding: var(--space-sm) var(--space-xs);
+		padding: var(--space-xs) var(--space-sm);
 		position: relative;
 		overflow: visible;
-		min-height: 80px;
+		min-height: 48px;
 
-		/* Glassmorphism Background */
-		background: linear-gradient(135deg, rgba(20, 20, 40, 0.5), rgba(30, 30, 50, 0.4));
-		backdrop-filter: blur(10px) saturate(150%);
-		-webkit-backdrop-filter: blur(10px) saturate(150%);
+		/* Darker Glassmorphism Background */
+		background: linear-gradient(135deg, rgba(10, 10, 20, 0.7), rgba(15, 15, 25, 0.6));
+		backdrop-filter: blur(8px) saturate(140%);
+		-webkit-backdrop-filter: blur(8px) saturate(140%);
 
 		/* Subtle inner shine */
-		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 	}
 
 	.health-stat {
-		/* Augmented UI Configuration */
-		--aug-border-bg: linear-gradient(135deg, #00ff88, #00cc66, #00ffaa);
-		--aug-tr: var(--aug-clip-sm);
-		--aug-tl: var(--aug-clip-xs);
+		/* Augmented UI Configuration - Top-left clips form arrow pointing right */
+		--aug-border-bg: linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta));
+		--aug-tl: var(--aug-clip-md);
+		--aug-tr: 0px;
 		--aug-br: var(--aug-clip-md);
-
-		/* Layout Variant: Label Top, Bar Bottom */
-		grid-template-areas:
-			'label'
-			'value'
-			'bar';
+		--aug-bl: 0px;
 
 		/* Enhanced Glow with Animation */
 		box-shadow:
-			0 0 30px rgba(0, 255, 136, 0.9),
-			0 0 50px rgba(0, 255, 136, 0.5),
-			0 0 80px rgba(0, 255, 136, 0.3),
-			inset 0 0 25px rgba(0, 255, 136, 0.25),
-			inset 0 1px 0 rgba(255, 255, 255, 0.1);
+			0 0 20px rgba(0, 255, 255, 0.6),
+			0 0 40px rgba(0, 255, 255, 0.3),
+			inset 0 0 15px rgba(0, 255, 255, 0.15),
+			inset 0 1px 0 rgba(255, 255, 255, 0.05);
 		animation: health-glow-pulse 2.5s ease-in-out infinite;
-	}
-
-	.health-stat .stat-label {
-		grid-area: label;
-	}
-
-	.health-stat .stat-value {
-		grid-area: value;
-	}
-
-	.health-stat .stat-bar {
-		grid-area: bar;
 	}
 
 	@keyframes health-glow-pulse {
 		0%,
 		100% {
 			box-shadow:
-				0 0 30px rgba(0, 255, 136, 0.9),
-				0 0 50px rgba(0, 255, 136, 0.5),
-				0 0 80px rgba(0, 255, 136, 0.3),
-				inset 0 0 25px rgba(0, 255, 136, 0.25),
-				inset 0 1px 0 rgba(255, 255, 255, 0.1);
+				0 0 20px rgba(0, 255, 255, 0.6),
+				0 0 40px rgba(0, 255, 255, 0.3),
+				inset 0 0 15px rgba(0, 255, 255, 0.15),
+				inset 0 1px 0 rgba(255, 255, 255, 0.05);
 		}
 		50% {
 			box-shadow:
-				0 0 40px rgba(0, 255, 136, 1),
-				0 0 60px rgba(0, 255, 136, 0.6),
-				0 0 100px rgba(0, 255, 136, 0.4),
-				inset 0 0 30px rgba(0, 255, 136, 0.3),
-				inset 0 1px 0 rgba(255, 255, 255, 0.15);
+				0 0 25px rgba(0, 255, 255, 0.8),
+				0 0 50px rgba(0, 255, 255, 0.4),
+				inset 0 0 20px rgba(0, 255, 255, 0.2),
+				inset 0 1px 0 rgba(255, 255, 255, 0.08);
 		}
 	}
 
 	.failure-stat {
-		/* Augmented UI Configuration */
-		--aug-border-bg: linear-gradient(135deg, #ff0055, #cc0044, #ff0066);
-		--aug-tl: var(--aug-clip-md);
-		--aug-tr: var(--aug-clip-sm);
-		--aug-bl: var(--aug-clip-xs);
-
-		/* Layout Variant: Bar Top, Label/Value Bottom */
-		grid-template-areas:
-			'bar'
-			'label'
-			'value';
+		/* Augmented UI Configuration - Top-right clips form arrow pointing left */
+		--aug-border-bg: linear-gradient(135deg, var(--color-cyber-magenta), var(--color-brand-yellow));
+		--aug-tl: 0px;
+		--aug-tr: var(--aug-clip-md);
+		--aug-br: 0px;
+		--aug-bl: var(--aug-clip-md);
 
 		/* Enhanced Glow with Animation */
 		box-shadow:
-			0 0 30px rgba(255, 0, 85, 0.9),
-			0 0 50px rgba(255, 0, 85, 0.5),
-			0 0 80px rgba(255, 0, 85, 0.3),
-			inset 0 0 25px rgba(255, 0, 85, 0.25),
-			inset 0 1px 0 rgba(255, 255, 255, 0.1);
+			0 0 20px rgba(217, 70, 239, 0.6),
+			0 0 40px rgba(217, 70, 239, 0.3),
+			inset 0 0 15px rgba(217, 70, 239, 0.15),
+			inset 0 1px 0 rgba(255, 255, 255, 0.05);
 		animation: failure-glow-pulse 2.2s ease-in-out infinite;
-	}
-
-	.failure-stat .stat-label {
-		grid-area: label;
-	}
-
-	.failure-stat .stat-value {
-		grid-area: value;
-	}
-
-	.failure-stat .stat-bar {
-		grid-area: bar;
 	}
 
 	@keyframes failure-glow-pulse {
 		0%,
 		100% {
 			box-shadow:
-				0 0 30px rgba(255, 0, 85, 0.9),
-				0 0 50px rgba(255, 0, 85, 0.5),
-				0 0 80px rgba(255, 0, 85, 0.3),
-				inset 0 0 25px rgba(255, 0, 85, 0.25),
-				inset 0 1px 0 rgba(255, 255, 255, 0.1);
+				0 0 20px rgba(217, 70, 239, 0.6),
+				0 0 40px rgba(217, 70, 239, 0.3),
+				inset 0 0 15px rgba(217, 70, 239, 0.15),
+				inset 0 1px 0 rgba(255, 255, 255, 0.05);
 		}
 		50% {
 			box-shadow:
-				0 0 40px rgba(255, 0, 85, 1),
-				0 0 60px rgba(255, 0, 85, 0.6),
-				0 0 100px rgba(255, 0, 85, 0.4),
-				inset 0 0 30px rgba(255, 0, 85, 0.3),
-				inset 0 1px 0 rgba(255, 255, 255, 0.15);
+				0 0 25px rgba(217, 70, 239, 0.8),
+				0 0 50px rgba(217, 70, 239, 0.4),
+				inset 0 0 20px rgba(217, 70, 239, 0.2),
+				inset 0 1px 0 rgba(255, 255, 255, 0.08);
 		}
 	}
 
 	.bonus-stat {
-		/* Augmented UI Configuration */
-		--aug-border-bg: linear-gradient(135deg, #00d9ff, #0088cc, #00eeff);
-		--aug-tr: var(--aug-clip-md);
-		--aug-tl: var(--aug-clip-sm);
-		--aug-br: var(--aug-clip-sm);
-
-		/* Layout Variant: Value Top, Bar Middle, Label Bottom */
-		grid-template-areas:
-			'value'
-			'bar'
-			'label';
+		/* Augmented UI Configuration - Bottom-left clips form arrow pointing right */
+		--aug-border-bg: linear-gradient(135deg, var(--color-brand-yellow), var(--color-neon-cyan));
+		--aug-tl: var(--aug-clip-md);
+		--aug-tr: 0px;
+		--aug-br: var(--aug-clip-md);
+		--aug-bl: 0px;
 
 		/* Enhanced Glow with Animation */
 		box-shadow:
-			0 0 30px rgba(0, 217, 255, 0.9),
-			0 0 50px rgba(0, 217, 255, 0.5),
-			0 0 80px rgba(0, 217, 255, 0.3),
-			inset 0 0 25px rgba(0, 217, 255, 0.25),
-			inset 0 1px 0 rgba(255, 255, 255, 0.1);
+			0 0 20px rgba(255, 215, 0, 0.6),
+			0 0 40px rgba(255, 215, 0, 0.3),
+			inset 0 0 15px rgba(255, 215, 0, 0.15),
+			inset 0 1px 0 rgba(255, 255, 255, 0.05);
 		animation: bonus-glow-pulse 2.8s ease-in-out infinite;
-	}
-
-	.bonus-stat .stat-label {
-		grid-area: label;
-	}
-
-	.bonus-stat .stat-value {
-		grid-area: value;
-	}
-
-	.bonus-stat .stat-bar {
-		grid-area: bar;
 	}
 
 	@keyframes bonus-glow-pulse {
 		0%,
 		100% {
 			box-shadow:
-				0 0 30px rgba(0, 217, 255, 0.9),
-				0 0 50px rgba(0, 217, 255, 0.5),
-				0 0 80px rgba(0, 217, 255, 0.3),
-				inset 0 0 25px rgba(0, 217, 255, 0.25),
-				inset 0 1px 0 rgba(255, 255, 255, 0.1);
+				0 0 20px rgba(255, 215, 0, 0.6),
+				0 0 40px rgba(255, 215, 0, 0.3),
+				inset 0 0 15px rgba(255, 215, 0, 0.15),
+				inset 0 1px 0 rgba(255, 255, 255, 0.05);
 		}
 		50% {
 			box-shadow:
-				0 0 40px rgba(0, 217, 255, 1),
-				0 0 60px rgba(0, 217, 255, 0.6),
-				0 0 100px rgba(0, 217, 255, 0.4),
-				inset 0 0 30px rgba(0, 217, 255, 0.3),
-				inset 0 1px 0 rgba(255, 255, 255, 0.15);
+				0 0 25px rgba(255, 215, 0, 0.8),
+				0 0 50px rgba(255, 215, 0, 0.4),
+				inset 0 0 20px rgba(255, 215, 0, 0.2),
+				inset 0 1px 0 rgba(255, 255, 255, 0.08);
 		}
 	}
 
 	.success-stat {
-		/* Augmented UI Configuration */
-		--aug-border-bg: linear-gradient(135deg, #ffdd00, #ccaa00, #ffee00);
-		--aug-tl: var(--aug-clip-xs);
+		/* Augmented UI Configuration - Bottom-right clips form arrow pointing left */
+		--aug-border-bg: linear-gradient(135deg, var(--color-neon-cyan), var(--color-brand-yellow));
+		--aug-tl: 0px;
 		--aug-tr: var(--aug-clip-md);
-		--aug-bl: var(--aug-clip-sm);
-		--aug-br: var(--aug-clip-sm);
-
-		/* Layout Variant: Label Top (alternate standard) */
-		grid-template-areas:
-			'label'
-			'bar'
-			'value';
+		--aug-br: 0px;
+		--aug-bl: var(--aug-clip-md);
 
 		/* Enhanced Glow with Animation */
 		box-shadow:
-			0 0 30px rgba(255, 221, 0, 0.9),
-			0 0 50px rgba(255, 221, 0, 0.5),
-			0 0 80px rgba(255, 221, 0, 0.3),
-			inset 0 0 25px rgba(255, 221, 0, 0.25),
-			inset 0 1px 0 rgba(255, 255, 255, 0.1);
+			0 0 20px rgba(0, 255, 255, 0.6),
+			0 0 40px rgba(0, 255, 255, 0.3),
+			inset 0 0 15px rgba(0, 255, 255, 0.15),
+			inset 0 1px 0 rgba(255, 255, 255, 0.05);
 		animation: success-glow-pulse 3s ease-in-out infinite;
-	}
-
-	.success-stat .stat-label {
-		grid-area: label;
-	}
-
-	.success-stat .stat-value {
-		grid-area: value;
-	}
-
-	.success-stat .stat-bar {
-		grid-area: bar;
 	}
 
 	@keyframes success-glow-pulse {
 		0%,
 		100% {
 			box-shadow:
-				0 0 30px rgba(255, 221, 0, 0.9),
-				0 0 50px rgba(255, 221, 0, 0.5),
-				0 0 80px rgba(255, 221, 0, 0.3),
-				inset 0 0 25px rgba(255, 221, 0, 0.25),
-				inset 0 1px 0 rgba(255, 255, 255, 0.1);
+				0 0 20px rgba(0, 255, 255, 0.6),
+				0 0 40px rgba(0, 255, 255, 0.3),
+				inset 0 0 15px rgba(0, 255, 255, 0.15),
+				inset 0 1px 0 rgba(255, 255, 255, 0.05);
 		}
 		50% {
 			box-shadow:
-				0 0 40px rgba(255, 221, 0, 1),
-				0 0 60px rgba(255, 221, 0, 0.6),
-				0 0 100px rgba(255, 221, 0, 0.4),
-				inset 0 0 30px rgba(255, 221, 0, 0.3),
-				inset 0 1px 0 rgba(255, 255, 255, 0.15);
+				0 0 25px rgba(0, 255, 255, 0.8),
+				0 0 50px rgba(0, 255, 255, 0.4),
+				inset 0 0 20px rgba(0, 255, 255, 0.2),
+				inset 0 1px 0 rgba(255, 255, 255, 0.08);
 		}
 	}
 
@@ -490,8 +410,11 @@
 		letter-spacing: 0.15em;
 		font-family: 'Courier New', monospace;
 		opacity: 0.9;
-		text-align: center;
+		text-align: left;
 		align-self: center;
+		flex: 0 0 auto;
+		white-space: nowrap;
+		min-width: 65px;
 	}
 
 	.health-stat .stat-label {
@@ -523,7 +446,7 @@
 	}
 
 	.stat-value {
-		font-size: 1.25rem;
+		font-size: 1rem;
 		font-weight: bold;
 		font-family: 'Courier New', monospace;
 		color: #fff;
@@ -534,30 +457,36 @@
 		align-self: center;
 		gap: 0.1rem;
 		justify-content: center;
+		flex: 0 0 auto;
+		white-space: nowrap;
+		min-width: 50px;
 	}
 
 	.stat-value .current {
-		font-size: 1.25rem;
+		font-size: 1rem;
 	}
 
 	.stat-value .divider {
-		font-size: 0.875rem;
+		font-size: 0.75rem;
 		opacity: 0.7;
 	}
 
 	.stat-value .max {
-		font-size: 0.75rem;
+		font-size: 0.7rem;
 		opacity: 0.8;
 	}
 
 	/* Stat Bars */
 	.stat-bar {
-		height: 0.375rem;
+		height: 6px;
 		background: rgba(0, 0, 0, 0.5);
 		border: 1px solid rgba(255, 255, 255, 0.2);
 		position: relative;
 		overflow: hidden;
 		align-self: center;
+		flex: 1 1 auto;
+		min-width: 40px;
+		border-radius: 2px;
 	}
 
 	.stat-fill {
@@ -620,31 +549,36 @@
 
 		.stat-item {
 			padding: var(--space-xs);
-			min-height: 70px;
+			min-height: 44px;
+			gap: 4px;
 		}
 
 		.stat-label {
-			font-size: 0.7rem;
+			font-size: 0.65rem;
+			min-width: 50px;
+			letter-spacing: 0.1em;
 		}
 
 		.stat-value {
-			font-size: 1rem;
+			font-size: 0.85rem;
+			min-width: 40px;
 		}
 
 		.stat-value .current {
-			font-size: 1rem;
+			font-size: 0.85rem;
 		}
 
 		.stat-value .divider {
-			font-size: 0.75rem;
-		}
-
-		.stat-value .max {
 			font-size: 0.65rem;
 		}
 
+		.stat-value .max {
+			font-size: 0.6rem;
+		}
+
 		.stat-bar {
-			height: 0.3rem;
+			height: 5px;
+			min-width: 30px;
 		}
 
 		.info-segment {
