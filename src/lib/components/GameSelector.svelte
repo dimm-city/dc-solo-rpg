@@ -1,4 +1,6 @@
 <script>
+	import AugmentedButton from './AugmentedButton.svelte';
+
 	let {
 		players = [],
 		games = [],
@@ -37,7 +39,7 @@
 		</select>
 	</div>
 
-	<button onclick={() => setConfig()} data-augmented-ui="tl-clip br-clip both">Load Game</button>
+	<AugmentedButton text="Load Game" onclick={() => setConfig()} />
 </div>
 
 <style>

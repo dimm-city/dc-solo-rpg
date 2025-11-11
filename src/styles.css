@@ -22,6 +22,7 @@
 	/* === CORE BRAND COLORS === */
 	--color-brand-yellow: #ffd700;
 	--color-cyber-magenta: #d946ef;
+	--color-cyber-magenta-alt: hsl(277, 87%, 53%);
 	--color-neon-cyan: #00ffff;
 	--color-toxic-green: #00ff00;
 
@@ -133,6 +134,28 @@
 	--aug-clip-sm: 10px;
 	--aug-clip-md: 12px;
 	--aug-clip-lg: 14px;
+
+	/* === AUGMENTED UI BORDERS === */
+	--aug-border-thin: 2px;
+	--aug-border-default: 3px;
+	--aug-border-thick: 4px;
+
+	/* === AUGMENTED BUTTON GLOWS === */
+	--glow-cta-primary: drop-shadow(0 0 8px rgba(217, 70, 239, 0.35)) drop-shadow(0 0 16px rgba(255, 215, 0, 0.2));
+	--glow-cta-primary-hover: drop-shadow(0 0 12px rgba(255, 215, 0, 0.4)) drop-shadow(0 0 20px rgba(217, 70, 239, 0.3));
+	--glow-cta-secondary: drop-shadow(0 0 6px rgba(217, 70, 239, 0.3)) drop-shadow(0 0 12px rgba(217, 70, 239, 0.2));
+	--glow-cta-secondary-hover: drop-shadow(0 0 10px rgba(255, 215, 0, 0.35)) drop-shadow(0 0 16px rgba(217, 70, 239, 0.25));
+
+	/* === AUGMENTED BUTTON ATMOSPHERIC EFFECTS === */
+	--aug-atmosphere-primary: radial-gradient(ellipse at center,
+			rgba(217, 70, 239, 0.08) 0%,
+			rgba(160, 32, 240, 0.04) 40%,
+			transparent 70%);
+
+	--aug-atmosphere-secondary: radial-gradient(ellipse at center,
+			rgba(217, 70, 239, 0.05) 0%,
+			rgba(160, 32, 240, 0.025) 40%,
+			transparent 70%);
 }
 
 /* ============================================
@@ -159,6 +182,8 @@ body {
 	line-height: var(--line-height-base);
 	color: var(--color-text-primary);
 	background: var(--color-bg-primary);
+	margin: 0;
+	padding: 0;
 	overflow: hidden;
 	height: 100vh;
 	display: flex;
@@ -253,7 +278,7 @@ nav {
 	padding: var(--space-sm) var(--space-lg);
 }
 
-nav > a {
+nav>a {
 	font-family: var(--font-display);
 	font-size: var(--text-xl);
 	font-weight: 900;
@@ -265,7 +290,7 @@ nav > a {
 	transition: color var(--transition-fast);
 }
 
-nav > a:hover {
+nav>a:hover {
 	color: var(--color-neon-cyan);
 	text-shadow: var(--text-glow-cyan);
 }
@@ -318,7 +343,8 @@ main {
 	flex-direction: column;
 	padding: 0;
 	max-width: 100%;
-	min-height: 0; /* CRITICAL: Allow flex child to shrink below content size */
+	min-height: 0;
+	/* CRITICAL: Allow flex child to shrink below content size */
 }
 
 .main {
@@ -362,12 +388,17 @@ main {
 	flex: 1;
 	display: flex;
 	flex-direction: column;
-	justify-content: flex-start; /* Align to top to prevent content overflow */
-	overflow: visible; /* Allow neural effects and glows to extend */
+	justify-content: flex-start;
+	/* Align to top to prevent content overflow */
+	overflow: visible;
+	/* Allow neural effects and glows to extend */
 	margin: var(--space-xs);
-	min-height: 0; /* CRITICAL: Allow flex child to shrink */
-	max-width: 100%; /* CRITICAL: Prevent horizontal overflow */
-	box-sizing: border-box; /* Include padding/border in width */
+	min-height: 0;
+	/* CRITICAL: Allow flex child to shrink */
+	max-width: 100%;
+	/* CRITICAL: Prevent horizontal overflow */
+	box-sizing: border-box;
+	/* Include padding/border in width */
 
 	/* Augmented UI for cyberpunk corners */
 	--aug-border-all: var(--border-width-thick);
@@ -444,111 +475,7 @@ label {
 	margin-bottom: var(--space-sm);
 }
 
-/* ============================================
-   BUTTONS - GRADIENT CYBERPUNK STYLE
-   ============================================ */
 
-button {
-	width: 100%;
-	padding: var(--space-sm) var(--space-md);
-	font-family: var(--font-display);
-	font-size: var(--text-sm);
-	font-weight: 700;
-	color: #000000;
-	/* Black text for maximum contrast (WCAG AA: 4.5:1) */
-	text-shadow: none;
-	/* Remove shadow to maintain contrast */
-	text-transform: uppercase;
-	letter-spacing: var(--letter-spacing-wide);
-
-	/* Gradient: Yellow → Magenta → Cyan */
-	background: linear-gradient(
-		90deg,
-		var(--color-brand-yellow) 0%,
-		var(--color-cyber-magenta) 50%,
-		var(--color-neon-cyan) 100%
-	);
-
-	border: none;
-	border-radius: var(--space-sm);
-	cursor: pointer;
-	margin-top: var(--space-md);
-	/* FIX #7 */
-
-	transition: all var(--transition-base);
-	filter: drop-shadow(0 0 8px rgba(217, 70, 239, 0.35));
-}
-
-button:hover {
-	transform: translateY(-2px);
-	filter: brightness(1.2) drop-shadow(0 0 12px rgba(255, 215, 0, 0.4))
-		drop-shadow(0 0 20px rgba(217, 70, 239, 0.3));
-}
-
-/* FIX #7: Reduced motion */
-@media (prefers-reduced-motion: reduce) {
-	button:hover {
-		transform: none;
-	}
-}
-
-button:active {
-	transform: translateY(0);
-	filter: brightness(0.9);
-}
-
-button:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-	filter: none;
-}
-
-button.loading {
-	opacity: 0.8;
-	cursor: wait;
-	pointer-events: none;
-	position: relative;
-}
-
-button.loading::before {
-	content: '';
-	display: inline-block;
-	width: 14px;
-	height: 14px;
-	margin-right: 8px;
-	border: 2px solid rgba(0, 0, 0, 0.3);
-	border-top-color: #000000;
-	border-radius: 50%;
-	animation: spinner-rotate 0.8s linear infinite;
-	vertical-align: middle;
-}
-
-@keyframes spinner-rotate {
-	from {
-		transform: rotate(0deg);
-	}
-
-	to {
-		transform: rotate(360deg);
-	}
-}
-
-/* Pulse glow effect for disabled/loading buttons */
-button[disabled],
-button.loading {
-	animation: pulse-glow 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse-glow {
-	0%,
-	100% {
-		box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
-	}
-
-	50% {
-		box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
-	}
-}
 
 /* ============================================
    FOOTER
@@ -680,19 +607,18 @@ body::before {
 	left: 0;
 	width: 100%;
 	height: 100%;
-	background: repeating-linear-gradient(
-		0deg,
-		transparent,
-		transparent 2px,
-		rgba(217, 70, 239, 0.015) 2px,
-		rgba(217, 70, 239, 0.015) 4px
-	);
+	background: repeating-linear-gradient(0deg,
+			transparent,
+			transparent 2px,
+			rgba(217, 70, 239, 0.015) 2px,
+			rgba(217, 70, 239, 0.015) 4px);
 	pointer-events: none;
 	z-index: 9999;
 }
 
 /* Subtle glow animation for interactive elements */
 @keyframes glow-pulse {
+
 	0%,
 	100% {
 		box-shadow: 0 0 8px rgba(217, 70, 239, 0.3);
@@ -762,13 +688,11 @@ body::before {
 	content: '';
 	position: absolute;
 	inset: 0;
-	background: repeating-linear-gradient(
-		90deg,
-		transparent,
-		transparent 2px,
-		rgba(255, 215, 0, 0.02) 2px,
-		rgba(255, 215, 0, 0.02) 4px
-	);
+	background: repeating-linear-gradient(90deg,
+			transparent,
+			transparent 2px,
+			rgba(255, 215, 0, 0.02) 2px,
+			rgba(255, 215, 0, 0.02) 4px);
 	pointer-events: none;
 }
 
@@ -812,7 +736,7 @@ body::before {
 }
 
 @media (max-width: 450px) {
-	nav > a {
+	nav>a {
 		font-size: var(--text-xl);
 		min-height: 48px;
 	}
@@ -835,6 +759,7 @@ body::before {
    ============================================ */
 
 @media (prefers-reduced-motion: reduce) {
+
 	*,
 	*::before,
 	*::after {
@@ -859,6 +784,7 @@ body::before {
 		opacity: 1;
 		transform: scale(1);
 	}
+
 	100% {
 		opacity: 0;
 		transform: scale(0.95);
@@ -875,6 +801,7 @@ body::before {
 		opacity: 0;
 		transform: translateY(20px);
 	}
+
 	100% {
 		opacity: 1;
 		transform: translateY(0);
@@ -891,10 +818,12 @@ body::before {
 		opacity: 1;
 		transform: perspective(1000px) rotateY(0deg);
 	}
+
 	50% {
 		opacity: 0.5;
 		transform: perspective(1000px) rotateY(90deg);
 	}
+
 	100% {
 		opacity: 1;
 		transform: perspective(1000px) rotateY(0deg);
@@ -912,11 +841,13 @@ body::before {
 		transform: perspective(1200px) rotateX(-15deg) scale(0.95);
 		filter: blur(4px);
 	}
+
 	50% {
 		opacity: 0.7;
 		transform: perspective(1200px) rotateX(-5deg) scale(0.98);
 		filter: blur(2px);
 	}
+
 	100% {
 		opacity: 1;
 		transform: perspective(1200px) rotateX(0deg) scale(1);
@@ -926,6 +857,7 @@ body::before {
 
 /* Respect reduced motion preferences - override all screen transitions */
 @media (prefers-reduced-motion: reduce) {
+
 	.screen-transition-out,
 	.screen-transition-in,
 	.round-transition,

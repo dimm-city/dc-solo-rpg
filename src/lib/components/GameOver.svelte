@@ -1,6 +1,7 @@
 <script>
 	import { gameState } from '../stores/gameStore.svelte.js';
 	import { nextScreen } from '../stores/gameActions.svelte.js';
+	import AugmentedButton from './AugmentedButton.svelte';
 </script>
 
 <div class="dc-game-over-container">
@@ -13,7 +14,7 @@
 		{/if}
 	</div>
 	<div class="dc-game-over-toolbar">
-		<button onclick={() => nextScreen('finalLog')}>record your final log</button>
+		<AugmentedButton text="record your final log" onclick={() => nextScreen('finalLog')} />
 	</div>
 </div>
 

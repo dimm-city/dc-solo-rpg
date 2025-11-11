@@ -1,6 +1,7 @@
 <script>
 	import { gameState } from '../stores/gameStore.svelte.js';
 	import { recordRound, nextScreen, restartGame, exitGame } from '../stores/gameActions.svelte.js';
+	import AugmentedButton from './AugmentedButton.svelte';
 
 	let { onjournalsaved = () => {} } = $props();
 
@@ -35,15 +36,19 @@
 	<div class="journal-tools-center-area">
 		{#if saved}
 			{#if gameState.gameOver}
-				<button onclick={restartGame}
-					>{gameState.config.labels.journalEntryRestartButtonText}</button
-				>
-				<button onclick={exitGame}>{gameState.config.labels.journalEntryExitButtonText}</button>
+				<AugmentedButton
+					text={gameState.config.labels.journalEntryRestartButtonText}
+					onclick={restartGame}
+				/>
+				<AugmentedButton
+					text={gameState.config.labels.journalEntryExitButtonText}
+					onclick={exitGame}
+				/>
 			{:else}
-				<button onclick={next}>{gameState.config.labels.journalEntryNextButtonText}</button>
+				<AugmentedButton text={gameState.config.labels.journalEntryNextButtonText} onclick={next} />
 			{/if}
 		{:else}
-			<button onclick={save}>{gameState.config.labels.journalEntrySaveButtonText}</button>
+			<AugmentedButton text={gameState.config.labels.journalEntrySaveButtonText} onclick={save} />
 		{/if}
 	</div>
 </div>
@@ -85,8 +90,7 @@
 	p {
 		padding-block: 0.25rem;
 	}
-	textarea,
-	button {
+	textarea {
 		width: 100%;
 		height: min(5rem, min-content);
 		box-sizing: border-box;
@@ -97,9 +101,16 @@
 		grid-area: journal-tools-center-area;
 		justify-content: center;
 		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
 	}
 
-	.journal-tools-center-area button {
-		margin-inline: 0.25rem;
+	.journal-tools-center-area :global(.aug-button-wrapper) {
+		flex: 1;
+		min-width: 200px;
+	}
+
+	.journal-tools-center-area :global(.aug-button) {
+		width: 100%;
 	}
 </style>

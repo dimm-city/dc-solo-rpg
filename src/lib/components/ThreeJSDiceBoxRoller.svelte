@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import DiceBox from '@3d-dice/dice-box-threejs';
 	import { gameState } from '../stores/gameStore.svelte.js';
+	import AugmentedButton from './AugmentedButton.svelte';
 
 	let {
 		rolling = $bindable(false),
@@ -86,7 +87,7 @@
 >
 	{#if !rolling}
 		<div class="dc-dice-roller-header dc-header">
-			<button class="dc-fade-in" {onclick} {onkeyup}>{header}</button>
+			<AugmentedButton text={header} {onclick} class="dc-fade-in" />
 		</div>
 	{/if}
 </div>
@@ -108,13 +109,15 @@
 		box-sizing: border-box;
 	}
 
-	.dc-dice-roller-container button {
-		/* position: absolute; */
+	.dc-dice-roller-container :global(.aug-button-wrapper) {
+		width: 100%;
+	}
+
+	.dc-dice-roller-container :global(.aug-button) {
 		display: grid;
 		justify-self: center;
 		align-self: center;
 		width: 100%;
 		margin: 0;
-		background-color: var(--dc-default-container-bg);
 	}
 </style>

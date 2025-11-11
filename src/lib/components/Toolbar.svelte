@@ -1,6 +1,7 @@
 <script>
 	import { gameState } from '../stores/gameStore.svelte.js';
 	import { exitGame } from '../stores/gameActions.svelte.js';
+	import AugmentedButton from './AugmentedButton.svelte';
 </script>
 
 <div class="dc-toolbar">
@@ -10,8 +11,8 @@
 	</div>
 	<div class="center"></div>
 	<div class="right">
-		<button class="dc-exit-button" onclick={exitGame}
-			>{@html gameState.config?.labels.toolbarExitButtonText}</button
+		<AugmentedButton class="dc-exit-button" onclick={exitGame}
+			>{@html gameState.config?.labels.toolbarExitButtonText}</AugmentedButton
 		>
 		<!-- <button class="toolbar-button" id="fullscreen">
             &#x26F6;
@@ -59,12 +60,4 @@
 		align-self: start;
 	}
 
-	.right button {
-		height: min-content;
-		width: min-content;
-
-		margin: 0;
-		padding: 0.1rem;
-		background-color: transparent;
-	}
 </style>

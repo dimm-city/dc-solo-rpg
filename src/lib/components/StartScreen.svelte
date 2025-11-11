@@ -1,5 +1,6 @@
 <script>
 	import { loadSystemConfig } from '../stores/gameActions.svelte.js';
+	import AugmentedButton from './AugmentedButton.svelte';
 
 	/**
 	 * @property  {SystemSettings} systemSettings - Current system settings
@@ -47,7 +48,7 @@
 		</select>
 	</div>
 
-	<button onclick={() => setConfig()}>Start Game</button>
+	<AugmentedButton text="Start Game" onclick={() => setConfig()} />
 </div>
 
 <style>

@@ -17,6 +17,7 @@
 	import Toolbar from './Toolbar.svelte';
 	import LoadScreen from './LoadScreen.svelte';
 	import NeuralBackground from './NeuralBackground.svelte';
+	import AugmentedButton from './AugmentedButton.svelte';
 
 	let {
 		systemSettings = $bindable({}),
@@ -89,10 +90,11 @@
 				{#if currentScreen == 'startRound'}
 					<div class="dc-fade-in dc-screen-container" data-testid="screen-startRound">
 						<h4>Round {gameState.round}</h4>
-						<button
+						<AugmentedButton
+							text="Roll for tasks"
 							onclick={async () => await transitionToScreen('rollForTasks')}
-							data-testid="start-round-button">Roll for tasks</button
-						>
+							testid="start-round-button"
+						/>
 					</div>
 				{:else if currentScreen == 'rollForTasks'}
 					<div class="dc-fade-in dc-screen-container" data-testid="screen-rollForTasks">
@@ -207,9 +209,9 @@
 		font-family: var(--dc-default-font-family);
 	}
 	:global(
-		.dc-game-container button,
-		.dc-game-container button:hover,
-		.dc-game-container button:focus-visible
+		.dc-game-container button:not(.aug-button),
+		.dc-game-container button:not(.aug-button):hover,
+		.dc-game-container button:not(.aug-button):focus-visible
 	) {
 		background: var(--dc-button-bg);
 		color: var(--dc-button-color);
@@ -275,16 +277,17 @@
 		bottom: 0.25rem;
 		padding: 0.5rem;
 		border-radius: var(--dc-default-border-radius);
-		box-shadow: var(--dc-default-box-shadow);
 		overflow: visible; /* Allow button glows to extend beyond bounds */
 	}
-	:global(.dc-header button) {
+	:global(.dc-header .aug-button-wrapper) {
+		width: 100%;
+	}
+	:global(.dc-header .aug-button) {
 		display: grid;
 		justify-self: center;
 		align-self: center;
 		width: 100%;
 		margin: 0;
-		background-color: var(--dc-default-container-bg);
 	}
 	.status-display-area {
 		display: grid;
@@ -328,6 +331,16 @@
 
 		:global(.dc-header) {
 			width: 90%;
+			bottom: 0.5rem; /* Slightly higher on small screens for better thumb access */
+			padding: 0.25rem;
+		}
+	}
+
+	/* Ensure button always stays at bottom on very small screens */
+	@media (max-height: 500px) {
+		:global(.dc-header) {
+			bottom: 0.25rem;
+			min-width: 85%;
 		}
 	}
 </style>
