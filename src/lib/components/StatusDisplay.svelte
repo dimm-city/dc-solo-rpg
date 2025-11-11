@@ -178,8 +178,7 @@
 			inset 0 0 30px rgba(255, 0, 255, 0.25),
 			inset 0 0 50px rgba(0, 255, 255, 0.1);
 
-		/* Subtle animation */
-		animation: bar-glow-pulse 3s ease-in-out infinite;
+		/* Subtle animation - removed for reduced visual noise */
 	}
 
 	@keyframes bar-glow-pulse {
@@ -270,13 +269,12 @@
 		--aug-tr: 14px;
 		--aug-br: 14px;
 
-		/* Enhanced Glow with Animation */
+		/* Enhanced Glow - animation removed */
 		box-shadow:
 			0 0 20px rgba(0, 255, 255, 0.6),
 			0 0 40px rgba(0, 255, 255, 0.3),
 			inset 0 0 15px rgba(0, 255, 255, 0.15),
 			inset 0 1px 0 rgba(255, 255, 255, 0.05);
-		animation: health-glow-pulse 2.5s ease-in-out infinite;
 	}
 
 	@keyframes health-glow-pulse {
@@ -304,13 +302,12 @@
 		--aug-tr: 8px;
 		--aug-br: 14px;
 
-		/* Enhanced Glow with Animation */
+		/* Enhanced Glow - animation removed */
 		box-shadow:
 			0 0 20px rgba(217, 70, 239, 0.6),
 			0 0 40px rgba(217, 70, 239, 0.3),
 			inset 0 0 15px rgba(217, 70, 239, 0.15),
 			inset 0 1px 0 rgba(255, 255, 255, 0.05);
-		animation: failure-glow-pulse 2.2s ease-in-out infinite;
 	}
 
 	@keyframes failure-glow-pulse {
@@ -338,13 +335,12 @@
 		--aug-tr: 14px;
 		--aug-br: 8px;
 
-		/* Enhanced Glow with Animation */
+		/* Enhanced Glow - animation removed */
 		box-shadow:
 			0 0 20px rgba(255, 215, 0, 0.6),
 			0 0 40px rgba(255, 215, 0, 0.3),
 			inset 0 0 15px rgba(255, 215, 0, 0.15),
 			inset 0 1px 0 rgba(255, 255, 255, 0.05);
-		animation: bonus-glow-pulse 2.8s ease-in-out infinite;
 	}
 
 	@keyframes bonus-glow-pulse {
@@ -373,13 +369,12 @@
 		--aug-br: 14px;
 		--aug-bl: 8px;
 
-		/* Enhanced Glow with Animation */
+		/* Enhanced Glow - animation removed */
 		box-shadow:
 			0 0 20px rgba(0, 255, 255, 0.6),
 			0 0 40px rgba(0, 255, 255, 0.3),
 			inset 0 0 15px rgba(0, 255, 255, 0.15),
 			inset 0 1px 0 rgba(255, 255, 255, 0.05);
-		animation: success-glow-pulse 3s ease-in-out infinite;
 	}
 
 	@keyframes success-glow-pulse {
