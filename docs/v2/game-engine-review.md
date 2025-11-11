@@ -1063,21 +1063,283 @@ Core tension mechanic missing.
 
 ---
 
-## 10. Conclusion
+## 10. Game Content Format & Creation
 
-The game engine is **architecturally sound** with a well-designed state management system and comprehensive test coverage. However, there are **three critical mechanical bugs** that significantly affect gameplay:
+### 10.1 The Missing Piece: Card Prompts & Story Content
 
+While the game engine mechanics are 65-70% aligned with the framework, there's a **critical content gap** that hasn't been addressed in the mechanical review:
+
+**🔴 MISSING: 52 Card Narrative Prompts**
+
+As noted in the original review, the implementation has:
+- ✅ Correct card mechanics (damage checks, special cards, counters)
+- ✅ Proper game flow and state management
+- ❌ **NO story content** - Players don't know what happens when they draw a card
+
+The framework guide focuses on **mechanics** (how the game works), but the original "The Wretched" review identified that **narrative prompts** (what each card means) are completely missing.
+
+### 10.2 Recommended Solution: Type-Based Markdown Format
+
+After evaluating multiple approaches for game content creation, we recommend the **Type-Based Markdown Format** documented in `/docs/v2/simplified-type-based-format.md`.
+
+#### Why This Format?
+
+**For Writers:**
+1. **No deck management** - Writers focus on story, not card identifiers
+2. **Clear purpose-driven structure** - Cards organized by SRD function
+3. **Minimal technical knowledge** - Just markdown headers and text
+4. **Flexible content length** - Short descriptions or long narratives
+5. **Story-first approach** - Content drives experience, not mechanics
+
+**For Implementation:**
+1. **Simple parsing** - Type headers with auto-assignment to 52-card deck
+2. **Validated by default** - Counts enforced (1+4+3+24+20 = 52)
+3. **SRD-compliant** - Aligns with Wretched & Alone framework
+4. **Future-proof** - Easy to extend with custom actions
+5. **Backward compatible** - Can convert from/to CSV format
+
+**For Players:**
+1. **Better storytelling** - Writers focus on narrative quality
+2. **Consistent mechanics** - Standard deck ensures balanced gameplay
+3. **Richer content** - Narrative cards add emotional depth
+4. **Thematic coherence** - Related events grouped logically
+
+#### Card Type Alignment with Framework
+
+The format uses 5 card types that map directly to framework mechanics:
+
+| Type | Count | Framework Mechanic | SRD Term |
+|------|-------|-------------------|----------|
+| **Primary Success** | 1 | Ace of Hearts - Win condition activation | "Salvation" |
+| **Failure Counter** | 4 | All Kings - 4th King = instant loss | Tracker Cards |
+| **Narrative** | 3 | Remaining Aces (A♦, A♣, A♠) - Bonus/help | "Bonus or help" |
+| **Challenge** | 24 | Odd cards (3,5,7,9,J) - Trigger damage checks | "Pull from tower" |
+| **Event** | 20 | Even cards (2,4,6,8,10,Q) - Safe cards | "Usually safe" |
+
+**Total:** 52 cards ✅
+
+#### Format Example
+
+```markdown
+---
+title: Future Lost
+subtitle: A Dimm City Campaign
+win-message: You have managed to repair the time machine!
+lose-message: The time machine has been damaged beyond repair
+---
+
+# Introduction
+
+## Who You Are
+You are a time traveler stranded in a dystopian future...
+
+## What Happened
+Your journey through time went catastrophically wrong...
+
+## Your Goal
+You must repair your time machine and return home...
+
+---
+
+# Card Deck
+
+## Primary Success
+
+**You find a survivor who knows how to repair the time machine**
+
+Dr. Chen recognizes your machine's design and offers to help.
+With her expertise, you finally have a real chance of getting home...
+
+---
+
+## Failure Counter
+
+**A group of hostile survivors has spotted you**
+
+They move through the ruins with purpose, weapons ready...
+
+---
+
+## Failure Counter
+
+**Your stash of resources is stolen**
+
+---
+
+## Failure Counter
+
+**You get lost in a dangerous part of the city**
+
+---
+
+## Failure Counter
+
+**The time machine suffers a major malfunction**
+
+---
+
+## Narrative
+
+**A moment of hope amid the ruins**
+
+As the sun sets, you find a rooftop garden. Plants still grow here...
+
+---
+
+## Narrative
+
+**The weight of displacement**
+
+You find an old photograph in the rubble...
+
+---
+
+## Narrative
+
+**A connection across time**
+
+---
+
+## Challenge
+
+**You're betrayed by a survivor you trusted**
+
+[Story here - 24 of these total]
+
+---
+
+## Event
+
+**You discover a hidden stash of resources**
+
+[Story here - 20 of these total]
+
+---
+```
+
+### 10.3 Implementation Approach
+
+**Phase 1: Parser Implementation** (4-6 hours)
+1. Create markdown parser for type-based format
+2. Validate card counts (1+4+3+24+20 = 52)
+3. Auto-assign cards to deck positions
+4. Support optional explicit card assignments
+5. Generate game config from parsed content
+
+**Phase 2: Game Loader Updates** (2-3 hours)
+1. Update `gameInit.js` to accept markdown-based configs
+2. Load parsed card prompts into deck
+3. Display prompts during card draw
+4. Maintain backward compatibility with CSV format
+
+**Phase 3: Content Creation Tools** (2-4 hours)
+1. Create template generator for new games
+2. Build validation tool for card counts
+3. Add conversion utility (CSV ↔ Markdown)
+4. Document format for writers
+
+### 10.4 Benefits for the Project
+
+**Solves Critical Content Gap:**
+- Players will finally know what each card means
+- Enables rich narrative storytelling
+- Makes game playable as designed
+
+**Lowers Content Creation Barrier:**
+- Writers don't need technical knowledge
+- Focus on story quality, not card IDs
+- Clear structure guides content creation
+
+**Enables Multiple Games:**
+- Easy to create new scenarios
+- Reuse same game engine
+- Build library of Wretched & Alone games
+
+**Maintains Framework Compliance:**
+- Auto-assignment ensures 52-card deck
+- Card types match SRD mechanics
+- Damage checks, trackers, win conditions all align
+
+### 10.5 Integration with Critical Fixes
+
+The content format works seamlessly with the mechanical fixes:
+
+1. **Ace Classification Fix** → Narrative cards (Aces) will trigger damage checks as intended
+2. **Initial Damage Roll** → Games start balanced regardless of content
+3. **Final Damage Roll** → Dramatic tension applies to all game scenarios
+
+The format is **mechanics-agnostic** - it provides story content while the engine handles the Wretched & Alone framework rules.
+
+### 10.6 Recommendation Priority
+
+**🔴 HIGH PRIORITY** (Should be implemented alongside critical mechanical fixes)
+
+**Rationale:**
+- Mechanical fixes make the engine correct
+- Content format makes the engine **usable**
+- Without card prompts, players can't actually play
+- Format enables rapid content creation for testing
+
+**Suggested Implementation Order:**
+1. Fix Ace classification bug (30 min) ← Do first
+2. Implement markdown parser (4-6 hours) ← Do second
+3. Add initial damage roll (15 min)
+4. Implement final damage roll (1.5-2 hours)
+5. Create first game using markdown format (testing)
+
+---
+
+## 11. Conclusion
+
+The game engine is **architecturally sound** with a well-designed state management system and comprehensive test coverage. However, there are **four critical gaps** that must be addressed:
+
+### Mechanical Gaps (Framework Alignment)
 1. **Ace classification error** - Aces don't trigger damage checks (should)
 2. **Missing initial damage** - Game starts too easy
 3. **Missing final roll** - Victory doesn't have the intended dramatic tension
 
-These are **not design decisions** but **implementation gaps** that should be aligned with the framework specification. The fixes are relatively straightforward and can be completed in a focused development session.
+### Content Gap (Playability)
+4. **Missing card prompts** - No story content for 52 cards
 
-**Bottom Line:** The engine is 65-70% aligned with the framework mechanically. With 2-3 hours of critical fixes, alignment would reach 95%+. The codebase is well-structured and ready for these improvements.
+These are **not design decisions** but **implementation gaps** that should be aligned with the framework specification. The mechanical fixes are relatively straightforward (2-3 hours), and the content format solution provides a clear path forward for creating playable games (4-6 hours).
+
+### Updated Assessment
+
+**Mechanical Alignment:** 65-70% (framework mechanics)
+**Content Completeness:** 0% (no card prompts)
+**Overall Playability:** ~35% (engine works, but unplayable without content)
+
+**With Recommended Fixes:**
+- Mechanical alignment: 95%+ (after critical fixes)
+- Content completeness: 100% (with markdown format + first game)
+- Overall playability: 95%+ (fully functional and playable)
+
+**Bottom Line:** The engine is well-architected and ready for improvements. With 6-9 hours of focused development (3 hours mechanical + 4-6 hours content system), the implementation will be fully aligned with the Wretched & Alone framework and ready for content creation.
+
+### Next Steps
+
+**Immediate (Blocking):**
+1. ❗ Fix Ace classification (30 min)
+2. ❗ Implement markdown parser (4-6 hours)
+3. ❗ Add initial damage roll (15 min)
+4. ❗ Implement final damage roll (1.5-2 hours)
+
+**High Priority (Testing):**
+5. Create first game using markdown format
+6. Update tests for corrected Ace behavior
+7. Add tests for final damage roll
+8. Balance testing with complete content
+
+**Medium Priority (Polish):**
+9. Documentation for writers
+10. Conversion tools (CSV ↔ Markdown)
+11. Template generator
+12. Enhanced loss messages
 
 ---
 
-**Document Version:** 2.0
+**Document Version:** 2.1
 **Review Date:** 2025-11-11
 **Framework Reference:** `/docs/wretched-alone-mechanics-guide.md` v2.0
-**Reviewer Assessment:** Comprehensive mechanical analysis complete
+**Content Format Reference:** `/docs/v2/simplified-type-based-format.md`
+**Reviewer Assessment:** Comprehensive mechanical + content analysis complete

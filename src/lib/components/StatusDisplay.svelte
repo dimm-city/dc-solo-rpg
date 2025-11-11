@@ -60,7 +60,7 @@
 			</div>
 		</div>
 
-		<div class="stat-item failure-stat" data-augmented-ui="tl-clip-y tr-clip br-clip-y border">
+		<div class="stat-item failure-stat" data-augmented-ui="tl-clip-y tr-clip br-clip-x border">
 			<div class="stat-label">
 				{gameState.config?.labels?.failureCounters?.toUpperCase() ?? 'FAILURE'}
 			</div>
@@ -74,7 +74,7 @@
 			</div>
 		</div>
 
-		<div class="stat-item bonus-stat" data-augmented-ui="tl-clip tr-clip-y br-clip border">
+		<div class="stat-item bonus-stat" data-augmented-ui="tl-clip-y tr-clip-x br-clip border">
 			<div class="stat-label">LUCK</div>
 			<div class="stat-value">
 				<span class="current">{bonusPercent}</span><span class="divider">/</span><span class="max"
@@ -88,7 +88,7 @@
 
 		<div
 			class="stat-item success-stat"
-			data-augmented-ui="tl-clip-x tr-clip br-clip-x bl-clip border"
+			data-augmented-ui="tl-clip-y tr-clip br-clip bl-clip border"
 		>
 			<div class="stat-label">
 				{gameState.config?.labels?.successCounters?.toUpperCase() ?? 'SUCCESS'}
@@ -263,11 +263,11 @@
 	}
 
 	.health-stat {
-		/* Augmented UI Configuration - Left start with sharp right edge */
+		/* Augmented UI Configuration - Entry point with rightward tab */
 		--aug-border-bg: linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta));
-		--aug-tl: 8px;
-		--aug-tr: 14px;
-		--aug-br: 14px;
+		--aug-tl: 8px;   /* Gentle entry */
+		--aug-tr: 14px;  /* Strong tab → connects to Failure */
+		--aug-br: 14px;  /* Strong tab → connects to Bonus (mobile) */
 
 		/* Enhanced Glow - animation removed */
 		box-shadow:
@@ -296,11 +296,11 @@
 	}
 
 	.failure-stat {
-		/* Augmented UI Configuration - Left arrow with vertical clips */
+		/* Augmented UI Configuration - Receiver with downward tab */
 		--aug-border-bg: linear-gradient(135deg, var(--color-cyber-magenta), var(--color-brand-yellow));
-		--aug-tl: 14px;
-		--aug-tr: 8px;
-		--aug-br: 14px;
+		--aug-tl: 14px;  /* Slot ← receives Health's tab */
+		--aug-tr: 8px;   /* Gentle transition */
+		--aug-br: 14px;  /* Strong tab → connects to Success (mobile) */
 
 		/* Enhanced Glow - animation removed */
 		box-shadow:
@@ -329,11 +329,11 @@
 	}
 
 	.bonus-stat {
-		/* Augmented UI Configuration - Right arrow with pointed left side */
+		/* Augmented UI Configuration - Power source with rightward tab */
 		--aug-border-bg: linear-gradient(135deg, var(--color-brand-yellow), var(--color-neon-cyan));
-		--aug-tl: 8px;
-		--aug-tr: 14px;
-		--aug-br: 8px;
+		--aug-tl: 14px;  /* Slot ← receives Health's tab (mobile) */
+		--aug-tr: 14px;  /* Strong tab → connects to Success */
+		--aug-br: 8px;   /* Gentle terminus */
 
 		/* Enhanced Glow - animation removed */
 		box-shadow:
@@ -362,12 +362,12 @@
 	}
 
 	.success-stat {
-		/* Augmented UI Configuration - Right end with sharp left edge */
+		/* Augmented UI Configuration - Terminus with receiving slot */
 		--aug-border-bg: linear-gradient(135deg, var(--color-neon-cyan), var(--color-brand-yellow));
-		--aug-tl: 14px;
-		--aug-tr: 8px;
-		--aug-br: 14px;
-		--aug-bl: 8px;
+		--aug-tl: 14px;  /* Slot ← receives Bonus's tab (desktop) OR Failure's tab (mobile) */
+		--aug-tr: 8px;   /* Gentle endpoint */
+		--aug-br: 8px;   /* Gentle terminus */
+		--aug-bl: 8px;   /* Visual anchor */
 
 		/* Enhanced Glow - animation removed */
 		box-shadow:
