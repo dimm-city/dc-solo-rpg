@@ -153,7 +153,9 @@ export function confirmCard() {
 
 	// Determine next state based on the card that was just confirmed
 	if (card) {
-		const isOdd = card.card !== 'A' && parseInt(card.card) % 2 !== 0;
+		// Per Wretched & Alone SRD: A, 3, 5, 7, 9 are odd-ranked and trigger damage
+		const oddRanks = ['A', '3', '5', '7', '9'];
+		const isOdd = oddRanks.includes(card.card);
 
 		if (isOdd) {
 			// Odd card requires failure check
@@ -277,15 +279,71 @@ export function successCheck() {
 	}
 
 	if (gameState.tokens === 0) {
-		gameState.win = true;
-		gameState.status = gameState.config.labels?.successCheckWin ?? 'Salvation has arrived';
-		gameState.gameOver = true;
-		transitionTo('gameOver');
+		// Per SRD: Don't immediately win - must face final damage roll first
+		logger.debug('[successCheck] All tokens removed, transitioning to final damage roll');
+		transitionTo('finalDamageRoll');
 	} else {
 		transitionTo('startRound');
 	}
 
 	return roll;
+}
+
+/**
+ * Perform the final damage roll after all tokens are removed
+ * This is the SRD's "salvation with risk" mechanic - victory can be snatched away at the last moment
+ * @param {number} roll - Dice roll result
+ */
+export function performFinalDamageRoll(roll) {
+	logger.debug(
+		'[performFinalDamageRoll] Roll:',
+		roll,
+		'Bonus:',
+		gameState.bonus,
+		'Tower:',
+		gameState.tower
+	);
+
+	gameState.diceRoll = roll;
+
+	// Calculate damage (same formula as regular damage checks)
+	const damage = Math.max(roll - gameState.bonus, 0);
+	gameState.tower = Math.max(gameState.tower - damage, 0);
+
+	logger.debug(
+		`[performFinalDamageRoll] Damage: ${damage}, Remaining Tower: ${gameState.tower}`
+	);
+
+	// Log the final roll
+	gameState.log.push({
+		type: 'final-damage',
+		roll,
+		damage,
+		tower: gameState.tower,
+		timestamp: Date.now(),
+		round: gameState.round,
+		id: `${gameState.round}.final`
+	});
+
+	// Determine outcome
+	if (gameState.tower > 0) {
+		// VICTORY - Survived the final test
+		gameState.win = true;
+		gameState.gameOver = true;
+		gameState.status =
+			gameState.config.labels?.successCheckWin ?? 'Victory! Against all odds, you survived.';
+		logger.info('[performFinalDamageRoll] VICTORY - Player survived final roll');
+	} else {
+		// DEFEAT - Victory snatched away
+		gameState.win = false;
+		gameState.gameOver = true;
+		gameState.status =
+			gameState.config.labels?.finalDamageRollLoss ??
+			'So close... Victory was within reach, but the final test proved too much.';
+		logger.info('[performFinalDamageRoll] DEFEAT - Final roll depleted tower');
+	}
+
+	transitionTo('gameOver');
 }
 
 /**

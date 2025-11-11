@@ -391,7 +391,7 @@ describe('WAAStore', () => {
 
 	//Test successCheck
 	describe('successCheck', () => {
-		test('should perform the success check and update the game state (success)', async () => {
+		test('should transition to finalDamageRoll when all tokens removed', async () => {
 			// Mock the getRandomNumber function
 			gameState.getRandomNumber = vi.fn(() => 6);
 			const initialState = {
@@ -413,11 +413,10 @@ describe('WAAStore', () => {
 
 			expect(roll).toBe(6);
 			expect(gameState.diceRoll).toBe(roll);
-			expect(gameState.tokens).toBe(initialState.tokens - 1);
-			expect(gameState.win).toBe(true);
-			expect(gameState.status).toBe('Custom Win Label');
-			expect(gameState.gameOver).toBe(true);
-			expect(gameState.state).toBe('gameOver');
+			expect(gameState.tokens).toBe(0);
+			expect(gameState.win).toBe(false); // Not won yet - must pass final damage roll
+			expect(gameState.gameOver).toBe(false); // Not over yet
+			expect(gameState.state).toBe('finalDamageRoll');
 		});
 
 		test('should perform the success check and update the game state (failure)', async () => {

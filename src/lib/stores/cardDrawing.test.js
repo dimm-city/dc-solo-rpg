@@ -316,20 +316,20 @@ describe('Card Drawing and Failure Check Flow', () => {
 	});
 
 	describe('Edge Cases', () => {
-		test('should handle Ace cards correctly (not treated as odd)', async () => {
+		test('should handle Ace cards correctly (treated as odd per SRD)', async () => {
 			gameState.deck = [{ card: 'A', suit: 'hearts', description: 'Ace of Hearts' }];
 			gameState.cardsToDraw = 1;
 			gameState.aceOfHeartsRevealed = false;
-			
+
 			await drawCard();
-			
+
 			// Ace should set the aceOfHeartsRevealed flag
 			expect(gameState.aceOfHeartsRevealed).toBe(true);
-			
+
 			await confirmCard();
-			
-			// Ace should NOT trigger failure check (not odd)
-			expect(gameState.state).toBe('log'); // No more cards, go to log
+
+			// Per Wretched & Alone SRD: Aces are odd-ranked and trigger failure check
+			expect(gameState.state).toBe('failureCheck');
 		});
 
 		test('should handle multiple kings triggering game over', async () => {

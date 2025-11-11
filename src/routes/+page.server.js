@@ -9,22 +9,54 @@ const projectRoot = process.env.GAMES_BASE_DIR || process.cwd();
 export async function load() {
 	// Read the games directory from static folder
 	const gamesDir = join(projectRoot, 'static', 'games');
-	
+
 	try {
 		const entries = await readdir(gamesDir, { withFileTypes: true });
-		
-		// Filter for directories only and map to game objects
-		const games = entries
+
+		// Track unique game slugs
+		const gameMap = new Map();
+
+		// 1. Find V2 format games (.game.md files)
+		entries
+			.filter(entry => entry.isFile() && entry.name.endsWith('.game.md'))
+			.forEach(entry => {
+				const slug = entry.name.replace('.game.md', '');
+				if (!gameMap.has(slug)) {
+					gameMap.set(slug, {
+						slug,
+						title: slug
+							.split('-')
+							.map(word => word.charAt(0).toUpperCase() + word.slice(1))
+							.join(' '),
+						format: 'v2'
+					});
+				}
+			});
+
+		// 2. Find V1 format games (directories)
+		entries
 			.filter(entry => entry.isDirectory())
-			.map(entry => ({
-				slug: entry.name,
-				// Convert slug to title (e.g., 'future-lost' -> 'Future Lost')
-				title: entry.name
-					.split('-')
-					.map(word => word.charAt(0).toUpperCase() + word.slice(1))
-					.join(' ')
-			}));
-		
+			.forEach(entry => {
+				// Only add if not already added by V2 format
+				if (!gameMap.has(entry.name)) {
+					gameMap.set(entry.name, {
+						slug: entry.name,
+						title: entry.name
+							.split('-')
+							.map(word => word.charAt(0).toUpperCase() + word.slice(1))
+							.join(' '),
+						format: 'v1'
+					});
+				}
+			});
+
+		// Convert to array and sort by title
+		const games = Array.from(gameMap.values()).sort((a, b) =>
+			a.title.localeCompare(b.title)
+		);
+
+		logger.info(`Found ${games.length} games:`, games.map(g => `${g.slug} (${g.format})`));
+
 		return {
 			games
 		};
