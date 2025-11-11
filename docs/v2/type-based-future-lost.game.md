@@ -75,27 +75,27 @@ This will require miracles. Or at least, very specific pre-collapse technology t
 
 ---
 
-## Narrative
+## Narrative: skip-damage
 
-**A moment of hope amid the ruins**
+**A moment of perfect timing saves you**
 
-As the sun sets over the broken skyline, you find yourself on a rooftop garden. Somehow, plants still grow here - tomatoes, herbs, even flowers. Someone tended this place with love.
+In the chaos of your escape from the collapsing structure, something impossible happens. A piece of falling debris that should have crushed you catches on a support beam at the last second. A gas leak that should have ignited doesn't. A patrol that should have spotted you turns the other way.
 
-For a moment, you remember why you have to get home, why all of this matters. The world may be broken, but life persists.
+The universe aligns in your favor, just this once. You make it through unscathed, heart pounding, knowing that next time you face danger, you might not be so lucky.
 
-You pick a tomato, the first fresh food you've had in weeks. As you eat it, tears stream down your face. You will survive this. You will make it home.
+But for now, you're alive. And sometimes, in this broken world, that's the only miracle you need.
 
 ---
 
-## Narrative
+## Narrative: return-king
 
-**The weight of displacement**
+**A second chance manifests from the darkness**
 
-You find an old photograph in the rubble - a family smiling at the camera, taken maybe twenty years ago in your time, but a century in the past here. What happened to them? Did they survive the collapse? Did their children?
+Against all odds, you discover a flaw in the hostile survivors' operation. They're not as organized as you thought - their leader made a critical mistake, and you've found it.
 
-The temporal paradox makes your head spin. This is someone's future, but it's your present. If you succeed, if you fix your machine and leave, will anything you've done here matter? Will anyone remember?
+With this knowledge, you can undo what seemed irreversible. The catastrophe they caused can be unwound, the damage repaired, the threat neutralized. It will take everything you have, but you can make this right.
 
-The questions haunt you as you carefully pocket the photograph. Someday, somehow, you'll find out what happened to them.
+Sometimes the universe gives you a chance to rewrite your failures. This is yours.
 
 ---
 

@@ -1,6 +1,6 @@
 # Game Engine Review: Implementation vs. Wretched & Alone Framework
 **Date:** 2025-11-11
-**Version:** 2.0 - Updated against `wretched-alone-mechanics-guide.md`
+**Version:** 3.0 - V2 Type-Based Format Alignment
 **Damage System:** Option A - Failure Check System (Odd Cards + Damage Roll)
 
 ---
@@ -8,30 +8,330 @@
 ## Executive Summary
 
 ### Overall Assessment
-The current implementation captures approximately **65-70% of the framework mechanics** but has critical gaps in initialization, card classification logic, win condition finale, and bonus counter application. The core game loop is well-implemented, but several mechanics differ from the framework specification.
+
+The current implementation has **dual gaps**: mechanical framework alignment (65-70%) and content completeness (0%). The architecture is excellent with modern Svelte 5 patterns, but critical bugs prevent proper SRD compliance. Most critically, **no narrative content exists** for the 52 cards, making the game unplayable despite functional mechanics.
 
 ### Implementation Maturity
+
 - **State Management:** ✅ Excellent (Svelte 5 runes, clean architecture)
 - **Core Game Loop:** ✅ Well-implemented (day/round structure)
-- **Special Cards:** ⚠️ Partially implemented (Aces/Kings tracking works, but mechanics incomplete)
-- **Damage System:** ⚠️ Incorrect implementation (Ace classification error)
-- **Win Conditions:** ❌ Missing final damage roll requirement
+- **Special Cards:** ⚠️ Partially implemented (tracking works, Ace damage behavior wrong)
+- **Damage System:** ⚠️ Formula correct, trigger conditions wrong (Ace bug)
+- **Win Conditions:** ❌ Missing final damage roll (SRD requirement)
 - **Loss Conditions:** ✅ Correct (resources ≤ 0, 4 trackers)
+- **Content System:** ❌ No V2 parser, no card prompts (0% playable)
 
-### Top 3 Critical Gaps
-1. 🔴 **Missing Initial Damage Roll** - Game should start with 54 - 1d6 resources
-2. 🔴 **Incorrect Ace Classification** - Aces ARE odd-ranked and should trigger damage checks
-3. 🔴 **Missing Final Roll Mechanic** - Win requires final damage check after all tokens removed
+### Top 4 Critical Gaps
+
+1. 🔴 **Incorrect Ace Classification** - Aces ARE odd-ranked, should trigger damage (30 min fix)
+2. 🔴 **Missing Final Damage Roll** - SRD-required dramatic tension mechanic (1.5-2 hrs)
+3. 🔴 **Missing Initial Damage Roll** - Game starts at 54 instead of 48-53 (15 min fix)
+4. 🔴 **Missing V2 Content Parser** - No way to create games using type-based format (4-6 hrs)
 
 ---
 
-## 1. Mechanical Alignment Analysis
+## 1. V2 Type-Based Format Overview
 
-### 1.1 Game Setup & Initialization
+### 1.1 Card Type System (V2 Specification)
 
-**Framework Specification (Section 3):**
+The V2 Type-Based Markdown Format organizes cards by **purpose**, not identifiers:
+
+| Type | Count | Deck Positions | Damage? | SRD Term |
+|------|-------|----------------|---------|----------|
+| **Primary Success** | 1 | A♥ (Ace of Hearts) | YES (odd) | "Salvation" |
+| **Failure Counter** | 4 | K♥, K♦, K♣, K♠ | NO (even) | Tracker Cards |
+| **Narrative** | 3 | A♦, A♣, A♠ | YES (odd) | "Bonus/help" |
+| **Challenge** | 16 | 3,5,7,9 × 4 suits | YES (odd) | "Pull from tower" |
+| **Event** | 28 | 2,4,6,8,10,J,Q × 4 suits | NO (even) | "Usually safe" |
+
+**Total:** 1 + 4 + 3 + 16 + 28 = **52 cards** ✓
+
+**Critical Corrections from Previous Docs:**
+- ❌ Old: Challenge = 24 cards (wrong)
+- ✅ New: Challenge = 16 cards (3,5,7,9 only, NOT Aces or Jacks)
+- ❌ Old: Event = 20 cards (wrong)
+- ✅ New: Event = 28 cards (2,4,6,8,10,J,Q, NOT Kings)
+- ✅ Jacks and Queens are EVEN-ranked (not face card exceptions)
+
+### 1.2 Special Card Modifiers (V2 Feature)
+
+Optional one-time modifiers for Narrative cards:
+
+#### Skip-Damage Modifier
+- **Syntax:** `## Narrative: skip-damage`
+- **Limit:** Maximum 1 per game
+- **Effect:** Skip next damage check when instructed
+- **Strategic Use:** Save for critical low-resource moments
+
+#### Return-King Modifier
+- **Syntax:** `## Narrative: return-king`
+- **Limit:** Maximum 1 per game
+- **Effect:** Return previously drawn King to deck
+- **Strategic Use:** Reset failure counter for relief
+
+**Validation Rules:**
+- Only ONE of each modifier per game
+- Modifiers ONLY on Narrative cards (A♦, A♣, A♠)
+- Standard Narrative cards without modifiers are valid
+
+**Current Implementation Status:** ❌ NOT IMPLEMENTED
+
+---
+
+## 2. Framework SRD Compliance Assessment
+
+### 2.1 Core SRD Principles
+
+#### Escalating Tension
+- ✅ **Implemented:** Resource depletion (54 → 0)
+- ✅ **Implemented:** Failure counters (4 Kings)
+- ✅ **Implemented:** Damage checks reduce resources
+- ⚠️ **Partial:** Fewer damage checks than intended (Ace bug = 16 vs 20 expected)
+
+#### Inevitable Doom
+- ✅ **Implemented:** High difficulty design
+- ⚠️ **Issue:** Win rate likely 10-15% higher than SRD target (10-20%)
+- ❌ **Missing:** Final damage roll (reduces win rate)
+- ❌ **Missing:** Initial damage roll (makes game easier)
+
+#### Progressive Rule Teaching
+- ❌ **Missing:** No card prompts to embed tutorial
+- ❌ **Missing:** No story content teaching mechanics through play
+- 🟡 **Planned:** V2 format supports this when parser implemented
+
+#### Accessibility
+- ✅ **Good:** Digital tower (accessible vs physical)
+- ❌ **Missing:** No option to disable damage checks
+- ❌ **Missing:** No narrative-only mode
+
+#### Salvation with Risk
+- ✅ **Implemented:** Ace of Hearts activates win condition
+- ✅ **Implemented:** 10-token countdown with dice rolls
+- ❌ **CRITICAL MISSING:** Final damage roll after countdown
+- ❌ **BUG:** Primary Success Ace doesn't trigger damage (should per SRD)
+
+### 2.2 SRD Terminology Mapping
+
+| SRD Term | Implementation | Status |
+|----------|----------------|--------|
+| "Salvation" | Primary Success / A♥ | ✅ Correct |
+| "The Oracle" | 52-card deck | ✅ Correct |
+| "Bonus or help" | Narrative cards / Aces | ⚠️ Concept correct, damage behavior wrong |
+| Tracker Cards | Failure Counter / Kings | ✅ Correct |
+| "Pull from tower" | Damage check / failureCheck | ⚠️ Formula correct, triggers wrong |
+| "Usually requires pull" | Odd-ranked trigger damage | ❌ Missing Aces |
+| "Usually safe" | Even-ranked skip damage | ✅ Correct |
+| Resources | tower (HP counter) | ✅ Acceptable adaptation |
+| Bonus Counter | bonus | ✅ Correct |
+
+### 2.3 SRD Compliance Score
+
+**Overall Framework Alignment:** 65-70%
+
+**Breakdown:**
+- Core mechanics (deck, resources, rounds): **95%** ✅
+- Card classification (odd/even triggers): **60%** ❌ (Ace bug)
+- Special cards (Aces, Kings): **75%** ⚠️ (tracking good, behavior buggy)
+- Win conditions: **50%** ❌ (missing final roll)
+- Loss conditions: **90%** ✅ (just missing final roll failure)
+- Progressive teaching: **0%** ❌ (no content)
+- Accessibility: **40%** ⚠️ (digital good, no options)
+
+---
+
+## 3. Svelte 5 Runes-Based Implementation
+
+### 3.1 State Management Architecture
+
+The implementation uses Svelte 5's modern runes system for fine-grained reactivity:
+
+**Core State Pattern:**
+
+📁 `/src/lib/stores/gameStore.svelte.js`
+
 ```typescript
-// Expected setup sequence
+// Svelte 5: Module-level reactive state using $state rune
+let gameState = $state({
+  // Screen state
+  state: 'loadGame',
+
+  // Player state
+  playerName: '',
+  tower: 54,           // Resources (54 → 0)
+  tokens: 10,          // Win countdown (10 → 0)
+
+  // Round state
+  round: 0,
+  cardsToDraw: 0,
+
+  // Card state
+  deck: [],
+  discard: [],
+  log: [],
+  currentCard: null,
+
+  // Roll state
+  diceRoll: 0,
+
+  // King tracking (Failure Counters)
+  kingsRevealed: 0,
+  kingOfHearts: false,
+  kingOfDiamonds: false,
+  kingOfClubs: false,
+  kingOfSpades: false,
+
+  // Ace tracking
+  aceOfHeartsRevealed: false,  // Win condition
+  bonus: 0,                     // Bonus counter (0-4)
+
+  // Game over state
+  gameOver: false,
+  win: false,
+
+  // Journal
+  journalEntries: [],
+
+  // Config
+  config: null,
+  systemConfig: null
+});
+```
+
+**Key Svelte 5 Features:**
+
+| Svelte 3/4 Pattern | Svelte 5 Pattern | Status |
+|--------------------|------------------|--------|
+| `writable()` stores | `$state()` rune | ✅ Fully migrated |
+| Reactive `$:` statements | `$derived()` rune | ✅ Fully migrated |
+| `onMount()`/`afterUpdate()` | `$effect()` rune | ✅ Fully migrated |
+| `export let prop` | `$props()` rune | ✅ Fully migrated |
+| `store.set(value)` | Direct mutation | ✅ Fully migrated |
+
+### 3.2 Component Reactivity Pattern
+
+```svelte
+<script>
+  import { gameState, transitionTo } from '../stores/gameStore.svelte.js';
+
+  // Derived values using $derived rune
+  const currentScreen = $derived(gameState.state);
+  const cardsRemaining = $derived(gameState.deck.length);
+  const isGameOver = $derived(gameState.gameOver);
+
+  // Props using $props rune
+  let {
+    systemSettings = {},
+    onfailurecheckcompleted = () => {},
+    onjournalsaved = () => {}
+  } = $props();
+
+  // Effects using $effect rune
+  $effect(() => {
+    if (diceContainer && !diceInitialized) {
+      diceInitialized = true;
+      initializeDiceBox(diceContainer);
+    }
+  });
+</script>
+```
+
+**Implementation Quality:** ✅ EXCELLENT - Modern, clean Svelte 5 patterns throughout
+
+---
+
+## 4. Component Architecture for Card Types
+
+### 4.1 Screen-Based Component Structure
+
+The game uses state-driven, screen-based architecture:
+
+📁 `/src/lib/components/GameScreen.svelte`
+
+```svelte
+{#if currentScreen == 'loadGame'}
+  <LoadScreen />
+{:else if currentScreen == 'options'}
+  <OptionsScreen {systemSettings} />
+{:else if currentScreen == 'intro'}
+  <IntroScreen />
+{:else if currentScreen == 'startRound'}
+  <h4>Round {gameState.round}</h4>
+  <ContinueButton onclick={() => transitionTo('rollForTasks')} />
+{:else if currentScreen == 'rollForTasks'}
+  <RollForTasks />
+{:else if currentScreen == 'drawCard'}
+  <DrawCard />
+{:else if currentScreen == 'failureCheck'}
+  <FailureCheck {onfailurecheckcompleted} />
+{:else if currentScreen == 'log'}
+  <JournalEntry {onjournalsaved} />
+{:else if currentScreen == 'successCheck'}
+  <SuccessCheck />
+{:else if currentScreen == 'gameOver'}
+  <GameOver />
+{/if}
+```
+
+### 4.2 Card Type-Specific Component Handling
+
+#### DrawCard Component (All 5 Card Types)
+
+**Supports:**
+
+| Card Type | Behavior | Status |
+|-----------|----------|--------|
+| **Primary Success** (A♥) | Activates win, shows tokens | ✅ Works |
+| **Failure Counter** (Kings) | Tracks count, instant loss at 4 | ✅ Works |
+| **Narrative** (A♦,A♣,A♠) | Shows bonus +1 | ⚠️ BUG: No damage check |
+| **Challenge** (3,5,7,9) | Triggers damage check | ✅ Works |
+| **Event** (2,4,6,8,10,J,Q) | Safe, no damage | ✅ Works |
+
+**CRITICAL BUG:**
+
+📁 `/src/lib/stores/gameActions.svelte.js` - Line 156
+
+```javascript
+const isOdd = card.card !== 'A' && parseInt(card.card) % 2 !== 0;
+//            ^^^^^^^^^^^^^^^^^ ❌ EXCLUDES ACES FROM ODD CLASSIFICATION
+```
+
+**Should be:**
+
+```javascript
+const oddRanks = ['A', '3', '5', '7', '9'];
+const isOdd = oddRanks.includes(card.card);
+```
+
+### 4.3 Missing Components for V2 Features
+
+#### 🔴 CRITICAL: FinalDamageRoll Component
+
+**Status:** ❌ NOT IMPLEMENTED
+**Priority:** CRITICAL (SRD requirement)
+**Estimated Effort:** 1-1.5 hours
+
+**Required:**
+- New `/src/lib/components/FinalDamageRoll.svelte`
+- Add `finalDamageRoll` state to transition graph
+- Implement `performFinalDamageRoll()` function
+- Update tests
+
+#### 🟡 MEDIUM: SpecialModifierHandler Component
+
+**Status:** ❌ NOT IMPLEMENTED
+**Priority:** Medium (V2 feature)
+**Estimated Effort:** 3-4 hours
+
+**Purpose:** UI for skip-damage and return-king modifiers
+
+---
+
+## 5. Mechanical Alignment Analysis
+
+### 5.1 Game Setup & Initialization
+
+**Framework Specification:**
+```typescript
 1. Shuffle 52-card deck
 2. Initialize resources to 54
 3. Roll 1d6 for initial damage
@@ -41,65 +341,36 @@ The current implementation captures approximately **65-70% of the framework mech
 ```
 
 **Current Implementation:**
+
 📁 `/src/lib/stores/gameInit.js` (Lines 31-83)
 
 ```javascript
-export function initializeGame(gameConfig, player, options = {}) {
-    // ...
-    Object.assign(gameState, {
-        // ...
-        tower: 54,  // ❌ NO INITIAL DAMAGE APPLIED
-        tokens: finalConfig.options?.startingTokens || 10,
-        // ...
-        round: 1,
-        // ...
-        deck
-    });
-}
+Object.assign(gameState, {
+    tower: 54,  // ❌ NO INITIAL DAMAGE APPLIED
+    tokens: finalConfig.options?.startingTokens || 10,
+    round: 1,
+    deck
+});
 ```
 
 **Analysis:**
 - ❌ **Missing:** Initial 1d6 damage roll
-- ✅ **Correct:** Deck shuffling (line 47)
-- ✅ **Correct:** 54 starting resources
-- ✅ **Correct:** 10 tokens initialization
-- ⚠️ **Note:** Variable named `tower` instead of `resources` (acceptable semantic difference)
+- ✅ **Correct:** Deck shuffling, 54 starting resources, 10 tokens
 
-**Impact:** 🔴 CRITICAL - Game balance significantly affected
-Makes the game easier than intended (~5-15% easier win rate)
+**Impact:** 🔴 CRITICAL - Game ~5-15% easier without initial damage
 
-**Recommendation:**
+**Fix:**
 ```javascript
-// In gameInit.js, line 56 (after deck setup)
-export function initializeGame(gameConfig, player, options = {}) {
-    // ... existing code ...
+const initialDamageRoll = Math.floor(Math.random() * 6) + 1;
+const startingResources = 54 - initialDamageRoll;
 
-    // Apply initial damage roll (Framework Section 3.1)
-    const initialDamageRoll = Math.floor(Math.random() * 6) + 1;
-    const startingResources = 54 - initialDamageRoll;
-
-    Object.assign(gameState, {
-        // ...
-        tower: startingResources,  // Should be 48-53 (not 54)
-        // ...
-    });
-}
+Object.assign(gameState, {
+    tower: startingResources,  // Now 48-53 instead of 54
+    // ...
+});
 ```
 
----
-
-### 1.2 Core Game Loop (Day Structure)
-
-**Framework Specification (Section 4):**
-```
-Day Structure:
-1. Phase One: Roll 1d6 → Draw N cards → Process each → Apply mechanics
-2. Phase Two: Record journal entry → Win condition check (if active) → Next day
-```
-
-**Current Implementation:**
-📁 `/src/lib/stores/gameActions.svelte.js`
-📁 `/src/lib/components/GameScreen.svelte`
+### 5.2 Core Game Loop
 
 **State Flow:**
 ```
@@ -109,394 +380,119 @@ startRound → rollForTasks → drawCard →
 ```
 
 **Analysis:**
-- ✅ **Correct:** Two-phase structure implemented
-- ✅ **Correct:** Roll for card count (lines 64-73)
-- ✅ **Correct:** Sequential card drawing (lines 88-138)
-- ✅ **Correct:** Journal phase after cards (lines 244-265)
-- ✅ **Correct:** Win condition checks at end of round (lines 271-289)
-- ✅ **Correct:** Day counter increments properly (line 54)
+- ✅ **Correct:** Two-phase structure (action + journal)
+- ✅ **Correct:** Roll for card count, sequential drawing
+- ✅ **Correct:** Day counter increments properly
 
-**Screen State Mapping:**
-| Framework State | Implementation State | Alignment |
-|----------------|---------------------|-----------|
-| Day Start | `startRound` | ✅ Correct |
-| Roll for Cards | `rollForTasks` | ✅ Correct |
-| Draw Card | `drawCard` | ✅ Correct |
-| Damage Check | `failureCheck` | ✅ Correct |
-| Journal Entry | `log` | ✅ Correct |
-| Win Progress | `successCheck` | ✅ Correct |
-| Game Over | `gameOver` | ✅ Correct |
+**Impact:** ✅ No issues - Core loop well-implemented
 
-**Impact:** ✅ No issues - Core loop is well-implemented
+### 5.3 Card Mechanics & Classification
 
----
-
-### 1.3 Card Mechanics & Classification
-
-**Framework Specification (Section 5.2):**
+**Framework Specification:**
 ```typescript
-// Odd ranks that trigger damage checks
 const ODD_RANKS = ['A', '3', '5', '7', '9'];  // 20 cards total
-
-function isOddRank(rank: string): boolean {
-    return ['A', '3', '5', '7', '9'].includes(rank);
-}
 ```
 
 **Current Implementation:**
-📁 `/src/lib/stores/gameActions.svelte.js` (Lines 155-159)
+
+📁 `/src/lib/stores/gameActions.svelte.js` (Line 156)
 
 ```javascript
-export function confirmCard() {
-    const card = gameState.currentCard;
-
-    if (card) {
-        const isOdd = card.card !== 'A' && parseInt(card.card) % 2 !== 0;
-        //            ^^^^^^^^^^^^^^^^^ ❌ INCORRECT!
-        //            Explicitly excludes Aces from odd classification
-
-        if (isOdd) {
-            transitionTo('failureCheck');
-        }
-    }
-}
+const isOdd = card.card !== 'A' && parseInt(card.card) % 2 !== 0;
+//            ^^^^^^^^^^^^^^^^^ ❌ EXPLICITLY EXCLUDES ACES
 ```
 
-**Analysis:**
-❌ **CRITICAL ERROR:** The condition `card.card !== 'A'` explicitly excludes Aces from being classified as odd. According to the framework (Section 5.2), **Aces ARE odd-ranked** and should trigger damage checks.
-
-**Framework states clearly:**
-> "Odd Ranks: A, 3, 5, 7, 9 (trigger damage checks)"
-> "Ace is odd, so still triggers damage check" (Section 6.2, line 419)
-
-**Current Behavior:**
-- ✅ Correctly identifies 3, 5, 7, 9 as odd
-- ❌ Incorrectly treats Aces as even (no damage check)
-- ✅ Correctly treats 2, 4, 6, 8, 10, J, Q, K as even
-
-**Impact:** 🔴 CRITICAL - Game balance broken
-- Aces drawn don't trigger damage → significantly easier game
-- Aces provide bonus counter without risk → compounds the problem
-- Framework expects 20 damage-triggering cards, implementation has only 16
+**Impact:** 🔴 CRITICAL
+- Framework expects 20 damage-triggering cards
+- Implementation has only 16 (missing Aces)
+- Game significantly easier (Aces provide bonus without risk)
+- Violates SRD tension mechanic
 
 **Test Evidence:**
-📁 `/src/lib/stores/gameFlow.test.js` (Lines 162-185, 219-242)
-```javascript
-// Test shows Ace of Hearts goes to 'log' state, not 'failureCheck'
-test('should draw a card and update the game state (ace of hearts)', async () => {
-    const card = { card: 'A', suit: 'hearts' };
-    // ...
-    await drawCard();
-    expect(gameState.state).toBe('log');  // ❌ Should be 'failureCheck'
-});
 
-// Test for odd card (7) correctly goes to failureCheck
-test('should draw a card and update the game state (odd card)', async () => {
-    const card = { card: '7', suit: 'diamonds' };
-    // ...
-    await drawCard();
-    expect(gameState.state).toBe('failureCheck');  // ✅ Correct
+📁 `/src/lib/stores/gameFlow.test.js`
+
+```javascript
+// ❌ INCORRECT TEST - Validates wrong behavior
+test('should draw ace of hearts', async () => {
+    expect(gameState.state).toBe('log');  // Should be 'failureCheck'
 });
 ```
 
-**Recommendation:**
-```javascript
-// Replace line 156 in gameActions.svelte.js
-export function confirmCard() {
-    const card = gameState.currentCard;
+### 5.4 Damage System
 
-    if (card) {
-        // Framework Section 5.2: Aces ARE odd-ranked
-        const oddRanks = ['A', '3', '5', '7', '9'];
-        const isOdd = oddRanks.includes(card.card);
-
-        if (isOdd) {
-            transitionTo('failureCheck');
-        } else if (gameState.cardsToDraw > 0) {
-            transitionTo('drawCard');
-        } else {
-            transitionTo('log');
-        }
-    }
-}
-```
-
----
-
-### 1.4 Damage System (Option A Implementation)
-
-**Framework Specification (Section 9):**
+**Framework Specification:**
 ```typescript
-// Damage formula
 damage = max(roll - bonusCounter, 0)
-
-// Only odd-ranked cards trigger damage
-if (isOddRank(card.rank)) {
-    const roll = rollD6();
-    const damage = calculateDamage(roll, gameState.bonusCounter);
-    gameState.resources -= damage;
-}
 ```
 
 **Current Implementation:**
+
 📁 `/src/lib/stores/gameActions.svelte.js` (Lines 183-220)
 
 ```javascript
-export function applyFailureCheckResult(result) {
-    gameState.diceRoll = result;
+const blocksToRemove = Math.max(result - gameState.bonus, 0);
+gameState.tower -= blocksToRemove;
 
-    // Calculate and apply damage
-    const blocksToRemove = Math.max(result - gameState.bonus, 0);
-    gameState.tower -= blocksToRemove;
-
-    // Check for tower collapse
-    if (gameState.tower <= 0) {
-        gameState.tower = 0;
-        gameState.gameOver = true;
-        transitionTo('gameOver');
-    }
-}
-```
-
-**Analysis:**
-- ✅ **Correct:** Damage formula `max(roll - bonus, 0)` (line 203)
-- ✅ **Correct:** Resources reduce by damage amount (line 204)
-- ✅ **Correct:** Game over when resources ≤ 0 (lines 207-211)
-- ✅ **Correct:** State transitions after damage (lines 213-219)
-- ❌ **Issue:** Damage checks triggered incorrectly due to Ace classification bug
-
-**Test Evidence:**
-📁 `/src/lib/stores/gameActions.test.js` (Lines 335-407)
-```javascript
-describe('Failure Check Mechanics', () => {
-    it('should reduce tower based on roll minus bonus', () => {
-        gameState.bonus = 3;
-        const roll = 4;
-        applyFailureCheckResult(roll);
-        // Damage = max(4 - 3, 0) = 1
-        expect(gameState.tower).toBe(53);  // ✅ Correct calculation
-    });
-});
-```
-
-**Impact:** ⚠️ Formula is correct, but called at wrong times due to Ace bug
-
----
-
-### 1.5 Special Cards - Aces
-
-**Framework Specification (Section 6.2):**
-```typescript
-// ALL Aces increase bonus counter
-function processAce(card: Card, gameState: GameState): void {
-    gameState.bonusCounter++;  // Always increase
-
-    // Check if this is the win condition card
-    if (card.suit === 'hearts' && card.rank === 'A') {
-        gameState.winConditionActive = true;
-        gameState.tokens = 10;
-    }
-
-    // Ace is odd, so STILL triggers damage check
-    if (isOddRank(card.rank)) {  // Will always be true for Aces
-        performDamageCheck(card, gameState);
-    }
-}
-```
-
-**Current Implementation:**
-📁 `/src/lib/stores/gameActions.svelte.js` (Lines 118-124)
-
-```javascript
-// Track aces
-if (card.card === 'A') {
-    gameState.bonus += 1;  // ✅ Correct: increases bonus counter
-    if (card.suit === 'hearts') {
-        gameState.aceOfHeartsRevealed = true;  // ✅ Correct: activates win
-    }
-}
-// ❌ Missing: No damage check triggered for Aces
-```
-
-**Analysis:**
-- ✅ **Correct:** All Aces increase bonus counter
-- ✅ **Correct:** Ace of Hearts activates win condition
-- ❌ **Missing:** Aces should ALSO trigger damage check (they're odd-ranked)
-- ⚠️ **Terminology:** Uses `aceOfHeartsRevealed` instead of `winConditionActive`
-
-**Impact:** 🔴 CRITICAL
-Aces provide benefits (bonus counter, win activation) without risk (no damage check). This breaks the tension mechanic where players must balance risk/reward.
-
----
-
-### 1.6 Special Cards - Kings (Trackers)
-
-**Framework Specification (Section 6.3):**
-```typescript
-// Tracker cards (Kings)
-function processTrackerCard(card: Card, gameState: GameState): void {
-    gameState.trackersRevealed++;
-    gameState.visibleCards.push(card);  // Keep visible
-
-    if (gameState.trackersRevealed >= 4) {
-        gameState.gameStatus = 'defeat';
-        gameState.defeatReason = 'tracker_limit';
-    }
-}
-```
-
-**Current Implementation:**
-📁 `/src/lib/stores/gameActions.svelte.js` (Lines 112-133)
-
-```javascript
-// Track kings
-if (card.card === 'K') {
-    gameState.kingsRevealed += 1;  // ✅ Correct
-    const suitKey = `kingOf${card.suit.charAt(0).toUpperCase() + card.suit.slice(1)}`;
-    gameState[suitKey] = true;  // ✅ Correct: tracks individual kings
-}
-
-// Check for game over (4 kings)
-if (gameState.kingsRevealed === 4) {
+if (gameState.tower <= 0) {
     gameState.gameOver = true;
-    gameState.win = false;
-    gameState.status = gameState.config.labels.failureCounterLoss;
-    transitionTo('gameOver');  // ✅ Correct
+    transitionTo('gameOver');
 }
 ```
 
 **Analysis:**
-- ✅ **Correct:** Increments tracker count
-- ✅ **Correct:** Tracks individual kings by suit
-- ✅ **Correct:** 4th king triggers instant loss
-- ⚠️ **Minor:** Doesn't maintain visible cards array (acceptable for digital)
-- ✅ **Correct:** Kings are even-ranked (no damage check)
+- ✅ **Correct:** Formula implementation
+- ✅ **Correct:** Game over at resources ≤ 0
+- ❌ **Issue:** Called at wrong times (Ace bug)
 
-**Test Evidence:**
-📁 `/src/lib/stores/gameFlow.test.js` (Lines 186-217)
-```javascript
-test('should draw a card and update the game state (final king)', async () => {
-    gameState.kingsRevealed = 3;
-    const card = { card: 'K', suit: 'hearts' };
+**Impact:** ⚠️ Formula perfect, trigger conditions wrong
 
-    await drawCard();
+### 5.5 Win Conditions
 
-    expect(gameState.kingsRevealed).toBe(4);  // ✅ Incremented
-    expect(gameState.gameOver).toBe(true);     // ✅ Game over
-    expect(gameState.win).toBe(false);         // ✅ Loss state
-    expect(gameState.state).toBe('gameOver');  // ✅ Correct state
-});
+**Framework Specification:**
 ```
-
-**Impact:** ✅ No issues - King mechanics correctly implemented
-
----
-
-### 1.7 Win Conditions
-
-**Framework Specification (Section 7.1):**
-```
-Victory Requirements:
 1. Draw win condition card (Ace of Hearts)
 2. Survive with resources > 0
-3. Roll for progress at end of each day
-4. Successfully remove all 10 tokens (roll = 6, or 5-6 with bonus)
+3. Roll for progress at end of day
+4. Remove all 10 tokens (roll = 6, or 5-6 with bonus)
 5. ❗ Make final damage roll
 6. Resources still > 0 after final roll → WIN
 ```
 
 **Current Implementation:**
+
 📁 `/src/lib/stores/gameActions.svelte.js` (Lines 271-289)
 
 ```javascript
-export function successCheck() {
-    const roll = gameState.getRandomNumber();
-    gameState.diceRoll = roll;
-
-    // Base: roll=6, Enhanced: roll+bonus=6
-    if (roll === 6 || (gameState.config.difficulty > 0 && roll + gameState.bonus === 6)) {
-        gameState.tokens -= 1;  // ✅ Remove token on success
-    }
-
-    if (gameState.tokens === 0) {
-        gameState.win = true;
-        gameState.status = gameState.config.labels?.successCheckWin;
-        gameState.gameOver = true;
-        transitionTo('gameOver');  // ❌ MISSING FINAL DAMAGE ROLL
-    } else {
-        transitionTo('startRound');
-    }
-
-    return roll;
+if (gameState.tokens === 0) {
+    gameState.win = true;
+    transitionTo('gameOver');  // ❌ MISSING FINAL DAMAGE ROLL
 }
 ```
 
-**Analysis:**
-- ✅ **Correct:** Win card (Ace of Hearts) activates countdown
-- ✅ **Correct:** Token removal on roll=6 (or 5-6 with bonus)
-- ✅ **Correct:** Win triggered when tokens=0
-- ❌ **CRITICAL MISSING:** Final damage roll after all tokens removed
-- ⚠️ **Issue:** Bonus counter applies to success rolls (not in framework base spec)
-
-**Framework Quote (Section 7.1, lines 231-236):**
-> "5. Make final damage roll
-> 6. Resources still > 0 → **WIN**"
-
-The framework explicitly requires a final damage check before victory is confirmed. The current implementation skips this entirely.
-
 **Expected Flow:**
 ```
-tokens = 1 → roll success → tokens = 0 →
-FINAL DAMAGE ROLL → if resources > 0 → WIN, else → LOSS
+tokens=0 → FINAL DAMAGE ROLL → if resources>0 → WIN else → LOSS
 ```
 
 **Current Flow:**
 ```
-tokens = 1 → roll success → tokens = 0 → WIN (immediate)
+tokens=0 → WIN (immediate)
 ```
 
 **Impact:** 🔴 CRITICAL
-- Game is significantly easier than intended
-- Framework's "snatching victory away at the last moment" mechanic is missing
-- Win rate likely ~10-15% higher than framework target (10-20%)
+- Missing SRD signature mechanic
+- No dramatic "snatched away" moment
+- Win rate ~10-15% higher than intended
 
-**Test Evidence:**
-📁 `/src/lib/stores/gameActions.test.js` (Lines 451-460)
+**Required Implementation:**
 ```javascript
-it('should trigger win when all tokens removed', async () => {
-    gameState.tokens = 1;
-    gameState.getRandomNumber = vi.fn().mockReturnValue(6);
-
-    await successCheck();
-
-    expect(gameState.tokens).toBe(0);
-    expect(gameState.win).toBe(true);  // ❌ No final damage roll tested
-    expect(gameState.state).toBe('gameOver');
-});
-```
-
-**Recommendation:**
-```javascript
-export function successCheck() {
-    const roll = gameState.getRandomNumber();
-    gameState.diceRoll = roll;
-
-    if (roll === 6 || (gameState.config.difficulty > 0 && roll + gameState.bonus === 6)) {
-        gameState.tokens -= 1;
-    }
-
-    if (gameState.tokens === 0) {
-        // Framework Section 7.1: Final damage roll required
-        transitionTo('finalDamageRoll');
-        return roll;
-    } else {
-        transitionTo('startRound');
-    }
-
+if (gameState.tokens === 0) {
+    transitionTo('finalDamageRoll');  // NEW STATE
     return roll;
 }
 
-// NEW: Final damage roll mechanic
+// NEW FUNCTION
 export function performFinalDamageRoll() {
     const roll = gameState.getRandomNumber();
     const damage = Math.max(roll - gameState.bonus, 0);
@@ -504,11 +500,9 @@ export function performFinalDamageRoll() {
 
     if (gameState.tower > 0) {
         gameState.win = true;
-        gameState.status = gameState.config.labels?.successCheckWin;
         gameState.gameOver = true;
         transitionTo('gameOver');
     } else {
-        gameState.tower = 0;
         gameState.win = false;
         gameState.status = 'Victory snatched away at the last moment';
         gameState.gameOver = true;
@@ -519,827 +513,361 @@ export function performFinalDamageRoll() {
 
 ---
 
-### 1.8 Loss Conditions
+## 6. Test Coverage Analysis
 
-**Framework Specification (Section 7.2):**
-```
-Loss Conditions:
-1. Resources ≤ 0 after any damage check
-2. 4 tracker cards (Kings) revealed
-3. Deck exhausted before win condition met (rare)
-4. Final roll depletes resources
-```
+### 6.1 Overall Test Quality
 
-**Current Implementation:**
+**Current Status:**
+- ✅ Comprehensive coverage (~85%)
+- ❌ **CRITICAL ISSUE:** Tests validate incorrect behavior
 
-**Loss Condition 1: Resources Depleted**
-📁 `/src/lib/stores/gameActions.svelte.js` (Lines 207-211)
-```javascript
-if (gameState.tower <= 0) {
-    gameState.tower = 0;  // ✅ Floor at 0
-    gameState.status = gameState.config.labels?.failureCheckLoss;
-    gameState.gameOver = true;
-    transitionTo('gameOver');  // ✅ Correct
-}
-```
+**Test Files:**
+- `/src/lib/stores/gameStore.test.js` - 349 lines ✅
+- `/src/lib/stores/gameActions.test.js` - 500+ lines ✅
+- `/src/lib/stores/gameFlow.test.js` - 494 lines ✅
 
-**Loss Condition 2: 4 Kings Revealed**
-📁 `/src/lib/stores/gameActions.svelte.js` (Lines 127-133)
-```javascript
-if (gameState.kingsRevealed === 4) {
-    gameState.gameOver = true;
-    gameState.win = false;
-    gameState.status = gameState.config.labels.failureCounterLoss;
-    transitionTo('gameOver');  // ✅ Correct
-}
-```
+**Problem:** High coverage of wrong implementation
 
-**Loss Condition 3: Deck Exhaustion**
-📁 `/src/lib/stores/gameActions.svelte.js` (Lines 92-96)
-```javascript
-if (gameState.deck.length === 0) {
-    gameState.gameOver = true;
-    transitionTo('gameOver');  // ✅ Correct
-    return null;
-}
-```
+### 6.2 Tests Validating Incorrect Behavior
 
-**Loss Condition 4: Final Roll Failure**
-❌ **Not implemented** (because final roll mechanic is missing entirely)
-
-**Analysis:**
-- ✅ **Correct:** Resources ≤ 0 triggers loss
-- ✅ **Correct:** 4 Kings triggers instant loss
-- ✅ **Correct:** Deck exhaustion handled
-- ❌ **Missing:** Final roll failure (depends on implementing final roll first)
-
-**Impact:** ⚠️ Mostly correct, but incomplete due to missing final roll
-
----
-
-### 1.9 State Machine & Transitions
-
-**Framework State Machine (Section 8.1):**
-```
-Setup → Day Start → Roll for Cards → Draw Cards → Process Card →
-[Damage Check if odd] → [More cards? repeat] → Discard Cards →
-Journal Phase → [Win Active? Win Roll] → [Tokens=0? Final Damage] →
-[Victory or Next Day]
-```
-
-**Current Implementation:**
-📁 `/src/lib/stores/transitions.js`
+#### Ace Classification Tests (WRONG)
 
 ```javascript
-export const transitionGraph = {
-    loadGame: ['options', 'intro'],
-    options: ['intro'],
-    intro: ['rollForTasks'],
-    startRound: ['rollForTasks'],
-    rollForTasks: ['drawCard'],
-    drawCard: ['failureCheck', 'log', 'gameOver'],
-    failureCheck: ['drawCard', 'log', 'gameOver'],
-    log: ['successCheck', 'startRound'],
-    successCheck: ['startRound', 'gameOver'],
-    gameOver: ['exitGame']
-};
+// ❌ THIS TEST IS WRONG
+test('ace of hearts', async () => {
+    expect(gameState.state).toBe('log'); // Should be 'failureCheck'
+});
+
+// ✅ SHOULD BE
+test('ace of hearts triggers damage check', async () => {
+    expect(gameState.state).toBe('failureCheck'); // Aces are odd
+    expect(gameState.bonus).toBe(1);              // Still adds bonus
+    expect(gameState.aceOfHeartsRevealed).toBe(true); // Still activates win
+});
 ```
 
-**Analysis:**
-- ✅ **Correct:** State graph prevents invalid transitions
-- ✅ **Correct:** Emergency exits to gameOver/exitGame always allowed
-- ✅ **Correct:** Validates transitions before applying (lines 132-149 in gameStore)
-- ❌ **Missing:** `finalDamageRoll` state not in graph
-- ⚠️ **Note:** Uses `startRound` instead of framework's `dayStart` (acceptable)
+#### Win Condition Tests (INCOMPLETE)
 
-**Impact:** ✅ State machine is well-designed, just needs final roll state added
-
----
-
-## 2. Missing Features
-
-### 🔴 Priority 1: Critical Blockers
-
-#### 2.1 Initial Damage Roll
-**Location:** `/src/lib/stores/gameInit.js` (Line 74)
-**Effort:** 5 minutes
-**Impact:** Game balance significantly easier without this
-
-**What's Missing:**
 ```javascript
-// Framework Section 3.1, 3.2
-const initialDamage = rollD6();  // 1-6
-resources = 54 - initialDamage;  // Should be 48-53, not 54
+// ❌ MISSING FINAL ROLL
+it('should trigger win when tokens removed', async () => {
+    expect(gameState.state).toBe('gameOver'); // Should be 'finalDamageRoll'
+});
+
+// ✅ SHOULD BE
+it('should transition to final damage roll', async () => {
+    expect(gameState.state).toBe('finalDamageRoll');
+    expect(gameState.win).toBe(false); // Not won yet
+});
 ```
 
-**Why Important:**
-- Framework expects ~9% reduction in starting resources
-- Balances early game difficulty
-- Affects win rate by ~5-10%
+### 6.3 Missing Test Suites
 
-**Implementation:**
+#### Card Type Distribution Tests (NOT PRESENT)
+
 ```javascript
-// In gameInit.js after line 46
-let deck = shuffle([...gameConfig.deck]);
+describe('V2 Card Type Distribution', () => {
+    test('should have exactly 1 Primary Success (A♥)', () => {
+        const primarySuccess = deck.filter(
+            c => c.card === 'A' && c.suit === 'hearts'
+        );
+        expect(primarySuccess).toHaveLength(1);
+    });
 
-// Apply initial damage (Framework Section 3.1)
-const initialDamageRoll = Math.floor(Math.random() * 6) + 1;
-const startingResources = 54 - initialDamageRoll;
+    test('should have exactly 16 Challenge cards (3,5,7,9)', () => {
+        const challenges = deck.filter(
+            c => ['3', '5', '7', '9'].includes(c.card)
+        );
+        expect(challenges).toHaveLength(16);
+    });
 
-Object.assign(gameState, {
-    // ...
-    tower: startingResources,  // Changed from 54
-    // ...
+    test('should have exactly 28 Event cards', () => {
+        const events = deck.filter(
+            c => ['2', '4', '6', '8', '10', 'J', 'Q'].includes(c.card)
+        );
+        expect(events).toHaveLength(28);
+    });
+
+    test('should have 20 damage-triggering cards (A,3,5,7,9)', () => {
+        const damageCards = deck.filter(
+            c => ['A', '3', '5', '7', '9'].includes(c.card)
+        );
+        expect(damageCards).toHaveLength(20);
+    });
 });
 ```
 
 ---
 
-#### 2.2 Ace Classification Fix
-**Location:** `/src/lib/stores/gameActions.svelte.js` (Line 156)
-**Effort:** 10 minutes
-**Impact:** CRITICAL - Game broken without this fix
+## 7. V2 Content System Gap Analysis
 
-**What's Missing:**
-Aces are explicitly excluded from odd card classification, but framework clearly states they ARE odd.
+### 7.1 The Critical Content Gap
 
-**Framework Quote (Section 5.2, Section 6.2):**
-> "Odd Ranks: **A**, 3, 5, 7, 9 (trigger damage checks)"
-> "Ace is odd, so **still triggers damage check**"
+**Current State:**
+- ✅ Mechanics: 65-70% framework aligned
+- ❌ Content: 0% (no card narrative prompts)
+- ❌ Playability: ~35% (engine works but unplayable)
 
-**Current Code:**
-```javascript
-const isOdd = card.card !== 'A' && parseInt(card.card) % 2 !== 0;
-//            ^^^^^^^^^^^^^^^^^ WRONG!
-```
+**The Problem:**
 
-**Correct Code:**
-```javascript
-const oddRanks = ['A', '3', '5', '7', '9'];
-const isOdd = oddRanks.includes(card.card);
-```
+Despite having functional mechanics:
+- ❌ Zero card prompts written (52 cards need content)
+- ❌ No parser for V2 type-based markdown format
+- ❌ Writers stuck with complex CSV/YAML format
+- ❌ No story content for players
 
-**Why Important:**
-- Aces should provide bonus counter BUT also trigger damage (risk/reward)
-- Framework expects 20 damage-triggering cards (currently only 16)
-- Game is significantly easier without Ace damage checks
+**Why Critical:** Correct mechanics mean nothing without prompts to experience
 
----
-
-#### 2.3 Final Damage Roll
-**Location:** `/src/lib/stores/gameActions.svelte.js` (New function needed)
-**Effort:** 1-2 hours (includes UI, state, tests)
-**Impact:** Missing signature tension mechanic
-
-**What's Missing:**
-Framework requires a final damage check after all tokens removed, before declaring victory.
-
-**Framework Quote (Section 7.1):**
-> "5. Make final damage roll
-> 6. Resources still > 0 → WIN"
-
-**Why Important:**
-- Core tension mechanic: "Victory snatched away at the last moment"
-- Balances win probability
-- Creates dramatic climax to successful runs
-
-**Implementation Steps:**
-1. Add `finalDamageRoll` state to transition graph
-2. Create new action `performFinalDamageRoll()`
-3. Modify `successCheck()` to transition to final roll when tokens=0
-4. Create UI component for final roll screen
-5. Add tests for final roll mechanics
-
----
-
-### 🟡 Priority 2: Important Gaps
-
-#### 2.4 Success Roll Bonus Mechanic
-**Location:** `/src/lib/stores/gameActions.svelte.js` (Line 275)
-**Effort:** 30 minutes
-**Impact:** Affects win probability
-
-**Current Implementation:**
-```javascript
-// Uses bonus counter for success rolls
-if (roll === 6 || (gameState.config.difficulty > 0 && roll + gameState.bonus === 6)) {
-    gameState.tokens -= 1;
-}
-```
-
-**Framework Specification (Section 6.2, Optional Enhancements):**
-The framework mentions optional Ace bonuses but doesn't specify bonus counter applying to all success rolls.
-
-**Analysis:**
-This appears to be a digital enhancement. Consider:
-- Is this intentional design decision?
-- Should be documented as deviation from base framework
-- May need balancing adjustment
-
----
-
-#### 2.5 Deck Exhaustion Handling
-**Location:** `/src/lib/stores/gameActions.svelte.js` (Lines 92-96)
-**Effort:** 15 minutes
-**Impact:** Edge case handling
-
-**Current:**
-```javascript
-if (gameState.deck.length === 0) {
-    gameState.gameOver = true;
-    transitionTo('gameOver');
-    return null;
-}
-```
-
-**Missing:**
-- No specific loss message for deck exhaustion
-- Should distinguish from other loss types
-
-**Recommendation:**
-```javascript
-if (gameState.deck.length === 0) {
-    gameState.gameOver = true;
-    gameState.win = false;
-    gameState.status = 'Time ran out - deck exhausted';
-    gameState.defeatReason = 'deck_exhaustion';
-    transitionTo('gameOver');
-    return null;
-}
-```
-
----
-
-### 🟢 Priority 3: Nice-to-Have
-
-#### 2.6 Game State Tracking
-**Effort:** 30 minutes
-**Impact:** Better analytics and debugging
-
-**Missing:**
-```typescript
-interface GameContext {
-    cardsThisTurn: number;           // ❌ Not tracked
-    currentCardIndex: number;        // ❌ Not tracked
-    defeatReason?: string;           // ⚠️ Partially tracked
-    visibleCards: Card[];            // ❌ Not maintained (digital doesn't need)
-}
-```
-
----
-
-## 3. Implementation Differences
-
-### 3.1 Intentional Design Decisions
-
-#### Virtual Health Bar vs Physical Tower
-**Framework:** Physical Jenga tower with unpredictable collapse
-**Implementation:** Numeric HP system (54 → 0)
-
-**Assessment:** ✅ Acceptable
-Digital implementation cannot replicate physical tower mechanics. Numeric system is appropriate adaptation.
-
-#### Terminology Variations
-**Framework → Implementation:**
-- `resources` → `tower`
-- `bonusCounter` → `bonus`
-- `trackersRevealed` → `kingsRevealed`
-- `winConditionActive` → `aceOfHeartsRevealed`
-
-**Assessment:** ✅ Acceptable
-Semantic differences that don't affect mechanics.
-
----
-
-### 3.2 Unintentional Deviations
-
-#### Missing Initial Damage
-**Framework:** Apply 1d6 damage at setup
-**Implementation:** Start at full 54
-
-**Assessment:** ❌ Should be aligned
-This is a balance issue, not a design choice.
-
-#### Ace Classification Bug
-**Framework:** Aces trigger damage checks
-**Implementation:** Aces skip damage checks
-
-**Assessment:** ❌ Must be fixed
-This is a bug, not an intentional design decision.
-
-#### Missing Final Roll
-**Framework:** Final damage check before victory
-**Implementation:** Immediate victory at tokens=0
-
-**Assessment:** ❌ Should be implemented
-Core tension mechanic missing.
-
----
-
-## 4. Correctly Implemented Features
-
-### ✅ Core Game Loop
-- Two-phase round structure (tasks + journal)
-- Day counter increments properly
-- Card drawing sequence works correctly
-- State transitions follow valid paths
-
-### ✅ Damage Calculation
-- Formula `max(roll - bonus, 0)` correctly implemented
-- Damage applied to resources properly
-- Game over triggered at resources ≤ 0
-
-### ✅ King Tracking
-- Individual kings tracked by suit
-- Counter increments properly
-- 4th king triggers instant loss
-- Kings don't trigger damage (correct - even rank)
-
-### ✅ Win Activation
-- Ace of Hearts activates win condition
-- Token countdown begins at 10
-- Success rolls checked at end of round
-
-### ✅ Bonus Counter
-- All Aces increase bonus counter
-- Bonus reduces damage correctly
-- Max bonus of 4 possible
-
-### ✅ State Management Architecture
-- Svelte 5 runes implementation is clean
-- Reactive state updates work properly
-- Validation prevents invalid transitions
-- Test coverage is comprehensive
-
----
-
-## 5. Test Coverage Analysis
-
-### Framework Test Specifications (Section 10)
-
-**Deck Management Tests:**
-✅ 52-card deck creation
-✅ 4 suits with 13 cards each
-❌ **Missing:** Odd/even classification tests for Aces
-⚠️ **Incorrect:** Tests show only 16 damage cards, should be 20
-
-**Game Initialization Tests:**
-✅ Correct starting state
-❌ **Missing:** Initial damage roll tests
-❌ **Missing:** Test that resources < 54 at start
-
-**Damage Calculation Tests:**
-✅ Damage with no bonus
-✅ Bonus counter application
-✅ No negative damage
-❌ **Incorrect:** Tests exclude Aces from odd classification
-
-**Special Card Tests:**
-✅ Bonus counter increments for Aces
-✅ Win condition activation
-✅ Token removal mechanics
-✅ King tracking
-✅ 4th king instant loss
-
-**Win Condition Tests:**
-✅ Requires win condition active
-✅ Requires all tokens removed
-✅ Requires resources > 0
-❌ **Missing:** Final damage roll tests
-
-**Loss Condition Tests:**
-✅ Resources ≤ 0
-✅ 4 trackers revealed
-✅ Deck exhaustion
-❌ **Missing:** Final roll failure tests
-
-**Test Files:**
-📁 `/src/lib/stores/gameStore.test.js` - 349 lines, comprehensive
-📁 `/src/lib/stores/gameActions.test.js` - 500+ lines, thorough
-📁 `/src/lib/stores/gameFlow.test.js` - 494 lines, integration tests
-📁 `/tests/integration/comprehensive-validation.spec.js` - End-to-end tests
-
-**Overall Test Quality:** ⚠️ 85% coverage but tests validate incorrect behavior
-
----
-
-## 6. Recommendations
-
-### Phase 1: Critical Fixes (2-3 hours)
-**Must be completed to align with framework**
-
-1. **Fix Ace Classification** (30 min)
-   - Update `confirmCard()` to include Aces in odd ranks
-   - Update tests to expect Aces → failureCheck transition
-   - Verify 20 damage-triggering cards in deck
-
-2. **Add Initial Damage Roll** (15 min)
-   - Apply 1d6 damage in `initializeGame()`
-   - Update initialization tests
-   - Verify starting resources are 48-53
-
-3. **Implement Final Damage Roll** (1.5-2 hours)
-   - Add `finalDamageRoll` state to transition graph
-   - Create `performFinalDamageRoll()` action
-   - Modify `successCheck()` to trigger final roll
-   - Create UI component/screen for final roll
-   - Add comprehensive tests for final roll mechanics
-   - Update win condition tests
-
-### Phase 2: Balance & Polish (1-2 hours)
-**Recommended for better framework alignment**
-
-4. **Deck Exhaustion Message** (15 min)
-   - Add specific loss message for deck exhaustion
-   - Track `defeatReason` in state
-
-5. **Documentation Updates** (30 min)
-   - Document all deviations from framework
-   - Update README with mechanics explanation
-   - Add comments explaining virtual tower adaptation
-
-6. **Balance Testing** (1 hour)
-   - Simulate 100+ games after fixes
-   - Measure win rate (target: 10-20%)
-   - Adjust difficulty if needed
-
-### Phase 3: Optional Enhancements (2-4 hours)
-**Nice-to-have improvements**
-
-7. **Enhanced State Tracking** (30 min)
-   - Add `cardsThisTurn` counter
-   - Track `currentCardIndex`
-   - Improve analytics
-
-8. **Better Loss Messages** (30 min)
-   - Distinguish loss types
-   - Add flavor text for each loss condition
-
-9. **Visual Enhancements** (2-3 hours)
-   - Animate resource depletion
-   - Visual representation of king count
-   - Dramatic final roll animation
-
----
-
-## 7. Code Locations Reference
-
-### Files Requiring Changes
-
-**Critical (Must Fix):**
-- `/src/lib/stores/gameInit.js` - Line 74 (initial damage)
-- `/src/lib/stores/gameActions.svelte.js` - Line 156 (Ace classification)
-- `/src/lib/stores/gameActions.svelte.js` - Lines 271-289 (final roll)
-- `/src/lib/stores/transitions.js` - Add finalDamageRoll state
-
-**Tests Requiring Updates:**
-- `/src/lib/stores/gameActions.test.js` - Lines 267-303 (Ace tests)
-- `/src/lib/stores/gameFlow.test.js` - Lines 219-242 (Ace tests)
-- `/src/lib/stores/gameActions.test.js` - Lines 451-460 (win condition tests)
-- New tests for final damage roll mechanic
-
-**UI Components:**
-- New: `/src/lib/components/FinalDamageRoll.svelte`
-- Update: `/src/lib/components/GameScreen.svelte` - Add final roll screen
-
----
-
-## 8. Prioritized Action Items
-
-### Immediate (Blocking Issues)
-1. ❗ Fix Ace classification to include Aces in odd ranks
-2. ❗ Add initial damage roll (1d6) at game setup
-3. ❗ Implement final damage roll mechanic before victory
-
-### High Priority (Significant Gaps)
-4. Add specific loss message for deck exhaustion
-5. Update all tests to validate correct Ace behavior
-6. Add comprehensive tests for final roll mechanic
-
-### Medium Priority (Quality Improvements)
-7. Document intentional deviations from framework
-8. Add balance testing and win rate validation
-9. Improve defeat reason tracking
-
-### Low Priority (Polish)
-10. Enhanced state tracking for analytics
-11. Visual enhancements for final roll
-12. Flavor text for different loss conditions
-
----
-
-## 9. Overall Assessment
-
-### Strengths
-- ✅ Excellent state management architecture
-- ✅ Clean Svelte 5 runes implementation
-- ✅ Comprehensive test coverage
-- ✅ Core game loop well-structured
-- ✅ King tracking perfectly implemented
-- ✅ Damage calculation formula correct
-
-### Weaknesses
-- ❌ Critical Ace classification bug
-- ❌ Missing initial damage roll
-- ❌ Missing final damage roll mechanic
-- ⚠️ Tests validate incorrect behavior
-- ⚠️ Balance likely easier than intended
-
-### Alignment Score: 65-70%
-
-**Breakdown:**
-- Core Loop: 95%
-- Damage System: 60% (formula correct, trigger conditions wrong)
-- Special Cards: 75% (Kings perfect, Aces buggy)
-- Win Conditions: 50% (missing final roll)
-- Loss Conditions: 90% (just missing final roll failure)
-- State Machine: 90% (just needs final roll state)
-
-### Estimated Effort to Full Alignment
-**2-4 hours of focused development**
-- Critical fixes: 2-3 hours
-- Testing & validation: 1 hour
-- Optional enhancements: 2-4 hours
-
----
-
-## 10. Game Content Format & Creation
-
-### 10.1 The Missing Piece: Card Prompts & Story Content
-
-While the game engine mechanics are 65-70% aligned with the framework, there's a **critical content gap** that hasn't been addressed in the mechanical review:
-
-**🔴 MISSING: 52 Card Narrative Prompts**
-
-As noted in the original review, the implementation has:
-- ✅ Correct card mechanics (damage checks, special cards, counters)
-- ✅ Proper game flow and state management
-- ❌ **NO story content** - Players don't know what happens when they draw a card
-
-The framework guide focuses on **mechanics** (how the game works), but the original "The Wretched" review identified that **narrative prompts** (what each card means) are completely missing.
-
-### 10.2 Recommended Solution: Type-Based Markdown Format
-
-After evaluating multiple approaches for game content creation, we recommend the **Type-Based Markdown Format** documented in `/docs/v2/simplified-type-based-format.md`.
-
-#### Why This Format?
+### 7.2 Type-Based Markdown Format Solution
 
 **For Writers:**
-1. **No deck management** - Writers focus on story, not card identifiers
-2. **Clear purpose-driven structure** - Cards organized by SRD function
-3. **Minimal technical knowledge** - Just markdown headers and text
-4. **Flexible content length** - Short descriptions or long narratives
-5. **Story-first approach** - Content drives experience, not mechanics
+- ✅ Single `.game.md` file (not CSV + YAML + multiple markdown)
+- ✅ Focus on card PURPOSE (Challenge, Event, etc.)
+- ✅ Auto-assignment to 52-card deck
+- ✅ Rich markdown storytelling
+- ✅ Minimal technical knowledge
 
 **For Implementation:**
-1. **Simple parsing** - Type headers with auto-assignment to 52-card deck
-2. **Validated by default** - Counts enforced (1+4+3+24+20 = 52)
-3. **SRD-compliant** - Aligns with Wretched & Alone framework
-4. **Future-proof** - Easy to extend with custom actions
-5. **Backward compatible** - Can convert from/to CSV format
+- ✅ Simple parsing (type headers + validation)
+- ✅ SRD-compliant (1+4+3+16+28 = 52)
+- ✅ Future-proof (special modifiers, custom actions)
+- ✅ Easy validation (count enforcement)
 
-**For Players:**
-1. **Better storytelling** - Writers focus on narrative quality
-2. **Consistent mechanics** - Standard deck ensures balanced gameplay
-3. **Richer content** - Narrative cards add emotional depth
-4. **Thematic coherence** - Related events grouped logically
-
-#### Card Type Alignment with Framework
-
-The format uses 5 card types that map directly to framework mechanics:
-
-| Type | Count | Framework Mechanic | SRD Term |
-|------|-------|-------------------|----------|
-| **Primary Success** | 1 | Ace of Hearts - Win condition activation | "Salvation" |
-| **Failure Counter** | 4 | All Kings - 4th King = instant loss | Tracker Cards |
-| **Narrative** | 3 | Remaining Aces (A♦, A♣, A♠) - Bonus/help | "Bonus or help" |
-| **Challenge** | 24 | Odd cards (3,5,7,9,J) - Trigger damage checks | "Pull from tower" |
-| **Event** | 20 | Even cards (2,4,6,8,10,Q) - Safe cards | "Usually safe" |
-
-**Total:** 52 cards ✅
-
-#### Format Example
+**Format Example:**
 
 ```markdown
 ---
 title: Future Lost
 subtitle: A Dimm City Campaign
-win-message: You have managed to repair the time machine!
-lose-message: The time machine has been damaged beyond repair
+win-message: You repaired the time machine!
+lose-message: The time machine is destroyed
 ---
 
 # Introduction
-
 ## Who You Are
 You are a time traveler stranded in a dystopian future...
-
-## What Happened
-Your journey through time went catastrophically wrong...
-
-## Your Goal
-You must repair your time machine and return home...
 
 ---
 
 # Card Deck
 
 ## Primary Success
-
 **You find a survivor who knows how to repair the time machine**
-
-Dr. Chen recognizes your machine's design and offers to help.
-With her expertise, you finally have a real chance of getting home...
+Dr. Chen recognizes your design...
 
 ---
 
 ## Failure Counter
-
-**A group of hostile survivors has spotted you**
-
-They move through the ruins with purpose, weapons ready...
+**Hostile survivors spot you**
+They move with purpose, weapons ready...
 
 ---
 
-## Failure Counter
-
-**Your stash of resources is stolen**
-
----
-
-## Failure Counter
-
-**You get lost in a dangerous part of the city**
-
----
-
-## Failure Counter
-
-**The time machine suffers a major malfunction**
-
----
-
-## Narrative
-
-**A moment of hope amid the ruins**
-
-As the sun sets, you find a rooftop garden. Plants still grow here...
-
----
-
-## Narrative
-
-**The weight of displacement**
-
-You find an old photograph in the rubble...
-
----
-
-## Narrative
-
-**A connection across time**
+## Narrative: skip-damage
+**A moment of perfect timing saves you**
+The universe aligns in your favor...
 
 ---
 
 ## Challenge
-
-**You're betrayed by a survivor you trusted**
-
-[Story here - 24 of these total]
+**You're betrayed by someone you trusted**
+[16 of these total]
 
 ---
 
 ## Event
-
-**You discover a hidden stash of resources**
-
-[Story here - 20 of these total]
-
----
+**You discover a hidden stash**
+[28 of these total]
 ```
 
-### 10.3 Implementation Approach
+### 7.3 Implementation Requirements
 
-**Phase 1: Parser Implementation** (4-6 hours)
+**Phase 1: Parser (4-6 hours)**
 1. Create markdown parser for type-based format
-2. Validate card counts (1+4+3+24+20 = 52)
-3. Auto-assign cards to deck positions
-4. Support optional explicit card assignments
-5. Generate game config from parsed content
+2. Validate card counts (1+4+3+16+28 = 52)
+3. Auto-assign to deck positions
+4. Support optional explicit assignments
+5. Parse special modifiers
 
-**Phase 2: Game Loader Updates** (2-3 hours)
-1. Update `gameInit.js` to accept markdown-based configs
+**Phase 2: Game Loader (2-3 hours)**
+1. Update `gameInit.js` for markdown configs
 2. Load parsed card prompts into deck
 3. Display prompts during card draw
-4. Maintain backward compatibility with CSV format
+4. Maintain CSV backward compatibility
 
-**Phase 3: Content Creation Tools** (2-4 hours)
-1. Create template generator for new games
-2. Build validation tool for card counts
-3. Add conversion utility (CSV ↔ Markdown)
-4. Document format for writers
+**Phase 3: Tools (2-4 hours)**
+1. Template generator
+2. Validation tool
+3. Conversion utility (CSV ↔ Markdown)
+4. Writer documentation
 
-### 10.4 Benefits for the Project
-
-**Solves Critical Content Gap:**
-- Players will finally know what each card means
-- Enables rich narrative storytelling
-- Makes game playable as designed
-
-**Lowers Content Creation Barrier:**
-- Writers don't need technical knowledge
-- Focus on story quality, not card IDs
-- Clear structure guides content creation
-
-**Enables Multiple Games:**
-- Easy to create new scenarios
-- Reuse same game engine
-- Build library of Wretched & Alone games
-
-**Maintains Framework Compliance:**
-- Auto-assignment ensures 52-card deck
-- Card types match SRD mechanics
-- Damage checks, trackers, win conditions all align
-
-### 10.5 Integration with Critical Fixes
-
-The content format works seamlessly with the mechanical fixes:
-
-1. **Ace Classification Fix** → Narrative cards (Aces) will trigger damage checks as intended
-2. **Initial Damage Roll** → Games start balanced regardless of content
-3. **Final Damage Roll** → Dramatic tension applies to all game scenarios
-
-The format is **mechanics-agnostic** - it provides story content while the engine handles the Wretched & Alone framework rules.
-
-### 10.6 Recommendation Priority
-
-**🔴 HIGH PRIORITY** (Should be implemented alongside critical mechanical fixes)
-
-**Rationale:**
-- Mechanical fixes make the engine correct
-- Content format makes the engine **usable**
-- Without card prompts, players can't actually play
-- Format enables rapid content creation for testing
-
-**Suggested Implementation Order:**
-1. Fix Ace classification bug (30 min) ← Do first
-2. Implement markdown parser (4-6 hours) ← Do second
-3. Add initial damage roll (15 min)
-4. Implement final damage roll (1.5-2 hours)
-5. Create first game using markdown format (testing)
+**Total Estimated Effort:** 8-13 hours for complete content system
 
 ---
 
-## 11. Conclusion
+## 8. Prioritized Action Items
 
-The game engine is **architecturally sound** with a well-designed state management system and comprehensive test coverage. However, there are **four critical gaps** that must be addressed:
+### 🔴 CRITICAL (Blocks Framework Compliance)
 
-### Mechanical Gaps (Framework Alignment)
-1. **Ace classification error** - Aces don't trigger damage checks (should)
-2. **Missing initial damage** - Game starts too easy
-3. **Missing final roll** - Victory doesn't have the intended dramatic tension
+#### 1. Fix Ace Classification Bug
+**File:** `/src/lib/stores/gameActions.svelte.js` line 156
+**Effort:** 30 minutes
+**Impact:** Game 15-20% easier, violates SRD
 
-### Content Gap (Playability)
-4. **Missing card prompts** - No story content for 52 cards
+```javascript
+// Current (WRONG)
+const isOdd = card.card !== 'A' && parseInt(card.card) % 2 !== 0;
 
-These are **not design decisions** but **implementation gaps** that should be aligned with the framework specification. The mechanical fixes are relatively straightforward (2-3 hours), and the content format solution provides a clear path forward for creating playable games (4-6 hours).
+// Correct
+const oddRanks = ['A', '3', '5', '7', '9'];
+const isOdd = oddRanks.includes(card.card);
+```
 
-### Updated Assessment
+#### 2. Add Initial Damage Roll
+**File:** `/src/lib/stores/gameInit.js` line 74
+**Effort:** 15 minutes
+**Impact:** Game ~5-15% easier without
 
-**Mechanical Alignment:** 65-70% (framework mechanics)
-**Content Completeness:** 0% (no card prompts)
-**Overall Playability:** ~35% (engine works, but unplayable without content)
+```javascript
+const initialDamageRoll = Math.floor(Math.random() * 6) + 1;
+const startingResources = 54 - initialDamageRoll;
+tower: startingResources,  // Now 48-53
+```
 
-**With Recommended Fixes:**
-- Mechanical alignment: 95%+ (after critical fixes)
-- Content completeness: 100% (with markdown format + first game)
-- Overall playability: 95%+ (fully functional and playable)
+#### 3. Implement Final Damage Roll
+**Files:** Multiple (new component, state, action)
+**Effort:** 1.5-2 hours
+**Impact:** Missing SRD signature mechanic
 
-**Bottom Line:** The engine is well-architected and ready for improvements. With 6-9 hours of focused development (3 hours mechanical + 4-6 hours content system), the implementation will be fully aligned with the Wretched & Alone framework and ready for content creation.
+**Required:**
+1. Add `finalDamageRoll` to transition graph
+2. Create `performFinalDamageRoll()` function
+3. Modify `successCheck()` to transition at tokens=0
+4. Create `FinalDamageRoll.svelte` component
+5. Add comprehensive tests
 
-### Next Steps
-
-**Immediate (Blocking):**
-1. ❗ Fix Ace classification (30 min)
-2. ❗ Implement markdown parser (4-6 hours)
-3. ❗ Add initial damage roll (15 min)
-4. ❗ Implement final damage roll (1.5-2 hours)
-
-**High Priority (Testing):**
-5. Create first game using markdown format
-6. Update tests for corrected Ace behavior
-7. Add tests for final damage roll
-8. Balance testing with complete content
-
-**Medium Priority (Polish):**
-9. Documentation for writers
-10. Conversion tools (CSV ↔ Markdown)
-11. Template generator
-12. Enhanced loss messages
+#### 4. Implement V2 Markdown Parser
+**Files:** New parser module
+**Effort:** 4-6 hours
+**Impact:** 0% → 100% content completeness
 
 ---
 
-**Document Version:** 2.1
+### 🟡 HIGH (Significant Gaps)
+
+5. Update all tests for correct Ace behavior (30 min)
+6. Add final damage roll test suite (30 min)
+7. Create first complete game using V2 format (2-4 hrs)
+8. Document SRD compliance & deviations (1 hr)
+9. Balance validation after fixes (1-2 hrs)
+
+### 🟢 MEDIUM (Quality & Polish)
+
+10. Card type distribution tests (30 min)
+11. Special modifier UI & logic (3-4 hrs)
+12. Enhanced loss messages (30 min)
+13. Conversion tool CSV → Markdown (2-3 hrs)
+
+---
+
+## 9. Overall Assessment
+
+### 9.1 Dual Gap Analysis
+
+#### A. Mechanical Implementation
+**Current:** 65-70% aligned
+**After Fixes:** 95%+ aligned
+
+| Component | Current | After Fixes |
+|-----------|---------|-------------|
+| Core game loop | 95% ✅ | 95% ✅ |
+| Card classification | 60% ❌ | 95% ✅ |
+| Damage system | 70% ⚠️ | 95% ✅ |
+| Special cards | 75% ⚠️ | 95% ✅ |
+| Win conditions | 50% ❌ | 95% ✅ |
+| Loss conditions | 90% ✅ | 95% ✅ |
+
+**Estimated Effort:** 2-3 hours
+
+#### B. Content Completeness
+**Current:** 0% (no prompts)
+**After Parser:** 100%
+
+**The Bigger Problem:** Having correct mechanics without content = unplayable
+
+**Estimated Effort:** 6-10 hours (parser + first game)
+
+### 9.2 Combined Playability Score
+
+**Current:** ~35%
+- Mechanics: 65-70%
+- Content: 0%
+- Formula: (0.7 × 0.5) + (0 × 0.5) = 35%
+
+**After All Fixes:** ~98%
+- Mechanics: 95%
+- Content: 100%
+- Formula: (0.95 × 0.5) + (1.0 × 0.5) = 97.5%
+
+### 9.3 Architectural Quality
+
+**Strengths:** ✅ EXCELLENT
+- Modern Svelte 5 runes
+- Clean code organization
+- 85%+ test coverage
+- Screen-based architecture
+- Transition graph validation
+
+**Weaknesses:** ❌ CRITICAL BUGS
+- Ace classification error
+- Missing final damage roll
+- No V2 format parser
+- Some tests validate bugs
+
+**Score:** 85% (great foundation, critical gaps)
+
+---
+
+## 10. Conclusion
+
+### 10.1 The Path Forward
+
+**Critical Path to Playability (9-14 hours):**
+
+1. **Day 1 (30 min):** Fix Ace classification ← MOST CRITICAL
+2. **Day 1-2 (4-6 hrs):** Implement V2 markdown parser ← ENABLES CONTENT
+3. **Day 2-3 (1.5-2 hrs):** Add final damage roll ← SRD COMPLIANCE
+4. **Day 3-4 (2-4 hrs):** Create first complete game ← VALIDATION
+5. **Day 4-5 (1.5 hrs):** Add initial damage + tests ← POLISH
+
+**Result:** Fully playable, SRD-compliant, V2-ready game engine
+
+### 10.2 Final Assessment
+
+**Current State:**
+- **Mechanical Framework:** 65-70% (excellent architecture, critical bugs)
+- **Content Completeness:** 0% (no game to play)
+- **Overall Playability:** ~35% (works but nothing to experience)
+
+**After Critical Fixes:**
+- **Mechanical Framework:** 95%+ (fully SRD-compliant)
+- **Content Completeness:** 100% (playable with V2 format)
+- **Overall Playability:** ~98% (production-ready)
+
+**Bottom Line:** Excellent foundation with modern Svelte 5, clean patterns, solid tests. The mechanical gaps are fixable in 3-4 hours. The content gap requires 6-10 hours for V2 parser and first game. **Total: 9-14 hours from unplayable to production-ready.**
+
+The **Type-Based Markdown Format** is the recommended path because it:
+1. Solves content creation barrier
+2. Maintains SRD compliance
+3. Enables non-technical writers
+4. Future-proofs the system
+5. Makes game creation enjoyable
+
+---
+
+**Document Version:** 3.0
 **Review Date:** 2025-11-11
-**Framework Reference:** `/docs/wretched-alone-mechanics-guide.md` v2.0
+**Framework Reference:** `/docs/v2/wretched-alone-mechanics-guide.md` v2.0
 **Content Format Reference:** `/docs/v2/simplified-type-based-format.md`
-**Reviewer Assessment:** Comprehensive mechanical + content analysis complete
+**Card Type Spec:** `/docs/v2/game-config-v2.md`
+**Reviewer Assessment:** Complete V2 alignment analysis with dual-gap framework

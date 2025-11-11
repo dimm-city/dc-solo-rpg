@@ -62,6 +62,65 @@ Based on the **Wretched and Alone SRD** mechanics:
 
 ---
 
+## Special Card Modifiers
+
+Per the Wretched and Alone SRD, some cards can have **special one-time effects** beyond their base type. These are specified using modifiers in the card type header.
+
+### Available Special Modifiers
+
+#### 1. Skip Damage (`skip-damage`)
+- **Can be assigned to**: ONE Narrative card only
+- **Effect**: Player may skip the next damage check when instructed
+- **Example text**: *"The next time you are told to pull from the tower you may choose not to"*
+- **Usage**: One-time only per game
+- **Strategic value**: Save for critical moments when resources are low
+
+**Example:**
+```markdown
+## Narrative: skip-damage
+
+**A stroke of incredible luck protects you**
+
+This moment of grace shields you from the next danger. The next time you would
+pull from the tower, you may choose not to.
+```
+
+#### 2. Return King (`return-king`)
+- **Can be assigned to**: ONE Narrative card only
+- **Effect**: Allows player to shuffle a previously drawn King back into the deck
+- **Example text**: *"If you have previously drawn the King of Spades you may shuffle it back into the deck"*
+- **Usage**: One-time only per game
+- **Strategic value**: Resets the failure counter, providing critical relief
+
+**Example:**
+```markdown
+## Narrative: return-king
+
+**A second chance emerges from the darkness**
+
+Against all odds, you find a way to undo a catastrophic setback. If you have
+previously drawn the King of Spades, you may shuffle it back into the deck.
+```
+
+### Combining Modifiers with Card Assignment
+
+You can combine explicit card assignment with special modifiers:
+
+```markdown
+## Narrative: A-clubs, skip-damage
+
+**A moment of perfect timing saves you**
+
+The universe aligns in your favor. When danger comes, you'll have one chance
+to avoid it entirely.
+```
+
+### Note on "Multiple Mechanics"
+
+The Primary Success card inherently has dual behavior (activates salvation countdown AND may trigger damage check), but this is handled by standard game logic for all Aces - no special syntax needed.
+
+---
+
 ## Format Example
 
 ```markdown
@@ -535,14 +594,19 @@ function parseTypeBasedFormat(markdown) {
     'primary-success': [],
     'failure-counter': [],
     'narrative': [],
+    'narrative-skip-damage': [],    // Special: skip damage modifier
+    'narrative-return-king': [],    // Special: return king modifier
     'challenge': [],
     'event': []
   };
 
   for (const section of sections.slice(2)) {
-    const { type, explicitAssignment, description, story } = parseCardSection(section);
+    const { type, modifier, explicitAssignment, description, story } = parseCardSection(section);
 
-    cardsByType[type].push({
+    // Build the full type key (e.g., "narrative-skip-damage")
+    const typeKey = modifier ? `${type}-${modifier}` : type;
+
+    cardsByType[typeKey].push({
       description,
       story,
       explicitAssignment // e.g., "7-hearts" or null
@@ -558,15 +622,54 @@ function parseTypeBasedFormat(markdown) {
   return { config, introduction, deck };
 }
 
+function parseCardSection(section) {
+  // Parse header: "## Type: card-assignment, modifier"
+  const headerMatch = section.match(/^##\s+([^:\n]+)(?::\s+(.+))?/);
+  if (!headerMatch) {
+    throw new ParseError('Invalid card section header');
+  }
+
+  const type = normalizeType(headerMatch[1].trim());
+  const modifiers = headerMatch[2] ? headerMatch[2].split(',').map(s => s.trim()) : [];
+
+  // Separate explicit assignment from modifier
+  let explicitAssignment = null;
+  let modifier = null;
+
+  for (const mod of modifiers) {
+    if (isCardIdentifier(mod)) {
+      // e.g., "7-hearts" or "A-clubs"
+      explicitAssignment = mod;
+    } else {
+      // e.g., "skip-damage" or "return-king"
+      modifier = mod;
+    }
+  }
+
+  // Extract description and story
+  const contentMatch = section.match(/\*\*(.+?)\*\*\n\n([\s\S]*)/);
+  const description = contentMatch ? contentMatch[1] : '';
+  const story = contentMatch ? contentMatch[2].trim() : '';
+
+  return { type, modifier, explicitAssignment, description, story };
+}
+
+function isCardIdentifier(str) {
+  // Matches patterns like: "A-hearts", "7-diamonds", "K-spades"
+  return /^([A23456789]|10|[JQKA])-(?:hearts|diamonds|clubs|spades)$/i.test(str);
+}
+
 function assignCardsToDeck(cardsByType) {
   const deck = [];
 
   // Primary Success: A♥
+  const primarySuccess = cardsByType['primary-success'][0];
   deck.push({
     card: 'A',
     suit: 'hearts',
     type: 'primary-success',
-    ...cardsByType['primary-success'][0]
+    description: primarySuccess.description,
+    story: primarySuccess.story
   });
 
   // Failure Counters: All Kings
@@ -576,18 +679,35 @@ function assignCardsToDeck(cardsByType) {
       card: 'K',
       suit: kingSuits[i],
       type: 'failure-counter',
-      ...card
+      description: card.description,
+      story: card.story
     });
   });
 
-  // Narrative: Remaining Aces
+  // Narrative: Remaining Aces (including special modifiers)
   const narrativeSuits = ['diamonds', 'clubs', 'spades'];
-  cardsByType['narrative'].forEach((card, i) => {
+  const allNarratives = [
+    ...cardsByType['narrative'],
+    ...cardsByType['narrative-skip-damage'],
+    ...cardsByType['narrative-return-king']
+  ];
+
+  allNarratives.forEach((card, i) => {
+    // Determine modifier from source
+    let modifier = null;
+    if (cardsByType['narrative-skip-damage'].includes(card)) {
+      modifier = 'skip-damage';
+    } else if (cardsByType['narrative-return-king'].includes(card)) {
+      modifier = 'return-king';
+    }
+
     deck.push({
       card: 'A',
       suit: narrativeSuits[i],
       type: 'narrative',
-      ...card
+      modifier: modifier,  // null, "skip-damage", or "return-king"
+      description: card.description,
+      story: card.story
     });
   });
 
@@ -608,7 +728,8 @@ function assignCardsToDeck(cardsByType) {
             card: assignedRank,
             suit: assignedSuit,
             type: 'challenge',
-            ...card
+            description: card.description,
+            story: card.story
           });
         } else {
           // Auto-assign
@@ -616,7 +737,8 @@ function assignCardsToDeck(cardsByType) {
             card: rank,
             suit: suit,
             type: 'challenge',
-            ...card
+            description: card.description,
+            story: card.story
           });
         }
 
@@ -640,14 +762,16 @@ function assignCardsToDeck(cardsByType) {
             card: assignedRank,
             suit: assignedSuit,
             type: 'event',
-            ...card
+            description: card.description,
+            story: card.story
           });
         } else {
           deck.push({
             card: rank,
             suit: suit,
             type: 'event',
-            ...card
+            description: card.description,
+            story: card.story
           });
         }
 
@@ -660,21 +784,42 @@ function assignCardsToDeck(cardsByType) {
 }
 
 function validateCardCounts(cardsByType) {
-  const expected = {
-    'primary-success': 1,
-    'failure-counter': 4,
-    'narrative': 3,
-    'challenge': 16,
-    'event': 28
-  };
-
   const errors = [];
 
-  for (const [type, count] of Object.entries(expected)) {
-    const actual = cardsByType[type].length;
-    if (actual !== count) {
-      errors.push(`Expected ${count} ${type} cards, found ${actual}`);
-    }
+  // Check fixed counts
+  if (cardsByType['primary-success'].length !== 1) {
+    errors.push(`Expected 1 Primary Success card, found ${cardsByType['primary-success'].length}`);
+  }
+
+  if (cardsByType['failure-counter'].length !== 4) {
+    errors.push(`Expected 4 Failure Counter cards, found ${cardsByType['failure-counter'].length}`);
+  }
+
+  // Narrative cards: total must be 3 (including special modifiers)
+  const narrativeTotal =
+    cardsByType['narrative'].length +
+    cardsByType['narrative-skip-damage'].length +
+    cardsByType['narrative-return-king'].length;
+
+  if (narrativeTotal !== 3) {
+    errors.push(`Expected 3 total Narrative cards, found ${narrativeTotal}`);
+  }
+
+  // Validate only one of each special modifier
+  if (cardsByType['narrative-skip-damage'].length > 1) {
+    errors.push('Only ONE Narrative card can have skip-damage modifier');
+  }
+
+  if (cardsByType['narrative-return-king'].length > 1) {
+    errors.push('Only ONE Narrative card can have return-king modifier');
+  }
+
+  if (cardsByType['challenge'].length !== 16) {
+    errors.push(`Expected 16 Challenge cards, found ${cardsByType['challenge'].length}`);
+  }
+
+  if (cardsByType['event'].length !== 28) {
+    errors.push(`Expected 28 Event cards, found ${cardsByType['event'].length}`);
   }
 
   if (errors.length > 0) {
@@ -685,40 +830,65 @@ function validateCardCounts(cardsByType) {
 
 ---
 
-## Future-Proofing for Custom Actions
+## Advanced: Future Extensibility
 
-When the engine supports custom card actions, the format easily extends:
+The format is designed to easily extend with custom modifiers as the engine evolves:
 
-```markdown
-## Challenge: custom-action-name
-
-**Description**
-
-Story...
-```
-
-Or with explicit assignment:
+### Future Custom Modifiers Examples
 
 ```markdown
-## Challenge: 7-hearts, disable-technology
+## Challenge: environmental-hazard
 
-**A critical system failure disables nearby tech**
+**You discover a hidden cache**
 
-Story...
+Gain 1d6 resources immediately.
+
+---
+
+## Event: tech-boost
+
+**You find advanced technology**
+
+Provides a temporary advantage against future challenges.
+
+---
+
+## Challenge: 7-hearts, radiation-zone
+
+**A toxic gas leak fills the corridor**
+
+Combines explicit card assignment with custom modifier.
 ```
 
-The parser can extract action names and pass them to the engine:
+### Parser Output with Custom Modifiers
+
+The parser extracts the modifier and passes it to the engine:
 
 ```javascript
 {
   card: '7',
   suit: 'hearts',
   type: 'challenge',
-  action: 'disable-technology', // Future use
-  description: '...',
+  modifier: 'radiation-zone',  // Engine can implement custom behavior
+  description: 'A toxic gas leak fills the corridor',
   story: '...'
 }
 ```
+
+### Current vs Future Modifiers
+
+**Current (Built-in):**
+- `skip-damage` - Skip next damage check (one-time, Narrative only)
+- `return-king` - Return King to deck (one-time, Narrative only)
+
+**Future (Extensible):**
+- `boost-resources` - Add resources
+- `tech-boost` - Temporary advantage
+- `environmental-hazard` - Custom challenge behavior
+- `narrative-choice` - Branching story paths
+- And any custom modifiers creators design
+
+The simple modifier system means the format can grow without adding complexity to the basic structure.
 
 ---
 
@@ -829,6 +999,7 @@ This progressive teaching respects player intelligence while ensuring they under
 - World-building that reveals theme and meaning
 - Consider: 1 moment of unexpected beauty/hope, 1 connection to what was lost, 1 realization about self/situation
 - These provide emotional fuel to continue the doomed journey
+- **Special Mechanics**: Optionally assign `skip-damage` or `return-king` to ONE Narrative card each (see Multiple Mechanics section)
 
 ### Challenge (16 cards - Tower Pulls)
 - **SRD Context**: "Usually requires you to pull from the tower" - moments where fate is tested
@@ -912,23 +1083,29 @@ What are they trying to achieve? What's at stake?
 
 ---
 
-## Narrative
+## Narrative: skip-damage
 
-**[Short description for first narrative card]**
+**[Short description - one-time protection from danger]**
 
-[This should be a reflective or emotional beat - no immediate mechanical threat]
+[Optional: A moment of incredible luck or perfect timing that shields you from
+the next danger. Use this mechanic strategically when resources are low.]
 
 ---
 
-## Narrative
+## Narrative: return-king
 
-**[Short description for second narrative card]**
+**[Short description - undo a catastrophic setback]**
+
+[Optional: A second chance or way to reverse a major failure. If you've drawn
+a King before, you can return it to the deck - once.]
 
 ---
 
 ## Narrative
 
 **[Short description for third narrative card]**
+
+[This should be a reflective or emotional beat - no special mechanics]
 
 ---
 
@@ -970,6 +1147,63 @@ npm run convert-to-markdown static/games/my-game
 
 ---
 
+## Mechanics Coverage Summary
+
+This format supports **all mechanics** described in the Wretched and Alone Mechanics Guide:
+
+### Core Card Types (Fully Supported)
+✅ **Primary Success (Salvation)** - 1 card (Ace of Hearts)
+  - Activates win condition
+  - Places 10 tokens
+  - Begins countdown mechanic
+  - May trigger damage check (designer choice)
+
+✅ **Failure Counter** - 4 cards (all Kings)
+  - Escalating threat tracker
+  - 4th King = instant defeat
+  - Keep visible during play
+  - Even-ranked (no damage)
+
+✅ **Narrative (Bonus/Help)** - 3 cards (remaining Aces)
+  - Increment bonus counter (+1 damage reduction each)
+  - Reflective/emotional content
+  - May trigger damage checks (designer choice)
+  - Can host special one-time mechanics
+
+✅ **Challenge** - 16 cards (odd ranks: 3, 5, 7, 9)
+  - Usually trigger damage checks
+  - Immediate dangers
+  - Tower pull mechanics
+
+✅ **Event** - 28 cards (even ranks: 2, 4, 6, 8, 10, J, Q)
+  - Usually safe from damage
+  - Respite, discovery, world-building
+  - No tower pulls required
+
+### Special Modifiers (Fully Supported)
+✅ **Skip Damage (`skip-damage`)** - One-time tower pull skip (Narrative only)
+✅ **Return King (`return-king`)** - Shuffle King back to deck (Narrative only)
+✅ **Explicit card assignment** - Manual placement for thematic suits
+✅ **Bonus counter system** - Damage reduction from Aces (0-4)
+✅ **Win condition countdown** - 10 tokens with dice rolls
+✅ **Final damage roll** - SRD-compliant final tension
+✅ **Primary Success dual behavior** - Salvation + damage check (handled by game logic)
+
+### Designer Flexibility (SRD-Aligned)
+✅ **"Usually" qualifier** - Odd/even rules are guidelines, not absolutes
+✅ **Aces may or may not trigger damage** - Designer decides per game
+✅ **Custom mechanics extensibility** - Future-proof for additional mechanics
+✅ **Progressive rule teaching** - Tutorial through card prompts
+✅ **Accessibility options** - Optional damage mechanics
+
+### Validation & Error Checking
+✅ **Card count validation** - Ensures exactly 52 cards (1+4+3+16+28)
+✅ **Special modifier validation** - One-time modifiers assigned only once
+✅ **Narrative-only modifiers** - Special modifiers restricted to Narrative cards
+✅ **Duplicate detection** - No duplicate card assignments
+
+---
+
 ## Recommendation
 
 **This type-based format is the recommended approach** because:
@@ -982,5 +1216,9 @@ npm run convert-to-markdown static/games/my-game
 6. **Easy to validate** - Counts are known (1+4+3+16+28 = 52 cards)
 7. **Natural organization by function** - Writers group by mechanical purpose, not arbitrary card IDs
 8. **SRD-compliant** - Aligns perfectly with official Wretched and Alone mechanics
+9. **Simple modifier system** - Optional modifiers add depth without complexity
+10. **Special one-time modifiers** - Skip damage and return King for strategic relief
 
-The format strikes the perfect balance between **simplicity for creators** and **flexibility for the engine**, while maintaining full compatibility with the **Wretched and Alone SRD** standard.
+The format strikes the perfect balance between **simplicity for creators** and **flexibility for the engine**, while maintaining full compatibility with the **Wretched and Alone SRD** standard and supporting all mechanics documented in the official mechanics guide.
+
+**Key Simplification:** The format avoids complex "multiple mechanics" arrays - the type header itself (e.g., `Narrative: skip-damage`) captures everything needed, and inherent dual behaviors (like Primary Success triggering both salvation and damage) are handled naturally by game logic.

@@ -1,4 +1,5 @@
 # Wretched & Alone Framework - Game Mechanics Guide
+
 ## Digital Implementation Reference (Story-Agnostic)
 
 **Version:** 2.0
@@ -38,6 +39,7 @@ The Wretched & Alone framework is a **solo journaling RPG system** that creates:
 ### 1.2 Core Objectives
 
 **Primary Win Path:**
+
 - Activate special win condition (Ace of designated suit)
 - Complete countdown mechanic (10 → 0 tokens)
 - Survive final risk check with resources intact
@@ -89,6 +91,7 @@ graph TB
 **Ranks:** A, 2, 3, 4, 5, 6, 7, 8, 9, 10, J, Q, K
 
 **Card Classification:**
+
 - **Odd Ranks:** A, 3, 5, 7, 9 (**usually** trigger damage checks per SRD)
 - **Even Ranks:** 2, 4, 6, 8, 10, J, Q, K (**usually** safe from damage per SRD)
 - **Note**: The "usually" qualifier preserves designer flexibility as per the Wretched and Alone SRD
@@ -104,11 +107,13 @@ graph LR
 ```
 
 **Resource Tracking:**
+
 - **Physical:** Tower that collapses on critical failure
 - **Digital:** HP counter from 54 to 0
 
 **Accessibility Note (Core SRD Principle):**
 The Wretched and Alone SRD emphasizes that **tower/damage mechanics should be optional** to ensure accessibility. Games should be playable without physical components or randomized failure. The digital implementation should make tower mechanics:
+
 - **Configurable**: Allow players to disable damage checks if desired
 - **Alternative modes**: Provide narrative-only mode for those who prefer pure journaling
 - **Transparent**: Clearly show when damage checks occur and why
@@ -167,6 +172,7 @@ interface GameState {
 ```
 
 **v2 Digital Enhancements vs SRD:**
+
 - **Initial 1d6 damage roll**: Added in v2 for digital balance (not in original SRD)
 - **Resource counter (54 HP)**: Digital equivalent of physical tower (SRD uses tower)
 - **Bonus counter mechanics**: Aligned with SRD "bonus/help" concept for Aces
@@ -174,6 +180,7 @@ interface GameState {
 ### 3.3 Opening Journal Entry
 
 Players should record an opening entry that establishes:
+
 - Character identity
 - Current situation
 - Initial state of resources
@@ -420,13 +427,58 @@ graph TB
    - Bonus counter reduces damage taken
    - Max bonus: +4 (all four Aces)
 
-**Critical: Aces Trigger Damage Checks**
+**IMPORTANT: Aces and Tower Pulls**
 
-Despite providing bonuses, **Aces are odd-ranked (A=1) and trigger damage checks**. This is intentional per the SRD:
-- Creates tension between hope and risk
-- Moments of help still carry danger
-- Even good fortune tests your stability
-- Thematic: Hope is not safety, it's resilience in the face of continued danger
+Per the Wretched and Alone SRD, **Aces MAY OR MAY NOT trigger tower pulls** depending on the specific game implementation:
+
+- The SRD states odd-numbered cards "**usually** require you to pull from the tower"
+- This "usually" qualifier provides **designer flexibility** for special cards
+- Aces are unique: they provide "bonus or help" while also being odd-ranked (A=1)
+- **Game designers decide** whether Aces trigger tower pulls in their specific game
+
+**Design Consideration:**
+
+- If Aces trigger pulls: Creates tension between hope and risk (20 damage cards total)
+- If Aces don't trigger pulls: Aces are pure relief/help (16 damage cards: 3, 5, 7, 9 only)
+- Both approaches are valid per SRD; choose based on desired difficulty and theme
+
+**Cards Can Have Multiple Mechanics:**
+
+Cards in Wretched & Alone games can combine multiple mechanical functions simultaneously:
+
+- **Example 1**: Ace of Hearts can BOTH activate salvation countdown AND trigger a tower pull
+- **Example 2**: Special Aces can provide bonuses AND have unique one-time effects
+
+This layering of mechanics creates richer gameplay and narrative depth.
+
+**Special One-Time Ace Mechanics:**
+
+Per The Wretched implementation, **two special mechanics can be assigned to Ace cards** (one card per mechanic, once per game):
+
+**1. Skip Tower Pull Mechanic**
+
+- Allows player to skip the next tower pull when instructed
+- Can only be assigned to ONE Ace card in the deck
+- Example text: *"The next time you are told to pull from the tower you may choose not to"*
+- Example from The Wretched: Ace of Clubs
+- Strategic use: Save for critical moments when resources are low
+
+**2. Return King Mechanic**
+
+- Allows player to shuffle a previously drawn King back into the deck
+- Can only be assigned to ONE Ace card in the deck
+- Specifically targets King of Spades in The Wretched
+- Example text: *"If you have previously drawn the King of Spades you may shuffle it back into the deck"*
+- Example from The Wretched: Ace of Spades
+- Strategic use: Resets the tracker count, providing critical relief
+
+**Design Notes:**
+
+- These are optional advanced mechanics from The Wretched
+- Each mechanic can only be used once per game
+- Provides strategic relief from escalating tension
+- Maintains SRD compliance while adding tactical depth
+- Game designers may create additional one-time mechanics following this pattern
 
 **Example:**
 
@@ -562,6 +614,7 @@ flowchart TB
 6. Resources still > 0 → **WIN**
 
 **Win Probability:**
+
 - Base chance per roll: 1/6 (16.67%)
 - With bonus: 2/6 (33.33%)
 - Typical win rate: 10-20% of games
@@ -608,6 +661,7 @@ pie title Game Outcome Probability
 ```
 
 **Typical Distribution:**
+
 - **60%** - Resources depleted before win
 - **15%** - Tracker limit reached
 - **10%** - Final roll fails
@@ -843,6 +897,7 @@ function performDamageCheck(card: Card, gameState: GameState): void {
 | 4 | 0.5 | Very low attrition |
 
 **Game Balance:**
+
 - ~38% of cards trigger damage (20 odd cards)
 - Average game draws ~30-40 cards
 - Expected damage checks: 11-15 per game

@@ -1,10 +1,10 @@
-# Game Configuration V2: Simplified Creator Experience
+# Game Configuration V2: Type-Based Markdown Format
 
 ## Executive Summary
 
-This document proposes three distinct solutions for simplifying the game creation process in DC Solo RPG. The current system requires creators to manage multiple file formats (YAML, CSV, Markdown, CSS) which creates friction for non-technical users. Each solution prioritizes ease of creation, immersive storytelling, and simplified publishing while removing or greatly simplifying theming and UI customization.
+This document describes the **Type-Based Markdown Format** solution for game creation in DC Solo RPG. The current system requires creators to manage multiple file formats (YAML, CSV, Markdown, CSS) which creates friction for non-technical users. The new system uses a **single markdown file** that focuses on card types rather than card identifiers, making it significantly easier for writers to create games while maintaining full compliance with the Wretched and Alone SRD.
 
-### Current Pain Points
+### Current Pain Points (V1 System)
 
 1. **Multiple file formats** - Requires knowledge of YAML, CSV, Markdown, and CSS
 2. **File management** - Creators must manage 3-4 separate files per game
@@ -12,27 +12,68 @@ This document proposes three distinct solutions for simplifying the game creatio
 4. **Complex theming** - CSS and dice themes add unnecessary complexity
 5. **Limited card text** - Single-line descriptions limit storytelling potential
 6. **Error-prone** - Syntax errors in YAML/CSV can break games
+7. **Card assignment complexity** - Writers must manually assign cards to deck positions
 
 ### Design Principles for V2
 
-1. **Single source of truth** - Minimize file management
-2. **Plain text where possible** - Use familiar formats
+1. **Single source of truth** - One markdown file per game
+2. **Plain text** - Use familiar Markdown syntax
 3. **Smart defaults** - Remove need to configure labels/styling
 4. **Rich storytelling** - Support paragraph-length card descriptions
 5. **Easy to publish** - Simple export/share workflow
 6. **Validate early** - Catch errors before testing
+7. **Type-based organization** - Focus on card purpose, not deck mechanics
+8. **SRD compliance** - Align with Wretched and Alone official mechanics
 
 ---
 
-## Solution 1: Single Markdown File (Simplest)
-
-**Best for:** Writers, authors, and non-technical creators who are comfortable with Markdown
+## Type-Based Markdown Format
 
 ### Overview
 
-Everything in one `.game.md` file using familiar Markdown syntax with YAML frontmatter for metadata and a simple card deck format. No separate CSV, no YAML config, no CSS needed.
+Everything in one `.game.md` file using type-based card organization. Writers create cards grouped by **purpose** (Primary Success, Failure Counter, Challenge, Event, Narrative) and the system automatically assigns them to the standard 52-card deck. No card identifiers needed, no CSV files, no complex configuration.
 
-### File Structure
+### Card Types (Based on Wretched and Alone SRD)
+
+The format uses five card types that map directly to the standard 52-card deck:
+
+1. **Primary Success** (1 card) - Ace of Hearts (salvation mechanism)
+2. **Failure Counter** (4 cards) - All Kings (escalating threat)
+3. **Narrative** (3 cards) - Remaining Aces (bonus/help cards, may include special modifiers)
+4. **Challenge** (16 cards) - Odd-numbered cards: 3, 5, 7, 9 (usually trigger damage checks)
+5. **Event** (28 cards) - Even-numbered cards: 2, 4, 6, 8, 10, J, Q (usually safe)
+
+**Total:** 1 + 4 + 3 + 16 + 28 = 52 cards ✓
+
+### Special Card Modifiers
+
+Narrative cards can optionally include special one-time modifiers:
+
+- **`skip-damage`** - Skip the next damage check (max 1 per game)
+  - Syntax: `## Narrative: skip-damage`
+  - Example: "A moment of perfect timing saves you from the next danger"
+
+- **`return-king`** - Return a previously drawn King to the deck (max 1 per game)
+  - Syntax: `## Narrative: return-king`
+  - Example: "A second chance to undo a catastrophic setback"
+
+These modifiers are **optional** - standard `## Narrative` cards without modifiers are perfectly valid.
+
+### Key Benefits
+
+1. **No card identifiers needed** - Writers focus on story, not "7-hearts" or "Q-diamonds"
+2. **Type-based organization** - Clear structure by card purpose
+3. **Auto-assignment** - System handles deck construction automatically
+4. **Future-proof** - Supports upcoming custom action system
+5. **SRD-compliant** - Aligns with official Wretched and Alone mechanics
+6. **Rich storytelling** - Paragraph-length descriptions with Markdown support
+7. **Single file management** - One `.game.md` file contains everything
+
+---
+
+## File Structure
+
+A complete game file looks like this:
 
 ```markdown
 ---
@@ -46,521 +87,305 @@ lose-message: The time machine has been damaged beyond repair
 
 ## Who You Are
 
-You are a time traveler, an explorer of the temporal realms, who has accidentally
-landed in a dystopian future. This future is a grim shadow of the world you once
-knew, where society has collapsed, and dangerous creatures roam the streets.
+You are a time traveler stranded in a dystopian future, desperately trying to
+repair your damaged time machine before the authorities discover you.
 
-## Your Mission
+## What Happened
 
-Your mission is to survive in this harsh and unfamiliar world while trying to
-repair your time machine. You'll need to scavenge for resources, navigate through
-the ruins, interact with other survivors, and deal with rogue technology.
+Your journey through time went catastrophically wrong. The temporal distortion
+field destabilized, throwing you into an unknown era. The time machine's core
+systems are failing, and you're running out of time.
+
+## Your Goal
+
+You must gather the necessary components and knowledge to repair your time
+machine and return home. But in this dark future, every action draws unwanted
+attention, and failure means being lost in time forever.
 
 ---
 
 # Card Deck
 
-## Ace of Hearts - Primary Success
-**You find a survivor who knows how to repair the time machine.**
+## Primary Success
+
+**You find a survivor who knows how to repair the time machine**
 
 This survivor is an engineer from before the collapse. She recognizes your time
 machine's design and offers to help. With her expertise, you finally have a real
-chance of getting home. She'll need time to study the damage, but hope fills
-your heart for the first time since you arrived.
+chance of getting home.
 
-## Ace of Diamonds
-**You discover a hidden stash of resources.**
+---
+
+## Failure Counter
+
+**A group of hostile survivors has spotted you**
+
+They move through the ruins with purpose, weapons ready. You recognize the look
+in their eyes - they've survived by taking from others.
+
+---
+
+## Failure Counter
+
+**Your stash of resources is stolen**
+
+---
+
+## Failure Counter
+
+**You get lost in a dangerous part of the city**
+
+---
+
+## Failure Counter
+
+**The time machine suffers a major malfunction**
+
+---
+
+## Narrative: skip-damage
+
+**A moment of perfect timing saves you**
+
+In the chaos of your escape, something impossible happens. A piece of falling
+debris catches on a support beam at the last second. The universe aligns in
+your favor, just this once, shielding you from the next danger.
+
+---
+
+## Narrative: return-king
+
+**A second chance manifests**
+
+Against all odds, you discover a way to undo what seemed irreversible. The
+catastrophe can be unwound, the damage repaired. Sometimes the universe gives
+you a chance to rewrite your failures.
+
+---
+
+## Narrative
+
+**A connection across time**
+
+Late at night, you realize that somewhere in the past, the choices being made
+will eventually save you. Time isn't a line - it's a web connecting moments
+across centuries.
+
+---
+
+## Challenge
+
+**You're betrayed by a survivor you trusted**
+
+You thought you had made an ally, someone who understood the value of cooperation.
+But they led you into an ambush.
+
+---
+
+[... 15 more Challenge cards ...]
+
+---
+
+## Event
+
+**You discover a hidden stash of resources**
 
 Behind a false wall in an abandoned building, you find a prepper's cache:
-canned food, clean water, tools, and even some medical supplies. Everything
-is still sealed and usable. This discovery gives you the resources you need
-to survive while working on the time machine.
+canned food, clean water, tools, and even some medical supplies.
 
-## Ace of Clubs
-**You find a map of the city, helping you navigate safely.**
+---
 
-The map shows safe routes, danger zones, and even marks locations of interest.
-Someone took the time to update this after the collapse, marking radiation
-zones and mutant territories. With this knowledge, you can avoid the worst
-dangers and find the parts you need more efficiently.
+[... 27 more Event cards ...]
+```
 
-## Ace of Spades
-**You manage to repair a crucial part of your time machine.**
+---
 
-## King of Hearts - Failure Counter
-**A group of hostile survivors has spotted you.**
+## Format Specification
 
-## King of Diamonds - Failure Counter
-**Your stash of resources is stolen.**
+### 1. Frontmatter (Required)
 
-## King of Clubs - Failure Counter
-**You get lost in a dangerous part of the city.**
+```yaml
+---
+title: Your Game Title          # Required
+subtitle: Your Game Subtitle    # Optional
+win-message: Victory message    # Required
+lose-message: Defeat message    # Required
+---
+```
 
-## King of Spades - Failure Counter
-**The time machine suffers a major malfunction.**
+**Only 4 fields total** - down from 38+ in V1 system
 
-## 3 of Hearts
-**You're betrayed by a survivor you trusted.**
+### 2. Introduction Sections (Required)
 
-You thought you had made an ally, someone who understood the value of cooperation
-in this harsh world. But they led you into an ambush, and their friends took
-everything you were carrying. You managed to escape, but the betrayal stings
-worse than your injuries.
+Use any H2 headings (`## Your Heading`) to organize the introduction. Common sections:
 
-## 4 of Hearts
-**A survivor offers to trade useful items.**
+- `## Who You Are` - Character/setting introduction
+- `## What Happened` - How they got here
+- `## Your Goal` - What they're trying to achieve
 
-## 5 of Hearts
-**A group of survivors tries to steal your supplies.**
+Supports **full Markdown** formatting.
 
-You hear them before you see them - whispers and footsteps. They think you're
-an easy mark, alone and distracted. But you've survived too long to be caught
-off guard. The confrontation is tense, weapons drawn, until they realize you're
-not worth the risk. They back off, but you know you'll need to be more careful.
+### 3. Card Deck (Required)
+
+Cards are organized by type using H2 headings:
+
+```markdown
+## [Card Type]
+
+**[Short description shown in game log]**
+
+[Optional longer story shown when card is drawn. Can be multiple paragraphs
+with full Markdown support.]
 
 ---
 ```
 
-### Processing Rules
+**Card counts:**
+- Primary Success: exactly 1
+- Failure Counter: exactly 4
+- Narrative: exactly 3
+- Challenge: exactly 16
+- Event: exactly 28
 
-1. **Frontmatter** - YAML between `---` markers (only title + 2 messages required)
-2. **Introduction** - Everything between frontmatter and first `---`
-3. **Cards** - Start with `## [Rank] of [Suit]` or `## [Rank] of [Suit] - [Type]`
-   - Types: "Primary Success" or "Failure Counter" (optional for other cards)
-   - First line after heading (bold) = short description (shown in log)
-   - Following paragraphs = full card text (shown when drawn)
-   - Cards without full text will only show the short description
+Total = 52 cards
 
-### Advantages
+### 4. Optional Special Modifiers
 
-- ✅ Single file to manage
-- ✅ Familiar Markdown syntax
-- ✅ Easy to write long-form card descriptions
-- ✅ Works with any text editor
-- ✅ Can be versioned in Git easily
-- ✅ Minimalist frontmatter (3 required fields)
-- ✅ Human-readable and easy to review
+Narrative cards can include special one-time modifiers:
 
-### Disadvantages
+```markdown
+## Narrative: skip-damage
 
-- ⚠️ Must follow heading format exactly
-- ⚠️ Requires learning minimal YAML for frontmatter
-- ⚠️ No visual preview while editing
+**A moment of perfect timing saves you**
 
-### Publishing Workflow
-
-1. Write `my-game.game.md` file
-2. Upload to DC Solo RPG website or drop into `/static/games/` folder
-3. System converts to internal format automatically
-4. Share link: `https://dcsolorpg.com/game/my-game`
+Story here...
 
 ---
 
-## Solution 2: Google Sheets + JSON Export (Most Accessible)
+## Narrative: return-king
 
-**Best for:** Creators who prefer spreadsheets and want real-time collaboration
+**A second chance manifests**
 
-### Overview
-
-Use Google Sheets as the editing interface with three simple tabs: Game Info, Introduction, and Card Deck. Export to JSON via a custom menu option. No local files, no syntax errors, collaborative editing built-in.
-
-### Google Sheet Structure
-
-#### Tab 1: Game Info
-```
-| Field         | Value                                                    |
-|---------------|----------------------------------------------------------|
-| Title         | Future Lost                                               |
-| Subtitle      | A Dimm City Campaign                                     |
-| Win Message   | You have managed to repair the time machine!             |
-| Lose Message  | The time machine has been damaged beyond repair          |
+Story here...
 ```
 
-#### Tab 2: Introduction
-```
-| Section       | Content                                                  |
-|---------------|----------------------------------------------------------|
-| Who You Are   | You are a time traveler, an explorer of the temporal... |
-| Your Mission  | Your mission is to survive in this harsh world while... |
-```
+**Available modifiers:**
+- `skip-damage` - Skip next damage check (max 1 per game)
+- `return-king` - Return King to deck (max 1 per game)
 
-#### Tab 3: Card Deck
-```
-| Rank | Suit     | Special Type      | Short Description                                    | Full Story (optional)                        |
-|------|----------|-------------------|------------------------------------------------------|---------------------------------------------|
-| A    | hearts   | Primary Success   | You find a survivor who knows how to repair...       | This survivor is an engineer from before... |
-| A    | diamonds |                   | You discover a hidden stash of resources.            | Behind a false wall in an abandoned...      |
-| K    | hearts   | Failure Counter   | A group of hostile survivors has spotted you.        |                                             |
-| 3    | hearts   |                   | You're betrayed by a survivor you trusted.           | You thought you had made an ally...         |
-```
+These are **optional** - standard `## Narrative` cards are valid without modifiers.
 
-### Features
+### 5. Optional Manual Card Assignment
 
-1. **Template Sheet** - Start from a copy of the official template
-2. **Data Validation** - Dropdowns for Rank, Suit, and Special Type
-3. **Auto-numbering** - Formula checks you have exactly 52 cards
-4. **Export Menu** - Custom Google Apps Script adds "DC Solo RPG" menu
-   - Export to JSON (downloads .json file)
-   - Validate Deck (checks for errors)
-   - Preview Game (generates preview link)
-5. **Collaboration** - Multiple creators can work simultaneously
-6. **Comments** - Use sheet comments for feedback/notes
+For advanced creators who want specific cards in specific positions:
 
-### Export Format (JSON)
+```markdown
+## Challenge: 7-hearts
 
-```json
-{
-  "title": "Future Lost",
-  "subtitle": "A Dimm City Campaign",
-  "winMessage": "You have managed to repair the time machine!",
-  "loseMessage": "The time machine has been damaged beyond repair",
-  "introduction": {
-    "whoYouAre": "You are a time traveler...",
-    "yourMission": "Your mission is to survive..."
-  },
-  "deck": [
-    {
-      "card": "A",
-      "suit": "hearts",
-      "type": "primary-success",
-      "description": "You find a survivor who knows how to repair...",
-      "story": "This survivor is an engineer from before..."
-    }
-  ]
-}
+**Specific event for seven of hearts**
+
+Story here...
 ```
 
-### Advantages
+Can be combined with modifiers:
 
-- ✅ Most familiar interface for non-technical users
-- ✅ No syntax errors possible
-- ✅ Data validation prevents common mistakes
-- ✅ Built-in collaboration tools
-- ✅ Works on any device (phone, tablet, desktop)
-- ✅ Version history built into Google Sheets
-- ✅ No installation required
-- ✅ Can copy/paste from existing spreadsheets
+```markdown
+## Narrative: A-clubs, skip-damage
 
-### Disadvantages
+**Assigned to Ace of Clubs with skip-damage modifier**
 
-- ⚠️ Requires Google account
-- ⚠️ Must install Apps Script for export
-- ⚠️ Less good for very long card stories (though multi-line cells work)
-- ⚠️ Requires internet connection
+Story here...
+```
 
-### Publishing Workflow
-
-1. Make a copy of official template sheet
-2. Fill in Game Info, Introduction, and Card Deck tabs
-3. Click "DC Solo RPG" menu → "Validate Deck" to check for errors
-4. Click "DC Solo RPG" menu → "Export to JSON"
-5. Upload JSON file to DC Solo RPG website
-6. Share link: `https://dcsolorpg.com/game/my-game`
-
-### Apps Script Code (Provided)
-
-The official template includes a pre-installed Apps Script that:
-- Validates card count (must be 52)
-- Checks for duplicate cards
-- Ensures all required fields are filled
-- Generates properly formatted JSON
-- Provides one-click export
+The `: 7-hearts` notation explicitly assigns this card. Useful for:
+- Thematic suit matching (hearts = people, diamonds = resources, etc.)
+- Specific rank significance in your narrative
+- Future custom action assignment
 
 ---
 
-## Solution 3: Interactive Web Creator (Most Powerful)
+## Advantages
 
-**Best for:** All users, especially those wanting live preview and guided creation
+### For Writers
 
-### Overview
+1. **No deck management** - Just write cards grouped by purpose
+2. **Clear structure** - Type headers show card function at a glance
+3. **Focus on narrative** - Card identifiers are implementation details
+4. **Flexible length** - Write short or long stories as needed
+5. **Narrative cards** - New space for reflection and character development
+6. **Familiar tools** - Works with any text editor
+7. **Version control** - Easy to track changes in Git
 
-A dedicated web application at `dcsolorpg.com/create` that guides creators through the game-building process with a visual interface, live preview, and automatic validation. No files to manage until export.
+### For Implementation
 
-### Interface Design
+1. **Simple parsing** - Type headers + auto-assignment
+2. **Validated by default** - Count requirements enforced
+3. **Future-proof** - Easy to add custom actions
+4. **Backward compatible** - Can convert from/to old CSV format
+5. **Explicit override** - Advanced users can specify exact cards
 
-#### Step 1: Game Basics
-```
-┌─────────────────────────────────────────────────────────┐
-│ Create Your Game                                [Step 1/4]│
-├─────────────────────────────────────────────────────────┤
-│                                                          │
-│ Game Title *                                            │
-│ ┌─────────────────────────────────────────────────────┐ │
-│ │ Future Lost                                         │ │
-│ └─────────────────────────────────────────────────────┘ │
-│                                                          │
-│ Subtitle (optional)                                     │
-│ ┌─────────────────────────────────────────────────────┐ │
-│ │ A Dimm City Campaign                                │ │
-│ └─────────────────────────────────────────────────────┘ │
-│                                                          │
-│ Win Message *                                           │
-│ ┌─────────────────────────────────────────────────────┐ │
-│ │ You managed to repair the time machine!             │ │
-│ └─────────────────────────────────────────────────────┘ │
-│                                                          │
-│ Lose Message *                                          │
-│ ┌─────────────────────────────────────────────────────┐ │
-│ │ The time machine is damaged beyond repair           │ │
-│ └─────────────────────────────────────────────────────┘ │
-│                                                          │
-│         [Back]                            [Next Step →] │
-└─────────────────────────────────────────────────────────┘
-```
+### For Players
 
-#### Step 2: Introduction
-```
-┌─────────────────────────────────────────────────────────┐
-│ Write Your Introduction                     [Step 2/4] │
-├─────────────────────────────────────────────────────────┤
-│                                                          │
-│ Who You Are *                                           │
-│ ┌─────────────────────────────────────────────────────┐ │
-│ │ You are a time traveler, an explorer of the        │ │
-│ │ temporal realms, who has accidentally landed in a  │ │
-│ │ dystopian future...                                │ │
-│ │                                                     │ │
-│ │                                          [250/1000] │ │
-│ └─────────────────────────────────────────────────────┘ │
-│                                                          │
-│ Your Mission *                                          │
-│ ┌─────────────────────────────────────────────────────┐ │
-│ │ Your mission is to survive in this harsh and       │ │
-│ │ unfamiliar world while trying to repair your time  │ │
-│ │ machine...                                          │ │
-│ │                                          [180/1000] │ │
-│ └─────────────────────────────────────────────────────┘ │
-│                                                          │
-│  ℹ️ Tip: Use vivid language to immerse players in      │
-│     your world. Set the tone and stakes.               │
-│                                                          │
-│         [← Back]                          [Next Step →] │
-└─────────────────────────────────────────────────────────┘
-```
-
-#### Step 3: Card Deck Builder
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│ Build Your Card Deck                            [Step 3/4] 15/52 📊 │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│ ┌─ Add New Card ───────────────────────────────────────────────┐   │
-│ │                                                                │   │
-│ │  Rank: [A▾]  Suit: [hearts▾]  Type: [Primary Success▾]       │   │
-│ │                                                                │   │
-│ │  Short Description (shown in game log) *                      │   │
-│ │  ┌────────────────────────────────────────────────────────┐   │   │
-│ │  │ You find a survivor who knows how to repair the        │   │   │
-│ │  │ time machine                                            │   │   │
-│ │  └────────────────────────────────────────────────────────┘   │   │
-│ │                                                                │   │
-│ │  Full Story (optional, shown when card is drawn)              │   │
-│ │  ┌────────────────────────────────────────────────────────┐   │   │
-│ │  │ This survivor is an engineer from before the collapse. │   │   │
-│ │  │ She recognizes your time machine's design and offers   │   │   │
-│ │  │ to help. With her expertise, you finally have a real   │   │   │
-│ │  │ chance of getting home...                     [250/500]│   │   │
-│ │  └────────────────────────────────────────────────────────┘   │   │
-│ │                                                                │   │
-│ │  [Add Card]  or  [Add Card & Create Another]                  │   │
-│ └────────────────────────────────────────────────────────────────┘   │
-│                                                                      │
-│ ┌─ Your Deck ──────────────────────────────────────────────────┐   │
-│ │                                                                │   │
-│ │  🃁 A♥ (Primary Success) - You find a survivor who knows...  │   │
-│ │      [Edit] [Delete] [Preview]                                │   │
-│ │                                                                │   │
-│ │  🃁 A♦ - You discover a hidden stash of resources...         │   │
-│ │      [Edit] [Delete] [Preview]                                │   │
-│ │                                                                │   │
-│ │  🃁 K♥ (Failure) - A group of hostile survivors...           │   │
-│ │      [Edit] [Delete] [Preview]                                │   │
-│ │                                                                │   │
-│ │  ... 12 more cards ...                                        │   │
-│ │                                                                │   │
-│ │  [Bulk Import from CSV] [Generate Remaining Cards w/ AI]      │   │
-│ └────────────────────────────────────────────────────────────────┘   │
-│                                                                      │
-│  ⚠️ You need 37 more cards to complete your deck (52 total)         │
-│                                                                      │
-│  [← Back]  [Save Draft]  [Preview Game]         [Next Step →]       │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-#### Step 4: Review & Publish
-```
-┌─────────────────────────────────────────────────────────┐
-│ Review & Publish                             [Step 4/4] │
-├─────────────────────────────────────────────────────────┤
-│                                                          │
-│ ✅ Game Title: Future Lost                              │
-│ ✅ Introduction: Complete                                │
-│ ✅ Card Deck: 52 cards (complete)                        │
-│    • 1 Primary Success card                             │
-│    • 4 Failure Counter cards                            │
-│    • 47 Event cards                                     │
-│                                                          │
-│ ┌─ Preview Your Game ─────────────────────────────────┐ │
-│ │                                                      │ │
-│ │  [Live Preview Panel showing actual game interface] │ │
-│ │                                                      │ │
-│ └──────────────────────────────────────────────────────┘ │
-│                                                          │
-│ ┌─ Publishing Options ─────────────────────────────────┐ │
-│ │                                                      │ │
-│ │  Game URL Slug *                                     │ │
-│ │  ┌───────────────────────────────────────────────┐  │ │
-│ │  │ future-lost                    [Check Avail.]│  │ │
-│ │  └───────────────────────────────────────────────┘  │ │
-│ │                                                      │ │
-│ │  Your game will be published at:                    │ │
-│ │  https://dcsolorpg.com/game/future-lost             │ │
-│ │                                                      │ │
-│ │  □ Make game public (visible in game library)       │ │
-│ │  □ Allow others to remix this game                  │ │
-│ │                                                      │ │
-│ └──────────────────────────────────────────────────────┘ │
-│                                                          │
-│  [← Back]  [Save Draft]  [Export Files]  [Publish! 🚀] │
-└─────────────────────────────────────────────────────────┘
-```
-
-### Key Features
-
-1. **Guided Workflow** - Step-by-step process prevents overwhelming creators
-2. **Live Validation** - Real-time feedback on errors/missing cards
-3. **Progress Tracking** - Visual indicators show completion status
-4. **Card Management** - Easy add/edit/delete with visual deck overview
-5. **Live Preview** - Play test your game before publishing
-6. **Draft Saving** - Auto-save to browser localStorage, optional account for cloud saves
-7. **Export Options** - Download as .game.md, JSON, or ZIP
-8. **AI Assist** (Optional) - Generate card suggestions based on your theme
-9. **Templates** - Start from genre templates (Sci-Fi, Fantasy, Horror, etc.)
-10. **Import** - Bring in existing CSV/YAML games for editing
-
-### Technical Architecture
-
-```
-┌─────────────────────────────────────────────────────┐
-│ Frontend (React/Svelte)                              │
-│  • Form validation & state management               │
-│  • Live preview renderer                            │
-│  • Export format generators                         │
-├─────────────────────────────────────────────────────┤
-│ Backend API (Optional for publishing)                │
-│  • User accounts (optional)                         │
-│  • Game storage & hosting                           │
-│  • URL slug management                              │
-│  • Community features (ratings, comments)           │
-└─────────────────────────────────────────────────────┘
-```
-
-### Advantages
-
-- ✅ Most user-friendly option
-- ✅ No file management required
-- ✅ Real-time validation prevents errors
-- ✅ Live preview before publishing
-- ✅ Works for both technical and non-technical users
-- ✅ Can include AI assistance for card generation
-- ✅ Handles all export formats
-- ✅ Direct publishing to web (no upload needed)
-- ✅ Built-in community features possible
-
-### Disadvantages
-
-- ⚠️ Requires building a web application
-- ⚠️ Most development effort required
-- ⚠️ Requires hosting infrastructure
-- ⚠️ Depends on internet connection (unless offline PWA mode)
-
-### Publishing Workflow
-
-1. Visit `dcsolorpg.com/create`
-2. Complete 4-step wizard
-3. Preview and test your game
-4. Click "Publish" button
-5. Game is immediately available at your chosen URL
-6. Share link: `https://dcsolorpg.com/game/your-game-slug`
+1. **Better storytelling** - Writers focus on narrative, not technical details
+2. **Consistent experience** - Standard deck ensures balanced gameplay
+3. **Richer content** - Narrative cards add depth
+4. **Thematic coherence** - Writers group related events together
 
 ---
 
-## Comparison Matrix
+## Universal Simplifications
 
-| Feature                    | Solution 1: Markdown | Solution 2: Sheets | Solution 3: Web Creator |
-|----------------------------|---------------------|-------------------|------------------------|
-| **Ease of Learning**       | ⭐⭐⭐             | ⭐⭐⭐⭐⭐         | ⭐⭐⭐⭐⭐             |
-| **No Installation**        | ⭐⭐⭐⭐           | ⭐⭐⭐⭐⭐         | ⭐⭐⭐⭐⭐             |
-| **Offline Capable**        | ⭐⭐⭐⭐⭐         | ⭐                | ⭐⭐                   |
-| **Collaboration**          | ⭐⭐               | ⭐⭐⭐⭐⭐         | ⭐⭐⭐⭐               |
-| **Long-form Writing**      | ⭐⭐⭐⭐⭐         | ⭐⭐⭐             | ⭐⭐⭐⭐               |
-| **Error Prevention**       | ⭐⭐               | ⭐⭐⭐⭐           | ⭐⭐⭐⭐⭐             |
-| **Version Control**        | ⭐⭐⭐⭐⭐         | ⭐⭐⭐⭐           | ⭐⭐⭐                 |
-| **Live Preview**           | ❌                 | ❌                | ⭐⭐⭐⭐⭐             |
-| **Development Effort**     | ⭐⭐⭐⭐⭐         | ⭐⭐⭐⭐           | ⭐                     |
-| **Publishing Simplicity**  | ⭐⭐⭐⭐           | ⭐⭐⭐⭐           | ⭐⭐⭐⭐⭐             |
-
----
-
-## Recommendations
-
-### Phase 1: Quick Win (1-2 weeks)
-Implement **Solution 1: Single Markdown File**
-- Lowest development effort
-- Immediately usable
-- Appeals to writers and technical users
-- Can be version controlled easily
-
-### Phase 2: Accessibility (1-2 months)
-Add **Solution 2: Google Sheets Template**
-- Reaches non-technical creators
-- Minimal server infrastructure needed
-- Leverages familiar tools
-- Can export to Markdown format from Phase 1
-
-### Phase 3: Full Platform (3-6 months)
-Build **Solution 3: Web Creator**
-- Best overall experience
-- Serves all user types
-- Enables community features
-- Can import/export to formats from Phase 1 & 2
-
----
-
-## Universal Simplifications (All Solutions)
-
-Regardless of which solution is chosen, these simplifications should apply to all:
+These simplifications apply to the V2 system:
 
 ### 1. Remove Label Customization
+
 - Use smart defaults for all UI text
-- Only expose: `title`, `subtitle`, `winMessage`, `loseMessage`
-- Reduces configuration from 38+ fields to 4
+- Only expose: `title`, `subtitle`, `win-message`, `lose-message`
+- **Reduces configuration from 38+ fields to 4**
 
 ### 2. Remove Theme/Styling
+
 - Use single, polished default theme
 - Remove CSS customization entirely
 - Remove dice theme configuration
-- Focus on content, not presentation
+- **Focus on content, not presentation**
 
 ### 3. Simplified Card Types
-- **Primary Success** - Ace of Hearts only (triggers success checks)
-- **Failure Counter** - Any King (4 revealed = game over)
-- **Event** - All other cards (default type, no need to specify)
+
+- **Primary Success** - Ace of Hearts only (activates salvation countdown)
+- **Failure Counter** - All Kings (4 revealed = instant game over)
+- **Narrative** - Remaining Aces (bonus/help cards, optional special modifiers)
+  - Each Ace adds +1 to bonus counter (reduces damage)
+  - May include `skip-damage` or `return-king` modifiers (max 1 each)
+  - Aces may or may not trigger damage checks (designer flexibility per SRD)
+- **Challenge** - Odd-numbered cards: 3, 5, 7, 9 (usually trigger damage checks)
+- **Event** - Even-numbered cards: 2, 4, 6, 8, 10, J, Q (usually safe)
+
+**Note:** The "usually" qualifier preserves designer flexibility per SRD intent
 
 ### 4. Smart Validation
-- Auto-check for exactly 52 cards
-- Warn if missing Ace of Hearts
-- Warn if not exactly 4 Kings
-- Validate no duplicate cards
+
+- Auto-check for exactly 52 cards (1+4+3+16+28)
+- Warn if missing Primary Success (Ace of Hearts)
+- Warn if not exactly 4 Failure Counters
+- Warn if not exactly 3 Narrative cards (including modifiers)
+- Validate special modifiers:
+  - Maximum 1 `skip-damage` modifier
+  - Maximum 1 `return-king` modifier
+  - Only on Narrative cards
+- Validate no duplicate card assignments
+- Verify card type counts match requirements
 
 ### 5. Rich Card Descriptions
+
 - **Short description** (1 sentence) - shown in game log
 - **Full story** (optional, up to 500 words) - shown when card is drawn
-- Support Markdown formatting in stories
+- Support Markdown formatting in stories (emphasis, lists, paragraphs)
 
 ### 6. Introduction Structure
-- **Who You Are** - Character/setting introduction
-- **Your Mission** - Goals and stakes
+
+- **Flexible sections** - Use any H2 headings that make sense for your story
+- **Common patterns** - Who You Are, What Happened, Your Goal
 - Both sections support Markdown and long-form text
 
 ---
@@ -569,78 +394,165 @@ Regardless of which solution is chosen, these simplifications should apply to al
 
 For existing games using the current system:
 
-1. **Automatic Conversion Tool**
-   - Reads existing config.yml + deck.csv + intro.md
-   - Outputs V2 format (Markdown, JSON, or both)
-   - Preserves all content, ignores deprecated fields
+### 1. Automatic Conversion Tool
 
-2. **Backward Compatibility**
-   - V2 system can still load V1 games
-   - Support V1 format for at least 6 months
-   - Clear deprecation timeline
+```bash
+# Convert old config.yml + deck.csv + intro.md to new format
+npm run convert-v1-to-v2 static/games/my-game
 
-3. **Migration Guide**
-   - Step-by-step instructions for each solution
-   - Before/after examples
-   - Common pitfalls and solutions
+# Output: static/games/my-game.game.md
+```
+
+**Conversion process:**
+1. Reads existing `config.yml` + `deck.csv` + `intro.md`
+2. Extracts title, subtitle, win/lose messages from config
+3. Converts introduction markdown to new format
+4. Maps each card to appropriate type based on rank:
+   - Ace of Hearts → Primary Success
+   - Kings → Failure Counter
+   - Other Aces → Narrative
+   - Odd ranks (3, 5, 7, 9) → Challenge
+   - Even ranks (2, 4, 6, 8, 10, J, Q) → Event
+5. Outputs single `.game.md` file
+6. **Preserves all content, ignores deprecated fields**
+
+### 2. Backward Compatibility
+
+- V2 system can still load V1 games during transition period
+- Support V1 format for **at least 6 months** after V2 launch
+- Clear deprecation timeline communicated to creators
+- Old games continue to work, but encourage migration
+
+### 3. Migration Guide for Creators
+
+**Step-by-step instructions:**
+
+1. **Run conversion tool** on your existing game
+2. **Review generated file** - check that cards mapped to correct types
+3. **Enhance cards** - add longer descriptions where beneficial
+4. **Remove manual assignments** - let auto-assignment handle it unless you have specific needs
+5. **Test in game engine** - verify everything works as expected
+6. **Update repository** - commit new `.game.md` file, archive old files
+
+**Common migration scenarios:**
+
+- **Standard games**: Auto-conversion handles everything
+- **Custom card assignments**: May need manual review of type mappings
+- **Special mechanics**: Check that custom cards map to correct types
+- **Thematic suit matching**: Add manual assignments if needed (`: 7-hearts` notation)
+
+### 4. Validation Tool
+
+```bash
+# Validate migrated game
+npm run validate-game static/games/my-game.game.md
+
+# Checks:
+# - Correct card counts (1+4+3+16+28=52)
+# - All required frontmatter fields
+# - Introduction sections present
+# - No duplicate cards
+# - Markdown syntax valid
+```
+
+---
+
+## Publishing Workflow
+
+### Option 1: Direct Upload
+
+1. Write `my-game.game.md` file
+2. Upload to DC Solo RPG website
+3. System converts to internal format automatically
+4. Share link: `https://dcsolorpg.com/game/my-game`
+
+### Option 2: Repository-Based
+
+1. Create `my-game.game.md` in `/static/games/` folder
+2. Commit to Git repository
+3. Push to main branch
+4. System automatically detects and publishes
+5. Share link: `https://dcsolorpg.com/game/my-game`
+
+### Option 3: CLI Tool
+
+```bash
+# Publish from command line
+npm run publish-game static/games/my-game.game.md
+
+# Output:
+# ✓ Validated: 52 cards, all types correct
+# ✓ Uploaded to server
+# ✓ Published at: https://dcsolorpg.com/game/my-game
+```
+
+---
+
+## Complete Template
+
+See [`simplified-type-based-format.md`](./simplified-type-based-format.md) for:
+
+- Complete format specification
+- Card type guidelines aligned with SRD
+- Parsing algorithm details
+- Example cards for each type
+- Progressive rule teaching guidance
+- Full working template
 
 ---
 
 ## Next Steps
 
-1. **Gather Feedback** - Share with potential creators for input
-2. **Prototype** - Build minimal version of chosen solution
-3. **User Testing** - Test with 3-5 non-technical creators
-4. **Iterate** - Refine based on feedback
-5. **Document** - Create comprehensive creator guide
-6. **Launch** - Roll out with example games and templates
+### For Implementation
+
+1. **Build parser** - Implement markdown-to-game-data converter
+2. **Create validator** - Ensure card counts and structure are correct
+3. **Build conversion tool** - Migrate existing V1 games
+4. **Update documentation** - Creator guide with examples
+5. **Test with creators** - Get feedback from 3-5 non-technical users
+
+### For Creators
+
+1. **Review format** - Read `simplified-type-based-format.md`
+2. **Try template** - Use the complete template as starting point
+3. **Provide feedback** - What works? What's confusing?
+4. **Migrate games** - Convert existing games to new format
+5. **Create new content** - Build games with simplified workflow
 
 ---
 
-## Appendix: Example Card Stories
+## Why This Format?
 
-### Short Description Only
-```
-## 4 of Hearts
-**A survivor offers to trade useful items.**
-```
-(Perfectly fine for cards that don't need backstory)
+**This type-based format is the recommended approach** because:
 
-### With Full Story
-```
-## 3 of Hearts
-**You're betrayed by a survivor you trusted.**
+1. **Lowest cognitive load for writers** - Focus on story, not deck management
+2. **Clear mechanical purpose** - Each card type has explicit SRD-aligned function
+3. **Auto-assignment removes tedious work** - System handles the 52-card deck construction
+4. **Narrative cards enable richer storytelling** - SRD "bonus/help" cards provide space for reflection
+5. **Optional strategic depth** - Special modifiers (skip-damage, return-king) add tactical gameplay
+6. **Simple modifier system** - Type headers capture everything; no complex data structures
+7. **Future-proof for extensions** - Easy to add custom modifiers as engine evolves
+8. **Easy to validate** - Counts are known (1+4+3+16+28 = 52 cards)
+9. **Natural organization by function** - Writers group by mechanical purpose, not arbitrary card IDs
+10. **SRD-compliant** - Aligns perfectly with official Wretched and Alone mechanics
+11. **Single file simplicity** - No juggling multiple formats
+12. **Version control friendly** - Plain text, easy diffs, meaningful commit history
 
-You thought you had made an ally. Sarah seemed different from the others -
-reasonable, kind, willing to share information about the safe zones. She
-suggested you travel together to a supply depot she knew about.
+The format strikes the perfect balance between **simplicity for creators** and **flexibility for the engine**, while maintaining full compatibility with the **Wretched and Alone SRD** standard.
 
-The ambush came when you were most vulnerable, climbing through a collapsed
-building. Her "friends" were waiting. They took everything - your supplies,
-your tools, even the spare parts you'd scavenged for the time machine.
+**Key Design Philosophy:** The format avoids unnecessary complexity. Inherent dual behaviors (like Primary Success activating salvation AND triggering damage) are handled naturally by game logic, not special syntax. Only truly optional enhancements (skip-damage, return-king) need explicit modifiers.
 
-Sarah didn't even look you in the eye as they left you there, wounded and alone.
-In this world, trust is a luxury you can't afford. The lesson is bitter, but
-you won't make this mistake again.
-```
+---
 
-### Multiple Paragraphs with Markdown
-```
-## 8 of Spades
-**You find a complete toolkit for your time machine.**
+## Additional Resources
 
-In the basement of an old university's physics building, behind three locked
-doors and covered in dust, you find it: a temporal mechanics research lab,
-completely intact.
+- **Full Specification**: [`simplified-type-based-format.md`](./simplified-type-based-format.md)
+- **Mechanics Guide**: [`wretched-alone-mechanics-guide.md`](./wretched-alone-mechanics-guide.md)
+- **SRD Compliance**: All v2 docs now aligned with Wretched and Alone SRD
+- **Example Game**: [`type-based-future-lost.game.md`](./type-based-future-lost.game.md)
 
-The toolkit is beautiful - precision instruments designed specifically for
-quantum field manipulation. Whoever worked here understood time travel theory.
-Maybe they were even trying to build their own machine before everything fell
-apart.
+---
 
-*This is it.* With these tools, you can finally make the complex repairs your
-time machine needs. Your hands shake as you carefully pack each instrument.
-After weeks of scavenging and making do, you finally have what you need.
+**End of Document**
 
-For the first time since you arrived, going home feels **possible**.
-```
+*This configuration approach simplifies game creation while maintaining the depth and balance of the Wretched and Alone framework.*
