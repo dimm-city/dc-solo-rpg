@@ -243,15 +243,15 @@
 		/* Augmented UI Base Configuration */
 		--aug-border-all: 2px;
 
-		/* Layout */
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		gap: var(--space-sm);
-		padding: var(--space-md) var(--space-sm);
+		/* Compact Layout */
+		display: grid;
+		grid-template-columns: 1fr;
+		grid-template-rows: auto auto auto;
+		gap: var(--space-xs);
+		padding: var(--space-sm) var(--space-xs);
 		position: relative;
 		overflow: visible;
-		min-height: 120px;
+		min-height: 80px;
 
 		/* Glassmorphism Background */
 		background: linear-gradient(135deg, rgba(20, 20, 40, 0.5), rgba(30, 30, 50, 0.4));
@@ -269,6 +269,12 @@
 		--aug-tl: var(--aug-clip-xs);
 		--aug-br: var(--aug-clip-md);
 
+		/* Layout Variant: Label Top, Bar Bottom */
+		grid-template-areas:
+			'label'
+			'value'
+			'bar';
+
 		/* Enhanced Glow with Animation */
 		box-shadow:
 			0 0 30px rgba(0, 255, 136, 0.9),
@@ -277,6 +283,18 @@
 			inset 0 0 25px rgba(0, 255, 136, 0.25),
 			inset 0 1px 0 rgba(255, 255, 255, 0.1);
 		animation: health-glow-pulse 2.5s ease-in-out infinite;
+	}
+
+	.health-stat .stat-label {
+		grid-area: label;
+	}
+
+	.health-stat .stat-value {
+		grid-area: value;
+	}
+
+	.health-stat .stat-bar {
+		grid-area: bar;
 	}
 
 	@keyframes health-glow-pulse {
@@ -306,6 +324,12 @@
 		--aug-tr: var(--aug-clip-sm);
 		--aug-bl: var(--aug-clip-xs);
 
+		/* Layout Variant: Bar Top, Label/Value Bottom */
+		grid-template-areas:
+			'bar'
+			'label'
+			'value';
+
 		/* Enhanced Glow with Animation */
 		box-shadow:
 			0 0 30px rgba(255, 0, 85, 0.9),
@@ -314,6 +338,18 @@
 			inset 0 0 25px rgba(255, 0, 85, 0.25),
 			inset 0 1px 0 rgba(255, 255, 255, 0.1);
 		animation: failure-glow-pulse 2.2s ease-in-out infinite;
+	}
+
+	.failure-stat .stat-label {
+		grid-area: label;
+	}
+
+	.failure-stat .stat-value {
+		grid-area: value;
+	}
+
+	.failure-stat .stat-bar {
+		grid-area: bar;
 	}
 
 	@keyframes failure-glow-pulse {
@@ -343,6 +379,12 @@
 		--aug-tl: var(--aug-clip-sm);
 		--aug-br: var(--aug-clip-sm);
 
+		/* Layout Variant: Value Top, Bar Middle, Label Bottom */
+		grid-template-areas:
+			'value'
+			'bar'
+			'label';
+
 		/* Enhanced Glow with Animation */
 		box-shadow:
 			0 0 30px rgba(0, 217, 255, 0.9),
@@ -351,6 +393,18 @@
 			inset 0 0 25px rgba(0, 217, 255, 0.25),
 			inset 0 1px 0 rgba(255, 255, 255, 0.1);
 		animation: bonus-glow-pulse 2.8s ease-in-out infinite;
+	}
+
+	.bonus-stat .stat-label {
+		grid-area: label;
+	}
+
+	.bonus-stat .stat-value {
+		grid-area: value;
+	}
+
+	.bonus-stat .stat-bar {
+		grid-area: bar;
 	}
 
 	@keyframes bonus-glow-pulse {
@@ -381,6 +435,12 @@
 		--aug-bl: var(--aug-clip-sm);
 		--aug-br: var(--aug-clip-sm);
 
+		/* Layout Variant: Label Top (alternate standard) */
+		grid-template-areas:
+			'label'
+			'bar'
+			'value';
+
 		/* Enhanced Glow with Animation */
 		box-shadow:
 			0 0 30px rgba(255, 221, 0, 0.9),
@@ -389,6 +449,18 @@
 			inset 0 0 25px rgba(255, 221, 0, 0.25),
 			inset 0 1px 0 rgba(255, 255, 255, 0.1);
 		animation: success-glow-pulse 3s ease-in-out infinite;
+	}
+
+	.success-stat .stat-label {
+		grid-area: label;
+	}
+
+	.success-stat .stat-value {
+		grid-area: value;
+	}
+
+	.success-stat .stat-bar {
+		grid-area: bar;
 	}
 
 	@keyframes success-glow-pulse {
@@ -419,7 +491,7 @@
 		font-family: 'Courier New', monospace;
 		opacity: 0.9;
 		text-align: center;
-		padding-top: 2px;
+		align-self: center;
 	}
 
 	.health-stat .stat-label {
@@ -451,7 +523,7 @@
 	}
 
 	.stat-value {
-		font-size: 1.5rem;
+		font-size: 1.25rem;
 		font-weight: bold;
 		font-family: 'Courier New', monospace;
 		color: #fff;
@@ -462,32 +534,30 @@
 		align-self: center;
 		gap: 0.1rem;
 		justify-content: center;
-		width: 100%;
 	}
 
 	.stat-value .current {
-		font-size: 1.5rem;
+		font-size: 1.25rem;
 	}
 
 	.stat-value .divider {
-		font-size: 1rem;
+		font-size: 0.875rem;
 		opacity: 0.7;
 	}
 
 	.stat-value .max {
-		font-size: 0.9rem;
+		font-size: 0.75rem;
 		opacity: 0.8;
 	}
 
 	/* Stat Bars */
 	.stat-bar {
-		height: 0.5rem;
+		height: 0.375rem;
 		background: rgba(0, 0, 0, 0.5);
 		border: 1px solid rgba(255, 255, 255, 0.2);
 		position: relative;
 		overflow: hidden;
 		align-self: center;
-		width: 100%;
 	}
 
 	.stat-fill {
@@ -549,16 +619,20 @@
 		}
 
 		.stat-item {
-			padding: var(--space-sm);
-			min-height: 100px;
+			padding: var(--space-xs);
+			min-height: 70px;
 		}
 
 		.stat-label {
 			font-size: 0.7rem;
 		}
 
+		.stat-value {
+			font-size: 1rem;
+		}
+
 		.stat-value .current {
-			font-size: 1.1rem;
+			font-size: 1rem;
 		}
 
 		.stat-value .divider {
@@ -566,11 +640,11 @@
 		}
 
 		.stat-value .max {
-			font-size: 0.7rem;
+			font-size: 0.65rem;
 		}
 
 		.stat-bar {
-			height: 0.4rem;
+			height: 0.3rem;
 		}
 
 		.info-segment {
