@@ -87,62 +87,64 @@
 			</div>
 			<div class="main-screen-area dc-table-bg">
 				{#key currentScreen}
-				{#if currentScreen == 'startRound'}
-					<div
-						class="dc-fade-in dc-screen-container"
-						data-testid="screen-startRound"
-						transition:fade={{ duration: TRANSITION_DURATION }}
-					>
-						<h4>Round {gameState.round}</h4>
-						<ContinueButton
-							text="Roll for tasks"
-							onclick={() => transitionTo('rollForTasks')}
-							testid="start-round-button"
-						/>
-					</div>
-				{:else if currentScreen == 'rollForTasks'}
-					<div
-						class="dc-fade-in dc-screen-container"
-						data-testid="screen-rollForTasks"
-						transition:fade={{ duration: TRANSITION_DURATION }}
-					>
-						<RollForTasks />
-					</div>
-				{:else if currentScreen == 'drawCard'}
-					<div
-						class="dc-fade-in dc-screen-container"
-						data-testid="screen-drawCard"
-						transition:fade={{ duration: TRANSITION_DURATION }}
-					>
-						<DrawCard />
-					</div>
-				{:else if currentScreen == 'failureCheck'}
-					<div
-						class="dc-fade-in dc-screen-container"
-						data-testid="screen-failureCheck"
-						transition:fade={{ duration: TRANSITION_DURATION }}
-					>
-						<FailureCheck {onfailurecheckcompleted} />
-					</div>
-				{:else if currentScreen == 'successCheck'}
-					<div
-						class="dc-fade-in dc-screen-container"
-						data-testid="screen-successCheck"
-						transition:fade={{ duration: TRANSITION_DURATION }}
-					>
-						<SuccessCheck />
-					</div>
-				{:else if currentScreen == 'finalLog' || currentScreen == 'log'}
-					<div
-						class="dc-fade-in dc-screen-container dc-journal-screen"
-						data-testid="screen-journal"
-						transition:fade={{ duration: TRANSITION_DURATION }}
-					>
-						<JournalEntry {onjournalsaved} />
-					</div>
-				{:else}
-					<div transition:fade={{ duration: TRANSITION_DURATION }}>error: {currentScreen}</div>
-				{/if}
+					{#if currentScreen == 'startRound'}
+						<div
+							class="dc-fade-in dc-screen-container dc-start-round-screen"
+							data-testid="screen-startRound"
+							transition:fade={{ duration: TRANSITION_DURATION }}
+						>
+							<h4>Round {gameState.round}</h4>
+							<div class="dc-dice-roller-header dc-header">
+								<ContinueButton
+									text="Roll for tasks"
+									onclick={() => transitionTo('rollForTasks')}
+									testid="start-round-button"
+								/>
+							</div>
+						</div>
+					{:else if currentScreen == 'rollForTasks'}
+						<div
+							class="dc-fade-in dc-screen-container"
+							data-testid="screen-rollForTasks"
+							transition:fade={{ duration: TRANSITION_DURATION }}
+						>
+							<RollForTasks />
+						</div>
+					{:else if currentScreen == 'drawCard'}
+						<div
+							class="dc-fade-in dc-screen-container"
+							data-testid="screen-drawCard"
+							transition:fade={{ duration: TRANSITION_DURATION }}
+						>
+							<DrawCard />
+						</div>
+					{:else if currentScreen == 'failureCheck'}
+						<div
+							class="dc-fade-in dc-screen-container"
+							data-testid="screen-failureCheck"
+							transition:fade={{ duration: TRANSITION_DURATION }}
+						>
+							<FailureCheck {onfailurecheckcompleted} />
+						</div>
+					{:else if currentScreen == 'successCheck'}
+						<div
+							class="dc-fade-in dc-screen-container"
+							data-testid="screen-successCheck"
+							transition:fade={{ duration: TRANSITION_DURATION }}
+						>
+							<SuccessCheck />
+						</div>
+					{:else if currentScreen == 'finalLog' || currentScreen == 'log'}
+						<div
+							class="dc-fade-in dc-screen-container dc-journal-screen"
+							data-testid="screen-journal"
+							transition:fade={{ duration: TRANSITION_DURATION }}
+						>
+							<JournalEntry {onjournalsaved} />
+						</div>
+					{:else}
+						<div transition:fade={{ duration: TRANSITION_DURATION }}>error: {currentScreen}</div>
+					{/if}
 				{/key}
 			</div>
 		</div>
@@ -242,6 +244,16 @@
 		width: 100%;
 		opacity: 0.9;
 		grid-area: status-area;
+	}
+
+	.dc-start-round-screen {
+		text-align: center;
+		display: grid;	
+		justify-content: center;
+		align-content: center;
+		h4 {
+			vertical-align: middle;
+		}
 	}
 
 	.dc-journal-screen {
