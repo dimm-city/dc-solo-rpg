@@ -72,7 +72,7 @@ The tests use Playwright's API to:
 
 1. **Navigate the game** - Clicks through intro screens and game flow
 2. **Monitor console logs** - Captures `[rollForTasks]` and `[drawCard]` debug logs
-3. **Interact with UI elements** - Clicks buttons like "ROLL FOR TASKS", "INTERCEPT FRAGMENT", "CONTINUE"
+3. **Interact with UI elements** - Clicks buttons like "ROLL FOR TASKS", "PROCEED TO NEXT BYTE", "CONTINUE"
 4. **Handle dynamic flow** - Manages failure checks that occur with odd cards
 5. **Validate results** - Compares card count with dice roll and journal entries
 

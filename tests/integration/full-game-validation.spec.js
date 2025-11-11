@@ -195,13 +195,13 @@ test.describe('Full Game Validation', () => {
 				// Take snapshot before drawing
 				const beforeDrawStats = await getUIStats();
 
-				// Draw card (click INTERCEPT FRAGMENT button)
+				// Draw card (click PROCEED TO NEXT BYTE button)
 				await page.click('.dc-card-deck');
 				await page.waitForTimeout(500);
 				cardsDrawn++;
 
 				// Wait for card to appear
-				const cardVisible = await waitFor('.fragment-container', 3000);
+				const cardVisible = await waitFor('.byte-container', 3000);
 				if (!cardVisible) {
 					logIssue('ERROR', 'Card did not appear after drawing', { cardNumber: cardsDrawn });
 				}

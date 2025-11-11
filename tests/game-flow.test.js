@@ -73,7 +73,7 @@ test.describe('Game Flow - Card Drawing', () => {
 			}
 
 			// Wait for the card drawing screen
-			await expect(page.getByRole('button', { name: /INTERCEPT FRAGMENT/i })).toBeVisible({
+			await expect(page.getByRole('button', { name: /PROCEED TO NEXT BYTE/i })).toBeVisible({
 				timeout: 5000
 			});
 
@@ -91,13 +91,13 @@ test.describe('Game Flow - Card Drawing', () => {
 
 			while (cardsDrawn < maxCards) {
 				// Check if we're at card drawing screen
-				const interceptButton = page.getByRole('button', {
-					name: /INTERCEPT FRAGMENT/i
+				const proceedButton = page.getByRole('button', {
+					name: /PROCEED TO NEXT BYTE/i
 				});
 
-				if (await interceptButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+				if (await proceedButton.isVisible({ timeout: 2000 }).catch(() => false)) {
 					console.log(`Drawing card ${cardsDrawn + 1}`);
-					await interceptButton.click();
+					await proceedButton.click();
 
 					// Wait for card to be revealed
 					await page.waitForTimeout(2000);
@@ -248,9 +248,9 @@ test.describe('Game Flow - Card Drawing', () => {
 		for (let i = 0; i < diceRoll; i++) {
 			await page.waitForTimeout(1000);
 
-			const interceptButton = page.getByRole('button', { name: /INTERCEPT FRAGMENT/i });
-			await expect(interceptButton).toBeVisible({ timeout: 5000 });
-			await interceptButton.click();
+			const proceedButton = page.getByRole('button', { name: /PROCEED TO NEXT BYTE/i });
+			await expect(proceedButton).toBeVisible({ timeout: 5000 });
+			await proceedButton.click();
 
 			// Wait for card reveal
 			await page.waitForTimeout(2000);

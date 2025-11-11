@@ -5,7 +5,7 @@
 
 	/**
 	 * Handle card request from neural interface
-	 * Triggered when user clicks "INTERCEPT FRAGMENT"
+	 * Triggered when user clicks "PROCEED TO NEXT BYTE"
 	 */
 	async function onRequestCard() {
 		// Draw card from game store

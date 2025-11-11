@@ -15,9 +15,9 @@
 
 	// Derived state for button text
 	let buttonText = $derived.by(() => {
-		if (animationStage === 'idle') return 'INTERCEPT FRAGMENT';
+		if (animationStage === 'idle') return 'PROCEED TO NEXT BYTE';
 		if (animationStage === 'anticipating' || animationStage === 'materializing')
-			return 'INTERCEPTING...';
+			return 'LOADING...';
 		if (animationStage === 'revealed') return 'CONTINUE';
 		return 'UPLOADING...';
 	});
@@ -30,9 +30,9 @@
 	);
 
 	/**
-	 * Handle intercept button click - request card draw and start animation
+	 * Handle proceed button click - request card draw and start animation
 	 */
-	async function onIntercept() {
+	async function onProceed() {
 		if (animationStage !== 'idle') return;
 
 		try {
@@ -56,14 +56,14 @@
 				return;
 			}
 
-			// Materialization phase - fragment appears with glitch
+			// Materialization phase - byte appears with glitch
 			animationStage = 'materializing';
 			await sleep(1000);
 
 			// Revealed phase - stable display
 			animationStage = 'revealed';
 		} catch (error) {
-			logger.error('Intercept failed:', error);
+			logger.error('Proceed to byte failed:', error);
 			animationStage = 'idle';
 		}
 	}
@@ -91,7 +91,7 @@
 	 */
 	export async function onButtonClick() {
 		if (animationStage === 'idle') {
-			await onIntercept();
+			await onProceed();
 		} else if (animationStage === 'revealed') {
 			await onDismiss();
 		}
@@ -155,27 +155,27 @@
 </script>
 
 <div class="dc-card-deck" class:active={animationStage !== 'idle'}>
-	<!-- Fragment container -->
+	<!-- Byte container -->
 	<div
-		class="fragment-container"
+		class="byte-container"
 		class:materializing={animationStage === 'materializing'}
 		class:revealed={animationStage === 'revealed'}
 		class:dismissing={animationStage === 'dismissing'}
 	>
 		{#if animationStage !== 'idle' && animationStage !== 'anticipating'}
-			<div class="fragment-shell">
+			<div class="byte-shell">
 				<!-- Bio-pulse rings -->
 				<div class="bio-pulse" aria-hidden="true"></div>
 
 				<!-- Corruption overlay for glitch effect -->
 				<div class="corruption-overlay" aria-hidden="true"></div>
 
-				<!-- Fragment content -->
+				<!-- Byte content -->
 				{#if card}
-					<div class="fragment-content">
-						<p class="fragment-data">{card.description || ''}</p>
-						<small class="fragment-id">
-							FRAGMENT-{card.card}-{card.suit?.slice(0, 3).toUpperCase() || 'UNK'}
+					<div class="byte-content">
+						<p class="byte-data">{card.description || ''}</p>
+						<small class="byte-id">
+							BYTE-{card.card}-{card.suit?.slice(0, 3).toUpperCase() || 'UNK'}
 						</small>
 					</div>
 				{/if}
@@ -210,10 +210,10 @@
 	}
 
 	/* ============================================
-	   FRAGMENT CONTAINER
+	   BYTE CONTAINER
 	   ============================================ */
 
-	.fragment-container {
+	.byte-container {
 		position: relative;
 		width: 90%;
 		max-width: 500px;
@@ -227,20 +227,20 @@
 		transition: none;
 	}
 
-	.fragment-container.materializing {
-		animation: fragment-materialize 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+	.byte-container.materializing {
+		animation: byte-materialize 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 	}
 
-	.fragment-container.revealed {
+	.byte-container.revealed {
 		opacity: 1;
 		transform: scale(1);
 	}
 
-	.fragment-container.dismissing {
-		animation: fragment-dismiss 600ms cubic-bezier(0.4, 0, 1, 1) forwards;
+	.byte-container.dismissing {
+		animation: byte-dismiss 600ms cubic-bezier(0.4, 0, 1, 1) forwards;
 	}
 
-	@keyframes fragment-materialize {
+	@keyframes byte-materialize {
 		0% {
 			opacity: 0;
 			transform: scale(0.8) rotateX(20deg);
@@ -258,7 +258,7 @@
 		}
 	}
 
-	@keyframes fragment-dismiss {
+	@keyframes byte-dismiss {
 		0% {
 			opacity: 1;
 			transform: translateY(0) scale(1);
@@ -271,10 +271,10 @@
 	}
 
 	/* ============================================
-	   FRAGMENT SHELL - MAIN CARD
+	   BYTE SHELL - MAIN CARD
 	   ============================================ */
 
-	.fragment-shell {
+	.byte-shell {
 		position: relative;
 		width: 100%;
 		min-height: 300px;
@@ -289,7 +289,7 @@
 		overflow: hidden;
 	}
 
-	.fragment-container.materializing .fragment-shell {
+	.byte-container.materializing .byte-shell {
 		animation: glitch-effect 200ms steps(2) 3;
 	}
 
@@ -388,10 +388,10 @@
 	}
 
 	/* ============================================
-	   FRAGMENT CONTENT
+	   BYTE CONTENT
 	   ============================================ */
 
-	.fragment-content {
+	.byte-content {
 		position: relative;
 		z-index: 2;
 		display: flex;
@@ -400,7 +400,7 @@
 		color: var(--color-text-primary, #fff);
 	}
 
-	.fragment-data {
+	.byte-data {
 		font-family: var(--font-body, 'Inter', sans-serif);
 		font-size: var(--text-lg, 1.125rem);
 		line-height: var(--line-height-relaxed, 1.75);
@@ -410,7 +410,7 @@
 		animation: text-materialize 800ms ease-out 200ms forwards;
 	}
 
-	.fragment-id {
+	.byte-id {
 		font-family: var(--font-display, 'Orbitron', monospace);
 		font-size: var(--text-xs, 0.75rem);
 		letter-spacing: var(--letter-spacing-wider, 0.1em);
@@ -523,17 +523,17 @@
 	   ============================================ */
 
 	@media (max-width: 768px) {
-		.fragment-container {
+		.byte-container {
 			max-width: 95%;
 			min-height: 200px;
 		}
 
-		.fragment-shell {
+		.byte-shell {
 			min-height: 200px;
 			padding: var(--space-lg, 1.5rem);
 		}
 
-		.fragment-data {
+		.byte-data {
 			font-size: var(--text-base, 1rem);
 		}
 
@@ -545,23 +545,23 @@
 	}
 
 	@media (max-width: 450px) or (max-height: 667px) {
-		.fragment-container {
+		.byte-container {
 			min-height: 100px;
 			max-width: 98%;
 			margin: 0;
 		}
 
-		.fragment-shell {
+		.byte-shell {
 			min-height: 100px;
 			padding: var(--space-sm, 0.5rem) var(--space-md, 1rem);
 		}
 
-		.fragment-data {
+		.byte-data {
 			font-size: var(--text-sm, 0.875rem);
 			line-height: var(--line-height-base, 1.5);
 		}
 
-		.fragment-id {
+		.byte-id {
 			font-size: 0.625rem;
 		}
 
@@ -590,15 +590,15 @@
 			animation: none !important;
 		}
 
-		.fragment-container.materializing {
-			animation: fragment-materialize-reduced 300ms ease forwards;
+		.byte-container.materializing {
+			animation: byte-materialize-reduced 300ms ease forwards;
 		}
 
-		.fragment-container.dismissing {
-			animation: fragment-dismiss-reduced 200ms ease forwards;
+		.byte-container.dismissing {
+			animation: byte-dismiss-reduced 200ms ease forwards;
 		}
 
-		@keyframes fragment-materialize-reduced {
+		@keyframes byte-materialize-reduced {
 			from {
 				opacity: 0;
 			}
@@ -607,7 +607,7 @@
 			}
 		}
 
-		@keyframes fragment-dismiss-reduced {
+		@keyframes byte-dismiss-reduced {
 			from {
 				opacity: 1;
 			}
@@ -616,8 +616,8 @@
 			}
 		}
 
-		.fragment-data,
-		.fragment-id {
+		.byte-data,
+		.byte-id {
 			animation: none !important;
 			opacity: 1 !important;
 		}

@@ -11,7 +11,7 @@
 
 
 	/**
-	 * Particle class for data fragment effect
+	 * Particle class for data byte effect
 	 */
 	class Particle {
 		constructor(x, y) {
