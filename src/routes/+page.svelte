@@ -99,6 +99,32 @@
 		grid-template-columns: repeat(3, 1fr);
 		gap: var(--space-lg);
 		width: 100%;
+		max-height: 60vh;
+		overflow-y: auto;
+		overflow-x: hidden;
+		padding-right: var(--space-sm);
+
+		/* Custom scrollbar styling */
+		scrollbar-width: thin;
+		scrollbar-color: var(--color-cyber-magenta) rgba(255, 255, 255, 0.1);
+	}
+
+	.game-cards-grid::-webkit-scrollbar {
+		width: 8px;
+	}
+
+	.game-cards-grid::-webkit-scrollbar-track {
+		background: rgba(255, 255, 255, 0.1);
+		border-radius: 4px;
+	}
+
+	.game-cards-grid::-webkit-scrollbar-thumb {
+		background: var(--color-cyber-magenta);
+		border-radius: 4px;
+	}
+
+	.game-cards-grid::-webkit-scrollbar-thumb:hover {
+		background: var(--color-neon-cyan);
 	}
 
 	/* ============================================
