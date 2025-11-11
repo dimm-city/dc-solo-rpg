@@ -123,7 +123,7 @@
 	.aug-button-wrapper::before {
 		content: '';
 		position: absolute;
-		inset: -40px;
+		inset: -32px;
 		background: var(--aug-atmosphere-secondary);
 		z-index: -1;
 		pointer-events: none;
@@ -132,6 +132,7 @@
 
 	.aug-button-wrapper.primary::before {
 		background: var(--aug-atmosphere-primary);
+		inset: -36px;
 	}
 
 	@keyframes atmospheric-pulse {
@@ -213,8 +214,8 @@
 		--aug-br: var(--aug-clip-md);
 		--aug-bl: var(--aug-clip-md);
 
-		padding: 1.75rem 4.5rem;
-		font-size: 1.75rem;
+		padding: 2rem 3.5rem;
+		font-size: 1.5rem;
 		font-weight: 900;
 
 		/* Animated gradient background - Yellow to Magenta pulsing */
@@ -315,19 +316,34 @@
 
 		.aug-button-wrapper::before {
 			/* Reduce atmospheric glow on mobile */
-			inset: -20px;
+			inset: -16px;
 			animation: none; /* Disable animation on mobile */
 		}
 
+		.aug-button-wrapper.primary::before {
+			inset: -20px;
+		}
+
 		.aug-button {
-			padding: 0.875rem 2rem;
+			padding: 0.75rem 1.5rem;
 			font-size: 1rem;
 		}
 
 		.aug-button.primary {
 			/* Still prominent on mobile, but scaled down */
-			padding: 1.25rem 3rem;
+			padding: 1.5rem 2.5rem;
 			font-size: 1.25rem;
+		}
+	}
+
+	/* Add safe spacing for stacked buttons */
+	.aug-button-wrapper + .aug-button-wrapper {
+		margin-top: var(--space-xl);
+	}
+
+	@media (max-width: 768px) {
+		.aug-button-wrapper + .aug-button-wrapper {
+			margin-top: var(--space-lg);
 		}
 	}
 

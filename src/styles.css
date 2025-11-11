@@ -131,6 +131,7 @@
 	--ease-in-out: cubic-bezier(0.645, 0.045, 0.355, 1);
 
 	/* === AUGMENTED UI SIZES === */
+	--aug-clip-xs: 8px;
 	--aug-clip-sm: 10px;
 	--aug-clip-md: 12px;
 	--aug-clip-lg: 14px;

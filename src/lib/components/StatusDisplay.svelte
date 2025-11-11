@@ -111,9 +111,29 @@
 		border: none;
 		color: #fff;
 		cursor: pointer;
-		padding: 0.25rem;
-		margin-left: 1rem;
+
+		/* CRITICAL FIX: Ensure 44px minimum touch target */
+		padding: var(--space-sm);
+		margin-left: var(--space-md);
+		min-width: 44px;
+		min-height: 44px;
+
+		/* Center the icon within larger touch area */
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+
 		transition: color var(--transition-base);
+	}
+
+	.dc-exit-button:hover {
+		color: var(--color-brand-yellow);
+		filter: brightness(1.2);
+	}
+
+	.dc-exit-button:focus-visible {
+		outline: 3px solid var(--color-neon-cyan);
+		outline-offset: 2px;
 	}
 	.status-display-container {
 		width: 100%;
@@ -137,7 +157,7 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		padding: 0.75rem 0rem;
+		padding: var(--space-md);
 		position: relative;
 
 		/* Glassmorphism Effect */
@@ -191,7 +211,7 @@
 	}
 
 	.info-segment .label {
-		font-size: 0.7rem;
+		font-size: var(--text-xs);
 		font-weight: bold;
 		color: #00eeff;
 		text-shadow:
@@ -215,7 +235,7 @@
 	.stats-grid {
 		display: grid;
 		grid-template-columns: repeat(4, 1fr);
-		gap: 0.75rem;
+		gap: var(--space-md);
 		width: 100%;
 	}
 
@@ -226,10 +246,12 @@
 		/* Layout */
 		display: flex;
 		flex-direction: column;
-		gap: 0.35rem;
-		padding: 0.85rem 0.65rem 0.65rem 0.65rem;
+		justify-content: center;
+		gap: var(--space-sm);
+		padding: var(--space-md) var(--space-sm);
 		position: relative;
 		overflow: visible;
+		min-height: 120px;
 
 		/* Glassmorphism Background */
 		background: linear-gradient(135deg, rgba(20, 20, 40, 0.5), rgba(30, 30, 50, 0.4));
@@ -243,9 +265,9 @@
 	.health-stat {
 		/* Augmented UI Configuration */
 		--aug-border-bg: linear-gradient(135deg, #00ff88, #00cc66, #00ffaa);
-		--aug-tr: 10px;
-		--aug-tl: 8px;
-		--aug-br: 12px;
+		--aug-tr: var(--aug-clip-sm);
+		--aug-tl: var(--aug-clip-xs);
+		--aug-br: var(--aug-clip-md);
 
 		/* Enhanced Glow with Animation */
 		box-shadow:
@@ -280,9 +302,9 @@
 	.failure-stat {
 		/* Augmented UI Configuration */
 		--aug-border-bg: linear-gradient(135deg, #ff0055, #cc0044, #ff0066);
-		--aug-tl: 12px;
-		--aug-tr: 10px;
-		--aug-bl: 8px;
+		--aug-tl: var(--aug-clip-md);
+		--aug-tr: var(--aug-clip-sm);
+		--aug-bl: var(--aug-clip-xs);
 
 		/* Enhanced Glow with Animation */
 		box-shadow:
@@ -317,9 +339,9 @@
 	.bonus-stat {
 		/* Augmented UI Configuration */
 		--aug-border-bg: linear-gradient(135deg, #00d9ff, #0088cc, #00eeff);
-		--aug-tr: 12px;
-		--aug-tl: 10px;
-		--aug-br: 10px;
+		--aug-tr: var(--aug-clip-md);
+		--aug-tl: var(--aug-clip-sm);
+		--aug-br: var(--aug-clip-sm);
 
 		/* Enhanced Glow with Animation */
 		box-shadow:
@@ -354,10 +376,10 @@
 	.success-stat {
 		/* Augmented UI Configuration */
 		--aug-border-bg: linear-gradient(135deg, #ffdd00, #ccaa00, #ffee00);
-		--aug-tl: 8px;
-		--aug-tr: 12px;
-		--aug-bl: 10px;
-		--aug-br: 10px;
+		--aug-tl: var(--aug-clip-xs);
+		--aug-tr: var(--aug-clip-md);
+		--aug-bl: var(--aug-clip-sm);
+		--aug-br: var(--aug-clip-sm);
 
 		/* Enhanced Glow with Animation */
 		box-shadow:
@@ -390,12 +412,14 @@
 	}
 
 	.stat-label {
-		font-size: 0.65rem;
+		font-size: var(--text-xs);
 		font-weight: bold;
 		text-transform: uppercase;
 		letter-spacing: 0.15em;
 		font-family: 'Courier New', monospace;
-		opacity: 0.8;
+		opacity: 0.9;
+		text-align: center;
+		padding-top: 2px;
 	}
 
 	.health-stat .stat-label {
@@ -435,8 +459,10 @@
 		line-height: 1;
 		display: flex;
 		align-items: baseline;
+		align-self: center;
 		gap: 0.1rem;
 		justify-content: center;
+		width: 100%;
 	}
 
 	.stat-value .current {
@@ -460,6 +486,8 @@
 		border: 1px solid rgba(255, 255, 255, 0.2);
 		position: relative;
 		overflow: hidden;
+		align-self: center;
+		width: 100%;
 	}
 
 	.stat-fill {
@@ -493,7 +521,7 @@
 	@media (max-width: 900px) {
 		.stats-grid {
 			grid-template-columns: repeat(2, 1fr);
-			gap: 0.5rem;
+			gap: var(--space-sm);
 		}
 
 		.stat-value .current {
@@ -509,7 +537,7 @@
 		}
 
 		.player-round-bar {
-			padding: 0.4rem 0.8rem;
+			padding: var(--space-sm) var(--space-md);
 		}
 	}
 
@@ -517,15 +545,16 @@
 	@media (max-width: 600px) {
 		.stats-grid {
 			grid-template-columns: repeat(2, 1fr);
-			gap: 0.4rem;
+			gap: var(--space-sm);
 		}
 
 		.stat-item {
-			padding: 0.4rem;
+			padding: var(--space-sm);
+			min-height: 100px;
 		}
 
 		.stat-label {
-			font-size: 0.55rem;
+			font-size: 0.7rem;
 		}
 
 		.stat-value .current {
@@ -545,11 +574,11 @@
 		}
 
 		.info-segment {
-			gap: 0.3rem;
+			gap: var(--space-xs);
 		}
 
 		.info-segment .label {
-			font-size: 0.55rem;
+			font-size: 0.7rem;
 		}
 
 		.info-segment .value {
@@ -557,8 +586,8 @@
 		}
 
 		.player-round-bar {
-			padding: 0.3rem 0.5rem;
-			gap: 0.5rem;
+			padding: var(--space-sm);
+			gap: var(--space-sm);
 		}
 	}
 
