@@ -2,11 +2,15 @@
 
 This document proposes a simplified markdown format that focuses on **card types** rather than card identifiers, making it significantly easier for writers to create games while remaining flexible for future engine enhancements.
 
+## Attribution
+
+This format is designed for games using the **Wretched and Alone SRD** (System Reference Document), a solo journaling RPG system that uses a standard 52-card deck (The Oracle) and a block tower as core mechanics. All card type definitions and mechanics align with the official SRD.
+
 ---
 
 ## Overview
 
-Instead of requiring writers to specify card identifiers (like "A-hearts" or "3-diamonds"), they simply write cards organized by **type**. The system automatically assigns cards to the standard 52-card deck based on order, or allows explicit assignment for special cases.
+Instead of requiring writers to specify card identifiers (like "A-hearts" or "3-diamonds"), they simply write cards organized by **type**. The system automatically assigns cards to the standard 52-card deck (The Oracle) based on order, or allows explicit assignment for special cases.
 
 ### Key Improvements Over Previous Variants
 
@@ -20,34 +24,39 @@ Instead of requiring writers to specify card identifiers (like "A-hearts" or "3-
 
 ## Card Types
 
-Based on current and planned game mechanics:
+Based on the **Wretched and Alone SRD** mechanics:
 
-### 1. Primary Success
+### 1. Primary Success (Salvation)
 - **Count**: Exactly 1 card (Ace of Hearts)
-- **Mechanics**: Triggers success checks at end of each round
-- **Purpose**: Main victory condition - players roll to remove tokens
+- **SRD Term**: "Salvation" - the main path to victory
+- **Mechanics**: Has 10 tokens placed on it. At the end of each round, roll a die - on a 6, remove one token. Win when all tokens are removed.
+- **Purpose**: Main victory condition with <1% win rate by design
+- **Note**: The game is designed to be nearly impossible to win; the journey and story matter more than victory
 
 ### 2. Failure Counter
 - **Count**: Exactly 4 cards (all Kings)
-- **Mechanics**: Revealing all 4 = instant game over
-- **Purpose**: Escalating threat throughout the game
+- **SRD Mechanics**: Revealing all 4 Kings = instant game over
+- **Purpose**: Escalating existential threat throughout the game
+- **Note**: Each King revealed increases tension and moves closer to inevitable failure
 
 ### 3. Challenge
-- **Count**: 24 cards (all odd-numbered cards: A, 3, 5, 7, 9, J)
-- **Mechanics**: Triggers failure check - roll dice, tower takes damage
-- **Purpose**: Immediate threats that test player luck
-- **Note**: Excludes Ace of Hearts (Primary Success)
+- **Count**: 24 cards (all odd-numbered cards: 3, 5, 7, 9, J)
+- **SRD Mechanics**: "Usually requires you to pull from the tower" - triggers a block tower pull. If tower falls = game over
+- **Purpose**: Immediate dangerous moments that physically test fate through the tower
+- **Note**: Excludes Ace of Hearts (Salvation) - only odd numbered cards 3-J
 
 ### 4. Event
 - **Count**: 20 cards (all even-numbered cards: 2, 4, 6, 8, 10, Q)
-- **Mechanics**: No immediate mechanical effect
-- **Purpose**: World-building, resource discovery, safe moments
+- **SRD Mechanics**: "Usually safe" - no tower pull required
+- **Purpose**: Moments of respite, discovery, world-building, and narrative development
+- **Note**: These cards provide breathing room between challenges
 
-### 5. Narrative (NEW)
+### 5. Narrative (Bonus/Help Cards)
 - **Count**: 3 cards (remaining Aces: A♦, A♣, A♠)
-- **Mechanics**: Provides bonus point, no check triggered
-- **Purpose**: Reflective moments, character development, story beats
-- **Special**: Writers can use these for meta-narrative or emotional beats
+- **SRD Term**: "Bonus or help in your plight"
+- **Mechanics**: Provides some advantage or relief; no tower pull required
+- **Purpose**: Reflective moments, emotional beats, and small victories that help sustain hope
+- **Special**: Writers can use these for character development, connections, or moments of beauty amid despair
 
 ---
 
@@ -738,37 +747,48 @@ The parser can extract action names and pass them to the engine:
 
 ---
 
-## Card Type Guidelines
+## Card Type Guidelines (Aligned with SRD)
 
-### Primary Success
-- The turning point - hope arrives
-- Should feel earned and significant
-- Consider making this a character or ally
+### Primary Success (Salvation)
+- **SRD Context**: This represents the ultimate hope - the slim chance of escape or victory
+- The turning point where genuine salvation becomes possible
+- Should feel monumental and earned when revealed
+- Consider making this a person (ally/mentor), discovery (crucial knowledge), or breakthrough (final piece needed)
+- Remember: Even with this card revealed, winning requires removing 10 tokens at 1/6 chance per round
 
 ### Failure Counter (4 cards)
-- Escalating threats or major setbacks
-- Each should feel substantial and dangerous
-- Consider: 1 external threat, 1 resource loss, 1 getting lost, 1 equipment failure
+- **SRD Context**: These are the inexorable forces driving toward defeat
+- Escalating threats or catastrophic setbacks
+- Each should feel substantial, dangerous, and world-changing
+- Consider the progression: 1st King = external threat emerges, 2nd King = resources/safety lost, 3rd King = lost/trapped, 4th King = final catastrophic failure
+- Each King revealed should deepen the sense that defeat is inevitable
 
-### Narrative (3 cards)
-- Reflective moments that don't drive action
-- Character development or emotional beats
-- World-building that reveals theme
-- Meta-commentary on the situation
-- Consider: 1 moment of hope, 1 moment of doubt, 1 connection to home
+### Narrative (3 cards - Bonus/Help)
+- **SRD Context**: Small mercies and moments of grace that sustain you
+- Reflective moments that don't drive immediate action
+- Brief respites that remind you why you're fighting
+- Character development or emotional processing
+- World-building that reveals theme and meaning
+- Consider: 1 moment of unexpected beauty/hope, 1 connection to what was lost, 1 realization about self/situation
+- These provide emotional fuel to continue the doomed journey
 
-### Challenge (24 cards)
-- Immediate dangers requiring luck to overcome
-- Conflicts, accidents, hostile encounters
-- Equipment failures, environmental hazards
-- Balance severe (4-6) and moderate (18-20) threats
+### Challenge (24 cards - Tower Pulls)
+- **SRD Context**: "Usually requires you to pull from the tower" - moments where fate is tested
+- Immediate dangers that physically threaten through tower mechanics
+- Conflicts, accidents, hostile encounters, disasters
+- Equipment failures, environmental hazards, confrontations
+- Balance severe immediate threats (6-8) with moderate dangers (16-18)
+- Each tower pull increases instability - the more you draw, the closer to collapse
+- Remember: The tower falling is often how these games end
 
-### Event (20 cards)
-- Neutral or positive developments
-- Resource discoveries, helpful NPCs
-- Safe exploration, information gathering
-- Environmental details, safe moments
-- Balance helpful (10-12) and neutral (8-10) events
+### Event (20 cards - Safe Cards)
+- **SRD Context**: "Usually safe" - no tower pull, but not necessarily positive
+- Can be neutral, positive, or even bittersweet
+- Resource discoveries, helpful encounters, information gained
+- Safe exploration, quiet moments, environmental details
+- World-building that doesn't require immediate response
+- Balance genuinely helpful (8-10), neutral/observational (6-8), and bittersweet (4-6)
+- These cards let you breathe, journal, and develop the story without risking the tower
 
 ---
 
@@ -896,12 +916,13 @@ npm run convert-to-markdown static/games/my-game
 
 **This type-based format is the recommended approach** because:
 
-1. Lowest cognitive load for writers
-2. Clear mechanical purpose for each card type
-3. Auto-assignment removes tedious work
-4. Narrative cards enable richer storytelling
-5. Future-proof for action system
-6. Easy to validate (counts are known)
-7. Natural organization by function
+1. **Lowest cognitive load for writers** - Focus on story, not deck management
+2. **Clear mechanical purpose** - Each card type has explicit SRD-aligned function
+3. **Auto-assignment removes tedious work** - System handles the 52-card deck construction
+4. **Narrative cards enable richer storytelling** - SRD "bonus/help" cards provide space for reflection
+5. **Future-proof for action system** - Easy to extend with custom mechanics
+6. **Easy to validate** - Counts are known (1+4+3+24+20 = 52 cards)
+7. **Natural organization by function** - Writers group by mechanical purpose, not arbitrary card IDs
+8. **SRD-compliant** - Aligns perfectly with official Wretched and Alone mechanics
 
-The format strikes the perfect balance between **simplicity for creators** and **flexibility for the engine**.
+The format strikes the perfect balance between **simplicity for creators** and **flexibility for the engine**, while maintaining full compatibility with the **Wretched and Alone SRD** standard.
