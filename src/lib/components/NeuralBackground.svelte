@@ -1,11 +1,15 @@
 <script>
 	import { onMount, onDestroy } from 'svelte';
 
+	 // 'idle', 'anticipating', 'materializing', 'revealed', 'dismissing'
+	 
+	let { animationStage = "idle"} = $props();
 	let canvas = $state();
 	let ctx = $state();
 	let particles = $state([]);
 	let animationFrameId = $state();
 
+	
 	/**
 	 * Particle class for data fragment effect
 	 */
@@ -135,6 +139,13 @@
 
 	<!-- Scan grid background -->
 	<div class="scan-grid" aria-hidden="true"></div>
+
+		<!-- Scan grid background -->
+	<div
+		class="scan-grid"
+		class:accelerating={animationStage === 'anticipating'}
+		aria-hidden="true"
+	></div>
 </div>
 
 <style>
@@ -183,6 +194,57 @@
 		opacity: 0.3;
 		z-index: 0;
 		/* Grid animation removed to avoid distraction during dice rolls */
+	}
+
+	.scan-grid.accelerating {
+		animation: grid-accelerate 0.8s ease-in-out;
+	}
+
+
+	/* ============================================
+	   SCAN GRID - ANIMATED BACKGROUND
+	   ============================================ */
+
+	.scan-grid {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background-image:
+			linear-gradient(0deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+			linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+		background-size: 40px 40px;
+		animation: grid-pulse 4s ease-in-out infinite;
+		z-index: 0;
+	}
+
+
+	@keyframes grid-pulse {
+		0%,
+		100% {
+			opacity: 0.3;
+			background-size: 40px 40px;
+		}
+		50% {
+			opacity: 0.5;
+			background-size: 42px 42px;
+		}
+	}
+
+	@keyframes grid-accelerate {
+		0% {
+			background-size: 40px 40px;
+			opacity: 0.3;
+		}
+		50% {
+			background-size: 30px 30px;
+			opacity: 0.7;
+		}
+		100% {
+			background-size: 40px 40px;
+			opacity: 0.5;
+		}
 	}
 
 	/* ============================================

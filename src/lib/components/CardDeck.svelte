@@ -11,104 +11,7 @@
 	let animationFrameId = $state();
 	let gridPulsePhase = $state(0);
 
-	/**
-	 * Particle class for data fragment effect
-	 */
-	class Particle {
-		constructor(x, y) {
-			this.x = x;
-			this.y = y;
-			this.vx = (Math.random() - 0.5) * 2;
-			this.vy = (Math.random() - 0.5) * 2;
-			this.life = 1.0;
-			this.size = Math.random() * 2 + 1;
-			this.color = Math.random() > 0.5 ? '#00ffff' : '#d946ef';
-			this.rushToCenter = false;
-		}
 
-		update(centerX, centerY) {
-			if (this.rushToCenter) {
-				// Rush to center during materialization
-				const dx = centerX - this.x;
-				const dy = centerY - this.y;
-				const dist = Math.sqrt(dx * dx + dy * dy);
-
-				if (dist > 5) {
-					this.vx = (dx / dist) * 8;
-					this.vy = (dy / dist) * 8;
-				} else {
-					this.life -= 0.05; // Fade out when reaching center
-				}
-			}
-
-			this.x += this.vx;
-			this.y += this.vy;
-			this.life -= animationStage === 'materializing' ? 0.02 : 0.01;
-
-			if (!this.rushToCenter) {
-				this.vy += 0.05; // Gentle float upward
-
-				// Wrap around edges
-				if (this.x < 0) this.x = canvas.width;
-				if (this.x > canvas.width) this.x = 0;
-				if (this.y > canvas.height) this.y = 0;
-			}
-		}
-
-		draw(ctx) {
-			ctx.save();
-			ctx.globalAlpha = this.life * 0.6;
-			ctx.fillStyle = this.color;
-			ctx.shadowBlur = 10;
-			ctx.shadowColor = this.color;
-			ctx.fillRect(this.x, this.y, this.size, this.size);
-			ctx.restore();
-		}
-	}
-
-	/**
-	 * Animate particle field with dynamic behavior based on stage
-	 */
-	function animateParticles() {
-		if (!ctx || !canvas) return;
-
-		ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-		const centerX = canvas.width / 2;
-		const centerY = canvas.height / 2;
-
-		// Update and filter particles
-		particles = particles.filter((p) => p.life > 0);
-		particles.forEach((p) => {
-			p.update(centerX, centerY);
-			p.draw(ctx);
-		});
-
-		// Spawn particles based on stage
-		const maxParticles = window.innerWidth < 768 ? 20 : 50;
-		let spawnRate = 0.1;
-
-		if (animationStage === 'anticipating') {
-			spawnRate = 0.3;
-		} else if (animationStage === 'materializing') {
-			spawnRate = 0.5;
-			// Mark particles to rush to center
-			particles.forEach((p) => {
-				if (!p.rushToCenter) {
-					p.rushToCenter = true;
-				}
-			});
-		}
-
-		if (particles.length < maxParticles && Math.random() < spawnRate) {
-			particles.push(new Particle(Math.random() * canvas.width, Math.random() * canvas.height));
-		}
-
-		// Update grid pulse phase
-		gridPulsePhase += animationStage === 'anticipating' ? 0.05 : 0.02;
-
-		animationFrameId = requestAnimationFrame(animateParticles);
-	}
 
 	/**
 	 * Handle intercept button click - request card draw and start animation
@@ -219,8 +122,8 @@
 			};
 			window.addEventListener('resize', handleResize);
 
-			// Start animation loop
-			animateParticles();
+			// // Start animation loop
+			// animateParticles();
 
 			return () => {
 				window.removeEventListener('resize', handleResize);
@@ -235,17 +138,7 @@
 	});
 </script>
 
-<div class="neural-interface" class:active={animationStage !== 'idle'}>
-	<!-- Particle field canvas -->
-	<canvas class="particle-field" bind:this={canvas} aria-hidden="true"></canvas>
-
-	<!-- Scan grid background -->
-	<div
-		class="scan-grid"
-		class:accelerating={animationStage === 'anticipating'}
-		aria-hidden="true"
-	></div>
-
+<div class="dc-card-deck" class:active={animationStage !== 'idle'}>
 	<!-- Fragment container -->
 	<div
 		class="fragment-container"
@@ -300,87 +193,7 @@
 </div>
 
 <style>
-	/* ============================================
-	   NEURAL INTERFACE - CONTAINER
-	   ============================================ */
 
-	.neural-interface {
-		position: relative;
-		width: 100%;
-		height: 100%;
-		min-height: 400px;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: var(--space-xl, 2rem);
-		overflow: visible; /* Allow button glows and effects to extend beyond bounds */
-		background: var(--color-bg-darker, #000);
-		box-sizing: border-box;
-	}
-
-	/* ============================================
-	   PARTICLE FIELD - CANVAS LAYER
-	   ============================================ */
-
-	.particle-field {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		pointer-events: none;
-		z-index: 1;
-	}
-
-	/* ============================================
-	   SCAN GRID - ANIMATED BACKGROUND
-	   ============================================ */
-
-	.scan-grid {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		background-image:
-			linear-gradient(0deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px),
-			linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
-		background-size: 40px 40px;
-		animation: grid-pulse 4s ease-in-out infinite;
-		z-index: 0;
-	}
-
-	.scan-grid.accelerating {
-		animation: grid-accelerate 0.8s ease-in-out;
-	}
-
-	@keyframes grid-pulse {
-		0%,
-		100% {
-			opacity: 0.3;
-			background-size: 40px 40px;
-		}
-		50% {
-			opacity: 0.5;
-			background-size: 42px 42px;
-		}
-	}
-
-	@keyframes grid-accelerate {
-		0% {
-			background-size: 40px 40px;
-			opacity: 0.3;
-		}
-		50% {
-			background-size: 30px 30px;
-			opacity: 0.7;
-		}
-		100% {
-			background-size: 40px 40px;
-			opacity: 0.5;
-		}
-	}
 
 	/* ============================================
 	   FRAGMENT CONTAINER
@@ -452,12 +265,7 @@
 		width: 100%;
 		min-height: 300px;
 		padding: var(--space-xl, 2rem);
-		background: linear-gradient(
-			135deg,
-			rgba(10, 10, 10, 0.95) 0%,
-			rgba(26, 26, 26, 0.9) 50%,
-			rgba(10, 10, 10, 0.95) 100%
-		);
+	
 		border: 2px solid var(--color-neon-cyan, #00ffff);
 		border-radius: 8px;
 		box-shadow:
@@ -701,11 +509,7 @@
 	   ============================================ */
 
 	@media (max-width: 768px) {
-		.neural-interface {
-			min-height: 350px;
-			gap: var(--space-md, 1rem);
-			padding: var(--space-sm, 0.5rem);
-		}
+
 
 		.fragment-container {
 			max-width: 95%;
@@ -727,20 +531,10 @@
 			min-height: 44px; /* Ensure touch target size */
 		}
 
-		.scan-grid {
-			background-size: 30px 30px;
-		}
 	}
 
 	@media (max-width: 450px) or (max-height: 667px) {
-		.neural-interface {
-			min-height: 180px;
-			gap: 0;
-			padding: var(--space-xs, 0.25rem);
-			justify-content: space-between;
-			padding-top: var(--space-sm, 0.5rem);
-			padding-bottom: var(--space-xs, 0.25rem);
-		}
+		
 
 		.fragment-container {
 			min-height: 100px;
@@ -753,9 +547,7 @@
 			padding: var(--space-sm, 0.5rem) var(--space-md, 1rem);
 		}
 
-		.scan-grid {
-			background-size: 25px 25px;
-		}
+	
 
 		.fragment-data {
 			font-size: var(--text-sm, 0.875rem);
@@ -780,7 +572,7 @@
 	   ============================================ */
 
 	@media (prefers-reduced-motion: reduce) {
-		.scan-grid,
+	
 		.bio-pulse::before,
 		.bio-pulse::after,
 		.corruption-overlay,

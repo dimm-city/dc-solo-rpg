@@ -48,7 +48,6 @@
 		justify-content: center;
 		align-content: center;
 		text-align: center;
-		background: var(--color-bg-darker, #000);
 		overflow: visible; /* Allow neural interface glows to extend beyond bounds */
 		box-sizing: border-box;
 	}

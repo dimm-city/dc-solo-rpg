@@ -1,9 +1,13 @@
-# Welcome to the Future
+# Future Lost
 
-## Who
+## Who You Are
 
-You are a time traveler, an explorer of the temporal realms, who has accidentally landed in a dystopian future. This future is a grim shadow of the world you once knew, where society has collapsed, and dangerous creatures roam the streets. You are alone, with only your wits and the remnants of your time machine to aid you.
+You are a time traveler stranded in a dystopian future, desperately trying to repair your damaged time machine before the authorities discover you.
 
-## What
+## What Happened
 
-Your mission is to survive in this harsh and unfamiliar world, while trying to repair your time machine. You'll need to scavenge for resources, navigate through the ruins of the city, interact with other survivors, and deal with the remnants of technology that have taken on a life of their own. Each card drawn will present a new challenge or opportunity, shaping your story as you try to make it back to your own time. Will you find the salvation you seek, or will the countdown to failure catch up with you? Only time will tell.
+Your journey through time went catastrophically wrong. The temporal distortion field destabilized, throwing you into an unknown era. The time machine's core systems are failing, and you're running out of time.
+
+## Your Goal
+
+You must gather the necessary components and knowledge to repair your time machine and return home. But in this dark future, every action draws unwanted attention, and failure means being lost in time forever.

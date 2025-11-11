@@ -14,9 +14,8 @@ const config = {
 		timeout: 10000 // 10 second timeout for assertions
 	},
 	use: {
-		// Use system Chromium with flags for headless environment
+		// Use Playwright's bundled Chromium
 		launchOptions: {
-			executablePath: '/usr/bin/chromium',
 			args: [
 				'--headless=new', // Use new headless mode (doesn't require X11)
 				'--no-sandbox',

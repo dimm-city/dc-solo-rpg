@@ -79,8 +79,15 @@ export class ConfigurationLoader {
 
 			//fetch introduction from the introductionUrl and convert it to a string
 			const introductionResponse = await fetch(introductionUrl);
-			const introduction = await introductionResponse.text();
-			configJson.introduction = introduction;
+
+			// If the intro.md file exists, use it; otherwise, leave introduction empty
+			if (introductionResponse.status === 404) {
+				configJson.introduction = '';
+				console.warn(`Introduction file not found: ${introductionUrl}. Using empty introduction.`);
+			} else {
+				const introduction = await introductionResponse.text();
+				configJson.introduction = introduction;
+			}
 		}
 
 		//check to see if config.url + "/game.css" exits via a fetch call.

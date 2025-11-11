@@ -76,7 +76,7 @@ describe('ConfigurationLoader', () => {
 		expect(loader.gameSettings.labels.introBackButtonText).toBe('Back');
 		expect(loader.gameSettings.labels.introStartButtonText).toBe('Start');
 		expect(loader.gameSettings.labels.introExitButtonText).toBe('Exit');
-		expect(loader.gameSettings.labels.toolbarExitButtonText).toBe('Exit');
+		expect(loader.gameSettings.labels.toolbarExitButtonText).toBe('&#10005;');
 		expect(loader.gameSettings.labels.journalEntryHeader).toBe('Record your journal entry');
 		expect(loader.gameSettings.labels.journalEntrySubHeader).toBe('Summary of events');
 		expect(loader.gameSettings.labels.journalEntryNextButtonText).toBe('Continue');
@@ -134,6 +134,72 @@ describe('ConfigurationLoader', () => {
 
 		// Assert that the correct value is returned
 		expect(loader.getConfigValue('gameConfigUrl')).toEqual('http://example.com/config.yaml');
+	});
+
+	// Test intro.md fallback when introduction field is missing
+	test('loadGameSettings should load intro.md when introduction field is missing', async () => {
+		const originalFetch = global.fetch;
+		const mockResponses = [
+			{ text: () => Promise.resolve('configYaml') }, // config.yml
+			{ text: () => Promise.resolve('card,suit,description\nA,spades,card text') }, // deck.csv
+			{ text: () => Promise.resolve('# Intro from MD\n\nThis is intro text from intro.md file.') }, // intro.md
+			{ status: 404 } // game.css
+		];
+		let callCount = 0;
+		global.fetch = () => Promise.resolve(mockResponses[callCount++]);
+
+		const loader = new ConfigurationLoader(new SystemSettings({}));
+
+		// Mock loadYaml to return config WITHOUT introduction field
+		loader.loadYaml = () => ({
+			deck: 'deck.csv',
+			// No introduction field - should trigger fallback to intro.md
+			labels: {}
+		});
+
+		await loader.loadGameSettings('http://example.com/config.yml');
+
+		// Assert that introduction was loaded from intro.md
+		expect(loader.gameSettings.introduction).toBe('# Intro from MD\n\nThis is intro text from intro.md file.');
+		expect(loader.gameSettings.loaded).toBe(true);
+
+		// Restore original function
+		global.fetch = originalFetch;
+	});
+
+	// Test intro.md fallback handles 404 gracefully
+	test('loadGameSettings should handle missing intro.md gracefully', async () => {
+		const originalFetch = global.fetch;
+		const originalConsoleWarn = console.warn;
+		const warnings = [];
+		console.warn = (msg) => warnings.push(msg);
+
+		const mockResponses = [
+			{ text: () => Promise.resolve('configYaml') }, // config.yml
+			{ text: () => Promise.resolve('card,suit,description\nA,spades,card text') }, // deck.csv
+			{ status: 404 }, // intro.md (not found)
+			{ status: 404 } // game.css
+		];
+		let callCount = 0;
+		global.fetch = () => Promise.resolve(mockResponses[callCount++]);
+
+		const loader = new ConfigurationLoader(new SystemSettings({}));
+
+		// Mock loadYaml to return config WITHOUT introduction field
+		loader.loadYaml = () => ({
+			deck: 'deck.csv',
+			labels: {}
+		});
+
+		await loader.loadGameSettings('http://example.com/config.yml');
+
+		// Assert that introduction is empty string when intro.md not found
+		expect(loader.gameSettings.introduction).toBe('');
+		expect(warnings.some(w => w.includes('Introduction file not found'))).toBe(true);
+
+		// Restore original functions
+		global.fetch = originalFetch;
+		console.warn = originalConsoleWarn;
 	});
 
 	// Test getAllSettings
