@@ -89,8 +89,9 @@ graph TB
 **Ranks:** A, 2, 3, 4, 5, 6, 7, 8, 9, 10, J, Q, K
 
 **Card Classification:**
-- **Odd Ranks:** A, 3, 5, 7, 9 (trigger damage checks)
-- **Even Ranks:** 2, 4, 6, 8, 10, J, Q, K (safe from damage)
+- **Odd Ranks:** A, 3, 5, 7, 9 (**usually** trigger damage checks per SRD)
+- **Even Ranks:** 2, 4, 6, 8, 10, J, Q, K (**usually** safe from damage per SRD)
+- **Note**: The "usually" qualifier preserves designer flexibility as per the Wretched and Alone SRD
 
 ### 2.3 Resource System
 
@@ -105,6 +106,13 @@ graph LR
 **Resource Tracking:**
 - **Physical:** Tower that collapses on critical failure
 - **Digital:** HP counter from 54 to 0
+
+**Accessibility Note (Core SRD Principle):**
+The Wretched and Alone SRD emphasizes that **tower/damage mechanics should be optional** to ensure accessibility. Games should be playable without physical components or randomized failure. The digital implementation should make tower mechanics:
+- **Configurable**: Allow players to disable damage checks if desired
+- **Alternative modes**: Provide narrative-only mode for those who prefer pure journaling
+- **Transparent**: Clearly show when damage checks occur and why
+- This preserves the core SRD value of accessibility for all players
 
 ### 2.4 Token System
 
@@ -132,7 +140,7 @@ sequenceDiagram
     P->>R: Initialize resources to 54
     P->>P: Roll 1d6
     P->>R: Reduce resources by roll result
-    Note over R: Initial resource depletion
+    Note over R: Initial resource depletion<br/>(v2 digital enhancement, not in SRD)
 
     P->>S: Set 10 tokens
     P->>S: Prepare journal/recording
@@ -146,6 +154,8 @@ sequenceDiagram
 interface GameState {
   day: number;                    // Starts at 1
   resources: number;              // 54 - initialDamage (1d6)
+                                  // Note: Initial damage roll is a v2 digital
+                                  // enhancement for balance, not in original SRD
   tokens: number;                 // Starts at 10
   deck: Card[];                   // Shuffled 52 cards
   cardsDrawn: number;             // Starts at 0
@@ -155,6 +165,11 @@ interface GameState {
   gameStatus: GameStatus;         // 'active' | 'victory' | 'defeat'
 }
 ```
+
+**v2 Digital Enhancements vs SRD:**
+- **Initial 1d6 damage roll**: Added in v2 for digital balance (not in original SRD)
+- **Resource counter (54 HP)**: Digital equivalent of physical tower (SRD uses tower)
+- **Bonus counter mechanics**: Aligned with SRD "bonus/help" concept for Aces
 
 ### 3.3 Opening Journal Entry
 
@@ -228,7 +243,7 @@ flowchart TD
     WinProgress -->|No| NextDay
 
     RemoveToken --> TokenCheck{All tokens<br/>removed?}
-    TokenCheck -->|Yes| FinalCheck[Final damage roll]
+    TokenCheck -->|Yes| FinalCheck[Final damage roll<br/>SRD: salvation may come<br/>with final tower pull]
     TokenCheck -->|No| NextDay
 
     FinalCheck --> FinalResource{Resources<br/>> 0?}
@@ -260,12 +275,12 @@ flowchart TD
 
 4. **Damage Check** (Option A - Failure Check System)
    - **If card rank is ODD (A, 3, 5, 7, 9):**
-     - Roll 1d6
+     - **Usually** roll 1d6 per SRD (designer flexibility preserved)
      - Calculate: `damage = max(roll - bonusCounter, 0)`
      - Apply: `resources -= damage`
      - If resources ≤ 0 → Game Over
    - **If card rank is EVEN (2, 4, 6, 8, 10, J, Q, K):**
-     - No damage check required
+     - **Usually** no damage check required per SRD
      - Continue to next card
 
 5. **Special Card Checks**
@@ -349,21 +364,24 @@ function requiresDamageCheck(card: Card): boolean {
 
 | Rank | Count | Triggers Damage? | Notes |
 |------|-------|------------------|-------|
-| A | 4 | ✅ Yes | Also special mechanics |
-| 2 | 4 | ❌ No | |
-| 3 | 4 | ✅ Yes | |
-| 4 | 4 | ❌ No | |
-| 5 | 4 | ✅ Yes | |
-| 6 | 4 | ❌ No | |
-| 7 | 4 | ✅ Yes | |
-| 8 | 4 | ❌ No | |
-| 9 | 4 | ✅ Yes | |
-| 10 | 4 | ❌ No | |
-| J | 4 | ❌ No | Potential special mechanics |
-| Q | 4 | ❌ No | Potential special mechanics |
-| K | 4 | ❌ No | Tracker cards (see Special Cards) |
+| A | 4 | ✅ Yes | Odd-ranked (A=1), triggers damage despite being bonus cards |
+| 2 | 4 | ❌ No | Even-ranked |
+| 3 | 4 | ✅ Yes | Odd-ranked |
+| 4 | 4 | ❌ No | Even-ranked |
+| 5 | 4 | ✅ Yes | Odd-ranked |
+| 6 | 4 | ❌ No | Even-ranked |
+| 7 | 4 | ✅ Yes | Odd-ranked |
+| 8 | 4 | ❌ No | Even-ranked |
+| 9 | 4 | ✅ Yes | Odd-ranked |
+| 10 | 4 | ❌ No | Even-ranked |
+| J | 4 | ❌ No | Even-valued face card |
+| Q | 4 | ❌ No | Even-valued face card |
+| K | 4 | ❌ No | Even-valued, Tracker cards (see Special Cards) |
 
 **Total Damage-Triggering Cards:** 20 out of 52 (~38%)
+
+**Important Note on Aces:**
+Aces are odd-ranked (A=1) and **trigger damage checks even though they provide bonuses**. This creates narrative tension - moments of hope and help still carry risk. The SRD describes Aces as "bonus or help in your plight" but does not exempt them from tower pulls, creating a bittersweet duality.
 
 ---
 
@@ -402,6 +420,14 @@ graph TB
    - Bonus counter reduces damage taken
    - Max bonus: +4 (all four Aces)
 
+**Critical: Aces Trigger Damage Checks**
+
+Despite providing bonuses, **Aces are odd-ranked (A=1) and trigger damage checks**. This is intentional per the SRD:
+- Creates tension between hope and risk
+- Moments of help still carry danger
+- Even good fortune tests your stability
+- Thematic: Hope is not safety, it's resilience in the face of continued danger
+
 **Example:**
 
 ```typescript
@@ -415,7 +441,9 @@ function processAce(card: Card, gameState: GameState): void {
     gameState.tokens = 10;
   }
 
-  // Ace is odd, so still triggers damage check
+  // IMPORTANT: Ace is odd-ranked, so it STILL triggers damage check
+  // This happens even though the Ace provides a bonus
+  // The bonus reduces THIS damage and future damage
   if (isOddRank(card.rank)) {
     performDamageCheck(card, gameState);
   }
@@ -530,13 +558,16 @@ flowchart TB
 2. Survive with resources > 0
 3. Roll for progress at end of each day
 4. Successfully remove all 10 tokens
-5. Make final damage roll
+5. **Make final damage roll** (SRD: "may come with a final pull from the tower")
 6. Resources still > 0 → **WIN**
 
 **Win Probability:**
 - Base chance per roll: 1/6 (16.67%)
 - With bonus: 2/6 (33.33%)
 - Typical win rate: 10-20% of games
+
+**Final Damage Roll (Dramatic Tension):**
+Per the SRD, achieving salvation "may come with a final pull from the tower." This creates maximum dramatic tension - you can complete the entire countdown successfully, only to fail at the very last moment due to the final damage roll. This reinforces the SRD's core theme: the journey matters more than victory, and victory is never guaranteed.
 
 ### 7.2 Defeat Conditions
 

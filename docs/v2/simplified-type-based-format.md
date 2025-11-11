@@ -32,6 +32,7 @@ Based on the **Wretched and Alone SRD** mechanics:
 - **Mechanics**: Has 10 tokens placed on it. At the end of each round, roll a die - on a 6, remove one token. Win when all tokens are removed.
 - **Purpose**: Main victory condition with <1% win rate by design
 - **Note**: The game is designed to be nearly impossible to win; the journey and story matter more than victory
+- **Final Tension**: Per SRD, achieving salvation "may come with a final pull from the tower" - even success carries risk of last-moment failure, creating dramatic tension
 
 ### 2. Failure Counter
 - **Count**: Exactly 4 cards (all Kings)
@@ -40,23 +41,24 @@ Based on the **Wretched and Alone SRD** mechanics:
 - **Note**: Each King revealed increases tension and moves closer to inevitable failure
 
 ### 3. Challenge
-- **Count**: 24 cards (all odd-numbered cards: 3, 5, 7, 9, J)
-- **SRD Mechanics**: "Usually requires you to pull from the tower" - triggers a block tower pull. If tower falls = game over
+- **Count**: 16 cards (odd-numbered cards: 3, 5, 7, 9)
+- **SRD Mechanics**: "Usually requires you to pull from the tower" - odd-numbered cards **usually** trigger a block tower pull. If tower falls = game over
 - **Purpose**: Immediate dangerous moments that physically test fate through the tower
-- **Note**: Excludes Ace of Hearts (Salvation) - only odd numbered cards 3-J
+- **Note**: Only odd numbered cards 3-9, excluding Aces (4 ranks × 4 suits = 16 cards). The "usually" qualifier preserves designer flexibility per SRD intent
 
 ### 4. Event
-- **Count**: 20 cards (all even-numbered cards: 2, 4, 6, 8, 10, Q)
-- **SRD Mechanics**: "Usually safe" - no tower pull required
+- **Count**: 28 cards (even-numbered cards: 2, 4, 6, 8, 10, J, Q)
+- **SRD Mechanics**: "Usually safe" - even-numbered cards **usually** don't require tower pulls
 - **Purpose**: Moments of respite, discovery, world-building, and narrative development
-- **Note**: These cards provide breathing room between challenges
+- **Note**: These cards provide breathing room between challenges (7 ranks × 4 suits = 28 cards, excluding Kings which are Failure Counters). The "usually" qualifier preserves designer flexibility per SRD intent
 
 ### 5. Narrative (Bonus/Help Cards)
 - **Count**: 3 cards (remaining Aces: A♦, A♣, A♠)
 - **SRD Term**: "Bonus or help in your plight"
-- **Mechanics**: Provides some advantage or relief; no tower pull required
+- **Mechanics**: Provides some advantage or relief; triggers damage check despite providing bonus
 - **Purpose**: Reflective moments, emotional beats, and small victories that help sustain hope
 - **Special**: Writers can use these for character development, connections, or moments of beauty amid despair
+- **Note**: Aces are odd-ranked (A=1) and trigger damage checks even though they provide bonuses - this creates tension between hope and risk
 
 ---
 
@@ -496,8 +498,8 @@ Cards are assigned to the deck in this order:
 1. **Primary Success** → A♥ (Ace of Hearts)
 2. **Failure Counters** (4 cards) → K♥, K♦, K♣, K♠ (all Kings)
 3. **Narrative** (3 cards) → A♦, A♣, A♠ (remaining Aces)
-4. **Challenge** (24 cards) → 3, 5, 7, 9, J (odd cards, all suits)
-5. **Event** (20 cards) → 2, 4, 6, 8, 10, Q (even cards, all suits)
+4. **Challenge** (16 cards) → 3, 5, 7, 9 (odd-numbered cards, all suits, excluding Aces)
+5. **Event** (28 cards) → 2, 4, 6, 8, 10, J, Q (even-numbered cards, all suits, excluding Kings)
 
 Within each type, cards are assigned to suits in order: ♥ ♦ ♣ ♠, then ranks ascending.
 
@@ -589,8 +591,8 @@ function assignCardsToDeck(cardsByType) {
     });
   });
 
-  // Challenge: Odd cards (3, 5, 7, 9, J) × 4 suits
-  const challengeRanks = ['3', '5', '7', '9', 'J'];
+  // Challenge: Odd cards (3, 5, 7, 9) × 4 suits = 16 cards
+  const challengeRanks = ['3', '5', '7', '9'];
   const allSuits = ['hearts', 'diamonds', 'clubs', 'spades'];
   let challengeIndex = 0;
 
@@ -623,8 +625,8 @@ function assignCardsToDeck(cardsByType) {
     }
   }
 
-  // Event: Even cards (2, 4, 6, 8, 10, Q) × 4 suits (skip Q♠ = 23 cards)
-  const eventRanks = ['2', '4', '6', '8', '10', 'Q'];
+  // Event: Even cards (2, 4, 6, 8, 10, J, Q) × 4 suits = 28 cards
+  const eventRanks = ['2', '4', '6', '8', '10', 'J', 'Q'];
   let eventIndex = 0;
 
   for (const rank of eventRanks) {
@@ -662,8 +664,8 @@ function validateCardCounts(cardsByType) {
     'primary-success': 1,
     'failure-counter': 4,
     'narrative': 3,
-    'challenge': 24,
-    'event': 20
+    'challenge': 16,
+    'event': 28
   };
 
   const errors = [];
@@ -747,6 +749,62 @@ The parser can extract action names and pass them to the engine:
 
 ---
 
+## Progressive Rule Teaching (SRD Principle)
+
+### Overview
+
+A core principle of Wretched and Alone games is that **rules should be revealed progressively through play**, not presented as a complete rulebook upfront. The Oracle (card draws) teaches the game as you play.
+
+### Design Philosophy from SRD
+
+- Players learn mechanics through experiencing them in context
+- Early cards should explain basic concepts naturally
+- Complex mechanics are introduced only when they become relevant
+- The act of drawing cards and encountering prompts is the tutorial
+- Journaling responses reinforces understanding organically
+
+### Embedding Tutorial Elements in Prompts
+
+When writing card content, content creators should:
+
+1. **Early Challenge Cards** - Include gentle reminders about tower mechanics
+   - Example: "Draw a block from the tower carefully. If it falls, your journey ends here."
+
+2. **First Narrative Card** - Can explain the bonus/hope mechanic narratively
+   - Example: "This moment of peace steadies your hand - when danger comes, you'll be more prepared."
+
+3. **Failure Counter Cards** - Remind players of the escalating threat
+   - Example: "This is the [first/second/third/fourth] major setback. Four such disasters will end everything."
+
+4. **Primary Success Card** - Explains the countdown mechanic when revealed
+   - Example: "Hope is now real, but fragile. Each day, there's a small chance you'll get closer to salvation."
+
+### What NOT to Do
+
+- Don't create a separate "rules" section in the introduction
+- Don't front-load all mechanics before play begins
+- Don't assume players have read a manual
+- Don't break immersion with meta-game language
+
+### What TO Do
+
+- Embed mechanical explanations in narrative context
+- Let the first few cards be gentler, more explanatory
+- Trust the card structure to teach through repetition
+- Use the introduction to set tone and stakes, not teach rules
+
+### Example: Tutorial Through Play
+
+**Card 1 (Challenge)** - "You encounter your first real danger. The old building groans as you search for supplies. *Take a risk by drawing from the tower - if it falls, your story ends here.*"
+
+**Card 2 (Event)** - "A moment of calm. You find a safe corner to rest and plan your next move. *No danger here - just breathe and record your thoughts.*"
+
+**Card 3 (Narrative/Ace)** - "Against all odds, you discover something that gives you hope. *This small victory will help you survive what comes next - you'll be a little more resilient when danger strikes again.*"
+
+This progressive teaching respects player intelligence while ensuring they understand mechanics through natural discovery.
+
+---
+
 ## Card Type Guidelines (Aligned with SRD)
 
 ### Primary Success (Salvation)
@@ -772,22 +830,22 @@ The parser can extract action names and pass them to the engine:
 - Consider: 1 moment of unexpected beauty/hope, 1 connection to what was lost, 1 realization about self/situation
 - These provide emotional fuel to continue the doomed journey
 
-### Challenge (24 cards - Tower Pulls)
+### Challenge (16 cards - Tower Pulls)
 - **SRD Context**: "Usually requires you to pull from the tower" - moments where fate is tested
 - Immediate dangers that physically threaten through tower mechanics
 - Conflicts, accidents, hostile encounters, disasters
 - Equipment failures, environmental hazards, confrontations
-- Balance severe immediate threats (6-8) with moderate dangers (16-18)
+- Balance severe immediate threats (4-6) with moderate dangers (10-12)
 - Each tower pull increases instability - the more you draw, the closer to collapse
 - Remember: The tower falling is often how these games end
 
-### Event (20 cards - Safe Cards)
+### Event (28 cards - Safe Cards)
 - **SRD Context**: "Usually safe" - no tower pull, but not necessarily positive
 - Can be neutral, positive, or even bittersweet
 - Resource discoveries, helpful encounters, information gained
 - Safe exploration, quiet moments, environmental details
 - World-building that doesn't require immediate response
-- Balance genuinely helpful (8-10), neutral/observational (6-8), and bittersweet (4-6)
+- Balance genuinely helpful (10-12), neutral/observational (10-12), and bittersweet (6-8)
 - These cards let you breathe, journal, and develop the story without risking the tower
 
 ---
@@ -878,11 +936,11 @@ What are they trying to achieve? What's at stake?
 
 **[Short description - this triggers a failure check]**
 
-[Optional story - 24 of these total]
+[Optional story - 16 of these total]
 
 ---
 
-[... 23 more Challenge cards ...]
+[... 15 more Challenge cards ...]
 
 ---
 
@@ -890,11 +948,11 @@ What are they trying to achieve? What's at stake?
 
 **[Short description - safe or positive]**
 
-[Optional story - 20 of these total]
+[Optional story - 28 of these total]
 
 ---
 
-[... 19 more Event cards ...]
+[... 27 more Event cards ...]
 ```
 
 ---
@@ -921,7 +979,7 @@ npm run convert-to-markdown static/games/my-game
 3. **Auto-assignment removes tedious work** - System handles the 52-card deck construction
 4. **Narrative cards enable richer storytelling** - SRD "bonus/help" cards provide space for reflection
 5. **Future-proof for action system** - Easy to extend with custom mechanics
-6. **Easy to validate** - Counts are known (1+4+3+24+20 = 52 cards)
+6. **Easy to validate** - Counts are known (1+4+3+16+28 = 52 cards)
 7. **Natural organization by function** - Writers group by mechanical purpose, not arbitrary card IDs
 8. **SRD-compliant** - Aligns perfectly with official Wretched and Alone mechanics
 
