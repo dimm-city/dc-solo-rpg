@@ -13,7 +13,7 @@
 	<!-- Player and Round Info Bar with Augmented UI -->
 	<div
 		class="player-round-bar"
-		data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
+		data-augmented-ui="tl-clip-x tr-2-clip-x br-clip bl-2-clip-x border"
 	>
 		<div class="info-segment">
 			<span class="label">PLAYER:</span>
