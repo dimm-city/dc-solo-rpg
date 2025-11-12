@@ -9,15 +9,15 @@
 
 ## Executive Summary
 
-After playing through multiple rounds of DC Solo RPG and conducting a comprehensive UX analysis, **5 critical issues** were identified that prevent the game from achieving award-winning user experience quality. While the core game mechanics are solid and the Wretched and Alone system is well-implemented, the user interface creates unnecessary friction that detracts from the narrative-driven, emotional gameplay experience.
+After playing through multiple rounds of DC Solo RPG and conducting a comprehensive UX analysis, **7 issues** were identified that impact the user experience quality. While the core game mechanics are solid and the Wretched and Alone system is well-implemented, the user interface creates unnecessary friction that detracts from the narrative-driven, emotional gameplay experience. Two additional issues were identified but declined for implementation.
 
 ### Top 3 Most Impactful Improvements
 
 1. **Mini Status HUD** - Always-visible stats during card reveals (eliminates context loss)
 2. **Progressive Introduction** - Break 1500+ word rule dump into digestible steps
-3. **Visual Card Type Indicators** - Color-coded card types for instant recognition
+3. **Visual Card Type Indicators** - Icon-based card types for instant recognition
 
-**Estimated Impact:** Implementing just the P0 recommendations (8 hours work) will reduce clicks by 40-60% and dramatically improve player comprehension and engagement.
+**Estimated Impact:** Implementing just the P0 recommendations (8 hours work) will improve player comprehension and engagement significantly. Touch-optimized solutions for all device types.
 
 ---
 
@@ -93,23 +93,45 @@ When viewing a card during gameplay, the status bar (Tower, Kings Revealed, Toke
 
 Create a persistent overlay that shows critical stats during card reveals.
 
-**Example Implementation:**
+**Example Implementation (Svelte 5 runes):**
 ```svelte
 <!-- src/lib/components/MiniStatusHUD.svelte -->
+<script>
+	import { gameState } from '$lib/stores/gameStore.svelte.js';
 
+	let { isCardScreen = false } = $props();
+
+	// Reactive access to game state using $derived
+	const tower = $derived(gameState.tower);
+	const kingsRevealed = $derived(gameState.kingsRevealed);
+	const tokens = $derived(gameState.tokens);
+</script>
 
 {#if isCardScreen}
 	<div class="mini-status-hud">
 		<div class="stat">
-			<span class="icon">Health</span>
+			<!-- Heart SVG icon -->
+			<svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+			</svg>
 			<span class="value">{tower}</span>
 		</div>
 		<div class="stat">
-			<span class="icon">Failure</span>
+			<!-- Skull SVG icon -->
+			<svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<circle cx="9" cy="12" r="1"/>
+				<circle cx="15" cy="12" r="1"/>
+				<path d="M8 20v2h8v-2"/>
+				<path d="m12.5 17-.5-1-.5 1h1z"/>
+				<path d="M16 20a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20"/>
+			</svg>
 			<span class="value">{kingsRevealed}/4</span>
 		</div>
 		<div class="stat">
-			<span class="icon">Succuess</span>
+			<!-- Star SVG icon -->
+			<svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+			</svg>
 			<span class="value">{tokens}</span>
 		</div>
 	</div>
@@ -139,13 +161,24 @@ Create a persistent overlay that shows critical stats during card reveals.
 		gap: 0.25rem;
 	}
 
-	.icon {
-		font-size: 1rem;
+	.stat .icon {
+		color: rgba(255, 255, 255, 0.7);
 	}
 
 	.value {
 		font-weight: 600;
 		font-variant-numeric: tabular-nums;
+	}
+
+	/* Touch-friendly for mobile */
+	@media (max-width: 768px) {
+		.mini-status-hud {
+			top: 0.5rem;
+			right: 0.5rem;
+			padding: 0.5rem;
+			gap: 0.75rem;
+			font-size: 0.75rem;
+		}
 	}
 </style>
 ```
@@ -275,12 +308,9 @@ Break introduction into digestible steps with "Learn as You Play" option.
 ```svelte
 <!-- src/lib/components/ProgressiveIntro.svelte -->
 <script>
-	import { createEventDispatcher } from 'svelte';
-
-	const dispatch = createEventDispatcher();
+	let { onStart = () => {} } = $props();
 
 	let currentStep = $state(0);
-	let hasPlayedBefore = $state(false);
 
 	const steps = [
 		{
@@ -301,16 +331,11 @@ Break introduction into digestible steps with "Learn as You Play" option.
 	];
 
 	function handleChoice(learnAsYouGo) {
-		if (learnAsYouGo) {
-			// Set flag in gameState to show contextual help
-			dispatch('start', { tutorialMode: true });
-		} else {
-			dispatch('start', { tutorialMode: false });
-		}
+		onStart({ tutorialMode: learnAsYouGo });
 	}
 
 	function skip() {
-		dispatch('start', { tutorialMode: false });
+		onStart({ tutorialMode: false });
 	}
 </script>
 
@@ -321,19 +346,34 @@ Break introduction into digestible steps with "Learn as You Play" option.
 			<p>How would you like to learn?</p>
 
 			<div class="choices">
-				<button class="choice-btn primary" on:click={() => handleChoice(true)}>
-					<span class="icon">🎮</span>
+				<button class="choice-btn primary" onclick={() => handleChoice(true)}>
+					<!-- Gamepad2 SVG icon -->
+					<svg class="icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<line x1="6" x2="10" y1="12" y2="12"/>
+						<line x1="8" x2="8" y1="10" y2="14"/>
+						<line x1="15" x2="15.01" y1="13" y2="13"/>
+						<line x1="18" x2="18.01" y1="11" y2="11"/>
+						<rect width="20" height="12" x="2" y="6" rx="2"/>
+					</svg>
 					<span class="title">Learn as I Play</span>
 					<span class="desc">Recommended for new players</span>
 				</button>
 
-				<button class="choice-btn" on:click={() => handleChoice(false)}>
-					<span class="icon">📖</span>
+				<button class="choice-btn" onclick={() => handleChoice(false)}>
+					<!-- BookOpen SVG icon -->
+					<svg class="icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+						<path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+					</svg>
 					<span class="title">Read Full Introduction</span>
 					<span class="desc">All rules upfront</span>
 				</button>
 
-				<button class="skip-btn" on:click={skip}>
+				<button class="skip-btn" onclick={skip}>
+					<!-- Play SVG icon -->
+					<svg class="inline-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<polygon points="5 3 19 12 5 21 5 3"/>
+					</svg>
 					I've played before - Skip intro
 				</button>
 			</div>
@@ -370,9 +410,12 @@ Break introduction into digestible steps with "Learn as You Play" option.
 		border-radius: 0.75rem;
 		cursor: pointer;
 		transition: all 0.2s;
+		/* Touch-friendly minimum size */
+		min-height: 120px;
 	}
 
-	.choice-btn:hover {
+	.choice-btn:hover,
+	.choice-btn:focus {
 		background: rgba(255, 255, 255, 0.1);
 		border-color: rgba(255, 255, 255, 0.3);
 		transform: translateY(-2px);
@@ -382,8 +425,8 @@ Break introduction into digestible steps with "Learn as You Play" option.
 		border-color: #4ade80;
 	}
 
-	.icon {
-		font-size: 2rem;
+	.choice-btn .icon {
+		color: rgba(255, 255, 255, 0.7);
 	}
 
 	.title {
@@ -398,21 +441,43 @@ Break introduction into digestible steps with "Learn as You Play" option.
 	}
 
 	.skip-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
 		margin-top: 1rem;
-		padding: 0.5rem;
+		padding: 0.75rem;
 		background: none;
 		border: none;
 		color: rgba(255, 255, 255, 0.5);
 		font-size: 0.875rem;
 		cursor: pointer;
 		text-decoration: underline;
+		/* Touch-friendly minimum size */
+		min-height: 44px;
+	}
+
+	.skip-btn .inline-icon {
+		color: inherit;
+	}
+
+	/* Touch-friendly mobile adjustments */
+	@media (max-width: 768px) {
+		.progressive-intro {
+			padding: 1rem;
+		}
+
+		.choice-btn {
+			padding: 1.25rem;
+			min-height: 100px;
+		}
 	}
 </style>
 ```
 
 **Tutorial Mode Implementation:**
 
-Add contextual help tooltips that appear during first playthrough:
+Add contextual help using the existing ConfirmModal component with a new HelpContent component:
 
 ```javascript
 // src/lib/stores/tutorialHelpers.js
@@ -420,24 +485,90 @@ export const tutorialSteps = {
 	firstCardDraw: {
 		trigger: 'cardDrawn',
 		condition: (state) => state.cardsDrawn === 1,
+		title: "Your First Card",
 		message: "This is your first card! Read the story and follow the prompt.",
-		position: 'bottom'
+		confirmText: "Got it"
 	},
 	firstDamageRoll: {
 		trigger: 'cardDrawn',
 		condition: (state) => state.currentCard?.type === 'challenge' && state.cardsDrawn <= 5,
-		message: "Challenge cards trigger damage rolls. Roll the dice to see how many blocks fall.",
-		position: 'top'
+		title: "Challenge Card",
+		message: "Challenge cards trigger damage rolls. Roll the dice to see how many blocks fall from your Tower.",
+		confirmText: "Understood"
 	},
 	firstKing: {
 		trigger: 'cardDrawn',
 		condition: (state) => state.currentCard?.card === 'K' && state.kingsRevealed === 1,
-		message: "⚠️ Kings are bad news. Draw all 4 and it's game over!",
-		position: 'top',
+		title: "Warning: King Revealed",
+		message: "Kings are bad news. Draw all 4 and it's game over! Keep track of how many you've revealed.",
+		confirmText: "I'll be careful",
 		style: 'warning'
 	}
 	// Add more contextual tips...
 };
+```
+
+```svelte
+<!-- src/lib/components/ContextualHelp.svelte -->
+<script>
+	import ConfirmModal from './ConfirmModal.svelte';
+	import { gameState } from '$lib/stores/gameStore.svelte.js';
+	import { tutorialSteps } from '$lib/stores/tutorialHelpers.js';
+
+	let { triggerKey = null } = $props();
+
+	// Get the help content for the current trigger
+	const currentHelp = $derived(triggerKey ? tutorialSteps[triggerKey] : null);
+	const isOpen = $derived(currentHelp !== null);
+
+	function handleDismiss() {
+		if (triggerKey) {
+			// Mark this tutorial step as completed
+			gameState.tutorialStepsCompleted = [
+				...(gameState.tutorialStepsCompleted || []),
+				triggerKey
+			];
+		}
+	}
+</script>
+
+{#if currentHelp}
+	<ConfirmModal
+		{isOpen}
+		title={currentHelp.title}
+		message={currentHelp.message}
+		confirmText={currentHelp.confirmText || "Got it"}
+		cancelText=""
+		onConfirm={handleDismiss}
+		onCancel={handleDismiss}
+	/>
+{/if}
+```
+
+**Usage in GameScreen.svelte:**
+
+```svelte
+<script>
+	import ContextualHelp from './ContextualHelp.svelte';
+	import { gameState } from '$lib/stores/gameStore.svelte.js';
+	import { tutorialSteps } from '$lib/stores/tutorialHelpers.js';
+
+	// Determine which tutorial step to show based on game state
+	const activeTutorialStep = $derived.by(() => {
+		if (!gameState.tutorialMode) return null;
+
+		// Check each tutorial step to see if it should trigger
+		for (const [key, step] of Object.entries(tutorialSteps)) {
+			if (!gameState.tutorialStepsCompleted?.includes(key) && step.condition(gameState)) {
+				return key;
+			}
+		}
+		return null;
+	});
+</script>
+
+<!-- Add to GameScreen template -->
+<ContextualHelp triggerKey={activeTutorialStep} />
 ```
 
 **Expected Outcome:**
@@ -448,62 +579,74 @@ export const tutorialSteps = {
 
 ---
 
-## Problem 4: Excessive Click Requirements (P1 - HIGH PRIORITY)
+## Problem 4: Excessive Tap/Click Requirements (P1 - HIGH PRIORITY)
 
 ### Issue Description
-Players must click 3-4 times per card over 52 cards = 156-208 clicks per game. This creates fatigue and breaks narrative immersion.
+Players must tap/click 3-4 times per card over 52 cards = 156-208 taps per game. This creates fatigue and breaks narrative immersion, especially on touch devices.
 
 **User Impact:** HIGH
-**Implementation Complexity:** VERY LOW (1 hour)
+**Implementation Complexity:** MEDIUM (3 hours)
 
-### Recommended Solution: Keyboard Shortcuts
+### Recommended Solution: Touch-Optimized Gestures
 
-Add keyboard navigation for common actions.
+Implement swipe gestures for touch devices with optional keyboard shortcuts for desktop users.
 
-**Implementation:**
+**Implementation (Svelte 5 runes):**
 
 ```svelte
-<!-- Add to GameScreen.svelte -->
+<!-- src/lib/components/SwipeableCard.svelte -->
 <script>
 	import { onMount } from 'svelte';
 
+	let { onSwipeUp, onSwipeRight, children } = $props();
+
+	let touchStartX = $state(0);
+	let touchStartY = $state(0);
+	let touchEndX = $state(0);
+	let touchEndY = $state(0);
+
+	const minSwipeDistance = 50;
+
+	function handleTouchStart(e) {
+		touchStartX = e.touches[0].clientX;
+		touchStartY = e.touches[0].clientY;
+	}
+
+	function handleTouchMove(e) {
+		touchEndX = e.touches[0].clientX;
+		touchEndY = e.touches[0].clientY;
+	}
+
+	function handleTouchEnd() {
+		const deltaX = touchEndX - touchStartX;
+		const deltaY = touchEndY - touchStartY;
+		const absDeltaX = Math.abs(deltaX);
+		const absDeltaY = Math.abs(deltaY);
+
+		// Vertical swipe up (draw card)
+		if (absDeltaY > minSwipeDistance && absDeltaY > absDeltaX && deltaY < 0) {
+			onSwipeUp?.();
+		}
+		// Horizontal swipe right (continue)
+		else if (absDeltaX > minSwipeDistance && absDeltaX > absDeltaY && deltaX > 0) {
+			onSwipeRight?.();
+		}
+	}
+
+	// Keyboard shortcuts for desktop users
 	function handleKeyPress(event) {
-		// Ignore if typing in input field
 		if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
 			return;
 		}
 
 		const key = event.key.toLowerCase();
-		const state = gameState.state;
 
-		// Space or Enter = Continue/Draw Card
 		if (key === ' ' || key === 'enter') {
 			event.preventDefault();
-
-			if (state === 'gameReady') {
-				drawCard();
-			} else if (state === 'cardDrawn') {
-				// If challenge card, roll for damage
-				if (gameState.currentCard?.type === 'challenge') {
-					rollForDamage();
-				} else {
-					continueToNextCard();
-				}
-			} else if (state === 'damageRollComplete') {
-				continueToNextCard();
-			}
-		}
-
-		// 'R' = Roll (when available)
-		if (key === 'r' && state === 'cardDrawn' && gameState.currentCard?.type === 'challenge') {
+			onSwipeRight?.();
+		} else if (key === 'arrowup') {
 			event.preventDefault();
-			rollForDamage();
-		}
-
-		// 'D' = Draw card (when available)
-		if (key === 'd' && state === 'gameReady') {
-			event.preventDefault();
-			drawCard();
+			onSwipeUp?.();
 		}
 	}
 
@@ -513,54 +656,98 @@ Add keyboard navigation for common actions.
 	});
 </script>
 
-<!-- Add keyboard hint UI -->
-<div class="keyboard-hints">
-	{#if gameState.state === 'gameReady'}
-		<span class="hint">Press <kbd>Space</kbd> or <kbd>D</kbd> to draw</span>
-	{:else if gameState.state === 'cardDrawn'}
-		{#if gameState.currentCard?.type === 'challenge'}
-			<span class="hint">Press <kbd>R</kbd> to roll for damage</span>
-		{:else}
-			<span class="hint">Press <kbd>Space</kbd> to continue</span>
-		{/if}
-	{/if}
+<div
+	class="swipeable-card"
+	ontouchstart={handleTouchStart}
+	ontouchmove={handleTouchMove}
+	ontouchend={handleTouchEnd}
+	role="button"
+	tabindex="0"
+>
+	{@render children?.()}
+
+	<!-- Visual hints for gestures -->
+	<div class="gesture-hints">
+		<div class="hint hint-up">
+			<!-- ChevronUp SVG icon -->
+			<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<path d="m18 15-6-6-6 6"/>
+			</svg>
+			<span>Swipe up to draw</span>
+		</div>
+		<div class="hint hint-right">
+			<!-- ChevronRight SVG icon -->
+			<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<path d="m9 18 6-6-6-6"/>
+			</svg>
+			<span>Swipe right to continue</span>
+		</div>
+	</div>
 </div>
 
 <style>
-	.keyboard-hints {
+	.swipeable-card {
+		position: relative;
+		width: 100%;
+		height: 100%;
+		user-select: none;
+		-webkit-user-select: none;
+		touch-action: pan-y pan-x;
+	}
+
+	.gesture-hints {
 		position: fixed;
 		bottom: 1rem;
 		left: 50%;
 		transform: translateX(-50%);
+		display: flex;
+		gap: 1rem;
+		opacity: 0.3;
+		transition: opacity 0.3s;
+		pointer-events: none;
+	}
+
+	.swipeable-card:active .gesture-hints {
+		opacity: 0.7;
+	}
+
+	.hint {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
 		background: rgba(0, 0, 0, 0.7);
 		padding: 0.5rem 1rem;
 		border-radius: 0.5rem;
-		font-size: 0.875rem;
+		font-size: 0.75rem;
 		color: rgba(255, 255, 255, 0.8);
-		opacity: 0.6;
-		transition: opacity 0.2s;
 	}
 
-	.keyboard-hints:hover {
-		opacity: 1;
+	.hint svg {
+		flex-shrink: 0;
 	}
 
-	kbd {
-		background: rgba(255, 255, 255, 0.2);
-		padding: 0.125rem 0.375rem;
-		border-radius: 0.25rem;
-		font-family: monospace;
-		font-size: 0.875em;
-		border: 1px solid rgba(255, 255, 255, 0.3);
+	/* Hide gesture hints on desktop */
+	@media (hover: hover) and (pointer: fine) {
+		.gesture-hints {
+			display: none;
+		}
+	}
+
+	/* Touch-friendly sizing */
+	@media (max-width: 768px) {
+		.hint {
+			font-size: 0.875rem;
+			padding: 0.75rem 1.25rem;
+		}
 	}
 </style>
 ```
 
 **Expected Outcome:**
-- Reduced clicks by 50%+ for keyboard users
-- Faster gameplay flow
-- Better accessibility
-- Less hand fatigue
+- Swipe gestures reduce taps by 40%+ on touch devices
+- Keyboard shortcuts available for desktop users
+- More natural, fluid gameplay experience
+- Less repetitive strain on mobile devices
 
 ---
 
@@ -584,11 +771,7 @@ Add visual indicators for card types using color, icons, and borders.
 
 ---
 
-## Problem 6: DECLINED
-
----
-
-## Problem 7: No Deck Visualization (P2 - NICE TO HAVE)
+## Problem 6: No Deck Visualization (P2 - NICE TO HAVE)
 
 ### Issue Description
 Players have no visual representation of the deck or card distribution, missing an opportunity for aesthetic engagement and strategic awareness.
@@ -607,9 +790,9 @@ Show a stylized deck stack that depletes as cards are drawn.
 <script>
 	import { gameState } from '$lib/stores/gameStore.svelte.js';
 
-	$: cardsRemaining = gameState.deck?.length || 0;
-	$: cardsDrawn = 52 - cardsRemaining;
-	$: deckHeight = (cardsRemaining / 52) * 200; // Max height 200px
+	const cardsRemaining = $derived(gameState.deck?.length || 0);
+	const cardsDrawn = $derived(52 - cardsRemaining);
+	const deckHeight = $derived((cardsRemaining / 52) * 200); // Max height 200px
 </script>
 
 <div class="deck-container">
@@ -663,11 +846,7 @@ Show a stylized deck stack that depletes as cards are drawn.
 
 ---
 
-## Problem 8: DECLINED
-
----
-
-## Problem 9: Lack of Contextual Help (P2 - NICE TO HAVE)
+## Problem 7: Lack of Contextual Help (P2 - NICE TO HAVE)
 
 ### Issue Description
 When players encounter new mechanics or forget rules, there's no quick reference available without leaving the game.
@@ -675,105 +854,144 @@ When players encounter new mechanics or forget rules, there's no quick reference
 **User Impact:** MEDIUM
 **Implementation Complexity:** MEDIUM (3 hours)
 
-### Recommended Solution: Inline Help Tooltips
+### Recommended Solution: Help Icons with Modal Dialog
 
-Add question mark icons with tooltips for key game concepts.
+Add help icons that open the existing ConfirmModal component with contextual help information.
 
-**Implementation:**
+**Implementation (Svelte 5 runes):**
 
 ```svelte
-<!-- src/lib/components/HelpTooltip.svelte -->
+<!-- src/lib/components/HelpIcon.svelte -->
 <script>
-	export let content;
-	export let position = 'top';
-
-	let showTooltip = $state(false);
+	let { onclick, ariaLabel = "Show help" } = $props();
 </script>
 
 <button
 	class="help-icon"
-	on:mouseenter={() => showTooltip = true}
-	on:mouseleave={() => showTooltip = false}
-	on:focus={() => showTooltip = true}
-	on:blur={() => showTooltip = false}
+	{onclick}
+	aria-label={ariaLabel}
+	type="button"
 >
-	<span class="icon">?</span>
-
-	{#if showTooltip}
-		<div class="tooltip {position}">
-			{content}
-		</div>
-	{/if}
+	<!-- HelpCircle SVG icon -->
+	<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+		<circle cx="12" cy="12" r="10"/>
+		<path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+		<path d="M12 17h.01"/>
+	</svg>
 </button>
 
 <style>
 	.help-icon {
-		position: relative;
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		width: 1.25rem;
-		height: 1.25rem;
-		background: rgba(255, 255, 255, 0.1);
+		width: 1.5rem;
+		height: 1.5rem;
+		background: rgba(255, 255, 255, 0.05);
 		border: 1px solid rgba(255, 255, 255, 0.2);
 		border-radius: 50%;
-		cursor: help;
-		font-size: 0.75rem;
+		cursor: pointer;
 		color: rgba(255, 255, 255, 0.6);
 		transition: all 0.2s;
+		/* Touch-friendly size */
+		min-width: 44px;
+		min-height: 44px;
+		padding: 0;
 	}
 
-	.help-icon:hover {
-		background: rgba(255, 255, 255, 0.2);
+	.help-icon:hover,
+	.help-icon:focus {
+		background: rgba(255, 255, 255, 0.1);
 		color: white;
+		border-color: rgba(255, 255, 255, 0.4);
 	}
 
-	.tooltip {
-		position: absolute;
-		background: rgba(0, 0, 0, 0.95);
-		color: white;
-		padding: 0.75rem;
-		border-radius: 0.5rem;
-		font-size: 0.875rem;
-		line-height: 1.4;
-		max-width: 250px;
-		z-index: 1000;
-		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-		border: 1px solid rgba(255, 255, 255, 0.2);
-		white-space: normal;
-	}
-
-	.tooltip.top {
-		bottom: calc(100% + 0.5rem);
-		left: 50%;
-		transform: translateX(-50%);
-	}
-
-	.tooltip.bottom {
-		top: calc(100% + 0.5rem);
-		left: 50%;
-		transform: translateX(-50%);
+	.help-icon svg {
+		pointer-events: none;
 	}
 </style>
+```
+
+```svelte
+<!-- src/lib/components/HelpContent.svelte -->
+<script>
+	import ConfirmModal from './ConfirmModal.svelte';
+
+	let { isOpen = false, helpKey, onClose } = $props();
+
+	// Define help content for different game concepts
+	const helpContent = {
+		tower: {
+			title: "Tower (Health)",
+			message: "Your Tower represents your health. Each time you take damage, blocks fall from the Tower. If it reaches 0, you lose the game. Start with 54 blocks."
+		},
+		kings: {
+			title: "Kings (Failure Counter)",
+			message: "Kings are your doom. Each time you reveal a King, you're one step closer to failure. Reveal all 4 Kings and the game ends immediately in defeat."
+		},
+		tokens: {
+			title: "Tokens (Win Condition)",
+			message: "Tokens are your path to victory. You need 10 tokens to attempt the final challenge. Gain tokens through Narrative (Bonus) cards. With 10 tokens, drawing the Ace of Hearts lets you roll for victory."
+		},
+		cardTypes: {
+			title: "Card Types",
+			message: "Challenge cards (odd ranks) trigger damage rolls. Event cards (even ranks) are safe moments. Narrative cards give bonuses. Kings are threats. The Ace of Hearts is your win condition."
+		}
+	};
+
+	const content = $derived(helpContent[helpKey] || { title: "Help", message: "No help available for this topic." });
+</script>
+
+<ConfirmModal
+	{isOpen}
+	title={content.title}
+	message={content.message}
+	confirmText="Got it"
+	cancelText=""
+	onConfirm={onClose}
+	onCancel={onClose}
+/>
 ```
 
 **Usage example:**
 
 ```svelte
-<div class="stat-label">
-	Tower
-	<HelpTooltip content="Your remaining health. When it reaches 0, you lose." />
+<!-- In StatusDisplay.svelte -->
+<script>
+	import HelpIcon from './HelpIcon.svelte';
+	import HelpContent from './HelpContent.svelte';
+
+	let showHelp = $state(null);
+</script>
+
+<div class="stat-row">
+	<span class="stat-label">
+		Tower
+		<HelpIcon onclick={() => showHelp = 'tower'} ariaLabel="Help: What is the Tower?" />
+	</span>
+	<span class="stat-value">{tower}</span>
 </div>
 
-<div class="stat-label">
-	Kings Revealed
-	<HelpTooltip content="Draw all 4 Kings and it's game over. Current: {gameState.kingsRevealed}/4" />
+<div class="stat-row">
+	<span class="stat-label">
+		Kings Revealed
+		<HelpIcon onclick={() => showHelp = 'kings'} ariaLabel="Help: What are Kings?" />
+	</span>
+	<span class="stat-value">{kingsRevealed}/4</span>
 </div>
+
+<HelpContent
+	isOpen={showHelp !== null}
+	helpKey={showHelp}
+	onClose={() => showHelp = null}
+/>
 ```
 
 **Expected Outcome:**
-- Reduced confusion
-- Better onboarding
+- Touch-friendly help access on all devices
+- Consistent UI using existing modal component
+- Reduced confusion for new players
+- Better onboarding without overwhelming intro text
 - Less need for external documentation
 
 ---
@@ -785,29 +1003,25 @@ Add question mark icons with tooltips for key game concepts.
 | **P0** | Mini Status HUD | HIGH | LOW | 2h | ✅ Yes |
 | **P0** | Cards Remaining Counter | HIGH | VERY LOW | 30m | ✅ Yes |
 | **P0** | Progressive Introduction | HIGH | MEDIUM | 4h | No |
-| **P0** | Keyboard Shortcuts | HIGH | VERY LOW | 1h | ✅ Yes |
+| **P1** | Touch Gestures & Keyboard Shortcuts | HIGH | MEDIUM | 3h | No |
 | **P1** | Visual Card Type Indicators | MEDIUM-HIGH | LOW | 2h | ✅ Yes |
-| **P1** | Auto-scroll to Actions | MEDIUM | VERY LOW | 1h | ✅ Yes |
 | **P2** | Deck Progress Visualization | MEDIUM | MEDIUM | 3h | No |
-| **P2** | Smart Defaults / Auto-continue | MEDIUM | LOW | 2h | No |
-| **P2** | Inline Help Tooltips | MEDIUM | MEDIUM | 3h | No |
+| **P2** | Contextual Help Icons | MEDIUM | MEDIUM | 3h | No |
 
 ### Recommended Implementation Order
 
-**Phase 1: Quick Wins (5.5 hours)**
+**Phase 1: Quick Wins (4.5 hours)**
 1. Cards Remaining Counter (30m)
-2. Keyboard Shortcuts (1h)
-3. Mini Status HUD (2h)
-4. Auto-scroll to Actions (1h)
-5. Visual Card Type Indicators (2h)
+2. Mini Status HUD (2h)
+3. Visual Card Type Indicators (2h)
 
-**Phase 2: High-Impact (4 hours)**
-6. Progressive Introduction (4h)
+**Phase 2: High-Impact (7 hours)**
+4. Progressive Introduction (4h)
+5. Touch Gestures & Keyboard Shortcuts (3h)
 
-**Phase 3: Polish (8 hours)**
-7. Deck Progress Visualization (3h)
-8. Smart Defaults (2h)
-9. Inline Help Tooltips (3h)
+**Phase 3: Polish (6 hours)**
+6. Deck Progress Visualization (3h)
+7. Contextual Help Icons (3h)
 
 ---
 
@@ -865,11 +1079,19 @@ While not tested in this analysis, consider:
 
 ## Conclusion
 
-The DC Solo RPG has a solid mechanical foundation, but the user experience requires refinement to achieve award-winning quality. The **9 recommendations** provided are all implementation-ready with code examples, and the **5 Quick Wins** can be completed in just **5.5 hours** of development time while providing **40-60% reduction in clicks** and dramatically improved player comprehension.
+The DC Solo RPG has a solid mechanical foundation, but the user experience requires refinement to achieve award-winning quality. The **7 recommendations** provided are all implementation-ready with Svelte 5 code examples optimized for touch devices, and the **3 Quick Wins** can be completed in just **4.5 hours** of development time while dramatically improving player comprehension and reducing friction.
 
 **The single most impactful change:** Implement the Mini Status HUD. This alone will solve the most critical player pain point and improve game feel significantly.
 
 **For maximum impact with minimum effort:** Complete Phase 1 (Quick Wins) first. These changes will transform the experience and can be shipped quickly.
+
+**Key improvements from this update:**
+- All code examples updated to Svelte 5 runes syntax ($state, $derived, $props)
+- Replaced emoji icons with inline SVG icons (no additional npm packages required)
+- Touch-optimized interactions for mobile devices (swipe gestures, proper touch targets)
+- Contextual help system using existing ConfirmModal component
+- Keyboard shortcuts remain available as a bonus for desktop users
+- No $effect usage - all reactivity handled with $derived
 
 The game has excellent potential - these UX improvements will unlock it and create a truly polished, award-worthy experience that honors the Wretched and Alone system's emphasis on narrative and emotional journey.
 
@@ -883,20 +1105,48 @@ After implementing improvements, test:
 - [ ] Status HUD shows correct values
 - [ ] Progress counter updates correctly
 - [ ] Progress bar animates smoothly
-- [ ] Keyboard shortcuts work in all states
-- [ ] Keyboard hints appear at correct times
-- [ ] Card type colors are distinct and accessible
-- [ ] Card type icons are meaningful
-- [ ] Auto-scroll works without jarring jumps
+- [ ] Swipe gestures work on touch devices
+- [ ] Keyboard shortcuts work on desktop
+- [ ] Card type visual indicators are distinct and accessible
 - [ ] Progressive intro offers correct choices
-- [ ] Tutorial mode triggers contextual help
+- [ ] Tutorial mode triggers contextual help modals
 - [ ] Skip intro works for returning players
-- [ ] All improvements work on mobile
+- [ ] Help icons open modal with correct content
+- [ ] All touch targets meet 44x44px minimum
+- [ ] All improvements work on mobile devices
 - [ ] All improvements work with screen readers
 - [ ] Performance remains smooth with new features
 - [ ] No regressions in existing functionality
 
 ---
 
+## Deferred Items (Not Implemented)
+
+The following problems were identified during the UX analysis but have been **declined** for implementation at this time:
+
+### Problem 6: [Title Not Specified]
+**Status:** DECLINED
+**Reason:** To be documented
+
+### Problem 8: [Title Not Specified]
+**Status:** DECLINED
+**Reason:** To be documented
+
+### Additional Considerations for Future Implementation
+
+1. **Auto-scroll to Actions** - Originally planned as P1, this was deemed unnecessary given the touch gesture implementation. May revisit if touch gestures prove insufficient.
+
+2. **Smart Auto-Advance** - Automatic progression for simple event cards was considered but not included in the final recommendations. Would need careful design to avoid interrupting player's reading pace.
+
+3. **Animation Polish** - Card flip animations, transition effects, and visual feedback were not addressed in this analysis. These are aesthetic improvements that don't impact core UX metrics.
+
+4. **Undo/Redo System** - Not included in analysis. Would require significant state management changes and may conflict with the Wretched and Alone "accept your fate" philosophy.
+
+5. **Multi-language Support** - Not addressed. Should be considered if the game gains international audience.
+
+---
+
 **Report compiled from live gameplay analysis**
+**Updated:** 2025-11-12
+**All code examples use Svelte 5 runes and are touch-optimized**
 **Ready for immediate implementation**
