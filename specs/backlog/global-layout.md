@@ -1,0 +1,4 @@
+- should have a header and footer controllable by the page
+- header should allow "collapse up"
+- footer has version and help/about by default
+- about is either modal or saves/restores game state

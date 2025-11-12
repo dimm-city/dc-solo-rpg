@@ -93,31 +93,23 @@ When viewing a card during gameplay, the status bar (Tower, Kings Revealed, Toke
 
 Create a persistent overlay that shows critical stats during card reveals.
 
-**Implementation:**
+**Example Implementation:**
 ```svelte
 <!-- src/lib/components/MiniStatusHUD.svelte -->
-<script>
-	import { gameState } from '$lib/stores/gameStore.svelte.js';
 
-	// Only show during card display
-	$: isCardScreen = gameState.state === 'cardDrawn';
-	$: tower = gameState.tower;
-	$: kingsRevealed = gameState.kingsRevealed || 0;
-	$: tokens = gameState.tokens;
-</script>
 
 {#if isCardScreen}
 	<div class="mini-status-hud">
 		<div class="stat">
-			<span class="icon">🏗️</span>
+			<span class="icon">Health</span>
 			<span class="value">{tower}</span>
 		</div>
 		<div class="stat">
-			<span class="icon">👑</span>
+			<span class="icon">Failure</span>
 			<span class="value">{kingsRevealed}/4</span>
 		</div>
 		<div class="stat">
-			<span class="icon">🪙</span>
+			<span class="icon">Succuess</span>
 			<span class="value">{tokens}</span>
 		</div>
 	</div>
@@ -186,15 +178,9 @@ Player draws card #47 - No feedback (should feel TENSE!)
 
 Add a simple counter showing cards processed and remaining.
 
-**Implementation:**
+**Example Implementation:**
 ```svelte
 <!-- Add to GameScreen.svelte status area -->
-<script>
-	$: cardsRemaining = gameState.deck?.length || 0;
-	$: cardsDrawn = 52 - cardsRemaining;
-	$: progressPercent = (cardsDrawn / 52) * 100;
-</script>
-
 <div class="progress-tracker">
 	<div class="progress-bar">
 		<div class="progress-fill" style="width: {progressPercent}%"></div>
@@ -284,7 +270,7 @@ EXPERIENCED PLAYER:
 
 Break introduction into digestible steps with "Learn as You Play" option.
 
-**Implementation:**
+**Example Implementation:**
 
 ```svelte
 <!-- src/lib/components/ProgressiveIntro.svelte -->
@@ -590,166 +576,15 @@ All cards look identical until you read them. Players can't quickly assess card 
 
 Add visual indicators for card types using color, icons, and borders.
 
-**Implementation:**
-
-```svelte
-<!-- src/lib/components/CardDisplay.svelte -->
-<script>
-	const cardTypeStyles = {
-		'primary-success': {
-			color: '#fbbf24', // Gold
-			icon: '🌟',
-			label: 'Salvation',
-			glow: 'rgba(251, 191, 36, 0.3)'
-		},
-		'failure-counter': {
-			color: '#ef4444', // Red
-			icon: '👑',
-			label: 'King',
-			glow: 'rgba(239, 68, 68, 0.3)'
-		},
-		'narrative': {
-			color: '#8b5cf6', // Purple
-			icon: '✨',
-			label: 'Narrative',
-			glow: 'rgba(139, 92, 246, 0.3)'
-		},
-		'challenge': {
-			color: '#f97316', // Orange
-			icon: '⚔️',
-			label: 'Challenge',
-			glow: 'rgba(249, 115, 22, 0.3)'
-		},
-		'event': {
-			color: '#06b6d4', // Cyan
-			icon: '📖',
-			label: 'Event',
-			glow: 'rgba(6, 182, 212, 0.3)'
-		}
-	};
-
-	$: cardType = card.type;
-	$: style = cardTypeStyles[cardType] || cardTypeStyles['event'];
-</script>
-
-<div
-	class="card-display"
-	style="
-		--card-color: {style.color};
-		--card-glow: {style.glow};
-	"
->
-	<div class="card-header">
-		<div class="card-type-badge">
-			<span class="badge-icon">{style.icon}</span>
-			<span class="badge-label">{style.label}</span>
-		</div>
-		<div class="card-identity">
-			{card.card} of {card.suit}
-		</div>
-	</div>
-
-	<div class="card-content">
-		<!-- Card story content -->
-	</div>
-</div>
-
-<style>
-	.card-display {
-		border: 2px solid var(--card-color);
-		box-shadow:
-			0 0 20px var(--card-glow),
-			0 4px 6px rgba(0, 0, 0, 0.3);
-		border-radius: 1rem;
-		padding: 1.5rem;
-		background: rgba(0, 0, 0, 0.8);
-		backdrop-filter: blur(10px);
-	}
-
-	.card-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 1rem;
-		padding-bottom: 1rem;
-		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-	}
-
-	.card-type-badge {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		padding: 0.375rem 0.75rem;
-		background: var(--card-color);
-		color: black;
-		border-radius: 1rem;
-		font-weight: 600;
-		font-size: 0.875rem;
-	}
-
-	.badge-icon {
-		font-size: 1rem;
-	}
-
-	.card-identity {
-		color: var(--card-color);
-		font-weight: 600;
-		font-size: 0.875rem;
-		text-transform: capitalize;
-	}
-</style>
-```
-
 **Expected Outcome:**
-- Instant card type recognition
+- Instant card type recognition using SVG icons based on type
 - Better strategic planning
 - Enhanced visual appeal
 - Reinforces game mechanics through color psychology
 
 ---
 
-## Problem 6: Auto-scroll Issues (P1 - MEDIUM PRIORITY)
-
-### Issue Description
-When cards are revealed or actions complete, the page doesn't automatically scroll to action buttons, forcing users to manually scroll.
-
-**User Impact:** MEDIUM
-**Implementation Complexity:** VERY LOW (1 hour)
-
-### Recommended Solution: Smart Auto-scroll
-
-Automatically scroll to action buttons when they appear.
-
-**Implementation:**
-
-```svelte
-<script>
-	import { tick } from 'svelte';
-
-	async function scrollToActions() {
-		await tick(); // Wait for DOM update
-		const actionButtons = document.querySelector('.action-buttons');
-		if (actionButtons) {
-			actionButtons.scrollIntoView({
-				behavior: 'smooth',
-				block: 'end'
-			});
-		}
-	}
-
-	// Call after state transitions
-	$effect(() => {
-		if (gameState.state === 'cardDrawn' || gameState.state === 'damageRollComplete') {
-			scrollToActions();
-		}
-	});
-</script>
-```
-
-**Expected Outcome:**
-- Reduced manual scrolling
-- Better flow
-- Users always see available actions
+## Problem 6: DECLINED
 
 ---
 
@@ -828,60 +663,7 @@ Show a stylized deck stack that depletes as cards are drawn.
 
 ---
 
-## Problem 8: No Smart Defaults (P2 - NICE TO HAVE)
-
-### Issue Description
-Players must manually click through safe cards (Events) that have no gameplay consequence, creating unnecessary friction.
-
-**User Impact:** MEDIUM
-**Implementation Complexity:** LOW (2 hours)
-
-### Recommended Solution: Auto-continue for Safe Cards
-
-Add option to auto-continue through Event cards (user preference).
-
-**Implementation:**
-
-```javascript
-// Add to gameOptions
-export const gameOptions = {
-	autoContinueEvents: false, // Default off, user can enable
-	autoContinueDelay: 3000    // 3 second delay to read card
-};
-
-// In gameActions.svelte.js
-export const handleCardDrawn = () => {
-	const card = gameState.currentCard;
-
-	// If auto-continue enabled and card is Event type
-	if (gameState.options.autoContinueEvents && card.type === 'event') {
-		setTimeout(() => {
-			if (gameState.state === 'cardDrawn') { // Still on this card
-				continueToNextCard();
-			}
-		}, gameState.options.autoContinueDelay);
-	}
-};
-```
-
-**UI for toggling:**
-
-```svelte
-<!-- Settings panel -->
-<label class="setting-toggle">
-	<input
-		type="checkbox"
-		bind:checked={gameState.options.autoContinueEvents}
-	/>
-	<span>Auto-continue Event cards after reading</span>
-	<span class="help-text">Reduces clicks on safe cards</span>
-</label>
-```
-
-**Expected Outcome:**
-- Reduced clicks on ~54% of cards (28 Event cards / 52 total)
-- Faster gameplay for experienced players
-- Optional - doesn't affect new players
+## Problem 8: DECLINED
 
 ---
 
