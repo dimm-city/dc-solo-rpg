@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseV2GameFile, ValidationError } from '../../src/lib/parsers/v2MarkdownParser.js';
+import { parseV2GameFile, ValidationError } from './v2MarkdownParser.js';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 

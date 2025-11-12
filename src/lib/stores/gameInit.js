@@ -64,7 +64,7 @@ export function initializeGame(gameConfig, player, options = {}) {
 		config: finalConfig,
 		stylesheet: finalConfig.stylesheet || gameConfig.stylesheet || '',
 		systemConfig: { gameConfigUrl: `/games/${gameConfig.slug || 'default'}/` },
-		state: 'intro',
+		state: 'options',
 		round: 1,
 		player,
 		playerName: player.name,
