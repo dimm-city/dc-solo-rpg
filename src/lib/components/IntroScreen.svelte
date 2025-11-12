@@ -194,11 +194,11 @@
 		{#if currentView === 'choice'}
 			<ContinueButton text="Exit" onclick={handleBack} testid="intro-exit-button" />
 		{:else}
-			<ContinueButton text="Back" onclick={handleBack} testid="intro-back-button" />
+			<ContinueButton text="Exit" onclick={exitGame} testid="intro-exit-button" />
 			<ContinueButton
-				text="Continue to Story"
-				onclick={handleInstructionsContinue}
-				testid="intro-continue-button"
+				text="Skip Once"
+				onclick={handleSkipOnce}
+				testid="intro-skip-once-button"
 			/>
 		{/if}
 	</div>
