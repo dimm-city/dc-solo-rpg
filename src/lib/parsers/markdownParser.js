@@ -1,5 +1,5 @@
 /**
- * V2 Type-Based Markdown Parser
+ * Type-Based Markdown Parser
  * Parses .game.md files into game configuration objects
  */
 
@@ -482,11 +482,11 @@ function assignCardsByType(deck, cards, ranks, suits, type, usedAssignments, add
 
 /**
  * Main parser function
- * Parse V2 Type-Based Markdown format into game configuration
+ * Parse Type-Based Markdown format into game configuration
  * @param {string} markdown - Raw markdown content
  * @returns {object} Game configuration object
  */
-export function parseV2GameFile(markdown) {
+export function parseGameFile(markdown) {
 	if (!markdown || typeof markdown !== 'string') {
 		throw new ValidationError('Invalid input: markdown must be a non-empty string');
 	}

@@ -1,6 +1,6 @@
 /**
- * Tests for Final Damage Roll mechanic (V2 SRD compliance)
- * Tests the new "salvation with risk" final test
+ * Tests for Final Damage Roll mechanic (SRD compliance)
+ * Tests the "salvation with risk" final test
  */
 import { describe, it, expect, beforeEach } from 'vitest';
 import { performFinalDamageRoll } from './gameActions.svelte.js';

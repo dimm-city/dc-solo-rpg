@@ -54,7 +54,7 @@ npm run prepublishOnly   # Pre-publish checks (runs automatically)
 - **`src/lib/`** - Library code (the actual published package)
   - **`components/`** - Svelte components (Game, GameSelector, CardDeck, etc.)
   - **`stores/`** - Game state management using Svelte 5 runes
-  - **`parsers/`** - Markdown game file parser (v2MarkdownParser.js)
+  - **`parsers/`** - Markdown game file parser (markdownParser.js)
   - **`configuration/`** - Game configuration objects and constants
   - **`utils/`** - Utility functions (logger, timing)
 
@@ -63,7 +63,7 @@ npm run prepublishOnly   # Pre-publish checks (runs automatically)
   - Not included in published package
 
 - **`docs/`** - Documentation for game creators
-  - `game-config.md` - V2 type-based markdown format specification
+  - `game-config.md` - Type-based markdown format specification
   - `simplified-type-based-format.md` - Complete format guide with examples
   - `wretched-alone-mechanics-guide.md` - Game mechanics documentation
 
@@ -113,7 +113,7 @@ export const drawCard = () => {
 - `src/lib/stores/gameInit.js` - Game initialization logic
 - `src/lib/stores/transitions.js` - State machine transition graph
 
-### Game Creation Format (V2)
+### Game Creation Format
 
 Games are created using a **single markdown file** (`.game.md`) with type-based card organization:
 
@@ -150,7 +150,7 @@ lose-message: Defeat message
 - Writers focus on **card types**, not card identifiers
 - System auto-assigns cards to the 52-card deck
 - Optional special modifiers: `skip-damage`, `return-king`
-- Parser: `src/lib/parsers/v2MarkdownParser.js`
+- Parser: `src/lib/parsers/markdownParser.js`
 
 **Full specification:** See `docs/game-config.md` and `docs/simplified-type-based-format.md`
 
@@ -279,8 +279,8 @@ Per SRD, rules should be revealed **through play**, not presented upfront. Card 
 - `src/lib/stores/finalDamageRoll.test.js` - Final damage roll tests
 
 ### Parsing
-- `src/lib/parsers/v2MarkdownParser.js` - V2 markdown format parser
-- `src/lib/parsers/v2MarkdownParser.test.js` - Parser tests
+- `src/lib/parsers/markdownParser.js` - Markdown format parser
+- `src/lib/parsers/markdownParser.test.js` - Parser tests
 
 ### Configuration
 - `src/lib/configuration/GameSettings.js` - Game settings object
