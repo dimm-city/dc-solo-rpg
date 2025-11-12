@@ -22,7 +22,16 @@
 	import DeckVisualization from './DeckVisualization.svelte';
 	import { onMount } from 'svelte';
 	import { rollDice } from '../stores/diceStore.svelte.js';
-	import { rollForTasks, confirmTaskRoll } from '../stores/gameActions.svelte.js';
+	import {
+		rollForTasks,
+		confirmTaskRoll,
+		getFailureCheckRoll,
+		applyFailureCheckResult,
+		confirmFailureCheck,
+		successCheck,
+		startRound,
+		performFinalDamageRoll
+	} from '../stores/gameActions.svelte.js';
 
 	let {
 		systemSettings = {},
@@ -70,6 +79,96 @@
 			: (gameState.config?.labels?.rollForTasksHeader ?? 'Roll for Tasks')
 	);
 	const rollForTasksButtonDisabled = $derived(rollTasksRolling || rollTasksConfirming);
+
+	// FailureCheck button state
+	let failureCheckRolling = $state(false);
+	let failureCheckResult = $state();
+
+	$effect(() => {
+		if (currentScreen === 'failureCheck') {
+			failureCheckResult = undefined;
+			failureCheckRolling = false;
+		}
+	});
+
+	async function handleFailureCheck() {
+		if (failureCheckRolling) return;
+		if (currentScreen == 'failureCheck' && !failureCheckResult) {
+			failureCheckRolling = true;
+			const rollResult = getFailureCheckRoll();
+			failureCheckResult = rollResult;
+			await rollDice(rollResult);
+			failureCheckRolling = false;
+			applyFailureCheckResult(rollResult);
+			await confirmFailureCheck();
+			onfailurecheckcompleted(gameState.state);
+		} else if (failureCheckResult) {
+			await confirmFailureCheck();
+		}
+	}
+
+	const failureCheckButtonText = $derived(failureCheckResult ? 'Click to continue' : 'Roll failure check');
+
+	// SuccessCheck button state
+	let successCheckRolling = $state(false);
+	let successCheckResult = $state();
+
+	$effect(() => {
+		if (currentScreen === 'successCheck') {
+			successCheckResult = undefined;
+			successCheckRolling = false;
+		}
+	});
+
+	async function handleSuccessCheck() {
+		if (successCheckRolling) return;
+		if (currentScreen == 'successCheck' && !successCheckResult) {
+			successCheckRolling = true;
+			const rollResult = await successCheck();
+			successCheckResult = rollResult;
+			await rollDice(rollResult);
+			successCheckRolling = false;
+		} else if (successCheckResult) {
+			await startRound();
+		}
+	}
+
+	const successCheckButtonText = $derived(successCheckResult ? 'Click to continue' : 'Roll success check');
+
+	// FinalDamageRoll button state
+	let finalDamageRolling = $state(false);
+	let finalDamageResult = $state();
+
+	$effect(() => {
+		if (currentScreen === 'finalDamageRoll') {
+			finalDamageResult = undefined;
+			finalDamageRolling = false;
+		}
+	});
+
+	async function handleFinalDamageRoll() {
+		if (finalDamageRolling || finalDamageResult !== undefined) return;
+		if (currentScreen !== 'finalDamageRoll') return;
+
+		finalDamageRolling = true;
+		const rollResult = Math.floor(Math.random() * 6) + 1;
+		finalDamageResult = rollResult;
+
+		try {
+			await rollDice(rollResult);
+			performFinalDamageRoll(rollResult);
+		} finally {
+			finalDamageRolling = false;
+		}
+	}
+
+	const finalDamageButtonText = $derived(
+		finalDamageResult
+			? gameState.win
+				? 'You survived! Click to continue'
+				: 'Victory slipped away... Click to continue'
+			: 'Roll for your final test'
+	);
 
 	// Show mini HUD during card-related screens
 	const showMiniHUD = $derived(
@@ -299,6 +398,27 @@
 							onclick={handleRollForTasks}
 							disabled={rollForTasksButtonDisabled}
 							testid="roll-tasks-button"
+						/>
+					{:else if currentScreen === 'failureCheck'}
+						<ContinueButton
+							text={failureCheckButtonText}
+							onclick={handleFailureCheck}
+							disabled={failureCheckRolling}
+							testid="failure-check-button"
+						/>
+					{:else if currentScreen === 'successCheck'}
+						<ContinueButton
+							text={successCheckButtonText}
+							onclick={handleSuccessCheck}
+							disabled={successCheckRolling}
+							testid="success-check-button"
+						/>
+					{:else if currentScreen === 'finalDamageRoll'}
+						<ContinueButton
+							text={finalDamageButtonText}
+							onclick={handleFinalDamageRoll}
+							disabled={finalDamageRolling}
+							testid="final-damage-roll-button"
 						/>
 					{/if}
 				</div>

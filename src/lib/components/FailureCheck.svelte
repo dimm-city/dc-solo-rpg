@@ -1,58 +1,11 @@
 <script>
-	import { rollDice } from '../stores/diceStore.svelte.js';
 	import { gameState } from '../stores/gameStore.svelte.js';
-	import {
-		getFailureCheckRoll,
-		applyFailureCheckResult,
-		confirmFailureCheck
-	} from '../stores/gameActions.svelte.js';
-	import ContinueButton from './ContinueButton.svelte';
 
-	let { onfailurecheckcompleted = () => {} } = $props();
-
-	let rolling = $state(false);
-	let result = $state();
-
-	// Reset state when entering failureCheck screen
-	$effect(() => {
-		if (gameState.state === 'failureCheck') {
-			result = undefined;
-			rolling = false;
-		}
-	});
-
-	async function doCheck() {
-		if (rolling) return;
-		if (gameState.state == 'failureCheck' && !result) {
-			rolling = true;
-
-			// Get roll result WITHOUT updating health yet
-			const rollResult = getFailureCheckRoll();
-			result = rollResult;
-
-			// Animate the dice
-			await rollDice(rollResult);
-
-			rolling = false;
-
-			// NOW apply the health consequences AFTER animation
-			applyFailureCheckResult(rollResult);
-
-			// The state has now changed - trigger the screen transition
-			// to the new screen (drawCard, log, or gameOver)
-			await confirmFailureCheck();
-			onfailurecheckcompleted(gameState.state);
-		} else if (result) {
-			// This branch is for when user clicks "continue" after seeing result
-			await confirmFailureCheck();
-		}
-	}
-
-	const header = $derived(result ? 'Click to continue' : 'Roll failure check');
+	// Button logic moved to GameScreen toolbar
 </script>
 
 <div class="dc-failure-check-container">
-	{#if gameState.currentCard && !result}
+	{#if gameState.currentCard}
 		<div class="card-info">
 			<p class="card-description">{gameState.currentCard.description}</p>
 			<small class="card-id">
@@ -60,14 +13,6 @@
 			</small>
 		</div>
 	{/if}
-	<div class="dc-dice-roller-header dc-header">
-		<ContinueButton
-			text={header}
-			onclick={doCheck}
-			disabled={rolling}
-			testid="failure-check-button"
-		/>
-	</div>
 </div>
 
 <style>

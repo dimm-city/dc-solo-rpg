@@ -279,7 +279,7 @@
 		--aug-tl: 8px; /* Gentle entry */
 		--aug-tr: 14px; /* Strong tab → connects to Failure */
 		--aug-br: 14px; /* Strong tab → connects to Bonus (mobile) */
-		--aug-rect-r: 5px;
+		--aug-rect-tr5: 15px;
 
 		/* Enhanced Glow - animation removed */
 		box-shadow:

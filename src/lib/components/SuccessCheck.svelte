@@ -1,51 +1,9 @@
 <script>
-	import { rollDice } from '../stores/diceStore.svelte.js';
-	import { gameState } from '../stores/gameStore.svelte.js';
-	import { startRound, successCheck } from '../stores/gameActions.svelte.js';
-	import ContinueButton from './ContinueButton.svelte';
-
-	let rolling = $state(false);
-	let result = $state();
-
-	// Reset state when entering successCheck screen
-	$effect(() => {
-		if (gameState.state === 'successCheck') {
-			result = undefined;
-			rolling = false;
-		}
-	});
-
-	async function doCheck() {
-		if (rolling) return;
-		if (gameState.state == 'successCheck' && !result) {
-			rolling = true;
-
-			// Get roll result
-			const rollResult = await successCheck();
-			result = rollResult;
-
-			// Animate the dice
-			await rollDice(rollResult);
-
-			rolling = false;
-		} else if (result) {
-			// This branch is for when user clicks "continue" after seeing result
-			await startRound();
-		}
-	}
-
-	const header = $derived(result ? 'Click to continue' : 'Roll success check');
+	// Button logic moved to GameScreen toolbar
 </script>
 
 <div class="dc-success-check-container">
-	<div class="dc-dice-roller-header dc-header">
-		<ContinueButton
-			text={header}
-			onclick={doCheck}
-			disabled={rolling}
-			testid="success-check-button"
-		/>
-	</div>
+	<!-- Button moved to toolbar -->
 </div>
 
 <style>

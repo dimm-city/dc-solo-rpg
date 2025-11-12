@@ -1,49 +1,7 @@
 <script>
-	import { rollDice } from '../stores/diceStore.svelte.js';
 	import { gameState } from '../stores/gameStore.svelte.js';
-	import { performFinalDamageRoll } from '../stores/gameActions.svelte.js';
-	import ContinueButton from './ContinueButton.svelte';
 
-	let rolling = $state(false);
-	let result = $state();
-
-	// Reset state when entering finalDamageRoll screen
-	$effect(() => {
-		if (gameState.state === 'finalDamageRoll') {
-			result = undefined;
-			rolling = false;
-		}
-	});
-
-	async function doFinalRoll() {
-		// Atomic check-and-set to prevent race conditions on rapid clicks
-		if (rolling || result !== undefined) return;
-		if (gameState.state !== 'finalDamageRoll') return;
-
-		// Set flags immediately before any async operations
-		rolling = true;
-		const rollResult = Math.floor(Math.random() * 6) + 1;
-		result = rollResult;
-
-		try {
-			// Animate the dice
-			await rollDice(rollResult);
-
-			// Apply the final damage roll
-			performFinalDamageRoll(rollResult);
-		} finally {
-			// Ensure rolling flag is cleared even if dice animation fails
-			rolling = false;
-		}
-	}
-
-	const header = $derived(
-		result
-			? gameState.win
-				? 'You survived! Click to continue'
-				: 'Victory slipped away... Click to continue'
-			: 'Roll for your final test'
-	);
+	// Button logic moved to GameScreen toolbar
 </script>
 
 <div class="dc-final-damage-roll-container">
@@ -58,15 +16,6 @@
 			<p><strong>Bonus Counter:</strong> {gameState.bonus}</p>
 			<p><strong>Possible Damage:</strong> 1-6, reduced by bonus</p>
 		</div>
-	</div>
-
-	<div class="dc-dice-roller-header dc-header">
-		<ContinueButton
-			text={header}
-			onclick={doFinalRoll}
-			disabled={rolling}
-			testid="final-damage-roll-button"
-		/>
 	</div>
 </div>
 
