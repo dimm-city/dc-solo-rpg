@@ -36,7 +36,7 @@
 		<div class="splash-content">
 			<div class="title">
 				<span>D</span><span>I</span><span>M</span><span>M</span>
-				<span>&nbsp;</span>
+				<div class="title-divider"></div>
 				<span>C</span><span>I</span><span>T</span><span>Y</span>
 			</div>
 			<div class="subtitle">Connecting to the aether...</div>
@@ -118,12 +118,20 @@
 		margin: 0;
 		padding: 0;
 		text-shadow:
+			0 0 2px var(--neon-yellow),
 			0 0 5px var(--neon-yellow),
-			0 0 15px var(--neon-yellow),
-			0 0 30px var(--neon-cyan);
+			0 0 10px var(--neon-cyan);
 		color: var(--neon-yellow);
 	}
-
+.title-divider {
+		width: 90%;
+		height: 2px;
+		margin: 0.5rem 0;
+		background: linear-gradient(90deg, var(--neon-magenta), var(--neon-cyan));
+		box-shadow:
+			0 0 8px var(--neon-yellow),
+			0 0 16px var(--neon-cyan);
+	}
 	.title span {
 		display: inline-block;
 		opacity: 0;

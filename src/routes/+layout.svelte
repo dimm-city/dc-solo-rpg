@@ -1,10 +1,15 @@
 <script>
 	import '../styles.css';
 	import { onNavigate } from '$app/navigation';
+	import { browser } from '$app/environment';
 
 	let { children } = $props();
 
 	onNavigate((navigation) => {
+		// Only run in browser environment (SSR safety)
+		if (!browser) return;
+
+		// Graceful degradation for browsers without view transitions support
 		if (!document.startViewTransition) return;
 
 		return new Promise((resolve) => {
@@ -24,7 +29,7 @@
 	/* View Transition API styles for smooth page transitions */
 	:global(::view-transition-old(root)),
 	:global(::view-transition-new(root)) {
-		animation-duration: 0.4s;
+		animation-duration: var(--anim-fast);
 	}
 
 	:global(::view-transition-old(root)) {
