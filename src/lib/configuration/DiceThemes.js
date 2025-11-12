@@ -9,9 +9,21 @@
 export const DICE_THEMES = [
 	{
 		key: 'default',
-		name: 'Default',
+		name: 'Default (White)',
 		category: 'standard',
 		description: 'Classic white dice with black numbers'
+	},
+	{
+		key: 'white',
+		name: 'White',
+		category: 'standard',
+		description: 'Clean white dice'
+	},
+	{
+		key: 'black',
+		name: 'Black',
+		category: 'standard',
+		description: 'Classic black dice'
 	},
 	{
 		key: 'pinkdreams',
@@ -20,22 +32,10 @@ export const DICE_THEMES = [
 		description: 'Vibrant pink neon dice'
 	},
 	{
-		key: 'bluedreams',
-		name: 'Blue Dreams',
+		key: 'radiant',
+		name: 'Radiant',
 		category: 'neon',
-		description: 'Glowing blue cyberpunk dice'
-	},
-	{
-		key: 'greendreams',
-		name: 'Green Dreams',
-		category: 'neon',
-		description: 'Bright green matrix-style dice'
-	},
-	{
-		key: 'purpledreams',
-		name: 'Purple Dreams',
-		category: 'neon',
-		description: 'Electric purple neon dice'
+		description: 'Bright radiant colors'
 	},
 	{
 		key: 'fire',
@@ -50,34 +50,70 @@ export const DICE_THEMES = [
 		description: 'Frozen ice crystal dice'
 	},
 	{
-		key: 'toxic',
-		name: 'Toxic',
+		key: 'poison',
+		name: 'Poison',
 		category: 'elemental',
-		description: 'Radioactive toxic dice'
+		description: 'Toxic poison dice'
 	},
 	{
-		key: 'gemstone',
-		name: 'Gemstone',
-		category: 'gem',
-		description: 'Precious gemstone dice'
+		key: 'water',
+		name: 'Water',
+		category: 'elemental',
+		description: 'Deep water blue dice'
 	},
 	{
-		key: 'wood',
-		name: 'Wood',
-		category: 'natural',
-		description: 'Natural wooden dice'
+		key: 'earth',
+		name: 'Earth',
+		category: 'elemental',
+		description: 'Earthy stone dice'
 	},
 	{
-		key: 'metal',
-		name: 'Metal',
+		key: 'astralsea',
+		name: 'Astral Sea',
+		category: 'mystical',
+		description: 'Cosmic astral sea colors'
+	},
+	{
+		key: 'bloodmoon',
+		name: 'Blood Moon',
+		category: 'mystical',
+		description: 'Dark blood moon red'
+	},
+	{
+		key: 'starynight',
+		name: 'Starry Night',
+		category: 'mystical',
+		description: 'Van Gogh inspired starry night'
+	},
+	{
+		key: 'glitterparty',
+		name: 'Glitter Party',
+		category: 'festive',
+		description: 'Sparkly glitter party dice'
+	},
+	{
+		key: 'bronze',
+		name: 'Bronze',
 		category: 'metal',
-		description: 'Sleek metallic dice'
+		description: 'Ancient bronze metal'
 	},
 	{
-		key: 'rock',
-		name: 'Rock',
-		category: 'stone',
-		description: 'Stone rock dice'
+		key: 'dragons',
+		name: 'Dragons',
+		category: 'fantasy',
+		description: 'Dragon scale dice'
+	},
+	{
+		key: 'tigerking',
+		name: 'Tiger King',
+		category: 'animal',
+		description: 'Tiger stripe pattern'
+	},
+	{
+		key: 'rainbow',
+		name: 'Rainbow',
+		category: 'festive',
+		description: 'Colorful rainbow dice'
 	}
 ];
 

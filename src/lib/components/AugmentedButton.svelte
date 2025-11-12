@@ -206,18 +206,8 @@
 		pointer-events: none;
 	}
 
-	/* Primary variant - DRAMATICALLY larger and more prominent (hero CTA) */
+	/* Primary variant - Yellow/Magenta animated gradient (color only) */
 	.aug-button.primary {
-		--aug-border-all: var(--aug-border-thin);
-		--aug-tl: var(--aug-clip-md);
-		--aug-tr: var(--aug-clip-md);
-		--aug-br: var(--aug-clip-md);
-		--aug-bl: var(--aug-clip-md);
-
-		padding: 2rem 3.5rem;
-		font-size: 1.5rem;
-		font-weight: 900;
-
 		/* Animated gradient background - Yellow to Magenta pulsing */
 		background: linear-gradient(
 			135deg,
@@ -292,11 +282,6 @@
 		outline-offset: 8px;
 	}
 
-	.aug-button.primary:focus {
-		outline: 2px solid var(--color-brand-yellow);
-		outline-offset: 6px;
-	}
-
 	/* Active state - pressed feeling */
 	.aug-button:active {
 		transform: translateY(-1px);
@@ -327,12 +312,6 @@
 		.aug-button {
 			padding: 0.75rem 1.5rem;
 			font-size: 1rem;
-		}
-
-		.aug-button.primary {
-			/* Still prominent on mobile, but scaled down */
-			padding: 1.5rem 2.5rem;
-			font-size: 1.25rem;
 		}
 	}
 
