@@ -19,6 +19,7 @@
 	import ConfirmModal from './ConfirmModal.svelte';
 	import MiniStatusHUD from './MiniStatusHUD.svelte';
 	import KeyboardHint from './KeyboardHint.svelte';
+	import DeckVisualization from './DeckVisualization.svelte';
 	import { onMount } from 'svelte';
 
 	let {
@@ -172,11 +173,8 @@
 	<div class="game-screen dc-game-bg">
 		<!-- UI Content Layer -->
 		<div class="ui-content-layer">
-			<!-- <div class="toolbar-area">
-				<Toolbar />
-			</div> -->
 			<div class="status-display-area dc-fade-in" data-testid="status-display">
-				<StatusDisplay onExitClick={handleExitClick} />
+				<StatusDisplay />
 			</div>
 			<div class="main-screen-area dc-table-bg">
 				{#key currentScreen}
@@ -247,6 +245,32 @@
 						<div transition:fade={{ duration: TRANSITION_DURATION }}>error: {currentScreen}</div>
 					{/if}
 				{/key}
+			</div>
+
+			<!-- Toolbar at bottom with deck visualization and buttons -->
+			<div class="toolbar-area" data-augmented-ui="tl-clip tr-clip border">
+				<div class="toolbar-left">
+					<DeckVisualization />
+				</div>
+				<div class="toolbar-right">
+					<button class="toolbar-button exit-button" onclick={handleExitClick} aria-label="Exit game">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							width="24"
+							height="24"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							aria-hidden="true"
+						>
+							<path d="M18 6 6 18" />
+							<path d="m6 6 12 12" />
+						</svg>
+					</button>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -359,14 +383,14 @@
 		height: 100%;
 		width: 100%;
 		min-width: 0; /* CRITICAL: Allow grid to shrink */
-		grid-template-rows: min-content min-content 1fr;
+		grid-template-rows: min-content 1fr min-content;
 		row-gap: 0.5rem;
 		padding: 0.5rem;
 		box-sizing: border-box;
 		grid-template-areas:
-			'toolbar-area'
 			'status-area'
-			'main-screen-area';
+			'main-screen-area'
+			'toolbar-area';
 		pointer-events: none; /* Allow dice clicks through */
 	}
 
@@ -374,6 +398,81 @@
 	.ui-content-layer > * {
 		pointer-events: auto;
 	}
+
+	/* Toolbar Area - Bottom bar with deck viz and buttons */
+	.toolbar-area {
+		grid-area: toolbar-area;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		width: 100%;
+		min-height: 60px;
+		padding: var(--space-sm) var(--space-md);
+		background: linear-gradient(135deg, rgba(10, 10, 20, 0.95), rgba(15, 15, 25, 0.9));
+		backdrop-filter: blur(10px);
+		-webkit-backdrop-filter: blur(10px);
+		border: 1px solid rgba(0, 255, 255, 0.3);
+		box-shadow:
+			0 -4px 20px rgba(0, 0, 0, 0.3),
+			0 0 20px rgba(0, 255, 255, 0.1),
+			inset 0 1px 0 rgba(255, 255, 255, 0.05);
+		position: relative;
+		z-index: 100;
+	}
+
+	.toolbar-left {
+		display: flex;
+		align-items: center;
+		gap: var(--space-md);
+	}
+
+	.toolbar-right {
+		display: flex;
+		align-items: center;
+		gap: var(--space-md);
+	}
+
+	.toolbar-button {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 44px;
+		height: 44px;
+		background: linear-gradient(135deg, rgba(30, 30, 40, 0.8), rgba(20, 20, 30, 0.9));
+		border: 1px solid rgba(0, 255, 255, 0.3);
+		border-radius: 4px;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		color: var(--color-neon-cyan);
+		backdrop-filter: blur(5px);
+		-webkit-backdrop-filter: blur(5px);
+	}
+
+	.toolbar-button:hover {
+		background: linear-gradient(135deg, rgba(40, 40, 50, 0.9), rgba(30, 30, 40, 0.95));
+		border-color: var(--color-neon-cyan);
+		box-shadow:
+			0 0 15px rgba(0, 255, 255, 0.4),
+			inset 0 0 10px rgba(0, 255, 255, 0.1);
+		transform: translateY(-2px);
+	}
+
+	.toolbar-button:active {
+		transform: translateY(0);
+	}
+
+	.exit-button {
+		color: var(--color-brand-red, #ff4444);
+		border-color: rgba(255, 68, 68, 0.3);
+	}
+
+	.exit-button:hover {
+		border-color: var(--color-brand-red, #ff4444);
+		box-shadow:
+			0 0 15px rgba(255, 68, 68, 0.4),
+			inset 0 0 10px rgba(255, 68, 68, 0.1);
+	}
+
 	.main-screen-area {
 		grid-area: main-screen-area;
 		width: 100%;

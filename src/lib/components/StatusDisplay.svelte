@@ -1,7 +1,6 @@
 <script>
 	import { gameState } from '../stores/gameStore.svelte.js';
 	import AugmentedButton from './AugmentedButton.svelte';
-	import DeckVisualization from './DeckVisualization.svelte';
 	import HelpIcon from './HelpIcon.svelte';
 	import HelpModal from './HelpModal.svelte';
 
@@ -14,8 +13,6 @@
 	const cardsRemaining = $derived(gameState.deck?.length || 52);
 	const totalCards = 52;
 	const progressPercent = $derived((cardsDrawn / totalCards) * 100);
-
-	let { onExitClick = () => {} } = $props();
 
 	// Help modal state
 	let showHelp = $state(null);
@@ -34,97 +31,83 @@
 		<div>
 			<h5>{gameState.config?.title}</h5>
 		</div>
-		<div class="info-segment-with-deck">
-			<div class="info-segment">
-				<span class="label">{gameState.config?.labels.statusDisplayRoundText ?? 'ROUND:'}</span>
-				<span class="value">{gameState?.round}</span>
-			</div>
-			<DeckVisualization />
-			<button class="dc-exit-button" onclick={onExitClick} aria-label="Exit game">
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					width="20"
-					height="20"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					aria-hidden="true"
-				>
-					<path d="M18 6 6 18" />
-					<path d="m6 6 12 12" />
-				</svg>
-			</button>
+		<div class="info-segment">
+			<span class="label">{gameState.config?.labels.statusDisplayRoundText ?? 'ROUND:'}</span>
+			<span class="value">{gameState?.round}</span>
 		</div>
 	</div>
 
 	<!-- Stats Grid -->
 	<div class="stats-grid">
-		<div class="stat-item health-stat" data-augmented-ui="tl-clip tr-clip-x br-clip-x border">
-			<div class="stat-label">
-				HEALTH
-				<HelpIcon onclick={() => (showHelp = 'tower')} ariaLabel="Help: What is Health?" />
+		<div>
+			<div class="stat-item health-stat" data-augmented-ui="tl-clip tr-clip-x br-clip-x border">
+				<div class="stat-label">
+					HEALTH
+					<HelpIcon onclick={() => (showHelp = 'tower')} ariaLabel="Help: What is Health?" />
+				</div>
+				<div class="stat-value">
+					<span class="current">{gameState.tower}</span><span class="divider">/</span><span
+						class="max">100</span
+					>
+				</div>
+				<div class="stat-bar">
+					<div class="stat-fill health-fill" style="width: {gameState.tower}%"></div>
+				</div>
 			</div>
-			<div class="stat-value">
-				<span class="current">{gameState.tower}</span><span class="divider">/</span><span
-					class="max">100</span
-				>
-			</div>
-			<div class="stat-bar">
-				<div class="stat-fill health-fill" style="width: {gameState.tower}%"></div>
+
+			<div class="stat-item failure-stat" data-augmented-ui="l-rect tr-clip br-clip-x border">
+				<div class="stat-label">
+					{gameState.config?.labels?.failureCounters?.toUpperCase() ?? 'FAILURE'}
+					<HelpIcon onclick={() => (showHelp = 'kings')} ariaLabel="Help: What are Kings?" />
+				</div>
+				<div class="stat-value">
+					<span class="current">{failurePercent}</span><span class="divider">/</span><span
+						class="max">4</span
+					>
+				</div>
+				<div class="stat-bar">
+					<div class="stat-fill failure-fill" style="width: {(failurePercent / 4) * 100}%"></div>
+				</div>
 			</div>
 		</div>
+		<div>
+			<div
+				class="stat-item bonus-stat"
+				data-augmented-ui="tl-clip-y l-rect-y tr-clip-x br-clip-x border"
+			>
+				<div class="stat-label">
+					LUCK
+					<HelpIcon onclick={() => (showHelp = 'bonus')} ariaLabel="Help: What is Luck?" />
+				</div>
+				<div class="stat-value">
+					<span class="current">{bonusPercent}</span><span class="divider">/</span><span class="max"
+						>10</span
+					>
+				</div>
+				<div class="stat-bar">
+					<div class="stat-fill bonus-fill" style="width: {(bonusPercent / 10) * 100}%"></div>
+				</div>
+			</div>
 
-		<div class="stat-item failure-stat" data-augmented-ui="l-rect tr-clip br-clip-x border">
-			<div class="stat-label">
-				{gameState.config?.labels?.failureCounters?.toUpperCase() ?? 'FAILURE'}
-				<HelpIcon onclick={() => (showHelp = 'kings')} ariaLabel="Help: What are Kings?" />
-			</div>
-			<div class="stat-value">
-				<span class="current">{failurePercent}</span><span class="divider">/</span><span class="max"
-					>4</span
-				>
-			</div>
-			<div class="stat-bar">
-				<div class="stat-fill failure-fill" style="width: {(failurePercent / 4) * 100}%"></div>
-			</div>
-		</div>
-
-		<div
-			class="stat-item bonus-stat"
-			data-augmented-ui="tl-clip-y l-rect-y tr-clip-x br-clip-x border"
-		>
-			<div class="stat-label">
-				LUCK
-				<HelpIcon onclick={() => (showHelp = 'bonus')} ariaLabel="Help: What is Luck?" />
-			</div>
-			<div class="stat-value">
-				<span class="current">{bonusPercent}</span><span class="divider">/</span><span class="max"
-					>10</span
-				>
-			</div>
-			<div class="stat-bar">
-				<div class="stat-fill bonus-fill" style="width: {(bonusPercent / 10) * 100}%"></div>
-			</div>
-		</div>
-
-		<div
-			class="stat-item success-stat"
-			data-augmented-ui=" tl-clip-inset tr-2-clip-y br-clip bl-2-clip-x border"
-		>
-			<div class="stat-label">
-				{gameState.config?.labels?.successCounters?.toUpperCase() ?? 'SUCCESS'}
-				<HelpIcon onclick={() => (showHelp = 'tokens')} ariaLabel="Help: What are Success Tokens?" />
-			</div>
-			<div class="stat-value">
-				<span class="current">{successPercent}</span><span class="divider">/</span><span class="max"
-					>10</span
-				>
-			</div>
-			<div class="stat-bar">
-				<div class="stat-fill success-fill" style="width: {(successPercent / 10) * 100}%"></div>
+			<div
+				class="stat-item success-stat"
+				data-augmented-ui=" tl-clip-inset tr-2-clip-y br-clip bl-2-clip-x border"
+			>
+				<div class="stat-label">
+					{gameState.config?.labels?.successCounters?.toUpperCase() ?? 'SUCCESS'}
+					<HelpIcon
+						onclick={() => (showHelp = 'tokens')}
+						ariaLabel="Help: What are Success Tokens?"
+					/>
+				</div>
+				<div class="stat-value">
+					<span class="current">{successPercent}</span><span class="divider">/</span><span
+						class="max">10</span
+					>
+				</div>
+				<div class="stat-bar">
+					<div class="stat-fill success-fill" style="width: {(successPercent / 10) * 100}%"></div>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -149,35 +132,6 @@
 <HelpModal isOpen={showHelp !== null} helpKey={showHelp} onClose={() => (showHelp = null)} />
 
 <style>
-	.dc-exit-button {
-		background: transparent;
-		border: none;
-		color: #fff;
-		cursor: pointer;
-
-		/* CRITICAL FIX: Ensure 44px minimum touch target */
-		padding: var(--space-sm);
-		margin-left: var(--space-md);
-		min-width: 44px;
-		min-height: 44px;
-
-		/* Center the icon within larger touch area */
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-
-		transition: color var(--transition-base);
-	}
-
-	.dc-exit-button:hover {
-		color: var(--color-brand-yellow);
-		filter: brightness(1.2);
-	}
-
-	.dc-exit-button:focus-visible {
-		outline: 3px solid var(--color-neon-cyan);
-		outline-offset: 2px;
-	}
 	.status-display-container {
 		width: 100%;
 		display: flex;
@@ -244,12 +198,6 @@
 		}
 	}
 
-	.info-segment-with-deck {
-		display: flex;
-		align-items: center;
-		gap: var(--space-md);
-	}
-
 	.info-segment {
 		display: flex;
 		align-items: baseline;
@@ -282,15 +230,16 @@
 	/* Stats Grid */
 	.stats-grid {
 		display: grid;
-		grid-template-columns: repeat(4, 1fr);
+		grid-template-columns: repeat(3, 1fr);
 		gap: var(--space-sm);
-		width: 100%;
+		width: stretch;
 	}
 
 	.stat-item {
 		/* Augmented UI Base Configuration */
 		--aug-border-all: 2px;
 
+		width: min-content;
 		/* Truly Compact Layout */
 		display: flex;
 		flex-direction: row;
@@ -661,17 +610,8 @@
 			white-space: nowrap;
 		}
 
-		.info-segment-with-deck {
-			gap: var(--space-sm);
-		}
-
 		/* Hide help icons on mobile to save space */
 		.stat-label :global(.help-icon) {
-			display: none;
-		}
-
-		/* Hide deck visualization on mobile to prevent overflow */
-		.info-segment-with-deck :global(.deck-container) {
 			display: none;
 		}
 	}
