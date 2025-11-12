@@ -13,7 +13,9 @@
 
 		<div class="game-over-message">
 			{#if gameState.kingsRevealed == 4}
-				<p>{gameState.config?.labels?.failureCounterLoss ?? 'Four kings revealed - the game is over'}</p>
+				<p>
+					{gameState.config?.labels?.failureCounterLoss ?? 'Four kings revealed - the game is over'}
+				</p>
 			{:else}
 				<p>{gameState.status}</p>
 			{/if}
@@ -45,11 +47,8 @@
 		width: 100%;
 		height: 100%;
 		background-color: var(--bg-color);
-		background-image: radial-gradient(
-				circle at 50% 50%,
-				rgba(255, 0, 255, 0.08),
-				transparent 75%
-			),
+		background-image:
+			radial-gradient(circle at 50% 50%, rgba(255, 0, 255, 0.08), transparent 75%),
 			radial-gradient(circle at 25% 75%, rgba(255, 42, 109, 0.1), transparent 70%);
 		display: flex;
 		align-items: center;
@@ -105,7 +104,9 @@
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
 		color: var(--neon-red);
-		text-shadow: 0 0 5px var(--neon-red), 0 0 20px var(--neon-magenta),
+		text-shadow:
+			0 0 5px var(--neon-red),
+			0 0 20px var(--neon-magenta),
 			0 0 35px var(--neon-magenta);
 	}
 

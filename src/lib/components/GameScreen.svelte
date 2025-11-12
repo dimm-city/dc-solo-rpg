@@ -257,7 +257,7 @@
 
 	.dc-start-round-screen {
 		text-align: center;
-		display: grid;	
+		display: grid;
 		justify-content: center;
 		align-content: center;
 		h4 {

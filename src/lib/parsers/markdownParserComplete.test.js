@@ -16,7 +16,6 @@ import { describe, it, expect } from 'vitest';
 import { parseGameFile, ValidationError } from './markdownParser.js';
 
 describe('Markdown Parser - Frontmatter', () => {
-
 	it('should parse valid frontmatter', () => {
 		const markdown = `---
 title: Test Game
@@ -117,7 +116,6 @@ No frontmatter
 });
 
 describe('Markdown Parser - Introduction', () => {
-
 	it('should parse introduction sections', () => {
 		const markdown = createValidGameMarkdown({
 			introduction: `## Who You Are
@@ -181,14 +179,12 @@ More text.`
 });
 
 describe('Markdown Parser - Card Types', () => {
-
 	describe('Primary Success', () => {
-
 		it('should parse exactly 1 Primary Success card', () => {
 			const markdown = createValidGameMarkdown();
 			const result = parseGameFile(markdown);
 
-			const primarySuccess = result.deck.filter(c => c.type === 'primary-success');
+			const primarySuccess = result.deck.filter((c) => c.type === 'primary-success');
 			expect(primarySuccess).toHaveLength(1);
 		});
 
@@ -212,12 +208,11 @@ describe('Markdown Parser - Card Types', () => {
 	});
 
 	describe('Failure Counter', () => {
-
 		it('should parse exactly 4 Failure Counter cards', () => {
 			const markdown = createValidGameMarkdown();
 			const result = parseGameFile(markdown);
 
-			const failureCounters = result.deck.filter(c => c.type === 'failure-counter');
+			const failureCounters = result.deck.filter((c) => c.type === 'failure-counter');
 			expect(failureCounters).toHaveLength(4);
 		});
 
@@ -232,15 +227,15 @@ describe('Markdown Parser - Card Types', () => {
 	});
 
 	describe('Narrative', () => {
-
 		it('should parse exactly 3 Narrative cards total', () => {
 			const markdown = createValidGameMarkdown();
 			const result = parseGameFile(markdown);
 
-			const narratives = result.deck.filter(c =>
-				c.type === 'narrative' ||
-				c.type === 'narrative-skip-damage' ||
-				c.type === 'narrative-return-king'
+			const narratives = result.deck.filter(
+				(c) =>
+					c.type === 'narrative' ||
+					c.type === 'narrative-skip-damage' ||
+					c.type === 'narrative-return-king'
 			);
 
 			expect(narratives).toHaveLength(3);
@@ -259,18 +254,17 @@ describe('Markdown Parser - Card Types', () => {
 			const markdown = createValidGameMarkdown();
 			const result = parseGameFile(markdown);
 
-			const standardNarratives = result.deck.filter(c => c.type === 'narrative');
+			const standardNarratives = result.deck.filter((c) => c.type === 'narrative');
 			expect(standardNarratives.length).toBeGreaterThanOrEqual(1);
 		});
 	});
 
 	describe('Challenge', () => {
-
 		it('should parse exactly 16 Challenge cards', () => {
 			const markdown = createValidGameMarkdown();
 			const result = parseGameFile(markdown);
 
-			const challenges = result.deck.filter(c => c.type === 'challenge');
+			const challenges = result.deck.filter((c) => c.type === 'challenge');
 			expect(challenges).toHaveLength(16);
 		});
 
@@ -285,12 +279,11 @@ describe('Markdown Parser - Card Types', () => {
 	});
 
 	describe('Event', () => {
-
 		it('should parse exactly 28 Event cards', () => {
 			const markdown = createValidGameMarkdown();
 			const result = parseGameFile(markdown);
 
-			const events = result.deck.filter(c => c.type === 'event');
+			const events = result.deck.filter((c) => c.type === 'event');
 			expect(events).toHaveLength(28);
 		});
 
@@ -314,9 +307,7 @@ describe('Markdown Parser - Card Types', () => {
 });
 
 describe('Markdown Parser - Special Modifiers', () => {
-
 	describe('skip-damage modifier', () => {
-
 		it('should parse Narrative card with skip-damage modifier', () => {
 			const markdown = createValidGameMarkdown({
 				narrativeSkipDamage: true
@@ -324,9 +315,7 @@ describe('Markdown Parser - Special Modifiers', () => {
 
 			const result = parseGameFile(markdown);
 
-			const skipDamageCards = result.deck.filter(c =>
-				c.modifier === 'skip-damage'
-			);
+			const skipDamageCards = result.deck.filter((c) => c.modifier === 'skip-damage');
 
 			expect(skipDamageCards).toHaveLength(1);
 		});
@@ -413,18 +402,15 @@ ${generateCards('Event', 28)}
 			});
 
 			const result = parseGameFile(markdown);
-			const skipCards = result.deck.filter(c =>
-				c.modifier === 'skip-damage'
-			);
+			const skipCards = result.deck.filter((c) => c.modifier === 'skip-damage');
 
-			skipCards.forEach(card => {
+			skipCards.forEach((card) => {
 				expect(card.type).toBe('narrative');
 			});
 		});
 	});
 
 	describe('return-king modifier', () => {
-
 		it('should parse Narrative card with return-king modifier', () => {
 			const markdown = createValidGameMarkdown({
 				narrativeReturnKing: true
@@ -432,9 +418,7 @@ ${generateCards('Event', 28)}
 
 			const result = parseGameFile(markdown);
 
-			const returnKingCards = result.deck.filter(c =>
-				c.modifier === 'return-king'
-			);
+			const returnKingCards = result.deck.filter((c) => c.modifier === 'return-king');
 
 			expect(returnKingCards).toHaveLength(1);
 		});
@@ -493,7 +477,6 @@ ${generateCards('Event', 28)}
 	});
 
 	describe('Combined modifiers', () => {
-
 		it('should allow both skip-damage and return-king in same game', () => {
 			const markdown = createValidGameMarkdown({
 				narrativeSkipDamage: true,
@@ -502,12 +485,8 @@ ${generateCards('Event', 28)}
 
 			const result = parseGameFile(markdown);
 
-			const skipDamage = result.deck.filter(c =>
-				c.modifier === 'skip-damage'
-			);
-			const returnKing = result.deck.filter(c =>
-				c.modifier === 'return-king'
-			);
+			const skipDamage = result.deck.filter((c) => c.modifier === 'skip-damage');
+			const returnKing = result.deck.filter((c) => c.modifier === 'return-king');
 
 			expect(skipDamage).toHaveLength(1);
 			expect(returnKing).toHaveLength(1);
@@ -521,14 +500,13 @@ ${generateCards('Event', 28)}
 
 			const result = parseGameFile(markdown);
 
-			const allNarratives = result.deck.filter(c => c.type && c.type.startsWith('narrative'));
+			const allNarratives = result.deck.filter((c) => c.type && c.type.startsWith('narrative'));
 			expect(allNarratives).toHaveLength(3);
 		});
 	});
 });
 
 describe('Markdown Parser - Manual Card Assignment', () => {
-
 	it('should parse manual card assignment like "7-hearts"', () => {
 		const markdown = `---
 title: Test
@@ -571,9 +549,7 @@ ${generateCards('Event', 28)}
 		// Even when auto-assignments might conflict, explicit should take precedence
 		try {
 			const result = parseGameFile(markdown);
-			const sevenHearts = result.deck.find(c =>
-				c.description === 'Lucky seven'
-			);
+			const sevenHearts = result.deck.find((c) => c.description === 'Lucky seven');
 			expect(sevenHearts).toBeDefined();
 			expect(sevenHearts.card).toBe('7');
 			expect(sevenHearts.suit).toBe('hearts');
@@ -625,9 +601,7 @@ ${generateCards('Event', 28)}
 		// This test verifies that explicit assignments with modifiers work
 		try {
 			const result = parseGameFile(markdown);
-			const specialAce = result.deck.find(c =>
-				c.description === 'Special ace'
-			);
+			const specialAce = result.deck.find((c) => c.description === 'Special ace');
 			expect(specialAce).toBeDefined();
 			expect(specialAce.card).toBe('A');
 			expect(specialAce.suit).toBe('clubs');
@@ -673,13 +647,12 @@ Test
 });
 
 describe('Markdown Parser - Card Content', () => {
-
 	it('should parse card description from bold text', () => {
 		const markdown = createValidGameMarkdown();
 
 		const result = parseGameFile(markdown);
 
-		const customCard = result.deck.find(c => c.description && c.description.length > 0);
+		const customCard = result.deck.find((c) => c.description && c.description.length > 0);
 		expect(customCard).toBeDefined();
 	});
 
@@ -727,7 +700,7 @@ ${generateCards('Event', 27)}
 
 		const result = parseGameFile(markdown);
 
-		const storyCard = result.deck.find(c => c.description === 'You discover a survivor');
+		const storyCard = result.deck.find((c) => c.description === 'You discover a survivor');
 		expect(storyCard).toBeDefined();
 		expect(storyCard.story).toBeTruthy();
 		expect(storyCard.story).toContain('long and detailed');
@@ -776,7 +749,7 @@ ${generateCards('Event', 27)}
 
 		const result = parseGameFile(markdown);
 
-		const card = result.deck.find(c => c.story && c.story.includes('**Bold**'));
+		const card = result.deck.find((c) => c.story && c.story.includes('**Bold**'));
 		expect(card).toBeDefined();
 		expect(card.story).toContain('_italic_');
 		expect(card.story).toContain('[links]');
@@ -787,7 +760,7 @@ ${generateCards('Event', 27)}
 		const result = parseGameFile(markdown);
 
 		// Most cards will have just description
-		const shortCards = result.deck.filter(c => !c.story || c.story === '');
+		const shortCards = result.deck.filter((c) => !c.story || c.story === '');
 		expect(shortCards.length).toBeGreaterThan(0);
 	});
 
@@ -821,7 +794,6 @@ No bold text here, should fail
 });
 
 describe('Markdown Parser - Error Handling', () => {
-
 	it('should throw ValidationError for invalid input', () => {
 		const markdown = 'Invalid content';
 
@@ -907,12 +879,18 @@ function generateCards(type, count) {
  */
 function createValidGameMarkdown(options = {}) {
 	const title = options.title || 'Test Game';
-	const subtitle = 'subtitle' in options && options.subtitle !== undefined ?
-		`subtitle: ${options.subtitle}\n` : ('subtitle' in options ? '' : 'subtitle: A Test Campaign\n');
+	const subtitle =
+		'subtitle' in options && options.subtitle !== undefined
+			? `subtitle: ${options.subtitle}\n`
+			: 'subtitle' in options
+				? ''
+				: 'subtitle: A Test Campaign\n';
 	const winMessage = options.winMessage || 'You win!';
 	const loseMessage = options.loseMessage || 'You lose!';
 
-	const introduction = options.introduction || `## Who You Are
+	const introduction =
+		options.introduction ||
+		`## Who You Are
 
 You are a test character.
 
@@ -933,8 +911,9 @@ Complete the test.`;
 	const event = options.event !== undefined ? options.event : 28;
 
 	// Adjust plain narrative count if special modifiers are used
-	const plainNarrative = narrative - (narrativeSkipDamage + narrativeReturnKing > 0 ?
-		(narrativeSkipDamage + narrativeReturnKing) : 0);
+	const plainNarrative =
+		narrative -
+		(narrativeSkipDamage + narrativeReturnKing > 0 ? narrativeSkipDamage + narrativeReturnKing : 0);
 
 	return `---
 title: ${title}
@@ -956,17 +935,25 @@ ${generateCards('Failure Counter', failureCounter)}
 
 ${plainNarrative > 0 ? generateCards('Narrative', plainNarrative) : ''}
 
-${narrativeSkipDamage ? `### Narrative: skip-damage
+${
+	narrativeSkipDamage
+		? `### Narrative: skip-damage
 
 **A moment of perfect timing**
 
----` : ''}
+---`
+		: ''
+}
 
-${narrativeReturnKing ? `### Narrative: return-king
+${
+	narrativeReturnKing
+		? `### Narrative: return-king
 
 **A second chance**
 
----` : ''}
+---`
+		: ''
+}
 
 ${generateCards('Challenge', challenge)}
 

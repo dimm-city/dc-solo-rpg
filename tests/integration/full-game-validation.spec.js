@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 /**
  * COMPREHENSIVE GAME VALIDATION TEST
- * 
+ *
  * This test validates the complete game flow, logic, and state management:
  * 1. All math calculations are correct (damage = roll - bonus, capped at 0)
  * 2. Dice rolls happen exactly once per transition
@@ -51,7 +51,9 @@ test.describe('Full Game Validation', () => {
 		// Helper: Extract game stats from UI
 		const getUIStats = async () => {
 			try {
-				const statsText = await page.locator('.dc-status-display, .status-display-area').textContent();
+				const statsText = await page
+					.locator('.dc-status-display, .status-display-area')
+					.textContent();
 				const tower = statsText?.match(/HEALTH\s*(\d+)\/100/)?.[1];
 				const tokens = statsText?.match(/SUCCESS\s*(\d+)\/10/)?.[1];
 				const round = statsText?.match(/Round:\s*(\d+)/)?.[1];
@@ -93,7 +95,10 @@ test.describe('Full Game Validation', () => {
 		console.log('✓ Game loaded via server routing');
 
 		// Navigate through rules screen
-		const continueVisible = await page.locator('button:has-text("CONTINUE")').isVisible().catch(() => false);
+		const continueVisible = await page
+			.locator('button:has-text("CONTINUE")')
+			.isVisible()
+			.catch(() => false);
 		if (continueVisible) {
 			await page.click('button:has-text("CONTINUE")');
 			await page.waitForTimeout(500);
@@ -142,7 +147,10 @@ test.describe('Full Game Validation', () => {
 			// Wait for dice roller
 			const diceVisible = await waitFor('.dc-dice-roller-container', 5000);
 			if (!diceVisible) {
-				logIssue('ERROR', 'Dice roller not visible', { expected: 'dice-roller', round: tracker.round });
+				logIssue('ERROR', 'Dice roller not visible', {
+					expected: 'dice-roller',
+					round: tracker.round
+				});
 				break;
 			}
 
@@ -170,7 +178,10 @@ test.describe('Full Game Validation', () => {
 
 			// Verify state didn't change during dice roll
 			const afterRollStats = await getUIStats();
-			if (afterRollStats.tower !== beforeRollSnapshot.tower || afterRollStats.tokens !== beforeRollSnapshot.tokens) {
+			if (
+				afterRollStats.tower !== beforeRollSnapshot.tower ||
+				afterRollStats.tokens !== beforeRollSnapshot.tokens
+			) {
 				logIssue('ERROR', 'State changed during dice roll', {
 					before: beforeRollSnapshot,
 					after: afterRollStats
@@ -192,8 +203,11 @@ test.describe('Full Game Validation', () => {
 				attempts++;
 
 				// Check if card deck is visible
-				const cardDeckVisible = await page.locator('.dc-card-deck').isVisible().catch(() => false);
-				
+				const cardDeckVisible = await page
+					.locator('.dc-card-deck')
+					.isVisible()
+					.catch(() => false);
+
 				if (!cardDeckVisible) {
 					console.log(`  ✓ Round complete - drew ${cardsDrawn} cards`);
 					break;
@@ -220,7 +234,10 @@ test.describe('Full Game Validation', () => {
 				await page.waitForTimeout(800);
 
 				// Check for failure check
-				const failureCheckVisible = await page.locator('.dc-failure-check-container').isVisible().catch(() => false);
+				const failureCheckVisible = await page
+					.locator('.dc-failure-check-container')
+					.isVisible()
+					.catch(() => false);
 
 				if (failureCheckVisible) {
 					console.log(`    ⚠️  ODD CARD - Failure check triggered`);
@@ -237,12 +254,14 @@ test.describe('Full Game Validation', () => {
 
 					if (failureRoll) {
 						console.log(`    🎲 Failure roll: ${failureRoll}`);
-						
+
 						// Calculate expected damage
 						const expectedDamage = Math.max(failureRoll - tracker.bonus, 0);
 						const expectedTower = towerBefore - expectedDamage;
 
-						console.log(`    💥 Expected damage: ${failureRoll} - ${tracker.bonus} = ${expectedDamage}`);
+						console.log(
+							`    💥 Expected damage: ${failureRoll} - ${tracker.bonus} = ${expectedDamage}`
+						);
 						console.log(`    🏗️  Expected tower: ${towerBefore} → ${expectedTower}`);
 
 						roundData.failureChecks.push({
@@ -266,7 +285,7 @@ test.describe('Full Game Validation', () => {
 					const towerAfter = (await getUIStats()).tower;
 					if (towerAfter !== null) {
 						console.log(`    ✓ UI shows tower: ${towerAfter}`);
-						
+
 						const lastCheck = roundData.failureChecks[roundData.failureChecks.length - 1];
 						if (lastCheck && towerAfter !== lastCheck.expectedTower) {
 							logIssue('ERROR', 'Tower health mismatch after failure check', {
@@ -310,7 +329,11 @@ test.describe('Full Game Validation', () => {
 			// Check for game over
 			if (gameOver) break;
 
-			const gameOverVisible = await page.locator('text=Game Over').or(page.locator('text=VICTORY')).isVisible().catch(() => false);
+			const gameOverVisible = await page
+				.locator('text=Game Over')
+				.or(page.locator('text=VICTORY'))
+				.isVisible()
+				.catch(() => false);
 			if (gameOverVisible) {
 				console.log('\n🎯 GAME OVER DETECTED');
 				gameOver = true;
@@ -334,7 +357,11 @@ test.describe('Full Game Validation', () => {
 			await page.waitForTimeout(1500);
 
 			// ==================== SUCCESS CHECK (if Ace of Hearts) ====================
-			const successCheckVisible = await page.locator('.dc-success-check-container').or(page.locator('text=Success Check')).isVisible().catch(() => false);
+			const successCheckVisible = await page
+				.locator('.dc-success-check-container')
+				.or(page.locator('text=Success Check'))
+				.isVisible()
+				.catch(() => false);
 
 			if (successCheckVisible) {
 				console.log(`\n⭐ SUCCESS CHECK`);
@@ -358,7 +385,9 @@ test.describe('Full Game Validation', () => {
 						console.log(`  ✅ Token removed! (roll: ${successRoll}, bonus: ${tracker.bonus})`);
 						console.log(`  🎯 Tokens remaining: ${tracker.tokens}/10`);
 					} else {
-						console.log(`  ❌ No token removed (need 6, rolled: ${successRoll}, +bonus: ${withBonus})`);
+						console.log(
+							`  ❌ No token removed (need 6, rolled: ${successRoll}, +bonus: ${withBonus})`
+						);
 					}
 
 					// Check for win
@@ -373,7 +402,11 @@ test.describe('Full Game Validation', () => {
 				await page.waitForTimeout(1000);
 
 				// Check for game over after success check
-				const gameOverAfterSuccess = await page.locator('text=Game Over').or(page.locator('text=VICTORY')).isVisible().catch(() => false);
+				const gameOverAfterSuccess = await page
+					.locator('text=Game Over')
+					.or(page.locator('text=VICTORY'))
+					.isVisible()
+					.catch(() => false);
 				if (gameOverAfterSuccess) {
 					console.log('\n🎯 GAME OVER AFTER SUCCESS CHECK');
 					gameOver = true;
@@ -386,7 +419,10 @@ test.describe('Full Game Validation', () => {
 				await page.waitForTimeout(1500);
 
 				// Check if next round started
-				const nextRollVisible = await page.locator('.dc-dice-roller-container').isVisible().catch(() => false);
+				const nextRollVisible = await page
+					.locator('.dc-dice-roller-container')
+					.isVisible()
+					.catch(() => false);
 				if (nextRollVisible) {
 					console.log(`\n→ Advancing to Round ${tracker.round + 1}`);
 				} else {
@@ -405,7 +441,9 @@ test.describe('Full Game Validation', () => {
 		console.log(`\n📊 GAME SUMMARY:`);
 		console.log(`  Rounds played: ${tracker.round}`);
 		console.log(`  Total cards drawn: ${tracker.rounds.reduce((sum, r) => sum + r.cardsDrawn, 0)}`);
-		console.log(`  Total failure checks: ${tracker.rounds.reduce((sum, r) => sum + r.failureChecks.length, 0)}`);
+		console.log(
+			`  Total failure checks: ${tracker.rounds.reduce((sum, r) => sum + r.failureChecks.length, 0)}`
+		);
 		console.log(`  Game completed: ${gameOver ? 'Yes' : 'No'}`);
 
 		// Issues report
@@ -427,15 +465,19 @@ test.describe('Full Game Validation', () => {
 			console.log(`\n  Round ${round.roundNumber}:`);
 			console.log(`    Dice roll: ${round.diceRoll}`);
 			console.log(`    Cards drawn: ${round.cardsDrawn} (expected: ${round.expectedCards})`);
-			console.log(`    Card count match: ${round.cardsDrawn === round.expectedCards ? '✅' : '❌'}`);
+			console.log(
+				`    Card count match: ${round.cardsDrawn === round.expectedCards ? '✅' : '❌'}`
+			);
 			console.log(`    Failure checks: ${round.failureChecks.length}`);
 			round.failureChecks.forEach((fc, j) => {
-				console.log(`      ${j + 1}. Card ${fc.cardNumber}: Roll ${fc.roll}, Bonus ${fc.bonus}, Damage ${fc.expectedDamage}, Tower ${fc.towerBefore}→${fc.expectedTower}`);
+				console.log(
+					`      ${j + 1}. Card ${fc.cardNumber}: Roll ${fc.roll}, Bonus ${fc.bonus}, Damage ${fc.expectedDamage}, Tower ${fc.towerBefore}→${fc.expectedTower}`
+				);
 			});
 		});
 
 		// Assert no critical issues
-		const criticalIssues = tracker.issues.filter(i => i.severity === 'ERROR');
+		const criticalIssues = tracker.issues.filter((i) => i.severity === 'ERROR');
 		expect(criticalIssues.length).toBe(0);
 		expect(gameOver).toBe(true);
 

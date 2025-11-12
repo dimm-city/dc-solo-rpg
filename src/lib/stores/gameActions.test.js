@@ -544,7 +544,6 @@ describe('gameActions - Core Game Mechanics', () => {
 		});
 	});
 
-
 	describe('Game Restart and Exit', () => {
 		beforeEach(() => {
 			gameState.state = 'gameOver';

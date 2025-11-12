@@ -325,9 +325,7 @@ export function performFinalDamageRoll(roll) {
 	const damage = Math.max(roll - gameState.bonus, 0);
 	gameState.tower = Math.max(gameState.tower - damage, 0);
 
-	logger.debug(
-		`[performFinalDamageRoll] Damage: ${damage}, Remaining Tower: ${gameState.tower}`
-	);
+	logger.debug(`[performFinalDamageRoll] Damage: ${damage}, Remaining Tower: ${gameState.tower}`);
 
 	// Log the final roll
 	gameState.log.push({

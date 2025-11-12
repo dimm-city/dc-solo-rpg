@@ -16,7 +16,7 @@ const mockDiceBox = {
 };
 
 // Create a mock constructor function
-const MockDiceBoxConstructor = vi.fn(function(selector, config) {
+const MockDiceBoxConstructor = vi.fn(function (selector, config) {
 	mockDiceBox.lastConfig = config;
 	return mockDiceBox;
 });
@@ -45,7 +45,7 @@ describe('DiceStore - Theme Configuration', () => {
 		});
 
 		it('all themes should have required properties', () => {
-			DICE_THEMES.forEach(theme => {
+			DICE_THEMES.forEach((theme) => {
 				expect(theme).toHaveProperty('key');
 				expect(theme).toHaveProperty('name');
 				expect(theme).toHaveProperty('category');
@@ -56,13 +56,13 @@ describe('DiceStore - Theme Configuration', () => {
 		});
 
 		it('should not have duplicate theme keys', () => {
-			const keys = DICE_THEMES.map(t => t.key);
+			const keys = DICE_THEMES.map((t) => t.key);
 			const uniqueKeys = new Set(keys);
 			expect(uniqueKeys.size).toBe(keys.length);
 		});
 
 		it('should have "default" as a valid theme key', () => {
-			const hasDefault = DICE_THEMES.some(t => t.key === 'default');
+			const hasDefault = DICE_THEMES.some((t) => t.key === 'default');
 			expect(hasDefault).toBe(true);
 		});
 	});
@@ -216,14 +216,15 @@ describe('DiceStore - Theme Configuration', () => {
 			// If someone accidentally sets theme_colorset: 'default', it will fail in DiceBox
 			const invalidConfig = {
 				assetPath: '/dice/',
-				theme_colorset: 'default'  // This is invalid!
+				theme_colorset: 'default' // This is invalid!
 			};
 
 			// Verify that our code would never produce this config
 			expect(invalidConfig.theme_colorset).toBe('default');
 
 			// Document why this is wrong
-			const errorMessage = 'DiceBox does not have a theme called "default". ' +
+			const errorMessage =
+				'DiceBox does not have a theme called "default". ' +
 				'When "default" is selected, theme_colorset should be omitted to allow ' +
 				'DiceBox to use its built-in default appearance.';
 
@@ -247,9 +248,23 @@ describe('DiceStore - Theme Configuration', () => {
 			// Known valid dice-box colorsets (from @3d-dice/dice-box-threejs v0.0.12)
 			// Source: https://github.com/3d-dice/dice-box/blob/main/src/themes/colorsets.js
 			const KNOWN_VALID_THEMES = [
-				'white', 'black', 'pinkdreams', 'radiant', 'fire', 'ice', 'poison',
-				'water', 'earth', 'astralsea', 'bloodmoon', 'starynight', 'glitterparty',
-				'bronze', 'dragons', 'tigerking', 'rainbow',
+				'white',
+				'black',
+				'pinkdreams',
+				'radiant',
+				'fire',
+				'ice',
+				'poison',
+				'water',
+				'earth',
+				'astralsea',
+				'bloodmoon',
+				'starynight',
+				'glitterparty',
+				'bronze',
+				'dragons',
+				'tigerking',
+				'rainbow'
 				// Additional themes that exist in dice-box but we're not using yet:
 				// 'diceofrolling', 'rust', 'sky', 'sunset', 'midnight', 'swamp',
 				// 'stone', 'walnut', 'wood', 'metal', 'gemstone', 'glass',
@@ -258,25 +273,23 @@ describe('DiceStore - Theme Configuration', () => {
 
 			// Themes that DON'T exist and should NEVER be added
 			const NON_EXISTENT_THEMES = [
-				'bluedreams',   // Doesn't exist (we had this before)
-				'greendreams',  // Doesn't exist (we had this before)
+				'bluedreams', // Doesn't exist (we had this before)
+				'greendreams', // Doesn't exist (we had this before)
 				'purpledreams', // Doesn't exist (we had this before)
-				'toxic',        // Doesn't exist (use 'poison' instead)
-				'rock'          // Doesn't exist (use 'stone' instead)
+				'toxic', // Doesn't exist (use 'poison' instead)
+				'rock' // Doesn't exist (use 'stone' instead)
 			];
 
 			// Get all theme keys except 'default' (which is our special case)
-			const definedThemes = DICE_THEMES
-				.filter(t => t.key !== 'default')
-				.map(t => t.key);
+			const definedThemes = DICE_THEMES.filter((t) => t.key !== 'default').map((t) => t.key);
 
 			// Verify all our themes are in the known valid list
-			definedThemes.forEach(themeKey => {
+			definedThemes.forEach((themeKey) => {
 				expect(KNOWN_VALID_THEMES).toContain(themeKey);
 			});
 
 			// Verify we haven't added any non-existent themes
-			definedThemes.forEach(themeKey => {
+			definedThemes.forEach((themeKey) => {
 				expect(NON_EXISTENT_THEMES).not.toContain(themeKey);
 			});
 		});
@@ -286,14 +299,14 @@ describe('DiceStore - Theme Configuration', () => {
 			// Regression: We had bluedreams, greendreams, purpledreams, toxic, gemstone, rock
 			// which all caused "Unable to load theme" errors
 
-			const themeKeys = DICE_THEMES.map(t => t.key);
+			const themeKeys = DICE_THEMES.map((t) => t.key);
 
 			// Ensure these fictional themes are NOT in our config
 			expect(themeKeys).not.toContain('bluedreams');
 			expect(themeKeys).not.toContain('greendreams');
 			expect(themeKeys).not.toContain('purpledreams');
-			expect(themeKeys).not.toContain('toxic');      // Should use 'poison' instead
-			expect(themeKeys).not.toContain('rock');       // Should use 'stone' instead
+			expect(themeKeys).not.toContain('toxic'); // Should use 'poison' instead
+			expect(themeKeys).not.toContain('rock'); // Should use 'stone' instead
 
 			// Document why: These theme names do not exist in dice-box-threejs
 			// and will cause "Unable to load theme" errors if used
@@ -306,10 +319,10 @@ describe('DiceStore - Theme Configuration', () => {
 
 			expect(DICE_THEMES.length).toBe(18);
 
-			const defaultThemes = DICE_THEMES.filter(t => t.key === 'default');
+			const defaultThemes = DICE_THEMES.filter((t) => t.key === 'default');
 			expect(defaultThemes.length).toBe(1);
 
-			const realThemes = DICE_THEMES.filter(t => t.key !== 'default');
+			const realThemes = DICE_THEMES.filter((t) => t.key !== 'default');
 			expect(realThemes.length).toBe(17);
 		});
 	});

@@ -32,11 +32,7 @@
 </script>
 
 {#if isVisible}
-	<div
-		class="splash-overlay"
-		class:fade-out={shouldFadeOut}
-		transition:fade={{ duration: 800 }}
-	>
+	<div class="splash-overlay" class:fade-out={shouldFadeOut} transition:fade={{ duration: 800 }}>
 		<div class="splash-content">
 			<div class="title">
 				<span>D</span><span>I</span><span>M</span><span>M</span>
@@ -64,11 +60,8 @@
 		height: 100%;
 		background-color: var(--bg-color);
 		/* Add a subtle radial gradient for depth */
-		background-image: radial-gradient(
-				circle at 50% 50%,
-				rgba(0, 255, 255, 0.08),
-				transparent 70%
-			),
+		background-image:
+			radial-gradient(circle at 50% 50%, rgba(0, 255, 255, 0.08), transparent 70%),
 			radial-gradient(circle at 20% 80%, rgba(255, 0, 255, 0.1), transparent 65%);
 		z-index: 9999;
 		display: flex;
@@ -124,7 +117,9 @@
 		letter-spacing: 0.05em;
 		margin: 0;
 		padding: 0;
-		text-shadow: 0 0 5px var(--neon-yellow), 0 0 15px var(--neon-yellow),
+		text-shadow:
+			0 0 5px var(--neon-yellow),
+			0 0 15px var(--neon-yellow),
 			0 0 30px var(--neon-cyan);
 		color: var(--neon-yellow);
 	}

@@ -1,133 +1,190 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dimm City – Game Over (Variant 3)</title>
-  <!--
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Dimm City – Game Over (Variant 3)</title>
+		<!--
     Game Over screen variant 3 matching the city skyline splash. The skyline
     remains but is bathed in sombre reds and magentas, with the sweeping
     highlight tinted crimson. The headline announces failure while a tagline
     below hints at an ending. Everything is kept in HTML and CSS.
   -->
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg-color: #04060B;
-      --neon-yellow: #FFE400;
-      --neon-cyan: #00FFFF;
-      --neon-magenta: #FF00FF;
-      --neon-red: #FF2A6D;
-    }
-    * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; width: 100%; height: 100%; }
-    body {
-      font-family: 'Orbitron', sans-serif;
-      background-color: var(--bg-color);
-      background-image:
-        radial-gradient(circle at 30% 30%, rgba(255, 0, 255, 0.08), transparent 70%),
-        radial-gradient(circle at 70% 80%, rgba(255, 42, 109, 0.1), transparent 65%),
-        radial-gradient(circle at 50% 100%, rgba(0, 255, 255, 0.05), transparent 90%);
-      color: var(--neon-red);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      overflow: hidden;
-      position: relative;
-    }
-    h1 {
-      margin: 0;
-      font-size: 3.2rem;
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-      text-shadow: 0 0 10px var(--neon-red), 0 0 30px var(--neon-magenta), 0 0 50px var(--neon-magenta);
-      animation: headlinePulse 3s infinite;
-    }
-    @keyframes headlinePulse {
-      0%, 100% { opacity: 1; }
-      45% { opacity: 0.6; }
-    }
-    p.tagline {
-      margin-top: 0.8rem;
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 1rem;
-      color: var(--neon-cyan);
-      text-shadow: 0 0 10px var(--neon-cyan);
-      animation: taglineFlicker 3.5s infinite;
-    }
-    @keyframes taglineFlicker {
-      0%, 20%, 60%, 100% { opacity: 1; }
-      10%, 35%, 58% { opacity: 0.3; }
-    }
-    /* Skyline container */
-    .skyline {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 25%;
-      display: flex;
-      align-items: flex-end;
-      justify-content: center;
-      overflow: hidden;
-    }
-    .building {
-      width: 4%;
-      margin: 0 1%;
-      background: linear-gradient(to top, rgba(255, 42, 109, 0.65), rgba(255, 42, 109, 0.15));
-      box-shadow: 0 0 5px var(--neon-red), 0 0 10px var(--neon-red);
-      animation: pulseBuilding 4s infinite ease-in-out;
-    }
-    .h-1 { height: 40%; }
-    .h-2 { height: 60%; }
-    .h-3 { height: 35%; }
-    .h-4 { height: 50%; }
-    .h-5 { height: 70%; }
-    .h-6 { height: 45%; }
-    .h-7 { height: 55%; }
-    @keyframes pulseBuilding {
-      0%, 100% { opacity: 0.8; }
-      50% { opacity: 1; box-shadow: 0 0 8px var(--neon-red), 0 0 18px var(--neon-red); }
-    }
-    /* Sweeping crimson light */
-    .skyline::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -30%;
-      width: 30%;
-      height: 100%;
-      background: linear-gradient(90deg,
-        rgba(255, 42, 109, 0) 0%,
-        rgba(255, 255, 255, 0.5) 50%,
-        rgba(255, 42, 109, 0) 100%
-      );
-      mix-blend-mode: screen;
-      opacity: 0.6;
-      animation: sweep 5s linear infinite;
-      pointer-events: none;
-    }
-    @keyframes sweep {
-      0% { left: -30%; }
-      100% { left: 100%; }
-    }
-  </style>
-</head>
-<body>
-  <h1>City Offline</h1>
-  <p class="tagline">Your journey ends here…</p>
-  <div class="skyline">
-    <div class="building h-2"></div>
-    <div class="building h-4"></div>
-    <div class="building h-1"></div>
-    <div class="building h-5"></div>
-    <div class="building h-3"></div>
-    <div class="building h-6"></div>
-    <div class="building h-2"></div>
-    <div class="building h-7"></div>
-    <div class="building h-1"></div>
-    <div class="building h-4"></div>
-  </div>
-</body>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap"
+			rel="stylesheet"
+		/>
+		<style>
+			:root {
+				--bg-color: #04060b;
+				--neon-yellow: #ffe400;
+				--neon-cyan: #00ffff;
+				--neon-magenta: #ff00ff;
+				--neon-red: #ff2a6d;
+			}
+			* {
+				box-sizing: border-box;
+			}
+			html,
+			body {
+				margin: 0;
+				padding: 0;
+				width: 100%;
+				height: 100%;
+			}
+			body {
+				font-family: 'Orbitron', sans-serif;
+				background-color: var(--bg-color);
+				background-image:
+					radial-gradient(circle at 30% 30%, rgba(255, 0, 255, 0.08), transparent 70%),
+					radial-gradient(circle at 70% 80%, rgba(255, 42, 109, 0.1), transparent 65%),
+					radial-gradient(circle at 50% 100%, rgba(0, 255, 255, 0.05), transparent 90%);
+				color: var(--neon-red);
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+				overflow: hidden;
+				position: relative;
+			}
+			h1 {
+				margin: 0;
+				font-size: 3.2rem;
+				text-transform: uppercase;
+				letter-spacing: 0.07em;
+				text-shadow:
+					0 0 10px var(--neon-red),
+					0 0 30px var(--neon-magenta),
+					0 0 50px var(--neon-magenta);
+				animation: headlinePulse 3s infinite;
+			}
+			@keyframes headlinePulse {
+				0%,
+				100% {
+					opacity: 1;
+				}
+				45% {
+					opacity: 0.6;
+				}
+			}
+			p.tagline {
+				margin-top: 0.8rem;
+				font-family: 'Share Tech Mono', monospace;
+				font-size: 1rem;
+				color: var(--neon-cyan);
+				text-shadow: 0 0 10px var(--neon-cyan);
+				animation: taglineFlicker 3.5s infinite;
+			}
+			@keyframes taglineFlicker {
+				0%,
+				20%,
+				60%,
+				100% {
+					opacity: 1;
+				}
+				10%,
+				35%,
+				58% {
+					opacity: 0.3;
+				}
+			}
+			/* Skyline container */
+			.skyline {
+				position: absolute;
+				bottom: 0;
+				left: 0;
+				width: 100%;
+				height: 25%;
+				display: flex;
+				align-items: flex-end;
+				justify-content: center;
+				overflow: hidden;
+			}
+			.building {
+				width: 4%;
+				margin: 0 1%;
+				background: linear-gradient(to top, rgba(255, 42, 109, 0.65), rgba(255, 42, 109, 0.15));
+				box-shadow:
+					0 0 5px var(--neon-red),
+					0 0 10px var(--neon-red);
+				animation: pulseBuilding 4s infinite ease-in-out;
+			}
+			.h-1 {
+				height: 40%;
+			}
+			.h-2 {
+				height: 60%;
+			}
+			.h-3 {
+				height: 35%;
+			}
+			.h-4 {
+				height: 50%;
+			}
+			.h-5 {
+				height: 70%;
+			}
+			.h-6 {
+				height: 45%;
+			}
+			.h-7 {
+				height: 55%;
+			}
+			@keyframes pulseBuilding {
+				0%,
+				100% {
+					opacity: 0.8;
+				}
+				50% {
+					opacity: 1;
+					box-shadow:
+						0 0 8px var(--neon-red),
+						0 0 18px var(--neon-red);
+				}
+			}
+			/* Sweeping crimson light */
+			.skyline::after {
+				content: '';
+				position: absolute;
+				top: 0;
+				left: -30%;
+				width: 30%;
+				height: 100%;
+				background: linear-gradient(
+					90deg,
+					rgba(255, 42, 109, 0) 0%,
+					rgba(255, 255, 255, 0.5) 50%,
+					rgba(255, 42, 109, 0) 100%
+				);
+				mix-blend-mode: screen;
+				opacity: 0.6;
+				animation: sweep 5s linear infinite;
+				pointer-events: none;
+			}
+			@keyframes sweep {
+				0% {
+					left: -30%;
+				}
+				100% {
+					left: 100%;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<h1>City Offline</h1>
+		<p class="tagline">Your journey ends here…</p>
+		<div class="skyline">
+			<div class="building h-2"></div>
+			<div class="building h-4"></div>
+			<div class="building h-1"></div>
+			<div class="building h-5"></div>
+			<div class="building h-3"></div>
+			<div class="building h-6"></div>
+			<div class="building h-2"></div>
+			<div class="building h-7"></div>
+			<div class="building h-1"></div>
+			<div class="building h-4"></div>
+		</div>
+	</body>
 </html>

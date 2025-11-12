@@ -196,10 +196,10 @@ canned food, clean water, tools, and even some medical supplies.
 
 ```yaml
 ---
-title: Your Game Title          # Required
-subtitle: Your Game Subtitle    # Optional
-win-message: Victory message    # Required
-lose-message: Defeat message    # Required
+title: Your Game Title # Required
+subtitle: Your Game Subtitle # Optional
+win-message: Victory message # Required
+lose-message: Defeat message # Required
 ---
 ```
 
@@ -231,6 +231,7 @@ with full Markdown support.]
 ```
 
 **Card counts:**
+
 - Primary Success: exactly 1
 - Failure Counter: exactly 4
 - Narrative: exactly 3
@@ -260,6 +261,7 @@ Story here...
 ```
 
 **Available modifiers:**
+
 - `skip-damage` - Skip next damage check (max 1 per game)
 - `return-king` - Return King to deck (max 1 per game)
 
@@ -288,6 +290,7 @@ Story here...
 ```
 
 The `: 7-hearts` notation explicitly assigns this card. Useful for:
+
 - Thematic suit matching (hearts = people, diamonds = resources, etc.)
 - Specific rank significance in your narrative
 - Future custom action assignment
@@ -475,4 +478,4 @@ The format strikes the perfect balance between **simplicity for creators** and *
 
 **End of Document**
 
-*This configuration approach simplifies game creation while maintaining the depth and balance of the Wretched and Alone framework.*
+_This configuration approach simplifies game creation while maintaining the depth and balance of the Wretched and Alone framework._

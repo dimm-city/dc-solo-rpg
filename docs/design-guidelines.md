@@ -28,20 +28,33 @@ Every design decision should answer these questions:
 
 ```css
 .dc-table-bg {
-  background-color: #1a1520; /* Darker, moodier base */
-  background-image:
+	background-color: #1a1520; /* Darker, moodier base */
+	background-image:
     /* Subtle mood lighting */
-    radial-gradient(circle at 20% 80%, rgba(217, 70, 239, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(255, 215, 0, 0.02) 0%, transparent 50%),
-    /* Thematic pattern (e.g., detective's evidence board grid) */
-    repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(217, 70, 239, 0.03) 40px, rgba(217, 70, 239, 0.03) 41px),
-    repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(217, 70, 239, 0.03) 40px, rgba(217, 70, 239, 0.03) 41px);
-  /* Focus attention with vignette */
-  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.3);
+		radial-gradient(circle at 20% 80%, rgba(217, 70, 239, 0.03) 0%, transparent 50%),
+		radial-gradient(circle at 80% 20%, rgba(255, 215, 0, 0.02) 0%, transparent 50%),
+		/* Thematic pattern (e.g., detective's evidence board grid) */
+			repeating-linear-gradient(
+				0deg,
+				transparent,
+				transparent 40px,
+				rgba(217, 70, 239, 0.03) 40px,
+				rgba(217, 70, 239, 0.03) 41px
+			),
+		repeating-linear-gradient(
+			90deg,
+			transparent,
+			transparent 40px,
+			rgba(217, 70, 239, 0.03) 40px,
+			rgba(217, 70, 239, 0.03) 41px
+		);
+	/* Focus attention with vignette */
+	box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.3);
 }
 ```
 
 **Key Principles:**
+
 - Patterns should be subtle (2-5% opacity)
 - Use 2-3 layered gradients maximum
 - Add depth without clutter
@@ -52,6 +65,7 @@ Every design decision should answer these questions:
 **Critical:** Sound is 50% of immersion
 
 **Sound Categories:**
+
 - **Ambient** - Continuous mood (30-40% volume, looped, fades in/out)
 - **Interaction** - Card draws, dice rolls, button clicks (50-70% volume)
 - **Emotional** - Damage, failure cards, victory (60-80% volume)
@@ -62,16 +76,16 @@ Every design decision should answer these questions:
 ```javascript
 // Create centralized sound manager
 class SoundManager {
-  play(soundKey, options = {}) {
-    if (!this.enabled) return;
-    // Clone to allow overlapping sounds
-    // Apply volume, fade-in if specified
-  }
+	play(soundKey, options = {}) {
+		if (!this.enabled) return;
+		// Clone to allow overlapping sounds
+		// Apply volume, fade-in if specified
+	}
 
-  startAmbient(soundKey) {
-    // Loop with fade-in over 3 seconds
-    // Keep at 30-40% of main volume
-  }
+	startAmbient(soundKey) {
+		// Loop with fade-in over 3 seconds
+		// Keep at 30-40% of main volume
+	}
 }
 
 // Use in components
@@ -81,6 +95,7 @@ soundManager.play('card-flip', { volume: 0.5 });
 ```
 
 **Sound Sourcing:**
+
 - freesound.org (CC0), zapsplat.com (free tier)
 - MP3, 128kbps, mono for effects, stereo for ambient
 - Keep total under 5MB
@@ -92,6 +107,7 @@ soundManager.play('card-flip', { volume: 0.5 });
 ### 2.1 Animation Principles
 
 Follow Disney's 12 principles, especially:
+
 - **Anticipation** - Lift before action
 - **Follow-through** - Settle bounce after action
 - **Timing** - Slow in, fast through, slow out
@@ -103,19 +119,21 @@ Follow Disney's 12 principles, especially:
 ```css
 /* Stage 1: Anticipation (300ms) */
 .card.lifting {
-  transform: translateY(-20px) scale(1.05);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(217, 70, 239, 0.4);
+	transform: translateY(-20px) scale(1.05);
+	box-shadow:
+		0 20px 40px rgba(0, 0, 0, 0.5),
+		0 0 30px rgba(217, 70, 239, 0.4);
 }
 
 /* Stage 2: Action (800ms) */
 .card.flipping {
-  animation: card-3d-flip 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  transform-style: preserve-3d;
+	animation: card-3d-flip 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+	transform-style: preserve-3d;
 }
 
 /* Stage 3: Follow-through (600ms) */
 .card.revealed {
-  animation: card-settle 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+	animation: card-settle 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 ```
 
@@ -125,20 +143,20 @@ Follow Disney's 12 principles, especially:
 
 ```javascript
 async function drawCard(cardData) {
-  cardElement.classList.add('lifting');
-  soundManager.play('card-draw');
-  await sleep(300);
+	cardElement.classList.add('lifting');
+	soundManager.play('card-draw');
+	await sleep(300);
 
-  cardElement.classList.remove('lifting');
-  cardElement.classList.add('flipping');
-  await sleep(400); // Halfway through flip
-  soundManager.play('card-flip');
-  updateCardContent(cardData); // Update when edge-on
-  await sleep(400);
+	cardElement.classList.remove('lifting');
+	cardElement.classList.add('flipping');
+	await sleep(400); // Halfway through flip
+	soundManager.play('card-flip');
+	updateCardContent(cardData); // Update when edge-on
+	await sleep(400);
 
-  cardElement.classList.remove('flipping');
-  cardElement.classList.add('revealed');
-  soundManager.play('card-place', { volume: 0.4 });
+	cardElement.classList.remove('flipping');
+	cardElement.classList.add('revealed');
+	soundManager.play('card-place', { volume: 0.4 });
 }
 ```
 
@@ -148,15 +166,17 @@ async function drawCard(cardData) {
 
 ```css
 .interactive-element:hover {
-  transform: translateY(-8px) rotate(-2deg);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 255, 255, 0.3);
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  cursor: grab;
+	transform: translateY(-8px) rotate(-2deg);
+	box-shadow:
+		0 12px 30px rgba(0, 0, 0, 0.5),
+		0 0 20px rgba(0, 255, 255, 0.3);
+	transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+	cursor: grab;
 }
 
 .interactive-element:active {
-  cursor: grabbing;
-  transform: translateY(-4px) scale(0.98);
+	cursor: grabbing;
+	transform: translateY(-4px) scale(0.98);
 }
 ```
 
@@ -170,19 +190,23 @@ async function drawCard(cardData) {
 
 ```css
 /* Progressive color states */
-.health-value[data-percent='high'] {    /* 70-100% */
-  color: var(--color-toxic-green);
+.health-value[data-percent='high'] {
+	/* 70-100% */
+	color: var(--color-toxic-green);
 }
-.health-value[data-percent='medium'] {  /* 40-69% */
-  color: var(--color-brand-yellow);
+.health-value[data-percent='medium'] {
+	/* 40-69% */
+	color: var(--color-brand-yellow);
 }
-.health-value[data-percent='low'] {     /* 20-39% */
-  color: #ff6b00;
-  animation: health-warning-pulse 1.5s ease-in-out infinite;
+.health-value[data-percent='low'] {
+	/* 20-39% */
+	color: #ff6b00;
+	animation: health-warning-pulse 1.5s ease-in-out infinite;
 }
-.health-value[data-percent='critical'] { /* 1-19% */
-  color: #ff0000;
-  animation: health-critical-pulse 1s ease-in-out infinite;
+.health-value[data-percent='critical'] {
+	/* 1-19% */
+	color: #ff0000;
+	animation: health-critical-pulse 1s ease-in-out infinite;
 }
 ```
 
@@ -190,19 +214,19 @@ async function drawCard(cardData) {
 
 ```javascript
 function handleDamage(amount) {
-  // Visual: shake screen and flash meter
-  healthMeterElement.classList.add('damage-flash');
-  gameScreenElement.classList.add('taking-damage');
+	// Visual: shake screen and flash meter
+	healthMeterElement.classList.add('damage-flash');
+	gameScreenElement.classList.add('taking-damage');
 
-  // Audio: heavy heartbeat
-  soundManager.play('health-loss', { volume: 0.7 });
+	// Audio: heavy heartbeat
+	soundManager.play('health-loss', { volume: 0.7 });
 
-  // Haptic: if supported
-  if (navigator.vibrate) {
-    navigator.vibrate([100, 50, 100]);
-  }
+	// Haptic: if supported
+	if (navigator.vibrate) {
+		navigator.vibrate([100, 50, 100]);
+	}
 
-  // Cleanup after 600ms
+	// Cleanup after 600ms
 }
 ```
 
@@ -212,34 +236,38 @@ function handleDamage(amount) {
 
 ```css
 .card.failure-card {
-  /* Hesitation before flip creates suspense */
-  animation: failure-card-reveal 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+	/* Hesitation before flip creates suspense */
+	animation: failure-card-reveal 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 .card.failure-card.revealed {
-  /* Ominous red glow */
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 30px rgba(255, 0, 0, 0.3);
-  animation: failure-ominous-pulse 2s ease-in-out infinite;
+	/* Ominous red glow */
+	box-shadow:
+		0 8px 32px rgba(0, 0, 0, 0.6),
+		0 0 30px rgba(255, 0, 0, 0.3);
+	animation: failure-ominous-pulse 2s ease-in-out infinite;
 }
 
 /* Screen darkens with each failure */
 .game-screen.failure-active {
-  animation: screen-darken 0.8s ease-out forwards;
-  filter: brightness(0.85);
+	animation: screen-darken 0.8s ease-out forwards;
+	filter: brightness(0.85);
 }
 ```
 
 **Escalating counter tension:**
 
 ```css
-.failure-meter[data-count='1'] { color: var(--color-brand-yellow); }
+.failure-meter[data-count='1'] {
+	color: var(--color-brand-yellow);
+}
 .failure-meter[data-count='2'] {
-  color: #ff6b00;
-  animation: failure-escalation 1.5s ease-in-out infinite;
+	color: #ff6b00;
+	animation: failure-escalation 1.5s ease-in-out infinite;
 }
 .failure-meter[data-count='3'] {
-  color: #ff0000;
-  animation: failure-imminent 1s ease-in-out infinite;
+	color: #ff0000;
+	animation: failure-imminent 1s ease-in-out infinite;
 }
 ```
 
@@ -253,21 +281,22 @@ function handleDamage(amount) {
 
 ```javascript
 async function nextScreen(screenName) {
-  // Exit animation (400ms)
-  currentElement.classList.add('screen-transition-out');
-  soundManager.play('screen-transition', { volume: 0.3 });
-  await sleep(400);
+	// Exit animation (400ms)
+	currentElement.classList.add('screen-transition-out');
+	soundManager.play('screen-transition', { volume: 0.3 });
+	await sleep(400);
 
-  // Change screen
-  currentScreen.set(screenName);
-  await tick();
+	// Change screen
+	currentScreen.set(screenName);
+	await tick();
 
-  // Enter animation (600ms)
-  newElement.classList.add('screen-transition-in');
+	// Enter animation (600ms)
+	newElement.classList.add('screen-transition-in');
 }
 ```
 
 **Transition Types:**
+
 - **Standard screens:** Fade + scale/slide
 - **Round transitions:** Page-turn effect (like journal)
 - **Journal:** Book-opening animation
@@ -283,30 +312,39 @@ async function nextScreen(screenName) {
 **Match UI elements to game theme:**
 
 **Detective Theme Example:**
+
 ```css
 /* Magnifying glass cursor */
-.card:hover { cursor: url('/cursors/magnifying-glass.png') 12 12, pointer; }
+.card:hover {
+	cursor:
+		url('/cursors/magnifying-glass.png') 12 12,
+		pointer;
+}
 
 /* Notebook ruled lines */
 .journal-container {
-  background-image: repeating-linear-gradient(
-    transparent, transparent 29px,
-    rgba(0, 255, 255, 0.1) 29px, rgba(0, 255, 255, 0.1) 30px
-  );
+	background-image: repeating-linear-gradient(
+		transparent,
+		transparent 29px,
+		rgba(0, 255, 255, 0.1) 29px,
+		rgba(0, 255, 255, 0.1) 30px
+	);
 }
 
 /* Push-pin holding evidence photos */
 .card.revealed::after {
-  /* Pin graphic in corner */
+	/* Pin graphic in corner */
 }
 ```
 
 **Sci-Fi Theme Example:**
+
 - Holographic flicker effects
 - Scanline overlays
 - Terminal/console aesthetics
 
 **Horror Theme Example:**
+
 - Blood drip effects
 - Torn paper textures
 - Flickering lights
@@ -327,14 +365,14 @@ async function nextScreen(screenName) {
 ```css
 /* Good - GPU accelerated */
 .animate {
-  transform: translateX(100px);
-  opacity: 0.5;
+	transform: translateX(100px);
+	opacity: 0.5;
 }
 
 /* Bad - causes reflow */
 .animate {
-  left: 100px;
-  width: 200px;
+	left: 100px;
+	width: 200px;
 }
 ```
 
@@ -344,11 +382,13 @@ async function nextScreen(screenName) {
 
 ```css
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
 }
 ```
 
@@ -358,9 +398,9 @@ async function nextScreen(screenName) {
 
 ```javascript
 function toggleSound() {
-  soundEnabled = !soundEnabled;
-  soundManager.setEnabled(soundEnabled);
-  localStorage.setItem('soundEnabled', soundEnabled);
+	soundEnabled = !soundEnabled;
+	soundManager.setEnabled(soundEnabled);
+	localStorage.setItem('soundEnabled', soundEnabled);
 }
 ```
 
@@ -372,18 +412,18 @@ function toggleSound() {
 
 ```css
 :root {
-  /* Durations */
-  --anim-instant: 0.1s;
-  --anim-fast: 0.3s;
-  --anim-normal: 0.5s;
-  --anim-slow: 0.8s;
-  --anim-very-slow: 1.2s;
+	/* Durations */
+	--anim-instant: 0.1s;
+	--anim-fast: 0.3s;
+	--anim-normal: 0.5s;
+	--anim-slow: 0.8s;
+	--anim-very-slow: 1.2s;
 
-  /* Easing functions */
-  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --ease-smooth: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  --ease-out: cubic-bezier(0.215, 0.61, 0.355, 1);
-  --ease-in-out: cubic-bezier(0.645, 0.045, 0.355, 1);
+	/* Easing functions */
+	--ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+	--ease-smooth: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+	--ease-out: cubic-bezier(0.215, 0.61, 0.355, 1);
+	--ease-in-out: cubic-bezier(0.645, 0.045, 0.355, 1);
 }
 ```
 
@@ -391,10 +431,10 @@ function toggleSound() {
 
 ```javascript
 const HEALTH_THRESHOLDS = {
-  high: 70,      // Green, no concern
-  medium: 40,    // Yellow, caution
-  low: 20,       // Orange, warning pulse
-  critical: 1    // Red, urgent heartbeat
+	high: 70, // Green, no concern
+	medium: 40, // Yellow, caution
+	low: 20, // Orange, warning pulse
+	critical: 1 // Red, urgent heartbeat
 };
 ```
 
@@ -433,6 +473,7 @@ const HEALTH_THRESHOLDS = {
 ### Qualitative Goals
 
 Players should report:
+
 - Feeling genuinely nervous during critical moments
 - Wanting to complete games even when failing
 - Remembering specific moments vividly
@@ -453,20 +494,20 @@ Players should report:
 
 ```javascript
 async function complexAnimation() {
-  element.classList.add('phase-1');
-  soundManager.play('sound-1');
-  await sleep(300);
+	element.classList.add('phase-1');
+	soundManager.play('sound-1');
+	await sleep(300);
 
-  element.classList.remove('phase-1');
-  element.classList.add('phase-2');
-  soundManager.play('sound-2');
-  await sleep(500);
+	element.classList.remove('phase-1');
+	element.classList.add('phase-2');
+	soundManager.play('sound-2');
+	await sleep(500);
 
-  element.classList.add('phase-3');
+	element.classList.add('phase-3');
 }
 
 function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 ```
 
@@ -475,30 +516,30 @@ function sleep(ms) {
 ```javascript
 // Calculate state
 $: healthState = (() => {
-  const percent = (health / maxHealth) * 100;
-  if (percent >= 70) return 'high';
-  if (percent >= 40) return 'medium';
-  if (percent >= 20) return 'low';
-  return 'critical';
+	const percent = (health / maxHealth) * 100;
+	if (percent >= 70) return 'high';
+	if (percent >= 40) return 'medium';
+	if (percent >= 20) return 'low';
+	return 'critical';
 })();
 
 // Apply to element
 <div class="health-value" data-percent={healthState}>
-  {health}
-</div>
+	{health}
+</div>;
 ```
 
 ### Sound + Visual Coordination
 
 ```javascript
 async function coordinatedFeedback() {
-  // Start visual and audio together
-  element.classList.add('impact');
-  soundManager.play('impact-sound');
+	// Start visual and audio together
+	element.classList.add('impact');
+	soundManager.play('impact-sound');
 
-  // Time visual cleanup to audio end
-  await sleep(600);
-  element.classList.remove('impact');
+	// Time visual cleanup to audio end
+	await sleep(600);
+	element.classList.remove('impact');
 }
 ```
 
@@ -511,6 +552,7 @@ async function coordinatedFeedback() {
 > W&A games succeed through tactile tension, ritual pacing, and inevitable doom. Every design choice should amplify these feelings digitally.
 
 **Questions to ask:**
+
 - Would this feel satisfying to repeat 50+ times in a game?
 - Does this create a moment of pause/contemplation?
 - Does this make success feel earned and failure feel consequential?
@@ -519,6 +561,7 @@ async function coordinatedFeedback() {
 ---
 
 **Next Steps:**
+
 1. Implement Quick Wins (validate approach)
 2. Build Phase 1 Foundation (test with players)
 3. Iterate based on emotional feedback

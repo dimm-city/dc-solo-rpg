@@ -131,7 +131,7 @@ export function getAllDiceThemes() {
  * @returns {Object|null} The dice theme object or null if not found
  */
 export function getDiceTheme(key) {
-	return DICE_THEMES.find(theme => theme.key === key) || null;
+	return DICE_THEMES.find((theme) => theme.key === key) || null;
 }
 
 /**
@@ -140,7 +140,7 @@ export function getDiceTheme(key) {
  * @returns {Array} Array of dice theme objects matching the category
  */
 export function getDiceThemesByCategory(category) {
-	return DICE_THEMES.filter(theme => theme.category === category);
+	return DICE_THEMES.filter((theme) => theme.category === category);
 }
 
 /**

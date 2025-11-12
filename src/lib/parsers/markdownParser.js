@@ -47,7 +47,9 @@ function parseFrontmatter(content) {
 	const remainingContent = content.substring(closingDelimiter + 5); // Skip \n---\n
 
 	if (frontmatterText.length > MAX_FRONTMATTER_SIZE) {
-		throw new ValidationError('Frontmatter section too large. Should contain only title, subtitle, and messages.');
+		throw new ValidationError(
+			'Frontmatter section too large. Should contain only title, subtitle, and messages.'
+		);
 	}
 
 	// Simple YAML parsing for our limited use case
@@ -65,12 +67,10 @@ function parseFrontmatter(content) {
 
 	// Validate required fields
 	const requiredFields = ['title', 'win-message', 'lose-message'];
-	const missingFields = requiredFields.filter(field => !frontmatter[field]);
+	const missingFields = requiredFields.filter((field) => !frontmatter[field]);
 
 	if (missingFields.length > 0) {
-		throw new ValidationError(
-			`Missing required frontmatter fields: ${missingFields.join(', ')}`
-		);
+		throw new ValidationError(`Missing required frontmatter fields: ${missingFields.join(', ')}`);
 	}
 
 	return { frontmatter, content: remainingContent };
@@ -166,7 +166,7 @@ function parseModifiers(modifierText) {
 		return { explicit: null, special: null };
 	}
 
-	const parts = modifierText.split(',').map(p => p.trim());
+	const parts = modifierText.split(',').map((p) => p.trim());
 	let explicit = null;
 	let special = null;
 
@@ -230,12 +230,12 @@ function parseCardSection(section) {
  */
 function parseCardDeck(cardDeckContent) {
 	// Split by horizontal rules or card headers
-	const cardSections = cardDeckContent.split(/\n---\n/).filter(s => s.trim());
+	const cardSections = cardDeckContent.split(/\n---\n/).filter((s) => s.trim());
 
 	const cardsByType = {
 		'primary-success': [],
 		'failure-counter': [],
-		'narrative': [],
+		narrative: [],
 		'narrative-skip-damage': [],
 		'narrative-return-king': [],
 		challenge: [],
@@ -396,9 +396,9 @@ function assignCardsToDeck(cardsByType) {
 	// 3. Narrative → A♦, A♣, A♠ (with optional modifiers)
 	const narrativeSuits = ['diamonds', 'clubs', 'spades'];
 	const allNarratives = [
-		...cardsByType['narrative'].map(c => ({ ...c, type: 'narrative' })),
-		...cardsByType['narrative-skip-damage'].map(c => ({ ...c, type: 'narrative' })),
-		...cardsByType['narrative-return-king'].map(c => ({ ...c, type: 'narrative' }))
+		...cardsByType['narrative'].map((c) => ({ ...c, type: 'narrative' })),
+		...cardsByType['narrative-skip-damage'].map((c) => ({ ...c, type: 'narrative' })),
+		...cardsByType['narrative-return-king'].map((c) => ({ ...c, type: 'narrative' }))
 	];
 
 	allNarratives.forEach((card, i) => {
@@ -419,11 +419,27 @@ function assignCardsToDeck(cardsByType) {
 
 	// 4. Challenge → 3, 5, 7, 9 (auto-assign or explicit)
 	const challengeRanks = ['3', '5', '7', '9'];
-	assignCardsByType(deck, cardsByType['challenge'], challengeRanks, suits, 'challenge', usedAssignments, addCard);
+	assignCardsByType(
+		deck,
+		cardsByType['challenge'],
+		challengeRanks,
+		suits,
+		'challenge',
+		usedAssignments,
+		addCard
+	);
 
 	// 5. Event → 2, 4, 6, 8, 10, J, Q (auto-assign or explicit)
 	const eventRanks = ['2', '4', '6', '8', '10', 'J', 'Q'];
-	assignCardsByType(deck, cardsByType['event'], eventRanks, suits, 'event', usedAssignments, addCard);
+	assignCardsByType(
+		deck,
+		cardsByType['event'],
+		eventRanks,
+		suits,
+		'event',
+		usedAssignments,
+		addCard
+	);
 
 	return deck;
 }
@@ -469,9 +485,7 @@ function assignCardsByType(deck, cards, ranks, suits, type, usedAssignments, add
 		} else {
 			// Auto-assign
 			if (i >= availableAssignments.length) {
-				throw new ValidationError(
-					`Not enough available ${type} slots for auto-assignment`
-				);
+				throw new ValidationError(`Not enough available ${type} slots for auto-assignment`);
 			}
 
 			const assignment = availableAssignments[i];
