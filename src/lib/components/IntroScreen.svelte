@@ -1,38 +1,44 @@
 <script>
-	import { marked } from 'marked';
+	import { onMount } from 'svelte';
 	import { gameState, transitionTo } from '../stores/gameStore.svelte.js';
 	import { exitGame } from '../stores/gameActions.svelte.js';
 	import ContinueButton from './ContinueButton.svelte';
+	import {
+		hasSeenInstructions,
+		markInstructionsAsSeen
+	} from '../utils/instructionsStorage.js';
 
-	let currentView = $state('choice'); // 'choice', 'rules', 'intro'
-	const backButtonText = $derived(currentView == 'intro' ? 'back' : 'exit');
-	const nextButtonText = $derived(currentView == 'intro' ? 'start' : 'continue');
-	const intro = $derived(marked(gameState.config?.introduction ?? ''));
+	let currentView = $state('choice'); // 'choice' or 'instructions'
+	let instructionsSeen = $state(false);
 
-	function handleChoice(choice) {
-		if (choice === 'skip') {
-			// Skip directly to game
-			transitionTo('rollForTasks');
-		} else if (choice === 'full') {
-			// Show full rules
-			currentView = 'rules';
-		} else if (choice === 'quick') {
-			// Show just the intro/story
-			currentView = 'intro';
+	onMount(() => {
+		// Check if user has already seen instructions
+		instructionsSeen = hasSeenInstructions();
+
+		if (instructionsSeen) {
+			// Skip directly to game intro overlay
+			transitionTo('showIntro');
 		}
+	});
+
+	function handleLearnToPlay() {
+		currentView = 'instructions';
 	}
 
-	function next() {
-		if (currentView == 'rules') {
-			currentView = 'intro';
-		} else {
-			transitionTo('rollForTasks');
-		}
+	function handleSkipInstructions() {
+		// Mark as seen and proceed to game intro
+		markInstructionsAsSeen();
+		transitionTo('showIntro');
 	}
-	function back() {
-		if (currentView == 'rules') {
-			currentView = 'choice';
-		} else if (currentView == 'intro') {
+
+	function handleInstructionsContinue() {
+		// Mark as seen and proceed to game intro
+		markInstructionsAsSeen();
+		transitionTo('showIntro');
+	}
+
+	function handleBack() {
+		if (currentView === 'instructions') {
 			currentView = 'choice';
 		} else {
 			exitGame();
@@ -41,34 +47,15 @@
 </script>
 
 <div class="dc-intro-container">
-	{#if currentView == 'choice'}
+	{#if currentView === 'choice'}
 		<div class="content choice dc-fade-in">
-			<h1>Ready to Begin?</h1>
-			<p class="subtitle">Choose how you'd like to experience the game:</p>
+			<h1>How To Play</h1>
+			<p class="subtitle">
+				Would you like to learn the game mechanics, or skip straight to the story?
+			</p>
 
 			<div class="choice-cards">
-				<button class="choice-card" onclick={() => handleChoice('quick')}>
-					<div class="icon-wrapper">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							width="48"
-							height="48"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-						>
-							<polygon points="5 3 19 12 5 21 5 3" />
-						</svg>
-					</div>
-					<h3>Quick Start</h3>
-					<p>Dive into the story, learn the mechanics as you play</p>
-					<span class="recommendation">Recommended for new players</span>
-				</button>
-
-				<button class="choice-card" onclick={() => handleChoice('full')}>
+				<button class="choice-card" onclick={handleLearnToPlay}>
 					<div class="icon-wrapper">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
@@ -85,12 +72,12 @@
 							<path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
 						</svg>
 					</div>
-					<h3>Read Full Rules</h3>
-					<p>Learn all the mechanics before starting</p>
-					<span class="recommendation">For those who prefer preparation</span>
+					<h3>Learn How to Play</h3>
+					<p>Understand the mechanics before diving into the story</p>
+					<span class="recommendation">Recommended for first-time players</span>
 				</button>
 
-				<button class="choice-card skip-card" onclick={() => handleChoice('skip')}>
+				<button class="choice-card skip-card" onclick={handleSkipInstructions}>
 					<div class="icon-wrapper">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
@@ -107,30 +94,30 @@
 							<line x1="19" x2="19" y1="5" y2="19" />
 						</svg>
 					</div>
-					<h3>Skip Intro</h3>
-					<p>Jump straight into the game</p>
-					<span class="recommendation">For returning players</span>
+					<h3>Skip Instructions</h3>
+					<p>I already know how to play, take me to the story</p>
+					<span class="recommendation">For experienced players</span>
 				</button>
 			</div>
 		</div>
-	{:else if currentView == 'rules'}
-		<div class="content rules dc-fade-in">
+	{:else if currentView === 'instructions'}
+		<div class="content instructions dc-fade-in">
 			<h1>How To Play</h1>
 
 			<h2>The Die</h2>
 			<p>
-				This determines how many tasks you must face in each scene. It also used for tests to see if
-				you are successful on the salvation mechanism and failure checks.
+				This determines how many tasks you must face in each scene. It's also used for tests to see
+				if you are successful on the salvation mechanism and failure checks.
 			</p>
 
 			<h2>The Oracle (a deck of cards)</h2>
 			<p>
 				The deck provides the tasks and challenges you face. Generally, a deck has four
-				topics/areas. The are four cards in the deck that act as your countdowns to failure, one
-				from each topic. When all four failure cards are revealed something in your setting ends
+				topics/areas. There are four cards in the deck that act as your countdowns to failure, one
+				from each topic. When all four failure cards are revealed, something in your setting ends
 				your quest. This may mean death, giving up, becoming lost, or something else. The primary
 				success card acts as a salvation mechanism (see below). The success cards of the other
-				topics give some bonus. Other cards require you to roll a failure check and while others are
+				topics give some bonus. Other cards require you to roll a failure check, while others are
 				safe.
 			</p>
 
@@ -138,10 +125,10 @@
 			<p>
 				Each game has a way of winning. This mechanism arrives with the primary success card. Once
 				the card is drawn, the player rolls a success check at the end of each round. If their roll
-				is successful they earn a success token. After the player has collected all of the required
-				success tokens, their character completes their quest! This may come with a final roll a
-				failure check. If your health meter drops to zero at this stage would snatch conquest away
-				at the last moment.
+				is successful, they earn a success token. After the player has collected all of the required
+				success tokens, their character completes their quest! This may come with a final roll or a
+				failure check. If your health meter drops to zero at this stage, it would snatch conquest
+				away at the last moment.
 			</p>
 
 			<h2>Failure Checks</h2>
@@ -163,27 +150,30 @@
 			<h2>The Journal</h2>
 			<p>
 				Wretched and Alone games are best recorded and documented. Depending on the theme and topic
-				of the game, this might be video/audio logs, a handwritten diary, a typed document or
+				of the game, this might be video/audio logs, a handwritten diary, a typed document, or
 				something else entirely.
 			</p>
 
 			<h2>Win Conditions</h2>
 			<p>
-				If you complete all of the required success checks, the game is over an you have won! Some
+				If you complete all of the required success checks, the game is over and you have won! Some
 				games may allow for additional win conditions.
 			</p>
 		</div>
-	{:else}
-		<div class="content intro dc-fade-in">
-			{@html intro}
-		</div>
 	{/if}
-	{#if currentView !== 'choice'}
-		<div class="button-bar dc-game-bg">
-			<ContinueButton text={backButtonText} onclick={back} testid="intro-back-button" />
-			<ContinueButton text={nextButtonText} onclick={next} testid="intro-next-button" />
-		</div>
-	{/if}
+
+	<div class="button-bar dc-game-bg">
+		{#if currentView === 'choice'}
+			<ContinueButton text="Exit" onclick={handleBack} testid="intro-exit-button" />
+		{:else}
+			<ContinueButton text="Back" onclick={handleBack} testid="intro-back-button" />
+			<ContinueButton
+				text="Continue to Story"
+				onclick={handleInstructionsContinue}
+				testid="intro-continue-button"
+			/>
+		{/if}
+	</div>
 </div>
 
 <style>
@@ -191,11 +181,11 @@
 		display: flex;
 		flex-direction: column;
 		height: 100%;
-		min-height: 0; /* CRITICAL: Allow flex item to shrink below content size */
+		min-height: 0;
 		width: 100%;
 		border-radius: 0;
 		position: relative;
-		overflow: visible; /* Allow glow effects to extend beyond bounds */
+		overflow: visible;
 		box-sizing: border-box;
 	}
 
@@ -205,22 +195,22 @@
 		overflow-x: hidden;
 		padding: var(--space-md);
 		background-color: transparent;
-		min-height: 0; /* CRITICAL: Allows flex item to shrink below content size */
+		min-height: 0;
 	}
 
 	:global(.content h1) {
-		font-size: var(--text-2xl); /* Reduced from 4xl */
+		font-size: var(--text-2xl);
 		margin-bottom: var(--space-md);
 	}
 
 	:global(.content h2) {
-		font-size: var(--text-xl); /* Reduced from 3xl */
+		font-size: var(--text-xl);
 		margin-top: var(--space-lg);
 		margin-bottom: var(--space-xs);
 	}
 
 	:global(.content h3) {
-		font-size: var(--text-lg); /* Reduced from 2xl */
+		font-size: var(--text-lg);
 		margin-top: var(--space-md);
 		margin-bottom: var(--space-xs);
 	}
@@ -231,15 +221,15 @@
 	}
 
 	.button-bar {
-		flex-shrink: 0; /* Prevent button bar from shrinking */
+		flex-shrink: 0;
 		width: 100%;
 		display: flex;
 		gap: var(--space-sm);
 		padding: var(--space-md);
 		background: var(--color-bg-primary);
 		border-top: 2px solid var(--color-cyber-magenta);
-		position: relative; /* Ensure proper stacking */
-		z-index: 10; /* Above content */
+		position: relative;
+		z-index: 10;
 	}
 
 	.button-bar :global(.aug-button-wrapper) {
@@ -249,8 +239,6 @@
 	.button-bar :global(.aug-button) {
 		width: 100%;
 	}
-
-	/* ContinueButton inherits AugmentedButton styles, so same selectors apply */
 
 	/* Choice screen styles */
 	.choice {

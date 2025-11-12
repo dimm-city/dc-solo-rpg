@@ -5,7 +5,8 @@
 export const transitionGraph = {
 	loadGame: ['options'],
 	options: ['intro'],
-	intro: ['rollForTasks'],
+	intro: ['showIntro'],
+	showIntro: ['rollForTasks'],
 	startRound: ['rollForTasks'],
 	rollForTasks: ['drawCard'],
 	drawCard: ['failureCheck', 'drawCard', 'endTurn', 'log', 'gameOver'],

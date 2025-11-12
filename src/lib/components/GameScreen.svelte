@@ -6,6 +6,7 @@
 	import LoadScreen from './LoadScreen.svelte';
 	import OptionsScreen from './OptionsScreen.svelte';
 	import IntroScreen from './IntroScreen.svelte';
+	import GameIntroOverlay from './GameIntroOverlay.svelte';
 	import GameOver from './GameOver.svelte';
 	import JournalEntry from './JournalEntry.svelte';
 	import SuccessCheck from './SuccessCheck.svelte';
@@ -41,6 +42,9 @@
 
 	let showExitModal = $state(false);
 	let showKeyboardHint = $state(false);
+
+	// Show game intro overlay when in showIntro state
+	const showIntroOverlay = $derived(currentScreen === 'showIntro');
 
 	function handleExitClick() {
 		showExitModal = true;
@@ -247,6 +251,9 @@
 	onConfirm={handleExitConfirm}
 	onCancel={handleExitCancel}
 />
+
+<!-- Game Intro Overlay - Shows story/intro text after instructions -->
+<GameIntroOverlay isOpen={showIntroOverlay} />
 
 <style>
 	.dc-intro-wrapper {
