@@ -6,7 +6,7 @@
 	import { page } from '$app/stores';
 	import { initializeDiceBox } from '$lib/stores/diceStore.svelte.js';
 
-	let { children } = $props();
+	let { children, data } = $props();
 	let diceContainer = $state();
 
 	// Show dice only when on game screens (not home, not about)
@@ -34,7 +34,10 @@
 		}
 	});
 </script>
+<svelte:head>
 
+		<link rel="icon" href="{data.icon || "/d20-150.png"}" />
+</svelte:head>
 <!-- Persistent DiceBox container that never unmounts, but can be hidden -->
 <div
 	bind:this={diceContainer}
