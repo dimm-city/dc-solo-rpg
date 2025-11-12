@@ -106,6 +106,9 @@ test.describe('Full Game Validation', () => {
 		// Start the game
 		await page.click('button:has-text("start")');
 		await page.waitForTimeout(1500);
+
+		// Wait for startRound screen to appear
+		await page.waitForSelector('[data-testid="screen-startRound"]', { timeout: 5000 });
 		console.log('✓ Game started\n');
 
 		// ==================== GAME LOOP ====================

@@ -13,49 +13,22 @@ export async function load() {
 	try {
 		const entries = await readdir(gamesDir, { withFileTypes: true });
 
-		// Track unique game slugs
-		const gameMap = new Map();
-
-		// 1. Find V2 format games (.game.md files)
-		entries
+		// Find V2 format games (.game.md files)
+		const games = entries
 			.filter(entry => entry.isFile() && entry.name.endsWith('.game.md'))
-			.forEach(entry => {
+			.map(entry => {
 				const slug = entry.name.replace('.game.md', '');
-				if (!gameMap.has(slug)) {
-					gameMap.set(slug, {
-						slug,
-						title: slug
-							.split('-')
-							.map(word => word.charAt(0).toUpperCase() + word.slice(1))
-							.join(' '),
-						format: 'v2'
-					});
-				}
-			});
+				return {
+					slug,
+					title: slug
+						.split('-')
+						.map(word => word.charAt(0).toUpperCase() + word.slice(1))
+						.join(' ')
+				};
+			})
+			.sort((a, b) => a.title.localeCompare(b.title));
 
-		// 2. Find V1 format games (directories)
-		entries
-			.filter(entry => entry.isDirectory())
-			.forEach(entry => {
-				// Only add if not already added by V2 format
-				if (!gameMap.has(entry.name)) {
-					gameMap.set(entry.name, {
-						slug: entry.name,
-						title: entry.name
-							.split('-')
-							.map(word => word.charAt(0).toUpperCase() + word.slice(1))
-							.join(' '),
-						format: 'v1'
-					});
-				}
-			});
-
-		// Convert to array and sort by title
-		const games = Array.from(gameMap.values()).sort((a, b) =>
-			a.title.localeCompare(b.title)
-		);
-
-		logger.info(`Found ${games.length} games:`, games.map(g => `${g.slug} (${g.format})`));
+		logger.info(`Found ${games.length} V2 games:`, games.map(g => g.slug));
 
 		return {
 			games
