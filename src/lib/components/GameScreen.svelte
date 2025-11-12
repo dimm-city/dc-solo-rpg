@@ -30,7 +30,10 @@
 		confirmFailureCheck,
 		successCheck,
 		startRound,
-		performFinalDamageRoll
+		performFinalDamageRoll,
+		recordRound,
+		restartGame,
+		exitGame
 	} from '../stores/gameActions.svelte.js';
 
 	let {
@@ -169,6 +172,49 @@
 				: 'Victory slipped away... Click to continue'
 			: 'Roll for your final test'
 	);
+
+	// DrawCard button state
+	let drawCardRef = $state();
+
+	// Reactive derived values for DrawCard button
+	const drawCardButtonText = $derived(drawCardRef?.getButtonText() ?? 'PROCEED TO NEXT BYTE');
+	const drawCardButtonDisabled = $derived(drawCardRef?.isButtonDisabled() ?? false);
+
+	async function handleDrawCardClick() {
+		if (drawCardRef) {
+			await drawCardRef.handleButtonClick();
+		}
+	}
+
+	// JournalEntry button state
+	let journalSaved = $state(false);
+	const journal = $state({ text: '' });
+
+	// Reset journal state when screen changes to log/finalLog
+	$effect(() => {
+		if (currentScreen === 'log' || currentScreen === 'finalLog') {
+			journalSaved = false;
+		}
+	});
+
+	async function handleJournalSave() {
+		await recordRound(journal);
+		journal.text = '';
+		journalSaved = true;
+		onjournalsaved(journal);
+	}
+
+	async function handleJournalNext() {
+		// recordRound already handles the state transition
+	}
+
+	async function handleJournalRestart() {
+		await restartGame();
+	}
+
+	async function handleJournalExit() {
+		await exitGame();
+	}
 
 	// Show mini HUD during card-related screens
 	const showMiniHUD = $derived(
@@ -339,7 +385,7 @@
 							data-testid="screen-drawCard"
 							transition:fade={{ duration: TRANSITION_DURATION }}
 						>
-							<DrawCard />
+							<DrawCard bind:this={drawCardRef} />
 						</div>
 					{:else if currentScreen == 'failureCheck'}
 						<div
@@ -371,7 +417,7 @@
 							data-testid="screen-journal"
 							transition:fade={{ duration: TRANSITION_DURATION }}
 						>
-							<JournalEntry {onjournalsaved} />
+							<JournalEntry bind:journalText={journal.text} />
 						</div>
 					{:else}
 						<div transition:fade={{ duration: TRANSITION_DURATION }}>error: {currentScreen}</div>
@@ -399,6 +445,14 @@
 							disabled={rollForTasksButtonDisabled}
 							testid="roll-tasks-button"
 						/>
+					{:else if currentScreen === 'drawCard'}
+						<ContinueButton
+							text={drawCardButtonText}
+							onclick={handleDrawCardClick}
+							disabled={drawCardButtonDisabled}
+							testid="card-deck-button"
+							class="neural-cta-wrapper"
+						/>
 					{:else if currentScreen === 'failureCheck'}
 						<ContinueButton
 							text={failureCheckButtonText}
@@ -420,6 +474,33 @@
 							disabled={finalDamageRolling}
 							testid="final-damage-roll-button"
 						/>
+					{:else if currentScreen === 'log' || currentScreen === 'finalLog'}
+						{#if journalSaved}
+							{#if gameState.gameOver}
+								<ContinueButton
+									text={gameState.config?.labels?.journalEntryRestartButtonText ?? 'Restart'}
+									onclick={handleJournalRestart}
+									testid="journal-restart-button"
+								/>
+								<ContinueButton
+									text={gameState.config?.labels?.journalEntryExitButtonText ?? 'Exit'}
+									onclick={handleJournalExit}
+									testid="journal-exit-button"
+								/>
+							{:else}
+								<ContinueButton
+									text={gameState.config?.labels?.journalEntryNextButtonText ?? 'Next'}
+									onclick={handleJournalNext}
+									testid="journal-next-button"
+								/>
+							{/if}
+						{:else}
+							<ContinueButton
+								text={gameState.config?.labels?.journalEntrySaveButtonText ?? 'Save'}
+								onclick={handleJournalSave}
+								testid="journal-save-button"
+							/>
+						{/if}
 					{/if}
 				</div>
 				<div class="toolbar-right">

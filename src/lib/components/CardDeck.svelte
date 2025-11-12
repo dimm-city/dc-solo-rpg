@@ -6,6 +6,7 @@
 
 	let { card = $bindable(null), onrequestcard = () => {}, onconfirmcard = () => {} } = $props();
 
+	// animationStage is accessible via component reference
 	let animationStage = $state('idle'); // 'idle', 'anticipating', 'materializing', 'revealed', 'dismissing'
 	let canvas = $state();
 	let ctx = $state();
@@ -290,16 +291,7 @@
 			</div>
 		{/if}
 	</div>
-	<div class="dc-dice-roller-header dc-header">
-		<!-- Neural CTA button -->
-		<ContinueButton
-			text={buttonText}
-			onclick={onButtonClick}
-			disabled={isButtonDisabled}
-			testid="card-deck-button"
-			class="neural-cta-wrapper"
-		/>
-	</div>
+	<!-- Button moved to GameScreen toolbar -->
 </div>
 
 <style>
@@ -308,13 +300,11 @@
 	   ============================================ */
 
 	.dc-card-deck {
-		display: grid;
-		grid-template-rows: 1fr auto;
+		display: flex;
 		width: 100%;
 		height: 100%;
 		align-items: center;
-		justify-items: center;
-		gap: 1rem;
+		justify-content: center;
 	}
 
 	/* ============================================

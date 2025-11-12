@@ -279,7 +279,10 @@
 		--aug-tl: 8px; /* Gentle entry */
 		--aug-tr: 14px; /* Strong tab → connects to Failure */
 		--aug-br: 14px; /* Strong tab → connects to Bonus (mobile) */
-		--aug-rect-tr5: 15px;
+		
+		/* Right side rectangle extension - creates puzzle tab */
+		--aug-r-extend1: 30px;
+		--aug-r-inset1: 12px;
 
 		/* Enhanced Glow - animation removed */
 		box-shadow:
@@ -308,13 +311,17 @@
 	}
 
 	.failure-stat {
-		/* Augmented UI Configuration - Receiver with downward tab */
+		/* Augmented UI Configuration - Receiver with matching inset */
 		--aug-border-bg: linear-gradient(135deg, var(--color-cyber-magenta), var(--color-brand-yellow));
 		--aug-tl: 14px; /* Slot ← receives Health's tab */
 		--aug-tr: 8px; /* Gentle transition */
-		--aug-l: 8px;
 		--aug-br: 14px; /* Strong tab → connects to Success (mobile) */
-
+		
+		/* Left side rectangle inset - receives puzzle tab from health */
+		--aug-l-extend1: 10px;
+		--aug-l-inset1: 15px;
+		margin-inline-start: -25px;
+		padding-inline-start: var(--space-xl);
 		/* Enhanced Glow - animation removed */
 		box-shadow:
 			0 0 20px rgba(217, 70, 239, 0.6),
@@ -380,7 +387,7 @@
 	.success-stat {
 		/* Augmented UI Configuration - Terminus with receiving slot */
 		--aug-border-bg: linear-gradient(135deg, var(--color-neon-cyan), var(--color-brand-yellow));
-		--aug-tl: 8px; /* Slot ← receives Bonus's tab (desktop) OR Failure's tab (mobile) */
+		--aug-tl: 6px; /* Slot ← receives Bonus's tab (desktop) OR Failure's tab (mobile) */
 		--aug-tr: 8px; /* Gentle endpoint */
 		--aug-br: 4px; /* Gentle terminus */
 		--aug-bl: 4px; /* Visual anchor */
