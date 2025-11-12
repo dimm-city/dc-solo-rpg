@@ -15,20 +15,23 @@ export async function load() {
 
 		// Find V2 format games (.game.md files)
 		const games = entries
-			.filter(entry => entry.isFile() && entry.name.endsWith('.game.md'))
-			.map(entry => {
+			.filter((entry) => entry.isFile() && entry.name.endsWith('.game.md'))
+			.map((entry) => {
 				const slug = entry.name.replace('.game.md', '');
 				return {
 					slug,
 					title: slug
 						.split('-')
-						.map(word => word.charAt(0).toUpperCase() + word.slice(1))
+						.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
 						.join(' ')
 				};
 			})
 			.sort((a, b) => a.title.localeCompare(b.title));
 
-		logger.info(`Found ${games.length} V2 games:`, games.map(g => g.slug));
+		logger.info(
+			`Found ${games.length} V2 games:`,
+			games.map((g) => g.slug)
+		);
 
 		return {
 			games
