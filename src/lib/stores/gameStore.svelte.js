@@ -56,6 +56,7 @@ let gameState = $state({
 
 	// Config
 	config: null,
+	originalConfig: null, // Pristine copy for restart
 	systemConfig: null,
 	stylesheet: '',
 

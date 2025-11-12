@@ -2,6 +2,7 @@
 	import { gameState, transitionTo } from '../stores/gameStore.svelte.js';
 	import { fade } from 'svelte/transition';
 	import { initializeDiceBox } from '../stores/diceStore.svelte.js';
+	import { exitGame } from '../stores/gameActions.svelte.js';
 
 	import LoadScreen from './LoadScreen.svelte';
 	import OptionsScreen from './OptionsScreen.svelte';
@@ -15,6 +16,7 @@
 	import FailureCheck from './FailureCheck.svelte';
 	import StatusDisplay from './StatusDisplay.svelte';
 	import ContinueButton from './ContinueButton.svelte';
+	import ConfirmModal from './ConfirmModal.svelte';
 
 	let {
 		systemSettings = {},
@@ -27,6 +29,7 @@
 
 	let diceContainer = $state();
 	let diceInitialized = $state(false);
+	let showExitModal = $state(false);
 
 	// Initialize dice box when container becomes available
 	$effect(() => {
@@ -35,6 +38,20 @@
 			initializeDiceBox(diceContainer);
 		}
 	});
+
+	function handleExitClick() {
+		showExitModal = true;
+	}
+
+	async function handleExitConfirm() {
+		showExitModal = false;
+		diceInitialized = false; // Reset so DiceBox reinitializes on next game
+		await exitGame();
+	}
+
+	function handleExitCancel() {
+		showExitModal = false;
+	}
 </script>
 
 {#if currentScreen == 'loadGame'}
@@ -84,7 +101,7 @@
 				<Toolbar />
 			</div> -->
 			<div class="status-display-area dc-fade-in" data-testid="status-display">
-				<StatusDisplay />
+				<StatusDisplay onExitClick={handleExitClick} />
 			</div>
 			<div class="main-screen-area dc-table-bg">
 				{#key currentScreen}
@@ -159,6 +176,17 @@
 		</div>
 	</div>
 {/if}
+
+<!-- Modal rendered at root level, outside game-screen container -->
+<ConfirmModal
+	isOpen={showExitModal}
+	title="Exit Game"
+	message="Are you sure you want to exit? Your current game progress will be lost and you'll return to the options screen."
+	confirmText="Exit Game"
+	cancelText="Continue Playing"
+	onConfirm={handleExitConfirm}
+	onCancel={handleExitCancel}
+/>
 
 <style>
 	.dc-intro-wrapper {

@@ -62,6 +62,7 @@ export function initializeGame(gameConfig, player, options = {}) {
 	// Initialize all game state in one operation
 	Object.assign(gameState, {
 		config: finalConfig,
+		originalConfig: JSON.parse(JSON.stringify(finalConfig)), // Deep copy for restart
 		stylesheet: finalConfig.stylesheet || gameConfig.stylesheet || '',
 		systemConfig: { gameConfigUrl: `/games/${gameConfig.slug || 'default'}/` },
 		state: 'options',

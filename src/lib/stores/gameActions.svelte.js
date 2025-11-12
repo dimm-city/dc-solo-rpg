@@ -379,9 +379,10 @@ export function restartGame() {
  */
 export async function exitGame() {
 	const player = gameState.player;
+	const originalConfig = gameState.originalConfig;
 
-	// Reset state
-	gameState.config = {};
+	// Reset state (restore original config for restart)
+	gameState.config = JSON.parse(JSON.stringify(originalConfig)); // Deep copy
 	gameState.player = player;
 	gameState.deck = [];
 	gameState.tokens = 10;
@@ -401,4 +402,9 @@ export async function exitGame() {
 	gameState.stylesheet = '';
 
 	transitionTo('exitGame');
+
+	// Immediately transition to options screen after resetting state
+	setTimeout(() => {
+		transitionTo('options');
+	}, 0);
 }
