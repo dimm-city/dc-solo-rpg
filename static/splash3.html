@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dimm City – Loading Screen (Variant 3)</title>
+  <!--
+    Variant 3 splash screen for Dimm City.
+
+    This screen conjures an ethereal cityscape silhouetted against a dark night
+    sky. Neon bars of varying heights evoke skyscrapers and high‑rise towers
+    glowing softly in the distance. A sweeping light scans across the bottom
+    skyline, hinting at activity within. The headline and tagline flicker
+    intermittently, reinforcing the cyberpunk ambience. Everything is built
+    using pure HTML and CSS for ease of integration.
+  -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #04060B;
+      --neon-yellow: #FFE400;
+      --neon-cyan: #00FFFF;
+      --neon-magenta: #FF00FF;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background-color: var(--bg-color);
+      background-image:
+        radial-gradient(circle at 20% 30%, rgba(0, 255, 255, 0.1), transparent 60%),
+        radial-gradient(circle at 80% 70%, rgba(255, 0, 255, 0.08), transparent 65%),
+        radial-gradient(circle at 50% 90%, rgba(255, 255, 0, 0.05), transparent 80%);
+      color: var(--neon-yellow);
+      font-family: 'Orbitron', sans-serif;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Heading styles */
+    h1 {
+      margin: 0;
+      font-size: 3.2rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      text-align: center;
+      animation: glowFlicker 4s infinite;
+      text-shadow:
+        0 0 5px var(--neon-yellow),
+        0 0 20px var(--neon-yellow),
+        0 0 40px var(--neon-cyan);
+    }
+
+    @keyframes glowFlicker {
+      0%, 18%, 22%, 25%, 53%, 100% { opacity: 1; }
+      19%, 24%, 55% { opacity: 0.5; }
+    }
+
+    p.tagline {
+      margin-top: 0.8rem;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1rem;
+      color: var(--neon-cyan);
+      text-shadow: 0 0 10px var(--neon-cyan);
+      animation: taglineFlicker 3.5s infinite;
+    }
+
+    @keyframes taglineFlicker {
+      0%, 15%, 60%, 100% { opacity: 1; }
+      16%, 35%, 57% { opacity: 0.3; }
+    }
+
+    /* City skyline container at the bottom */
+    .skyline {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 25%;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* Individual buildings */
+    .building {
+      width: 4%;
+      margin: 0 1%;
+      background: linear-gradient(to top, rgba(0, 255, 255, 0.6), rgba(0, 255, 255, 0.1));
+      box-shadow: 0 0 5px var(--neon-cyan), 0 0 10px var(--neon-cyan);
+      animation: pulseBuilding 3s infinite ease-in-out;
+    }
+
+    /* Different heights for variety */
+    .h-1 { height: 40%; }
+    .h-2 { height: 60%; }
+    .h-3 { height: 35%; }
+    .h-4 { height: 50%; }
+    .h-5 { height: 70%; }
+    .h-6 { height: 45%; }
+    .h-7 { height: 55%; }
+
+    @keyframes pulseBuilding {
+      0%, 100% { opacity: 0.9; }
+      50% { opacity: 1; box-shadow: 0 0 8px var(--neon-cyan), 0 0 20px var(--neon-cyan); }
+    }
+
+    /* Sweeping light scanning across the skyline */
+    /* Sweeping light scanning across the skyline */
+    .skyline::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      /* start off‑screen to the left; width less than container for a tighter beam */
+      left: -30%;
+      width: 30%;
+      height: 100%;
+      /* create a soft white beam with cyan tint */
+      background: linear-gradient(90deg,
+        rgba(0, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.5) 50%,
+        rgba(0, 255, 255, 0) 100%
+      );
+      mix-blend-mode: screen;
+      opacity: 0.5;
+      animation: sweep 4s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes sweep {
+      0%   { left: -30%; }
+      100% { left: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Entering the Neon</h1>
+  <p class="tagline">Synchronising dream sequences…</p>
+
+  <!-- City skyline representation -->
+  <div class="skyline">
+    <div class="building h-2"></div>
+    <div class="building h-4"></div>
+    <div class="building h-1"></div>
+    <div class="building h-5"></div>
+    <div class="building h-3"></div>
+    <div class="building h-6"></div>
+    <div class="building h-2"></div>
+    <div class="building h-7"></div>
+    <div class="building h-1"></div>
+    <div class="building h-4"></div>
+  </div>
+</body>
+</html>

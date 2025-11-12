@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dimm City – Game Over (Variant 2)</title>
+  <!--
+    Game Over screen variant 2 matching the animated lettering splash. Here, the
+    phrase "Game Over" appears letter by letter from the top, accentuated by
+    scanlines and a subtle glitch effect. Colours shift toward red and
+    magenta to signal failure while keeping the cyberpunk aesthetic.
+  -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #05070A;
+      --neon-yellow: #FFE400;
+      --neon-cyan: #00FFFF;
+      --neon-magenta: #FF00FF;
+      --neon-red: #FF2A6D;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+    }
+    body {
+      background-color: var(--bg-color);
+      background-image:
+        radial-gradient(circle at 50% 50%, rgba(255, 0, 255, 0.08), transparent 75%),
+        radial-gradient(circle at 25% 75%, rgba(255, 42, 109, 0.1), transparent 70%);
+      font-family: 'Orbitron', sans-serif;
+      color: var(--neon-red);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+    /* scanlines overlay */
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: repeating-linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.05) 0px,
+        rgba(255, 255, 255, 0.05) 2px,
+        transparent 2px,
+        transparent 4px
+      );
+      pointer-events: none;
+      animation: scan 10s linear infinite;
+    }
+    @keyframes scan {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-4px); }
+    }
+    #game-over {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      font-size: 4rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      text-shadow:
+        0 0 5px var(--neon-red),
+        0 0 20px var(--neon-magenta),
+        0 0 35px var(--neon-magenta);
+    }
+    #game-over span {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(-80px);
+      animation: dropIn 0.9s forwards;
+    }
+    /* delays for each letter */
+    #game-over span:nth-child(1) { animation-delay: 0.1s; }
+    #game-over span:nth-child(2) { animation-delay: 0.25s; }
+    #game-over span:nth-child(3) { animation-delay: 0.4s; }
+    #game-over span:nth-child(4) { animation-delay: 0.55s; }
+    #game-over span:nth-child(5) { animation-delay: 0.7s; }
+    #game-over span:nth-child(6) { animation-delay: 0.85s; }
+    #game-over span:nth-child(7) { animation-delay: 1.0s; }
+    #game-over span:nth-child(8) { animation-delay: 1.15s; }
+    #game-over span:nth-child(9) { animation-delay: 1.3s; }
+    @keyframes dropIn {
+      0% {
+        opacity: 0;
+        transform: translateY(-80px) scale(0.9);
+        filter: blur(4px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+      }
+    }
+    /* subtitle */
+    #restart {
+      margin-top: 1rem;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1rem;
+      color: var(--neon-cyan);
+      text-shadow: 0 0 10px var(--neon-cyan);
+      animation: flicker 3s infinite;
+    }
+    @keyframes flicker {
+      0%, 20%, 50%, 100% { opacity: 1; }
+      10%, 40%, 70% { opacity: 0.3; }
+    }
+  </style>
+</head>
+<body>
+  <div id="game-over">
+    <span>G</span><span>A</span><span>M</span><span>E</span><span>&nbsp;</span><span>O</span><span>V</span><span>E</span><span>R</span>
+  </div>
+  <div id="restart">Press any key to restart</div>
+</body>
+</html>

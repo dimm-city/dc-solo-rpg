@@ -1,10 +1,13 @@
 <script>
 	import Game from '$lib/components/Game.svelte';
 	import { initializeGame } from '$lib/stores/gameInit.js';
+	import { getAllDiceThemes } from '$lib/configuration/DiceThemes.js';
 	import { onMount } from 'svelte';
 
 	/** @type {import('./$types').PageData} */
 	let { data } = $props();
+
+	const availableDiceThemes = getAllDiceThemes();
 
 	onMount(() => {
 		// Initialize game state using centralized initialization logic
@@ -17,7 +20,7 @@
 </svelte:head>
 
 <div class="game-page" data-testid="game-page">
-	<Game systemSettings={{ player: data.player }} />
+	<Game systemSettings={{ player: data.player, availableDiceThemes }} />
 </div>
 
 <style>
