@@ -425,10 +425,26 @@
 				{/key}
 			</div>
 
-			<!-- Toolbar at bottom with deck visualization and buttons -->
+			<!-- Toolbar at bottom with exit button and deck visualization -->
 			<div class="toolbar-area" data-augmented-ui="tl-clip tr-clip border">
 				<div class="toolbar-left">
-					<DeckVisualization />
+					<button class="toolbar-button exit-button" onclick={handleExitClick} aria-label="Exit game">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							width="24"
+							height="24"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							aria-hidden="true"
+						>
+							<path d="M18 6 6 18" />
+							<path d="m6 6 12 12" />
+						</svg>
+					</button>
 				</div>
 				<div class="toolbar-center">
 					<!-- Action buttons will go here based on current screen -->
@@ -504,23 +520,7 @@
 					{/if}
 				</div>
 				<div class="toolbar-right">
-					<button class="toolbar-button exit-button" onclick={handleExitClick} aria-label="Exit game">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							width="24"
-							height="24"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							aria-hidden="true"
-						>
-							<path d="M18 6 6 18" />
-							<path d="m6 6 12 12" />
-						</svg>
-					</button>
+					<DeckVisualization />
 				</div>
 			</div>
 		</div>
