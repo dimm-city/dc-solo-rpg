@@ -60,6 +60,9 @@
 
 {#if showContent}
 	<section class="form-container" data-testid="home-page" transition:fade={{ duration: 600 }}>
+		<div class="page-header">
+			<a href="/about" class="about-link">About</a>
+		</div>
 		<div class="welcome-container">
 			<div class="dc-start-screen-container" data-testid="game-selector">
 				<h2>Select a Game</h2>
@@ -105,6 +108,42 @@
 	:global(body) {
 		overflow-y: auto;
 	}
+
+	.page-header {
+		display: flex;
+		justify-content: flex-end;
+		padding: var(--space-md) var(--space-lg);
+		border-bottom: var(--border-width-default) solid var(--color-cyber-magenta);
+		margin-bottom: var(--space-lg);
+	}
+
+	.about-link {
+		font-family: var(--font-display);
+		font-size: var(--text-sm);
+		font-weight: 700;
+		color: var(--color-brand-yellow);
+		text-decoration: none;
+		text-transform: uppercase;
+		letter-spacing: var(--letter-spacing-wide);
+		padding: var(--space-sm) var(--space-md);
+		border: var(--border-width-default) solid var(--color-cyber-magenta);
+		transition: all var(--transition-fast);
+		display: inline-flex;
+		align-items: center;
+	}
+
+	.about-link:hover {
+		color: var(--color-neon-cyan);
+		border-color: var(--color-neon-cyan);
+		box-shadow: var(--glow-cyan);
+		transform: translateY(-2px);
+		text-shadow: var(--text-glow-cyan);
+	}
+
+	.about-link:active {
+		transform: translateY(-1px);
+	}
+
 	.welcome-container {
 		display: flex;
 		flex-direction: column;
@@ -199,8 +238,8 @@
 
 		/* Staggered fade-in animation */
 		animation:
-			cardFadeIn 0.6s ease-out backwards,
-			float 6s ease-in-out infinite;
+			cardFadeIn 0.6s ease-out 0.3s backwards,
+			float 25s ease-in-out infinite;
 	}
 
 	/* Ethereal floating animation */
@@ -513,7 +552,9 @@
 
 		.game-card:hover,
 		.game-card.selected,
-		.game-card:active {
+		.game-card:active,
+		.about-link:hover,
+		.about-link:active {
 			transition: none !important;
 			transform: none !important;
 		}
