@@ -9,11 +9,11 @@
 
 <div class="dc-journal-container">
 	<div class="journal-header-area">
-		<h2>{gameState.config?.labels?.journalEntryHeader ?? 'Journal Entry'}</h2>
-		<h3>{gameState.config?.labels?.journalEntrySubHeader ?? 'Record your progress'}</h3>
+		<h6>{gameState.config?.labels?.journalEntryHeader ?? 'Journal Entry'}</h6>
+		<blockquote>{gameState.config?.labels?.journalEntrySubHeader ?? 'Record your progress'}</blockquote>
 
 		{#each currentEvents as event (event.id)}
-			<p>{event.id}:{event.description}</p>
+			<p>{event.description}</p>
 		{/each}
 	</div>
 	<div class="text-entry-area">
@@ -28,7 +28,7 @@
 		height: 100%;
 		padding: var(--dc-default-padding);
 		grid-template-columns: 1fr;
-		grid-template-rows: auto 1fr;
+		grid-template-rows: 1fr auto;
 		row-gap: 0.5rem;
 		grid-auto-flow: row;
 		grid-template-areas:
@@ -41,6 +41,9 @@
 		grid-area: header-area;
 		overflow-y: auto;
 		max-height: 40vh; /* Limit header height to prevent overflow */
+		p {
+			margin: var(--space-sm) 0;
+		}
 	}
 
 	.text-entry-area {
@@ -50,21 +53,12 @@
 		min-height: 0; /* Allow flex shrinking */
 	}
 
-	h2 {
-		margin-bottom: 0.75rem;
-		font-size: var(--text-lg); /* Reduce from default h2 size */
-	}
-	h3 {
-		font-size: var(--text-base); /* Reduce from default h3 size */
-		margin-top: 0.5rem;
-	}
-	p {
-		padding-block: 0.25rem;
-	}
+	
 	textarea {
 		width: 100%;
 		flex: 1;
 		min-height: 8rem; /* Minimum comfortable size */
+		max-height: 12rem;
 		box-sizing: border-box;
 		resize: vertical; /* Allow vertical resizing */
 		font-family: inherit;

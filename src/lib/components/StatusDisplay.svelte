@@ -236,14 +236,14 @@
 		grid-template-columns: repeat(3, 1fr);
 		gap: var(--space-sm);
 		width: stretch;
-		&>div{
+		& > div {
 			display: flex;
 			flex-direction: row;
 		}
-		&>div:nth-of-type(2){
+		& > div:nth-of-type(2) {
 			justify-content: center;
 		}
-		&>div:last-of-type{
+		& > div:last-of-type {
 			justify-content: flex-end;
 		}
 	}
@@ -567,14 +567,32 @@
 	/* Mobile - 2x2 grid */
 	@media (max-width: 600px) {
 		.stats-grid {
-			grid-template-columns: repeat(2, 1fr);
-			gap: var(--space-sm);
+			/* Display as 2 columns, hiding middle */
+			display: flex;
+			flex-direction: row;
+			gap: 0;
+			justify-content: space-between;
+		}
+
+		/* Hide the "Last Roll" column on mobile */
+		.stats-grid > div:nth-of-type(2) {
+			display: none;
+		}
+
+		/* Make the stat columns display as flex column to stack items */
+		.stats-grid > div:first-of-type,
+		.stats-grid > div:last-of-type {
+			display: flex;
+			flex-direction: column;
+			gap: 0;
+			flex: 1;
 		}
 
 		.stat-item {
 			padding: var(--space-xs);
 			min-height: 44px;
 			gap: 4px;
+			width: 100%; /* Full width for better interlocking */
 		}
 
 		.stat-label {
@@ -634,6 +652,60 @@
 		/* Hide help icons on mobile to save space */
 		.stat-label :global(.help-icon) {
 			display: none;
+		}
+
+		/* Mobile Puzzle Piece Interlocking - 2x2 Grid */
+		/* Health: Top-left - extends right AND down */
+		.health-stat {
+			/* Horizontal right extension for Health → Failure */
+			--aug-r-extend1: 25px;
+			--aug-r-inset1: 10px;
+			
+			/* Vertical bottom extension for Health → Bonus */
+			--aug-b-extend1: 25px;
+			--aug-b-inset1: 10px;
+		}
+
+		/* Failure: Top-right - receives left AND extends down */
+		.failure-stat {
+			/* Horizontal left inset to receive Health's tab */
+			--aug-l-extend1: 25px;
+			--aug-l-inset1: 10px;
+			margin-inline-start: -20px;
+			padding-inline-start: var(--space-lg);
+			
+			/* Vertical bottom extension for Failure → Success */
+			--aug-b-extend1: 25px;
+			--aug-b-inset1: 10px;
+		}
+
+		/* Bonus: Bottom-left - receives top AND extends right */
+		.bonus-stat {
+			/* Horizontal right extension for Bonus → Success */
+			--aug-r-extend1: 25px;
+			--aug-r-inset1: 10px;
+			
+			/* Vertical top inset to receive Health's tab */
+			--aug-t-extend1: 25px;
+			--aug-t-inset1: 10px;
+			margin-block-start: -20px;
+			padding-block-start: calc(var(--space-lg) + 4px);
+			padding-inline-start: var(--space-sm);
+		}
+
+		/* Success: Bottom-right - receives left AND top */
+		.success-stat {
+			/* Horizontal left inset to receive Bonus's tab */
+			--aug-l-extend1: 25px;
+			--aug-l-inset1: 10px;
+			margin-inline-start: -20px;
+			padding-inline-start: calc(var(--space-lg) + 4px);
+			
+			/* Vertical top inset to receive Failure's tab */
+			--aug-t-extend1: 25px;
+			--aug-t-inset1: 10px;
+			margin-block-start: -20px;
+			padding-block-start: calc(var(--space-lg) + 4px);
 		}
 	}
 
