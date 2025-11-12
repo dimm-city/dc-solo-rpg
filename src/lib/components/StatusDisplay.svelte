@@ -649,7 +649,30 @@
 
 		.player-round-bar {
 			padding: var(--space-sm);
+			gap: var(--space-xs);
+			flex-wrap: wrap;
+		}
+
+		.player-round-bar h5 {
+			font-size: 0.8rem;
+			max-width: 150px;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
+
+		.info-segment-with-deck {
 			gap: var(--space-sm);
+		}
+
+		/* Hide help icons on mobile to save space */
+		.stat-label :global(.help-icon) {
+			display: none;
+		}
+
+		/* Hide deck visualization on mobile to prevent overflow */
+		.info-segment-with-deck :global(.deck-container) {
+			display: none;
 		}
 	}
 
