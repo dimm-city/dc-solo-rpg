@@ -426,7 +426,7 @@
 			</div>
 
 			<!-- Toolbar at bottom with exit button and deck visualization -->
-			<div class="toolbar-area" data-augmented-ui="tl-clip tr-clip border">
+			<div class="toolbar-area" data-augmented-ui="tl-clip tr-clip br-clip bl-clip border">
 				<div class="toolbar-left">
 					<button class="toolbar-button exit-button" onclick={handleExitClick} aria-label="Exit game">
 						<svg
@@ -653,22 +653,56 @@
 	/* Toolbar Area - Bottom bar with deck viz and buttons */
 	.toolbar-area {
 		grid-area: toolbar-area;
+
+		/* Augmented UI Configuration - Match player-round-bar */
+		--aug-border-all: 2px;
+		--aug-border-bg: linear-gradient(135deg, #00eeff 0%, #ff00ff 50%, #00ffaa 100%);
+		--aug-tl: 14px;
+		--aug-tr: 14px;
+		--aug-br: 14px;
+		--aug-bl: 14px;
+
+		/* Layout */
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		width: 100%;
 		min-height: 60px;
-		padding: var(--space-sm) var(--space-md);
-		background: linear-gradient(135deg, rgba(10, 10, 20, 0.95), rgba(15, 15, 25, 0.9));
-		backdrop-filter: blur(10px);
-		-webkit-backdrop-filter: blur(10px);
-		border: 1px solid rgba(0, 255, 255, 0.3);
-		box-shadow:
-			0 -4px 20px rgba(0, 0, 0, 0.3),
-			0 0 20px rgba(0, 255, 255, 0.1),
-			inset 0 1px 0 rgba(255, 255, 255, 0.05);
+		padding: var(--space-md);
 		position: relative;
 		z-index: 100;
+
+		/* Glassmorphism Effect - Match player-round-bar */
+		background: linear-gradient(
+			135deg,
+			rgba(100, 50, 200, 0.3),
+			rgba(50, 150, 255, 0.25),
+			rgba(100, 50, 200, 0.2)
+		);
+		backdrop-filter: blur(12px) saturate(180%);
+		-webkit-backdrop-filter: blur(12px) saturate(180%);
+
+		/* Enhanced Multi-layer Glow - Match player-round-bar */
+		box-shadow:
+			0 0 30px rgba(0, 238, 255, 0.7),
+			0 0 60px rgba(0, 238, 255, 0.4),
+			0 0 90px rgba(0, 238, 255, 0.2),
+			inset 0 0 30px rgba(255, 0, 255, 0.25),
+			inset 0 0 50px rgba(0, 255, 255, 0.1);
+
+		/* Slide-in animation from bottom */
+		animation: toolbar-slide-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+	}
+
+	@keyframes toolbar-slide-in {
+		from {
+			transform: translateY(100%);
+			opacity: 0;
+		}
+		to {
+			transform: translateY(0);
+			opacity: 1;
+		}
 	}
 
 	.toolbar-left {
