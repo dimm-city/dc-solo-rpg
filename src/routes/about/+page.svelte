@@ -39,34 +39,24 @@
 	<h2>Easy Game Creation</h2>
 
 	<p>
-		The game creation process for the DC Solo RPG system is designed to be easy for anyone. The
-		three steps to create a game are:
+		The game creation process for the DC Solo RPG system uses a simple markdown-based format.
+		Create a game by writing a single <code>.game.md</code> file with:
 	</p>
 
 	<ol>
 		<li>
-			<a href="https://github.com/dimm-city/dc-solo-rpg/raw/main/docs/templates.zip"
-				>Download the game templates</a
-			>
+			YAML frontmatter with title, subtitle, win/lose messages
 		</li>
 		<li>
-			Modify the <code>config.yml</code> file that holds the game configuration, such as the title, subtitle,
-			introduction, and more.
+			Introduction sections using markdown headers
 		</li>
 		<li>
-			Modify the description of each card in the <code>deck.csv</code> file to provide the card text.
-		</li>
-		<li>
-			Modify the <code>theme.css</code> file to achieve the desired visual style, such as colors, fonts,
-			and layout.
+			52 card definitions organized by type (Primary Success, Failure Counter, Narrative, Challenge, Event)
 		</li>
 	</ol>
 
 	<p>
-		If you would like more information about building a game, you can read the full guide here: <a
-			href="https://github.com/dimm-city/dc-solo-rpg/blob/main/docs/how-to-build-a-game.md"
-			target="_blank">How to build a game</a
-		>
+		For more information about building a game with V2 format, see the documentation in the repository.
 	</p>
 
 	<h2>License Attribution</h2>

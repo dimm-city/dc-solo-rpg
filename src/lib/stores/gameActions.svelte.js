@@ -27,10 +27,12 @@ export const startGame = (player, gameConfigOrOptions = {}, options = {}) => {
 
 	// Determine if we got a full config or just options
 	let gameConfig;
+	let isFullConfig = false;
 
 	// If gameConfigOrOptions has a deck, it's a full config
 	if (gameConfigOrOptions.deck) {
 		gameConfig = gameConfigOrOptions;
+		isFullConfig = true;
 	} else {
 		// Otherwise, use services.gameSettings and treat second param as options
 		gameConfig = services.gameSettings || gameState.config;
@@ -41,8 +43,21 @@ export const startGame = (player, gameConfigOrOptions = {}, options = {}) => {
 		throw new Error('Game configuration with deck is required');
 	}
 
-	// Use centralized initialization logic
-	initializeGame(gameConfig, player, options);
+	// If this is a full config (initial game load), use centralized initialization
+	// If just options (from OptionsScreen), apply options and transition to intro
+	if (isFullConfig) {
+		initializeGame(gameConfig, player, options);
+	} else {
+		// Apply options to existing game state
+		if (gameState.config) {
+			gameState.config = {
+				...gameState.config,
+				options: { ...(gameState.config.options || {}), ...options }
+			};
+		}
+		// Transition to intro screen
+		transitionTo('intro');
+	}
 };
 
 /**

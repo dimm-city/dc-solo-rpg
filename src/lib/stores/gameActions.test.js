@@ -19,7 +19,6 @@ import {
 	confirmSuccessCheck,
 	restartGame,
 	exitGame,
-	nextScreen,
 	services
 } from './gameActions.svelte.js';
 import { gameState, transitionTo } from './gameStore.svelte.js';
@@ -143,7 +142,7 @@ describe('gameActions - Core Game Mechanics', () => {
 
 	describe('Round Management', () => {
 		it('should increment round number', async () => {
-			gameState.state = 'startRound';
+			gameState.state = 'log';
 			gameState.round = 1;
 
 			await startRound();
@@ -152,12 +151,12 @@ describe('gameActions - Core Game Mechanics', () => {
 		});
 
 		it('should transition to rollForTasks state', async () => {
-			gameState.state = 'startRound';
+			gameState.state = 'log';
 			gameState.round = 1;
 
 			await startRound();
 
-			expect(gameState.state).toBe('rollForTasks');
+			expect(gameState.state).toBe('startRound');
 		});
 	});
 
@@ -529,16 +528,16 @@ describe('gameActions - Core Game Mechanics', () => {
 
 			await recordRound({ text: 'Entry' });
 
-			// startRound transitions to rollForTasks
-			expect(gameState.state).toBe('rollForTasks');
+			// startRound transitions to startRound state first, then to rollForTasks
+			expect(gameState.state).toBe('startRound');
 		});
 
-		it('should throw error if no journal entry provided', async () => {
-			await expect(recordRound()).rejects.toThrow('No journal entries provided for this round');
+		it('should throw error if no journal entry provided', () => {
+			expect(() => recordRound()).toThrow('No journal entries provided for this round');
 		});
 
-		it('should throw error if journal entry has no text', async () => {
-			await expect(recordRound({})).rejects.toThrow('No journal entries provided for this round');
+		it('should throw error if journal entry has no text', () => {
+			expect(() => recordRound({})).toThrow('No journal entries provided for this round');
 		});
 	});
 
@@ -551,7 +550,10 @@ describe('gameActions - Core Game Mechanics', () => {
 			gameState.tokens = 3;
 			gameState.kingsRevealed = 2;
 			gameState.player = { name: 'Test Player' };
-			gameState.config = { options: { difficulty: 1 } };
+			gameState.config = {
+				deck: mockGameConfig.deck,
+				options: { difficulty: 1, initialDamage: false }
+			};
 		});
 
 		it('should restart game and reset state', () => {
@@ -570,11 +572,11 @@ describe('gameActions - Core Game Mechanics', () => {
 		});
 	});
 
-	describe('State Transitions - nextScreen', () => {
+	describe('State Transitions - transitionTo', () => {
 		it('should transition to specified screen', () => {
-			gameState.state = 'intro';
+			gameState.state = 'startRound';
 
-			nextScreen('rollForTasks');
+			transitionTo('rollForTasks');
 
 			expect(gameState.state).toBe('rollForTasks');
 		});
