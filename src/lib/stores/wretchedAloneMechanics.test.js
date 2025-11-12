@@ -123,7 +123,8 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 
 			initializeGame(config, player);
 
-			expect(gameState.round).toBe(0);
+			// V2 implementation: round starts at 1, not 0
+			expect(gameState.round).toBe(1);
 			expect(gameState.tokens).toBe(10);
 			expect(gameState.kingsRevealed).toBe(0);
 			expect(gameState.bonus).toBe(0);
@@ -145,12 +146,13 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 			const config = createMockGameConfig();
 			const player = { name: 'Test Player' };
 
-			// Mock random number to return 4
-			vi.spyOn(gameState, 'getRandomNumber').mockReturnValue(4);
-
+			// Mock Math.random to return a value that produces roll of 4
+			// Math.floor(Math.random() * 6) + 1 where random = 0.5 gives us 4
+			const mathRandomSpy = vi.spyOn(Math, 'random').mockReturnValue(0.5);
 			initializeGame(config, player, { initialDamage: true });
 
 			expect(gameState.tower).toBe(50); // 54 - 4
+			mathRandomSpy.mockRestore();
 		});
 
 		it('should initialize with shuffled deck', () => {
@@ -171,13 +173,19 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 			expect(gameState.discard).toEqual([]);
 		});
 
-		it('should initialize empty log', () => {
+		it('should initialize log with initial damage entry', () => {
 			const config = createMockGameConfig();
 			const player = { name: 'Test Player' };
 
 			initializeGame(config, player);
-
-			expect(gameState.log).toEqual([]);
+			// V2 implementation: log contains initial damage entry when initialDamage is enabled (default)
+			expect(gameState.log).toHaveLength(1);
+			expect(gameState.log[0]).toMatchObject({
+				type: 'system',
+				round: 0,
+				id: '0.0'
+			});
+			expect(gameState.log[0].message).toMatch(/Initial setup: Lost \d resources to instability/);
 		});
 
 		it('should set player name', () => {
