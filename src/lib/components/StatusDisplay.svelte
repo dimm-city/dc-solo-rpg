@@ -1,6 +1,9 @@
 <script>
 	import { gameState } from '../stores/gameStore.svelte.js';
 	import AugmentedButton from './AugmentedButton.svelte';
+	import DeckVisualization from './DeckVisualization.svelte';
+	import HelpIcon from './HelpIcon.svelte';
+	import HelpModal from './HelpModal.svelte';
 
 	const successPercent = $derived(10 - gameState.tokens);
 	const bonusPercent = $derived(gameState.bonus);
@@ -13,6 +16,9 @@
 	const progressPercent = $derived((cardsDrawn / totalCards) * 100);
 
 	let { onExitClick = () => {} } = $props();
+
+	// Help modal state
+	let showHelp = $state(null);
 </script>
 
 <div class="status-display-container">
@@ -28,10 +34,12 @@
 		<div>
 			<h5>{gameState.config?.title}</h5>
 		</div>
-		<div class="info-segment">
-			<span class="label">{gameState.config?.labels.statusDisplayRoundText ?? 'ROUND:'}</span>
-			<span class="value">{gameState?.round}</span>
-
+		<div class="info-segment-with-deck">
+			<div class="info-segment">
+				<span class="label">{gameState.config?.labels.statusDisplayRoundText ?? 'ROUND:'}</span>
+				<span class="value">{gameState?.round}</span>
+			</div>
+			<DeckVisualization />
 			<button class="dc-exit-button" onclick={onExitClick} aria-label="Exit game">
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
@@ -55,7 +63,10 @@
 	<!-- Stats Grid -->
 	<div class="stats-grid">
 		<div class="stat-item health-stat" data-augmented-ui="tl-clip tr-clip-x br-clip-x border">
-			<div class="stat-label">HEALTH</div>
+			<div class="stat-label">
+				HEALTH
+				<HelpIcon onclick={() => (showHelp = 'tower')} ariaLabel="Help: What is Health?" />
+			</div>
 			<div class="stat-value">
 				<span class="current">{gameState.tower}</span><span class="divider">/</span><span
 					class="max">100</span
@@ -69,6 +80,7 @@
 		<div class="stat-item failure-stat" data-augmented-ui="l-rect tr-clip br-clip-x border">
 			<div class="stat-label">
 				{gameState.config?.labels?.failureCounters?.toUpperCase() ?? 'FAILURE'}
+				<HelpIcon onclick={() => (showHelp = 'kings')} ariaLabel="Help: What are Kings?" />
 			</div>
 			<div class="stat-value">
 				<span class="current">{failurePercent}</span><span class="divider">/</span><span class="max"
@@ -84,7 +96,10 @@
 			class="stat-item bonus-stat"
 			data-augmented-ui="tl-clip-y l-rect-y tr-clip-x br-clip-x border"
 		>
-			<div class="stat-label">LUCK</div>
+			<div class="stat-label">
+				LUCK
+				<HelpIcon onclick={() => (showHelp = 'bonus')} ariaLabel="Help: What is Luck?" />
+			</div>
 			<div class="stat-value">
 				<span class="current">{bonusPercent}</span><span class="divider">/</span><span class="max"
 					>10</span
@@ -101,6 +116,7 @@
 		>
 			<div class="stat-label">
 				{gameState.config?.labels?.successCounters?.toUpperCase() ?? 'SUCCESS'}
+				<HelpIcon onclick={() => (showHelp = 'tokens')} ariaLabel="Help: What are Success Tokens?" />
 			</div>
 			<div class="stat-value">
 				<span class="current">{successPercent}</span><span class="divider">/</span><span class="max"
@@ -128,6 +144,9 @@
 		</div>
 	{/if}
 </div>
+
+<!-- Help Modal -->
+<HelpModal isOpen={showHelp !== null} helpKey={showHelp} onClose={() => (showHelp = null)} />
 
 <style>
 	.dc-exit-button {
@@ -223,6 +242,12 @@
 				inset 0 0 40px rgba(255, 0, 255, 0.3),
 				inset 0 0 60px rgba(0, 255, 255, 0.15);
 		}
+	}
+
+	.info-segment-with-deck {
+		display: flex;
+		align-items: center;
+		gap: var(--space-md);
 	}
 
 	.info-segment {
@@ -438,6 +463,10 @@
 		min-width: 65px;
 		/* Add padding to avoid clip zones */
 		padding-left: 4px;
+		/* Display help icon inline */
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
 	}
 
 	.health-stat .stat-label {
