@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { parseV2GameFile, ValidationError } from './v2MarkdownParser.js';
+import { parseGameFile, ValidationError } from './markdownParser.js';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
 /**
- * V2 Markdown Parser Integration Tests
+ * Markdown Parser Integration Tests
  *
- * Tests the V2 type-based markdown parser with:
+ * Tests the type-based markdown parser with:
  * - Valid game file parsing
  * - Invalid card counts
  * - Special modifiers (skip-damage, return-king)
@@ -15,13 +15,13 @@ import { join } from 'path';
  * - Edge cases
  */
 
-describe('V2 Markdown Parser', () => {
+describe('Markdown Parser', () => {
 	describe('Valid Game Files', () => {
 		it('should parse future-lost.game.md successfully', () => {
 			const gamePath = join(process.cwd(), 'static', 'games', 'future-lost.game.md');
 			const markdown = readFileSync(gamePath, 'utf-8');
 
-			const result = parseV2GameFile(markdown);
+			const result = parseGameFile(markdown);
 
 			// Verify structure
 			expect(result).toHaveProperty('title');
@@ -68,7 +68,7 @@ describe('V2 Markdown Parser', () => {
 			const gamePath = join(process.cwd(), 'static', 'games', 'future-lost.game.md');
 			const markdown = readFileSync(gamePath, 'utf-8');
 
-			const result = parseV2GameFile(markdown);
+			const result = parseGameFile(markdown);
 
 			expect(result.introduction).toBeInstanceOf(Array);
 			expect(result.introduction.length).toBeGreaterThan(0);
@@ -85,7 +85,7 @@ describe('V2 Markdown Parser', () => {
 			const gamePath = join(process.cwd(), 'static', 'games', 'future-lost.game.md');
 			const markdown = readFileSync(gamePath, 'utf-8');
 
-			const result = parseV2GameFile(markdown);
+			const result = parseGameFile(markdown);
 
 			// Find cards with special modifiers
 			const skipDamageCards = result.deck.filter(c => c.modifier === 'skip-damage');
@@ -172,8 +172,8 @@ Description
 
 			const fullMarkdown = invalidMarkdown + challenges + events;
 
-			expect(() => parseV2GameFile(fullMarkdown)).toThrow(ValidationError);
-			expect(() => parseV2GameFile(fullMarkdown)).toThrow(/Expected exactly 1 Primary Success card/);
+			expect(() => parseGameFile(fullMarkdown)).toThrow(ValidationError);
+			expect(() => parseGameFile(fullMarkdown)).toThrow(/Expected exactly 1 Primary Success card/);
 		});
 
 		it('should reject game with too many Failure Counter cards', () => {
@@ -262,8 +262,8 @@ Description
 
 			const fullMarkdown = invalidMarkdown + challenges + events;
 
-			expect(() => parseV2GameFile(fullMarkdown)).toThrow(ValidationError);
-			expect(() => parseV2GameFile(fullMarkdown)).toThrow(/Expected exactly 4 Failure Counter cards/);
+			expect(() => parseGameFile(fullMarkdown)).toThrow(ValidationError);
+			expect(() => parseGameFile(fullMarkdown)).toThrow(/Expected exactly 4 Failure Counter cards/);
 		});
 
 		it('should reject game with incorrect Narrative count', () => {
@@ -340,8 +340,8 @@ Description
 
 			const fullMarkdown = invalidMarkdown + challenges + events;
 
-			expect(() => parseV2GameFile(fullMarkdown)).toThrow(ValidationError);
-			expect(() => parseV2GameFile(fullMarkdown)).toThrow(/Expected exactly 3 Narrative cards/);
+			expect(() => parseGameFile(fullMarkdown)).toThrow(ValidationError);
+			expect(() => parseGameFile(fullMarkdown)).toThrow(/Expected exactly 3 Narrative cards/);
 		});
 
 		it('should reject game with too few Challenge cards', () => {
@@ -424,8 +424,8 @@ Description
 
 			const fullMarkdown = invalidMarkdown + challenges + events;
 
-			expect(() => parseV2GameFile(fullMarkdown)).toThrow(ValidationError);
-			expect(() => parseV2GameFile(fullMarkdown)).toThrow(/Expected exactly 16 Challenge cards/);
+			expect(() => parseGameFile(fullMarkdown)).toThrow(ValidationError);
+			expect(() => parseGameFile(fullMarkdown)).toThrow(/Expected exactly 16 Challenge cards/);
 		});
 
 		it('should reject game with too many Event cards', () => {
@@ -508,8 +508,8 @@ Description
 
 			const fullMarkdown = invalidMarkdown + challenges + events;
 
-			expect(() => parseV2GameFile(fullMarkdown)).toThrow(ValidationError);
-			expect(() => parseV2GameFile(fullMarkdown)).toThrow(/Expected exactly 28 Event cards/);
+			expect(() => parseGameFile(fullMarkdown)).toThrow(ValidationError);
+			expect(() => parseGameFile(fullMarkdown)).toThrow(/Expected exactly 28 Event cards/);
 		});
 	});
 
@@ -593,8 +593,8 @@ Description
 
 			const fullMarkdown = invalidMarkdown + challenges + events;
 
-			expect(() => parseV2GameFile(fullMarkdown)).toThrow(ValidationError);
-			expect(() => parseV2GameFile(fullMarkdown)).toThrow(/Only ONE Narrative card can have skip-damage/);
+			expect(() => parseGameFile(fullMarkdown)).toThrow(ValidationError);
+			expect(() => parseGameFile(fullMarkdown)).toThrow(/Only ONE Narrative card can have skip-damage/);
 		});
 
 		it('should reject multiple return-king modifiers', () => {
@@ -676,8 +676,8 @@ Description
 
 			const fullMarkdown = invalidMarkdown + challenges + events;
 
-			expect(() => parseV2GameFile(fullMarkdown)).toThrow(ValidationError);
-			expect(() => parseV2GameFile(fullMarkdown)).toThrow(/Only ONE Narrative card can have return-king/);
+			expect(() => parseGameFile(fullMarkdown)).toThrow(ValidationError);
+			expect(() => parseGameFile(fullMarkdown)).toThrow(/Only ONE Narrative card can have return-king/);
 		});
 	});
 
@@ -694,8 +694,8 @@ Test intro
 # Card Deck
 `;
 
-			expect(() => parseV2GameFile(invalidMarkdown)).toThrow(ValidationError);
-			expect(() => parseV2GameFile(invalidMarkdown)).toThrow(/Missing required frontmatter fields.*title/);
+			expect(() => parseGameFile(invalidMarkdown)).toThrow(ValidationError);
+			expect(() => parseGameFile(invalidMarkdown)).toThrow(/Missing required frontmatter fields.*title/);
 		});
 
 		it('should reject game without win-message', () => {
@@ -710,8 +710,8 @@ Test intro
 # Card Deck
 `;
 
-			expect(() => parseV2GameFile(invalidMarkdown)).toThrow(ValidationError);
-			expect(() => parseV2GameFile(invalidMarkdown)).toThrow(/Missing required frontmatter fields.*win-message/);
+			expect(() => parseGameFile(invalidMarkdown)).toThrow(ValidationError);
+			expect(() => parseGameFile(invalidMarkdown)).toThrow(/Missing required frontmatter fields.*win-message/);
 		});
 
 		it('should reject game without lose-message', () => {
@@ -726,8 +726,8 @@ Test intro
 # Card Deck
 `;
 
-			expect(() => parseV2GameFile(invalidMarkdown)).toThrow(ValidationError);
-			expect(() => parseV2GameFile(invalidMarkdown)).toThrow(/Missing required frontmatter fields.*lose-message/);
+			expect(() => parseGameFile(invalidMarkdown)).toThrow(ValidationError);
+			expect(() => parseGameFile(invalidMarkdown)).toThrow(/Missing required frontmatter fields.*lose-message/);
 		});
 	});
 
@@ -739,8 +739,8 @@ Test intro
 # Card Deck
 `;
 
-			expect(() => parseV2GameFile(invalidMarkdown)).toThrow(ValidationError);
-			expect(() => parseV2GameFile(invalidMarkdown)).toThrow(/No frontmatter found/);
+			expect(() => parseGameFile(invalidMarkdown)).toThrow(ValidationError);
+			expect(() => parseGameFile(invalidMarkdown)).toThrow(/No frontmatter found/);
 		});
 
 		it('should reject game without Card Deck section', () => {
@@ -754,8 +754,8 @@ lose-message: You lost!
 Test intro
 `;
 
-			expect(() => parseV2GameFile(invalidMarkdown)).toThrow(ValidationError);
-			expect(() => parseV2GameFile(invalidMarkdown)).toThrow(/No "# Card Deck" section found/);
+			expect(() => parseGameFile(invalidMarkdown)).toThrow(ValidationError);
+			expect(() => parseGameFile(invalidMarkdown)).toThrow(/No "# Card Deck" section found/);
 		});
 
 		it('should reject card without description', () => {
@@ -782,15 +782,15 @@ This is not bold
 Description
 `;
 
-			expect(() => parseV2GameFile(invalidMarkdown)).toThrow(ValidationError);
-			expect(() => parseV2GameFile(invalidMarkdown)).toThrow(/Card missing description/);
+			expect(() => parseGameFile(invalidMarkdown)).toThrow(ValidationError);
+			expect(() => parseGameFile(invalidMarkdown)).toThrow(/Card missing description/);
 		});
 
 		it('should reject invalid input types', () => {
-			expect(() => parseV2GameFile(null)).toThrow(ValidationError);
-			expect(() => parseV2GameFile(undefined)).toThrow(ValidationError);
-			expect(() => parseV2GameFile(123)).toThrow(ValidationError);
-			expect(() => parseV2GameFile('')).toThrow(ValidationError);
+			expect(() => parseGameFile(null)).toThrow(ValidationError);
+			expect(() => parseGameFile(undefined)).toThrow(ValidationError);
+			expect(() => parseGameFile(123)).toThrow(ValidationError);
+			expect(() => parseGameFile('')).toThrow(ValidationError);
 		});
 	});
 
@@ -871,7 +871,7 @@ Description
 
 			const fullMarkdown = markdown + challenges + events;
 
-			const result = parseV2GameFile(fullMarkdown);
+			const result = parseGameFile(fullMarkdown);
 			expect(result.introduction).toHaveLength(0);
 		});
 
@@ -955,7 +955,7 @@ Description
 
 			const fullMarkdown = markdown + challenges + events;
 
-			const result = parseV2GameFile(fullMarkdown);
+			const result = parseGameFile(fullMarkdown);
 			expect(result.subtitle).toBe('A thrilling adventure');
 		});
 
@@ -963,7 +963,7 @@ Description
 			const gamePath = join(process.cwd(), 'static', 'games', 'future-lost.game.md');
 			const markdown = readFileSync(gamePath, 'utf-8');
 
-			const result = parseV2GameFile(markdown);
+			const result = parseGameFile(markdown);
 
 			// At least some cards should have story content
 			const cardsWithStory = result.deck.filter(c => c.story && c.story.length > 0);
@@ -1049,7 +1049,7 @@ Description
 
 			const fullMarkdown = markdown + challenges + events;
 
-			const result = parseV2GameFile(fullMarkdown);
+			const result = parseGameFile(fullMarkdown);
 
 			// Should parse successfully despite case variations
 			expect(result.deck).toHaveLength(52);

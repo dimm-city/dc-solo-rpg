@@ -56,7 +56,7 @@
 	</ol>
 
 	<p>
-		For more information about building a game with V2 format, see the documentation in the repository.
+		For more information about building a game, see the documentation in the repository.
 	</p>
 
 	<h2>License Attribution</h2>

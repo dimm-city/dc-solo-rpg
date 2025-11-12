@@ -1,11 +1,16 @@
 <script>
 	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
+	import { fade } from 'svelte/transition';
 	import AugmentedButton from '$lib/components/AugmentedButton.svelte';
+	import Splash from '$lib/components/Splash.svelte';
 
 	/** @type {import('./$types').PageData} */
 	let { data } = $props();
 
 	let selectedGame = $state(null);
+	let showSplash = $state(true);
+	let showContent = $state(false);
 
 	function selectGame(game) {
 		selectedGame = game;
@@ -17,6 +22,20 @@
 		}
 	}
 
+	function handleSplashComplete() {
+		showSplash = false;
+		// Wait for splash fade-out to complete before showing content
+		setTimeout(() => {
+			showContent = true;
+		}, 850); // Wait for 800ms fade + 50ms buffer
+	}
+
+	// Show splash on mount and on navigation back to home
+	onMount(() => {
+		showSplash = true;
+		showContent = false;
+	});
+
 	// Game descriptions/subtitles for enhanced UI
 	const gameDescriptions = {
 		'artful-detective': 'Solve mysteries in a noir-cyberpunk city',
@@ -27,7 +46,10 @@
 	};
 </script>
 
-<section class="form-container" data-testid="home-page">
+<Splash visible={showSplash} onComplete={handleSplashComplete} />
+
+{#if showContent}
+	<section class="form-container" data-testid="home-page" transition:fade={{ duration: 600 }}>
 	<div class="welcome-container">
 		<section class="hero">
 			<h1 data-testid="page-title">Dimm City: Solo RPG</h1>
@@ -65,7 +87,8 @@
 			</div>
 		</div>
 	</div>
-</section>
+	</section>
+{/if}
 
 <style>
 	:global(body){

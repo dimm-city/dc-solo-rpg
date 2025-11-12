@@ -148,7 +148,7 @@ sequenceDiagram
     P->>R: Initialize resources to 54
     P->>P: Roll 1d6
     P->>R: Reduce resources by roll result
-    Note over R: Initial resource depletion<br/>(v2 digital enhancement, not in SRD)
+    Note over R: Initial resource depletion<br/>(digital enhancement, not in SRD)
 
     P->>S: Set 10 tokens
     P->>S: Prepare journal/recording
@@ -162,7 +162,7 @@ sequenceDiagram
 interface GameState {
   day: number;                    // Starts at 1
   resources: number;              // 54 - initialDamage (1d6)
-                                  // Note: Initial damage roll is a v2 digital
+                                  // Note: Initial damage roll is a digital
                                   // enhancement for balance, not in original SRD
   tokens: number;                 // Starts at 10
   deck: Card[];                   // Shuffled 52 cards
@@ -174,9 +174,9 @@ interface GameState {
 }
 ```
 
-**v2 Digital Enhancements vs SRD:**
+**Digital Enhancements vs SRD:**
 
-- **Initial 1d6 damage roll**: Added in v2 for digital balance (not in original SRD)
+- **Initial 1d6 damage roll**: Added for digital balance (not in original SRD)
 - **Resource counter (54 HP)**: Digital equivalent of physical tower (SRD uses tower)
 - **Bonus counter mechanics**: Aligned with SRD "bonus/help" concept for Aces
 

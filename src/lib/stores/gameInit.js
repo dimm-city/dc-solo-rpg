@@ -53,7 +53,7 @@ export function initializeGame(gameConfig, player, options = {}) {
 		deck = deck.filter((c) => !(c.card === 'A' && c.suit === 'hearts'));
 	}
 
-	// Apply initial damage roll (V2 SRD digital enhancement)
+	// Apply initial damage roll (SRD digital enhancement)
 	// Game starts at 48-53 resources instead of 54
 	const applyInitialDamage = finalConfig.options?.initialDamage !== false;
 	const initialDamageRoll = applyInitialDamage ? Math.floor(Math.random() * 6) + 1 : 0;

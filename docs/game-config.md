@@ -1,20 +1,10 @@
-# Game Configuration V2: Type-Based Markdown Format
+# Game Configuration: Type-Based Markdown Format
 
 ## Executive Summary
 
-This document describes the **Type-Based Markdown Format** solution for game creation in DC Solo RPG. The current system requires creators to manage multiple file formats (YAML, CSV, Markdown, CSS) which creates friction for non-technical users. The new system uses a **single markdown file** that focuses on card types rather than card identifiers, making it significantly easier for writers to create games while maintaining full compliance with the Wretched and Alone SRD.
+This document describes the **Type-Based Markdown Format** for game creation in DC Solo RPG. The system uses a **single markdown file** that focuses on card types rather than card identifiers, making it significantly easier for writers to create games while maintaining full compliance with the Wretched and Alone SRD.
 
-### Current Pain Points (V1 System)
-
-1. **Multiple file formats** - Requires knowledge of YAML, CSV, Markdown, and CSS
-2. **File management** - Creators must manage 3-4 separate files per game
-3. **Tedious customization** - 38+ label fields that most creators won't customize
-4. **Complex theming** - CSS and dice themes add unnecessary complexity
-5. **Limited card text** - Single-line descriptions limit storytelling potential
-6. **Error-prone** - Syntax errors in YAML/CSV can break games
-7. **Card assignment complexity** - Writers must manually assign cards to deck positions
-
-### Design Principles for V2
+### Design Principles
 
 1. **Single source of truth** - One markdown file per game
 2. **Plain text** - Use familiar Markdown syntax
@@ -213,7 +203,7 @@ lose-message: Defeat message    # Required
 ---
 ```
 
-**Only 4 fields total** - down from 38+ in V1 system
+**Only 4 fields total** - simple and focused
 
 ### 2. Introduction Sections (Required)
 
@@ -335,7 +325,7 @@ The `: 7-hearts` notation explicitly assigns this card. Useful for:
 
 ## Universal Simplifications
 
-These simplifications apply to the V2 system:
+These simplifications apply to the system:
 
 ### 1. Remove Label Customization
 
@@ -389,73 +379,6 @@ These simplifications apply to the V2 system:
 
 ---
 
-## Migration Path from V1
-
-For existing games using the current system:
-
-### 1. Automatic Conversion Tool
-
-```bash
-# Convert old config.yml + deck.csv + intro.md to new format
-npm run convert-v1-to-v2 static/games/my-game
-
-# Output: static/games/my-game.game.md
-```
-
-**Conversion process:**
-1. Reads existing `config.yml` + `deck.csv` + `intro.md`
-2. Extracts title, subtitle, win/lose messages from config
-3. Converts introduction markdown to new format
-4. Maps each card to appropriate type based on rank:
-   - Ace of Hearts → Primary Success
-   - Kings → Failure Counter
-   - Other Aces → Narrative
-   - Odd ranks (3, 5, 7, 9) → Challenge
-   - Even ranks (2, 4, 6, 8, 10, J, Q) → Event
-5. Outputs single `.game.md` file
-6. **Preserves all content, ignores deprecated fields**
-
-### 2. Backward Compatibility
-
-- V2 system can still load V1 games during transition period
-- Support V1 format for **at least 6 months** after V2 launch
-- Clear deprecation timeline communicated to creators
-- Old games continue to work, but encourage migration
-
-### 3. Migration Guide for Creators
-
-**Step-by-step instructions:**
-
-1. **Run conversion tool** on your existing game
-2. **Review generated file** - check that cards mapped to correct types
-3. **Enhance cards** - add longer descriptions where beneficial
-4. **Remove manual assignments** - let auto-assignment handle it unless you have specific needs
-5. **Test in game engine** - verify everything works as expected
-6. **Update repository** - commit new `.game.md` file, archive old files
-
-**Common migration scenarios:**
-
-- **Standard games**: Auto-conversion handles everything
-- **Custom card assignments**: May need manual review of type mappings
-- **Special mechanics**: Check that custom cards map to correct types
-- **Thematic suit matching**: Add manual assignments if needed (`: 7-hearts` notation)
-
-### 4. Validation Tool
-
-```bash
-# Validate migrated game
-npm run validate-game static/games/my-game.game.md
-
-# Checks:
-# - Correct card counts (1+4+3+16+28=52)
-# - All required frontmatter fields
-# - Introduction sections present
-# - No duplicate cards
-# - Markdown syntax valid
-```
-
----
-
 ## Publishing Workflow
 
 ### Option 1: Direct Upload
@@ -506,17 +429,15 @@ See [`simplified-type-based-format.md`](./simplified-type-based-format.md) for:
 
 1. **Build parser** - Implement markdown-to-game-data converter
 2. **Create validator** - Ensure card counts and structure are correct
-3. **Build conversion tool** - Migrate existing V1 games
-4. **Update documentation** - Creator guide with examples
-5. **Test with creators** - Get feedback from 3-5 non-technical users
+3. **Update documentation** - Creator guide with examples
+4. **Test with creators** - Get feedback from 3-5 non-technical users
 
 ### For Creators
 
 1. **Review format** - Read `simplified-type-based-format.md`
 2. **Try template** - Use the complete template as starting point
 3. **Provide feedback** - What works? What's confusing?
-4. **Migrate games** - Convert existing games to new format
-5. **Create new content** - Build games with simplified workflow
+4. **Create new content** - Build games with simplified workflow
 
 ---
 
@@ -547,7 +468,7 @@ The format strikes the perfect balance between **simplicity for creators** and *
 
 - **Full Specification**: [`simplified-type-based-format.md`](./simplified-type-based-format.md)
 - **Mechanics Guide**: [`wretched-alone-mechanics-guide.md`](./wretched-alone-mechanics-guide.md)
-- **SRD Compliance**: All v2 docs now aligned with Wretched and Alone SRD
+- **SRD Compliance**: All docs aligned with Wretched and Alone SRD
 - **Example Game**: [`type-based-future-lost.game.md`](./type-based-future-lost.game.md)
 
 ---

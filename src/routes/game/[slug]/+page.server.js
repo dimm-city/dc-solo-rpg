@@ -1,13 +1,13 @@
 import { error } from '@sveltejs/kit';
 import { logger } from '$lib/utils/logger.js';
-import { parseV2GameFile, ValidationError } from '$lib/parsers/v2MarkdownParser.js';
+import { parseGameFile, ValidationError } from '$lib/parsers/markdownParser.js';
 
 /**
- * Format V2 introduction sections into markdown
+ * Format introduction sections into markdown
  * @param {Array} sections - Introduction sections
  * @returns {string} Formatted markdown
  */
-function formatV2Introduction(sections) {
+function formatIntroduction(sections) {
 	return sections
 		.map(section => `## ${section.heading}\n\n${section.content}`)
 		.join('\n\n');
@@ -18,17 +18,17 @@ export async function load({ params, fetch }) {
 	const { slug } = params;
 
 	try {
-		const v2Url = `/games/${slug}.game.md`;
-		const v2Response = await fetch(v2Url);
+		const gameUrl = `/games/${slug}.game.md`;
+		const gameResponse = await fetch(gameUrl);
 
-		if (!v2Response.ok) {
+		if (!gameResponse.ok) {
 			throw error(404, `Game "${slug}" not found`);
 		}
 
-		const markdown = await v2Response.text();
-		const parsed = parseV2GameFile(markdown);
+		const markdown = await gameResponse.text();
+		const parsed = parseGameFile(markdown);
 
-		// Convert V2 format to internal game config format
+		// Convert to internal game config format
 		const gameConfig = {
 			slug,
 			title: parsed.title,
@@ -39,13 +39,13 @@ export async function load({ params, fetch }) {
 				failureCounterLoss: parsed['lose-message']
 			},
 			deck: parsed.deck,
-			introduction: formatV2Introduction(parsed.introduction),
+			introduction: formatIntroduction(parsed.introduction),
 			loaded: true,
 			stylesheet: `/games/${slug}/game.css`, // Optional stylesheet
 			metadata: parsed.metadata
 		};
 
-		logger.info(`Successfully loaded "${slug}" (V2 format)`);
+		logger.info(`Successfully loaded "${slug}"`);
 
 		return {
 			slug,
@@ -56,8 +56,8 @@ export async function load({ params, fetch }) {
 		};
 	} catch (err) {
 		if (err instanceof ValidationError) {
-			logger.error(`V2 validation error for "${slug}":`, err.errors);
-			throw error(400, `Invalid V2 game file: ${err.message}`);
+			logger.error(`Validation error for "${slug}":`, err.errors);
+			throw error(400, `Invalid game file: ${err.message}`);
 		}
 		logger.error(`Error loading game "${slug}":`, err);
 		throw error(404, `Game "${slug}" not found`);

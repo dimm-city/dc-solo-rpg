@@ -1,6 +1,6 @@
 /**
  * Wretched & Alone Framework - Comprehensive Mechanics Tests
- * Based on: docs/v2/wretched-alone-mechanics-guide.md
+ * Based on: docs/wretched-alone-mechanics-guide.md
  *
  * Tests cover:
  * - Deck management (Section 2.2)
@@ -123,7 +123,7 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 
 			initializeGame(config, player);
 
-			// V2 implementation: round starts at 1, not 0
+			// Implementation: round starts at 1, not 0
 			expect(gameState.round).toBe(1);
 			expect(gameState.tokens).toBe(10);
 			expect(gameState.kingsRevealed).toBe(0);
@@ -178,7 +178,7 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 			const player = { name: 'Test Player' };
 
 			initializeGame(config, player);
-			// V2 implementation: log contains initial damage entry when initialDamage is enabled (default)
+			// Implementation: log contains initial damage entry when initialDamage is enabled (default)
 			expect(gameState.log).toHaveLength(1);
 			expect(gameState.log[0]).toMatchObject({
 				type: 'system',
