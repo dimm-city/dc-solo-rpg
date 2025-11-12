@@ -1,6 +1,6 @@
 {
 	"name": "@dimm-city/dc-solo-rpg",
-	"version": "0.0.17",
+	"version": "0.1.0",
 	"license": "cc-by-4.0",
 	"publishConfig": {
 		"access": "public"
@@ -19,8 +19,7 @@
 		"test": "playwright test",
 		"test:unit": "vitest",
 		"lint": "prettier --check . && eslint .",
-		"format": "prettier --write .",
-		"update:templates": "zip -j docs/templates.zip docs/templates/*"
+		"format": "prettier --write ."
 	},
 	"exports": {
 		".": {
