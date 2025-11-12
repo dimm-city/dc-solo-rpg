@@ -3,6 +3,7 @@
 	import { gameState, transitionTo } from '../stores/gameStore.svelte.js';
 	import { exitGame } from '../stores/gameActions.svelte.js';
 	import ContinueButton from './ContinueButton.svelte';
+	import ButtonBar from './ButtonBar.svelte';
 	import {
 		hasSeenInstructions,
 		markInstructionsAsSeen
@@ -190,7 +191,7 @@
 		</div>
 	{/if}
 
-	<div class="button-bar dc-game-bg">
+	<ButtonBar>
 		{#if currentView === 'choice'}
 			<ContinueButton text="Exit" onclick={handleBack} testid="intro-exit-button" />
 		{:else}
@@ -201,7 +202,7 @@
 				testid="intro-skip-once-button"
 			/>
 		{/if}
-	</div>
+	</ButtonBar>
 </div>
 
 <style>
@@ -246,26 +247,6 @@
 	:global(.content p) {
 		margin-bottom: var(--space-sm);
 		line-height: 1.6;
-	}
-
-	.button-bar {
-		flex-shrink: 0;
-		width: 100%;
-		display: flex;
-		gap: var(--space-sm);
-		padding: var(--space-md);
-		background: var(--color-bg-primary);
-		border-top: 2px solid var(--color-cyber-magenta);
-		position: relative;
-		z-index: 10;
-	}
-
-	.button-bar :global(.aug-button-wrapper) {
-		flex: 1;
-	}
-
-	.button-bar :global(.aug-button) {
-		width: 100%;
 	}
 
 	/* Choice screen styles */

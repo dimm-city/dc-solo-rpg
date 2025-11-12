@@ -2,6 +2,7 @@
 	import { fade, scale } from 'svelte/transition';
 	import { onMount } from 'svelte';
 	import AugmentedButton from './AugmentedButton.svelte';
+	import ButtonBar from './ButtonBar.svelte';
 
 	/**
 	 * @typedef {Object} Props
@@ -64,10 +65,10 @@
 					<p>{message}</p>
 				</div>
 
-				<div class="modal-footer">
+				<ButtonBar bordered={true} gameBackground={false}>
 					<AugmentedButton onclick={onCancel} text={cancelText} variant="secondary" />
 					<AugmentedButton onclick={onConfirm} text={confirmText} variant="primary" />
-				</div>
+				</ButtonBar>
 			</div>
 		</div>
 	{/key}
@@ -169,46 +170,10 @@
 		line-height: var(--line-height-relaxed);
 	}
 
-	.modal-footer {
-		padding: var(--space-lg);
-		border-top: 1px solid rgba(217, 70, 239, 0.3);
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--space-md);
-		justify-content: center;
-		align-items: stretch;
-		position: relative;
-	}
-
-	.modal-footer > :global(*) {
-		flex: 1 1 auto;
-		min-width: 120px;
-	}
-
-	.modal-footer::before {
-		content: '';
-		position: absolute;
-		top: -1px;
-		left: 50%;
-		transform: translateX(-50%);
-		width: 100px;
-		height: 1px;
-		background: linear-gradient(90deg, transparent, var(--color-cyber-magenta), transparent);
-		box-shadow: 0 0 8px rgba(217, 70, 239, 0.6);
-	}
-
 	/* Responsive adjustments */
 	@media (max-width: 600px) {
 		.modal-content {
 			max-width: 100%;
-		}
-
-		.modal-footer {
-			flex-direction: column;
-		}
-
-		.modal-footer :global(.aug-button-wrapper) {
-			width: 100%;
 		}
 	}
 

@@ -4,6 +4,7 @@
 	import { startGame } from '../stores/gameActions.svelte.js';
 	import { Difficulty } from '../configuration/DifficultyLevels.js';
 	import ContinueButton from './ContinueButton.svelte';
+	import ButtonBar from './ButtonBar.svelte';
 
 	let { systemSettings = {} } = $props();
 
@@ -60,7 +61,7 @@
 		</div>
 	</div>
 
-	<div class="button-bar dc-game-bg">
+	<ButtonBar>
 		<ContinueButton
 			text="Cancel"
 			onclick={handleCancel}
@@ -73,7 +74,7 @@
 			testid="options-start-button"
 			ariaLabel="Start game with selected options"
 		/>
-	</div>
+	</ButtonBar>
 </div>
 
 <style>
@@ -244,29 +245,6 @@
 		padding: var(--space-sm);
 		text-transform: capitalize;
 		letter-spacing: normal;
-	}
-
-	/* ============================================
-	   BUTTONS
-	   ============================================ */
-	.button-bar {
-		flex-shrink: 0;
-		width: 100%;
-		display: flex;
-		gap: var(--space-sm);
-		padding: var(--space-md);
-		background: var(--color-bg-primary);
-		border-top: 2px solid var(--color-cyber-magenta);
-		position: relative;
-		z-index: 10;
-	}
-
-	.button-bar :global(.aug-button-wrapper) {
-		flex: 1;
-	}
-
-	.button-bar :global(.aug-button) {
-		width: 100%;
 	}
 
 	/* ============================================

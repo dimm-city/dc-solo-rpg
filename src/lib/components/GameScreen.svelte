@@ -20,6 +20,7 @@
 	import MiniStatusHUD from './MiniStatusHUD.svelte';
 	import KeyboardHint from './KeyboardHint.svelte';
 	import DeckVisualization from './DeckVisualization.svelte';
+	import ButtonBar from './ButtonBar.svelte';
 	import { onMount } from 'svelte';
 	import { rollDice } from '../stores/diceStore.svelte.js';
 	import {
@@ -493,16 +494,18 @@
 					{:else if currentScreen === 'log' || currentScreen === 'finalLog'}
 						{#if journalSaved}
 							{#if gameState.gameOver}
-								<ContinueButton
-									text={gameState.config?.labels?.journalEntryRestartButtonText ?? 'Restart'}
-									onclick={handleJournalRestart}
-									testid="journal-restart-button"
-								/>
-								<ContinueButton
-									text={gameState.config?.labels?.journalEntryExitButtonText ?? 'Exit'}
-									onclick={handleJournalExit}
-									testid="journal-exit-button"
-								/>
+								<ButtonBar bordered={false} gameBackground={false}>
+									<ContinueButton
+										text={gameState.config?.labels?.journalEntryRestartButtonText ?? 'Restart'}
+										onclick={handleJournalRestart}
+										testid="journal-restart-button"
+									/>
+									<ContinueButton
+										text={gameState.config?.labels?.journalEntryExitButtonText ?? 'Exit'}
+										onclick={handleJournalExit}
+										testid="journal-exit-button"
+									/>
+								</ButtonBar>
 							{:else}
 								<ContinueButton
 									text={gameState.config?.labels?.journalEntryNextButtonText ?? 'Next'}
