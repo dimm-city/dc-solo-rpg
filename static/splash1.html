@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dimm City – Loading Screen (Variant 1)</title>
+    <!--
+      Variant 1 splash screen for Dimm City.
+
+      This page takes inspiration from the official demo site (demo.dimm.city) by
+      leaning heavily into a neon‑lit cyberpunk palette. The dark backdrop,
+      glowing radial gradients and subtle animations convey an ethereal, high‑tech
+      ambience while maintaining the distinctive colours used on the original
+      site. A pulsing heading and flickering subheading mimic the feel of
+      futuristic signage. The design is kept purely in HTML and CSS for
+      portability and easy integration into a loading flow.
+    -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        /* Cyberpunk neon palette based on demo.dimm.city */
+        --bg-color: #05070A;
+        --neon-yellow: #FFE400;
+        --neon-cyan: #00FFFF;
+        --neon-magenta: #FF00FF;
+        --neon-green: #00FF73;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg-color);
+        /* Layer multiple radial gradients for an ethereal glow */
+        background-image:
+          radial-gradient(circle at 25% 30%, rgba(0, 255, 255, 0.18), transparent 60%),
+          radial-gradient(circle at 75% 70%, rgba(255, 0, 255, 0.15), transparent 65%),
+          radial-gradient(circle at 50% 50%, rgba(0, 255, 115, 0.1), transparent 70%);
+        overflow: hidden;
+        font-family: 'Orbitron', sans-serif;
+        color: var(--neon-yellow);
+      }
+
+      /* Pulsing container for the main text */
+      #splash-container {
+        position: relative;
+        text-align: center;
+        z-index: 2;
+      }
+
+      #splash-container h1 {
+        margin: 0;
+        font-size: 3.5rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        animation: pulseGlow 3s infinite alternate;
+        text-shadow:
+          0 0 5px var(--neon-yellow),
+          0 0 15px var(--neon-yellow),
+          0 0 30px var(--neon-cyan);
+      }
+
+      #splash-container .subtitle {
+        margin-top: 1rem;
+        font-size: 0.9rem;
+        font-family: 'Share Tech Mono', monospace;
+        color: var(--neon-cyan);
+        text-shadow: 0 0 10px var(--neon-cyan);
+        animation: flickerText 2.5s infinite;
+        white-space: nowrap;
+      }
+
+      /* Animated blurred circles floating in the background */
+      .glow-circle {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(80px);
+        opacity: 0.6;
+        mix-blend-mode: screen;
+        animation: float 8s ease-in-out infinite alternate;
+      }
+      .glow-circle.c1 {
+        width: 450px;
+        height: 450px;
+        top: 20%;
+        left: 15%;
+        background: linear-gradient(45deg, var(--neon-cyan), var(--neon-magenta));
+        animation-delay: 0s;
+      }
+      .glow-circle.c2 {
+        width: 350px;
+        height: 350px;
+        bottom: 15%;
+        right: 10%;
+        background: linear-gradient(135deg, var(--neon-magenta), var(--neon-yellow));
+        animation-delay: 2s;
+      }
+      .glow-circle.c3 {
+        width: 300px;
+        height: 300px;
+        top: 65%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(90deg, var(--neon-green), var(--neon-cyan));
+        animation-delay: 4s;
+      }
+
+      /* Pulse the glow of the main heading */
+      @keyframes pulseGlow {
+        from {
+          text-shadow:
+            0 0 5px var(--neon-yellow),
+            0 0 15px var(--neon-yellow),
+            0 0 30px var(--neon-cyan);
+        }
+        to {
+          text-shadow:
+            0 0 15px var(--neon-yellow),
+            0 0 35px var(--neon-yellow),
+            0 0 60px var(--neon-cyan);
+        }
+      }
+
+      /* Flicker effect for the subtitle, reminiscent of malfunctioning neon signs */
+      @keyframes flickerText {
+        0%, 19%, 23%, 27%, 58%, 100% { opacity: 1; }
+        20%, 24%, 25%, 26%, 29%, 33%, 55% { opacity: 0.4; }
+      }
+
+      /* Slow floating animation for the circles */
+      @keyframes float {
+        0%   { transform: translate(0, 0) scale(1); }
+        50%  { transform: translate(15px, -10px) scale(1.05); }
+        100% { transform: translate(-10px, 20px) scale(1); }
+      }
+    </style>
+</head>
+<body>
+  <!-- Ethereal floating light glows -->
+  <div class="glow-circle c1"></div>
+  <div class="glow-circle c2"></div>
+  <div class="glow-circle c3"></div>
+
+  <div id="splash-container">
+    <h1>Welcome to<br>Dimm City</h1>
+    <div class="subtitle">Initialising systems…</div>
+  </div>
+</body>
+</html>

@@ -903,6 +903,7 @@ function hasWon() {
  */
 function resetGameState() {
 	updateGameState({
+		state: 'log', // Set to valid gameplay state for tests
 		round: 0,
 		tower: 54,
 		tokens: 10,

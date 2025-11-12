@@ -18,3 +18,5 @@ playwright-report/screenshots/
 .references/
 screenshots/
 LTR-TheWretched-Pages-Screen.pdf
+docs/v1
+.tmp/
