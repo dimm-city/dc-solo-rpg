@@ -316,10 +316,11 @@
 		--aug-tl: 14px; /* Slot ← receives Health's tab */
 		--aug-tr: 8px; /* Gentle transition */
 		--aug-br: 14px; /* Strong tab → connects to Success (mobile) */
-		
+
 		/* Left side rectangle inset - receives puzzle tab from health */
-		--aug-l-extend1: 10px;
-		--aug-l-inset1: 15px;
+		/* Match health's right extension for perfect fit */
+		--aug-l-extend1: 30px;
+		--aug-l-inset1: 12px;
 		margin-inline-start: -25px;
 		padding-inline-start: var(--space-xl);
 		/* Enhanced Glow - animation removed */
@@ -564,35 +565,52 @@
 		}
 	}
 
-	/* Mobile - 2x2 grid */
+	/* Mobile - Maintain 2x2 grid like 900-600px */
 	@media (max-width: 600px) {
 		.stats-grid {
-			/* Display as 2 columns, hiding middle */
-			display: flex;
-			flex-direction: row;
-			gap: 0;
-			justify-content: space-between;
+			/* 2x2 grid with explicit positioning */
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: var(--space-xs);
 		}
 
-		/* Hide the "Last Roll" column on mobile */
-		.stats-grid > div:nth-of-type(2) {
-			display: none;
-		}
-
-		/* Make the stat columns display as flex column to stack items */
-		.stats-grid > div:first-of-type,
-		.stats-grid > div:last-of-type {
+		/* Position first column (Health + Failure) */
+		.stats-grid > div:first-of-type {
+			grid-column: 1;
+			grid-row: 1;
 			display: flex;
 			flex-direction: column;
-			gap: 0;
-			flex: 1;
+			gap: var(--space-xs);
+		}
+
+		/* Position Last Roll below stats, centered across both columns */
+		.stats-grid > div:nth-of-type(2) {
+			grid-column: 1 / -1;
+			grid-row: 2;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			padding: var(--space-xs);
+			font-size: 0.75rem;
+			color: rgba(255, 255, 255, 0.7);
+			text-transform: uppercase;
+			letter-spacing: 0.1em;
+		}
+
+		/* Position third column (Bonus + Success) */
+		.stats-grid > div:last-of-type {
+			grid-column: 2;
+			grid-row: 1;
+			display: flex;
+			flex-direction: column;
+			gap: var(--space-xs);
 		}
 
 		.stat-item {
-			padding: var(--space-xs);
+			padding: var(--space-xs) var(--space-sm);
 			min-height: 44px;
 			gap: 4px;
-			width: 100%; /* Full width for better interlocking */
+			width: 100%;
 		}
 
 		.stat-label {
@@ -618,9 +636,9 @@
 			font-size: 0.6rem;
 		}
 
+		/* Hide progress bars on mobile for compact layout */
 		.stat-bar {
-			height: 5px;
-			min-width: 30px;
+			display: none;
 		}
 
 		.info-segment {
@@ -636,8 +654,8 @@
 		}
 
 		.player-round-bar {
-			padding: var(--space-sm);
-			gap: var(--space-xs);
+			padding: var(--space-md);
+			gap: var(--space-sm);
 			flex-wrap: wrap;
 		}
 
@@ -649,63 +667,34 @@
 			white-space: nowrap;
 		}
 
-		/* Hide help icons on mobile to save space */
-		.stat-label :global(.help-icon) {
-			display: none;
-		}
-
-		/* Mobile Puzzle Piece Interlocking - 2x2 Grid */
-		/* Health: Top-left - extends right AND down */
+		/* Mobile Puzzle Piece Interlocking - Horizontal only */
+		/* Health: Top-left - extends right to Failure */
 		.health-stat {
-			/* Horizontal right extension for Health → Failure */
-			--aug-r-extend1: 25px;
-			--aug-r-inset1: 10px;
-			
-			/* Vertical bottom extension for Health → Bonus */
-			--aug-b-extend1: 25px;
-			--aug-b-inset1: 10px;
+			--aug-r-extend1: 20px;
+			--aug-r-inset1: 8px;
 		}
 
-		/* Failure: Top-right - receives left AND extends down */
+		/* Failure: Top-right - receives left from Health */
 		.failure-stat {
-			/* Horizontal left inset to receive Health's tab */
-			--aug-l-extend1: 25px;
-			--aug-l-inset1: 10px;
-			margin-inline-start: -20px;
-			padding-inline-start: var(--space-lg);
-			
-			/* Vertical bottom extension for Failure → Success */
-			--aug-b-extend1: 25px;
-			--aug-b-inset1: 10px;
+			--aug-l-extend1: 20px;
+			--aug-l-inset1: 8px;
+			margin-inline-start: -15px;
+			padding-inline-start: calc(var(--space-md) + var(--space-xs));
 		}
 
-		/* Bonus: Bottom-left - receives top AND extends right */
+		/* Bonus: Bottom-left - extends right to Success */
 		.bonus-stat {
-			/* Horizontal right extension for Bonus → Success */
-			--aug-r-extend1: 25px;
-			--aug-r-inset1: 10px;
-			
-			/* Vertical top inset to receive Health's tab */
-			--aug-t-extend1: 25px;
-			--aug-t-inset1: 10px;
-			margin-block-start: -20px;
-			padding-block-start: calc(var(--space-lg) + 4px);
+			--aug-r-extend1: 20px;
+			--aug-r-inset1: 8px;
 			padding-inline-start: var(--space-sm);
 		}
 
-		/* Success: Bottom-right - receives left AND top */
+		/* Success: Bottom-right - receives left from Bonus */
 		.success-stat {
-			/* Horizontal left inset to receive Bonus's tab */
-			--aug-l-extend1: 25px;
-			--aug-l-inset1: 10px;
-			margin-inline-start: -20px;
-			padding-inline-start: calc(var(--space-lg) + 4px);
-			
-			/* Vertical top inset to receive Failure's tab */
-			--aug-t-extend1: 25px;
-			--aug-t-inset1: 10px;
-			margin-block-start: -20px;
-			padding-block-start: calc(var(--space-lg) + 4px);
+			--aug-l-extend1: 20px;
+			--aug-l-inset1: 8px;
+			margin-inline-start: -15px;
+			padding-inline-start: calc(var(--space-md) + var(--space-xs));
 		}
 	}
 
