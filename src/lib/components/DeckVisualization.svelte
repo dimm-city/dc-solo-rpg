@@ -3,7 +3,7 @@
 
 	const cardsRemaining = $derived(gameState.deck?.length || 0);
 	const cardsDrawn = $derived(52 - cardsRemaining);
-	const deckHeight = $derived(Math.min((cardsRemaining / 52) * 200, 200)); // Max height 200px
+	const deckHeight = $derived(Math.min((cardsRemaining / 52) * 52, 52)); // Max height 200px
 	const visibleLayers = $derived(Math.min(Math.ceil(cardsRemaining / 5), 10)); // Show up to 10 layers
 </script>
 
@@ -53,6 +53,7 @@
 		align-items: center;
 		gap: var(--space-sm);
 		min-width: 100px;
+		position: relative;
 	}
 
 	.deck-stack {
@@ -87,14 +88,16 @@
 		flex-direction: column;
 		align-items: center;
 		gap: 0.125rem;
-		font-family: 'Courier New', monospace;
+		font-family: 'lixdu', 'Courier New', monospace;
 		text-align: center;
+		position: absolute;
+		z-index: 10;
 	}
 
 	.count {
 		font-size: 1.5rem;
 		font-weight: 700;
-		color: var(--color-neon-cyan);
+		color: var(--color-brand-yellow);
 		text-shadow:
 			0 0 10px rgba(0, 255, 255, 1),
 			0 0 20px rgba(0, 255, 255, 0.6);
@@ -102,8 +105,9 @@
 	}
 
 	.text {
-		font-size: 0.75rem;
-		color: rgba(255, 255, 255, 0.6);
+		font-size: 0.5rem;
+		font-family: 'Orbitron', sans-serif;
+		color: var(--color-brand-yellow);
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
 	}
