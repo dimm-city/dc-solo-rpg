@@ -50,8 +50,8 @@
 	<div class="dc-final-damage-description">
 		<h2>The Final Test</h2>
 		<p>
-			You've completed the countdown, but salvation comes with one final risk. Roll one last time
-			to see if you truly escape...
+			You've completed the countdown, but salvation comes with one final risk. Roll one last time to
+			see if you truly escape...
 		</p>
 		<div class="dc-final-damage-stats">
 			<p><strong>Current Resources:</strong> {gameState.tower}</p>

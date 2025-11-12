@@ -11,6 +11,7 @@ DC Solo RPG is a SvelteKit-based web component library for creating solo role-pl
 ## Important: Use Code Index Skill
 
 **CRITICAL:** Before exploring the codebase or gathering context, ALWAYS use the `code-index-builder` skill to leverage indexed documentation in `.references/`. This directory contains:
+
 - `project.index.md` - Comprehensive codebase index
 - `codebase_ast.md` - AST analysis of the project structure
 - `external-docs/` - Scraped web documentation
@@ -20,6 +21,7 @@ Using the code index tools will provide the most efficient context gathering and
 ## Common Commands
 
 ### Development
+
 ```bash
 npm run dev              # Start development server
 npm run dev -- --open    # Start dev server and open in browser
@@ -28,12 +30,14 @@ npm run preview          # Preview production build
 ```
 
 ### Testing
+
 ```bash
 npm run test:unit        # Run unit tests with Vitest
 npm run test             # Run Playwright tests (e2e)
 ```
 
 ### Code Quality
+
 ```bash
 npm run check            # Type-check with svelte-check
 npm run check:watch      # Type-check in watch mode
@@ -42,6 +46,7 @@ npm run format           # Auto-format code with Prettier
 ```
 
 ### Package Management
+
 ```bash
 npm run package          # Build library for publishing
 npm run prepublishOnly   # Pre-publish checks (runs automatically)
@@ -77,37 +82,40 @@ npm run prepublishOnly   # Pre-publish checks (runs automatically)
 The project uses **Svelte 5 runes** for reactive state management. The old StateMachine class has been eliminated.
 
 **Core Pattern:**
+
 ```javascript
 // gameStore.svelte.js - Single source of truth
 let gameState = $state({
-  state: 'loadGame',
-  tower: 54,
-  tokens: 10,
-  deck: [],
-  // ... all game state
+	state: 'loadGame',
+	tower: 54,
+	tokens: 10,
+	deck: []
+	// ... all game state
 });
 
 // Export getter functions for computed values
 export function getCurrentScreen() {
-  return gameState.state;
+	return gameState.state;
 }
 ```
 
 **Actions Pattern:**
+
 ```javascript
 // gameActions.svelte.js - All state mutations
 export const startGame = (player, config, options) => {
-  initializeGame(config, player, options);
+	initializeGame(config, player, options);
 };
 
 export const drawCard = () => {
-  // Modify gameState directly
-  gameState.currentCard = gameState.deck.pop();
-  transitionTo('cardDrawn');
+	// Modify gameState directly
+	gameState.currentCard = gameState.deck.pop();
+	transitionTo('cardDrawn');
 };
 ```
 
 **Key Files:**
+
 - `src/lib/stores/gameStore.svelte.js` - Core state and transition management
 - `src/lib/stores/gameActions.svelte.js` - All game logic and mutations
 - `src/lib/stores/gameInit.js` - Game initialization logic
@@ -126,27 +134,34 @@ lose-message: Defeat message
 ---
 
 # Introduction
+
 [Game setup and narrative]
 
 # Card Deck
 
 ### Primary Success
+
 [1 card - Ace of Hearts - main win condition]
 
 ### Failure Counter
+
 [4 cards - All Kings - instant loss when all revealed]
 
 ### Narrative
+
 [3 cards - Remaining Aces - reflective moments, bonus/help]
 
 ### Challenge
+
 [16 cards - Odd ranks (3,5,7,9) - trigger damage checks]
 
 ### Event
+
 [28 cards - Even ranks (2,4,6,8,10,J,Q) - safe moments]
 ```
 
 **Key Concepts:**
+
 - Writers focus on **card types**, not card identifiers
 - System auto-assigns cards to the 52-card deck
 - Optional special modifiers: `skip-damage`, `return-king`
@@ -157,6 +172,7 @@ lose-message: Defeat message
 ### Component Architecture
 
 **Main Components:**
+
 - `Game.svelte` - Root game component, handles lifecycle
 - `GameSelector.svelte` - Game selection interface
 - `GameScreen.svelte` - Main game play screen
@@ -166,13 +182,14 @@ lose-message: Defeat message
 - `ThreeJSDiceBoxRoller.svelte` - 3D dice rolling (uses @3d-dice/dice-box-threejs)
 
 **Component Pattern:**
+
 ```svelte
 <script>
-  import { gameState } from '$lib/stores/gameStore.svelte.js';
-  import { someAction } from '$lib/stores/gameActions.svelte.js';
+	import { gameState } from '$lib/stores/gameStore.svelte.js';
+	import { someAction } from '$lib/stores/gameActions.svelte.js';
 
-  // Access reactive state directly
-  $: tower = gameState.tower;
+	// Access reactive state directly
+	$: tower = gameState.tower;
 </script>
 
 <div>Tower: {tower}</div>
@@ -181,28 +198,31 @@ lose-message: Defeat message
 ### Testing
 
 Tests use **Vitest** with jsdom environment:
+
 ```bash
 npm run test:unit        # Run all tests
 npm run test:unit -- src/lib/stores/gameStore.test.js  # Run specific test
 ```
 
 **Test Pattern:**
+
 ```javascript
 import { describe, it, expect, beforeEach } from 'vitest';
 import { gameState } from './gameStore.svelte.js';
 
 describe('Game State', () => {
-  beforeEach(() => {
-    // Reset state before each test
-  });
+	beforeEach(() => {
+		// Reset state before each test
+	});
 
-  it('should initialize correctly', () => {
-    expect(gameState.tower).toBe(54);
-  });
+	it('should initialize correctly', () => {
+		expect(gameState.tower).toBe(54);
+	});
 });
 ```
 
 **Coverage:**
+
 ```bash
 npm run test:unit -- --coverage
 ```
@@ -212,6 +232,7 @@ npm run test:unit -- --coverage
 The game implements standard Wretched and Alone mechanics:
 
 ### Card Types
+
 1. **Primary Success (Salvation)** - Ace of Hearts
    - Activates win condition (10 tokens, roll to remove)
    - <1% win rate by design (journey matters more than victory)
@@ -234,11 +255,13 @@ The game implements standard Wretched and Alone mechanics:
    - Respite, discovery, world-building
 
 ### Progressive Rule Teaching
+
 Per SRD, rules should be revealed **through play**, not presented upfront. Card prompts teach mechanics naturally.
 
 ## Configuration Objects
 
 **Game Configuration:**
+
 ```javascript
 {
   title: "Game Title",
@@ -253,6 +276,7 @@ Per SRD, rules should be revealed **through play**, not presented upfront. Card 
 ```
 
 **Card Object:**
+
 ```javascript
 {
   card: "7",              // Card rank
@@ -267,28 +291,33 @@ Per SRD, rules should be revealed **through play**, not presented upfront. Card 
 ## Important Files
 
 ### Core State Management
+
 - `src/lib/stores/gameStore.svelte.js` - Core game state (Svelte 5 runes)
 - `src/lib/stores/gameActions.svelte.js` - All game actions and mutations
 - `src/lib/stores/gameInit.js` - Game initialization
 - `src/lib/stores/transitions.js` - State transition graph
 
 ### Game Mechanics
+
 - `src/lib/stores/wretchedAloneMechanics.test.js` - Wretched and Alone mechanics tests
 - `src/lib/stores/cardDrawing.test.js` - Card drawing logic tests
 - `src/lib/stores/gameBalance.test.js` - Game balance tests
 - `src/lib/stores/finalDamageRoll.test.js` - Final damage roll tests
 
 ### Parsing
+
 - `src/lib/parsers/markdownParser.js` - Markdown format parser
 - `src/lib/parsers/markdownParser.test.js` - Parser tests
 
 ### Configuration
+
 - `src/lib/configuration/GameSettings.js` - Game settings object
 - `src/lib/configuration/GameOptions.js` - Game options
 - `src/lib/configuration/DifficultyLevels.js` - Difficulty configuration
 - `src/lib/configuration/DiceThemes.js` - Dice theme configuration
 
 ### Entry Points
+
 - `src/lib/index.js` - Main library exports
 - `src/lib/components/Game.svelte` - Root game component
 - `src/lib/components/GameSelector.svelte` - Game selection component
@@ -298,6 +327,7 @@ Per SRD, rules should be revealed **through play**, not presented upfront. Card 
 This is a published npm package: `@dimm-city/dc-solo-rpg`
 
 **Exports:**
+
 ```javascript
 export { Game, GameSelector } from '@dimm-city/dc-solo-rpg';
 export { gameState, getCurrentScreen, getGameStats } from '@dimm-city/dc-solo-rpg';
@@ -305,12 +335,14 @@ export * from '@dimm-city/dc-solo-rpg'; // All game actions
 ```
 
 **Build:**
+
 ```bash
 npm run build    # Builds to dist/
 npm run package  # Prepares for publishing
 ```
 
 **Package Contents:**
+
 - `dist/` directory only (no tests, no routes)
 - Type definitions included
 - Svelte component exports
@@ -327,37 +359,40 @@ npm run package  # Prepares for publishing
 ## Common Patterns
 
 ### Adding a New Game Action
+
 ```javascript
 // src/lib/stores/gameActions.svelte.js
 export const myAction = () => {
-  // Mutate gameState directly
-  gameState.someValue = newValue;
+	// Mutate gameState directly
+	gameState.someValue = newValue;
 
-  // Trigger transition if needed
-  transitionTo('newState');
+	// Trigger transition if needed
+	transitionTo('newState');
 
-  // Log for debugging
-  logger.debug('[myAction] Description', gameState);
+	// Log for debugging
+	logger.debug('[myAction] Description', gameState);
 };
 ```
 
 ### Adding a New Component
+
 ```svelte
 <!-- src/lib/components/MyComponent.svelte -->
 <script>
-  import { gameState } from '$lib/stores/gameStore.svelte.js';
-  import { myAction } from '$lib/stores/gameActions.svelte.js';
+	import { gameState } from '$lib/stores/gameStore.svelte.js';
+	import { myAction } from '$lib/stores/gameActions.svelte.js';
 
-  // Access reactive state
-  $: value = gameState.someValue;
+	// Access reactive state
+	$: value = gameState.someValue;
 </script>
 
 <button on:click={myAction}>
-  Value: {value}
+	Value: {value}
 </button>
 ```
 
 ### Adding Tests
+
 ```javascript
 // src/lib/stores/myFeature.test.js
 import { describe, it, expect, beforeEach } from 'vitest';
@@ -365,14 +400,14 @@ import { gameState } from './gameStore.svelte.js';
 import { myAction } from './gameActions.svelte.js';
 
 describe('My Feature', () => {
-  beforeEach(() => {
-    // Reset gameState or set up test conditions
-  });
+	beforeEach(() => {
+		// Reset gameState or set up test conditions
+	});
 
-  it('should do something', () => {
-    myAction();
-    expect(gameState.someValue).toBe(expectedValue);
-  });
+	it('should do something', () => {
+		myAction();
+		expect(gameState.someValue).toBe(expectedValue);
+	});
 });
 ```
 

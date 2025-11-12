@@ -81,12 +81,12 @@ graph TB
 
 **Total Cards:** 52 (4 suits × 13 ranks)
 
-| Suit | Symbol | Thematic Category | Count |
-|------|--------|-------------------|-------|
-| Suit A (Hearts) | ♥ | Category 1 | 13 |
-| Suit B (Diamonds) | ♦ | Category 2 | 13 |
-| Suit C (Clubs) | ♣ | Category 3 | 13 |
-| Suit D (Spades) | ♠ | Category 4 | 13 |
+| Suit              | Symbol | Thematic Category | Count |
+| ----------------- | ------ | ----------------- | ----- |
+| Suit A (Hearts)   | ♥     | Category 1        | 13    |
+| Suit B (Diamonds) | ♦     | Category 2        | 13    |
+| Suit C (Clubs)    | ♣     | Category 3        | 13    |
+| Suit D (Spades)   | ♠     | Category 4        | 13    |
 
 **Ranks:** A, 2, 3, 4, 5, 6, 7, 8, 9, 10, J, Q, K
 
@@ -160,17 +160,17 @@ sequenceDiagram
 
 ```typescript
 interface GameState {
-  day: number;                    // Starts at 1
-  resources: number;              // 54 - initialDamage (1d6)
-                                  // Note: Initial damage roll is a digital
-                                  // enhancement for balance, not in original SRD
-  tokens: number;                 // Starts at 10
-  deck: Card[];                   // Shuffled 52 cards
-  cardsDrawn: number;             // Starts at 0
-  trackersRevealed: number;       // Tracker cards (e.g., Kings) revealed (0-4)
-  winConditionActive: boolean;    // Win card drawn? (false)
-  bonusCounter: number;           // Bonus cards drawn (0-4)
-  gameStatus: GameStatus;         // 'active' | 'victory' | 'defeat'
+	day: number; // Starts at 1
+	resources: number; // 54 - initialDamage (1d6)
+	// Note: Initial damage roll is a digital
+	// enhancement for balance, not in original SRD
+	tokens: number; // Starts at 10
+	deck: Card[]; // Shuffled 52 cards
+	cardsDrawn: number; // Starts at 0
+	trackersRevealed: number; // Tracker cards (e.g., Kings) revealed (0-4)
+	winConditionActive: boolean; // Win card drawn? (false)
+	bonusCounter: number; // Bonus cards drawn (0-4)
+	gameStatus: GameStatus; // 'active' | 'victory' | 'defeat'
 }
 ```
 
@@ -334,12 +334,12 @@ flowchart TD
 
 ```typescript
 interface Card {
-  suit: 'hearts' | 'diamonds' | 'clubs' | 'spades';
-  rank: 'A' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | 'J' | 'Q' | 'K';
-  promptText: string;           // Story-specific narrative
-  requiresDamageCheck: boolean; // TRUE if odd rank
-  specialMechanic?: string;     // Special card effects
-  keepVisible?: boolean;        // Keep card displayed (e.g., tracker cards)
+	suit: 'hearts' | 'diamonds' | 'clubs' | 'spades';
+	rank: 'A' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | 'J' | 'Q' | 'K';
+	promptText: string; // Story-specific narrative
+	requiresDamageCheck: boolean; // TRUE if odd rank
+	specialMechanic?: string; // Special card effects
+	keepVisible?: boolean; // Keep card displayed (e.g., tracker cards)
 }
 ```
 
@@ -361,28 +361,28 @@ graph TB
 
 ```typescript
 function requiresDamageCheck(card: Card): boolean {
-  const damageRanks = ['3', '5', '7', '9'];
-  return damageRanks.includes(card.rank);
+	const damageRanks = ['3', '5', '7', '9'];
+	return damageRanks.includes(card.rank);
 }
 ```
 
 ### 5.3 Card Distribution
 
-| Rank | Count | Triggers Damage? | Notes |
-|------|-------|------------------|-------|
-| A | 4 | ❌ No | Bonus/help cards - provide respite and reduce damage |
-| 2 | 4 | ❌ No | Even-ranked |
-| 3 | 4 | ✅ Yes | Odd-ranked challenge |
-| 4 | 4 | ❌ No | Even-ranked |
-| 5 | 4 | ✅ Yes | Odd-ranked challenge |
-| 6 | 4 | ❌ No | Even-ranked |
-| 7 | 4 | ✅ Yes | Odd-ranked challenge |
-| 8 | 4 | ❌ No | Even-ranked |
-| 9 | 4 | ✅ Yes | Odd-ranked challenge |
-| 10 | 4 | ❌ No | Even-ranked |
-| J | 4 | ❌ No | Even-valued face card |
-| Q | 4 | ❌ No | Even-valued face card |
-| K | 4 | ❌ No | Even-valued, Tracker cards (see Special Cards) |
+| Rank | Count | Triggers Damage? | Notes                                                |
+| ---- | ----- | ---------------- | ---------------------------------------------------- |
+| A    | 4     | ❌ No            | Bonus/help cards - provide respite and reduce damage |
+| 2    | 4     | ❌ No            | Even-ranked                                          |
+| 3    | 4     | ✅ Yes           | Odd-ranked challenge                                 |
+| 4    | 4     | ❌ No            | Even-ranked                                          |
+| 5    | 4     | ✅ Yes           | Odd-ranked challenge                                 |
+| 6    | 4     | ❌ No            | Even-ranked                                          |
+| 7    | 4     | ✅ Yes           | Odd-ranked challenge                                 |
+| 8    | 4     | ❌ No            | Even-ranked                                          |
+| 9    | 4     | ✅ Yes           | Odd-ranked challenge                                 |
+| 10   | 4     | ❌ No            | Even-ranked                                          |
+| J    | 4     | ❌ No            | Even-valued face card                                |
+| Q    | 4     | ❌ No            | Even-valued face card                                |
+| K    | 4     | ❌ No            | Even-valued, Tracker cards (see Special Cards)       |
 
 **Total Damage-Triggering Cards:** 16 out of 52 (~31%)
 
@@ -438,6 +438,7 @@ Per the Wretched and Alone SRD, **Aces are "bonus or help" cards and do NOT trig
 **Design Philosophy:**
 
 Aces represent moments of genuine help without immediate cost. While the game is difficult and failure is expected, these cards provide:
+
 - Breathing room between challenges
 - Narrative space for reflection and character development
 - Mechanical relief through bonus accumulation
@@ -460,7 +461,7 @@ Per The Wretched implementation, **two special mechanics can be assigned to Ace 
 
 - Allows player to skip the next tower pull when instructed
 - Can only be assigned to ONE Ace card in the deck
-- Example text: *"The next time you are told to pull from the tower you may choose not to"*
+- Example text: _"The next time you are told to pull from the tower you may choose not to"_
 - Example from The Wretched: Ace of Clubs
 - Strategic use: Save for critical moments when resources are low
 
@@ -469,7 +470,7 @@ Per The Wretched implementation, **two special mechanics can be assigned to Ace 
 - Allows player to shuffle a previously drawn King back into the deck
 - Can only be assigned to ONE Ace card in the deck
 - Specifically targets King of Spades in The Wretched
-- Example text: *"If you have previously drawn the King of Spades you may shuffle it back into the deck"*
+- Example text: _"If you have previously drawn the King of Spades you may shuffle it back into the deck"_
 - Example from The Wretched: Ace of Spades
 - Strategic use: Resets the tracker count, providing critical relief
 
@@ -485,21 +486,21 @@ Per The Wretched implementation, **two special mechanics can be assigned to Ace 
 
 ```typescript
 function processAce(card: Card, gameState: GameState): void {
-  // All Aces add to bonus counter
-  gameState.bonusCounter++;
+	// All Aces add to bonus counter
+	gameState.bonusCounter++;
 
-  // Check if this is the win condition card
-  if (card.suit === 'hearts' && card.rank === 'A') {
-    gameState.winConditionActive = true;
-    gameState.tokens = 10;
-  }
+	// Check if this is the win condition card
+	if (card.suit === 'hearts' && card.rank === 'A') {
+		gameState.winConditionActive = true;
+		gameState.tokens = 10;
+	}
 
-  // IMPORTANT: Ace is odd-ranked, so it STILL triggers damage check
-  // This happens even though the Ace provides a bonus
-  // The bonus reduces THIS damage and future damage
-  if (isOddRank(card.rank)) {
-    performDamageCheck(card, gameState);
-  }
+	// IMPORTANT: Ace is odd-ranked, so it STILL triggers damage check
+	// This happens even though the Ace provides a bonus
+	// The bonus reduces THIS damage and future damage
+	if (isOddRank(card.rank)) {
+		performDamageCheck(card, gameState);
+	}
 }
 ```
 
@@ -538,28 +539,28 @@ sequenceDiagram
 
 ```typescript
 function processTrackerCard(card: Card, gameState: GameState): void {
-  // Increment tracker count
-  gameState.trackersRevealed++;
+	// Increment tracker count
+	gameState.trackersRevealed++;
 
-  // Keep card visible
-  gameState.visibleCards.push(card);
+	// Keep card visible
+	gameState.visibleCards.push(card);
 
-  // Check for instant loss
-  if (gameState.trackersRevealed >= 4) {
-    gameState.gameStatus = 'defeat';
-    gameState.defeatReason = 'tracker_limit';
-  }
+	// Check for instant loss
+	if (gameState.trackersRevealed >= 4) {
+		gameState.gameStatus = 'defeat';
+		gameState.defeatReason = 'tracker_limit';
+	}
 }
 ```
 
 ### 6.4 Special Mechanics Summary
 
-| Card Type | Effect | Mechanic |
-|-----------|--------|----------|
-| Win Ace | Activate win condition | Place 10 tokens, begin countdown |
-| All Aces | Increase bonus counter | +1 damage reduction per Ace |
-| Tracker Cards | Progress toward loss | 4th tracker = instant defeat |
-| Modifier Cards | Enhanced effects | Story-specific, optional |
+| Card Type      | Effect                 | Mechanic                         |
+| -------------- | ---------------------- | -------------------------------- |
+| Win Ace        | Activate win condition | Place 10 tokens, begin countdown |
+| All Aces       | Increase bonus counter | +1 damage reduction per Ace      |
+| Tracker Cards  | Progress toward loss   | 4th tracker = instant defeat     |
+| Modifier Cards | Enhanced effects       | Story-specific, optional         |
 
 **Optional Ace Enhancements:**
 
@@ -740,46 +741,46 @@ stateDiagram-v2
 
 ```typescript
 type GameState =
-  | 'initialization'    // Creating new game
-  | 'setup'             // Initializing resources
-  | 'firstEntry'        // Recording opening
-  | 'dayStart'          // Beginning new day
-  | 'rollForCards'      // Rolling 1d6 for card count
-  | 'drawCards'         // Drawing N cards
-  | 'processCard'       // Processing next card
-  | 'showPrompt'        // Displaying card prompt
-  | 'damageCheck'       // Checking if odd rank
-  | 'rollDamage'        // Rolling damage
-  | 'applyDamage'       // Applying damage to resources
-  | 'cardComplete'      // Card resolved
-  | 'discardCards'      // Moving cards to discard
-  | 'specialChecks'     // Checking Aces, Kings, etc.
-  | 'winActive'         // Win condition countdown
-  | 'winRoll'           // Rolling for progress
-  | 'removeToken'       // Token removed
-  | 'finalDamage'       // Final damage roll
-  | 'journalPhase'      // Writing entry
-  | 'recordEntry'       // Saving journal
-  | 'gameOverState'     // Defeat
-  | 'victoryState'      // Victory
-  | 'finalEntry'        // Closing entry
-  | 'exit';             // Game complete
+	| 'initialization' // Creating new game
+	| 'setup' // Initializing resources
+	| 'firstEntry' // Recording opening
+	| 'dayStart' // Beginning new day
+	| 'rollForCards' // Rolling 1d6 for card count
+	| 'drawCards' // Drawing N cards
+	| 'processCard' // Processing next card
+	| 'showPrompt' // Displaying card prompt
+	| 'damageCheck' // Checking if odd rank
+	| 'rollDamage' // Rolling damage
+	| 'applyDamage' // Applying damage to resources
+	| 'cardComplete' // Card resolved
+	| 'discardCards' // Moving cards to discard
+	| 'specialChecks' // Checking Aces, Kings, etc.
+	| 'winActive' // Win condition countdown
+	| 'winRoll' // Rolling for progress
+	| 'removeToken' // Token removed
+	| 'finalDamage' // Final damage roll
+	| 'journalPhase' // Writing entry
+	| 'recordEntry' // Saving journal
+	| 'gameOverState' // Defeat
+	| 'victoryState' // Victory
+	| 'finalEntry' // Closing entry
+	| 'exit'; // Game complete
 
 interface GameContext {
-  day: number;
-  resources: number;            // 54 → 0
-  tokens: number;               // 10 → 0
-  deck: Card[];                 // Remaining cards
-  hand: Card[];                 // Current day's cards
-  discard: Card[];              // Used cards
-  trackersRevealed: number;     // 0 → 4
-  bonusCounter: number;         // 0 → 4
-  winConditionActive: boolean;
-  journal: JournalEntry[];
-  cardsThisTurn: number;
-  currentCardIndex: number;
-  gameStatus: 'active' | 'victory' | 'defeat';
-  defeatReason?: string;
+	day: number;
+	resources: number; // 54 → 0
+	tokens: number; // 10 → 0
+	deck: Card[]; // Remaining cards
+	hand: Card[]; // Current day's cards
+	discard: Card[]; // Used cards
+	trackersRevealed: number; // 0 → 4
+	bonusCounter: number; // 0 → 4
+	winConditionActive: boolean;
+	journal: JournalEntry[];
+	cardsThisTurn: number;
+	currentCardIndex: number;
+	gameStatus: 'active' | 'victory' | 'defeat';
+	defeatReason?: string;
 }
 ```
 
@@ -814,42 +815,42 @@ flowchart TB
 
 ```typescript
 function calculateDamage(roll: number, bonusCounter: number): number {
-  const damage = Math.max(roll - bonusCounter, 0);
-  return damage;
+	const damage = Math.max(roll - bonusCounter, 0);
+	return damage;
 }
 
 function performDamageCheck(card: Card, gameState: GameState): void {
-  // Only challenge cards (3, 5, 7, 9) trigger damage
-  const damageRanks = ['3', '5', '7', '9'];
-  if (!damageRanks.includes(card.rank)) {
-    return;
-  }
+	// Only challenge cards (3, 5, 7, 9) trigger damage
+	const damageRanks = ['3', '5', '7', '9'];
+	if (!damageRanks.includes(card.rank)) {
+		return;
+	}
 
-  // Roll 1d6
-  const roll = rollD6(); // Returns 1-6
+	// Roll 1d6
+	const roll = rollD6(); // Returns 1-6
 
-  // Calculate damage
-  const damage = calculateDamage(roll, gameState.bonusCounter);
+	// Calculate damage
+	const damage = calculateDamage(roll, gameState.bonusCounter);
 
-  // Apply damage
-  gameState.resources -= damage;
+	// Apply damage
+	gameState.resources -= damage;
 
-  // Log event
-  gameState.journal.push({
-    type: 'damage',
-    day: gameState.day,
-    card: card.id,
-    roll: roll,
-    bonusCounter: gameState.bonusCounter,
-    damage: damage,
-    resourcesRemaining: gameState.resources
-  });
+	// Log event
+	gameState.journal.push({
+		type: 'damage',
+		day: gameState.day,
+		card: card.id,
+		roll: roll,
+		bonusCounter: gameState.bonusCounter,
+		damage: damage,
+		resourcesRemaining: gameState.resources
+	});
 
-  // Check for game over
-  if (gameState.resources <= 0) {
-    gameState.gameStatus = 'defeat';
-    gameState.defeatReason = 'resources_depleted';
-  }
+	// Check for game over
+	if (gameState.resources <= 0) {
+		gameState.gameStatus = 'defeat';
+		gameState.defeatReason = 'resources_depleted';
+	}
 }
 ```
 
@@ -858,45 +859,45 @@ function performDamageCheck(card: Card, gameState: GameState): void {
 **Without Bonus Counter (bonusCounter = 0):**
 
 | Roll | Damage | Resources After (from 54) |
-|------|--------|---------------------------|
-| 1 | 1 | 53 |
-| 2 | 2 | 52 |
-| 3 | 3 | 51 |
-| 4 | 4 | 50 |
-| 5 | 5 | 49 |
-| 6 | 6 | 48 |
+| ---- | ------ | ------------------------- |
+| 1    | 1      | 53                        |
+| 2    | 2      | 52                        |
+| 3    | 3      | 51                        |
+| 4    | 4      | 50                        |
+| 5    | 5      | 49                        |
+| 6    | 6      | 48                        |
 
 **With Bonus Counter +2 (bonusCounter = 2):**
 
 | Roll | Damage | Resources After (from 54) |
-|------|--------|---------------------------|
-| 1 | 0 | 54 (no damage) |
-| 2 | 0 | 54 (no damage) |
-| 3 | 1 | 53 |
-| 4 | 2 | 52 |
-| 5 | 3 | 51 |
-| 6 | 4 | 50 |
+| ---- | ------ | ------------------------- |
+| 1    | 0      | 54 (no damage)            |
+| 2    | 0      | 54 (no damage)            |
+| 3    | 1      | 53                        |
+| 4    | 2      | 52                        |
+| 5    | 3      | 51                        |
+| 6    | 4      | 50                        |
 
 **With Bonus Counter +4 (bonusCounter = 4 - all Aces):**
 
 | Roll | Damage | Resources After (from 54) |
-|------|--------|---------------------------|
-| 1 | 0 | 54 (no damage) |
-| 2 | 0 | 54 (no damage) |
-| 3 | 0 | 54 (no damage) |
-| 4 | 0 | 54 (no damage) |
-| 5 | 1 | 53 |
-| 6 | 2 | 52 |
+| ---- | ------ | ------------------------- |
+| 1    | 0      | 54 (no damage)            |
+| 2    | 0      | 54 (no damage)            |
+| 3    | 0      | 54 (no damage)            |
+| 4    | 0      | 54 (no damage)            |
+| 5    | 1      | 53                        |
+| 6    | 2      | 52                        |
 
 ### 9.4 Expected Damage Per Check
 
 | Bonus Counter | Average Damage | Expected Resource Loss |
-|---------------|----------------|------------------------|
-| 0 | 3.5 | High attrition |
-| 1 | 2.5 | Moderate attrition |
-| 2 | 1.67 | Reduced attrition |
-| 3 | 1.0 | Minimal attrition |
-| 4 | 0.5 | Very low attrition |
+| ------------- | -------------- | ---------------------- |
+| 0             | 3.5            | High attrition         |
+| 1             | 2.5            | Moderate attrition     |
+| 2             | 1.67           | Reduced attrition      |
+| 3             | 1.0            | Minimal attrition      |
+| 4             | 0.5            | Very low attrition     |
 
 **Game Balance:**
 
@@ -911,66 +912,66 @@ function performDamageCheck(card: Card, gameState: GameState): void {
 ```typescript
 // Configuration for tuning difficulty
 const GAME_CONFIG = {
-  INITIAL_RESOURCES: 54,        // Starting resource pool
-  INITIAL_DAMAGE_ROLL: true,    // Apply 1d6 damage at start?
-  BONUS_PER_ACE: 1,             // Damage reduction per Ace
-  WIN_TOKENS: 10,               // Tokens required for win
-  WIN_ROLL_BASE: 6,             // Roll needed without bonus Ace
-  WIN_ROLL_ENHANCED: 5,         // Roll needed with bonus Ace
-  TRACKER_LIMIT: 4              // Number of trackers before loss
+	INITIAL_RESOURCES: 54, // Starting resource pool
+	INITIAL_DAMAGE_ROLL: true, // Apply 1d6 damage at start?
+	BONUS_PER_ACE: 1, // Damage reduction per Ace
+	WIN_TOKENS: 10, // Tokens required for win
+	WIN_ROLL_BASE: 6, // Roll needed without bonus Ace
+	WIN_ROLL_ENHANCED: 5, // Roll needed with bonus Ace
+	TRACKER_LIMIT: 4 // Number of trackers before loss
 };
 ```
 
 **Difficulty Modes:**
 
-| Mode | Initial Resources | Initial Damage | Bonus per Ace | Expected Win Rate |
-|------|------------------|----------------|---------------|-------------------|
-| Easy | 65 | No | 2 | ~30% |
-| Normal | 54 | Yes (1d6) | 1 | ~15% |
-| Hard | 48 | Yes (1d6+2) | 1 | ~5% |
-| Nightmare | 40 | Yes (2d6) | 0 | ~1% |
+| Mode      | Initial Resources | Initial Damage | Bonus per Ace | Expected Win Rate |
+| --------- | ----------------- | -------------- | ------------- | ----------------- |
+| Easy      | 65                | No             | 2             | ~30%              |
+| Normal    | 54                | Yes (1d6)      | 1             | ~15%              |
+| Hard      | 48                | Yes (1d6+2)    | 1             | ~5%               |
+| Nightmare | 40                | Yes (2d6)      | 0             | ~1%               |
 
 ### 9.6 Implementation Example
 
 ```typescript
 // Complete card processing with damage system
 function processCard(card: Card, gameState: GameState): GameResult {
-  // 1. Display narrative prompt (story-specific)
-  displayPrompt(card.promptText);
+	// 1. Display narrative prompt (story-specific)
+	displayPrompt(card.promptText);
 
-  // 2. Check if card triggers damage
-  if (isOddRank(card.rank)) {
-    performDamageCheck(card, gameState);
+	// 2. Check if card triggers damage
+	if (isOddRank(card.rank)) {
+		performDamageCheck(card, gameState);
 
-    // Check if game over
-    if (gameState.resources <= 0) {
-      return {
-        status: 'defeat',
-        reason: 'resources_depleted'
-      };
-    }
-  }
+		// Check if game over
+		if (gameState.resources <= 0) {
+			return {
+				status: 'defeat',
+				reason: 'resources_depleted'
+			};
+		}
+	}
 
-  // 3. Handle special mechanics
-  if (card.rank === 'A') {
-    processAce(card, gameState);
-  }
+	// 3. Handle special mechanics
+	if (card.rank === 'A') {
+		processAce(card, gameState);
+	}
 
-  if (card.rank === 'K') {
-    processTrackerCard(card, gameState);
+	if (card.rank === 'K') {
+		processTrackerCard(card, gameState);
 
-    if (gameState.trackersRevealed >= 4) {
-      return {
-        status: 'defeat',
-        reason: 'tracker_limit'
-      };
-    }
-  }
+		if (gameState.trackersRevealed >= 4) {
+			return {
+				status: 'defeat',
+				reason: 'tracker_limit'
+			};
+		}
+	}
 
-  // 4. Continue game
-  return {
-    status: 'continue'
-  };
+	// 4. Continue game
+	return {
+		status: 'continue'
+	};
 }
 ```
 
@@ -984,37 +985,37 @@ function processCard(card: Card, gameState: GameState): GameResult {
 
 ```typescript
 describe('Deck Management', () => {
-  test('should create 52-card deck', () => {
-    const deck = createDeck();
-    expect(deck).toHaveLength(52);
-  });
+	test('should create 52-card deck', () => {
+		const deck = createDeck();
+		expect(deck).toHaveLength(52);
+	});
 
-  test('should have 4 suits with 13 cards each', () => {
-    const deck = createDeck();
-    ['hearts', 'diamonds', 'clubs', 'spades'].forEach(suit => {
-      const suitCards = deck.filter(c => c.suit === suit);
-      expect(suitCards).toHaveLength(13);
-    });
-  });
+	test('should have 4 suits with 13 cards each', () => {
+		const deck = createDeck();
+		['hearts', 'diamonds', 'clubs', 'spades'].forEach((suit) => {
+			const suitCards = deck.filter((c) => c.suit === suit);
+			expect(suitCards).toHaveLength(13);
+		});
+	});
 
-  test('should classify odd and even ranks correctly', () => {
-    const oddRanks = ['A', '3', '5', '7', '9'];
-    const evenRanks = ['2', '4', '6', '8', '10', 'J', 'Q', 'K'];
+	test('should classify odd and even ranks correctly', () => {
+		const oddRanks = ['A', '3', '5', '7', '9'];
+		const evenRanks = ['2', '4', '6', '8', '10', 'J', 'Q', 'K'];
 
-    oddRanks.forEach(rank => {
-      expect(isOddRank(rank)).toBe(true);
-    });
+		oddRanks.forEach((rank) => {
+			expect(isOddRank(rank)).toBe(true);
+		});
 
-    evenRanks.forEach(rank => {
-      expect(isOddRank(rank)).toBe(false);
-    });
-  });
+		evenRanks.forEach((rank) => {
+			expect(isOddRank(rank)).toBe(false);
+		});
+	});
 
-  test('should have 20 damage-triggering cards', () => {
-    const deck = createDeck();
-    const damageCards = deck.filter(c => isOddRank(c.rank));
-    expect(damageCards).toHaveLength(20);
-  });
+	test('should have 20 damage-triggering cards', () => {
+		const deck = createDeck();
+		const damageCards = deck.filter((c) => isOddRank(c.rank));
+		expect(damageCards).toHaveLength(20);
+	});
 });
 ```
 
@@ -1022,29 +1023,29 @@ describe('Deck Management', () => {
 
 ```typescript
 describe('Game Initialization', () => {
-  test('should initialize with correct starting state', () => {
-    const game = initializeGame();
+	test('should initialize with correct starting state', () => {
+		const game = initializeGame();
 
-    expect(game.day).toBe(1);
-    expect(game.tokens).toBe(10);
-    expect(game.trackersRevealed).toBe(0);
-    expect(game.bonusCounter).toBe(0);
-    expect(game.winConditionActive).toBe(false);
-    expect(game.gameStatus).toBe('active');
-  });
+		expect(game.day).toBe(1);
+		expect(game.tokens).toBe(10);
+		expect(game.trackersRevealed).toBe(0);
+		expect(game.bonusCounter).toBe(0);
+		expect(game.winConditionActive).toBe(false);
+		expect(game.gameStatus).toBe('active');
+	});
 
-  test('should apply initial damage when enabled', () => {
-    const game = initializeGame({ initialDamage: true });
+	test('should apply initial damage when enabled', () => {
+		const game = initializeGame({ initialDamage: true });
 
-    expect(game.resources).toBeLessThan(54);
-    expect(game.resources).toBeGreaterThanOrEqual(48); // 54 - 6 max
-  });
+		expect(game.resources).toBeLessThan(54);
+		expect(game.resources).toBeGreaterThanOrEqual(48); // 54 - 6 max
+	});
 
-  test('should not apply initial damage when disabled', () => {
-    const game = initializeGame({ initialDamage: false });
+	test('should not apply initial damage when disabled', () => {
+		const game = initializeGame({ initialDamage: false });
 
-    expect(game.resources).toBe(54);
-  });
+		expect(game.resources).toBe(54);
+	});
 });
 ```
 
@@ -1052,30 +1053,30 @@ describe('Game Initialization', () => {
 
 ```typescript
 describe('Damage Calculation (Option A)', () => {
-  test('should calculate damage with no bonus', () => {
-    expect(calculateDamage(1, 0)).toBe(1);
-    expect(calculateDamage(4, 0)).toBe(4);
-    expect(calculateDamage(6, 0)).toBe(6);
-  });
+	test('should calculate damage with no bonus', () => {
+		expect(calculateDamage(1, 0)).toBe(1);
+		expect(calculateDamage(4, 0)).toBe(4);
+		expect(calculateDamage(6, 0)).toBe(6);
+	});
 
-  test('should apply bonus counter correctly', () => {
-    expect(calculateDamage(4, 2)).toBe(2); // 4 - 2
-    expect(calculateDamage(5, 3)).toBe(2); // 5 - 3
-    expect(calculateDamage(6, 4)).toBe(2); // 6 - 4
-  });
+	test('should apply bonus counter correctly', () => {
+		expect(calculateDamage(4, 2)).toBe(2); // 4 - 2
+		expect(calculateDamage(5, 3)).toBe(2); // 5 - 3
+		expect(calculateDamage(6, 4)).toBe(2); // 6 - 4
+	});
 
-  test('should not deal negative damage', () => {
-    expect(calculateDamage(1, 5)).toBe(0);
-    expect(calculateDamage(3, 4)).toBe(0);
-  });
+	test('should not deal negative damage', () => {
+		expect(calculateDamage(1, 5)).toBe(0);
+		expect(calculateDamage(3, 4)).toBe(0);
+	});
 
-  test('should only trigger on odd cards', () => {
-    const evenCard = { rank: '2', suit: 'hearts' };
-    const oddCard = { rank: '3', suit: 'hearts' };
+	test('should only trigger on odd cards', () => {
+		const evenCard = { rank: '2', suit: 'hearts' };
+		const oddCard = { rank: '3', suit: 'hearts' };
 
-    expect(requiresDamageCheck(evenCard)).toBe(false);
-    expect(requiresDamageCheck(oddCard)).toBe(true);
-  });
+		expect(requiresDamageCheck(evenCard)).toBe(false);
+		expect(requiresDamageCheck(oddCard)).toBe(true);
+	});
 });
 ```
 
@@ -1083,76 +1084,76 @@ describe('Damage Calculation (Option A)', () => {
 
 ```typescript
 describe('Special Cards', () => {
-  describe('Aces - Bonus Counter', () => {
-    test('should increment bonus counter for each Ace', () => {
-      const game = initializeGame();
+	describe('Aces - Bonus Counter', () => {
+		test('should increment bonus counter for each Ace', () => {
+			const game = initializeGame();
 
-      processAce({ rank: 'A', suit: 'diamonds' }, game);
-      expect(game.bonusCounter).toBe(1);
+			processAce({ rank: 'A', suit: 'diamonds' }, game);
+			expect(game.bonusCounter).toBe(1);
 
-      processAce({ rank: 'A', suit: 'clubs' }, game);
-      expect(game.bonusCounter).toBe(2);
+			processAce({ rank: 'A', suit: 'clubs' }, game);
+			expect(game.bonusCounter).toBe(2);
 
-      processAce({ rank: 'A', suit: 'spades' }, game);
-      expect(game.bonusCounter).toBe(3);
+			processAce({ rank: 'A', suit: 'spades' }, game);
+			expect(game.bonusCounter).toBe(3);
 
-      processAce({ rank: 'A', suit: 'hearts' }, game);
-      expect(game.bonusCounter).toBe(4);
-    });
-  });
+			processAce({ rank: 'A', suit: 'hearts' }, game);
+			expect(game.bonusCounter).toBe(4);
+		});
+	});
 
-  describe('Win Condition Ace', () => {
-    test('should activate win condition', () => {
-      const game = initializeGame();
+	describe('Win Condition Ace', () => {
+		test('should activate win condition', () => {
+			const game = initializeGame();
 
-      processCard({ rank: 'A', suit: 'hearts' }, game);
+			processCard({ rank: 'A', suit: 'hearts' }, game);
 
-      expect(game.winConditionActive).toBe(true);
-      expect(game.tokens).toBe(10);
-    });
+			expect(game.winConditionActive).toBe(true);
+			expect(game.tokens).toBe(10);
+		});
 
-    test('should allow token removal on successful roll', () => {
-      const game = initializeGame();
-      game.winConditionActive = true;
-      game.tokens = 10;
+		test('should allow token removal on successful roll', () => {
+			const game = initializeGame();
+			game.winConditionActive = true;
+			game.tokens = 10;
 
-      winRoll(game, 6); // Success
+			winRoll(game, 6); // Success
 
-      expect(game.tokens).toBe(9);
-    });
+			expect(game.tokens).toBe(9);
+		});
 
-    test('should not remove token on failed roll', () => {
-      const game = initializeGame();
-      game.winConditionActive = true;
-      game.tokens = 10;
+		test('should not remove token on failed roll', () => {
+			const game = initializeGame();
+			game.winConditionActive = true;
+			game.tokens = 10;
 
-      winRoll(game, 3); // Failure
+			winRoll(game, 3); // Failure
 
-      expect(game.tokens).toBe(10);
-    });
-  });
+			expect(game.tokens).toBe(10);
+		});
+	});
 
-  describe('Tracker Cards (Kings)', () => {
-    test('should track count correctly', () => {
-      const game = initializeGame();
+	describe('Tracker Cards (Kings)', () => {
+		test('should track count correctly', () => {
+			const game = initializeGame();
 
-      processTrackerCard({ rank: 'K', suit: 'hearts' }, game);
-      expect(game.trackersRevealed).toBe(1);
+			processTrackerCard({ rank: 'K', suit: 'hearts' }, game);
+			expect(game.trackersRevealed).toBe(1);
 
-      processTrackerCard({ rank: 'K', suit: 'diamonds' }, game);
-      expect(game.trackersRevealed).toBe(2);
-    });
+			processTrackerCard({ rank: 'K', suit: 'diamonds' }, game);
+			expect(game.trackersRevealed).toBe(2);
+		});
 
-    test('should trigger instant loss on 4th tracker', () => {
-      const game = initializeGame();
-      game.trackersRevealed = 3;
+		test('should trigger instant loss on 4th tracker', () => {
+			const game = initializeGame();
+			game.trackersRevealed = 3;
 
-      processTrackerCard({ rank: 'K', suit: 'spades' }, game);
+			processTrackerCard({ rank: 'K', suit: 'spades' }, game);
 
-      expect(game.gameStatus).toBe('defeat');
-      expect(game.defeatReason).toBe('tracker_limit');
-    });
-  });
+			expect(game.gameStatus).toBe('defeat');
+			expect(game.defeatReason).toBe('tracker_limit');
+		});
+	});
 });
 ```
 
@@ -1160,75 +1161,75 @@ describe('Special Cards', () => {
 
 ```typescript
 describe('Win Conditions', () => {
-  test('should require win condition active', () => {
-    const game = initializeGame();
-    game.tokens = 0;
-    game.resources = 30;
+	test('should require win condition active', () => {
+		const game = initializeGame();
+		game.tokens = 0;
+		game.resources = 30;
 
-    expect(checkWinCondition(game)).toBe(false);
-  });
+		expect(checkWinCondition(game)).toBe(false);
+	});
 
-  test('should require all tokens removed', () => {
-    const game = initializeGame();
-    game.winConditionActive = true;
-    game.tokens = 3;
-    game.resources = 30;
+	test('should require all tokens removed', () => {
+		const game = initializeGame();
+		game.winConditionActive = true;
+		game.tokens = 3;
+		game.resources = 30;
 
-    expect(checkWinCondition(game)).toBe(false);
-  });
+		expect(checkWinCondition(game)).toBe(false);
+	});
 
-  test('should require resources > 0', () => {
-    const game = initializeGame();
-    game.winConditionActive = true;
-    game.tokens = 0;
-    game.resources = 0;
+	test('should require resources > 0', () => {
+		const game = initializeGame();
+		game.winConditionActive = true;
+		game.tokens = 0;
+		game.resources = 0;
 
-    expect(checkWinCondition(game)).toBe(false);
-  });
+		expect(checkWinCondition(game)).toBe(false);
+	});
 
-  test('should win when all conditions met', () => {
-    const game = initializeGame();
-    game.winConditionActive = true;
-    game.tokens = 0;
-    game.resources = 20;
+	test('should win when all conditions met', () => {
+		const game = initializeGame();
+		game.winConditionActive = true;
+		game.tokens = 0;
+		game.resources = 20;
 
-    expect(checkWinCondition(game)).toBe(true);
-  });
+		expect(checkWinCondition(game)).toBe(true);
+	});
 });
 
 describe('Loss Conditions', () => {
-  test('should lose when resources reach 0', () => {
-    const game = initializeGame();
-    game.resources = 1;
+	test('should lose when resources reach 0', () => {
+		const game = initializeGame();
+		game.resources = 1;
 
-    const card = { rank: '5', suit: 'hearts' };
-    performDamageCheck(card, game); // Will roll damage
+		const card = { rank: '5', suit: 'hearts' };
+		performDamageCheck(card, game); // Will roll damage
 
-    if (game.resources <= 0) {
-      expect(game.gameStatus).toBe('defeat');
-      expect(game.defeatReason).toBe('resources_depleted');
-    }
-  });
+		if (game.resources <= 0) {
+			expect(game.gameStatus).toBe('defeat');
+			expect(game.defeatReason).toBe('resources_depleted');
+		}
+	});
 
-  test('should lose when 4 trackers revealed', () => {
-    const game = initializeGame();
-    game.trackersRevealed = 3;
+	test('should lose when 4 trackers revealed', () => {
+		const game = initializeGame();
+		game.trackersRevealed = 3;
 
-    processTrackerCard({ rank: 'K', suit: 'spades' }, game);
+		processTrackerCard({ rank: 'K', suit: 'spades' }, game);
 
-    expect(game.gameStatus).toBe('defeat');
-    expect(game.defeatReason).toBe('tracker_limit');
-  });
+		expect(game.gameStatus).toBe('defeat');
+		expect(game.defeatReason).toBe('tracker_limit');
+	});
 
-  test('should lose when deck exhausted without win', () => {
-    const game = initializeGame();
-    game.deck = [];
-    game.winConditionActive = false;
+	test('should lose when deck exhausted without win', () => {
+		const game = initializeGame();
+		game.deck = [];
+		game.winConditionActive = false;
 
-    const result = checkEndOfDay(game);
+		const result = checkEndOfDay(game);
 
-    expect(result).toBe('defeat');
-  });
+		expect(result).toBe('defeat');
+	});
 });
 ```
 
@@ -1236,53 +1237,53 @@ describe('Loss Conditions', () => {
 
 ```typescript
 describe('Game Balance', () => {
-  test('should achieve target win rate', () => {
-    const iterations = 1000;
-    let wins = 0;
+	test('should achieve target win rate', () => {
+		const iterations = 1000;
+		let wins = 0;
 
-    for (let i = 0; i < iterations; i++) {
-      const result = simulateGame();
-      if (result === 'victory') wins++;
-    }
+		for (let i = 0; i < iterations; i++) {
+			const result = simulateGame();
+			if (result === 'victory') wins++;
+		}
 
-    const winRate = wins / iterations;
-    expect(winRate).toBeGreaterThan(0.05);  // At least 5%
-    expect(winRate).toBeLessThan(0.30);     // Less than 30%
-  });
+		const winRate = wins / iterations;
+		expect(winRate).toBeGreaterThan(0.05); // At least 5%
+		expect(winRate).toBeLessThan(0.3); // Less than 30%
+	});
 
-  test('should last 15-30 days on average', () => {
-    const iterations = 100;
-    let totalDays = 0;
+	test('should last 15-30 days on average', () => {
+		const iterations = 100;
+		let totalDays = 0;
 
-    for (let i = 0; i < iterations; i++) {
-      const result = simulateGame({ trackDays: true });
-      totalDays += result.days;
-    }
+		for (let i = 0; i < iterations; i++) {
+			const result = simulateGame({ trackDays: true });
+			totalDays += result.days;
+		}
 
-    const avgDays = totalDays / iterations;
-    expect(avgDays).toBeGreaterThan(10);
-    expect(avgDays).toBeLessThan(40);
-  });
+		const avgDays = totalDays / iterations;
+		expect(avgDays).toBeGreaterThan(10);
+		expect(avgDays).toBeLessThan(40);
+	});
 
-  test('tracker limit should account for ~15% of losses', () => {
-    const iterations = 500;
-    let trackerDefeats = 0;
-    let totalDefeats = 0;
+	test('tracker limit should account for ~15% of losses', () => {
+		const iterations = 500;
+		let trackerDefeats = 0;
+		let totalDefeats = 0;
 
-    for (let i = 0; i < iterations; i++) {
-      const result = simulateGame();
-      if (result.status === 'defeat') {
-        totalDefeats++;
-        if (result.reason === 'tracker_limit') {
-          trackerDefeats++;
-        }
-      }
-    }
+		for (let i = 0; i < iterations; i++) {
+			const result = simulateGame();
+			if (result.status === 'defeat') {
+				totalDefeats++;
+				if (result.reason === 'tracker_limit') {
+					trackerDefeats++;
+				}
+			}
+		}
 
-    const trackerRate = trackerDefeats / totalDefeats;
-    expect(trackerRate).toBeGreaterThan(0.10);
-    expect(trackerRate).toBeLessThan(0.25);
-  });
+		const trackerRate = trackerDefeats / totalDefeats;
+		expect(trackerRate).toBeGreaterThan(0.1);
+		expect(trackerRate).toBeLessThan(0.25);
+	});
 });
 ```
 
@@ -1290,55 +1291,55 @@ describe('Game Balance', () => {
 
 ```typescript
 describe('Edge Cases', () => {
-  test('should handle drawing last card', () => {
-    const game = initializeGame();
-    game.deck = [{ rank: 'A', suit: 'hearts' }];
+	test('should handle drawing last card', () => {
+		const game = initializeGame();
+		game.deck = [{ rank: 'A', suit: 'hearts' }];
 
-    drawCards(game, 1);
+		drawCards(game, 1);
 
-    expect(game.hand).toHaveLength(1);
-    expect(game.deck).toHaveLength(0);
-  });
+		expect(game.hand).toHaveLength(1);
+		expect(game.deck).toHaveLength(0);
+	});
 
-  test('should handle win card as first card', () => {
-    const game = initializeGame();
-    game.deck[0] = { rank: 'A', suit: 'hearts' };
+	test('should handle win card as first card', () => {
+		const game = initializeGame();
+		game.deck[0] = { rank: 'A', suit: 'hearts' };
 
-    rollForCards(game, 1);
-    drawCards(game);
-    processCards(game);
+		rollForCards(game, 1);
+		drawCards(game);
+		processCards(game);
 
-    expect(game.winConditionActive).toBe(true);
-    expect(game.day).toBe(1);
-  });
+		expect(game.winConditionActive).toBe(true);
+		expect(game.day).toBe(1);
+	});
 
-  test('should handle all Aces drawn before win card', () => {
-    const game = initializeGame();
+	test('should handle all Aces drawn before win card', () => {
+		const game = initializeGame();
 
-    processAce({ rank: 'A', suit: 'diamonds' }, game);
-    processAce({ rank: 'A', suit: 'clubs' }, game);
-    processAce({ rank: 'A', suit: 'spades' }, game);
+		processAce({ rank: 'A', suit: 'diamonds' }, game);
+		processAce({ rank: 'A', suit: 'clubs' }, game);
+		processAce({ rank: 'A', suit: 'spades' }, game);
 
-    expect(game.bonusCounter).toBe(3);
+		expect(game.bonusCounter).toBe(3);
 
-    processAce({ rank: 'A', suit: 'hearts' }, game);
+		processAce({ rank: 'A', suit: 'hearts' }, game);
 
-    expect(game.bonusCounter).toBe(4);
-    expect(game.winConditionActive).toBe(true);
-  });
+		expect(game.bonusCounter).toBe(4);
+		expect(game.winConditionActive).toBe(true);
+	});
 
-  test('should handle exactly lethal damage', () => {
-    const game = initializeGame();
-    game.resources = 3;
-    game.bonusCounter = 0;
+	test('should handle exactly lethal damage', () => {
+		const game = initializeGame();
+		game.resources = 3;
+		game.bonusCounter = 0;
 
-    // Simulate roll of 3
-    const damage = calculateDamage(3, game.bonusCounter);
-    game.resources -= damage;
+		// Simulate roll of 3
+		const damage = calculateDamage(3, game.bonusCounter);
+		game.resources -= damage;
 
-    expect(game.resources).toBe(0);
-    expect(game.gameStatus).toBe('defeat');
-  });
+		expect(game.resources).toBe(0);
+		expect(game.gameStatus).toBe('defeat');
+	});
 });
 ```
 
@@ -1384,20 +1385,20 @@ Where:
 
 ### Win Condition Rolls
 
-| Condition | Success On |
-|-----------|------------|
+| Condition       | Success On      |
+| --------------- | --------------- |
 | Base (no bonus) | 6 only (16.67%) |
-| With bonus Ace | 5-6 (33.33%) |
+| With bonus Ace  | 5-6 (33.33%)    |
 
 ### Expected Damage Per Roll
 
 | Bonus Counter | Avg Damage |
-|---------------|------------|
-| 0 | 3.5 |
-| 1 | 2.5 |
-| 2 | 1.67 |
-| 3 | 1.0 |
-| 4 | 0.5 |
+| ------------- | ---------- |
+| 0             | 3.5        |
+| 1             | 2.5        |
+| 2             | 1.67       |
+| 3             | 1.0        |
+| 4             | 0.5        |
 
 ---
 
@@ -1420,4 +1421,4 @@ Where:
 
 **End of Document**
 
-*This guide describes the core Wretched & Alone framework mechanics. Narrative elements, themes, and specific story content are implementation-specific and should be customized for each game using this framework.*
+_This guide describes the core Wretched & Alone framework mechanics. Narrative elements, themes, and specific story content are implementation-specific and should be customized for each game using this framework._

@@ -1,137 +1,157 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dimm City – Game Over (Variant 1)</title>
-  <!--
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Dimm City – Game Over (Variant 1)</title>
+		<!--
     Game Over screen variant 1 matching the ethereal glow splash. A dark
     background with diffuse coloured blobs echoes the original splash but uses
     magenta and red tones to convey failure. The "Game Over" title pulses
     ominously while the subtitle flickers. Only HTML and CSS are used.
   -->
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg-color: #05070A;
-      --neon-yellow: #FFE400;
-      --neon-cyan: #00FFFF;
-      --neon-magenta: #FF00FF;
-      --neon-red: #FF2A6D;
-    }
+		<link
+			href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap"
+			rel="stylesheet"
+		/>
+		<style>
+			:root {
+				--bg-color: #05070a;
+				--neon-yellow: #ffe400;
+				--neon-cyan: #00ffff;
+				--neon-magenta: #ff00ff;
+				--neon-red: #ff2a6d;
+			}
 
-    * {
-      box-sizing: border-box;
-    }
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-    }
-    body {
-      font-family: 'Orbitron', sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background-color: var(--bg-color);
-      background-image:
-        radial-gradient(circle at 30% 30%, rgba(255, 42, 109, 0.25), transparent 60%),
-        radial-gradient(circle at 70% 70%, rgba(255, 0, 255, 0.2), transparent 65%),
-        radial-gradient(circle at 50% 50%, rgba(0, 255, 255, 0.1), transparent 70%);
-      overflow: hidden;
-      color: var(--neon-red);
-    }
-    #over-container {
-      position: relative;
-      text-align: center;
-      z-index: 2;
-    }
-    #over-container h1 {
-      margin: 0;
-      font-size: 4rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--neon-red);
-      animation: pulseGlowRed 2.5s infinite ease-in-out;
-      text-shadow:
-        0 0 10px var(--neon-red),
-        0 0 30px var(--neon-magenta),
-        0 0 45px var(--neon-magenta);
-    }
-    #over-container .subtitle {
-      margin-top: 1.2rem;
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 1rem;
-      color: var(--neon-cyan);
-      text-shadow: 0 0 8px var(--neon-cyan);
-      animation: flickerSubtitle 3s infinite;
-    }
-    /* Glow circles reminiscent of variant1 but tinted red/magenta */
-    .glow {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(100px);
-      opacity: 0.5;
-      mix-blend-mode: screen;
-      animation: float 7s infinite alternate;
-    }
-    .glow.red {
-      width: 500px;
-      height: 500px;
-      top: 15%;
-      left: 20%;
-      background: linear-gradient(45deg, var(--neon-red), var(--neon-magenta));
-    }
-    .glow.purple {
-      width: 350px;
-      height: 350px;
-      bottom: 20%;
-      right: 15%;
-      background: linear-gradient(135deg, var(--neon-magenta), var(--neon-cyan));
-      animation-delay: 2s;
-    }
-    .glow.blue {
-      width: 300px;
-      height: 300px;
-      top: 60%;
-      left: 60%;
-      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-red));
-      animation-delay: 4s;
-    }
-    @keyframes pulseGlowRed {
-      0%, 100% {
-        text-shadow:
-          0 0 10px var(--neon-red),
-          0 0 30px var(--neon-magenta),
-          0 0 45px var(--neon-magenta);
-      }
-      50% {
-        text-shadow:
-          0 0 20px var(--neon-red),
-          0 0 45px var(--neon-magenta),
-          0 0 70px var(--neon-magenta);
-      }
-    }
-    @keyframes flickerSubtitle {
-      0%, 18%, 55%, 100% { opacity: 1; }
-      20%, 30%, 60% { opacity: 0.4; }
-    }
-    @keyframes float {
-      0%   { transform: translate(0, 0) scale(1); }
-      50%  { transform: translate(20px, -15px) scale(1.05); }
-      100% { transform: translate(-15px, 20px) scale(1); }
-    }
-  </style>
-</head>
-<body>
-  <div class="glow red"></div>
-  <div class="glow purple"></div>
-  <div class="glow blue"></div>
+			* {
+				box-sizing: border-box;
+			}
+			html,
+			body {
+				margin: 0;
+				padding: 0;
+				width: 100%;
+				height: 100%;
+			}
+			body {
+				font-family: 'Orbitron', sans-serif;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				background-color: var(--bg-color);
+				background-image:
+					radial-gradient(circle at 30% 30%, rgba(255, 42, 109, 0.25), transparent 60%),
+					radial-gradient(circle at 70% 70%, rgba(255, 0, 255, 0.2), transparent 65%),
+					radial-gradient(circle at 50% 50%, rgba(0, 255, 255, 0.1), transparent 70%);
+				overflow: hidden;
+				color: var(--neon-red);
+			}
+			#over-container {
+				position: relative;
+				text-align: center;
+				z-index: 2;
+			}
+			#over-container h1 {
+				margin: 0;
+				font-size: 4rem;
+				letter-spacing: 0.08em;
+				text-transform: uppercase;
+				color: var(--neon-red);
+				animation: pulseGlowRed 2.5s infinite ease-in-out;
+				text-shadow:
+					0 0 10px var(--neon-red),
+					0 0 30px var(--neon-magenta),
+					0 0 45px var(--neon-magenta);
+			}
+			#over-container .subtitle {
+				margin-top: 1.2rem;
+				font-family: 'Share Tech Mono', monospace;
+				font-size: 1rem;
+				color: var(--neon-cyan);
+				text-shadow: 0 0 8px var(--neon-cyan);
+				animation: flickerSubtitle 3s infinite;
+			}
+			/* Glow circles reminiscent of variant1 but tinted red/magenta */
+			.glow {
+				position: absolute;
+				border-radius: 50%;
+				filter: blur(100px);
+				opacity: 0.5;
+				mix-blend-mode: screen;
+				animation: float 7s infinite alternate;
+			}
+			.glow.red {
+				width: 500px;
+				height: 500px;
+				top: 15%;
+				left: 20%;
+				background: linear-gradient(45deg, var(--neon-red), var(--neon-magenta));
+			}
+			.glow.purple {
+				width: 350px;
+				height: 350px;
+				bottom: 20%;
+				right: 15%;
+				background: linear-gradient(135deg, var(--neon-magenta), var(--neon-cyan));
+				animation-delay: 2s;
+			}
+			.glow.blue {
+				width: 300px;
+				height: 300px;
+				top: 60%;
+				left: 60%;
+				background: linear-gradient(90deg, var(--neon-cyan), var(--neon-red));
+				animation-delay: 4s;
+			}
+			@keyframes pulseGlowRed {
+				0%,
+				100% {
+					text-shadow:
+						0 0 10px var(--neon-red),
+						0 0 30px var(--neon-magenta),
+						0 0 45px var(--neon-magenta);
+				}
+				50% {
+					text-shadow:
+						0 0 20px var(--neon-red),
+						0 0 45px var(--neon-magenta),
+						0 0 70px var(--neon-magenta);
+				}
+			}
+			@keyframes flickerSubtitle {
+				0%,
+				18%,
+				55%,
+				100% {
+					opacity: 1;
+				}
+				20%,
+				30%,
+				60% {
+					opacity: 0.4;
+				}
+			}
+			@keyframes float {
+				0% {
+					transform: translate(0, 0) scale(1);
+				}
+				50% {
+					transform: translate(20px, -15px) scale(1.05);
+				}
+				100% {
+					transform: translate(-15px, 20px) scale(1);
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<div class="glow red"></div>
+		<div class="glow purple"></div>
+		<div class="glow blue"></div>
 
-  <div id="over-container">
-    <h1>Game Over</h1>
-    <div class="subtitle">The city falls silent…</div>
-  </div>
-</body>
+		<div id="over-container">
+			<h1>Game Over</h1>
+			<div class="subtitle">The city falls silent…</div>
+		</div>
+	</body>
 </html>

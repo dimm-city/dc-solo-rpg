@@ -29,11 +29,7 @@
 </svelte:head>
 <div class="dc-game-container dc-game-bg" data-testid="game-container">
 	<NeuralBackground />
-	<GameScreen
-		{systemSettings}
-		{onfailurecheckcompleted}
-		{onjournalsaved}
-	/>
+	<GameScreen {systemSettings} {onfailurecheckcompleted} {onjournalsaved} />
 </div>
 
 <style>

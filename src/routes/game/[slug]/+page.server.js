@@ -8,9 +8,7 @@ import { parseGameFile, ValidationError } from '$lib/parsers/markdownParser.js';
  * @returns {string} Formatted markdown
  */
 function formatIntroduction(sections) {
-	return sections
-		.map(section => `## ${section.heading}\n\n${section.content}`)
-		.join('\n\n');
+	return sections.map((section) => `## ${section.heading}\n\n${section.content}`).join('\n\n');
 }
 
 /** @type {import('./$types').PageServerLoad} */

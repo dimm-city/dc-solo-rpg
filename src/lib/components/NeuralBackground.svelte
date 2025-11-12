@@ -1,14 +1,13 @@
 <script>
 	import { onMount, onDestroy } from 'svelte';
 
-	 // 'idle', 'anticipating', 'materializing', 'revealed', 'dismissing'
-	 
-	let { animationStage = "idle"} = $props();
+	// 'idle', 'anticipating', 'materializing', 'revealed', 'dismissing'
+
+	let { animationStage = 'idle' } = $props();
 	let canvas = $state();
 	let ctx = $state();
 	let particles = $state([]);
 	let animationFrameId = $state();
-
 
 	/**
 	 * Particle class for data byte effect
@@ -66,14 +65,11 @@
 			});
 
 			// Spawn particles (with safety check for window)
-			const maxParticles =
-				typeof window !== 'undefined' && window.innerWidth < 768 ? 20 : 50;
+			const maxParticles = typeof window !== 'undefined' && window.innerWidth < 768 ? 20 : 50;
 			const spawnRate = 0.1;
 
 			if (particles.length < maxParticles && Math.random() < spawnRate) {
-				particles.push(
-					new Particle(Math.random() * canvas.width, Math.random() * canvas.height)
-				);
+				particles.push(new Particle(Math.random() * canvas.width, Math.random() * canvas.height));
 			}
 
 			animationFrameId = requestAnimationFrame(animateParticles);
@@ -140,11 +136,8 @@
 	<!-- Scan grid background -->
 	<div class="scan-grid" aria-hidden="true"></div>
 
-		<!-- Scan grid background -->
-	<div
-		class="scan-grid {animationStage}"
-		aria-hidden="true"
-	></div>
+	<!-- Scan grid background -->
+	<div class="scan-grid {animationStage}" aria-hidden="true"></div>
 </div>
 
 <style>
@@ -195,13 +188,12 @@
 		/* Grid animation removed to avoid distraction during dice rolls */
 	}
 
-	.scan-grid.idle{
+	.scan-grid.idle {
 		animation: none;
 	}
 	.scan-grid.accelerating {
 		animation: grid-accelerate 0.8s ease-in-out;
 	}
-
 
 	/* ============================================
 	   SCAN GRID - ANIMATED BACKGROUND
@@ -220,7 +212,6 @@
 		animation: grid-pulse 4s ease-in-out infinite;
 		z-index: 0;
 	}
-
 
 	@keyframes grid-pulse {
 		0%,

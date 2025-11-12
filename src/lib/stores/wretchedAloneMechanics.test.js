@@ -13,11 +13,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import {
-	gameState,
-	transitionTo,
-	updateGameState
-} from './gameStore.svelte.js';
+import { gameState, transitionTo, updateGameState } from './gameStore.svelte.js';
 import {
 	startGame,
 	drawCard,
@@ -29,12 +25,10 @@ import {
 import { initializeGame } from './gameInit.js';
 
 describe('Wretched & Alone Framework - Core Mechanics', () => {
-
 	// ==========================
 	// SECTION 1: Deck Management
 	// ==========================
 	describe('Deck Management (Section 2.2)', () => {
-
 		it('should create 52-card deck', () => {
 			const mockDeck = createStandardDeck();
 			expect(mockDeck).toHaveLength(52);
@@ -44,8 +38,8 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 			const deck = createStandardDeck();
 			const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
 
-			suits.forEach(suit => {
-				const suitCards = deck.filter(c => c.suit === suit);
+			suits.forEach((suit) => {
+				const suitCards = deck.filter((c) => c.suit === suit);
 				expect(suitCards).toHaveLength(13);
 			});
 		});
@@ -55,9 +49,9 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 			const ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 			const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
 
-			suits.forEach(suit => {
-				ranks.forEach(rank => {
-					const card = deck.find(c => c.suit === suit && c.card === rank);
+			suits.forEach((suit) => {
+				ranks.forEach((rank) => {
+					const card = deck.find((c) => c.suit === suit && c.card === rank);
 					expect(card).toBeDefined();
 				});
 			});
@@ -67,43 +61,43 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 			const oddRanks = ['A', '3', '5', '7', '9'];
 			const evenRanks = ['2', '4', '6', '8', '10', 'J', 'Q', 'K'];
 
-			oddRanks.forEach(rank => {
+			oddRanks.forEach((rank) => {
 				expect(isOddRank(rank)).toBe(true);
 			});
 
-			evenRanks.forEach(rank => {
+			evenRanks.forEach((rank) => {
 				expect(isOddRank(rank)).toBe(false);
 			});
 		});
 
 		it('should have exactly 20 damage-triggering cards (A,3,5,7,9)', () => {
 			const deck = createStandardDeck();
-			const damageCards = deck.filter(c => isOddRank(c.card));
+			const damageCards = deck.filter((c) => isOddRank(c.card));
 			expect(damageCards).toHaveLength(20);
 		});
 
 		it('should have exactly 16 challenge cards (3,5,7,9)', () => {
 			const deck = createStandardDeck();
 			const challengeRanks = ['3', '5', '7', '9'];
-			const challengeCards = deck.filter(c => challengeRanks.includes(c.card));
+			const challengeCards = deck.filter((c) => challengeRanks.includes(c.card));
 			expect(challengeCards).toHaveLength(16);
 		});
 
 		it('should have exactly 32 safe cards (even ranks)', () => {
 			const deck = createStandardDeck();
-			const safeCards = deck.filter(c => !isOddRank(c.card));
+			const safeCards = deck.filter((c) => !isOddRank(c.card));
 			expect(safeCards).toHaveLength(32);
 		});
 
 		it('should have exactly 4 Aces (bonus/help cards)', () => {
 			const deck = createStandardDeck();
-			const aces = deck.filter(c => c.card === 'A');
+			const aces = deck.filter((c) => c.card === 'A');
 			expect(aces).toHaveLength(4);
 		});
 
 		it('should have exactly 4 Kings (tracker cards)', () => {
 			const deck = createStandardDeck();
-			const kings = deck.filter(c => c.card === 'K');
+			const kings = deck.filter((c) => c.card === 'K');
 			expect(kings).toHaveLength(4);
 		});
 	});
@@ -112,7 +106,6 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 	// SECTION 2: Game Initialization
 	// ================================
 	describe('Game Initialization (Section 3)', () => {
-
 		beforeEach(() => {
 			resetGameState();
 		});
@@ -202,7 +195,6 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 	// SECTION 3: Damage Calculation (Option A)
 	// =========================================
 	describe('Damage Calculation - Option A (Section 9)', () => {
-
 		beforeEach(() => {
 			resetGameState();
 		});
@@ -241,7 +233,7 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 		it('should trigger damage on A, 3, 5, 7, 9', () => {
 			const damageRanks = ['A', '3', '5', '7', '9'];
 
-			damageRanks.forEach(rank => {
+			damageRanks.forEach((rank) => {
 				const card = { card: rank, suit: 'hearts' };
 				expect(requiresDamageCheck(card)).toBe(true);
 			});
@@ -250,7 +242,7 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 		it('should NOT trigger damage on 2, 4, 6, 8, 10, J, Q, K', () => {
 			const safeRanks = ['2', '4', '6', '8', '10', 'J', 'Q', 'K'];
 
-			safeRanks.forEach(rank => {
+			safeRanks.forEach((rank) => {
 				const card = { card: rank, suit: 'hearts' };
 				expect(requiresDamageCheck(card)).toBe(false);
 			});
@@ -310,13 +302,11 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 	// SECTION 4: Special Card Mechanics
 	// =======================================
 	describe('Special Card Mechanics (Section 6)', () => {
-
 		beforeEach(() => {
 			resetGameState();
 		});
 
 		describe('Ace Mechanics - Bonus Counter', () => {
-
 			it('should increment bonus counter for each Ace drawn', () => {
 				const config = createMockGameConfig();
 				initializeGame(config, { name: 'Test' });
@@ -353,7 +343,7 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 					{ card: 'A', suit: 'hearts', prompt: 'Test 4' }
 				];
 
-				aces.forEach(ace => {
+				aces.forEach((ace) => {
 					gameState.deck = [ace];
 					drawCard();
 				});
@@ -363,7 +353,6 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 		});
 
 		describe('Win Condition Ace (Ace of Hearts)', () => {
-
 			it('should activate win condition when Ace of Hearts drawn', () => {
 				const config = createMockGameConfig();
 				initializeGame(config, { name: 'Test' });
@@ -418,7 +407,6 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 		});
 
 		describe('Tracker Cards (Kings)', () => {
-
 			it('should track king count correctly', () => {
 				const config = createMockGameConfig();
 				initializeGame(config, { name: 'Test' });
@@ -480,7 +468,6 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 		});
 
 		describe('Aces Do NOT Trigger Damage (SRD Compliance)', () => {
-
 			it('should classify Aces as odd but provide respite', () => {
 				// Aces are technically odd-ranked but per SRD they are "bonus/help" cards
 				// The implementation should handle this special case
@@ -497,13 +484,11 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 	// SECTION 5: Win & Loss Conditions
 	// =======================================
 	describe('Win & Loss Conditions (Section 7)', () => {
-
 		beforeEach(() => {
 			resetGameState();
 		});
 
 		describe('Victory Conditions', () => {
-
 			it('should require win condition active (Ace of Hearts drawn)', () => {
 				gameState.tokens = 0;
 				gameState.tower = 30;
@@ -556,7 +541,6 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 		});
 
 		describe('Defeat Conditions', () => {
-
 			it('should lose when resources reach 0', () => {
 				gameState.tower = 2;
 				gameState.bonus = 0;
@@ -632,7 +616,6 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 	// SECTION 6: Card Type Classification
 	// =======================================
 	describe('Card Type Classification (Section 5)', () => {
-
 		it('should classify Primary Success card (Ace of Hearts)', () => {
 			const card = { card: 'A', suit: 'hearts' };
 			expect(isPrimarySuccess(card)).toBe(true);
@@ -646,7 +629,7 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 				{ card: 'K', suit: 'spades' }
 			];
 
-			kings.forEach(king => {
+			kings.forEach((king) => {
 				expect(isFailureCounter(king)).toBe(true);
 			});
 		});
@@ -658,7 +641,7 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 				{ card: 'A', suit: 'spades' }
 			];
 
-			narrativeAces.forEach(ace => {
+			narrativeAces.forEach((ace) => {
 				expect(isNarrative(ace)).toBe(true);
 			});
 		});
@@ -667,8 +650,8 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 			const challengeRanks = ['3', '5', '7', '9'];
 			const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
 
-			challengeRanks.forEach(rank => {
-				suits.forEach(suit => {
+			challengeRanks.forEach((rank) => {
+				suits.forEach((suit) => {
 					const card = { card: rank, suit };
 					expect(isChallenge(card)).toBe(true);
 				});
@@ -679,8 +662,8 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 			const eventRanks = ['2', '4', '6', '8', '10', 'J', 'Q'];
 			const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
 
-			eventRanks.forEach(rank => {
-				suits.forEach(suit => {
+			eventRanks.forEach((rank) => {
+				suits.forEach((suit) => {
 					const card = { card: rank, suit };
 					expect(isEvent(card)).toBe(true);
 				});
@@ -696,11 +679,11 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 			const challenges = deck.filter(isChallenge);
 			const events = deck.filter(isEvent);
 
-			expect(primarySuccess).toHaveLength(1);  // 1 Ace of Hearts
+			expect(primarySuccess).toHaveLength(1); // 1 Ace of Hearts
 			expect(failureCounters).toHaveLength(4); // 4 Kings
-			expect(narratives).toHaveLength(3);      // 3 other Aces
-			expect(challenges).toHaveLength(16);     // 4 suits × 4 ranks
-			expect(events).toHaveLength(28);         // 4 suits × 7 ranks
+			expect(narratives).toHaveLength(3); // 3 other Aces
+			expect(challenges).toHaveLength(16); // 4 suits × 4 ranks
+			expect(events).toHaveLength(28); // 4 suits × 7 ranks
 
 			// Total should be 52
 			const total = 1 + 4 + 3 + 16 + 28;
@@ -712,7 +695,6 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 	// SECTION 7: Edge Cases
 	// =======================================
 	describe('Edge Cases (Section 10.3)', () => {
-
 		beforeEach(() => {
 			resetGameState();
 		});
@@ -754,7 +736,7 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 				{ card: 'A', suit: 'spades', prompt: 'A3' }
 			];
 
-			aces.forEach(ace => {
+			aces.forEach((ace) => {
 				gameState.deck = [ace];
 				drawCard();
 			});
@@ -795,7 +777,7 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 				{ card: 'A', suit: 'spades', prompt: 'A♠' }
 			];
 
-			allAces.forEach(ace => {
+			allAces.forEach((ace) => {
 				gameState.deck = [ace];
 				drawCard();
 			});
@@ -877,8 +859,8 @@ function createStandardDeck() {
 	const ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 	const deck = [];
 
-	suits.forEach(suit => {
-		ranks.forEach(rank => {
+	suits.forEach((suit) => {
+		ranks.forEach((rank) => {
 			deck.push({
 				card: rank,
 				suit: suit,
@@ -941,9 +923,7 @@ function isEvent(card) {
  * Check if player has won
  */
 function hasWon() {
-	return gameState.tokens === 0 &&
-	       gameState.tower > 0 &&
-	       gameState.aceOfHeartsRevealed;
+	return gameState.tokens === 0 && gameState.tower > 0 && gameState.aceOfHeartsRevealed;
 }
 
 /**

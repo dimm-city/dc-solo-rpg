@@ -88,7 +88,7 @@ WRITING TIPS:
   * Diamonds = resources, discoveries
   * Clubs = places, environments
   * Spades = technology, systems
-  
+
 ============================================================================ -->
 
 ### Primary Success

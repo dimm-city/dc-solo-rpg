@@ -27,6 +27,7 @@ Instead of requiring writers to specify card identifiers (like "A-hearts" or "3-
 Based on the **Wretched and Alone SRD** mechanics:
 
 ### 1. Primary Success (Salvation)
+
 - **Count**: Exactly 1 card (Ace of Hearts)
 - **SRD Term**: "Salvation" - the main path to victory
 - **Mechanics**: Has 10 tokens placed on it. At the end of each round, roll a die - on a 6, remove one token. Win when all tokens are removed.
@@ -35,24 +36,28 @@ Based on the **Wretched and Alone SRD** mechanics:
 - **Final Tension**: Per SRD, achieving salvation "may come with a final pull from the tower" - even success carries risk of last-moment failure, creating dramatic tension
 
 ### 2. Failure Counter
+
 - **Count**: Exactly 4 cards (all Kings)
 - **SRD Mechanics**: Revealing all 4 Kings = instant game over
 - **Purpose**: Escalating existential threat throughout the game
 - **Note**: Each King revealed increases tension and moves closer to inevitable failure
 
 ### 3. Challenge
+
 - **Count**: 16 cards (odd-numbered cards: 3, 5, 7, 9)
 - **SRD Mechanics**: "Usually requires you to pull from the tower" - odd-numbered cards **usually** trigger a block tower pull. If tower falls = game over
 - **Purpose**: Immediate dangerous moments that physically test fate through the tower
 - **Note**: Only odd numbered cards 3-9, excluding Aces (4 ranks × 4 suits = 16 cards). The "usually" qualifier preserves designer flexibility per SRD intent
 
 ### 4. Event
+
 - **Count**: 28 cards (even-numbered cards: 2, 4, 6, 8, 10, J, Q)
 - **SRD Mechanics**: "Usually safe" - even-numbered cards **usually** don't require tower pulls
 - **Purpose**: Moments of respite, discovery, world-building, and narrative development
 - **Note**: These cards provide breathing room between challenges (7 ranks × 4 suits = 28 cards, excluding Kings which are Failure Counters). The "usually" qualifier preserves designer flexibility per SRD intent
 
 ### 5. Narrative (Bonus/Help Cards)
+
 - **Count**: 3 cards (remaining Aces: A♦, A♣, A♠)
 - **SRD Term**: "Bonus or help in your plight"
 - **Mechanics**: Provides some advantage or relief; does NOT trigger damage checks unless modified
@@ -69,13 +74,15 @@ Per the Wretched and Alone SRD, some cards can have **special one-time effects**
 ### Available Special Modifiers
 
 #### 1. Skip Damage (`skip-damage`)
+
 - **Can be assigned to**: ONE Narrative card only
 - **Effect**: Player may skip the next damage check when instructed
-- **Example text**: *"The next time you are told to pull from the tower you may choose not to"*
+- **Example text**: _"The next time you are told to pull from the tower you may choose not to"_
 - **Usage**: One-time only per game
 - **Strategic value**: Save for critical moments when resources are low
 
 **Example:**
+
 ```markdown
 #### Narrative: skip-damage
 
@@ -86,13 +93,15 @@ pull from the tower, you may choose not to.
 ```
 
 #### 2. Return King (`return-king`)
+
 - **Can be assigned to**: ONE Narrative card only
 - **Effect**: Allows player to shuffle a previously drawn King back into the deck
-- **Example text**: *"If you have previously drawn the King of Spades you may shuffle it back into the deck"*
+- **Example text**: _"If you have previously drawn the King of Spades you may shuffle it back into the deck"_
 - **Usage**: One-time only per game
 - **Strategic value**: Resets the failure counter, providing critical relief
 
 **Example:**
+
 ```markdown
 #### Narrative: return-king
 
@@ -575,6 +584,7 @@ Story here...
 ```
 
 The `: 7-hearts` notation explicitly assigns this card. Useful for:
+
 - Thematic suit matching (hearts = people, diamonds = resources, clubs = places, spades = technology)
 - Specific rank significance in your narrative
 - Future custom action assignment
@@ -585,246 +595,246 @@ The `: 7-hearts` notation explicitly assigns this card. Useful for:
 
 ```javascript
 function parseTypeBasedFormat(markdown) {
-  const sections = splitIntoSections(markdown);
-  const config = parseFrontmatter(sections[0]);
-  const introduction = parseIntroduction(sections[1]);
+	const sections = splitIntoSections(markdown);
+	const config = parseFrontmatter(sections[0]);
+	const introduction = parseIntroduction(sections[1]);
 
-  // Collect cards by type
-  const cardsByType = {
-    'primary-success': [],
-    'failure-counter': [],
-    'narrative': [],
-    'narrative-skip-damage': [],    // Special: skip damage modifier
-    'narrative-return-king': [],    // Special: return king modifier
-    'challenge': [],
-    'event': []
-  };
+	// Collect cards by type
+	const cardsByType = {
+		'primary-success': [],
+		'failure-counter': [],
+		narrative: [],
+		'narrative-skip-damage': [], // Special: skip damage modifier
+		'narrative-return-king': [], // Special: return king modifier
+		challenge: [],
+		event: []
+	};
 
-  for (const section of sections.slice(2)) {
-    const { type, modifier, explicitAssignment, description, story } = parseCardSection(section);
+	for (const section of sections.slice(2)) {
+		const { type, modifier, explicitAssignment, description, story } = parseCardSection(section);
 
-    // Build the full type key (e.g., "narrative-skip-damage")
-    const typeKey = modifier ? `${type}-${modifier}` : type;
+		// Build the full type key (e.g., "narrative-skip-damage")
+		const typeKey = modifier ? `${type}-${modifier}` : type;
 
-    cardsByType[typeKey].push({
-      description,
-      story,
-      explicitAssignment // e.g., "7-hearts" or null
-    });
-  }
+		cardsByType[typeKey].push({
+			description,
+			story,
+			explicitAssignment // e.g., "7-hearts" or null
+		});
+	}
 
-  // Validate counts
-  validateCardCounts(cardsByType);
+	// Validate counts
+	validateCardCounts(cardsByType);
 
-  // Assign to deck
-  const deck = assignCardsToDeck(cardsByType);
+	// Assign to deck
+	const deck = assignCardsToDeck(cardsByType);
 
-  return { config, introduction, deck };
+	return { config, introduction, deck };
 }
 
 function parseCardSection(section) {
-  // Parse header: "## Type: card-assignment, modifier"
-  const headerMatch = section.match(/^##\s+([^:\n]+)(?::\s+(.+))?/);
-  if (!headerMatch) {
-    throw new ParseError('Invalid card section header');
-  }
+	// Parse header: "## Type: card-assignment, modifier"
+	const headerMatch = section.match(/^##\s+([^:\n]+)(?::\s+(.+))?/);
+	if (!headerMatch) {
+		throw new ParseError('Invalid card section header');
+	}
 
-  const type = normalizeType(headerMatch[1].trim());
-  const modifiers = headerMatch[2] ? headerMatch[2].split(',').map(s => s.trim()) : [];
+	const type = normalizeType(headerMatch[1].trim());
+	const modifiers = headerMatch[2] ? headerMatch[2].split(',').map((s) => s.trim()) : [];
 
-  // Separate explicit assignment from modifier
-  let explicitAssignment = null;
-  let modifier = null;
+	// Separate explicit assignment from modifier
+	let explicitAssignment = null;
+	let modifier = null;
 
-  for (const mod of modifiers) {
-    if (isCardIdentifier(mod)) {
-      // e.g., "7-hearts" or "A-clubs"
-      explicitAssignment = mod;
-    } else {
-      // e.g., "skip-damage" or "return-king"
-      modifier = mod;
-    }
-  }
+	for (const mod of modifiers) {
+		if (isCardIdentifier(mod)) {
+			// e.g., "7-hearts" or "A-clubs"
+			explicitAssignment = mod;
+		} else {
+			// e.g., "skip-damage" or "return-king"
+			modifier = mod;
+		}
+	}
 
-  // Extract description and story
-  const contentMatch = section.match(/\*\*(.+?)\*\*\n\n([\s\S]*)/);
-  const description = contentMatch ? contentMatch[1] : '';
-  const story = contentMatch ? contentMatch[2].trim() : '';
+	// Extract description and story
+	const contentMatch = section.match(/\*\*(.+?)\*\*\n\n([\s\S]*)/);
+	const description = contentMatch ? contentMatch[1] : '';
+	const story = contentMatch ? contentMatch[2].trim() : '';
 
-  return { type, modifier, explicitAssignment, description, story };
+	return { type, modifier, explicitAssignment, description, story };
 }
 
 function isCardIdentifier(str) {
-  // Matches patterns like: "A-hearts", "7-diamonds", "K-spades"
-  return /^([A23456789]|10|[JQKA])-(?:hearts|diamonds|clubs|spades)$/i.test(str);
+	// Matches patterns like: "A-hearts", "7-diamonds", "K-spades"
+	return /^([A23456789]|10|[JQKA])-(?:hearts|diamonds|clubs|spades)$/i.test(str);
 }
 
 function assignCardsToDeck(cardsByType) {
-  const deck = [];
+	const deck = [];
 
-  // Primary Success: A♥
-  const primarySuccess = cardsByType['primary-success'][0];
-  deck.push({
-    card: 'A',
-    suit: 'hearts',
-    type: 'primary-success',
-    description: primarySuccess.description,
-    story: primarySuccess.story
-  });
+	// Primary Success: A♥
+	const primarySuccess = cardsByType['primary-success'][0];
+	deck.push({
+		card: 'A',
+		suit: 'hearts',
+		type: 'primary-success',
+		description: primarySuccess.description,
+		story: primarySuccess.story
+	});
 
-  // Failure Counters: All Kings
-  const kingSuits = ['hearts', 'diamonds', 'clubs', 'spades'];
-  cardsByType['failure-counter'].forEach((card, i) => {
-    deck.push({
-      card: 'K',
-      suit: kingSuits[i],
-      type: 'failure-counter',
-      description: card.description,
-      story: card.story
-    });
-  });
+	// Failure Counters: All Kings
+	const kingSuits = ['hearts', 'diamonds', 'clubs', 'spades'];
+	cardsByType['failure-counter'].forEach((card, i) => {
+		deck.push({
+			card: 'K',
+			suit: kingSuits[i],
+			type: 'failure-counter',
+			description: card.description,
+			story: card.story
+		});
+	});
 
-  // Narrative: Remaining Aces (including special modifiers)
-  const narrativeSuits = ['diamonds', 'clubs', 'spades'];
-  const allNarratives = [
-    ...cardsByType['narrative'],
-    ...cardsByType['narrative-skip-damage'],
-    ...cardsByType['narrative-return-king']
-  ];
+	// Narrative: Remaining Aces (including special modifiers)
+	const narrativeSuits = ['diamonds', 'clubs', 'spades'];
+	const allNarratives = [
+		...cardsByType['narrative'],
+		...cardsByType['narrative-skip-damage'],
+		...cardsByType['narrative-return-king']
+	];
 
-  allNarratives.forEach((card, i) => {
-    // Determine modifier from source
-    let modifier = null;
-    if (cardsByType['narrative-skip-damage'].includes(card)) {
-      modifier = 'skip-damage';
-    } else if (cardsByType['narrative-return-king'].includes(card)) {
-      modifier = 'return-king';
-    }
+	allNarratives.forEach((card, i) => {
+		// Determine modifier from source
+		let modifier = null;
+		if (cardsByType['narrative-skip-damage'].includes(card)) {
+			modifier = 'skip-damage';
+		} else if (cardsByType['narrative-return-king'].includes(card)) {
+			modifier = 'return-king';
+		}
 
-    deck.push({
-      card: 'A',
-      suit: narrativeSuits[i],
-      type: 'narrative',
-      modifier: modifier,  // null, "skip-damage", or "return-king"
-      description: card.description,
-      story: card.story
-    });
-  });
+		deck.push({
+			card: 'A',
+			suit: narrativeSuits[i],
+			type: 'narrative',
+			modifier: modifier, // null, "skip-damage", or "return-king"
+			description: card.description,
+			story: card.story
+		});
+	});
 
-  // Challenge: Odd cards (3, 5, 7, 9) × 4 suits = 16 cards
-  const challengeRanks = ['3', '5', '7', '9'];
-  const allSuits = ['hearts', 'diamonds', 'clubs', 'spades'];
-  let challengeIndex = 0;
+	// Challenge: Odd cards (3, 5, 7, 9) × 4 suits = 16 cards
+	const challengeRanks = ['3', '5', '7', '9'];
+	const allSuits = ['hearts', 'diamonds', 'clubs', 'spades'];
+	let challengeIndex = 0;
 
-  for (const rank of challengeRanks) {
-    for (const suit of allSuits) {
-      if (challengeIndex < cardsByType['challenge'].length) {
-        const card = cardsByType['challenge'][challengeIndex];
+	for (const rank of challengeRanks) {
+		for (const suit of allSuits) {
+			if (challengeIndex < cardsByType['challenge'].length) {
+				const card = cardsByType['challenge'][challengeIndex];
 
-        if (card.explicitAssignment) {
-          // Use explicit assignment
-          const [assignedRank, assignedSuit] = parseAssignment(card.explicitAssignment);
-          deck.push({
-            card: assignedRank,
-            suit: assignedSuit,
-            type: 'challenge',
-            description: card.description,
-            story: card.story
-          });
-        } else {
-          // Auto-assign
-          deck.push({
-            card: rank,
-            suit: suit,
-            type: 'challenge',
-            description: card.description,
-            story: card.story
-          });
-        }
+				if (card.explicitAssignment) {
+					// Use explicit assignment
+					const [assignedRank, assignedSuit] = parseAssignment(card.explicitAssignment);
+					deck.push({
+						card: assignedRank,
+						suit: assignedSuit,
+						type: 'challenge',
+						description: card.description,
+						story: card.story
+					});
+				} else {
+					// Auto-assign
+					deck.push({
+						card: rank,
+						suit: suit,
+						type: 'challenge',
+						description: card.description,
+						story: card.story
+					});
+				}
 
-        challengeIndex++;
-      }
-    }
-  }
+				challengeIndex++;
+			}
+		}
+	}
 
-  // Event: Even cards (2, 4, 6, 8, 10, J, Q) × 4 suits = 28 cards
-  const eventRanks = ['2', '4', '6', '8', '10', 'J', 'Q'];
-  let eventIndex = 0;
+	// Event: Even cards (2, 4, 6, 8, 10, J, Q) × 4 suits = 28 cards
+	const eventRanks = ['2', '4', '6', '8', '10', 'J', 'Q'];
+	let eventIndex = 0;
 
-  for (const rank of eventRanks) {
-    for (const suit of allSuits) {
-      if (eventIndex < cardsByType['event'].length) {
-        const card = cardsByType['event'][eventIndex];
+	for (const rank of eventRanks) {
+		for (const suit of allSuits) {
+			if (eventIndex < cardsByType['event'].length) {
+				const card = cardsByType['event'][eventIndex];
 
-        if (card.explicitAssignment) {
-          const [assignedRank, assignedSuit] = parseAssignment(card.explicitAssignment);
-          deck.push({
-            card: assignedRank,
-            suit: assignedSuit,
-            type: 'event',
-            description: card.description,
-            story: card.story
-          });
-        } else {
-          deck.push({
-            card: rank,
-            suit: suit,
-            type: 'event',
-            description: card.description,
-            story: card.story
-          });
-        }
+				if (card.explicitAssignment) {
+					const [assignedRank, assignedSuit] = parseAssignment(card.explicitAssignment);
+					deck.push({
+						card: assignedRank,
+						suit: assignedSuit,
+						type: 'event',
+						description: card.description,
+						story: card.story
+					});
+				} else {
+					deck.push({
+						card: rank,
+						suit: suit,
+						type: 'event',
+						description: card.description,
+						story: card.story
+					});
+				}
 
-        eventIndex++;
-      }
-    }
-  }
+				eventIndex++;
+			}
+		}
+	}
 
-  return deck;
+	return deck;
 }
 
 function validateCardCounts(cardsByType) {
-  const errors = [];
+	const errors = [];
 
-  // Check fixed counts
-  if (cardsByType['primary-success'].length !== 1) {
-    errors.push(`Expected 1 Primary Success card, found ${cardsByType['primary-success'].length}`);
-  }
+	// Check fixed counts
+	if (cardsByType['primary-success'].length !== 1) {
+		errors.push(`Expected 1 Primary Success card, found ${cardsByType['primary-success'].length}`);
+	}
 
-  if (cardsByType['failure-counter'].length !== 4) {
-    errors.push(`Expected 4 Failure Counter cards, found ${cardsByType['failure-counter'].length}`);
-  }
+	if (cardsByType['failure-counter'].length !== 4) {
+		errors.push(`Expected 4 Failure Counter cards, found ${cardsByType['failure-counter'].length}`);
+	}
 
-  // Narrative cards: total must be 3 (including special modifiers)
-  const narrativeTotal =
-    cardsByType['narrative'].length +
-    cardsByType['narrative-skip-damage'].length +
-    cardsByType['narrative-return-king'].length;
+	// Narrative cards: total must be 3 (including special modifiers)
+	const narrativeTotal =
+		cardsByType['narrative'].length +
+		cardsByType['narrative-skip-damage'].length +
+		cardsByType['narrative-return-king'].length;
 
-  if (narrativeTotal !== 3) {
-    errors.push(`Expected 3 total Narrative cards, found ${narrativeTotal}`);
-  }
+	if (narrativeTotal !== 3) {
+		errors.push(`Expected 3 total Narrative cards, found ${narrativeTotal}`);
+	}
 
-  // Validate only one of each special modifier
-  if (cardsByType['narrative-skip-damage'].length > 1) {
-    errors.push('Only ONE Narrative card can have skip-damage modifier');
-  }
+	// Validate only one of each special modifier
+	if (cardsByType['narrative-skip-damage'].length > 1) {
+		errors.push('Only ONE Narrative card can have skip-damage modifier');
+	}
 
-  if (cardsByType['narrative-return-king'].length > 1) {
-    errors.push('Only ONE Narrative card can have return-king modifier');
-  }
+	if (cardsByType['narrative-return-king'].length > 1) {
+		errors.push('Only ONE Narrative card can have return-king modifier');
+	}
 
-  if (cardsByType['challenge'].length !== 16) {
-    errors.push(`Expected 16 Challenge cards, found ${cardsByType['challenge'].length}`);
-  }
+	if (cardsByType['challenge'].length !== 16) {
+		errors.push(`Expected 16 Challenge cards, found ${cardsByType['challenge'].length}`);
+	}
 
-  if (cardsByType['event'].length !== 28) {
-    errors.push(`Expected 28 Event cards, found ${cardsByType['event'].length}`);
-  }
+	if (cardsByType['event'].length !== 28) {
+		errors.push(`Expected 28 Event cards, found ${cardsByType['event'].length}`);
+	}
 
-  if (errors.length > 0) {
-    throw new ValidationError(errors.join('\n'));
-  }
+	if (errors.length > 0) {
+		throw new ValidationError(errors.join('\n'));
+	}
 }
 ```
 
@@ -878,10 +888,12 @@ The parser extracts the modifier and passes it to the engine:
 ### Current vs Future Modifiers
 
 **Current (Built-in):**
+
 - `skip-damage` - Skip next damage check (one-time, Narrative only)
 - `return-king` - Return King to deck (one-time, Narrative only)
 
 **Future (Extensible):**
+
 - `boost-resources` - Add resources
 - `tech-boost` - Temporary advantage
 - `environmental-hazard` - Custom challenge behavior
@@ -965,11 +977,11 @@ When writing card content, content creators should:
 
 ### Example: Tutorial Through Play
 
-**Card 1 (Challenge)** - "You encounter your first real danger. The old building groans as you search for supplies. *Take a risk by drawing from the tower - if it falls, your story ends here.*"
+**Card 1 (Challenge)** - "You encounter your first real danger. The old building groans as you search for supplies. _Take a risk by drawing from the tower - if it falls, your story ends here._"
 
-**Card 2 (Event)** - "A moment of calm. You find a safe corner to rest and plan your next move. *No danger here - just breathe and record your thoughts.*"
+**Card 2 (Event)** - "A moment of calm. You find a safe corner to rest and plan your next move. _No danger here - just breathe and record your thoughts._"
 
-**Card 3 (Narrative/Ace)** - "Against all odds, you discover something that gives you hope. *This small victory will help you survive what comes next - you'll be a little more resilient when danger strikes again.*"
+**Card 3 (Narrative/Ace)** - "Against all odds, you discover something that gives you hope. _This small victory will help you survive what comes next - you'll be a little more resilient when danger strikes again._"
 
 This progressive teaching respects player intelligence while ensuring they understand mechanics through natural discovery.
 
@@ -978,6 +990,7 @@ This progressive teaching respects player intelligence while ensuring they under
 ## Card Type Guidelines (Aligned with SRD)
 
 #### Primary Success (Salvation)
+
 - **SRD Context**: This represents the ultimate hope - the slim chance of escape or victory
 - The turning point where genuine salvation becomes possible
 - Should feel monumental and earned when revealed
@@ -985,6 +998,7 @@ This progressive teaching respects player intelligence while ensuring they under
 - Remember: Even with this card revealed, winning requires removing 10 tokens at 1/6 chance per round
 
 #### Failure Counter (4 cards)
+
 - **SRD Context**: These are the inexorable forces driving toward defeat
 - Escalating threats or catastrophic setbacks
 - Each should feel substantial, dangerous, and world-changing
@@ -992,6 +1006,7 @@ This progressive teaching respects player intelligence while ensuring they under
 - Each King revealed should deepen the sense that defeat is inevitable
 
 #### Narrative (3 cards - Bonus/Help)
+
 - **SRD Context**: Small mercies and moments of grace that sustain you
 - Reflective moments that don't drive immediate action
 - Brief respites that remind you why you're fighting
@@ -1002,6 +1017,7 @@ This progressive teaching respects player intelligence while ensuring they under
 - **Special Mechanics**: Optionally assign `skip-damage` or `return-king` to ONE Narrative card each (see Multiple Mechanics section)
 
 #### Challenge (16 cards - Tower Pulls)
+
 - **SRD Context**: "Usually requires you to pull from the tower" - moments where fate is tested
 - Immediate dangers that physically threaten through tower mechanics
 - Conflicts, accidents, hostile encounters, disasters
@@ -1011,6 +1027,7 @@ This progressive teaching respects player intelligence while ensuring they under
 - Remember: The tower falling is often how these games end
 
 #### Event (28 cards - Safe Cards)
+
 - **SRD Context**: "Usually safe" - no tower pull, but not necessarily positive
 - Can be neutral, positive, or even bittersweet
 - Resource discoveries, helpful encounters, information gained
@@ -1152,35 +1169,42 @@ npm run convert-to-markdown static/games/my-game
 This format supports **all mechanics** described in the Wretched and Alone Mechanics Guide:
 
 ### Core Card Types (Fully Supported)
+
 ✅ **Primary Success (Salvation)** - 1 card (Ace of Hearts)
-  - Activates win condition
-  - Places 10 tokens
-  - Begins countdown mechanic
-  - May trigger damage check (designer choice)
+
+- Activates win condition
+- Places 10 tokens
+- Begins countdown mechanic
+- May trigger damage check (designer choice)
 
 ✅ **Failure Counter** - 4 cards (all Kings)
-  - Escalating threat tracker
-  - 4th King = instant defeat
-  - Keep visible during play
-  - Even-ranked (no damage)
+
+- Escalating threat tracker
+- 4th King = instant defeat
+- Keep visible during play
+- Even-ranked (no damage)
 
 ✅ **Narrative (Bonus/Help)** - 3 cards (remaining Aces)
-  - Increment bonus counter (+1 damage reduction each)
-  - Reflective/emotional content
-  - May trigger damage checks (designer choice)
-  - Can host special one-time mechanics
+
+- Increment bonus counter (+1 damage reduction each)
+- Reflective/emotional content
+- May trigger damage checks (designer choice)
+- Can host special one-time mechanics
 
 ✅ **Challenge** - 16 cards (odd ranks: 3, 5, 7, 9)
-  - Usually trigger damage checks
-  - Immediate dangers
-  - Tower pull mechanics
+
+- Usually trigger damage checks
+- Immediate dangers
+- Tower pull mechanics
 
 ✅ **Event** - 28 cards (even ranks: 2, 4, 6, 8, 10, J, Q)
-  - Usually safe from damage
-  - Respite, discovery, world-building
-  - No tower pulls required
+
+- Usually safe from damage
+- Respite, discovery, world-building
+- No tower pulls required
 
 ### Special Modifiers (Fully Supported)
+
 ✅ **Skip Damage (`skip-damage`)** - One-time tower pull skip (Narrative only)
 ✅ **Return King (`return-king`)** - Shuffle King back to deck (Narrative only)
 ✅ **Explicit card assignment** - Manual placement for thematic suits
@@ -1190,6 +1214,7 @@ This format supports **all mechanics** described in the Wretched and Alone Mecha
 ✅ **Primary Success dual behavior** - Salvation + damage check (handled by game logic)
 
 ### Designer Flexibility (SRD-Aligned)
+
 ✅ **"Usually" qualifier** - Odd/even rules are guidelines, not absolutes
 ✅ **Aces may or may not trigger damage** - Designer decides per game
 ✅ **Custom mechanics extensibility** - Future-proof for additional mechanics
@@ -1197,6 +1222,7 @@ This format supports **all mechanics** described in the Wretched and Alone Mecha
 ✅ **Accessibility options** - Optional damage mechanics
 
 ### Validation & Error Checking
+
 ✅ **Card count validation** - Ensures exactly 52 cards (1+4+3+16+28)
 ✅ **Special modifier validation** - One-time modifiers assigned only once
 ✅ **Narrative-only modifiers** - Special modifiers restricted to Narrative cards

@@ -209,10 +209,12 @@ test.describe('V2 Gameplay Mechanics', () => {
 		// 4. Verify final damage roll screen appears
 
 		// For now, we verify the component exists in the codebase
-		const hasComponent = await page.evaluate(() => {
-			// Check if FinalDamageRoll component is loaded
-			return document.querySelector('[data-testid="screen-finalDamageRoll"]') !== null;
-		}).catch(() => false);
+		const hasComponent = await page
+			.evaluate(() => {
+				// Check if FinalDamageRoll component is loaded
+				return document.querySelector('[data-testid="screen-finalDamageRoll"]') !== null;
+			})
+			.catch(() => false);
 
 		console.log('✅ Final damage roll component exists in game flow');
 		expect(true).toBe(true); // Placeholder - real test would require game state manipulation
@@ -253,7 +255,7 @@ test.describe('V2 Gameplay Mechanics', () => {
 				const towerBefore = await page
 					.locator('.dc-status-display')
 					.textContent()
-					.then(text => {
+					.then((text) => {
 						const match = text.match(/HEALTH\s*(\d+)|Tower:\s*(\d+)/);
 						return match ? parseInt(match[1] || match[2]) : null;
 					})
@@ -297,7 +299,7 @@ test.describe('V2 Gameplay Mechanics', () => {
 					const towerAfter = await page
 						.locator('.dc-status-display')
 						.textContent()
-						.then(text => {
+						.then((text) => {
 							const match = text.match(/HEALTH\s*(\d+)|Tower:\s*(\d+)/);
 							return match ? parseInt(match[1] || match[2]) : null;
 						})
@@ -462,7 +464,10 @@ test.describe('V2 Gameplay Mechanics', () => {
 				gameOver = true;
 
 				// Determine loss reason
-				const pageText = await page.locator('body').textContent().catch(() => '');
+				const pageText = await page
+					.locator('body')
+					.textContent()
+					.catch(() => '');
 				if (pageText.includes('tower') || pageText.includes('fallen')) {
 					lossReason = 'tower-collapsed';
 				} else if (pageText.includes('Kings') || pageText.includes('king')) {

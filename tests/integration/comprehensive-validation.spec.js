@@ -311,7 +311,10 @@ test('COMPREHENSIVE: Full game validation with logic verification', async ({ pag
 	console.log('✓ Rules screen loaded');
 
 	// Navigate through rules to intro
-	const continueVisible = await page.locator('button:has-text("CONTINUE")').isVisible().catch(() => false);
+	const continueVisible = await page
+		.locator('button:has-text("CONTINUE")')
+		.isVisible()
+		.catch(() => false);
 	if (continueVisible) {
 		await page.click('button:has-text("CONTINUE")');
 		await page.waitForTimeout(500);
@@ -593,7 +596,10 @@ test('SMOKE TEST: Game starts and first round works', async ({ page }) => {
 
 	// Navigate through intro/rules screens
 	// First, check if we're on the rules screen and click CONTINUE
-	const continueVisible = await page.locator('button:has-text("CONTINUE")').isVisible().catch(() => false);
+	const continueVisible = await page
+		.locator('button:has-text("CONTINUE")')
+		.isVisible()
+		.catch(() => false);
 	if (continueVisible) {
 		await page.click('button:has-text("CONTINUE")');
 		await page.waitForTimeout(500);
@@ -624,8 +630,14 @@ test('SMOKE TEST: Game starts and first round works', async ({ page }) => {
 	console.log('✓ Clicked Roll for Tasks');
 
 	// Check if dice roller appeared or if result is already shown
-	const diceRollerVisible = await page.locator('.dc-dice-roller-container').isVisible().catch(() => false);
-	const resultButtonVisible = await page.locator('button:has-text("RESULT")').isVisible().catch(() => false);
+	const diceRollerVisible = await page
+		.locator('.dc-dice-roller-container')
+		.isVisible()
+		.catch(() => false);
+	const resultButtonVisible = await page
+		.locator('button:has-text("RESULT")')
+		.isVisible()
+		.catch(() => false);
 
 	if (diceRollerVisible) {
 		// Roll the dice
@@ -644,11 +656,17 @@ test('SMOKE TEST: Game starts and first round works', async ({ page }) => {
 	}
 
 	// Verify game is running (health bar, game title, round counter visible)
-	const gameRunning = await page.locator('[data-testid="game-container"], .dc-game-container').isVisible().catch(() => false);
+	const gameRunning = await page
+		.locator('[data-testid="game-container"], .dc-game-container')
+		.isVisible()
+		.catch(() => false);
 	expect(gameRunning).toBe(true);
 
 	// Check that game state is being tracked
-	const healthVisible = await page.locator('text=/HEALTH|Tower/i').isVisible().catch(() => false);
+	const healthVisible = await page
+		.locator('text=/HEALTH|Tower/i')
+		.isVisible()
+		.catch(() => false);
 	expect(healthVisible).toBe(true);
 
 	console.log('✓ Game is running and playable');

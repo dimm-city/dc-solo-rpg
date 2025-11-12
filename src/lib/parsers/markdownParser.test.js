@@ -40,27 +40,27 @@ describe('Markdown Parser', () => {
 			expect(result.deck).toHaveLength(52);
 
 			// Verify card types are assigned correctly
-			const primarySuccess = result.deck.filter(c => c.type === 'primary-success');
+			const primarySuccess = result.deck.filter((c) => c.type === 'primary-success');
 			expect(primarySuccess).toHaveLength(1);
 			expect(primarySuccess[0].card).toBe('A');
 			expect(primarySuccess[0].suit).toBe('hearts');
 
-			const failureCounters = result.deck.filter(c => c.type === 'failure-counter');
+			const failureCounters = result.deck.filter((c) => c.type === 'failure-counter');
 			expect(failureCounters).toHaveLength(4);
-			failureCounters.forEach(card => {
+			failureCounters.forEach((card) => {
 				expect(card.card).toBe('K');
 			});
 
-			const narratives = result.deck.filter(c => c.type === 'narrative');
+			const narratives = result.deck.filter((c) => c.type === 'narrative');
 			expect(narratives).toHaveLength(3);
-			narratives.forEach(card => {
+			narratives.forEach((card) => {
 				expect(card.card).toBe('A');
 			});
 
-			const challenges = result.deck.filter(c => c.type === 'challenge');
+			const challenges = result.deck.filter((c) => c.type === 'challenge');
 			expect(challenges).toHaveLength(16);
 
-			const events = result.deck.filter(c => c.type === 'event');
+			const events = result.deck.filter((c) => c.type === 'event');
 			expect(events).toHaveLength(28);
 		});
 
@@ -73,7 +73,7 @@ describe('Markdown Parser', () => {
 			expect(result.introduction).toBeInstanceOf(Array);
 			expect(result.introduction.length).toBeGreaterThan(0);
 
-			result.introduction.forEach(section => {
+			result.introduction.forEach((section) => {
 				expect(section).toHaveProperty('heading');
 				expect(section).toHaveProperty('content');
 				expect(typeof section.heading).toBe('string');
@@ -88,8 +88,8 @@ describe('Markdown Parser', () => {
 			const result = parseGameFile(markdown);
 
 			// Find cards with special modifiers
-			const skipDamageCards = result.deck.filter(c => c.modifier === 'skip-damage');
-			const returnKingCards = result.deck.filter(c => c.modifier === 'return-king');
+			const skipDamageCards = result.deck.filter((c) => c.modifier === 'skip-damage');
+			const returnKingCards = result.deck.filter((c) => c.modifier === 'return-king');
 
 			// Should have at most one of each special modifier
 			expect(skipDamageCards.length).toBeLessThanOrEqual(1);
@@ -154,21 +154,31 @@ Description
 `;
 
 			// Add 16 challenges and 28 events to make 52 total without primary success
-			const challenges = Array(16).fill(null).map((_, i) => `
+			const challenges = Array(16)
+				.fill(null)
+				.map(
+					(_, i) => `
 ---
 
 ### Challenge
 **Challenge ${i + 1}**
 Description
-`).join('');
+`
+				)
+				.join('');
 
-			const events = Array(28).fill(null).map((_, i) => `
+			const events = Array(28)
+				.fill(null)
+				.map(
+					(_, i) => `
 ---
 
 ### Event
 **Event ${i + 1}**
 Description
-`).join('');
+`
+				)
+				.join('');
 
 			const fullMarkdown = invalidMarkdown + challenges + events;
 
@@ -244,21 +254,31 @@ Description
 `;
 
 			// Add challenges and events
-			const challenges = Array(16).fill(null).map((_, i) => `
+			const challenges = Array(16)
+				.fill(null)
+				.map(
+					(_, i) => `
 ---
 
 ### Challenge
 **Challenge ${i + 1}**
 Description
-`).join('');
+`
+				)
+				.join('');
 
-			const events = Array(27).fill(null).map((_, i) => `
+			const events = Array(27)
+				.fill(null)
+				.map(
+					(_, i) => `
 ---
 
 ### Event
 **Event ${i + 1}**
 Description
-`).join('');
+`
+				)
+				.join('');
 
 			const fullMarkdown = invalidMarkdown + challenges + events;
 
@@ -322,21 +342,31 @@ Description
 `;
 
 			// Only 2 narratives instead of 3
-			const challenges = Array(16).fill(null).map((_, i) => `
+			const challenges = Array(16)
+				.fill(null)
+				.map(
+					(_, i) => `
 ---
 
 ### Challenge
 **Challenge ${i + 1}**
 Description
-`).join('');
+`
+				)
+				.join('');
 
-			const events = Array(29).fill(null).map((_, i) => `
+			const events = Array(29)
+				.fill(null)
+				.map(
+					(_, i) => `
 ---
 
 ### Event
 **Event ${i + 1}**
 Description
-`).join('');
+`
+				)
+				.join('');
 
 			const fullMarkdown = invalidMarkdown + challenges + events;
 
@@ -406,21 +436,31 @@ Description
 `;
 
 			// Only 10 challenges instead of 16
-			const challenges = Array(10).fill(null).map((_, i) => `
+			const challenges = Array(10)
+				.fill(null)
+				.map(
+					(_, i) => `
 ---
 
 ### Challenge
 **Challenge ${i + 1}**
 Description
-`).join('');
+`
+				)
+				.join('');
 
-			const events = Array(28).fill(null).map((_, i) => `
+			const events = Array(28)
+				.fill(null)
+				.map(
+					(_, i) => `
 ---
 
 ### Event
 **Event ${i + 1}**
 Description
-`).join('');
+`
+				)
+				.join('');
 
 			const fullMarkdown = invalidMarkdown + challenges + events;
 
@@ -489,22 +529,32 @@ Description
 Description
 `;
 
-			const challenges = Array(16).fill(null).map((_, i) => `
+			const challenges = Array(16)
+				.fill(null)
+				.map(
+					(_, i) => `
 ---
 
 ### Challenge
 **Challenge ${i + 1}**
 Description
-`).join('');
+`
+				)
+				.join('');
 
 			// 30 events instead of 28
-			const events = Array(30).fill(null).map((_, i) => `
+			const events = Array(30)
+				.fill(null)
+				.map(
+					(_, i) => `
 ---
 
 ### Event
 **Event ${i + 1}**
 Description
-`).join('');
+`
+				)
+				.join('');
 
 			const fullMarkdown = invalidMarkdown + challenges + events;
 
@@ -575,26 +625,38 @@ Description
 Description
 `;
 
-			const challenges = Array(16).fill(null).map((_, i) => `
+			const challenges = Array(16)
+				.fill(null)
+				.map(
+					(_, i) => `
 ---
 
 ### Challenge
 **Challenge ${i + 1}**
 Description
-`).join('');
+`
+				)
+				.join('');
 
-			const events = Array(28).fill(null).map((_, i) => `
+			const events = Array(28)
+				.fill(null)
+				.map(
+					(_, i) => `
 ---
 
 ### Event
 **Event ${i + 1}**
 Description
-`).join('');
+`
+				)
+				.join('');
 
 			const fullMarkdown = invalidMarkdown + challenges + events;
 
 			expect(() => parseGameFile(fullMarkdown)).toThrow(ValidationError);
-			expect(() => parseGameFile(fullMarkdown)).toThrow(/Only ONE Narrative card can have skip-damage/);
+			expect(() => parseGameFile(fullMarkdown)).toThrow(
+				/Only ONE Narrative card can have skip-damage/
+			);
 		});
 
 		it('should reject multiple return-king modifiers', () => {
@@ -658,26 +720,38 @@ Description
 Description
 `;
 
-			const challenges = Array(16).fill(null).map((_, i) => `
+			const challenges = Array(16)
+				.fill(null)
+				.map(
+					(_, i) => `
 ---
 
 ### Challenge
 **Challenge ${i + 1}**
 Description
-`).join('');
+`
+				)
+				.join('');
 
-			const events = Array(28).fill(null).map((_, i) => `
+			const events = Array(28)
+				.fill(null)
+				.map(
+					(_, i) => `
 ---
 
 ### Event
 **Event ${i + 1}**
 Description
-`).join('');
+`
+				)
+				.join('');
 
 			const fullMarkdown = invalidMarkdown + challenges + events;
 
 			expect(() => parseGameFile(fullMarkdown)).toThrow(ValidationError);
-			expect(() => parseGameFile(fullMarkdown)).toThrow(/Only ONE Narrative card can have return-king/);
+			expect(() => parseGameFile(fullMarkdown)).toThrow(
+				/Only ONE Narrative card can have return-king/
+			);
 		});
 	});
 
@@ -695,7 +769,9 @@ Test intro
 `;
 
 			expect(() => parseGameFile(invalidMarkdown)).toThrow(ValidationError);
-			expect(() => parseGameFile(invalidMarkdown)).toThrow(/Missing required frontmatter fields.*title/);
+			expect(() => parseGameFile(invalidMarkdown)).toThrow(
+				/Missing required frontmatter fields.*title/
+			);
 		});
 
 		it('should reject game without win-message', () => {
@@ -711,7 +787,9 @@ Test intro
 `;
 
 			expect(() => parseGameFile(invalidMarkdown)).toThrow(ValidationError);
-			expect(() => parseGameFile(invalidMarkdown)).toThrow(/Missing required frontmatter fields.*win-message/);
+			expect(() => parseGameFile(invalidMarkdown)).toThrow(
+				/Missing required frontmatter fields.*win-message/
+			);
 		});
 
 		it('should reject game without lose-message', () => {
@@ -727,7 +805,9 @@ Test intro
 `;
 
 			expect(() => parseGameFile(invalidMarkdown)).toThrow(ValidationError);
-			expect(() => parseGameFile(invalidMarkdown)).toThrow(/Missing required frontmatter fields.*lose-message/);
+			expect(() => parseGameFile(invalidMarkdown)).toThrow(
+				/Missing required frontmatter fields.*lose-message/
+			);
 		});
 	});
 
@@ -853,21 +933,31 @@ Description
 Description
 `;
 
-			const challenges = Array(16).fill(null).map((_, i) => `
+			const challenges = Array(16)
+				.fill(null)
+				.map(
+					(_, i) => `
 ---
 
 ### Challenge
 **Challenge ${i + 1}**
 Description
-`).join('');
+`
+				)
+				.join('');
 
-			const events = Array(28).fill(null).map((_, i) => `
+			const events = Array(28)
+				.fill(null)
+				.map(
+					(_, i) => `
 ---
 
 ### Event
 **Event ${i + 1}**
 Description
-`).join('');
+`
+				)
+				.join('');
 
 			const fullMarkdown = markdown + challenges + events;
 
@@ -937,21 +1027,31 @@ Description
 Description
 `;
 
-			const challenges = Array(16).fill(null).map((_, i) => `
+			const challenges = Array(16)
+				.fill(null)
+				.map(
+					(_, i) => `
 ---
 
 ### Challenge
 **Challenge ${i + 1}**
 Description
-`).join('');
+`
+				)
+				.join('');
 
-			const events = Array(28).fill(null).map((_, i) => `
+			const events = Array(28)
+				.fill(null)
+				.map(
+					(_, i) => `
 ---
 
 ### Event
 **Event ${i + 1}**
 Description
-`).join('');
+`
+				)
+				.join('');
 
 			const fullMarkdown = markdown + challenges + events;
 
@@ -966,7 +1066,7 @@ Description
 			const result = parseGameFile(markdown);
 
 			// At least some cards should have story content
-			const cardsWithStory = result.deck.filter(c => c.story && c.story.length > 0);
+			const cardsWithStory = result.deck.filter((c) => c.story && c.story.length > 0);
 			expect(cardsWithStory.length).toBeGreaterThan(0);
 		});
 
@@ -1031,21 +1131,31 @@ Description
 Description
 `;
 
-			const challenges = Array(16).fill(null).map((_, i) => `
+			const challenges = Array(16)
+				.fill(null)
+				.map(
+					(_, i) => `
 ---
 
 ### challenge
 **Challenge ${i + 1}**
 Description
-`).join('');
+`
+				)
+				.join('');
 
-			const events = Array(28).fill(null).map((_, i) => `
+			const events = Array(28)
+				.fill(null)
+				.map(
+					(_, i) => `
 ---
 
 ### EVENT
 **Event ${i + 1}**
 Description
-`).join('');
+`
+				)
+				.join('');
 
 			const fullMarkdown = markdown + challenges + events;
 
@@ -1053,10 +1163,10 @@ Description
 
 			// Should parse successfully despite case variations
 			expect(result.deck).toHaveLength(52);
-			expect(result.deck.filter(c => c.type === 'failure-counter')).toHaveLength(4);
-			expect(result.deck.filter(c => c.type === 'narrative')).toHaveLength(3);
-			expect(result.deck.filter(c => c.type === 'challenge')).toHaveLength(16);
-			expect(result.deck.filter(c => c.type === 'event')).toHaveLength(28);
+			expect(result.deck.filter((c) => c.type === 'failure-counter')).toHaveLength(4);
+			expect(result.deck.filter((c) => c.type === 'narrative')).toHaveLength(3);
+			expect(result.deck.filter((c) => c.type === 'challenge')).toHaveLength(16);
+			expect(result.deck.filter((c) => c.type === 'event')).toHaveLength(28);
 		});
 	});
 });
