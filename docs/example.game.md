@@ -73,7 +73,7 @@ This will require miracles. Or at least, very specific pre-collapse technology t
 
 ---
 
-#### Narrative: skip-damage
+### Narrative: skip-damage
 
 **A moment of perfect timing saves you**
 
@@ -85,7 +85,7 @@ But for now, you're alive. And sometimes, in this broken world, that's the only 
 
 ---
 
-#### Narrative: return-king
+### Narrative: return-king
 
 **A second chance manifests from the darkness**
 
