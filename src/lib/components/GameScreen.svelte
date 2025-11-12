@@ -16,6 +16,7 @@
 	import StatusDisplay from './StatusDisplay.svelte';
 	import ContinueButton from './ContinueButton.svelte';
 	import ConfirmModal from './ConfirmModal.svelte';
+	import MiniStatusHUD from './MiniStatusHUD.svelte';
 
 	let {
 		systemSettings = {},
@@ -25,6 +26,16 @@
 
 	const currentScreen = $derived(gameState.state);
 	const TRANSITION_DURATION = 300;
+
+	// Show mini HUD during card-related screens
+	const showMiniHUD = $derived(
+		currentScreen === 'drawCard' ||
+			currentScreen === 'failureCheck' ||
+			currentScreen === 'successCheck' ||
+			currentScreen === 'finalDamageRoll' ||
+			currentScreen === 'log' ||
+			currentScreen === 'finalLog'
+	);
 
 	let showExitModal = $state(false);
 
@@ -164,6 +175,9 @@
 		</div>
 	</div>
 {/if}
+
+<!-- Mini Status HUD - Shows during card screens -->
+<MiniStatusHUD show={showMiniHUD} />
 
 <!-- Modal rendered at root level, outside game-screen container -->
 <ConfirmModal

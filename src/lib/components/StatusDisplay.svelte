@@ -6,6 +6,12 @@
 	const bonusPercent = $derived(gameState.bonus);
 	const failurePercent = $derived(gameState.kingsRevealed);
 
+	// Cards progress tracking
+	const cardsDrawn = $derived(gameState.cardsDrawn || 0);
+	const cardsRemaining = $derived(gameState.deck?.length || 52);
+	const totalCards = 52;
+	const progressPercent = $derived((cardsDrawn / totalCards) * 100);
+
 	let { onExitClick = () => {} } = $props();
 </script>
 
@@ -106,6 +112,21 @@
 			</div>
 		</div>
 	</div>
+
+	<!-- Cards Remaining Progress Tracker -->
+	{#if cardsDrawn > 0}
+		<div class="progress-tracker" data-augmented-ui="tl-2-clip-x tr-2-clip-x border">
+			<div class="progress-bar">
+				<div class="progress-fill" style="width: {progressPercent}%"></div>
+			</div>
+			<div class="progress-text">
+				<span class="drawn">{cardsDrawn}</span>
+				<span class="separator">/</span>
+				<span class="total">{totalCards}</span>
+				<span class="label">CARDS DRAWN</span>
+			</div>
+		</div>
+	{/if}
 </div>
 
 <style>
@@ -603,6 +624,116 @@
 		}
 	}
 
+	/* Progress Tracker Styles */
+	.progress-tracker {
+		/* Augmented UI Configuration */
+		--aug-border-all: 2px;
+		--aug-border-bg: linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta));
+		--aug-tl: 12px;
+		--aug-tr: 12px;
+
+		width: 100%;
+		padding: var(--space-sm);
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+
+		/* Glassmorphism Effect */
+		background: linear-gradient(135deg, rgba(10, 10, 20, 0.7), rgba(15, 15, 25, 0.6));
+		backdrop-filter: blur(8px) saturate(140%);
+		-webkit-backdrop-filter: blur(8px) saturate(140%);
+
+		/* Glow */
+		box-shadow:
+			0 0 15px rgba(0, 255, 255, 0.4),
+			0 0 30px rgba(217, 70, 239, 0.2),
+			inset 0 0 10px rgba(0, 255, 255, 0.1);
+	}
+
+	.progress-bar {
+		flex: 1;
+		height: 8px;
+		background: rgba(0, 0, 0, 0.5);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		border-radius: 4px;
+		overflow: hidden;
+		position: relative;
+	}
+
+	.progress-fill {
+		height: 100%;
+		background: linear-gradient(90deg, var(--color-neon-cyan), var(--color-cyber-magenta));
+		transition: width 0.3s ease;
+		box-shadow: 0 0 10px rgba(0, 255, 255, 0.6);
+		position: relative;
+	}
+
+	.progress-text {
+		display: flex;
+		align-items: baseline;
+		gap: 0.25rem;
+		font-family: 'Courier New', monospace;
+		white-space: nowrap;
+		flex-shrink: 0;
+	}
+
+	.progress-text .drawn {
+		font-size: 1.25rem;
+		font-weight: 700;
+		color: var(--color-neon-cyan);
+		text-shadow:
+			0 0 10px rgba(0, 255, 255, 1),
+			0 0 20px rgba(0, 255, 255, 0.6);
+	}
+
+	.progress-text .separator {
+		font-size: 1rem;
+		color: rgba(255, 255, 255, 0.5);
+		opacity: 0.7;
+	}
+
+	.progress-text .total {
+		font-size: 1rem;
+		font-weight: 600;
+		color: rgba(255, 255, 255, 0.7);
+	}
+
+	.progress-text .label {
+		font-size: var(--text-xs);
+		color: rgba(255, 255, 255, 0.6);
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		margin-left: var(--space-xs);
+	}
+
+	/* Mobile adjustments for progress tracker */
+	@media (max-width: 600px) {
+		.progress-tracker {
+			padding: var(--space-xs);
+			gap: var(--space-xs);
+		}
+
+		.progress-bar {
+			height: 6px;
+		}
+
+		.progress-text .drawn {
+			font-size: 1rem;
+		}
+
+		.progress-text .separator {
+			font-size: 0.875rem;
+		}
+
+		.progress-text .total {
+			font-size: 0.875rem;
+		}
+
+		.progress-text .label {
+			font-size: 0.6rem;
+		}
+	}
+
 	/* Accessibility - Reduced Motion */
 	@media (prefers-reduced-motion: reduce) {
 		.player-round-bar,
@@ -613,7 +744,8 @@
 			animation: none !important;
 		}
 
-		.stat-fill {
+		.stat-fill,
+		.progress-fill {
 			transition: none !important;
 		}
 	}
