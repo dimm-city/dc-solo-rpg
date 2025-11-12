@@ -76,8 +76,8 @@ describe('WAAStore', () => {
 			name: 'John Doe'
 		};
 
-		// Set up mock game settings for the test
-		services.gameSettings = {
+		// Set up mock game configuration
+		const mockGameConfig = {
 			deck: Array.from({ length: 52 }, (_, i) => ({
 				card: String(i),
 				suit: 'hearts',
@@ -86,8 +86,9 @@ describe('WAAStore', () => {
 			options: { startingTokens: 10 }
 		};
 
-		// Call the startGame action
-		startGame(mockPlayer, {
+		// Call the startGame action with full config
+		// When passing full config, startGame uses initializeGame which sets state to 'options'
+		startGame(mockPlayer, mockGameConfig, {
 			difficulty: 3,
 			initialDamage: false
 		});
@@ -97,7 +98,8 @@ describe('WAAStore', () => {
 		expect(gameState.player.name).toBe(mockPlayer.name);
 		expect(gameState.deck).toBeDefined();
 		expect(gameState.deck.length).toBe(52);
-		expect(gameState.state).toBe('intro');
+		// initializeGame sets state to 'options' (initial state)
+		expect(gameState.state).toBe('options');
 		expect(gameState.config.options).toBeDefined();
 		expect(gameState.config.options.difficulty).toBe(3);
 	});
@@ -452,7 +454,8 @@ describe('WAAStore', () => {
 
 		expect(gameState.player).toStrictEqual(player);
 		expect(gameState.config.options).toStrictEqual(options);
-		expect(gameState.state).toBe('intro');
+		// restartGame uses initializeGame which sets state to 'options'
+		expect(gameState.state).toBe('options');
 	});
 
 	// Test exitGame

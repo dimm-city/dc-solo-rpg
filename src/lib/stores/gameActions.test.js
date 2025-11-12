@@ -86,7 +86,8 @@ describe('gameActions - Core Game Mechanics', () => {
 			const player = { name: 'Test Player' };
 			const options = { difficulty: 1 };
 
-			startGame(player, options);
+			// Use the full config from services.gameSettings (set in beforeEach)
+			startGame(player, mockGameConfig, options);
 
 			expect(gameState.player).toEqual(player);
 			expect(gameState.playerName).toBe('Test Player');
@@ -96,12 +97,14 @@ describe('gameActions - Core Game Mechanics', () => {
 			expect(gameState.tower).toBeLessThanOrEqual(53);
 			expect(gameState.tokens).toBe(10);
 			expect(gameState.deck.length).toBeGreaterThan(0);
+			// State should be 'options' after initialization
+			expect(gameState.state).toBe('options');
 		});
 
 		it('should initialize deck by shuffling config deck', () => {
 			const player = { name: 'Test' };
 
-			startGame(player, {});
+			startGame(player, mockGameConfig, {});
 
 			// Deck should be shuffled and have cards
 			expect(gameState.deck.length).toBeGreaterThan(0);
@@ -110,7 +113,7 @@ describe('gameActions - Core Game Mechanics', () => {
 		it('should handle easy difficulty by removing Ace of Hearts', () => {
 			const player = { name: 'Test' };
 
-			startGame(player, { difficulty: 0 });
+			startGame(player, mockGameConfig, { difficulty: 0 });
 
 			// Ace of Hearts should be marked as revealed
 			expect(gameState.aceOfHeartsRevealed).toBe(true);
@@ -128,7 +131,7 @@ describe('gameActions - Core Game Mechanics', () => {
 			gameState.tower = 20;
 			gameState.log = [{ card: 'K', suit: 'hearts' }];
 
-			startGame(player, {});
+			startGame(player, mockGameConfig, {});
 
 			expect(gameState.kingsRevealed).toBe(0);
 			// Tower resets to 48-53 (54 minus initial 1d6 damage)
@@ -479,7 +482,7 @@ describe('gameActions - Core Game Mechanics', () => {
 		it('should start with 10 tokens', () => {
 			const player = { name: 'Test' };
 
-			startGame(player, {});
+			startGame(player, mockGameConfig, {});
 
 			expect(gameState.tokens).toBe(10);
 		});
@@ -559,7 +562,8 @@ describe('gameActions - Core Game Mechanics', () => {
 		it('should restart game and reset state', () => {
 			restartGame();
 
-			expect(gameState.state).toBe('intro');
+			// restartGame() sets state to 'options' (initial state after game init)
+			expect(gameState.state).toBe('options');
 			expect(gameState.round).toBe(1);
 			expect(gameState.tower).toBe(54);
 			expect(gameState.tokens).toBe(10);

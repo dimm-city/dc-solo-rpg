@@ -251,6 +251,9 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 		it('should apply damage to resources correctly', () => {
 			gameState.tower = 54;
 			gameState.bonus = 0;
+			gameState.state = 'failureCheck';
+			gameState.cardsToDraw = 0;
+			gameState.config = createMockGameConfig();
 
 			applyFailureCheckResult(3);
 
@@ -260,6 +263,9 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 		it('should reduce damage with bonus counter', () => {
 			gameState.tower = 54;
 			gameState.bonus = 2;
+			gameState.state = 'failureCheck';
+			gameState.cardsToDraw = 0;
+			gameState.config = createMockGameConfig();
 
 			applyFailureCheckResult(5);
 
@@ -270,6 +276,9 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 		it('should not damage with full bonus negation', () => {
 			gameState.tower = 54;
 			gameState.bonus = 4;
+			gameState.state = 'failureCheck';
+			gameState.cardsToDraw = 0;
+			gameState.config = createMockGameConfig();
 
 			applyFailureCheckResult(2);
 
@@ -279,6 +288,9 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 		it('should set resources to 0 when damage exceeds current value', () => {
 			gameState.tower = 3;
 			gameState.bonus = 0;
+			gameState.state = 'failureCheck';
+			gameState.cardsToDraw = 0;
+			gameState.config = createMockGameConfig();
 
 			applyFailureCheckResult(6);
 
@@ -439,12 +451,14 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 				// Draw 3 kings
 				for (let i = 0; i < 3; i++) {
 					gameState.deck = [kings[i]];
+					gameState.state = 'drawCard';
 					drawCard();
 					expect(gameState.gameOver).toBe(false);
 				}
 
 				// Draw 4th king
 				gameState.deck = [kings[3]];
+				gameState.state = 'drawCard';
 				drawCard();
 				expect(gameState.gameOver).toBe(true);
 				expect(gameState.win).toBe(false);
@@ -520,6 +534,7 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 				gameState.aceOfHeartsRevealed = true;
 				gameState.bonus = 3;
 				gameState.config = { difficulty: 1 };
+				gameState.state = 'successCheck';
 
 				// Success on token roll
 				vi.spyOn(gameState, 'getRandomNumber').mockReturnValueOnce(6);
@@ -538,6 +553,9 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 				gameState.tower = 2;
 				gameState.bonus = 0;
 				gameState.gameOver = false;
+				gameState.state = 'failureCheck';
+				gameState.cardsToDraw = 0;
+				gameState.config = createMockGameConfig();
 
 				applyFailureCheckResult(6); // 6 damage > 2 resources
 
@@ -549,6 +567,9 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 				gameState.tower = 1;
 				gameState.bonus = 0;
 				gameState.gameOver = false;
+				gameState.state = 'failureCheck';
+				gameState.cardsToDraw = 0;
+				gameState.config = createMockGameConfig();
 
 				applyFailureCheckResult(5);
 
@@ -562,6 +583,7 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 
 				gameState.kingsRevealed = 3;
 				gameState.deck = [{ card: 'K', suit: 'spades', prompt: 'Final King' }];
+				gameState.state = 'drawCard';
 
 				drawCard();
 
@@ -572,6 +594,7 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 			it('should lose when deck exhausted without win condition', () => {
 				gameState.deck = [];
 				gameState.aceOfHeartsRevealed = false;
+				gameState.state = 'drawCard';
 
 				drawCard();
 
@@ -583,6 +606,9 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 				gameState.tower = 2;
 				gameState.bonus = 0;
 				gameState.aceOfHeartsRevealed = true;
+				gameState.state = 'failureCheck';
+				gameState.cardsToDraw = 0;
+				gameState.config = createMockGameConfig();
 
 				// Simulate final damage roll
 				applyFailureCheckResult(5); // More than 2
@@ -699,16 +725,14 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 			const config = createMockGameConfig();
 			initializeGame(config, { name: 'Test' });
 
-			// Place Ace of Hearts on top
-			gameState.deck = [
-				{ card: 'A', suit: 'hearts', prompt: 'Win card' },
-				...gameState.deck.slice(1)
-			];
+			// Place Ace of Hearts as the only card (deck.pop() draws from end)
+			gameState.deck = [{ card: 'A', suit: 'hearts', prompt: 'Win card' }];
+			gameState.state = 'drawCard';
 
 			drawCard();
 
 			expect(gameState.aceOfHeartsRevealed).toBe(true);
-			expect(gameState.round).toBe(0); // Still day 0
+			expect(gameState.round).toBe(1); // Round increments during init
 		});
 
 		it('should handle all Aces drawn before win card', () => {
@@ -742,6 +766,9 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 			gameState.tower = 3;
 			gameState.bonus = 0;
 			gameState.gameOver = false;
+			gameState.state = 'failureCheck';
+			gameState.cardsToDraw = 0;
+			gameState.config = createMockGameConfig();
 
 			applyFailureCheckResult(3);
 
@@ -769,14 +796,21 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 
 			// With max bonus, rolls 1-4 should deal 0 damage
 			gameState.tower = 54;
+			gameState.state = 'failureCheck';
+			gameState.cardsToDraw = 0;
+			gameState.config = createMockGameConfig();
 
 			applyFailureCheckResult(1);
 			expect(gameState.tower).toBe(54);
 
+			gameState.state = 'failureCheck'; // Reset state
+			gameState.cardsToDraw = 0;
 			applyFailureCheckResult(4);
 			expect(gameState.tower).toBe(54);
 
 			// Roll 5 should deal 1 damage (5 - 4)
+			gameState.state = 'failureCheck'; // Reset state
+			gameState.cardsToDraw = 0;
 			gameState.gameOver = false; // Reset flag
 			applyFailureCheckResult(5);
 			expect(gameState.tower).toBe(53);
@@ -786,6 +820,9 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 			gameState.tower = 54;
 			gameState.bonus = 6; // More than max roll
 			gameState.gameOver = false;
+			gameState.state = 'failureCheck';
+			gameState.cardsToDraw = 0;
+			gameState.config = createMockGameConfig();
 
 			applyFailureCheckResult(6);
 
@@ -796,6 +833,7 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 			gameState.tokens = 3;
 			gameState.aceOfHeartsRevealed = true;
 			gameState.config = { difficulty: 0 };
+			gameState.state = 'successCheck';
 
 			// Three successful rolls
 			vi.spyOn(gameState, 'getRandomNumber')
@@ -806,10 +844,12 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 			successCheck();
 			expect(gameState.tokens).toBe(2);
 
+			gameState.state = 'successCheck'; // Reset state
 			gameState.gameOver = false; // Reset
 			successCheck();
 			expect(gameState.tokens).toBe(1);
 
+			gameState.state = 'successCheck'; // Reset state
 			gameState.gameOver = false; // Reset
 			successCheck();
 			expect(gameState.tokens).toBe(0);
