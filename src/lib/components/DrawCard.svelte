@@ -6,6 +6,9 @@
 	// Reference to CardDeck component
 	let cardDeckRef;
 
+	// Track animation stage so button state updates reactively
+	let animationStage = $state('idle');
+
 	/**
 	 * Handle card request from neural interface
 	 * Triggered when user clicks "PROCEED TO NEXT BYTE"
@@ -34,26 +37,24 @@
 	}
 
 	/**
-	 * Expose button text for toolbar
+	 * Expose button text for toolbar - derived from animation stage
 	 */
 	export function getButtonText() {
-		// Access the derived buttonText from CardDeck
-		// This will be 'PROCEED TO NEXT BYTE', 'LOADING...', 'CONTINUE', or 'UPLOADING...'
-		if (cardDeckRef?.animationStage === 'idle') return 'PROCEED TO NEXT BYTE';
-		if (cardDeckRef?.animationStage === 'anticipating' || cardDeckRef?.animationStage === 'materializing')
+		if (animationStage === 'idle') return 'PROCEED TO NEXT BYTE';
+		if (animationStage === 'anticipating' || animationStage === 'materializing')
 			return 'LOADING...';
-		if (cardDeckRef?.animationStage === 'revealed') return 'CONTINUE';
+		if (animationStage === 'revealed') return 'CONTINUE';
 		return 'UPLOADING...';
 	}
 
 	/**
-	 * Expose button disabled state for toolbar
+	 * Expose button disabled state for toolbar - derived from animation stage
 	 */
 	export function isButtonDisabled() {
 		return (
-			cardDeckRef?.animationStage === 'anticipating' ||
-			cardDeckRef?.animationStage === 'materializing' ||
-			cardDeckRef?.animationStage === 'dismissing'
+			animationStage === 'anticipating' ||
+			animationStage === 'materializing' ||
+			animationStage === 'dismissing'
 		);
 	}
 </script>
@@ -72,6 +73,7 @@
 	<CardDeck
 		bind:this={cardDeckRef}
 		bind:card={gameState.currentCard}
+		bind:animationStage={animationStage}
 		onrequestcard={onRequestCard}
 		onconfirmcard={onConfirmCardDeck}
 	/>

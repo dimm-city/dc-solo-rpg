@@ -4,10 +4,14 @@
 	import { logger } from '../utils/logger.js';
 	import ContinueButton from './ContinueButton.svelte';
 
-	let { card = $bindable(null), onrequestcard = () => {}, onconfirmcard = () => {} } = $props();
+	let {
+		card = $bindable(null),
+		animationStage = $bindable('idle'),
+		onrequestcard = () => {},
+		onconfirmcard = () => {}
+	} = $props();
 
-	// animationStage is accessible via component reference
-	let animationStage = $state('idle'); // 'idle', 'anticipating', 'materializing', 'revealed', 'dismissing'
+	// animationStage is now bindable so changes propagate to parent
 	let canvas = $state();
 	let ctx = $state();
 	let particles = $state([]);
@@ -96,6 +100,28 @@
 		} else if (animationStage === 'revealed') {
 			await onDismiss();
 		}
+	}
+
+	/**
+	 * Get current button text based on animation stage
+	 */
+	export function getButtonText() {
+		if (animationStage === 'idle') return 'PROCEED TO NEXT BYTE';
+		if (animationStage === 'anticipating' || animationStage === 'materializing')
+			return 'LOADING...';
+		if (animationStage === 'revealed') return 'CONTINUE';
+		return 'UPLOADING...';
+	}
+
+	/**
+	 * Get button disabled state based on animation stage
+	 */
+	export function getButtonDisabled() {
+		return (
+			animationStage === 'anticipating' ||
+			animationStage === 'materializing' ||
+			animationStage === 'dismissing'
+		);
 	}
 
 	/**
