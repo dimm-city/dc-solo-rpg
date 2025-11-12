@@ -17,6 +17,8 @@
 	import ContinueButton from './ContinueButton.svelte';
 	import ConfirmModal from './ConfirmModal.svelte';
 	import MiniStatusHUD from './MiniStatusHUD.svelte';
+	import KeyboardHint from './KeyboardHint.svelte';
+	import { onMount } from 'svelte';
 
 	let {
 		systemSettings = {},
@@ -38,6 +40,7 @@
 	);
 
 	let showExitModal = $state(false);
+	let showKeyboardHint = $state(false);
 
 	function handleExitClick() {
 		showExitModal = true;
@@ -54,6 +57,58 @@
 	function handleExitCancel() {
 		showExitModal = false;
 	}
+
+	/**
+	 * Global keyboard shortcut handler
+	 * Allows Space/Enter to trigger primary action on each screen
+	 */
+	function handleKeyPress(event) {
+		// Ignore if user is typing in an input/textarea
+		if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+			return;
+		}
+
+		// Ignore if modal is open
+		if (showExitModal) {
+			return;
+		}
+
+		const key = event.key.toLowerCase();
+
+		// Space or Enter triggers the primary action button on the current screen
+		if (key === ' ' || key === 'enter') {
+			event.preventDefault();
+
+			// Find the primary action button on the current screen and click it
+			const primaryButton = document.querySelector(
+				'[data-testid="start-round-button"], [data-testid="card-deck-button"], [data-testid="continue-button"]'
+			);
+
+			if (primaryButton && !primaryButton.disabled) {
+				primaryButton.click();
+			}
+		}
+	}
+
+	onMount(() => {
+		window.addEventListener('keydown', handleKeyPress);
+
+		// Show keyboard hint when game starts (on desktop only)
+		const isDesktop = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+		if (isDesktop && currentScreen === 'startRound') {
+			showKeyboardHint = true;
+		}
+
+		return () => window.removeEventListener('keydown', handleKeyPress);
+	});
+
+	// Watch for game start and show keyboard hint on first round
+	$effect(() => {
+		const isDesktop = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+		if (isDesktop && currentScreen === 'startRound' && gameState.round === 1) {
+			showKeyboardHint = true;
+		}
+	});
 </script>
 
 {#if currentScreen == 'loadGame'}
@@ -178,6 +233,9 @@
 
 <!-- Mini Status HUD - Shows during card screens -->
 <MiniStatusHUD show={showMiniHUD} />
+
+<!-- Keyboard Hint - Shows on desktop for first round -->
+<KeyboardHint show={showKeyboardHint} />
 
 <!-- Modal rendered at root level, outside game-screen container -->
 <ConfirmModal
