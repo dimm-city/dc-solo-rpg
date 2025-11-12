@@ -360,21 +360,38 @@ main {
 
 .hero {
 	text-align: center;
-	padding: var(--space-md) var(--space-md);
-	margin-bottom: var(--space-sm);
+	padding: clamp(var(--space-lg), 4vw, var(--space-2xl)) var(--space-md);
+	margin-bottom: var(--space-lg);
+	position: relative;
 }
 
 .hero h1 {
-	font-size: clamp(2rem, 8vw, var(--text-4xl));
-	margin-bottom: var(--space-lg);
-	/* FIX #1: 24px */
+	font-size: clamp(1.75rem, 4vw, 2.5rem);
+	margin-bottom: var(--space-md);
+	/* Enhanced glow for hero prominence */
+	text-shadow:
+		0 0 10px rgba(255, 215, 0, 0.5),
+		0 0 20px rgba(255, 215, 0, 0.3),
+		0 0 30px rgba(255, 215, 0, 0.15);
 }
 
 .hero p {
-	font-size: var(--text-lg);
-	color: var(--color-text-secondary);
+	font-family: var(--font-display);
+	font-size: var(--text-base);
+	font-weight: 700;
+	color: var(--color-neon-cyan);
 	text-transform: uppercase;
-	letter-spacing: var(--letter-spacing-wide);
+	letter-spacing: var(--letter-spacing-widest);
+	/* Badge-like styling */
+	display: inline-block;
+	padding: var(--space-xs) var(--space-lg);
+	background: rgba(0, 255, 255, 0.1);
+	border: 2px solid var(--color-neon-cyan);
+	border-radius: 2px;
+	box-shadow:
+		0 0 10px rgba(0, 255, 255, 0.3),
+		inset 0 0 10px rgba(0, 255, 255, 0.05);
+	text-shadow: 0 0 8px rgba(0, 255, 255, 0.4);
 }
 
 /* ============================================
@@ -383,9 +400,9 @@ main {
 
 .form-container {
 	position: relative;
-	background: var(--color-bg-secondary);
+	/* background: var(--color-bg-secondary);
 	border: var(--border-width-thick) solid var(--color-cyber-magenta);
-	box-shadow: var(--shadow-lg);
+	box-shadow: var(--shadow-lg); */
 	flex: 1;
 	display: flex;
 	flex-direction: column;
@@ -673,16 +690,16 @@ body::before {
 	position: absolute;
 	inset: -2px;
 	border-radius: inherit;
-	background: linear-gradient(45deg, transparent 30%, rgba(217, 70, 239, 0.1) 50%, transparent 70%);
+	/* background: linear-gradient(45deg, transparent 30%, rgba(217, 70, 239, 0.1) 50%, transparent 70%); */
 	opacity: 0;
 	transition: opacity var(--transition-base);
 	pointer-events: none;
 	z-index: -1;
 }
-
+/* 
 .form-container:hover::after {
 	opacity: 1;
-}
+} */
 
 /* Atmospheric background pattern */
 .cyber-box::before {

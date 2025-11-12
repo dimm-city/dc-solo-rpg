@@ -2,8 +2,9 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
-	import AugmentedButton from '$lib/components/AugmentedButton.svelte';
+	import ConfirmModal from '$lib/components/ConfirmModal.svelte';
 	import Splash from '$lib/components/Splash.svelte';
+	import NeuralBackground from '$lib/components/NeuralBackground.svelte';
 
 	/** @type {import('./$types').PageData} */
 	let { data } = $props();
@@ -11,15 +12,23 @@
 	let selectedGame = $state(null);
 	let showSplash = $state(true);
 	let showContent = $state(false);
+	let showModal = $state(false);
 
 	function selectGame(game) {
 		selectedGame = game;
+		showModal = true;
 	}
 
-	function loadGame() {
+	function handleConfirm() {
 		if (selectedGame) {
 			goto(`/game/${selectedGame.slug}`);
 		}
+		showModal = false;
+	}
+
+	function handleCancel() {
+		showModal = false;
+		selectedGame = null;
 	}
 
 	function handleSplashComplete() {
@@ -46,60 +55,76 @@
 	};
 </script>
 
+<NeuralBackground />
 <Splash visible={showSplash} onComplete={handleSplashComplete} />
 
 {#if showContent}
 	<section class="form-container" data-testid="home-page" transition:fade={{ duration: 600 }}>
-	<div class="welcome-container">
-		<section class="hero">
-			<h1 data-testid="page-title">Dimm City: Solo RPG</h1>
-			<p>Demo</p>
-		</section>
-		<div class="dc-start-screen-container" data-testid="game-selector">
-			<h2>Select a Game</h2>
+		<div class="welcome-container">
+			<div class="dc-start-screen-container" data-testid="game-selector">
+				<h2>Select a Game</h2>
 
-			<div class="game-cards-grid">
-				{#each data.games as game, index}
-					<button
-						class="game-card game-card-{index + 1}"
-						class:selected={selectedGame?.slug === game.slug}
-						onclick={() => selectGame(game)}
-						data-augmented-ui={index === 0 ? 'tl-clip tr-clip-x br-clip-x border' :
-										   index === 1 ? 'tl-clip-y tr-clip br-clip-x border' :
-										   index === 2 ? 'tl-clip-y tr-clip-x br-clip border' :
-										   index === 3 ? 'tl-clip tr-clip-y br-clip-x bl-clip border' :
-										   'tl-clip-x tr-clip br-clip-y bl-clip border'}
-						data-testid="game-card-{game.slug}"
-					>
-						<h3 class="game-card-title">{game.title}</h3>
-						<p class="game-subtitle">{gameDescriptions[game.slug] || 'Begin your adventure'}</p>
-					</button>
-				{/each}
-			</div>
-
-			<div class="load-button-container">
-				<AugmentedButton
-					onclick={loadGame}
-					disabled={!selectedGame}
-					text="LOAD GAME"
-					testid="load-game-button"
-				/>
+				<div class="game-cards-grid">
+					{#each data.games as game, index}
+						<button
+							class="game-card game-card-{index + 1}"
+							class:selected={selectedGame?.slug === game.slug}
+							onclick={() => selectGame(game)}
+							data-augmented-ui={index === 0
+								? 'tl-clip tr-clip-x br-clip-x border'
+								: index === 1
+									? 'tl-clip-y tr-clip br-clip-x border'
+									: index === 2
+										? 'tl-clip-y tr-clip-x br-clip border'
+										: index === 3
+											? 'tl-clip tr-clip-y br-clip-x bl-clip border'
+											: 'tl-clip-x tr-clip br-clip-y bl-clip border'}
+							data-testid="game-card-{game.slug}"
+						>
+							<h3 class="game-card-title">{game.title}</h3>
+							<p class="game-subtitle">{gameDescriptions[game.slug] || 'Begin your adventure'}</p>
+						</button>
+					{/each}
+				</div>
 			</div>
 		</div>
-	</div>
 	</section>
 {/if}
 
+<ConfirmModal
+	isOpen={showModal}
+	title="Load Game"
+	message={selectedGame ? `Start "${selectedGame.title}"?` : 'Loading game...'}
+	confirmText="START GAME"
+	cancelText="CANCEL"
+	onConfirm={handleConfirm}
+	onCancel={handleCancel}
+/>
+
 <style>
-	:global(body){
+	:global(body) {
 		overflow-y: auto;
 	}
 	.welcome-container {
 		display: flex;
 		flex-direction: column;
 		justify-content: flex-start;
-		padding: var(--space-lg);
-		gap: var(--space-lg);
+		/* Fluid padding that scales with viewport */
+		padding-inline: clamp(var(--space-md), 3vw, var(--space-2xl));
+		gap: clamp(var(--space-lg), 2vw, var(--space-xl));
+		/* Add subtle fade-in animation */
+		animation: fadeInContent 0.6s ease-out;
+	}
+
+	@keyframes fadeInContent {
+		from {
+			opacity: 0;
+			transform: translateY(10px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
 	}
 
 	.dc-start-screen-container {
@@ -112,6 +137,26 @@
 	.dc-start-screen-container h2 {
 		text-align: center;
 		margin: 0;
+		/* Enhanced visual weight and glow */
+		font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+		letter-spacing: var(--letter-spacing-widest);
+		position: relative;
+		padding-bottom: var(--space-md);
+		animation: fadeInContent 0.6s ease-out;
+		animation-delay: 0.2s;
+	}
+
+	/* Subtle underline accent for h2 */
+	.dc-start-screen-container h2::after {
+		content: '';
+		position: absolute;
+		bottom: 0;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 30%;
+		height: 3px;
+		background: linear-gradient(90deg, transparent, var(--color-cyber-magenta), transparent);
+		box-shadow: 0 0 10px var(--color-cyber-magenta);
 	}
 
 	/* ============================================
@@ -120,34 +165,9 @@
 	.game-cards-grid {
 		display: grid;
 		grid-template-columns: repeat(3, 1fr);
-		gap: var(--space-lg);
+		/* Fluid gap that scales */
+		gap: clamp(var(--space-md), 2vw, var(--space-xl));
 		width: 100%;
-		max-height: 60vh;
-		overflow-y: auto;
-		overflow-x: hidden;
-		padding-right: var(--space-sm);
-
-		/* Custom scrollbar styling */
-		scrollbar-width: thin;
-		scrollbar-color: var(--color-cyber-magenta) rgba(255, 255, 255, 0.1);
-	}
-
-	.game-cards-grid::-webkit-scrollbar {
-		width: 8px;
-	}
-
-	.game-cards-grid::-webkit-scrollbar-track {
-		background: rgba(255, 255, 255, 0.1);
-		border-radius: 4px;
-	}
-
-	.game-cards-grid::-webkit-scrollbar-thumb {
-		background: var(--color-cyber-magenta);
-		border-radius: 4px;
-	}
-
-	.game-cards-grid::-webkit-scrollbar-thumb:hover {
-		background: var(--color-neon-cyan);
 	}
 
 	/* ============================================
@@ -159,18 +179,14 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: var(--space-sm);
-		padding: var(--space-xl) var(--space-lg);
-		min-height: 180px;
+		gap: var(--space-md);
+		padding: clamp(var(--space-lg), 2vw, var(--space-2xl)) var(--space-lg);
+		min-height: 200px;
 
-		/* Glassmorphism Background */
-		background: linear-gradient(
-			135deg,
-			rgba(10, 10, 20, 0.7),
-			rgba(15, 15, 25, 0.6)
-		);
-		backdrop-filter: blur(10px);
-		-webkit-backdrop-filter: blur(10px);
+		/* Glassmorphism Background - enhanced depth with gradient */
+		background: linear-gradient(135deg, rgba(10, 10, 20, 0.6), rgba(15, 15, 25, 0.5));
+		backdrop-filter: blur(16px);
+		-webkit-backdrop-filter: blur(16px);
 
 		/* Remove default button styling */
 		border: none;
@@ -178,8 +194,52 @@
 		position: relative;
 
 		/* Transitions */
-		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 		will-change: transform, box-shadow, filter;
+
+		/* Staggered fade-in animation */
+		animation:
+			cardFadeIn 0.6s ease-out backwards,
+			float 6s ease-in-out infinite;
+	}
+
+	/* Ethereal floating animation */
+	@keyframes float {
+		0%,
+		100% {
+			transform: translateY(0px);
+		}
+		50% {
+			transform: translateY(-8px);
+		}
+	}
+
+	/* Stagger the fade-in and float animations for each card */
+	.game-card-1 {
+		animation-delay: 0.1s, 0s;
+	}
+	.game-card-2 {
+		animation-delay: 0.2s, 1.2s;
+	}
+	.game-card-3 {
+		animation-delay: 0.3s, 2.4s;
+	}
+	.game-card-4 {
+		animation-delay: 0.4s, 3.6s;
+	}
+	.game-card-5 {
+		animation-delay: 0.5s, 4.8s;
+	}
+
+	@keyframes cardFadeIn {
+		from {
+			opacity: 0;
+			transform: translateY(20px) scale(0.95);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0) scale(1);
+		}
 	}
 
 	/* ============================================
@@ -263,8 +323,8 @@
 	   ============================================ */
 
 	.game-card:hover {
-		transform: translateY(-4px);
-		filter: brightness(1.15);
+		transform: translateY(-6px) scale(1.02);
+		filter: brightness(1.2);
 	}
 
 	.game-card-1:hover {
@@ -305,7 +365,7 @@
 	/* Selected State - Enhanced glow and thicker border */
 	.game-card.selected {
 		--aug-border-all: 3px;
-		transform: translateY(-6px);
+		transform: translateY(-6px) scale(1.03);
 	}
 
 	.game-card-1.selected {
@@ -358,41 +418,39 @@
 
 	.game-card-title {
 		font-family: 'lixdu', monospace;
-		font-size: 1.5rem;
+		font-size: clamp(1.25rem, 1.8vw, 1.75rem);
 		text-transform: uppercase;
-		letter-spacing: 0.05em;
+		letter-spacing: 0.08em;
 		color: var(--color-brand-yellow);
 		text-shadow: var(--text-glow-yellow);
 		margin: 0;
 		text-align: center;
-		line-height: var(--line-height-tight);
+		line-height: 1.2;
+		/* Improve text rendering */
+		font-weight: 700;
 	}
 
 	.game-subtitle {
 		font-family: 'Courier New', monospace;
-		font-size: 0.875rem;
-		color: rgba(255, 255, 255, 0.7);
+		font-size: clamp(0.8rem, 1vw, 0.95rem);
+		color: rgba(255, 255, 255, 0.8);
 		text-align: center;
 		margin: 0;
-		line-height: var(--line-height-base);
-	}
-
-	/* ============================================
-	   LOAD BUTTON CONTAINER
-	   ============================================ */
-
-	.load-button-container {
-		display: flex;
-		justify-content: center;
-		margin-top: var(--space-lg);
-		:global(.aug-button-wrapper, button){
-			width: stretch;
-		}
+		line-height: var(--line-height-relaxed);
+		/* Subtle glow for better readability */
+		text-shadow: 0 0 4px rgba(0, 255, 255, 0.15);
 	}
 
 	/* ============================================
 	   RESPONSIVE LAYOUTS
 	   ============================================ */
+
+	/* Large tablet/small desktop - 3 columns maintained but tighter */
+	@media (max-width: 1200px) {
+		.game-cards-grid {
+			gap: var(--space-md);
+		}
+	}
 
 	/* Tablet - 2 columns */
 	@media (max-width: 900px) {
@@ -402,7 +460,19 @@
 		}
 
 		.welcome-container {
-			padding: var(--space-md);
+			padding-inline: var(--space-lg);
+		}
+
+		.dc-start-screen-container h2 {
+			font-size: var(--text-2xl);
+		}
+	}
+
+	/* Small tablet - 2 columns, more compact */
+	@media (max-width: 700px) {
+		.game-card {
+			min-height: 180px;
+			padding: var(--space-xl) var(--space-md);
 		}
 	}
 
@@ -415,23 +485,19 @@
 
 		.game-card {
 			padding: var(--space-lg) var(--space-md);
-			min-height: 150px;
-		}
-
-		.game-card-title {
-			font-size: 1.25rem;
-		}
-
-		.game-subtitle {
-			font-size: 0.8rem;
+			min-height: 160px;
 		}
 
 		.welcome-container {
-			padding: var(--space-sm);
+			padding-inline: var(--space-md);
 		}
 
 		.dc-start-screen-container {
 			gap: var(--space-lg);
+		}
+
+		.dc-start-screen-container h2 {
+			font-size: var(--text-xl);
 		}
 	}
 
@@ -440,7 +506,11 @@
 	   ============================================ */
 
 	@media (prefers-reduced-motion: reduce) {
-		.game-card,
+		.welcome-container,
+		.game-card {
+			animation: none !important;
+		}
+
 		.game-card:hover,
 		.game-card.selected,
 		.game-card:active {
@@ -449,4 +519,3 @@
 		}
 	}
 </style>
-

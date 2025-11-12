@@ -118,7 +118,7 @@
 		justify-content: center;
 		align-items: center;
 		flex-wrap: wrap;
-		font-family: 'Orbitron', sans-serif;
+		font-family: 'lixdu', 'Orbitron', sans-serif;
 		font-size: 4rem;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;

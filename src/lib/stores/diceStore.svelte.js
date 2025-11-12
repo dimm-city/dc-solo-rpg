@@ -38,14 +38,15 @@ export async function initializeDiceBox(container) {
 		sounds: true,
 		volume: 100,
 		baseScale: 100,
-		strength: 1.5,
-		// Default theme if none specified
-		theme_colorset: 'pinkdreams'
+		strength: 1.5
 	};
 
 	// Apply dice theme from game config if provided
 	if (gameState.config?.options?.dice?.key) {
-		config.theme_colorset = gameState.config.options.dice.key;
+		// If key is 'default', don't set a theme (let dice-box use its built-in default)
+		if (gameState.config.options.dice.key !== 'default') {
+			config.theme_colorset = gameState.config.options.dice.key;
+		}
 	} else if (gameState.config?.options?.dice) {
 		config.theme_customColorset = gameState.config.options.dice;
 	}
