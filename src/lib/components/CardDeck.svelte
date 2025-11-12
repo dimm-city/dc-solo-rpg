@@ -178,6 +178,9 @@
 						<small class="byte-id">
 							BYTE-{card.card}-{card.suit?.slice(0, 3).toUpperCase() || 'UNK'}
 						</small>
+						<p>
+							{card.story}
+						</p>
 					</div>
 				{/if}
 			</div>
