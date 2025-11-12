@@ -25,15 +25,15 @@
 		data-augmented-ui="tl-clip-x tr-2-clip-x br-clip bl-2-clip-x border"
 	>
 		<div class="info-segment">
-			<span class="label">PLAYER:</span>
+			<span class="label">PLAYER</span>
 			<span class="value">{gameState.player.name.toUpperCase()}</span>
 		</div>
 		<div>
 			<h5>{gameState.config?.title}</h5>
 		</div>
 		<div class="info-segment">
-			<span class="label">{gameState.config?.labels.statusDisplayRoundText ?? 'ROUND:'}</span>
 			<span class="value">{gameState?.round}</span>
+			<span class="label">{gameState.config?.labels.statusDisplayRoundText ?? 'ROUND'}</span>
 		</div>
 	</div>
 
@@ -69,6 +69,9 @@
 					<div class="stat-fill failure-fill" style="width: {(failurePercent / 4) * 100}%"></div>
 				</div>
 			</div>
+		</div>
+		<div>
+			<span>Last Roll</span>
 		</div>
 		<div>
 			<div
@@ -154,7 +157,7 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		padding: var(--space-sm);
+		padding: var(--space-md);
 		position: relative;
 
 		/* Glassmorphism Effect */
@@ -233,6 +236,16 @@
 		grid-template-columns: repeat(3, 1fr);
 		gap: var(--space-sm);
 		width: stretch;
+		&>div{
+			display: flex;
+			flex-direction: row;
+		}
+		&>div:nth-of-type(2){
+			justify-content: center;
+		}
+		&>div:last-of-type{
+			justify-content: flex-end;
+		}
 	}
 
 	.stat-item {
@@ -266,6 +279,7 @@
 		--aug-tl: 8px; /* Gentle entry */
 		--aug-tr: 14px; /* Strong tab → connects to Failure */
 		--aug-br: 14px; /* Strong tab → connects to Bonus (mobile) */
+		--aug-rect-r: 5px;
 
 		/* Enhanced Glow - animation removed */
 		box-shadow:

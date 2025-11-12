@@ -21,6 +21,8 @@
 	import KeyboardHint from './KeyboardHint.svelte';
 	import DeckVisualization from './DeckVisualization.svelte';
 	import { onMount } from 'svelte';
+	import { rollDice } from '../stores/diceStore.svelte.js';
+	import { rollForTasks, confirmTaskRoll } from '../stores/gameActions.svelte.js';
 
 	let {
 		systemSettings = {},
@@ -30,6 +32,44 @@
 
 	const currentScreen = $derived(gameState.state);
 	const TRANSITION_DURATION = 300;
+
+	// RollForTasks button state
+	let rollTasksRolled = $state(false);
+	let rollTasksRolling = $state(false);
+	let rollTasksConfirming = $state(false);
+
+	// Reset rollForTasks state when screen changes
+	$effect(() => {
+		if (currentScreen === 'rollForTasks') {
+			rollTasksRolled = false;
+			rollTasksRolling = false;
+			rollTasksConfirming = false;
+		}
+	});
+
+	async function handleRollForTasks() {
+		if (rollTasksRolling || rollTasksConfirming) return;
+		if (rollTasksRolled) {
+			// Confirm
+			rollTasksConfirming = true;
+			await confirmTaskRoll();
+			rollTasksConfirming = false;
+		} else {
+			// Roll
+			rollTasksRolling = true;
+			const result = await rollForTasks();
+			await rollDice(result);
+			rollTasksRolling = false;
+			rollTasksRolled = true;
+		}
+	}
+
+	const rollForTasksButtonText = $derived(
+		rollTasksRolled
+			? (gameState.config?.labels?.rollForTasksResultHeader ?? 'Result')
+			: (gameState.config?.labels?.rollForTasksHeader ?? 'Roll for Tasks')
+	);
+	const rollForTasksButtonDisabled = $derived(rollTasksRolling || rollTasksConfirming);
 
 	// Show mini HUD during card-related screens
 	const showMiniHUD = $derived(
@@ -185,13 +225,6 @@
 							transition:fade={{ duration: TRANSITION_DURATION }}
 						>
 							<h4>Round {gameState.round}</h4>
-							<div class="dc-dice-roller-header dc-header">
-								<ContinueButton
-									text="Roll for tasks"
-									onclick={() => transitionTo('rollForTasks')}
-									testid="start-round-button"
-								/>
-							</div>
 						</div>
 					{:else if currentScreen == 'rollForTasks'}
 						<div
@@ -251,6 +284,23 @@
 			<div class="toolbar-area" data-augmented-ui="tl-clip tr-clip border">
 				<div class="toolbar-left">
 					<DeckVisualization />
+				</div>
+				<div class="toolbar-center">
+					<!-- Action buttons will go here based on current screen -->
+					{#if currentScreen === 'startRound'}
+						<ContinueButton
+							text="Roll for tasks"
+							onclick={() => transitionTo('rollForTasks')}
+							testid="start-round-button"
+						/>
+					{:else if currentScreen === 'rollForTasks'}
+						<ContinueButton
+							text={rollForTasksButtonText}
+							onclick={handleRollForTasks}
+							disabled={rollForTasksButtonDisabled}
+							testid="roll-tasks-button"
+						/>
+					{/if}
 				</div>
 				<div class="toolbar-right">
 					<button class="toolbar-button exit-button" onclick={handleExitClick} aria-label="Exit game">
@@ -424,12 +474,22 @@
 		display: flex;
 		align-items: center;
 		gap: var(--space-md);
+		flex: 0 0 auto;
+	}
+
+	.toolbar-center {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex: 1 1 auto;
+		min-width: 0;
 	}
 
 	.toolbar-right {
 		display: flex;
 		align-items: center;
 		gap: var(--space-md);
+		flex: 0 0 auto;
 	}
 
 	.toolbar-button {
