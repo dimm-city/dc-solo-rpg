@@ -1,8 +1,7 @@
 <script>
 	import { gameState, transitionTo } from '../stores/gameStore.svelte.js';
 	import { fade } from 'svelte/transition';
-	import { initializeDiceBox } from '../stores/diceStore.svelte.js';
-	import { exitGame } from '../stores/gameActions.svelte.js';
+	import { goto } from '$app/navigation';
 
 	import LoadScreen from './LoadScreen.svelte';
 	import OptionsScreen from './OptionsScreen.svelte';
@@ -27,17 +26,7 @@
 	const currentScreen = $derived(gameState.state);
 	const TRANSITION_DURATION = 300;
 
-	let diceContainer = $state();
-	let diceInitialized = $state(false);
 	let showExitModal = $state(false);
-
-	// Initialize dice box when container becomes available
-	$effect(() => {
-		if (diceContainer && !diceInitialized) {
-			diceInitialized = true;
-			initializeDiceBox(diceContainer);
-		}
-	});
 
 	function handleExitClick() {
 		showExitModal = true;
@@ -45,8 +34,10 @@
 
 	async function handleExitConfirm() {
 		showExitModal = false;
-		diceInitialized = false; // Reset so DiceBox reinitializes on next game
-		await exitGame();
+		// Navigate to home page to reset game state
+		// DiceBox persists in the layout so no reinitialization needed
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
+		goto('/');
 	}
 
 	function handleExitCancel() {
@@ -92,10 +83,7 @@
 	</div>
 {:else}
 	<div class="game-screen dc-game-bg">
-		<!-- Dice Box Background Layer - fills entire viewport -->
-		<div bind:this={diceContainer} id="dice-roller-container" class="dice-background-layer"></div>
-
-		<!-- UI Content Layer - on top of dice -->
+		<!-- UI Content Layer -->
 		<div class="ui-content-layer">
 			<!-- <div class="toolbar-area">
 				<Toolbar />
@@ -204,28 +192,9 @@
 		overflow: hidden;
 	}
 
-	/* Dice Background Layer - behind everything */
-	.dice-background-layer {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		z-index: 0;
-		pointer-events: none; /* Don't block clicks on UI elements */
-	}
-
-	/* Canvas from DiceBox should fill the container */
-	:global(.dice-background-layer > canvas) {
-		width: 100% !important;
-		height: 100% !important;
-		display: block;
-	}
-
-	/* UI Content Layer - on top of dice */
+	/* UI Content Layer */
 	.ui-content-layer {
 		position: relative;
-		z-index: 1;
 		align-items: center;
 		display: grid;
 		height: 100%;

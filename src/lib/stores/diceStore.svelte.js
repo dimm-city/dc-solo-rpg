@@ -22,13 +22,28 @@ export async function initializeDiceBox(container) {
 		return null;
 	}
 
-	if (isInitialized && diceBoxInstance) {
-		// Already initialized, just update container and resize
-		containerElement = container;
+	// Check if we need to reinitialize
+	const hasCanvas = container.querySelector('canvas') !== null;
+	const containerChanged = containerElement !== container;
+
+	if (isInitialized && diceBoxInstance && !containerChanged && hasCanvas) {
+		// Already initialized with same container and canvas exists, just resize
+		console.log('[diceStore] DiceBox already initialized, triggering resize');
 		setTimeout(() => {
 			window.dispatchEvent(new Event('resize'));
 		}, 500);
 		return diceBoxInstance;
+	}
+
+	// If there's an old canvas and we're reinitializing, clear it
+	// But only if we're actually reinitializing (not first time)
+	if (isInitialized || hasCanvas) {
+		console.log('[diceStore] Clearing stale canvas elements');
+		while (container.firstChild) {
+			container.removeChild(container.firstChild);
+		}
+		// Wait for DOM to update after clearing
+		await new Promise((resolve) => setTimeout(resolve, 100));
 	}
 
 	containerElement = container;
@@ -51,11 +66,42 @@ export async function initializeDiceBox(container) {
 		config.theme_customColorset = gameState.config.options.dice;
 	}
 
+	// Verify the container is properly attached to the DOM
+	if (!document.body.contains(container)) {
+		console.error('[diceStore] Container is not attached to DOM');
+		return null;
+	}
+
+	// Verify we can query the selector
+	const queriedContainer = document.querySelector('#dice-roller-container');
+	if (!queriedContainer) {
+		console.error('[diceStore] Cannot find #dice-roller-container in DOM');
+		return null;
+	}
+
+	if (queriedContainer !== container) {
+		console.warn('[diceStore] Queried container does not match provided container');
+	}
+
 	console.log('[diceStore] Initializing DiceBox with container:', container);
-	// DiceBox expects a CSS selector string, not a DOM element
-	diceBoxInstance = new DiceBox('#dice-roller-container', config);
-	await diceBoxInstance.initialize();
-	console.log('[diceStore] DiceBox initialized successfully');
+	console.log('[diceStore] Container dimensions:', {
+		width: container.clientWidth,
+		height: container.clientHeight,
+		offsetWidth: container.offsetWidth,
+		offsetHeight: container.offsetHeight
+	});
+
+	try {
+		// DiceBox expects a CSS selector string, not a DOM element
+		diceBoxInstance = new DiceBox('#dice-roller-container', config);
+		await diceBoxInstance.initialize();
+		console.log('[diceStore] DiceBox initialized successfully');
+	} catch (error) {
+		console.error('[diceStore] Failed to initialize DiceBox:', error);
+		diceBoxInstance = null;
+		isInitialized = false;
+		throw error;
+	}
 
 	// Call resizeWorld initially
 	diceBoxInstance.resizeWorld();
@@ -94,6 +140,26 @@ export function resizeDiceBox() {
 		// Trigger window resize event to let DiceBox handle it
 		window.dispatchEvent(new Event('resize'));
 	}
+}
+
+/**
+ * Reset the DiceBox instance
+ * Call this when exiting a game to ensure clean reinitialization
+ */
+export function resetDiceBox() {
+	console.log('[diceStore] Resetting DiceBox');
+
+	// Clear any existing canvas from the container
+	if (containerElement) {
+		while (containerElement.firstChild) {
+			containerElement.removeChild(containerElement.firstChild);
+		}
+	}
+
+	// Reset the references - DiceBox will be recreated on next init
+	diceBoxInstance = null;
+	isInitialized = false;
+	containerElement = null;
 }
 
 /**

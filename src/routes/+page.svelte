@@ -10,8 +10,9 @@
 	let { data } = $props();
 
 	let selectedGame = $state(null);
-	let showSplash = $state(true);
-	let showContent = $state(false);
+	// Check if splash was already shown in this session
+	let showSplash = $state(typeof window !== 'undefined' && !sessionStorage.getItem('splashShown'));
+	let showContent = $state(typeof window !== 'undefined' && sessionStorage.getItem('splashShown') === 'true');
 	let showModal = $state(false);
 
 	function selectGame(game) {
@@ -33,17 +34,13 @@
 
 	function handleSplashComplete() {
 		showSplash = false;
+		// Mark splash as shown for this session
+		sessionStorage.setItem('splashShown', 'true');
 		// Wait for splash fade-out to complete before showing content
 		setTimeout(() => {
 			showContent = true;
 		}, 850); // Wait for 800ms fade + 50ms buffer
 	}
-
-	// Show splash on mount and on navigation back to home
-	onMount(() => {
-		showSplash = true;
-		showContent = false;
-	});
 
 	// Game descriptions/subtitles for enhanced UI
 	const gameDescriptions = {
