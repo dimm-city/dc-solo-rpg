@@ -20,7 +20,7 @@
 			<span class="value">{gameState.player.name.toUpperCase()}</span>
 		</div>
 		<div>
-			<h6>{gameState.config?.title}</h6>
+			<h5>{gameState.config?.title}</h5>
 		</div>
 		<div class="info-segment">
 			<span class="label">{gameState.config?.labels.statusDisplayRoundText ?? 'ROUND:'}</span>
@@ -60,7 +60,7 @@
 			</div>
 		</div>
 
-		<div class="stat-item failure-stat" data-augmented-ui="tl-clip-y tr-clip br-clip-x border">
+		<div class="stat-item failure-stat" data-augmented-ui="l-rect tr-clip br-clip-x border">
 			<div class="stat-label">
 				{gameState.config?.labels?.failureCounters?.toUpperCase() ?? 'FAILURE'}
 			</div>
@@ -74,7 +74,7 @@
 			</div>
 		</div>
 
-		<div class="stat-item bonus-stat" data-augmented-ui="tl-clip-y tr-clip-x br-clip border">
+		<div class="stat-item bonus-stat" data-augmented-ui="tl-clip-y l-rect-y tr-clip-x br-clip-x border">
 			<div class="stat-label">LUCK</div>
 			<div class="stat-value">
 				<span class="current">{bonusPercent}</span><span class="divider">/</span><span class="max"
@@ -88,7 +88,7 @@
 
 		<div
 			class="stat-item success-stat"
-			data-augmented-ui="tl-clip-y tr-clip br-clip bl-clip border"
+			data-augmented-ui=" tl-clip-inset tr-2-clip-y br-clip bl-2-clip-x border"
 		>
 			<div class="stat-label">
 				{gameState.config?.labels?.successCounters?.toUpperCase() ?? 'SUCCESS'}
@@ -157,7 +157,7 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		padding: var(--space-md);
+		padding: var(--space-sm);
 		position: relative;
 
 		/* Glassmorphism Effect */
@@ -234,7 +234,7 @@
 	.stats-grid {
 		display: grid;
 		grid-template-columns: repeat(4, 1fr);
-		gap: var(--space-md);
+		gap: var(--space-sm);
 		width: 100%;
 	}
 
@@ -300,6 +300,7 @@
 		--aug-border-bg: linear-gradient(135deg, var(--color-cyber-magenta), var(--color-brand-yellow));
 		--aug-tl: 14px;  /* Slot ← receives Health's tab */
 		--aug-tr: 8px;   /* Gentle transition */
+		--aug-l: 8px;
 		--aug-br: 14px;  /* Strong tab → connects to Success (mobile) */
 
 		/* Enhanced Glow - animation removed */
@@ -331,10 +332,13 @@
 	.bonus-stat {
 		/* Augmented UI Configuration - Power source with rightward tab */
 		--aug-border-bg: linear-gradient(135deg, var(--color-brand-yellow), var(--color-neon-cyan));
-		--aug-tl: 14px;  /* Slot ← receives Health's tab (mobile) */
-		--aug-tr: 14px;  /* Strong tab → connects to Success */
+		--aug-tl: 10px;
+		  /* Slot ← receives Health's tab (mobile) */
+		--aug-l: 0px;
+		--aug-tr: 12px;  /* Strong tab → connects to Success */
 		--aug-br: 8px;   /* Gentle terminus */
-
+		padding: var(--space-sm);
+		padding-left: var(--space-md);
 		/* Enhanced Glow - animation removed */
 		box-shadow:
 			0 0 20px rgba(255, 215, 0, 0.6),
@@ -364,11 +368,12 @@
 	.success-stat {
 		/* Augmented UI Configuration - Terminus with receiving slot */
 		--aug-border-bg: linear-gradient(135deg, var(--color-neon-cyan), var(--color-brand-yellow));
-		--aug-tl: 14px;  /* Slot ← receives Bonus's tab (desktop) OR Failure's tab (mobile) */
+		--aug-tl: 8px;  /* Slot ← receives Bonus's tab (desktop) OR Failure's tab (mobile) */
 		--aug-tr: 8px;   /* Gentle endpoint */
-		--aug-br: 8px;   /* Gentle terminus */
-		--aug-bl: 8px;   /* Visual anchor */
+		--aug-br: 4px;   /* Gentle terminus */
+		--aug-bl: 4px;   /* Visual anchor */
 
+		padding: 1rem;
 		/* Enhanced Glow - animation removed */
 		box-shadow:
 			0 0 20px rgba(0, 255, 255, 0.6),

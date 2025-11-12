@@ -323,6 +323,9 @@ test('COMPREHENSIVE: Full game validation with logic verification', async ({ pag
 	// Start first round
 	await page.click('button:has-text("start")');
 	await page.waitForTimeout(1500);
+
+	// Wait for startRound screen to appear
+	await page.waitForSelector('[data-testid="screen-startRound"]', { timeout: 5000 });
 	trackScreen('RollForTasks');
 	await page.screenshot({ path: 'screenshots/test-04-start-round-1.png', fullPage: true });
 	console.log('✓ Round 1 started\n');
@@ -354,6 +357,9 @@ test('COMPREHENSIVE: Full game validation with logic verification', async ({ pag
 
 		// Roll for tasks
 		console.log(`\n🎲 ROLL FOR TASKS`);
+
+		// Wait for dice roller to become available
+		await page.waitForSelector('.dc-dice-roller-container', { timeout: 5000 });
 		await page.click('.dc-dice-roller-container');
 		await page.waitForTimeout(2000);
 
@@ -438,6 +444,7 @@ test('COMPREHENSIVE: Full game validation with logic verification', async ({ pag
 		});
 
 		// Success check (if Ace of Hearts revealed)
+		await page.waitForTimeout(500);
 		const hadSuccessCheck = await performSuccessCheck(roundNumber);
 		if (hadSuccessCheck) {
 			await page.screenshot({
