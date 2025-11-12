@@ -9,11 +9,12 @@
 	} from '../utils/instructionsStorage.js';
 
 	let currentView = $state('choice'); // 'choice' or 'instructions'
-	let instructionsSeen = $state(false);
+	let mounted = $state(false);
 
 	onMount(() => {
+		mounted = true;
 		// Check if user has already seen instructions
-		instructionsSeen = hasSeenInstructions();
+		const instructionsSeen = hasSeenInstructions();
 
 		if (instructionsSeen) {
 			// Skip directly to game intro overlay
@@ -25,15 +26,20 @@
 		currentView = 'instructions';
 	}
 
-	function handleSkipInstructions() {
-		// Mark as seen and proceed to game intro
+	function handleSkipOnce() {
+		// Skip to story without storing preference
+		transitionTo('showIntro');
+	}
+
+	function handleSkipAlways() {
+		// Skip to story and remember preference
 		markInstructionsAsSeen();
 		transitionTo('showIntro');
 	}
 
 	function handleInstructionsContinue() {
-		// Mark as seen and proceed to game intro
-		markInstructionsAsSeen();
+		// Don't mark as seen when continuing from instructions
+		// User chose to learn, so don't auto-skip next time
 		transitionTo('showIntro');
 	}
 
@@ -77,7 +83,7 @@
 					<span class="recommendation">Recommended for first-time players</span>
 				</button>
 
-				<button class="choice-card skip-card" onclick={handleSkipInstructions}>
+				<button class="choice-card skip-card" onclick={handleSkipOnce}>
 					<div class="icon-wrapper">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
@@ -94,8 +100,30 @@
 							<line x1="19" x2="19" y1="5" y2="19" />
 						</svg>
 					</div>
-					<h3>Skip Instructions</h3>
-					<p>I already know how to play, take me to the story</p>
+					<h3>Skip Once</h3>
+					<p>Skip to the story this time, show instructions again next time</p>
+					<span class="recommendation">Try the game first</span>
+				</button>
+
+				<button class="choice-card skip-always-card" onclick={handleSkipAlways}>
+					<div class="icon-wrapper">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							width="48"
+							height="48"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						>
+							<polygon points="5 4 15 12 5 20 5 4" />
+							<polygon points="13 4 23 12 13 20 13 4" />
+						</svg>
+					</div>
+					<h3>Skip Always</h3>
+					<p>I know how to play, never show instructions again</p>
 					<span class="recommendation">For experienced players</span>
 				</button>
 			</div>
@@ -324,6 +352,22 @@
 			inset 0 0 30px rgba(217, 70, 239, 0.1);
 	}
 
+	.skip-always-card {
+		border-color: rgba(255, 215, 0, 0.3);
+		box-shadow:
+			0 0 20px rgba(255, 215, 0, 0.2),
+			inset 0 0 20px rgba(255, 215, 0, 0.05);
+	}
+
+	.skip-always-card:hover,
+	.skip-always-card:focus {
+		border-color: var(--color-brand-yellow);
+		box-shadow:
+			0 0 30px rgba(255, 215, 0, 0.4),
+			0 0 60px rgba(255, 215, 0, 0.2),
+			inset 0 0 30px rgba(255, 215, 0, 0.1);
+	}
+
 	.icon-wrapper {
 		color: var(--color-neon-cyan);
 		filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.6));
@@ -332,6 +376,11 @@
 	.skip-card .icon-wrapper {
 		color: var(--color-cyber-magenta);
 		filter: drop-shadow(0 0 10px rgba(217, 70, 239, 0.6));
+	}
+
+	.skip-always-card .icon-wrapper {
+		color: var(--color-brand-yellow);
+		filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.6));
 	}
 
 	.choice-card h3 {
@@ -359,6 +408,10 @@
 
 	.skip-card .recommendation {
 		color: var(--color-cyber-magenta);
+	}
+
+	.skip-always-card .recommendation {
+		color: var(--color-brand-yellow);
 	}
 
 	@media (max-width: 768px) {
