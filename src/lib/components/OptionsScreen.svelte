@@ -3,7 +3,7 @@
 	import { gameState } from '../stores/gameStore.svelte.js';
 	import { startGame } from '../stores/gameActions.svelte.js';
 	import { Difficulty } from '../configuration/DifficultyLevels.js';
-	import AugmentedButton from './AugmentedButton.svelte';
+	import ContinueButton from './ContinueButton.svelte';
 
 	let { systemSettings = {} } = $props();
 
@@ -21,58 +21,54 @@
 	}
 </script>
 
-<div class="dc-start-screen-container">
-	<div class="options-content">
+<div class="options-screen">
+	<div class="options-container">
 		<h2>{gameState.config?.title ?? 'Game'}</h2>
 
 		<div class="options-form">
-			<!-- Dice Theme Selection -->
 			<div class="form-group">
 				<label for="diceSelect">Select a Dice Theme:</label>
-				<div class="select-wrapper" data-augmented-ui="tl-clip tr-clip-x br-clip border">
-					<select
-						id="diceSelect"
-						bind:value={options.dice}
-						aria-label="Select dice theme"
-						data-testid="dice-select"
-					>
-						{#each systemSettings?.availableDiceThemes as theme (theme.name)}
-							<option value={theme}>{theme.name}</option>
-						{/each}
-					</select>
-				</div>
+				<select
+					id="diceSelect"
+					class="augmented-select dice-select"
+					bind:value={options.dice}
+					aria-label="Select dice theme"
+					data-testid="dice-select"
+					data-augmented-ui="tl-clip tr-clip-x br-clip border"
+				>
+					{#each systemSettings?.availableDiceThemes as theme (theme.name)}
+						<option value={theme}>{theme.name}</option>
+					{/each}
+				</select>
 			</div>
 
-			<!-- Difficulty Selection -->
 			<div class="form-group">
 				<label for="difficulty">Select a Difficulty:</label>
-				<div class="select-wrapper" data-augmented-ui="tl-clip-x tr-clip br-clip-x border">
-					<select
-						id="difficulty"
-						bind:value={options.difficulty}
-						aria-label="Select difficulty level"
-						data-testid="difficulty-select"
-					>
-						{#each Difficulty.getEntries() as entry (entry.value)}
-							<option value={entry.value}>{entry.key?.replaceAll('_', ' ')}</option>
-						{/each}
-					</select>
-				</div>
+				<select
+					id="difficulty"
+					class="augmented-select difficulty-select"
+					bind:value={options.difficulty}
+					aria-label="Select difficulty level"
+					data-testid="difficulty-select"
+					data-augmented-ui="tl-clip-x tr-clip br-clip border"
+				>
+					{#each Difficulty.getEntries() as entry (entry.value)}
+						<option value={entry.value}>{entry.key?.replaceAll('_', ' ')}</option>
+					{/each}
+				</select>
 			</div>
 		</div>
 	</div>
 
-	<div class="button-container">
-		<AugmentedButton
+	<div class="button-bar dc-game-bg">
+		<ContinueButton
 			text="Cancel"
-			variant="secondary"
 			onclick={handleCancel}
 			testid="options-cancel-button"
 			ariaLabel="Cancel and return to home"
 		/>
-		<AugmentedButton
+		<ContinueButton
 			text="Start Game"
-			variant="primary"
 			onclick={setConfig}
 			testid="options-start-button"
 			ariaLabel="Start game with selected options"
@@ -81,350 +77,244 @@
 </div>
 
 <style>
-	/* ============================================
-	   MAIN CONTAINER
-	   ============================================ */
-	.dc-start-screen-container {
+	.options-screen {
 		display: flex;
+		flex-direction: column;
 		height: 100%;
-		flex-direction: column;
-		gap: var(--space-xl);
-		padding: clamp(var(--space-md), 3vw, var(--space-2xl));
-		justify-content: space-between;
-		animation: fadeInContent 0.6s ease-out;
+		min-height: 0;
 	}
 
-	@keyframes fadeInContent {
-		from {
-			opacity: 0;
-			transform: translateY(10px);
-		}
-		to {
-			opacity: 1;
-			transform: translateY(0);
-		}
+	.options-container {
+		flex: 1;
+		overflow-y: auto;
+		width: 100%;
+		max-width: 640px;
+		margin: 0 auto;
+		padding: clamp(var(--space-lg), 4vw, var(--space-2xl));
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2xl);
+		min-height: 0;
 	}
 
 	/* ============================================
-	   OPTIONS CONTENT
+	   TITLE
 	   ============================================ */
-	.options-content {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-xl);
-		flex: 1;
-		justify-content: center;
-	}
-
-	.dc-start-screen-container h2 {
+	h2 {
 		text-align: center;
 		margin: 0;
-		font-size: clamp(1.5rem, 3vw, 2.5rem);
+		font-size: clamp(1.75rem, 4vw, 2.5rem);
 		letter-spacing: var(--letter-spacing-widest);
+		color: var(--color-brand-yellow);
+		text-shadow: var(--text-glow-yellow);
 		position: relative;
-		padding-bottom: var(--space-md);
-		animation: fadeInContent 0.6s ease-out 0.1s backwards;
+		padding-bottom: var(--space-lg);
 	}
 
-	/* Subtle underline accent for h2 */
-	.dc-start-screen-container h2::after {
+	h2::after {
 		content: '';
 		position: absolute;
 		bottom: 0;
 		left: 50%;
 		transform: translateX(-50%);
-		width: min(200px, 35%);
-		height: 3px;
+		width: min(180px, 40%);
+		height: 2px;
 		background: linear-gradient(90deg, transparent, var(--color-cyber-magenta), transparent);
-		box-shadow: 0 0 10px var(--color-cyber-magenta);
+		box-shadow: 0 0 8px var(--color-cyber-magenta);
 	}
 
 	/* ============================================
-	   OPTIONS FORM
+	   FORM
 	   ============================================ */
 	.options-form {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-xl);
-		width: 100%;
-		max-width: 600px;
-		margin: 0 auto;
-		animation: fadeInContent 0.6s ease-out 0.2s backwards;
+		gap: var(--space-2xl);
 	}
 
 	.form-group {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-md);
+		gap: var(--space-sm);
 	}
 
-	/* ============================================
-	   LABELS
-	   ============================================ */
 	label {
-		display: block;
 		font-family: var(--font-display);
-		font-size: var(--text-base);
+		font-size: var(--text-sm);
 		font-weight: 700;
 		color: var(--color-brand-yellow);
 		text-transform: uppercase;
-		letter-spacing: var(--letter-spacing-wide);
-		text-shadow: var(--text-glow-yellow);
-		line-height: var(--line-height-tight);
+		letter-spacing: var(--letter-spacing-wider);
+		text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
 		margin: 0;
 	}
 
 	/* ============================================
-	   SELECT WRAPPER - AUGMENTED UI STYLING
+	   SELECT ELEMENTS
 	   ============================================ */
-	.select-wrapper {
-		position: relative;
+	.augmented-select {
 		width: 100%;
-
-		/* Augmented-UI Custom Properties */
-		--aug-border-all: 2px;
-		--aug-border-bg: linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta));
-		--aug-tl: 8px;
-		--aug-tr: 14px;
-		--aug-br: 14px;
-
-		/* Glassmorphism Background */
-		background: linear-gradient(135deg, rgba(10, 10, 20, 0.6), rgba(15, 15, 25, 0.5));
-		backdrop-filter: blur(16px);
-		-webkit-backdrop-filter: blur(16px);
-
-		/* Box Shadow with Neon Glow */
-		box-shadow:
-			0 0 15px rgba(0, 255, 255, 0.3),
-			0 0 30px rgba(0, 255, 255, 0.15),
-			inset 0 0 10px rgba(0, 255, 255, 0.1);
-
-		/* Transitions */
-		transition: all var(--transition-base);
-		will-change: box-shadow, transform;
-	}
-
-	/* Alternate gradient for second select */
-	.form-group:nth-child(2) .select-wrapper {
-		--aug-border-bg: linear-gradient(225deg, var(--color-cyber-magenta), var(--color-brand-yellow));
-		--aug-tl: 14px;
-		--aug-tr: 8px;
-		--aug-br: 14px;
-
-		box-shadow:
-			0 0 15px rgba(217, 70, 239, 0.3),
-			0 0 30px rgba(217, 70, 239, 0.15),
-			inset 0 0 10px rgba(217, 70, 239, 0.1);
-	}
-
-	/* Hover State */
-	.select-wrapper:hover {
-		transform: translateY(-2px);
-		box-shadow:
-			0 0 20px rgba(0, 255, 255, 0.5),
-			0 0 40px rgba(0, 255, 255, 0.25),
-			inset 0 0 15px rgba(0, 255, 255, 0.15);
-		filter: brightness(1.1);
-	}
-
-	.form-group:nth-child(2) .select-wrapper:hover {
-		box-shadow:
-			0 0 20px rgba(217, 70, 239, 0.5),
-			0 0 40px rgba(217, 70, 239, 0.25),
-			inset 0 0 15px rgba(217, 70, 239, 0.15);
-	}
-
-	/* Focus-Within State (when select is focused) */
-	.select-wrapper:focus-within {
-		--aug-border-all: 3px;
-		transform: translateY(-2px);
-		outline: 3px solid var(--color-brand-yellow);
-		outline-offset: 2px;
-		box-shadow:
-			0 0 25px rgba(255, 215, 0, 0.6),
-			0 0 50px rgba(255, 215, 0, 0.3),
-			inset 0 0 20px rgba(255, 215, 0, 0.15);
-	}
-
-	/* ============================================
-	   SELECT ELEMENT STYLING
-	   ============================================ */
-	select {
-		width: 100%;
-		padding: var(--space-md);
+		padding: var(--space-md) var(--space-lg);
+		padding-right: 48px;
 		font-family: var(--font-body);
 		font-size: var(--text-base);
 		font-weight: 600;
 		color: var(--color-text-primary);
-		background: transparent;
 		border: none;
 		cursor: pointer;
 		appearance: none;
-		position: relative;
-		z-index: 1;
-		letter-spacing: var(--letter-spacing-normal);
+		outline: none;
 		text-transform: uppercase;
-		line-height: var(--line-height-base);
+		letter-spacing: var(--letter-spacing-wide);
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-		/* Custom chevron indicator */
-		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%2300FFFF' d='M8 11L3 6h10z'/%3E%3C/svg%3E");
-		background-repeat: no-repeat;
-		background-position: right 16px center;
-		padding-right: 48px;
+		/* Background with subtle gradient */
+		background: linear-gradient(135deg, rgba(0, 20, 40, 0.4), rgba(10, 10, 30, 0.6));
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
 
-		/* Remove default styles */
-		outline: none;
-		transition: all var(--transition-fast);
+		/* Custom chevron */
+		background-image: linear-gradient(135deg, rgba(0, 20, 40, 0.4), rgba(10, 10, 30, 0.6)),
+			url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2300FFFF' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+		background-repeat: no-repeat, no-repeat;
+		background-position: 0 0, right var(--space-md) center;
 	}
 
-	/* Magenta chevron for second select */
-	.form-group:nth-child(2) .select-wrapper select {
-		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%23D946EF' d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+	/* Augmented-UI styling */
+	.dice-select {
+		--aug-border-all: 2px;
+		--aug-border-bg: linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta));
+		--aug-tl: 12px;
+		--aug-tr: 16px;
+		--aug-br: 12px;
+
+		box-shadow:
+			0 0 20px rgba(0, 255, 255, 0.25),
+			0 0 40px rgba(0, 255, 255, 0.1),
+			inset 0 0 20px rgba(0, 255, 255, 0.05);
 	}
 
-	select:hover {
+	.difficulty-select {
+		--aug-border-all: 2px;
+		--aug-border-bg: linear-gradient(135deg, var(--color-cyber-magenta), var(--color-brand-yellow));
+		--aug-tl: 16px;
+		--aug-tr: 12px;
+		--aug-br: 16px;
+
+		box-shadow:
+			0 0 20px rgba(217, 70, 239, 0.25),
+			0 0 40px rgba(217, 70, 239, 0.1),
+			inset 0 0 20px rgba(217, 70, 239, 0.05);
+
+		background-image: linear-gradient(135deg, rgba(0, 20, 40, 0.4), rgba(10, 10, 30, 0.6)),
+			url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23D946EF' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+	}
+
+	.augmented-select:hover {
+		--aug-border-all: 3px;
+		transform: translateY(-2px);
+		filter: brightness(1.15);
+	}
+
+	.dice-select:hover {
+		box-shadow:
+			0 0 30px rgba(0, 255, 255, 0.4),
+			0 0 60px rgba(0, 255, 255, 0.15),
+			inset 0 0 30px rgba(0, 255, 255, 0.08);
+	}
+
+	.difficulty-select:hover {
+		box-shadow:
+			0 0 30px rgba(217, 70, 239, 0.4),
+			0 0 60px rgba(217, 70, 239, 0.15),
+			inset 0 0 30px rgba(217, 70, 239, 0.08);
+	}
+
+	.augmented-select:focus {
+		--aug-border-all: 3px;
+		outline: 2px solid var(--color-brand-yellow);
+		outline-offset: 4px;
 		color: var(--color-brand-yellow);
-		text-shadow: 0 0 4px rgba(255, 215, 0, 0.3);
+		text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
 	}
 
-	select:focus {
-		outline: none;
-		color: var(--color-brand-yellow);
-		text-shadow: var(--text-glow-yellow);
-	}
-
-	/* Option Styling */
 	select option {
 		background: var(--color-bg-primary);
 		color: var(--color-text-primary);
 		padding: var(--space-sm);
-		font-weight: 600;
-		letter-spacing: normal;
 		text-transform: capitalize;
+		letter-spacing: normal;
 	}
 
 	/* ============================================
-	   STATUS MESSAGE
+	   BUTTONS
 	   ============================================ */
-	.status-message {
-		padding: var(--space-md);
-		background: linear-gradient(135deg, rgba(217, 70, 239, 0.2), rgba(255, 0, 0, 0.2));
-		border: 2px solid var(--color-cyber-magenta);
-		color: var(--color-text-primary);
-		text-align: center;
-		font-family: var(--font-display);
-		font-size: var(--text-sm);
-		text-transform: uppercase;
-		letter-spacing: var(--letter-spacing-wide);
-		box-shadow: 0 0 20px rgba(217, 70, 239, 0.4);
-		animation: pulse-glow 2s ease-in-out infinite;
-	}
-
-	@keyframes pulse-glow {
-		0%,
-		100% {
-			box-shadow: 0 0 20px rgba(217, 70, 239, 0.4);
-		}
-		50% {
-			box-shadow: 0 0 30px rgba(217, 70, 239, 0.6);
-		}
-	}
-
-	/* ============================================
-	   BUTTON CONTAINER
-	   ============================================ */
-	.button-container {
-		display: flex;
-		flex-direction: row;
-		justify-content: center;
-		align-items: center;
-		gap: var(--space-xl);
+	.button-bar {
+		flex-shrink: 0;
 		width: 100%;
-		flex-wrap: wrap;
-		animation: fadeInContent 0.6s ease-out 0.3s backwards;
+		display: flex;
+		gap: var(--space-sm);
+		padding: var(--space-md);
+		background: var(--color-bg-primary);
+		border-top: 2px solid var(--color-cyber-magenta);
+		position: relative;
+		z-index: 10;
+	}
+
+	.button-bar :global(.aug-button-wrapper) {
+		flex: 1;
+	}
+
+	.button-bar :global(.aug-button) {
+		width: 100%;
 	}
 
 	/* ============================================
-	   RESPONSIVE DESIGN
+	   RESPONSIVE
 	   ============================================ */
 	@media (max-width: 768px) {
-		.dc-start-screen-container {
-			padding: var(--space-lg);
-			gap: var(--space-lg);
+		.options-container {
+			padding: var(--space-xl) var(--space-lg);
+			gap: var(--space-xl);
 		}
 
 		.options-form {
-			gap: var(--space-lg);
-		}
-
-		.dc-start-screen-container h2 {
-			font-size: var(--text-2xl);
-		}
-
-		.button-container {
-			flex-direction: column;
-			gap: var(--space-md);
-		}
-
-		/* Reduce glow intensity on mobile for performance */
-		.select-wrapper {
-			box-shadow:
-				0 0 10px rgba(0, 255, 255, 0.25),
-				0 0 20px rgba(0, 255, 255, 0.1),
-				inset 0 0 8px rgba(0, 255, 255, 0.08);
-		}
-
-		.form-group:nth-child(2) .select-wrapper {
-			box-shadow:
-				0 0 10px rgba(217, 70, 239, 0.25),
-				0 0 20px rgba(217, 70, 239, 0.1),
-				inset 0 0 8px rgba(217, 70, 239, 0.08);
+			gap: var(--space-xl);
 		}
 	}
 
 	@media (max-width: 480px) {
-		.dc-start-screen-container {
-			padding: var(--space-md);
+		.options-container {
+			padding: var(--space-lg) var(--space-md);
 		}
 
-		.dc-start-screen-container h2 {
-			font-size: var(--text-xl);
+		h2 {
+			font-size: var(--text-2xl);
 		}
 
 		label {
 			font-size: var(--text-xs);
 		}
 
-		select {
+		.augmented-select {
 			font-size: var(--text-sm);
 			padding: var(--space-sm) var(--space-md);
+			padding-right: 40px;
 		}
 	}
 
 	/* ============================================
-	   ACCESSIBILITY - REDUCED MOTION
+	   ACCESSIBILITY
 	   ============================================ */
 	@media (prefers-reduced-motion: reduce) {
-		.dc-start-screen-container,
-		.dc-start-screen-container h2,
-		.options-form,
-		.button-container,
-		.status-message {
-			animation: none !important;
-		}
-
-		.select-wrapper:hover,
-		.select-wrapper:focus-within {
-			transition: none !important;
-			transform: none !important;
+		* {
+			animation-duration: 0.01ms !important;
+			transition-duration: 0.01ms !important;
 		}
 	}
 
-	/* ============================================
-	   FOCUS-VISIBLE ACCESSIBILITY
-	   ============================================ */
-	select:focus-visible {
-		outline: 3px solid var(--color-neon-cyan);
-		outline-offset: 2px;
+	.augmented-select:focus-visible {
+		outline: 2px solid var(--color-brand-yellow);
+		outline-offset: 4px;
 	}
 </style>

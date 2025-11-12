@@ -1,5 +1,6 @@
 <script>
 	import { fade, scale } from 'svelte/transition';
+	import { onMount } from 'svelte';
 	import AugmentedButton from './AugmentedButton.svelte';
 
 	/**
@@ -23,6 +24,12 @@
 		onCancel
 	} = $props();
 
+	let modalTarget = $state(null);
+
+	onMount(() => {
+		modalTarget = document.body;
+	});
+
 	function handleBackdropClick(event) {
 		if (event.target === event.currentTarget) {
 			onCancel();
@@ -36,49 +43,50 @@
 	}
 </script>
 
-{#if isOpen}
-	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-	<div
-		class="modal-backdrop"
-		onclick={handleBackdropClick}
-		onkeydown={handleKeydown}
-		role="dialog"
-		aria-modal="true"
-		aria-labelledby="modal-title"
-		transition:fade={{ duration: 200 }}
-	>
-		<div class="modal-content" transition:scale={{ duration: 300, start: 0.9 }}>
-			<div class="modal-header">
-				<h2 id="modal-title">{title}</h2>
-			</div>
+{#if isOpen && modalTarget}
+	{#key isOpen}
+		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+		<div
+			class="modal-backdrop"
+			onclick={handleBackdropClick}
+			onkeydown={handleKeydown}
+			role="dialog"
+			aria-modal="true"
+			aria-labelledby="modal-title"
+			transition:fade={{ duration: 200 }}
+		>
+			<div class="modal-content" transition:scale={{ duration: 300, start: 0.9 }}>
+				<div class="modal-header">
+					<h2 id="modal-title">{title}</h2>
+				</div>
 
-			<div class="modal-body">
-				<p>{message}</p>
-			</div>
+				<div class="modal-body">
+					<p>{message}</p>
+				</div>
 
-			<div class="modal-footer">
-				<AugmentedButton onclick={onCancel} text={cancelText} variant="secondary" />
-				<AugmentedButton onclick={onConfirm} text={confirmText} variant="primary" />
+				<div class="modal-footer">
+					<AugmentedButton onclick={onCancel} text={cancelText} variant="secondary" />
+					<AugmentedButton onclick={onConfirm} text={confirmText} variant="primary" />
+				</div>
 			</div>
 		</div>
-	</div>
+	{/key}
 {/if}
 
 <style>
 	.modal-backdrop {
-		position: fixed;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
+		position: fixed !important;
+		inset: 0 !important;
+		width: 100vw !important;
+		height: 100vh !important;
 		background: rgba(0, 0, 0, 0.85);
 		backdrop-filter: blur(8px);
 		-webkit-backdrop-filter: blur(8px);
-		display: flex;
+		display: flex !important;
 		align-items: center;
 		justify-content: center;
-		z-index: 9999;
-		padding: var(--space-lg);
+		z-index: 99999 !important;
+		padding: 1rem;
 	}
 
 	.modal-content {
@@ -165,9 +173,16 @@
 		padding: var(--space-lg);
 		border-top: 1px solid rgba(217, 70, 239, 0.3);
 		display: flex;
+		flex-wrap: wrap;
 		gap: var(--space-md);
 		justify-content: center;
+		align-items: stretch;
 		position: relative;
+	}
+
+	.modal-footer > :global(*) {
+		flex: 1 1 auto;
+		min-width: 120px;
 	}
 
 	.modal-footer::before {

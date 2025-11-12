@@ -1,12 +1,12 @@
 <script>
 	import { gameState } from '../stores/gameStore.svelte.js';
-
-	import { exitGame } from '../stores/gameActions.svelte.js';
-
 	import AugmentedButton from './AugmentedButton.svelte';
+
 	const successPercent = $derived(10 - gameState.tokens);
 	const bonusPercent = $derived(gameState.bonus);
 	const failurePercent = $derived(gameState.kingsRevealed);
+
+	let { onExitClick = () => {} } = $props();
 </script>
 
 <div class="status-display-container">
@@ -26,7 +26,7 @@
 			<span class="label">{gameState.config?.labels.statusDisplayRoundText ?? 'ROUND:'}</span>
 			<span class="value">{gameState?.round}</span>
 
-			<button class="dc-exit-button" onclick={exitGame} aria-label="Exit game">
+			<button class="dc-exit-button" onclick={onExitClick} aria-label="Exit game">
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					width="20"
