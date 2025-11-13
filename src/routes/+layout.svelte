@@ -2,7 +2,6 @@
 	import '../styles.css';
 	import { onNavigate } from '$app/navigation';
 	import { browser } from '$app/environment';
-	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { initializeDiceBox } from '$lib/stores/diceStore.svelte.js';
 
@@ -27,9 +26,10 @@
 		});
 	});
 
-	// Initialize DiceBox once when the app loads
-	onMount(() => {
-		if (diceContainer) {
+	// Initialize DiceBox when the container becomes visible
+	$effect(() => {
+		// Only initialize if showing dice and container exists
+		if (showDice && diceContainer) {
 			initializeDiceBox(diceContainer);
 		}
 	});
