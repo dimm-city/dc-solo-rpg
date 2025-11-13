@@ -3,6 +3,7 @@
 	import { fade } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { marked } from 'marked';
+	import "../../game.css";
 
 	import LoadScreen from './LoadScreen.svelte';
 	import GameOver from './GameOver.svelte';
