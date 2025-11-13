@@ -46,12 +46,6 @@
 		if (contentEl && portalEl && isOpen) {
 			portalEl.appendChild(contentEl);
 		}
-
-		return () => {
-			if (contentEl && portalEl && portalEl.contains(contentEl)) {
-				portalEl.removeChild(contentEl);
-			}
-		};
 	});
 
 	function handleBackdropClick(event) {
