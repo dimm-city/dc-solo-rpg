@@ -5,7 +5,12 @@
 	import ConfirmModal from '$lib/components/ConfirmModal.svelte';
 	import Splash from '$lib/components/Splash.svelte';
 	import NeuralBackground from '$lib/components/NeuralBackground.svelte';
-	import { hasSeenInstructions, markInstructionsAsSeen } from '$lib/utils/instructionsStorage.js';
+	import {
+		hasSeenInstructions,
+		markInstructionsAsSeen,
+		hasShownInstructionsInSession,
+		markInstructionsShownInSession
+	} from '$lib/utils/instructionsStorage.js';
 
 	/** @type {import('./$types').PageData} */
 	let { data } = $props();
@@ -23,7 +28,10 @@
 		if (splashAlreadyShown) {
 			// Splash already shown in this session, determine what to show
 			const instructionsSeen = hasSeenInstructions();
-			if (instructionsSeen) {
+			const instructionsShownInSession = hasShownInstructionsInSession();
+
+			// Skip instructions if either permanently skipped OR already shown this session
+			if (instructionsSeen || instructionsShownInSession) {
 				showContent = true;
 			} else {
 				showInstructionsChoice = true;
@@ -53,12 +61,13 @@
 		// Mark splash as shown for this session
 		sessionStorage.setItem('splashShown', 'true');
 
-		// Check if user has seen instructions
+		// Check if user has seen instructions or if already shown this session
 		const instructionsSeen = hasSeenInstructions();
+		const instructionsShownInSession = hasShownInstructionsInSession();
 
 		// Wait for splash fade-out to complete before showing next screen
 		setTimeout(() => {
-			if (instructionsSeen) {
+			if (instructionsSeen || instructionsShownInSession) {
 				// Skip directly to game selection
 				showContent = true;
 			} else {
@@ -69,11 +78,14 @@
 	}
 
 	function handleLearnToPlay() {
+		// Mark as shown for this session
+		markInstructionsShownInSession();
 		goto('/how-to');
 	}
 
 	function handleSkipOnce() {
-		// Skip to game selection without storing preference
+		// Skip to game selection without storing preference (but mark session as shown)
+		markInstructionsShownInSession();
 		showInstructionsChoice = false;
 		setTimeout(() => {
 			showContent = true;
@@ -81,8 +93,9 @@
 	}
 
 	function handleSkipAlways() {
-		// Skip to game selection and remember preference
+		// Skip to game selection and remember preference permanently
 		markInstructionsAsSeen();
+		markInstructionsShownInSession();
 		showInstructionsChoice = false;
 		setTimeout(() => {
 			showContent = true;

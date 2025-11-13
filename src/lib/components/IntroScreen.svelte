@@ -4,7 +4,12 @@
 	import { exitGame } from '../stores/gameActions.svelte.js';
 	import ContinueButton from './ContinueButton.svelte';
 	import ButtonBar from './ButtonBar.svelte';
-	import { hasSeenInstructions, markInstructionsAsSeen } from '../utils/instructionsStorage.js';
+	import {
+		hasSeenInstructions,
+		markInstructionsAsSeen,
+		hasShownInstructionsInSession,
+		markInstructionsShownInSession
+	} from '../utils/instructionsStorage.js';
 	import HowToPlay from './HowToPlay.svelte';
 
 	let currentView = $state('choice'); // 'choice' or 'instructions'
@@ -12,27 +17,32 @@
 
 	onMount(() => {
 		mounted = true;
-		// Check if user has already seen instructions
+		// Check if user has already seen instructions or if shown this session
 		const instructionsSeen = hasSeenInstructions();
+		const instructionsShownInSession = hasShownInstructionsInSession();
 
-		if (instructionsSeen) {
+		if (instructionsSeen || instructionsShownInSession) {
 			// Skip directly to game intro overlay
 			transitionTo('showIntro');
 		}
 	});
 
 	function handleLearnToPlay() {
+		// Mark as shown for this session
+		markInstructionsShownInSession();
 		currentView = 'instructions';
 	}
 
 	function handleSkipOnce() {
-		// Skip to story without storing preference
+		// Skip to story without storing preference (but mark session as shown)
+		markInstructionsShownInSession();
 		transitionTo('showIntro');
 	}
 
 	function handleSkipAlways() {
-		// Skip to story and remember preference
+		// Skip to story and remember preference permanently
 		markInstructionsAsSeen();
+		markInstructionsShownInSession();
 		transitionTo('showIntro');
 	}
 

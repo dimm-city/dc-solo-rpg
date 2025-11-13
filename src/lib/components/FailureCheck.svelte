@@ -1,7 +1,5 @@
 <script>
 	import { gameState } from '../stores/gameStore.svelte.js';
-
-	// Button logic moved to GameScreen toolbar
 </script>
 
 <div class="dc-failure-check-container">
@@ -12,7 +10,7 @@
 				{gameState.currentCard.card} of {gameState.currentCard.suit}
 			</small>
 		</div>
-	{/if}
+	{/if}	
 </div>
 
 <style>

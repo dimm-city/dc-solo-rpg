@@ -1,6 +1,5 @@
 <script>
 	import { gameState } from '../stores/gameStore.svelte.js';
-	import AugmentedButton from './AugmentedButton.svelte';
 	import HelpIcon from './HelpIcon.svelte';
 	import HelpModal from './HelpModal.svelte';
 
@@ -10,7 +9,6 @@
 
 	// Cards progress tracking
 	const cardsDrawn = $derived(gameState.cardsDrawn || 0);
-	const cardsRemaining = $derived(gameState.deck?.length || 52);
 	const totalCards = 52;
 	const progressPercent = $derived((cardsDrawn / totalCards) * 100);
 
@@ -31,7 +29,7 @@
 	<div
 		class="player-round-bar slide-down"
 		data-augmented-ui="tl-clip-x tr-2-clip-x br-clip bl-2-clip-x border"
-		style="animation-delay: 0.1s"
+		style="animation-delay: 0.3s"
 	>
 		<div class="info-segment">
 			<span class="label">PLAYER</span>
@@ -41,8 +39,10 @@
 			<h5>{gameState.config?.title}</h5>
 		</div>
 		<div class="info-segment">
-			<span class="value">{gameState?.round}</span>
-			<span class="label">{gameState.config?.labels.statusDisplayRoundText ?? 'ROUND'}</span>
+			<div>
+				<span class="value">{gameState?.round}</span>
+				<span class="label">{gameState.config?.labels.statusDisplayRoundText ?? 'ROUND'}</span>
+			</div>
 		</div>
 	</div>
 
@@ -71,7 +71,6 @@
 			<div
 				class="stat-item failure-stat slide-down"
 				data-augmented-ui="l-rect tr-clip br-clip-x border"
-				style="animation-delay: 0.35s"
 			>
 				<div class="stat-label">
 					{gameState.config?.labels?.failureCounters?.toUpperCase() ?? 'FAILURE'}
@@ -88,28 +87,24 @@
 			</div>
 		</div>
 		<div>
-			<!-- Digital Dice Readout -->
-			{#if gameState.diceRoll > 0}
-				<div
-					class="dice-readout slide-down"
-					data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
-					style="animation-delay: 0.5s"
-				>
-					<div class="dice-label">LAST ROLL</div>
-					<div class="dice-value">{gameState.diceRoll}</div>
-					<div class="dice-pips">
-						{#each Array(gameState.diceRoll) as _, i}
-							<span class="pip"></span>
-						{/each}
-					</div>
+			<div
+				class="dice-readout slide-down"
+				data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
+				style="animation-delay: 1.25s"
+			>
+				<div class="dice-label">LAST ROLL</div>
+				<div class="dice-value">{gameState.diceRoll}</div>
+				<div class="dice-pips">
+					{#each Array(gameState.diceRoll) as _, i}
+						<span class="pip"></span>
+					{/each}
 				</div>
-			{/if}
+			</div>
 		</div>
 		<div>
 			<div
 				class="stat-item bonus-stat slide-down"
 				data-augmented-ui="tl-clip-y l-rect-y tr-clip-x br-clip-x border"
-				style="animation-delay: 0.65s"
 			>
 				<div class="stat-label">
 					LUCK
@@ -128,7 +123,7 @@
 			<div
 				class="stat-item success-stat slide-down"
 				data-augmented-ui=" tl-clip-inset tr-2-clip-y br-clip bl-2-clip-x border"
-				style="animation-delay: 0.8s"
+				style="animation-delay: 0.5s"
 			>
 				<div class="stat-label">
 					{gameState.config?.labels?.successCounters?.toUpperCase() ?? 'SUCCESS'}
@@ -158,7 +153,7 @@
 		<div
 			class="progress-tracker slide-down"
 			data-augmented-ui="tl-2-clip-x tr-2-clip-x border"
-			style="animation-delay: 0.95s"
+			style="animation-delay: 0.5s"
 		>
 			<div class="progress-bar">
 				<div class="progress-fill" style="width: {progressPercent}%"></div>
@@ -198,8 +193,45 @@
 	}
 
 	.slide-down {
-		animation: slideDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+		animation: slideDown 0.5s ease-in forwards;
 		opacity: 0;
+	}
+
+	/* Slide Down Animation */
+	@keyframes slideDownAndLeft {
+		0% {
+			transform: translateY(-100%) translateX(100px);
+			opacity: 0;
+		}
+		25% {
+			opacity: 1;
+		}
+		50% {
+			transform: translateY(0) translateX(100px);
+			opacity: 1;
+		}
+		100% {
+			transform: translateY(0) translateX(0);
+			opacity: 1;
+		}
+	}
+	/* Slide Down Animation */
+	@keyframes slideDownAndRight {
+		0% {
+			transform: translateY(-100%) translateX(-100px);
+			opacity: 0;
+		}
+		25% {
+			opacity: 1;
+		}
+		50% {
+			transform: translateY(0) translateX(-100px);
+			opacity: 1;
+		}
+		100% {
+			transform: translateY(0) translateX(0);
+			opacity: 1;
+		}
 	}
 
 	/* Player/Round Info Bar - Augmented UI with Glassmorphism */
@@ -213,10 +245,11 @@
 		--aug-bl: 14px;
 
 		/* Layout */
-		display: flex;
-		justify-content: space-between;
+		display: grid;
 		align-items: center;
-		padding: var(--space-md);
+		grid-template-columns: 1fr auto 1fr;
+		padding-inline: var(--space-md);
+		padding-block: var(--space-sm);
 		position: relative;
 
 		/* Glassmorphism Effect */
@@ -262,9 +295,7 @@
 
 	.info-segment {
 		display: flex;
-		align-items: baseline;
 		gap: 0.5rem;
-		font-family: 'Courier New', monospace;
 		text-transform: uppercase;
 	}
 
@@ -286,8 +317,15 @@
 			0 0 10px rgba(255, 255, 255, 1),
 			0 0 20px rgba(255, 255, 255, 0.5);
 	}
-	.info-segment .label:first-of-type {
-		padding-inline-start: 0.5rem;
+	
+	.info-segment:last-of-type {
+		display: flex;
+		justify-content: flex-end;
+		& > div {
+			display: flex;
+			flex-direction: column;
+			gap: 0;
+		}
 	}
 	/* Stats Grid */
 	.stats-grid {
@@ -338,7 +376,7 @@
 		--aug-tl: 8px; /* Gentle entry */
 		--aug-tr: 14px; /* Strong tab → connects to Failure */
 		--aug-br: 14px; /* Strong tab → connects to Bonus (mobile) */
-		
+
 		/* Right side rectangle extension - creates puzzle tab */
 		--aug-r-extend1: 30px;
 		--aug-r-inset1: 12px;
@@ -390,6 +428,12 @@
 			inset 0 1px 0 rgba(255, 255, 255, 0.05);
 	}
 
+	.failure-stat.slide-down {
+		animation-delay: 0.35s;
+		animation-duration: 1s;
+		animation-timing-function: cubic-bezier(0.075, 0.82, 0.165, 1);
+		animation-name: slideDownAndLeft;
+	}
 	@keyframes failure-glow-pulse {
 		0%,
 		100% {
@@ -424,6 +468,12 @@
 			0 0 40px rgba(255, 215, 0, 0.3),
 			inset 0 0 15px rgba(255, 215, 0, 0.15),
 			inset 0 1px 0 rgba(255, 255, 255, 0.05);
+	}
+
+	.bonus-stat.slide-down {
+		animation-name: slideDownAndRight;
+		animation-delay: 1s;
+		animation-timing-function: ease-in;
 	}
 
 	@keyframes bonus-glow-pulse {
@@ -615,6 +665,7 @@
 		gap: var(--space-xs);
 		padding: var(--space-sm);
 		min-width: 80px;
+		aspect-ratio: 1;
 
 		background: linear-gradient(135deg, rgba(10, 10, 20, 0.9), rgba(15, 15, 25, 0.8));
 		backdrop-filter: blur(10px) saturate(150%);

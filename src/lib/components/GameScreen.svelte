@@ -277,6 +277,80 @@
 		}
 	}
 
+	/**
+	 * Handle clicks anywhere on the screen to advance the game
+	 * Only triggers if clicking on non-interactive elements
+	 */
+	function handleScreenClick(event) {
+		// Ignore clicks on buttons, inputs, textareas, and links
+		const target = event.target;
+		const isInteractive =
+			target.tagName === 'BUTTON' ||
+			target.tagName === 'INPUT' ||
+			target.tagName === 'TEXTAREA' ||
+			target.tagName === 'A' ||
+			target.closest('button') ||
+			target.closest('a') ||
+			target.closest('[role="button"]') ||
+			target.closest('.toolbar-button');
+
+		if (isInteractive) {
+			return;
+		}
+
+		// Ignore if modal is open
+		if (showExitModal) {
+			return;
+		}
+
+		// Trigger the appropriate action based on the current screen
+		switch (currentScreen) {
+			case 'showIntro':
+				transitionTo('rollForTasks');
+				break;
+			case 'startRound':
+				transitionTo('rollForTasks');
+				break;
+			case 'rollForTasks':
+				if (!rollForTasksButtonDisabled) {
+					handleRollForTasks();
+				}
+				break;
+			case 'drawCard':
+				if (!drawCardButtonDisabled) {
+					handleDrawCardClick();
+				}
+				break;
+			case 'failureCheck':
+				if (!failureCheckRolling) {
+					handleFailureCheck();
+				}
+				break;
+			case 'successCheck':
+				if (!successCheckRolling) {
+					handleSuccessCheck();
+				}
+				break;
+			case 'finalDamageRoll':
+				if (!finalDamageRolling) {
+					handleFinalDamageRoll();
+				}
+				break;
+			case 'log':
+			case 'finalLog':
+				if (journalSaved) {
+					if (gameState.gameOver) {
+						// Don't auto-advance on game over journal - let user choose restart or exit
+					} else {
+						handleJournalNext();
+					}
+				} else {
+					handleJournalSave();
+				}
+				break;
+		}
+	}
+
 	onMount(() => {
 		window.addEventListener('keydown', handleKeyPress);
 
@@ -319,6 +393,7 @@
 		class="dc-game-bg dc-intro-wrapper"
 		data-testid="screen-showIntro"
 		transition:fade={{ duration: TRANSITION_DURATION }}
+		onclick={handleScreenClick}
 	>
 		<div class="intro-story-container">
 			<div class="content">
@@ -353,7 +428,7 @@
 			<div class="status-display-area dc-fade-in" data-testid="status-display">
 				<StatusDisplay />
 			</div>
-			<div class="main-screen-area dc-table-bg">
+			<div class="main-screen-area dc-table-bg" onclick={handleScreenClick}>
 				{#key currentScreen}
 					{#if currentScreen == 'startRound'}
 						<div
