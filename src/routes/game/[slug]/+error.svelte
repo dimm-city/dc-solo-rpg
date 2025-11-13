@@ -12,7 +12,7 @@
 		<p class="error-details">{$page.error?.message}</p>
 
 		<div class="actions">
-			<AugmentedButton href="/" text="Browse Games" variant="primary" />
+			<AugmentedButton href="/" target="_self" text="Browse Games" variant="primary" />
 		</div>
 	</div>
 </div>

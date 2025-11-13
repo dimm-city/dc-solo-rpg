@@ -5,7 +5,6 @@
 	import { marked } from 'marked';
 
 	import LoadScreen from './LoadScreen.svelte';
-	import OptionsScreen from './OptionsScreen.svelte';
 	import GameOver from './GameOver.svelte';
 	import JournalEntry from './JournalEntry.svelte';
 	import SuccessCheck from './SuccessCheck.svelte';
@@ -377,14 +376,6 @@
 		transition:fade={{ duration: TRANSITION_DURATION }}
 	>
 		<LoadScreen />
-	</div>
-{:else if currentScreen == 'options'}
-	<div
-		class="dc-game-bg"
-		data-testid="screen-options"
-		transition:fade={{ duration: TRANSITION_DURATION }}
-	>
-		<OptionsScreen {systemSettings} />
 	</div>
 {:else if currentScreen == 'showIntro'}
 	<div
