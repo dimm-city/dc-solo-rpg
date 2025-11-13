@@ -1,6 +1,6 @@
 ---
-title: Ghost in the Machine
-subtitle: A Dimm City Solo Campaign
+title: Locked In TechD
+subtitle: Grab and go turned mad dash for the gate
 win-message: You slip through Drift Gate 7 as it cycles, the stolen neuralware finally synced to your consciousness. The augmerc's roar fades behind you as reality fractures and reforms. You're free—for now. But in Dimm City, freedom is just another word for "running faster."
 lose-message: The augmerc's chrome claws find you at last. As your vision fractures into static and the smell of burnt ozone fills your lungs, you realize the Machine always wins. The Tech District claims another ghost.
 ---
