@@ -445,7 +445,7 @@
 						</div>
 					{:else if currentScreen == 'drawCard'}
 						<div
-							class="dc-fade-in dc-screen-container"
+							class="dc-fade-in dc-screen-container dc-card-overlay-screen"
 							data-testid="screen-drawCard"
 							transition:fade={{ duration: TRANSITION_DURATION }}
 						>
@@ -868,6 +868,28 @@
 		box-sizing: border-box;
 		position: relative; /* Ensure content appears above neural background */
 		z-index: 1;
+	}
+
+	/* Card overlay screen - fills entire game area, scrollable, above content but below toolbar */
+	.dc-card-overlay-screen {
+		position: fixed !important;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		width: 100vw !important;
+		height: 100vh !important;
+		z-index: 50 !important; /* Above main content (z-index: 1) but below toolbar (z-index: 100) */
+		overflow-y: auto !important; /* Allow scrolling for long card content */
+		overflow-x: hidden;
+		padding: var(--space-md);
+		padding-bottom: calc(60px + var(--space-lg)); /* Extra padding for toolbar */
+		display: flex;
+		align-items: flex-start; /* Align to top for scrolling */
+		justify-content: center;
+		background: rgba(0, 0, 0, 0.5); /* Semi-transparent backdrop */
+		backdrop-filter: blur(4px);
+		-webkit-backdrop-filter: blur(4px);
 	}
 
 	.dc-table-bg {
