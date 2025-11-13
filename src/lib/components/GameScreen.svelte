@@ -844,5 +844,10 @@
 			margin: auto;
 			justify-content: stretch;
 		}
+
+		.toolbar-left,
+		.toolbar-right {
+			transform: translateY(-150px);
+		}
 	}
 </style>
