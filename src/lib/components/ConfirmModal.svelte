@@ -1,5 +1,5 @@
 <script>
-	import { fade, scale } from 'svelte/transition';
+	import { fade, fly } from 'svelte/transition';
 	import { onMount } from 'svelte';
 	import AugmentedButton from './AugmentedButton.svelte';
 	import ButtonBar from './ButtonBar.svelte';
@@ -45,33 +45,31 @@
 </script>
 
 {#if isOpen && modalTarget}
-	{#key isOpen}
-		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-		<div
-			class="modal-backdrop"
-			onclick={handleBackdropClick}
-			onkeydown={handleKeydown}
-			role="dialog"
-			aria-modal="true"
-			aria-labelledby="modal-title"
-			transition:fade={{ duration: 200 }}
-		>
-			<div class="modal-content" transition:scale={{ duration: 300, start: 0.9 }}>
-				<div class="modal-header">
-					<h2 id="modal-title">{title}</h2>
-				</div>
-
-				<div class="modal-body">
-					<p>{message}</p>
-				</div>
-
-				<ButtonBar bordered={true} gameBackground={false}>
-					<AugmentedButton onclick={onCancel} text={cancelText} variant="secondary" />
-					<AugmentedButton onclick={onConfirm} text={confirmText} variant="primary" />
-				</ButtonBar>
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+	<div
+		class="modal-backdrop"
+		onclick={handleBackdropClick}
+		onkeydown={handleKeydown}
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="modal-title"
+		transition:fade={{ duration: 200 }}
+	>
+		<div class="modal-content" transition:fly={{ y: -500, duration: 400, opacity: 1 }}>
+			<div class="modal-header">
+				<h2 id="modal-title">{title}</h2>
 			</div>
+
+			<div class="modal-body">
+				<p>{message}</p>
+			</div>
+
+			<ButtonBar bordered={true} gameBackground={false}>
+				<AugmentedButton onclick={onCancel} text={cancelText} variant="secondary" />
+				<AugmentedButton onclick={onConfirm} text={confirmText} variant="primary" />
+			</ButtonBar>
 		</div>
-	{/key}
+	</div>
 {/if}
 
 <style>

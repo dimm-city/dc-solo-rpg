@@ -16,13 +16,22 @@
 
 	// Help modal state
 	let showHelp = $state(null);
+
+	// Token visualization - create array of token states
+	const tokenStates = $derived(
+		Array.from({ length: 10 }, (_, i) => ({
+			index: i,
+			active: i < successPercent
+		}))
+	);
 </script>
 
 <div class="status-display-container">
 	<!-- Player and Round Info Bar with Augmented UI -->
 	<div
-		class="player-round-bar"
+		class="player-round-bar slide-down"
 		data-augmented-ui="tl-clip-x tr-2-clip-x br-clip bl-2-clip-x border"
+		style="animation-delay: 0.1s"
 	>
 		<div class="info-segment">
 			<span class="label">PLAYER</span>
@@ -38,7 +47,7 @@
 	</div>
 
 	<!-- Stats Grid -->
-	<div class="stats-grid">
+	<div class="stats-grid slide-down" style="animation-delay: 0.2s">
 		<div>
 			<div class="stat-item health-stat" data-augmented-ui="tl-clip tr-clip-x br-clip-x border">
 				<div class="stat-label">
@@ -71,7 +80,18 @@
 			</div>
 		</div>
 		<div>
-			<span>Last Roll</span>
+			<!-- Digital Dice Readout -->
+			{#if gameState.diceRoll > 0}
+				<div class="dice-readout" data-augmented-ui="tl-clip tr-clip br-clip bl-clip border">
+					<div class="dice-label">LAST ROLL</div>
+					<div class="dice-value">{gameState.diceRoll}</div>
+					<div class="dice-pips">
+						{#each Array(gameState.diceRoll) as _, i}
+							<span class="pip"></span>
+						{/each}
+					</div>
+				</div>
+			{/if}
 		</div>
 		<div>
 			<div
@@ -103,13 +123,17 @@
 						ariaLabel="Help: What are Success Tokens?"
 					/>
 				</div>
-				<div class="stat-value">
-					<span class="current">{successPercent}</span><span class="divider">/</span><span
-						class="max">10</span
-					>
-				</div>
-				<div class="stat-bar">
-					<div class="stat-fill success-fill" style="width: {(successPercent / 10) * 100}%"></div>
+				<div class="token-grid">
+					{#each tokenStates as token (token.index)}
+						<div
+							class="token-shape"
+							class:active={token.active}
+							class:disabled={!token.active}
+							style="--token-index: {token.index}"
+						>
+							<div class="token-inner"></div>
+						</div>
+					{/each}
 				</div>
 			</div>
 		</div>
@@ -117,7 +141,11 @@
 
 	<!-- Cards Remaining Progress Tracker -->
 	{#if cardsDrawn > 0}
-		<div class="progress-tracker" data-augmented-ui="tl-2-clip-x tr-2-clip-x border">
+		<div
+			class="progress-tracker slide-down"
+			data-augmented-ui="tl-2-clip-x tr-2-clip-x border"
+			style="animation-delay: 0.3s"
+		>
 			<div class="progress-bar">
 				<div class="progress-fill" style="width: {progressPercent}%"></div>
 			</div>
@@ -141,6 +169,23 @@
 		flex-direction: column;
 		gap: 0.5rem;
 		overflow: visible;
+	}
+
+	/* Slide Down Animation */
+	@keyframes slideDown {
+		from {
+			transform: translateY(-100%);
+			opacity: 0;
+		}
+		to {
+			transform: translateY(0);
+			opacity: 1;
+		}
+	}
+
+	.slide-down {
+		animation: slideDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+		opacity: 0;
 	}
 
 	/* Player/Round Info Bar - Augmented UI with Glassmorphism */
@@ -541,6 +586,135 @@
 		box-shadow: 0 0 10px #ffdd00;
 	}
 
+	/* Digital Dice Readout */
+	.dice-readout {
+		--aug-border-all: 2px;
+		--aug-border-bg: linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta));
+		--aug-tl: 6px;
+		--aug-tr: 6px;
+		--aug-br: 6px;
+		--aug-bl: 6px;
+
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-xs);
+		padding: var(--space-sm);
+		min-width: 80px;
+
+		background: linear-gradient(135deg, rgba(10, 10, 20, 0.9), rgba(15, 15, 25, 0.8));
+		backdrop-filter: blur(10px) saturate(150%);
+		-webkit-backdrop-filter: blur(10px) saturate(150%);
+
+		box-shadow:
+			0 0 20px rgba(0, 255, 255, 0.5),
+			0 0 40px rgba(217, 70, 239, 0.3),
+			inset 0 0 20px rgba(0, 255, 255, 0.15);
+	}
+
+	.dice-label {
+		font-size: var(--text-xs);
+		font-weight: bold;
+		text-transform: uppercase;
+		letter-spacing: 0.15em;
+		font-family: 'Courier New', monospace;
+		color: #00eeff;
+		text-shadow:
+			0 0 10px rgba(0, 238, 255, 1),
+			0 0 20px rgba(0, 238, 255, 0.6);
+	}
+
+	.dice-value {
+		font-size: 2rem;
+		font-weight: 900;
+		font-family: 'Courier New', monospace;
+		color: #ffee00;
+		text-shadow:
+			0 0 15px rgba(255, 238, 0, 1),
+			0 0 30px rgba(255, 238, 0, 0.6),
+			0 0 45px rgba(255, 238, 0, 0.3);
+		line-height: 1;
+	}
+
+	.dice-pips {
+		display: flex;
+		gap: 3px;
+		flex-wrap: wrap;
+		justify-content: center;
+		max-width: 60px;
+	}
+
+	.pip {
+		width: 6px;
+		height: 6px;
+		background: linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta));
+		border-radius: 50%;
+		box-shadow:
+			0 0 5px rgba(0, 255, 255, 0.8),
+			0 0 10px rgba(217, 70, 239, 0.4);
+		animation: pip-pulse 2s ease-in-out infinite;
+	}
+
+	@keyframes pip-pulse {
+		0%,
+		100% {
+			opacity: 1;
+			transform: scale(1);
+		}
+		50% {
+			opacity: 0.6;
+			transform: scale(0.9);
+		}
+	}
+
+	/* Token Grid */
+	.token-grid {
+		display: grid;
+		grid-template-columns: repeat(5, 1fr);
+		gap: var(--space-xs);
+		padding: var(--space-xs);
+	}
+
+	.token-shape {
+		width: 20px;
+		height: 20px;
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: all 0.3s ease;
+	}
+
+	.token-inner {
+		width: 100%;
+		height: 100%;
+		clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+		transition: all 0.3s ease;
+	}
+
+	.token-shape.active .token-inner {
+		background: linear-gradient(135deg, var(--color-brand-yellow), var(--color-neon-cyan));
+		box-shadow:
+			0 0 10px rgba(255, 238, 0, 0.8),
+			0 0 20px rgba(0, 255, 255, 0.4);
+		animation: token-glow 2s ease-in-out infinite;
+	}
+
+	.token-shape.disabled .token-inner {
+		background: rgba(100, 100, 100, 0.2);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+	}
+
+	@keyframes token-glow {
+		0%,
+		100% {
+			filter: brightness(1);
+		}
+		50% {
+			filter: brightness(1.3);
+		}
+	}
+
 	/* Tablet - 2 columns */
 	@media (max-width: 900px) {
 		.stats-grid {
@@ -563,6 +737,15 @@
 		.player-round-bar {
 			padding: var(--space-sm) var(--space-md);
 		}
+
+		.dice-value {
+			font-size: 1.5rem;
+		}
+
+		.token-shape {
+			width: 16px;
+			height: 16px;
+		}
 	}
 
 	/* Mobile - Maintain 2x2 grid like 900-600px */
@@ -583,7 +766,7 @@
 			gap: var(--space-xs);
 		}
 
-		/* Position Last Roll below stats, centered across both columns */
+		/* Position Dice Readout below stats, centered across both columns */
 		.stats-grid > div:nth-of-type(2) {
 			grid-column: 1 / -1;
 			grid-row: 2;
@@ -591,10 +774,29 @@
 			justify-content: center;
 			align-items: center;
 			padding: var(--space-xs);
-			font-size: 0.75rem;
-			color: rgba(255, 255, 255, 0.7);
-			text-transform: uppercase;
-			letter-spacing: 0.1em;
+		}
+
+		.dice-readout {
+			min-width: 60px;
+			padding: var(--space-xs) var(--space-sm);
+		}
+
+		.dice-label {
+			font-size: 0.6rem;
+		}
+
+		.dice-value {
+			font-size: 1.25rem;
+		}
+
+		.pip {
+			width: 4px;
+			height: 4px;
+		}
+
+		.dice-pips {
+			max-width: 40px;
+			gap: 2px;
 		}
 
 		/* Position third column (Bonus + Success) */
@@ -695,6 +897,17 @@
 			--aug-l-inset1: 8px;
 			margin-inline-start: -15px;
 			padding-inline-start: calc(var(--space-md) + var(--space-xs));
+		}
+
+		.token-grid {
+			grid-template-columns: repeat(5, 1fr);
+			gap: 2px;
+			padding: var(--space-xs);
+		}
+
+		.token-shape {
+			width: 12px;
+			height: 12px;
 		}
 	}
 
@@ -814,12 +1027,16 @@
 		.health-stat,
 		.failure-stat,
 		.bonus-stat,
-		.success-stat {
+		.success-stat,
+		.slide-down,
+		.pip,
+		.token-shape {
 			animation: none !important;
 		}
 
 		.stat-fill,
-		.progress-fill {
+		.progress-fill,
+		.token-inner {
 			transition: none !important;
 		}
 	}
