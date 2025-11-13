@@ -236,7 +236,7 @@ test.describe('V2 Gameplay Mechanics', () => {
 		while (!bonusObserved && roundsPlayed < maxRounds) {
 			roundsPlayed++;
 
-			// Roll for tasks
+			// Generate Number
 			await page.waitForSelector('.dc-dice-roller-container', { timeout: 5000 });
 			await page.click('.dc-dice-roller-container');
 			await page.waitForTimeout(2000);
@@ -408,7 +408,7 @@ test.describe('V2 Gameplay Mechanics', () => {
 				break;
 			}
 
-			// Roll for tasks
+			// Generate Number
 			await page.waitForSelector('.dc-dice-roller-container', { timeout: 5000 });
 			await page.click('.dc-dice-roller-container');
 			await page.waitForTimeout(2000);

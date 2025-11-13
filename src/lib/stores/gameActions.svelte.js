@@ -73,7 +73,7 @@ export const startRound = () => {
 };
 
 /**
- * Roll for tasks
+ * Generate Number
  * @returns {Promise<number>} Dice roll result
  */
 export async function rollForTasks() {

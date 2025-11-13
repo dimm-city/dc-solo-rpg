@@ -19,7 +19,7 @@ You must gather the necessary components and knowledge to repair your time machi
 
 ---
 
-# Card Deck
+## Card Deck
 
 ### Primary Success
 
