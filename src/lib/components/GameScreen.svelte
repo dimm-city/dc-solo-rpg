@@ -3,7 +3,7 @@
 	import { fade } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { marked } from 'marked';
-	import "../../game.css";
+	import '../../game.css';
 
 	import LoadScreen from './LoadScreen.svelte';
 	import GameOver from './GameOver.svelte';
@@ -447,9 +447,7 @@
 							<RollForTasks />
 						</div>
 					{:else if currentScreen == 'drawCard'}
-						<OverlayModal isVisible={true} zIndex={50}>
-							<DrawCard bind:this={drawCardRef} />
-						</OverlayModal>
+						<!-- DrawCard rendered in modal at root level -->
 					{:else if currentScreen == 'failureCheck'}
 						<div
 							class="dc-fade-in dc-screen-container"
@@ -475,9 +473,7 @@
 							<FinalDamageRoll />
 						</div>
 					{:else if currentScreen == 'finalLog' || currentScreen == 'log'}
-						<OverlayModal isVisible={true} zIndex={50}>
-							<JournalEntry bind:journalText={journal.text} />
-						</OverlayModal>
+						<!-- JournalEntry rendered in modal at root level -->
 					{:else}
 						<div transition:fade={{ duration: TRANSITION_DURATION }}>error: {currentScreen}</div>
 					{/if}
@@ -639,6 +635,16 @@
 
 <!-- Help Modal -->
 <HelpModal isOpen={showHelpModal} onClose={handleHelpClose} />
+
+<!-- Card Modal -->
+<OverlayModal isVisible={currentScreen === 'drawCard'} zIndex={50}>
+	<DrawCard bind:this={drawCardRef} />
+</OverlayModal>
+
+<!-- Journal Modal -->
+<OverlayModal isVisible={currentScreen === 'log' || currentScreen === 'finalLog'} zIndex={50}>
+	<JournalEntry bind:journalText={journal.text} />
+</OverlayModal>
 
 <style>
 	.game-screen {
