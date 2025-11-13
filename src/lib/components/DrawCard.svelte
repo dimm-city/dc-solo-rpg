@@ -37,13 +37,30 @@
 	}
 
 	/**
-	 * Expose button text for toolbar - derived from animation stage
+	 * Expose button text for toolbar - derived from animation stage and card state
 	 */
 	export function getButtonText() {
 		if (animationStage === 'idle') return 'PROCEED TO NEXT BYTE';
 		if (animationStage === 'anticipating' || animationStage === 'materializing')
 			return 'LOADING...';
-		if (animationStage === 'revealed') return 'CONTINUE';
+		if (animationStage === 'revealed') {
+			// Determine what happens next based on the card
+			const card = gameState.currentCard;
+			if (card) {
+				// Per Wretched & Alone SRD: A, 3, 5, 7, 9 are odd-ranked and trigger damage
+				const oddRanks = ['A', '3', '5', '7', '9'];
+				const isOdd = oddRanks.includes(card.card);
+
+				if (isOdd) {
+					return 'TAP CARD TO ROLL FOR DAMAGE';
+				} else if (gameState.cardsToDraw > 0) {
+					return 'TAP CARD TO DRAW NEXT';
+				} else {
+					return 'TAP CARD TO CONTINUE';
+				}
+			}
+			return 'CONTINUE';
+		}
 		return 'UPLOADING...';
 	}
 

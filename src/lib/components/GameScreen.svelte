@@ -895,61 +895,19 @@
 		position: relative;
 		width: 100%;
 		height: 100%;
-		overflow-y: auto; /* Allow scrolling if content overflows */
-		overflow-x: hidden;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: var(--space-md);
+		box-sizing: border-box;
 		z-index: 150; /* Above all toolbar elements (toolbar is 100, mobile toolbar items are 101) */
 	}
 
-	/* Atmospheric/ethereal dark cloud background with transparent edges */
-	.dc-journal-screen::before {
-		content: '';
-		position: absolute;
-		inset: 0;
-
-		/* Subtle dark background */
-		background: linear-gradient(
-			135deg,
-			rgba(10, 10, 25, 0.85),
-			rgba(15, 10, 30, 0.8),
-			rgba(10, 15, 25, 0.85)
-		);
-
-		/* Ethereal cloud-like mask with soft edges */
-		mask-image: radial-gradient(
-			ellipse 85% 90% at center,
-			rgba(0, 0, 0, 1) 0%,
-			rgba(0, 0, 0, 0.95) 40%,
-			rgba(0, 0, 0, 0.85) 60%,
-			rgba(0, 0, 0, 0.5) 80%,
-			rgba(0, 0, 0, 0.2) 92%,
-			transparent 100%
-		);
-		-webkit-mask-image: radial-gradient(
-			ellipse 85% 90% at center,
-			rgba(0, 0, 0, 1) 0%,
-			rgba(0, 0, 0, 0.95) 40%,
-			rgba(0, 0, 0, 0.85) 60%,
-			rgba(0, 0, 0, 0.5) 80%,
-			rgba(0, 0, 0, 0.2) 92%,
-			transparent 100%
-		);
-
-		/* Blur effect for content beneath */
-		backdrop-filter: blur(8px) saturate(130%);
-		-webkit-backdrop-filter: blur(8px) saturate(130%);
-		pointer-events: none;
-		z-index: 0;
-
-		/* Very subtle ethereal glow */
-		box-shadow:
-			inset 0 0 100px rgba(0, 255, 255, 0.04),
-			inset 0 0 50px rgba(217, 70, 239, 0.02);
-	}
-
 	.dc-journal-screen :global(.dc-journal-container) {
-		position: relative;
-		z-index: 1;
-		height: 100%; /* Fill available space */
+		width: 100%;
+		max-width: 900px;
+		height: 100%;
+		max-height: 100%;
 	}
 
 	/* Mobile responsiveness - Move exit and deck outside toolbar */

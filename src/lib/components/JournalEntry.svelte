@@ -7,7 +7,7 @@
 	const currentEvents = $derived(gameState.log.filter((l) => l.round === gameState.round));
 </script>
 
-<div class="dc-journal-container">
+<div class="dc-journal-container" data-augmented-ui="tl-clip tr-clip br-clip bl-clip border">
 	<div class="journal-header-area">
 		<h6>{gameState.config?.labels?.journalEntryHeader ?? 'Journal Entry'}</h6>
 		<blockquote>{gameState.config?.labels?.journalEntrySubHeader ?? 'Record your progress'}</blockquote>
@@ -26,15 +26,33 @@
 	.dc-journal-container {
 		display: grid;
 		height: 100%;
-		padding: var(--dc-default-padding);
+		padding: var(--space-xl);
 		grid-template-columns: 1fr;
 		grid-template-rows: 1fr auto;
-		row-gap: 0.5rem;
+		row-gap: var(--space-lg);
 		grid-auto-flow: row;
 		grid-template-areas:
 			'header-area'
 			'text-entry-area';
 		box-sizing: border-box;
+
+		/* Card styling with glassmorphism */
+		background: linear-gradient(135deg, rgba(10, 10, 20, 0.9), rgba(15, 15, 25, 0.85));
+		backdrop-filter: blur(16px);
+		-webkit-backdrop-filter: blur(16px);
+		border: var(--border-width-thick) solid var(--color-cyber-magenta);
+		box-shadow:
+			0 0 30px rgba(217, 70, 239, 0.3),
+			0 0 60px rgba(217, 70, 239, 0.15),
+			inset 0 0 30px rgba(217, 70, 239, 0.08);
+
+		/* Augmented UI */
+		--aug-border-all: var(--border-width-thick);
+		--aug-border-bg: linear-gradient(135deg, var(--color-cyber-magenta), var(--color-neon-cyan));
+		--aug-tl: 14px;
+		--aug-tr: 14px;
+		--aug-br: 14px;
+		--aug-bl: 14px;
 	}
 
 	.journal-header-area {
