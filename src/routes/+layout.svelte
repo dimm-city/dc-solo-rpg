@@ -53,18 +53,18 @@
 </div>
 
 <style>
-	/* Persistent DiceBox container - fills viewport, behind neural background */
+	/* Persistent DiceBox container - fills viewport, behind all content */
 	.dice-container {
 		position: fixed;
 		top: 0;
 		left: 0;
 		width: 100vw;
 		height: 100vh;
-		z-index: 5; /* Below neural background (10), above page content (1) */
+		z-index: -10; /* Behind everything - neural background and all content */
 		pointer-events: none; /* Don't block clicks */
 		background: transparent;
-		opacity: 0.7; /* Slightly transparent when behind neural background */
-		filter: brightness(0.9); /* Slightly dimmed for depth effect */
+		opacity: 0.6; /* More transparent when behind neural background */
+		filter: brightness(0.85); /* More dimmed for better depth effect */
 		transition:
 			opacity 1.5s ease,
 			filter 1.5s ease,

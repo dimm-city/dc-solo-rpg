@@ -74,6 +74,20 @@
 	}
 
 	/**
+	 * Auto-trigger card draw when entering idle state
+	 * This skips the "PROCEED TO NEXT BYTE" button click
+	 */
+	$effect(() => {
+		if (animationStage === 'idle') {
+			// Small delay to avoid immediate re-trigger and allow UI to settle
+			const timeout = setTimeout(() => {
+				onProceed();
+			}, 100);
+			return () => clearTimeout(timeout);
+		}
+	});
+
+	/**
 	 * Handle dismiss/continue - upload animation and notify parent
 	 */
 	async function onDismiss() {

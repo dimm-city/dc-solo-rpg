@@ -286,8 +286,8 @@
 		position: sticky;
 		top: 0;
 		z-index: 100;
-		display: grid;
-		grid-template-columns: 1fr auto 1fr;
+		display: flex;
+		justify-content: space-between;
 		align-items: center;
 		padding: var(--space-md) var(--space-lg);
 		background: rgba(10, 10, 20, 0.05);
@@ -296,7 +296,6 @@
 	}
 
 	.header-logo {
-		grid-column: 2;
 		display: flex;
 		flex-direction: row;
 		align-items: center;
@@ -332,8 +331,6 @@
 	}
 
 	.header-buttons {
-		grid-column: 3;
-		justify-self: end;
 		display: flex;
 		gap: var(--space-md);
 		align-items: center;
