@@ -1,7 +1,5 @@
 <script>
 	import { gameState } from '../stores/gameStore.svelte.js';
-	import HelpIcon from './HelpIcon.svelte';
-	import HelpModal from './HelpModal.svelte';
 	import { innerWidth } from 'svelte/reactivity/window';
 
 	const successPercent = $derived(10 - gameState.tokens);
@@ -12,9 +10,6 @@
 	const cardsDrawn = $derived(gameState.cardsDrawn || 0);
 	const totalCards = 52;
 	const progressPercent = $derived((cardsDrawn / totalCards) * 100);
-
-	// Help modal state
-	let showHelp = $state(null);
 
 	// Token visualization - create array of token states
 	const tokenStates = $derived(
@@ -97,7 +92,6 @@
 						<path d="M3.22 13H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27" />
 					</svg>
 					HEALTH
-					<HelpIcon onclick={() => (showHelp = 'tower')} ariaLabel="Help: What is Health?" />
 				</div>
 				<div class="stat-value">
 					<span class="current">{gameState.tower}</span><span class="divider">/</span><span
@@ -131,7 +125,6 @@
 						<circle cx="9" cy="12" r="1" />
 					</svg>
 					{gameState.config?.labels?.failureCounters?.toUpperCase() ?? 'FAILURE'}
-					<HelpIcon onclick={() => (showHelp = 'kings')} ariaLabel="Help: What are Kings?" />
 				</div>
 				<div class="stat-value">
 					<span class="current">{failurePercent}</span><span class="divider">/</span><span
@@ -202,7 +195,6 @@
 						<circle cx="4" cy="20" r="2" />
 					</svg>
 					LUCK
-					<HelpIcon onclick={() => (showHelp = 'bonus')} ariaLabel="Help: What is Luck?" />
 				</div>
 				<div class="stat-value">
 					<span class="current">{bonusPercent}</span><span class="divider">/</span><span class="max"
@@ -240,10 +232,6 @@
 						<path d="M6 9H4.5a1 1 0 0 1 0-5H6" />
 					</svg>
 					{gameState.config?.labels?.successCounters?.toUpperCase() ?? 'SUCCESS'}
-					<HelpIcon
-						onclick={() => (showHelp = 'tokens')}
-						ariaLabel="Help: What are Success Tokens?"
-					/>
 				</div>
 				<div class="token-grid">
 					{#each tokenStates as token (token.index)}
@@ -280,9 +268,6 @@
 		</div>
 	{/if}
 </div>
-
-<!-- Help Modal -->
-<HelpModal isOpen={showHelp !== null} helpKey={showHelp} onClose={() => (showHelp = null)} />
 
 <style>
 	.status-display-container {

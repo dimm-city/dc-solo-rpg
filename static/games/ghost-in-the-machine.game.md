@@ -15,19 +15,19 @@ You're a fox—rust-red fur matted with grime, one eye replaced with a salvaged 
 
 Then you saw it: an augmerc passed out in an alley behind Last Bite, fresh off a bad batch of synthetic euphoria. A wolf, massive and chrome-plated, with military-grade neuralware jutting from his skull like a crown of thorns. The kind of augmentation that costs more than you'd see in ten stretches. The kind that screams corporate enforcer, black ops, the sort of merc who disappears people for asking the wrong questions.
 
-You didn't think. You just *moved*.
+You didn't think. You just _moved_.
 
 ## What Happened
 
 **The heist took thirty ticks. The consequences have lasted three days.**
 
-Your claws worked fast, disconnecting the neuralware module from the augmerc's cerebral socket. The tech was still warm, pulsing with bioelectric rhythm. You could feel it humming—not just machinery, but something alive, something *aware*. The moment you touched it, visions flooded your mind: classified security protocols, corporate kill-lists, encrypted channels to people who don't officially exist.
+Your claws worked fast, disconnecting the neuralware module from the augmerc's cerebral socket. The tech was still warm, pulsing with bioelectric rhythm. You could feel it humming—not just machinery, but something alive, something _aware_. The moment you touched it, visions flooded your mind: classified security protocols, corporate kill-lists, encrypted channels to people who don't officially exist.
 
 You pocketed the hardware and ran.
 
 He woke up screaming. You heard it six blocks away—a howl of rage that made the neon signs flicker and crack. The sound of chrome claws scraping concrete. The Tech District's surveillance grid lit up like a wildfire, every camera swiveling to track your signature. Corporate security drones began their patrol cycles early. Lockdown protocols activated in sectors you'd never even heard of.
 
-The augmerc wants his property back. No—he wants *you* back. Wants to peel your skull open and retrieve what you stole, then leave your carcass in the gutter as a message. The neuralware you grabbed isn't just expensive. It's *connected*—linked to systems you don't understand, encryptions you can barely perceive. Every tick you keep it, it digs deeper into your nervous system, showing you things you were never meant to see.
+The augmerc wants his property back. No—he wants _you_ back. Wants to peel your skull open and retrieve what you stole, then leave your carcass in the gutter as a message. The neuralware you grabbed isn't just expensive. It's _connected_—linked to systems you don't understand, encryptions you can barely perceive. Every tick you keep it, it digs deeper into your nervous system, showing you things you were never meant to see.
 
 Corporate kill-squads are mobilizing. The merc's connections run deep—deeper than the transit tunnels, deeper than the data-stacks in the server farms. You've got no allies, no safe houses, no exit strategy. Just the clothes on your back, the stolen tech burning against your ribs, and the growing certainty that the walls are closing in.
 
@@ -37,7 +37,7 @@ The Etherwave Transit Hub is your only shot. Drift Gate 7 cycles every few short
 
 **Reach Drift Gate 7 and escape the Tech District before the augmerc catches you or the stolen neuralware kills you from the inside.**
 
-The neuralware is integrating with your nervous system—you can feel it worming through your synapses like ice-cold fingers. Every shorty brings new capabilities, new visions, new *pain*. You're seeing through security cameras now, hearing encrypted chatter in languages you don't speak, tasting ozone when data-packets route through nearby servers.
+The neuralware is integrating with your nervous system—you can feel it worming through your synapses like ice-cold fingers. Every shorty brings new capabilities, new visions, new _pain_. You're seeing through security cameras now, hearing encrypted chatter in languages you don't speak, tasting ozone when data-packets route through nearby servers.
 
 But integration takes time, and time is the one thing you don't have. The augmerc is hunting. The corporations want you silenced. The Tech District's infrastructure is turning against you, every terminal and transit-pod a potential trap.
 
@@ -51,11 +51,11 @@ Survive. Adapt. Escape. In Dimm City, that's the only prayer that ever gets answ
 
 **The neuralware finally syncs—you see everything, and you know exactly how to disappear.**
 
-The pain stops. Not gradually, not with mercy—it just *ends*, like a switch flipping in your brain. The stolen tech completes its integration, and suddenly you're not fighting it anymore. You're *using* it.
+The pain stops. Not gradually, not with mercy—it just _ends_, like a switch flipping in your brain. The stolen tech completes its integration, and suddenly you're not fighting it anymore. You're _using_ it.
 
 Every camera in the Tech District becomes your eyes. Every locked door whispers its override codes. You see the patrol patterns of security drones mapped in three-dimensional space, their predictable routes glowing like neon threads. The Etherwave Transit Hub's schedule unfolds before you—Drift Gate 7 will cycle in exactly forty-three ticks, and you know precisely which maintenance tunnel to use, which guard to avoid, which moment of electromagnetic interference will blank the sensors long enough for you to slip through.
 
-The augmerc is three blocks away, his chrome bulk tearing through a crowd of late-shift factory workers. You can hear his frustrated snarl through a nearby speaker-grill. He's fast, but you're faster now. You're not just running anymore—you're *phasing*, slipping through reality's cracks like you were born to it.
+The augmerc is three blocks away, his chrome bulk tearing through a crowd of late-shift factory workers. You can hear his frustrated snarl through a nearby speaker-grill. He's fast, but you're faster now. You're not just running anymore—you're _phasing_, slipping through reality's cracks like you were born to it.
 
 Drift Gate 7 shimmers ahead, its reality-distortion field making the air taste like copper and starlight. You run.
 
@@ -77,7 +77,7 @@ Red targeting lasers paint the walls around you. Somewhere above, you hear the w
 
 **The neuralware rejects violently—your body fights the foreign technology.**
 
-Your vision fractures into static. Blood—your blood—drips from your nose, tasting of copper and burnt circuits. The stolen tech is trying to rewrite your nervous system, and your body is *screaming* its refusal.
+Your vision fractures into static. Blood—your blood—drips from your nose, tasting of copper and burnt circuits. The stolen tech is trying to rewrite your nervous system, and your body is _screaming_ its refusal.
 
 Your limbs move wrong, jerking like a puppet with tangled strings. The optic implant in your left eye flares white-hot, and for a horrible moment you can see through walls, through flesh, through the fundamental code of reality itself. Then it all goes dark except for error messages scrolling endlessly across your retinas.
 
@@ -115,9 +115,9 @@ His claws extend—military-grade adamantine, designed to tear through armored v
 
 **You find a reality glitch at exactly the right moment—danger phases right through you.**
 
-The wall *fractures*. Not physically—it's still there, still solid rust-stained concrete. But you can see where it's *wrong*, where the code stutters and skips. An etherlock's gift, finally useful for more than madness.
+The wall _fractures_. Not physically—it's still there, still solid rust-stained concrete. But you can see where it's _wrong_, where the code stutters and skips. An etherlock's gift, finally useful for more than madness.
 
-You press your palm against the impossible space and *push*.
+You press your palm against the impossible space and _push_.
 
 Reality bends. For one dizzy moment you're in two places at once, your consciousness splitting like corrupted data. Then you're through, standing on the other side of what should have been solid matter. Behind you, you hear your pursuers crash into the wall at full speed, confusion in their shouts.
 
@@ -129,11 +129,11 @@ The glitch fades, sealing behind you. Your head pounds and your mouth tastes lik
 
 **The neuralware shows you a way to undo what seemed irreversible.**
 
-The stolen tech pulses against your ribs, and suddenly you *see* it—a cascade of probability threads spreading out from this moment like a spider's web. The augmerc's network, the corporate lockdown, the security protocols—they're all just *code*, and code can be rewritten.
+The stolen tech pulses against your ribs, and suddenly you _see_ it—a cascade of probability threads spreading out from this moment like a spider's web. The augmerc's network, the corporate lockdown, the security protocols—they're all just _code_, and code can be rewritten.
 
 Your claws move without conscious thought, interfacing with a nearby terminal. The neuralware floods your mind with access keys you shouldn't have, backdoors you shouldn't know exist. You're rewriting recent history in the district's security logs, creating just enough chaos and contradiction to reset their response protocols.
 
-Suddenly, you have a second chance. The catastrophe you thought was locked in stone starts to *unravel*, threads of causality rewinding like tape in reverse. Not completely—you can't undo everything. But you can buy yourself breathing room.
+Suddenly, you have a second chance. The catastrophe you thought was locked in stone starts to _unravel_, threads of causality rewinding like tape in reverse. Not completely—you can't undo everything. But you can buy yourself breathing room.
 
 The Machine may always win eventually. But not today. Not this tick.
 
@@ -145,7 +145,7 @@ The Machine may always win eventually. But not today. Not this tick.
 
 You're crouched in an abandoned server farm, surrounded by the hum of dying machines and the smell of burnt insulation. Through a cracked window, you can see the Tech District sprawled out below: a circuit board of light and shadow, beauty and brutality intertwined.
 
-This city doesn't love you. Never has, never will. But it's *yours* in a way the augmerc will never understand. Every DimmCitz hustling to survive, every wirephreak pulling impossible jobs just to eat—they're your people, even if you'll never speak to them.
+This city doesn't love you. Never has, never will. But it's _yours_ in a way the augmerc will never understand. Every DimmCitz hustling to survive, every wirephreak pulling impossible jobs just to eat—they're your people, even if you'll never speak to them.
 
 You close your eyes and let the neuralware show you what it knows: a vision of freedom, of transit gates and open sky, of possibilities beyond this chrome-plated nightmare. It's not hope, exactly. Hope is for shorties who haven't lived in Dimm City long enough.
 
@@ -161,7 +161,7 @@ The air fills with the whine of servo-motors and targeting computers. Six drones
 
 You smell ozone building as capacitors charge. The first shot scorches the air where you were standing half a tick ago. The concrete wall explodes in a shower of superheated debris. Your ears ring. Your fur smokes.
 
-They're herding you toward the killbox. You need to move *now*.
+They're herding you toward the killbox. You need to move _now_.
 
 ---
 
@@ -169,9 +169,9 @@ They're herding you toward the killbox. You need to move *now*.
 
 **The augmerc's scent is getting closer—you can hear his chrome claws scraping concrete.**
 
-That sound. Scrape-click-scrape-click, methodical and patient. He's not rushing anymore. He knows the district is locked down, knows you're running out of places to hide. He's *savoring* this.
+That sound. Scrape-click-scrape-click, methodical and patient. He's not rushing anymore. He knows the district is locked down, knows you're running out of places to hide. He's _savoring_ this.
 
-You catch his scent on the recycled air: gun oil, blood, the acrid chemical smell of combat drugs. Your instincts scream *predator*, and every fiber of your being wants to curl up and hide. But there's nowhere to hide anymore.
+You catch his scent on the recycled air: gun oil, blood, the acrid chemical smell of combat drugs. Your instincts scream _predator_, and every fiber of your being wants to curl up and hide. But there's nowhere to hide anymore.
 
 The scraping stops. Silence, somehow worse than the sound. Then his voice, echoing from somewhere too close: "I can smell your fear, little fox."
 
@@ -257,7 +257,7 @@ Jump and probably die. Stay and definitely die. Dimm City doesn't believe in goo
 
 You're getting weaker. You can feel it in your bones, in the way your legs shake with each step. The neuralware is hungry—feeding on your bioelectrical energy, burning through your reserves faster than your body can replenish them.
 
-Your vision tunnels. Your coordination fails. You collapse against a wall, gasping, tasting copper and exhaustion. The stolen tech wasn't designed for an organic host. It's *killing* you, and there's nothing you can do but keep running and hope you reach the gate before your body gives out entirely.
+Your vision tunnels. Your coordination fails. You collapse against a wall, gasping, tasting copper and exhaustion. The stolen tech wasn't designed for an organic host. It's _killing_ you, and there's nothing you can do but keep running and hope you reach the gate before your body gives out entirely.
 
 ---
 
@@ -265,7 +265,7 @@ Your vision tunnels. Your coordination fails. You collapse against a wall, gaspi
 
 **Electromagnetic pulse fries nearby systems—including your only navigation aid.**
 
-The EMP wave rolls through the district like invisible thunder. Every screen dies. Every terminal goes dark. The neuralware in your chest *screams* a warning half a tick before the pulse hits, giving you just enough time to dive behind a dumpster.
+The EMP wave rolls through the district like invisible thunder. Every screen dies. Every terminal goes dark. The neuralware in your chest _screams_ a warning half a tick before the pulse hits, giving you just enough time to dive behind a dumpster.
 
 When you emerge, your stolen map data is corrupted, your waypoints erased. You're lost in the Tech District's labyrinth with no guides, no landmarks, just your fading memory of which way might lead to the transit hub.
 
@@ -289,7 +289,7 @@ Somewhere ahead should be clean air. Somewhere. But the fog is thickening, and y
 
 **Cyber-psychosis episode—the neuralware makes you see threats that aren't there.**
 
-The walls are bleeding code. You can see it dripping down in luminescent streams, pooling on the floor in incomprehensible glyphs. The people passing by aren't people anymore—they're *things*, hollow shells filled with crawling static.
+The walls are bleeding code. You can see it dripping down in luminescent streams, pooling on the floor in incomprehensible glyphs. The people passing by aren't people anymore—they're _things_, hollow shells filled with crawling static.
 
 You know it's not real. The neuralware is glitching, corrupting your sensory input. But knowing doesn't help when your claws are out and you're backing into a corner, convinced that the entire world has become hostile.
 
@@ -315,7 +315,7 @@ You could try to bluff through. You could try to run. Neither option ends well. 
 
 You round the corner and realize your mistake instantly. It's too quiet. The normal sounds of the Tech District—the hum of machinery, the chatter of crowds, the endless advertisements—they're all absent.
 
-Then you see him. The wolf, sitting perfectly still in the center of the intersection, chrome gleaming under flickering neon. He's been waiting for you. He *knew* you'd come this way.
+Then you see him. The wolf, sitting perfectly still in the center of the intersection, chrome gleaming under flickering neon. He's been waiting for you. He _knew_ you'd come this way.
 
 "Hello, little fox," he rumbles. "End of the line."
 
@@ -343,7 +343,7 @@ They're cats—Entertainment District muscle who've wandered into Tech territory
 
 "You're the wirephreak who doxxed the Neon Lords," she hisses. "Boss wants your tail as a trophy."
 
-You're not. You've never even *seen* the Neon Lords. But these shorties aren't interested in explanations—they're interested in proving themselves. And you're in no condition to fight your way through three augmented gang enforcers.
+You're not. You've never even _seen_ the Neon Lords. But these shorties aren't interested in explanations—they're interested in proving themselves. And you're in no condition to fight your way through three augmented gang enforcers.
 
 ---
 
@@ -351,7 +351,7 @@ You're not. You've never even *seen* the Neon Lords. But these shorties aren't i
 
 **You find an abandoned wirephreak safe house—momentary shelter.**
 
-The door is hidden behind a glitching hologram ad, exactly where your gut told you to look. Inside: a cramped space that smells like old coffee and burnt circuits, barely large enough to turn around in. But it's *safe*, at least for now.
+The door is hidden behind a glitching hologram ad, exactly where your gut told you to look. Inside: a cramped space that smells like old coffee and burnt circuits, barely large enough to turn around in. But it's _safe_, at least for now.
 
 Someone left supplies: a half-full canteen of clean water, energy bars that taste like cardboard and optimism, a charging port that still works. You drink. You eat. You let yourself breathe for the first time in shorties.
 
@@ -379,7 +379,7 @@ You don't even know her name. But you owe her your life.
 
 **You discover a forgotten maintenance passage—a shortcut toward the transit hub.**
 
-The vent grate is rusted nearly through, easy to pry open. Beyond: darkness and the smell of machine oil, but also a current of air that suggests this tunnel goes *somewhere*.
+The vent grate is rusted nearly through, easy to pry open. Beyond: darkness and the smell of machine oil, but also a current of air that suggests this tunnel goes _somewhere_.
 
 You squeeze through, your lean fox frame barely fitting. The passage is cramped and filthy, but it runs parallel to the main thoroughfare—away from checkpoints, away from cameras. Your neuralware flickers, showing you a ghostly map: this passage connects to the transit hub's sub-basement.
 
@@ -415,7 +415,7 @@ The pain recedes to a dull roar. It's not healing—not really. But it's enough 
 
 **The neuralware reveals a hidden backdoor in the security system.**
 
-The revelation comes like lightning: a cascade of data showing you something the system's designers never intended anyone to see. A *flaw*. A beautiful, exploitable flaw in the security architecture.
+The revelation comes like lightning: a cascade of data showing you something the system's designers never intended anyone to see. A _flaw_. A beautiful, exploitable flaw in the security architecture.
 
 You can't use it yet—the timing has to be perfect. But you know it's there now, waiting for the right moment. A secret weapon against the Machine that thinks it owns you.
 
@@ -469,7 +469,7 @@ The security panel looks impenetrable—military-grade encryption, biometric loc
 
 But you're not normal anymore. You've got stolen corporate neuralware integrated with your nervous system. And you remember something from years ago: an exploit, ancient and probably patched, but maybe, just maybe...
 
-Your claws interface with the panel. The neuralware floods your consciousness with raw data. And the ancient exploit *works*. The lock disengages with a satisfying click.
+Your claws interface with the panel. The neuralware floods your consciousness with raw data. And the ancient exploit _works_. The lock disengages with a satisfying click.
 
 Sometimes experience beats cutting-edge security. Sometimes.
 
@@ -493,7 +493,7 @@ You breathe in their faintly sweet scent, let yourself remember that the world c
 
 The pipe burst days ago, probably, judging by the rust stains. But the water pooling beneath it is clean—or at least cleaner than anything else you're likely to find. You lap at it desperately, your parched tongue finally finding relief.
 
-It tastes like metal and infrastructure, but it's *water*. Your body thanks you with a surge of renewed energy. You even splash some on your face, washing away dried blood and grime.
+It tastes like metal and infrastructure, but it's _water_. Your body thanks you with a surge of renewed energy. You even splash some on your face, washing away dried blood and grime.
 
 Small victories. In Dimm City, you take what you can get.
 
@@ -509,11 +509,11 @@ You're pressed into a shadowy alcove when you hear them: two corporate security 
 
 "Yeah. Brass is pissed. Apparently his neuralware was more than just hardware—it was keeping his combat trauma in check. Without it, he's unstable. Dangerous even to friendlies."
 
-"So he's getting *worse* the longer this drags out?"
+"So he's getting _worse_ the longer this drags out?"
 
 "Much worse. Give it another stretch and he'll be completely feral."
 
-They move on. You stay hidden, processing this revelation. The augmerc isn't just angry—he's *deteriorating*. Time might be on your side after all.
+They move on. You stay hidden, processing this revelation. The augmerc isn't just angry—he's _deteriorating_. Time might be on your side after all.
 
 ---
 
@@ -537,7 +537,7 @@ You approach the checkpoint with your heart in your throat, ready to bolt. The g
 
 "Move along," he grunts.
 
-You were ready to fight, flee, die. But he's *not looking for you*. The security net isn't as tight as you feared. Maybe the explosion earlier scrambled their priorities. Maybe you're just lucky.
+You were ready to fight, flee, die. But he's _not looking for you_. The security net isn't as tight as you feared. Maybe the explosion earlier scrambled their priorities. Maybe you're just lucky.
 
 You don't question it. You just walk through, carefully casual, and disappear into the crowd on the other side.
 
@@ -547,7 +547,7 @@ You don't question it. You just walk through, carefully casual, and disappear in
 
 **You spot a security blind spot—a camera array with dead zones.**
 
-The neuralware highlights it for you: overlapping camera coverage that *should* be complete, but isn't. A gap in the grid, probably due to budget cuts or maintenance neglect. Just large enough for someone your size to slip through unseen.
+The neuralware highlights it for you: overlapping camera coverage that _should_ be complete, but isn't. A gap in the grid, probably due to budget cuts or maintenance neglect. Just large enough for someone your size to slip through unseen.
 
 You memorize the location, the timing. It might be nothing. Might be the difference between capture and escape.
 
@@ -573,9 +573,9 @@ Maybe he's right. Maybe you're becoming something more than a wirephreak with st
 
 The shrine is barely recognizable: faded offerings, broken incense burners, symbols scratched into concrete by claws like yours. A place where etherlocks once gathered to honor the spaces between spaces, the glitches where reality shows its seams.
 
-You press your palm against the wall and *feel* it: the presence of others like you, their residual energy staining the fabric of the world. You're not alone. You've never been alone.
+You press your palm against the wall and _feel_ it: the presence of others like you, their residual energy staining the fabric of the world. You're not alone. You've never been alone.
 
-The shrines remember. The city remembers. And for one crystalline moment, you remember why being an etherlock isn't just madness—it's *purpose*.
+The shrines remember. The city remembers. And for one crystalline moment, you remember why being an etherlock isn't just madness—it's _purpose_.
 
 ---
 
@@ -599,7 +599,7 @@ The raccoon running the food cart sees you: bedraggled, desperate, running from 
 
 "On the house, shorty. You look like you need it."
 
-The noodles are cheap synthetic protein and recycled carbs, but they're *warm* and they're *free* and they're offered with something that might be compassion. You eat standing up, trying not to cry.
+The noodles are cheap synthetic protein and recycled carbs, but they're _warm_ and they're _free_ and they're offered with something that might be compassion. You eat standing up, trying not to cry.
 
 "Stay safe out there," she says as you leave.
 
@@ -623,7 +623,7 @@ The city provides, sometimes. Usually when you're not looking.
 
 **Meditation in hiding—the neuralware shows you calm within chaos.**
 
-You're crammed into a ventilation shaft, barely breathing, listening to security sweep the area below. But instead of panic, the neuralware floods you with unexpected *serenity*.
+You're crammed into a ventilation shaft, barely breathing, listening to security sweep the area below. But instead of panic, the neuralware floods you with unexpected _serenity_.
 
 You see the pursuit as data patterns. The threats as mathematical probabilities. Your own fear as merely elevated cortisol levels. The tech translates terror into numbers, and numbers can be understood, managed, overcome.
 
@@ -635,9 +635,9 @@ Your heart rate slows. Your breathing steadies. When the security passes, you em
 
 **You notice corporate security is spread dangerously thin—the system is overwhelmed.**
 
-Too many crises. Too few enforcers. The explosion earlier, plus standard crime, plus hunting you—the Tech District's security apparatus is *straining*. You can see it in how long response times are getting, how many cameras stay broken, how exhausted the guards look.
+Too many crises. Too few enforcers. The explosion earlier, plus standard crime, plus hunting you—the Tech District's security apparatus is _straining_. You can see it in how long response times are getting, how many cameras stay broken, how exhausted the guards look.
 
-The Machine is powerful, but it's not infinite. It can be overwhelmed. It can *fail*.
+The Machine is powerful, but it's not infinite. It can be overwhelmed. It can _fail_.
 
 The knowledge doesn't make you safe. But it makes you hopeful, which is almost the same thing.
 
@@ -673,7 +673,7 @@ Community exists even in a city that teaches you to trust no one.
 
 The power flicker is barely perceptible to organics, but your neuralware screams the alert: total surveillance dropout across three city blocks. Ninety ticks of absolute blindness.
 
-You *move*. Covering distance that would normally take shorties, racing through zones you'd never dare enter under normal circumstances. When the systems reboot, you're six blocks away and the security net has no idea how you got there.
+You _move_. Covering distance that would normally take shorties, racing through zones you'd never dare enter under normal circumstances. When the systems reboot, you're six blocks away and the security net has no idea how you got there.
 
 Sometimes the Machine glitches. And sometimes, that's all the advantage you need.
 
@@ -683,7 +683,7 @@ Sometimes the Machine glitches. And sometimes, that's all the advantage you need
 
 **Children playing remind you what you're fighting to protect.**
 
-They're young Sporos—kittens and pups and cubs—playing some elaborate game in a condemned lot. They shouldn't be here. It's not safe. But they're *playing*, and their laughter rings through the Tech District like defiance.
+They're young Sporos—kittens and pups and cubs—playing some elaborate game in a condemned lot. They shouldn't be here. It's not safe. But they're _playing_, and their laughter rings through the Tech District like defiance.
 
 You watch from the shadows, remembering when you were that young, that free, that certain the world held more possibility than pain. You're running to survive, yes. But you're also running so that these kids can keep playing, keep laughing, keep believing in something better.
 
@@ -695,9 +695,9 @@ It's not hope. But it's close enough to keep your legs moving.
 
 **Perfect hiding spot—you catch your breath and plan next moves.**
 
-The service closet is small, dark, and smells like cleaning chemicals and rust. But it's *empty* and it's *safe* and for the first time in what feels like forever, you can stop moving.
+The service closet is small, dark, and smells like cleaning chemicals and rust. But it's _empty_ and it's _safe_ and for the first time in what feels like forever, you can stop moving.
 
-You lean against the wall, letting your pounding heart slow. The neuralware pulses steadily against your ribs, no longer fighting your biology. It's integrating. Slowly, painfully, but *integrating*.
+You lean against the wall, letting your pounding heart slow. The neuralware pulses steadily against your ribs, no longer fighting your biology. It's integrating. Slowly, painfully, but _integrating_.
 
 You review your mental map. Calculate distances. Consider options. You're not there yet. But you're closer than you were. And sometimes, closer is all you need to keep going.
 

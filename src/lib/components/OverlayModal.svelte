@@ -43,9 +43,8 @@
 		width: 100vw;
 		height: 100vh;
 
-		/* Scrollable for long content */
-		overflow-y: auto;
-		overflow-x: hidden;
+		/* No scrolling at container level */
+		overflow: hidden;
 
 		/* Semi-transparent backdrop with blur */
 		background: rgba(0, 0, 0, 0.5);
@@ -56,9 +55,9 @@
 		padding: var(--space-md);
 		padding-bottom: calc(60px + var(--space-lg)); /* Extra padding for toolbar */
 
-		/* Center content, align to top for scrolling */
+		/* Center content */
 		display: flex;
-		align-items: flex-start;
+		align-items: center;
 		justify-content: center;
 	}
 
@@ -71,12 +70,11 @@
 		position: relative;
 		width: 95%;
 		max-width: 900px;
-		height: auto;
-		min-height: 400px;
-		max-height: 90vh;
+		max-height: calc(100vh - 60px - var(--space-lg) * 2);
 
-		/* Vertical margin for better spacing */
-		margin: var(--space-lg) 0;
+		/* Scrollable content within modal */
+		overflow-y: auto;
+		overflow-x: hidden;
 
 		/* Augmented UI Configuration */
 		--aug-border-all: 2px;
@@ -96,9 +94,6 @@
 			0 0 30px rgba(0, 255, 255, 0.4),
 			0 0 60px rgba(217, 70, 239, 0.3),
 			inset 0 0 20px rgba(0, 255, 255, 0.1);
-
-		/* Ensure content can overflow if needed */
-		overflow: visible;
 	}
 
 	/* ============================================
