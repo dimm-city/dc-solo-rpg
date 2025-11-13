@@ -203,7 +203,6 @@
 		class:revealed={animationStage === 'revealed'}
 		class:dismissing={animationStage === 'dismissing'}
 		class:clickable={animationStage === 'revealed'}
-		data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
 		onclick={() => {
 			if (animationStage === 'revealed') onDismiss();
 		}}
@@ -365,27 +364,15 @@
 
 	.byte-container {
 		position: relative;
-		width: 95%;
-		max-width: 900px;
-		height: auto; /* Changed from 100% to auto for proper scrolling */
+		width: 100%;
+		height: 100%;
 		min-height: 400px;
-		max-height: 90vh; /* Ensure card doesn't exceed viewport */
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		z-index: 2;
 		opacity: 0;
 		transform: scale(0.8);
 		transition: none;
-		margin: var(--space-lg) 0; /* Add vertical margin for better spacing */
-
-		/* Augmented UI Configuration */
-		--aug-border-all: 2px;
-		--aug-border-bg: linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta));
-		--aug-tl: 16px;
-		--aug-tr: 16px;
-		--aug-br: 16px;
-		--aug-bl: 16px;
 	}
 
 	/* Clickable state when revealed */
@@ -456,15 +443,8 @@
 	.byte-shell {
 		position: relative;
 		width: 100%;
-		height: auto; /* Changed from 100% to auto for proper content sizing */
-		min-height: 400px;
-		max-height: 85vh; /* Ensure content doesn't exceed viewport */
+		height: 100%;
 		padding: var(--space-xl, 2rem);
-
-		/* Remove border/box-shadow since augmented-ui handles it on parent */
-		background: linear-gradient(135deg, rgba(10, 10, 20, 0.8), rgba(15, 15, 25, 0.7));
-		backdrop-filter: blur(10px) saturate(150%);
-		-webkit-backdrop-filter: blur(10px) saturate(150%);
 		overflow-y: auto; /* Allow scrolling for long content */
 		overflow-x: hidden;
 		box-sizing: border-box;
