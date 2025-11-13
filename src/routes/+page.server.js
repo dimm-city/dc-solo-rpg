@@ -43,9 +43,7 @@ export async function load() {
 		const entries = await readdir(gamesDir, { withFileTypes: true });
 
 		// Find V2 format games (.game.md files)
-		const gameFiles = entries.filter(
-			(entry) => entry.isFile() && entry.name.endsWith('.game.md')
-		);
+		const gameFiles = entries.filter((entry) => entry.isFile() && entry.name.endsWith('.game.md'));
 
 		// Read each game file and extract frontmatter
 		const games = await Promise.all(
@@ -59,10 +57,12 @@ export async function load() {
 
 					return {
 						slug,
-						title: frontmatter.title || slug
-							.split('-')
-							.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-							.join(' '),
+						title:
+							frontmatter.title ||
+							slug
+								.split('-')
+								.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+								.join(' '),
 						subtitle: frontmatter.subtitle || ''
 					};
 				} catch (err) {

@@ -241,10 +241,13 @@
 	}
 
 	function handleHelpClick() {
+		console.log('[GameScreen] Help button clicked, current showHelpModal:', showHelpModal);
 		showHelpModal = true;
+		console.log('[GameScreen] showHelpModal set to:', showHelpModal);
 	}
 
 	function handleHelpClose() {
+		console.log('[GameScreen] Closing help modal');
 		showHelpModal = false;
 	}
 
