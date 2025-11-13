@@ -101,7 +101,7 @@
 	/* GameScreen component appears above neural background */
 	.dc-game-container > :global(*:not(.neural-background)) {
 		position: relative;
-		z-index: 1;
+		/* z-index removed to prevent stacking context - modals need to escape */
 	}
 
 	/* Screen-specific styles moved to GameScreen.svelte */
