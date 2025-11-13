@@ -319,8 +319,8 @@
 
 		/* Left side rectangle inset - receives puzzle tab from health */
 		/* Match health's right extension for perfect fit */
-		--aug-l-extend1: 30px;
-		--aug-l-inset1: 12px;
+		--aug-l-extend1: 4px;
+		--aug-l-inset1: 8px;
 		margin-inline-start: -25px;
 		padding-inline-start: var(--space-xl);
 		/* Enhanced Glow - animation removed */

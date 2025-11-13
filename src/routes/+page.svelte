@@ -59,23 +59,42 @@
 	<section class="form-container" data-testid="home-page" transition:fade={{ duration: 600 }}>
 		<div class="page-header">
 			<h2>Select a Game</h2>
-			<a href="/about" class="about-link" aria-label="About">
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					width="24"
-					height="24"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-				>
-					<circle cx="12" cy="12" r="10"></circle>
-					<path d="M12 16v-4"></path>
-					<path d="M12 8h.01"></path>
-				</svg>
-			</a>
+			<div class="header-buttons">
+				<a href="/how-to" class="header-link" aria-label="How to Play">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="24"
+						height="24"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<circle cx="12" cy="12" r="10"></circle>
+						<path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+						<path d="M12 17h.01"></path>
+					</svg>
+				</a>
+				<a href="/about" class="header-link" aria-label="About">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="24"
+						height="24"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<circle cx="12" cy="12" r="10"></circle>
+						<path d="M12 16v-4"></path>
+						<path d="M12 8h.01"></path>
+					</svg>
+				</a>
+			</div>
 		</div>
 		<div class="welcome-container">
 			<div class="dc-start-screen-container" data-testid="game-selector">
@@ -144,9 +163,15 @@
 		text-shadow: var(--text-glow-yellow);
 	}
 
-	.about-link {
+	.header-buttons {
 		grid-column: 3;
 		justify-self: end;
+		display: flex;
+		gap: var(--space-md);
+		align-items: center;
+	}
+
+	.header-link {
 		color: var(--color-brand-yellow);
 		text-decoration: none;
 		padding: var(--space-sm);
@@ -156,22 +181,22 @@
 		border-radius: 50%;
 	}
 
-	.about-link svg {
+	.header-link svg {
 		width: 28px;
 		height: 28px;
 		filter: drop-shadow(0 0 4px var(--color-brand-yellow));
 	}
 
-	.about-link:hover {
+	.header-link:hover {
 		color: var(--color-neon-cyan);
 		transform: scale(1.1);
 	}
 
-	.about-link:hover svg {
+	.header-link:hover svg {
 		filter: drop-shadow(0 0 8px var(--color-neon-cyan));
 	}
 
-	.about-link:active {
+	.header-link:active {
 		transform: scale(1.05);
 	}
 
@@ -550,7 +575,11 @@
 			font-size: var(--text-xl);
 		}
 
-		.about-link svg {
+		.header-buttons {
+			gap: var(--space-sm);
+		}
+
+		.header-link svg {
 			width: 24px;
 			height: 24px;
 		}
