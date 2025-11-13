@@ -55,8 +55,8 @@ export const startGame = (player, gameConfigOrOptions = {}, options = {}) => {
 				options: { ...(gameState.config.options || {}), ...options }
 			};
 		}
-		// Transition to intro screen
-		transitionTo('intro');
+		// Transition to showIntro screen
+		transitionTo('showIntro');
 	}
 };
 

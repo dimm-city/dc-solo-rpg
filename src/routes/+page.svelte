@@ -716,16 +716,11 @@
 	   ============================================ */
 
 	.instructions-choice-container {
-		position: fixed;
-		inset: 0;
-		width: 100vw;
-		height: 100vh;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		padding: var(--space-xl);
 		overflow-y: auto;
-		z-index: 10;
 	}
 
 	.choice-content {
