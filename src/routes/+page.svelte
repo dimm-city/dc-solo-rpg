@@ -5,6 +5,7 @@
 	import ConfirmModal from '$lib/components/ConfirmModal.svelte';
 	import Splash from '$lib/components/Splash.svelte';
 	import NeuralBackground from '$lib/components/NeuralBackground.svelte';
+	import { hasSeenInstructions, markInstructionsAsSeen } from '$lib/utils/instructionsStorage.js';
 
 	/** @type {import('./$types').PageData} */
 	let { data } = $props();
@@ -12,7 +13,8 @@
 	let selectedGame = $state(null);
 	// Check if splash was already shown in this session
 	let showSplash = $state(typeof window !== 'undefined' && !sessionStorage.getItem('splashShown'));
-	let showContent = $state(typeof window !== 'undefined' && sessionStorage.getItem('splashShown') === 'true');
+	let showInstructionsChoice = $state(false);
+	let showContent = $state(false);
 	let showModal = $state(false);
 
 	function selectGame(game) {
@@ -36,10 +38,41 @@
 		showSplash = false;
 		// Mark splash as shown for this session
 		sessionStorage.setItem('splashShown', 'true');
-		// Wait for splash fade-out to complete before showing content
+
+		// Check if user has seen instructions
+		const instructionsSeen = hasSeenInstructions();
+
+		// Wait for splash fade-out to complete before showing next screen
+		setTimeout(() => {
+			if (instructionsSeen) {
+				// Skip directly to game selection
+				showContent = true;
+			} else {
+				// Show instructions choice screen
+				showInstructionsChoice = true;
+			}
+		}, 850); // Wait for 800ms fade + 50ms buffer
+	}
+
+	function handleLearnToPlay() {
+		goto('/how-to');
+	}
+
+	function handleSkipOnce() {
+		// Skip to game selection without storing preference
+		showInstructionsChoice = false;
 		setTimeout(() => {
 			showContent = true;
-		}, 850); // Wait for 800ms fade + 50ms buffer
+		}, 300);
+	}
+
+	function handleSkipAlways() {
+		// Skip to game selection and remember preference
+		markInstructionsAsSeen();
+		showInstructionsChoice = false;
+		setTimeout(() => {
+			showContent = true;
+		}, 300);
 	}
 
 	// Game descriptions/subtitles for enhanced UI
@@ -54,6 +87,85 @@
 
 <NeuralBackground />
 <Splash visible={showSplash} onComplete={handleSplashComplete} />
+
+{#if showInstructionsChoice}
+	<section class="instructions-choice-container" transition:fade={{ duration: 600 }}>
+		<div class="choice-content">
+			<h1>How To Play</h1>
+			<p class="subtitle">
+				Would you like to learn the game mechanics, or skip straight to the games?
+			</p>
+
+			<div class="choice-cards">
+				<button class="choice-card" onclick={handleLearnToPlay}>
+					<div class="icon-wrapper">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							width="48"
+							height="48"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						>
+							<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+							<path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+						</svg>
+					</div>
+					<h3>Learn How to Play</h3>
+					<p>Understand the mechanics before diving into the story</p>
+					<span class="recommendation">Recommended for first-time players</span>
+				</button>
+
+				<button class="choice-card skip-card" onclick={handleSkipOnce}>
+					<div class="icon-wrapper">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							width="48"
+							height="48"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						>
+							<polygon points="5 4 15 12 5 20 5 4" />
+							<line x1="19" x2="19" y1="5" y2="19" />
+						</svg>
+					</div>
+					<h3>Skip Once</h3>
+					<p>Skip to game selection this time, show instructions again next time</p>
+					<span class="recommendation">Try the game first</span>
+				</button>
+
+				<button class="choice-card skip-always-card" onclick={handleSkipAlways}>
+					<div class="icon-wrapper">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							width="48"
+							height="48"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						>
+							<polygon points="5 4 15 12 5 20 5 4" />
+							<polygon points="13 4 23 12 13 20 13 4" />
+						</svg>
+					</div>
+					<h3>Skip Always</h3>
+					<p>I know how to play, never show instructions again</p>
+					<span class="recommendation">For experienced players</span>
+				</button>
+			</div>
+		</div>
+	</section>
+{/if}
 
 {#if showContent}
 	<section class="form-container" data-testid="home-page" transition:fade={{ duration: 600 }}>
@@ -586,12 +698,228 @@
 	}
 
 	/* ============================================
+	   INSTRUCTIONS CHOICE SCREEN
+	   ============================================ */
+
+	.instructions-choice-container {
+		position: fixed;
+		inset: 0;
+		width: 100vw;
+		height: 100vh;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: var(--space-xl);
+		overflow-y: auto;
+		z-index: 10;
+	}
+
+	.choice-content {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		text-align: center;
+		max-width: 800px;
+		width: 100%;
+		animation: fadeInContent 0.6s ease-out;
+	}
+
+	.choice-content h1 {
+		font-size: clamp(2rem, 4vw, 3rem);
+		margin-bottom: var(--space-md);
+		color: var(--color-neon-cyan);
+		text-shadow:
+			0 0 20px rgba(0, 255, 255, 0.6),
+			0 0 40px rgba(0, 255, 255, 0.3);
+	}
+
+	.subtitle {
+		font-size: clamp(1rem, 2vw, 1.25rem);
+		margin-bottom: var(--space-2xl);
+		color: rgba(255, 255, 255, 0.8);
+	}
+
+	.choice-cards {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xl);
+		width: 100%;
+	}
+
+	.choice-card {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-md);
+		padding: var(--space-2xl);
+		background: linear-gradient(135deg, rgba(10, 10, 20, 0.8), rgba(15, 15, 25, 0.7));
+		border: 2px solid rgba(0, 255, 255, 0.3);
+		border-radius: var(--dc-default-border-radius);
+		cursor: pointer;
+		transition: all 0.3s ease;
+		backdrop-filter: blur(10px);
+		-webkit-backdrop-filter: blur(10px);
+		box-shadow:
+			0 0 20px rgba(0, 255, 255, 0.2),
+			inset 0 0 20px rgba(0, 255, 255, 0.05);
+		min-height: 180px;
+		text-align: center;
+	}
+
+	.choice-card:hover,
+	.choice-card:focus {
+		background: linear-gradient(135deg, rgba(20, 20, 35, 0.9), rgba(25, 25, 40, 0.8));
+		border-color: var(--color-neon-cyan);
+		transform: translateY(-4px);
+		box-shadow:
+			0 0 30px rgba(0, 255, 255, 0.4),
+			0 0 60px rgba(0, 255, 255, 0.2),
+			inset 0 0 30px rgba(0, 255, 255, 0.1);
+	}
+
+	.choice-card:active {
+		transform: translateY(-2px);
+	}
+
+	.skip-card {
+		border-color: rgba(217, 70, 239, 0.3);
+		box-shadow:
+			0 0 20px rgba(217, 70, 239, 0.2),
+			inset 0 0 20px rgba(217, 70, 239, 0.05);
+	}
+
+	.skip-card:hover,
+	.skip-card:focus {
+		border-color: var(--color-cyber-magenta);
+		box-shadow:
+			0 0 30px rgba(217, 70, 239, 0.4),
+			0 0 60px rgba(217, 70, 239, 0.2),
+			inset 0 0 30px rgba(217, 70, 239, 0.1);
+	}
+
+	.skip-always-card {
+		border-color: rgba(255, 215, 0, 0.3);
+		box-shadow:
+			0 0 20px rgba(255, 215, 0, 0.2),
+			inset 0 0 20px rgba(255, 215, 0, 0.05);
+	}
+
+	.skip-always-card:hover,
+	.skip-always-card:focus {
+		border-color: var(--color-brand-yellow);
+		box-shadow:
+			0 0 30px rgba(255, 215, 0, 0.4),
+			0 0 60px rgba(255, 215, 0, 0.2),
+			inset 0 0 30px rgba(255, 215, 0, 0.1);
+	}
+
+	.icon-wrapper {
+		color: var(--color-neon-cyan);
+		filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.6));
+	}
+
+	.skip-card .icon-wrapper {
+		color: var(--color-cyber-magenta);
+		filter: drop-shadow(0 0 10px rgba(217, 70, 239, 0.6));
+	}
+
+	.skip-always-card .icon-wrapper {
+		color: var(--color-brand-yellow);
+		filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.6));
+	}
+
+	.choice-card h3 {
+		font-size: clamp(1.25rem, 2vw, 1.5rem);
+		font-weight: 600;
+		color: white;
+		margin: 0;
+	}
+
+	.choice-card p {
+		font-size: var(--text-base);
+		color: rgba(255, 255, 255, 0.7);
+		line-height: 1.5;
+		margin: 0;
+	}
+
+	.recommendation {
+		font-size: var(--text-sm);
+		color: var(--color-neon-cyan);
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		margin-top: var(--space-xs);
+	}
+
+	.skip-card .recommendation {
+		color: var(--color-cyber-magenta);
+	}
+
+	.skip-always-card .recommendation {
+		color: var(--color-brand-yellow);
+	}
+
+	@media (max-width: 768px) {
+		.instructions-choice-container {
+			padding: var(--space-lg);
+		}
+
+		.choice-content h1 {
+			font-size: var(--text-2xl);
+		}
+
+		.subtitle {
+			font-size: var(--text-base);
+		}
+
+		.choice-cards {
+			gap: var(--space-lg);
+		}
+
+		.choice-card {
+			padding: var(--space-xl);
+			min-height: 160px;
+		}
+
+		.icon-wrapper svg {
+			width: 36px;
+			height: 36px;
+		}
+
+		.choice-card h3 {
+			font-size: var(--text-lg);
+		}
+
+		.choice-card p {
+			font-size: var(--text-sm);
+		}
+	}
+
+	@media (max-width: 450px) {
+		.instructions-choice-container {
+			padding: var(--space-md);
+		}
+
+		.choice-card {
+			padding: var(--space-lg);
+			min-height: 140px;
+		}
+
+		.icon-wrapper svg {
+			width: 32px;
+			height: 32px;
+		}
+	}
+
+	/* ============================================
 	   ACCESSIBILITY - REDUCED MOTION
 	   ============================================ */
 
 	@media (prefers-reduced-motion: reduce) {
 		.welcome-container,
-		.game-card {
+		.game-card,
+		.choice-card {
 			animation: none !important;
 		}
 
@@ -599,7 +927,9 @@
 		.game-card.selected,
 		.game-card:active,
 		.about-link:hover,
-		.about-link:active {
+		.about-link:active,
+		.choice-card:hover,
+		.choice-card:focus {
 			transition: none !important;
 			transform: none !important;
 		}

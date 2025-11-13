@@ -2,11 +2,9 @@
 	import { gameState, transitionTo } from '../stores/gameStore.svelte.js';
 	import { fade } from 'svelte/transition';
 	import { goto } from '$app/navigation';
-	import { marked } from 'marked';
 
 	import LoadScreen from './LoadScreen.svelte';
 	import OptionsScreen from './OptionsScreen.svelte';
-	import IntroScreen from './IntroScreen.svelte';
 	import GameOver from './GameOver.svelte';
 	import JournalEntry from './JournalEntry.svelte';
 	import SuccessCheck from './SuccessCheck.svelte';
@@ -315,39 +313,6 @@
 	>
 		<OptionsScreen {systemSettings} />
 	</div>
-{:else if currentScreen == 'intro'}
-	<div
-		class="dc-game-bg dc-intro-wrapper"
-		data-testid="screen-intro"
-		transition:fade={{ duration: TRANSITION_DURATION }}
-	>
-		<IntroScreen />
-	</div>
-{:else if currentScreen == 'showIntro'}
-	<div
-		class="dc-game-bg dc-intro-wrapper"
-		data-testid="screen-showIntro"
-		transition:fade={{ duration: TRANSITION_DURATION }}
-	>
-		<div class="intro-story-container">
-			<div class="content">
-				<h1>{gameState.config?.title || 'Game Introduction'}</h1>
-				{@html marked(gameState.config?.introduction ?? '')}
-			</div>
-			<ButtonBar>
-				<ContinueButton
-					text="Back"
-					onclick={() => transitionTo('intro')}
-					testid="story-back-button"
-				/>
-				<ContinueButton
-					text="Begin Your Journey"
-					onclick={() => transitionTo('rollForTasks')}
-					testid="story-continue-button"
-				/>
-			</ButtonBar>
-		</div>
-	</div>
 {:else if currentScreen == 'gameOver'}
 	<div
 		class="dc-fade-in dc-screen-container"
@@ -553,80 +518,6 @@
 />
 
 <style>
-	.dc-intro-wrapper {
-		display: flex;
-		flex-direction: column;
-		overflow: visible; /* Allow glow effects to extend beyond bounds */
-		min-height: 0; /* Allow flex shrinking */
-		height: 100%; /* Fill parent */
-	}
-
-	.intro-story-container {
-		display: flex;
-		flex-direction: column;
-		height: 100%;
-		min-height: 0;
-		width: 100%;
-		position: relative;
-		overflow: visible;
-		box-sizing: border-box;
-	}
-
-	.intro-story-container .content {
-		flex: 1;
-		overflow-y: auto;
-		overflow-x: hidden;
-		padding: var(--space-md);
-		background-color: transparent;
-		min-height: 0;
-	}
-
-	.intro-story-container .content h1 {
-		font-size: var(--text-2xl);
-		margin-bottom: var(--space-md);
-		color: var(--color-neon-cyan);
-		text-shadow:
-			0 0 20px rgba(0, 255, 255, 0.6),
-			0 0 40px rgba(0, 255, 255, 0.3);
-	}
-
-	.intro-story-container .content :global(h2) {
-		font-size: var(--text-xl);
-		margin-top: var(--space-lg);
-		margin-bottom: var(--space-xs);
-	}
-
-	.intro-story-container .content :global(h3) {
-		font-size: var(--text-lg);
-		margin-top: var(--space-md);
-		margin-bottom: var(--space-xs);
-	}
-
-	.intro-story-container .content :global(p) {
-		margin-bottom: var(--space-sm);
-		line-height: 1.6;
-	}
-
-	.intro-story-container .button-bar {
-		flex-shrink: 0;
-		width: 100%;
-		display: flex;
-		gap: var(--space-sm);
-		padding: var(--space-md);
-		background: var(--color-bg-primary);
-		border-top: 2px solid var(--color-cyber-magenta);
-		position: relative;
-		z-index: 10;
-	}
-
-	.intro-story-container .button-bar :global(.aug-button-wrapper) {
-		flex: 1;
-	}
-
-	.intro-story-container .button-bar :global(.aug-button) {
-		width: 100%;
-	}
-
 	.game-screen {
 		position: relative;
 		height: 100%;
