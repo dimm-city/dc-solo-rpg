@@ -197,7 +197,10 @@
 {#if showContent}
 	<section class="form-container" data-testid="home-page" transition:fade={{ duration: 600 }}>
 		<div class="page-header">
-			<h2>Select a Game</h2>
+			<div class="header-logo">
+				<img src="/d20-150.png" alt="DC Solo RPG Logo" class="logo-dice" />
+				<span class="version-text">DC-S-0.1.0</span>
+			</div>
 			<div class="header-buttons">
 				<a href="/how-to" class="header-link" aria-label="How to Play">
 					<svg
@@ -292,14 +295,39 @@
 		-webkit-backdrop-filter: blur(16px);
 	}
 
-	.page-header h2 {
+	.header-logo {
 		grid-column: 2;
-		text-align: center;
-		margin: 0;
-		font-size: clamp(1.25rem, 2.5vw, 1.75rem);
-		letter-spacing: var(--letter-spacing-widest);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+
+	.logo-dice {
+		width: clamp(48px, 8vw, 72px);
+		height: auto;
+		filter: drop-shadow(0 0 12px rgba(217, 70, 239, 0.6)) drop-shadow(0 0 24px rgba(217, 70, 239, 0.3));
+		animation: float 6s ease-in-out infinite;
+	}
+
+	@keyframes float {
+		0%,
+		100% {
+			transform: translateY(0px);
+		}
+		50% {
+			transform: translateY(-8px);
+		}
+	}
+
+	.version-text {
+		font-family: var(--font-display);
+		font-size: clamp(0.75rem, 1.5vw, 1rem);
+		font-weight: 700;
 		color: var(--color-brand-yellow);
 		text-shadow: var(--text-glow-yellow);
+		text-transform: uppercase;
+		letter-spacing: var(--letter-spacing-wider);
 	}
 
 	.header-buttons {

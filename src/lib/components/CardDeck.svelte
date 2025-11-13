@@ -188,7 +188,19 @@
 		class:materializing={animationStage === 'materializing'}
 		class:revealed={animationStage === 'revealed'}
 		class:dismissing={animationStage === 'dismissing'}
+		class:clickable={animationStage === 'revealed'}
 		data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
+		onclick={() => {
+			if (animationStage === 'revealed') onDismiss();
+		}}
+		role="button"
+		tabindex={animationStage === 'revealed' ? '0' : '-1'}
+		onkeydown={(e) => {
+			if (animationStage === 'revealed' && (e.key === 'Enter' || e.key === ' ')) {
+				e.preventDefault();
+				onDismiss();
+			}
+		}}
 	>
 		{#if animationStage !== 'idle' && animationStage !== 'anticipating'}
 			<div class="byte-shell">
@@ -358,6 +370,24 @@
 		--aug-tr: 16px;
 		--aug-br: 16px;
 		--aug-bl: 16px;
+	}
+
+	/* Clickable state when revealed */
+	.byte-container.clickable {
+		cursor: pointer;
+		transition: all var(--transition-fast);
+	}
+
+	.byte-container.clickable:hover {
+		transform: scale(1.02);
+		box-shadow:
+			0 0 40px rgba(0, 255, 255, 0.5),
+			0 0 80px rgba(217, 70, 239, 0.3),
+			inset 0 0 40px rgba(0, 255, 255, 0.15);
+	}
+
+	.byte-container.clickable:active {
+		transform: scale(0.98);
 	}
 
 	.byte-container.materializing {

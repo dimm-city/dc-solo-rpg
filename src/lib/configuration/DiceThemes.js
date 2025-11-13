@@ -148,5 +148,5 @@ export function getDiceThemesByCategory(category) {
  * @returns {Object} The default dice theme
  */
 export function getDefaultDiceTheme() {
-	return DICE_THEMES[0];
+	return getDiceTheme('pinkdreams') || DICE_THEMES[0];
 }

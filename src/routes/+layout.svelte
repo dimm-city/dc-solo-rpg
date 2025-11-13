@@ -3,13 +3,14 @@
 	import { onNavigate } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import { page } from '$app/stores';
-	import { initializeDiceBox } from '$lib/stores/diceStore.svelte.js';
+	import { initializeDiceBox, getDiceRolling } from '$lib/stores/diceStore.svelte.js';
 
 	let { children, data } = $props();
 	let diceContainer = $state();
 
 	// Show dice only when on game screens (not home, not about)
 	const showDice = $derived($page.url.pathname.startsWith('/game/'));
+	const diceRolling = $derived(getDiceRolling());
 
 	onNavigate((navigation) => {
 		// Only run in browser environment (SSR safety)
@@ -44,6 +45,7 @@
 	id="dice-roller-container"
 	class="dice-container"
 	class:hidden={!showDice}
+	class:rolling={diceRolling}
 ></div>
 
 <div class="page-content">
@@ -61,12 +63,20 @@
 		z-index: -1; /* Behind page content */
 		pointer-events: none; /* Don't block clicks */
 		background: transparent;
-		transition: opacity 0.3s ease;
+		transition:
+			opacity 0.3s ease,
+			z-index 1.5s ease; /* Slow transition back down */
 	}
 
 	.dice-container.hidden {
 		opacity: 0;
 		visibility: hidden;
+	}
+
+	/* When rolling, bring dice to front with immediate transition */
+	.dice-container.rolling {
+		z-index: 9999;
+		transition: opacity 0.3s ease; /* No z-index transition when going up */
 	}
 
 	/* Canvas from DiceBox should fill the container */

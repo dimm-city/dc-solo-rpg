@@ -11,6 +11,7 @@ import { gameState } from './gameStore.svelte.js';
 let diceBoxInstance = $state(null);
 let isInitialized = $state(false);
 let containerElement = $state(null);
+let isRolling = $state(false);
 
 /**
  * Initialize the DiceBox instance
@@ -53,17 +54,21 @@ export async function initializeDiceBox(container) {
 		sounds: true,
 		volume: 100,
 		baseScale: 100,
-		strength: 1.5
+		strength: 1.5,
+		theme_colorset: 'pinkdreams' // Default theme is pink dreams
 	};
 
 	// Apply dice theme from game config if provided
 	if (gameState.config?.options?.dice?.key) {
-		// If key is 'default', don't set a theme (let dice-box use its built-in default)
-		if (gameState.config.options.dice.key !== 'default') {
+		// If key is 'default', use white dice
+		if (gameState.config.options.dice.key === 'default') {
+			delete config.theme_colorset; // Use dice-box built-in default (white)
+		} else {
 			config.theme_colorset = gameState.config.options.dice.key;
 		}
 	} else if (gameState.config?.options?.dice) {
 		config.theme_customColorset = gameState.config.options.dice;
+		delete config.theme_colorset; // Custom colorset overrides theme
 	}
 
 	// Verify the container is properly attached to the DOM
@@ -132,6 +137,13 @@ export function isDiceBoxInitialized() {
 }
 
 /**
+ * Get whether dice are currently rolling
+ */
+export function getDiceRolling() {
+	return isRolling;
+}
+
+/**
  * Trigger a resize of the DiceBox
  * Call this when the container size changes or after screen transitions
  */
@@ -172,8 +184,16 @@ export async function rollDice(value = null) {
 		throw new Error('DiceBox not initialized. Call initializeDiceBox first.');
 	}
 
+	// Set rolling state to true immediately
+	isRolling = true;
+
 	const rollString = value ? `1d6@${value}` : '1d6';
 	const result = await diceBoxInstance.roll(rollString);
+
+	// After roll completes, wait 2 seconds before transitioning z-index back down
+	setTimeout(() => {
+		isRolling = false;
+	}, 2000);
 
 	return result.total;
 }
