@@ -25,10 +25,33 @@
 		onCancel
 	} = $props();
 
-	let modalTarget = $state(null);
+	let portalEl = $state(null);
+	let contentEl = $state(null);
 
 	onMount(() => {
-		modalTarget = document.body;
+		// Create portal container at body level
+		portalEl = document.createElement('div');
+		portalEl.className = 'modal-portal-root';
+		document.body.appendChild(portalEl);
+
+		return () => {
+			if (portalEl && document.body.contains(portalEl)) {
+				document.body.removeChild(portalEl);
+			}
+		};
+	});
+
+	// Teleport content to portal when it changes
+	$effect(() => {
+		if (contentEl && portalEl && isOpen) {
+			portalEl.appendChild(contentEl);
+		}
+
+		return () => {
+			if (contentEl && portalEl && portalEl.contains(contentEl)) {
+				portalEl.removeChild(contentEl);
+			}
+		};
 	});
 
 	function handleBackdropClick(event) {
@@ -44,9 +67,10 @@
 	}
 </script>
 
-{#if isOpen && modalTarget}
+{#if isOpen}
 	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
+		bind:this={contentEl}
 		class="modal-backdrop"
 		onclick={handleBackdropClick}
 		onkeydown={handleKeydown}
