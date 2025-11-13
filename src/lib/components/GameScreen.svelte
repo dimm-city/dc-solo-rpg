@@ -110,7 +110,9 @@
 		}
 	}
 
-	const failureCheckButtonText = $derived(failureCheckResult ? 'Click to continue' : 'Roll failure check');
+	const failureCheckButtonText = $derived(
+		failureCheckResult ? 'Click to continue' : 'Roll failure check'
+	);
 
 	// SuccessCheck button state
 	let successCheckRolling = $state(false);
@@ -136,7 +138,9 @@
 		}
 	}
 
-	const successCheckButtonText = $derived(successCheckResult ? 'Click to continue' : 'Roll success check');
+	const successCheckButtonText = $derived(
+		successCheckResult ? 'Click to continue' : 'Roll success check'
+	);
 
 	// FinalDamageRoll button state
 	let finalDamageRolling = $state(false);
@@ -495,10 +499,17 @@
 			<!-- Toolbar at bottom with exit button and deck visualization -->
 			<div class="toolbar-area">
 				<!-- Augmented UI background - doesn't clip children -->
-				<div class="toolbar-background" data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"></div>
+				<div
+					class="toolbar-background"
+					data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
+				></div>
 
 				<div class="toolbar-left">
-					<button class="toolbar-button exit-button" onclick={handleExitClick} aria-label="Exit game">
+					<button
+						class="toolbar-button exit-button"
+						onclick={handleExitClick}
+						aria-label="Exit game"
+					>
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							width="24"

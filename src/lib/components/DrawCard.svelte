@@ -90,7 +90,7 @@
 	<CardDeck
 		bind:this={cardDeckRef}
 		bind:card={gameState.currentCard}
-		bind:animationStage={animationStage}
+		bind:animationStage
 		onrequestcard={onRequestCard}
 		onconfirmcard={onConfirmCardDeck}
 	/>

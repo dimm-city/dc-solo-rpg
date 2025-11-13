@@ -58,14 +58,17 @@
 		<section class="content-card" data-augmented-ui="tl-clip-x tr-clip br-clip-y bl-clip border">
 			<h3>Overview</h3>
 			<p>
-				The Dimm City Solo RPG is a narrative-driven, solo role-playing game that takes players on
-				a thrilling adventure that changes each time they play. The game is designed to be played
-				alone, with the game system guiding the player through the story, presenting challenges,
-				and shaping the narrative based on the cards that are drawn and the roll of the dice.
+				The Dimm City Solo RPG is a narrative-driven, solo role-playing game that takes players on a
+				thrilling adventure that changes each time they play. The game is designed to be played
+				alone, with the game system guiding the player through the story, presenting challenges, and
+				shaping the narrative based on the cards that are drawn and the roll of the dice.
 			</p>
 		</section>
 
-		<section class="content-card features-card" data-augmented-ui="tl-clip tr-clip-x br-clip bl-clip-y border">
+		<section
+			class="content-card features-card"
+			data-augmented-ui="tl-clip tr-clip-x br-clip bl-clip-y border"
+		>
 			<h3>Key Features</h3>
 			<ul class="features-list">
 				<li>
@@ -100,7 +103,9 @@
 							stroke-width="2"
 						>
 							<circle cx="12" cy="12" r="3" />
-							<path d="M12 1v6m0 6v6M5.6 5.6l4.2 4.2m4.4 4.4l4.2 4.2M1 12h6m6 0h6M5.6 18.4l4.2-4.2m4.4-4.4l4.2-4.2" />
+							<path
+								d="M12 1v6m0 6v6M5.6 5.6l4.2 4.2m4.4 4.4l4.2 4.2M1 12h6m6 0h6M5.6 18.4l4.2-4.2m4.4-4.4l4.2-4.2"
+							/>
 						</svg>
 					</div>
 					<div>
@@ -152,7 +157,10 @@
 			</ul>
 		</section>
 
-		<section class="content-card creation-card" data-augmented-ui="tl-clip-y tr-clip br-clip-x bl-clip border">
+		<section
+			class="content-card creation-card"
+			data-augmented-ui="tl-clip-y tr-clip br-clip-x bl-clip border"
+		>
 			<div class="section-header">
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
@@ -188,7 +196,10 @@
 			</p>
 		</section>
 
-		<section class="content-card license-card" data-augmented-ui="tl-clip tr-clip-y br-clip bl-clip-x border">
+		<section
+			class="content-card license-card"
+			data-augmented-ui="tl-clip tr-clip-y br-clip bl-clip-x border"
+		>
 			<div class="section-header">
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
@@ -218,7 +229,10 @@
 			</p>
 		</section>
 
-		<section class="content-card dimm-city-card" data-augmented-ui="tl-clip-x tr-clip br-clip-y bl-clip-x border">
+		<section
+			class="content-card dimm-city-card"
+			data-augmented-ui="tl-clip-x tr-clip br-clip-y bl-clip-x border"
+		>
 			<div class="dimm-city-branding">
 				<h3>Part of the Dimm City Universe</h3>
 				<p>

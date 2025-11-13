@@ -50,7 +50,9 @@
 	.button-bar > :global(.aug-button-wrapper .aug-button) {
 		width: 100%;
 		height: 100%;
-		transition: height 0.3s ease, width 0.3s ease;
+		transition:
+			height 0.3s ease,
+			width 0.3s ease;
 	}
 
 	/* Direct children (non-wrapped buttons) also get flex treatment */
@@ -62,7 +64,7 @@
 	/* Stack vertically when container is less than 200px wide */
 	@media (max-width: 300px) {
 		.button-bar {
-			flex-wrap: wrap;			
+			flex-wrap: wrap;
 		}
 
 		.button-bar > :global(.aug-button-wrapper),

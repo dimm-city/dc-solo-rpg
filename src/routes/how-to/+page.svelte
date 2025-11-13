@@ -36,9 +36,8 @@
 	<article class="content-wrapper">
 		<div class="intro-section" data-augmented-ui="tl-clip tr-clip br-clip bl-clip border">
 			<p class="intro-text">
-				Welcome to the Wretched and Alone solo RPG experience. This narrative-driven system
-				combines dice, cards, and your imagination to create unique stories of survival and
-				perseverance.
+				Welcome to the Wretched and Alone solo RPG experience. This narrative-driven system combines
+				dice, cards, and your imagination to create unique stories of survival and perseverance.
 			</p>
 		</div>
 
@@ -60,8 +59,8 @@
 				<h2>The Die</h2>
 			</div>
 			<p>
-				This determines how many tasks you must face in each scene. It's also used for tests to
-				see if you are successful on the salvation mechanism and failure checks.
+				This determines how many tasks you must face in each scene. It's also used for tests to see
+				if you are successful on the salvation mechanism and failure checks.
 			</p>
 		</section>
 
@@ -111,10 +110,10 @@
 			<p>
 				Each game has a way of winning. This mechanism arrives with the primary success card. Once
 				the card is drawn, the player rolls a success check at the end of each round. If their roll
-				is successful, they earn a success token. After the player has collected all of the
-				required success tokens, their character completes their quest! This may come with a final
-				roll or a failure check. If your health meter drops to zero at this stage, it would snatch
-				conquest away at the last moment.
+				is successful, they earn a success token. After the player has collected all of the required
+				success tokens, their character completes their quest! This may come with a final roll or a
+				failure check. If your health meter drops to zero at this stage, it would snatch conquest
+				away at the last moment.
 			</p>
 		</section>
 
@@ -129,16 +128,18 @@
 					stroke="currentColor"
 					stroke-width="2"
 				>
-					<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+					<path
+						d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+					/>
 					<line x1="12" y1="9" x2="12" y2="13" />
 					<line x1="12" y1="17" x2="12.01" y2="17" />
 				</svg>
 				<h2>Failure Checks</h2>
 			</div>
 			<p>
-				Your health meter is one of your countdowns to losing. Some of your tasks from the deck
-				will make you roll a failure check. It represents the fragility of your path to completing
-				your task. When your health meter reaches zero, you fail.
+				Your health meter is one of your countdowns to losing. Some of your tasks from the deck will
+				make you roll a failure check. It represents the fragility of your path to completing your
+				task. When your health meter reaches zero, you fail.
 			</p>
 		</section>
 
@@ -161,10 +162,10 @@
 			</div>
 			<p>
 				The tokens are used to track the progress of the salvation mechanism on the Ace of Hearts.
-				Tokens can be anything physical that players can easily keep track of, but it is
-				recommended that you suggest something fitting to the theme of your game. For example, The
-				Wretched tasks the player with trying to repair their ship, and the suggested tokens are
-				screws, nuts, and bolts.
+				Tokens can be anything physical that players can easily keep track of, but it is recommended
+				that you suggest something fitting to the theme of your game. For example, The Wretched
+				tasks the player with trying to repair their ship, and the suggested tokens are screws,
+				nuts, and bolts.
 			</p>
 		</section>
 
@@ -191,7 +192,10 @@
 			</p>
 		</section>
 
-		<section class="mechanic-card win-condition" data-augmented-ui="tl-clip tr-clip br-clip bl-clip border">
+		<section
+			class="mechanic-card win-condition"
+			data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
+		>
 			<div class="card-header">
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
