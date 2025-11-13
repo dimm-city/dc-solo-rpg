@@ -141,8 +141,8 @@ test.describe('Full Game Validation', () => {
 			const statsBefore = await getUIStats();
 			console.log(`📊 Start: Tower ${statsBefore.tower}/54, Tokens ${statsBefore.tokens}/10`);
 
-			// ==================== ROLL FOR TASKS ====================
-			console.log(`\n🎲 ROLL FOR TASKS`);
+			// ==================== GENERATE NUMBER ====================
+			console.log(`\n🎲 GENERATE NUMBER`);
 
 			// Wait for dice roller
 			const diceVisible = await waitFor('.dc-dice-roller-container', 5000);

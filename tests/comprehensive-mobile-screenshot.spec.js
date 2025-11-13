@@ -28,7 +28,7 @@ test('Comprehensive mobile screenshot test for user verification', async ({ page
 	await page.screenshot({ path: 'screenshots/mobile-04-intro.png', fullPage: true });
 	console.log('✓ Screenshot 4: Intro screen');
 
-	// 5. Roll for tasks screen (after clicking START on intro)
+	// 5. Generate Number screen (after clicking START on intro)
 	await page.getByTestId('intro-next-button').click();
 	await page.waitForTimeout(2000);
 	const rollTasksVisible = await page
@@ -36,11 +36,11 @@ test('Comprehensive mobile screenshot test for user verification', async ({ page
 		.isVisible({ timeout: 5000 })
 		.catch(() => false);
 	if (!rollTasksVisible) {
-		console.log('⚠️  Roll for tasks screen not visible, checking startRound...');
+		console.log('⚠️  Generate Number screen not visible, checking startRound...');
 		await expect(page.getByTestId('screen-startRound')).toBeVisible({ timeout: 5000 });
 	}
 	await page.screenshot({ path: 'screenshots/mobile-05-roll-for-tasks.png', fullPage: true });
-	console.log('✓ Screenshot 5: Roll for tasks screen');
+	console.log('✓ Screenshot 5: Generate Number screen');
 
 	// Check button dimensions
 	const diceArea = page.locator('.dc-dice-roller-container').first();

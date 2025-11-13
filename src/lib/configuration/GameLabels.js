@@ -44,7 +44,7 @@ export class GameLabels {
 		this.journalEntryExitButtonText = labels?.journalEntryExitButtonText ?? 'New Game';
 
 		/** @property {string} rollForTasksHeader - Header text for the roll for tasks section. */
-		this.rollForTasksHeader = labels?.rollForTasksHeader ?? 'Roll for tasks';
+		this.rollForTasksHeader = labels?.rollForTasksHeader ?? 'Generate Number';
 
 		/** @property {string} rollForTasksResultHeader - Header text for the result of the roll for tasks section. */
 		this.rollForTasksResultHeader = labels?.rollForTasksResultHeader ?? 'Click to continue';

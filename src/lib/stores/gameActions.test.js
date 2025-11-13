@@ -163,7 +163,7 @@ describe('gameActions - Core Game Mechanics', () => {
 		});
 	});
 
-	describe('Dice Rolling - Roll For Tasks', () => {
+	describe('Dice Rolling - Generate Number', () => {
 		beforeEach(() => {
 			gameState.state = 'rollForTasks';
 		});

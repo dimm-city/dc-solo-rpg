@@ -358,8 +358,8 @@ test('COMPREHENSIVE: Full game validation with logic verification', async ({ pag
 			);
 		}
 
-		// Roll for tasks
-		console.log(`\n🎲 ROLL FOR TASKS`);
+		// Generate Number
+		console.log(`\n🎲 GENERATE NUMBER`);
 
 		// Wait for dice roller to become available
 		await page.waitForSelector('.dc-dice-roller-container', { timeout: 5000 });
@@ -616,18 +616,18 @@ test('SMOKE TEST: Game starts and first round works', async ({ page }) => {
 	await page.click('button:has-text("start")');
 	await page.waitForTimeout(1500);
 
-	// Verify "Roll for Tasks" button or dice roller is visible
-	const rollButton = page.locator('button:has-text("ROLL FOR TASKS")');
+	// Verify "Generate Number" button or dice roller is visible
+	const rollButton = page.locator('button:has-text("GENERATE NUMBER")');
 	const diceRoller = page.locator('.dc-dice-roller-container');
 	const isVisible = await rollButton.or(diceRoller).isVisible();
 	expect(isVisible).toBe(true);
-	console.log('✓ Roll for tasks screen appeared');
+	console.log('✓ Generate Number screen appeared');
 
-	// Click Roll for Tasks button
-	const rollTasksButton = page.locator('button:has-text("ROLL FOR TASKS")');
+	// Click Generate Number button
+	const rollTasksButton = page.locator('button:has-text("GENERATE NUMBER")');
 	await rollTasksButton.click();
 	await page.waitForTimeout(2000);
-	console.log('✓ Clicked Roll for Tasks');
+	console.log('✓ Clicked Generate Number');
 
 	// Check if dice roller appeared or if result is already shown
 	const diceRollerVisible = await page

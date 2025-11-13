@@ -78,8 +78,8 @@
 
 	const rollForTasksButtonText = $derived(
 		rollTasksRolled
-			? (gameState.config?.labels?.rollForTasksResultHeader ?? 'Result')
-			: (gameState.config?.labels?.rollForTasksHeader ?? 'Roll for Tasks')
+			? (gameState.config?.labels?.rollForTasksResultHeader ?? 'Generate Number')
+			: (gameState.config?.labels?.rollForTasksHeader ?? 'Generate Number')
 	);
 	const rollForTasksButtonDisabled = $derived(rollTasksRolling || rollTasksConfirming);
 
@@ -524,7 +524,7 @@
 					<!-- Action buttons will go here based on current screen -->
 					{#if currentScreen === 'startRound'}
 						<ContinueButton
-							text="Roll for tasks"
+							text="Generate Number"
 							onclick={() => transitionTo('rollForTasks')}
 							testid="start-round-button"
 						/>
@@ -588,7 +588,7 @@
 							{/if}
 						{:else}
 							<ContinueButton
-								text={gameState.config?.labels?.journalEntrySaveButtonText ?? 'Save'}
+								text={gameState.config?.labels?.journalEntrySaveButtonText ?? 'Record Entry'}
 								onclick={handleJournalSave}
 								testid="journal-save-button"
 							/>
