@@ -2,6 +2,7 @@
 	import { gameState } from '../stores/gameStore.svelte.js';
 	import NeuralBackground from './NeuralBackground.svelte';
 	import GameScreen from './GameScreen.svelte';
+	import HelpModal from './HelpModal.svelte';
 
 	let {
 		systemSettings = $bindable({}),
@@ -14,6 +15,12 @@
 
 	const gameStylesheet = $derived(gameState.stylesheet);
 	const currentScreen = $derived(gameState.state);
+
+	let showHelpModal = $state(false);
+
+	function handleHelpClose() {
+		showHelpModal = false;
+	}
 
 	$effect(() => {
 		if (currentScreen == 'gameOver') {
@@ -29,8 +36,11 @@
 </svelte:head>
 <div class="dc-game-container dc-game-bg" data-testid="game-container">
 	<NeuralBackground />
-	<GameScreen {systemSettings} {onfailurecheckcompleted} {onjournalsaved} />
+	<GameScreen {systemSettings} {onfailurecheckcompleted} {onjournalsaved} bind:showHelpModal />
 </div>
+
+<!-- Help Modal rendered at game container level -->
+<HelpModal isOpen={showHelpModal} onClose={handleHelpClose} />
 
 <style>
 	:root {

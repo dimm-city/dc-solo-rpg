@@ -21,7 +21,6 @@
 	import DeckVisualization from './DeckVisualization.svelte';
 	import ButtonBar from './ButtonBar.svelte';
 	import OverlayModal from './OverlayModal.svelte';
-	import HelpModal from './HelpModal.svelte';
 	import { onMount } from 'svelte';
 	import { rollDice } from '../stores/diceStore.svelte.js';
 	import {
@@ -41,7 +40,8 @@
 	let {
 		systemSettings = {},
 		onfailurecheckcompleted = () => {},
-		onjournalsaved = () => {}
+		onjournalsaved = () => {},
+		showHelpModal = $bindable(false)
 	} = $props();
 
 	const currentScreen = $derived(gameState.state);
@@ -234,7 +234,6 @@
 
 	let showExitModal = $state(false);
 	let showKeyboardHint = $state(false);
-	let showHelpModal = $state(false);
 
 	function handleExitClick() {
 		showExitModal = true;
@@ -636,9 +635,6 @@
 	onConfirm={handleExitConfirm}
 	onCancel={handleExitCancel}
 />
-
-<!-- Help Modal -->
-<HelpModal isOpen={showHelpModal} onClose={handleHelpClose} />
 
 <style>
 	.game-screen {
