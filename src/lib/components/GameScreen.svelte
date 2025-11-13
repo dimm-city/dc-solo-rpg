@@ -20,6 +20,7 @@
 	import KeyboardHint from './KeyboardHint.svelte';
 	import DeckVisualization from './DeckVisualization.svelte';
 	import ButtonBar from './ButtonBar.svelte';
+	import OverlayModal from './OverlayModal.svelte';
 	import { onMount } from 'svelte';
 	import { rollDice } from '../stores/diceStore.svelte.js';
 	import {
@@ -444,13 +445,9 @@
 							<RollForTasks />
 						</div>
 					{:else if currentScreen == 'drawCard'}
-						<div
-							class="dc-fade-in dc-screen-container dc-card-overlay-screen"
-							data-testid="screen-drawCard"
-							transition:fade={{ duration: TRANSITION_DURATION }}
-						>
+						<OverlayModal isVisible={true} zIndex={50}>
 							<DrawCard bind:this={drawCardRef} />
-						</div>
+						</OverlayModal>
 					{:else if currentScreen == 'failureCheck'}
 						<div
 							class="dc-fade-in dc-screen-container"
@@ -476,13 +473,9 @@
 							<FinalDamageRoll />
 						</div>
 					{:else if currentScreen == 'finalLog' || currentScreen == 'log'}
-						<div
-							class="dc-fade-in dc-screen-container dc-journal-screen"
-							data-testid="screen-journal"
-							transition:fade={{ duration: TRANSITION_DURATION }}
-						>
+						<OverlayModal isVisible={true} zIndex={50}>
 							<JournalEntry bind:journalText={journal.text} />
-						</div>
+						</OverlayModal>
 					{:else}
 						<div transition:fade={{ duration: TRANSITION_DURATION }}>error: {currentScreen}</div>
 					{/if}
@@ -870,28 +863,6 @@
 		z-index: 1;
 	}
 
-	/* Card overlay screen - fills entire game area, scrollable, above content but below toolbar */
-	.dc-card-overlay-screen {
-		position: fixed !important;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		width: 100vw !important;
-		height: 100vh !important;
-		z-index: 50 !important; /* Above main content (z-index: 1) but below toolbar (z-index: 100) */
-		overflow-y: auto !important; /* Allow scrolling for long card content */
-		overflow-x: hidden;
-		padding: var(--space-md);
-		padding-bottom: calc(60px + var(--space-lg)); /* Extra padding for toolbar */
-		display: flex;
-		align-items: flex-start; /* Align to top for scrolling */
-		justify-content: center;
-		background: rgba(0, 0, 0, 0.5); /* Semi-transparent backdrop */
-		backdrop-filter: blur(4px);
-		-webkit-backdrop-filter: blur(4px);
-	}
-
 	.dc-table-bg {
 		border-radius: var(--dc-default-border-radius);
 		/* Background removed to show neural network animation on all screens */
@@ -915,25 +886,6 @@
 		h4 {
 			vertical-align: middle;
 		}
-	}
-
-	.dc-journal-screen {
-		position: relative;
-		width: 100%;
-		height: 100%;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: var(--space-md);
-		box-sizing: border-box;
-		z-index: 150; /* Above all toolbar elements (toolbar is 100, mobile toolbar items are 101) */
-	}
-
-	.dc-journal-screen :global(.dc-journal-container) {
-		width: 100%;
-		max-width: 900px;
-		height: 100%;
-		max-height: 100%;
 	}
 
 	/* Mobile responsiveness - Move exit and deck outside toolbar */

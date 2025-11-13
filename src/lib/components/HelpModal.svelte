@@ -1,5 +1,6 @@
 <script>
 	import { fade } from 'svelte/transition';
+	import OverlayModal from './OverlayModal.svelte';
 
 	let { isOpen = false, helpKey, onClose } = $props();
 
@@ -53,100 +54,36 @@
 	}
 </script>
 
-{#if isOpen}
-	<div
-		class="help-modal-backdrop"
-		transition:fade={{ duration: 200 }}
-		onclick={handleBackdropClick}
-		role="button"
-		tabindex="0"
-		onkeydown={(e) => e.key === 'Escape' && onClose()}
-	>
-		<div
-			class="help-card"
-			data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
-			transition:fade={{ duration: 300, delay: 100 }}
-		>
-			<div class="help-card-content">
-				<h3 class="help-title">{content.title}</h3>
-				<p class="help-message">{content.message}</p>
-				<button class="dismiss-button" onclick={onClose}>
-					<span>Got it</span>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						width="18"
-						height="18"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						aria-hidden="true"
-					>
-						<path d="M5 12h14" />
-						<path d="m12 5 7 7-7 7" />
-					</svg>
-				</button>
-			</div>
-		</div>
+<OverlayModal isVisible={isOpen} zIndex={1000}>
+	<div class="help-card-content">
+		<h3 class="help-title">{content.title}</h3>
+		<p class="help-message">{content.message}</p>
+		<button class="dismiss-button" onclick={onClose}>
+			<span>Got it</span>
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				width="18"
+				height="18"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				aria-hidden="true"
+			>
+				<path d="M5 12h14" />
+				<path d="m12 5 7 7-7 7" />
+			</svg>
+		</button>
 	</div>
-{/if}
+</OverlayModal>
 
 <style>
-	.help-modal-backdrop {
-		position: fixed;
-		inset: 0;
-		background: rgba(0, 0, 0, 0.7);
-		backdrop-filter: blur(8px);
-		-webkit-backdrop-filter: blur(8px);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		z-index: 1000;
-		padding: var(--space-md);
-	}
-
-	.help-card {
-		position: relative;
-		max-width: 500px;
-		width: 100%;
-		padding: var(--space-xl);
-
-		/* Augmented UI Configuration */
-		--aug-border-all: 2px;
-		--aug-border-bg: linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta));
-		--aug-tl: 16px;
-		--aug-tr: 16px;
-		--aug-br: 16px;
-		--aug-bl: 16px;
-
-		/* Card styling */
-		background: linear-gradient(135deg, rgba(10, 10, 20, 0.95), rgba(15, 15, 25, 0.9));
-		backdrop-filter: blur(10px) saturate(150%);
-		-webkit-backdrop-filter: blur(10px) saturate(150%);
-
-		/* Enhanced glow */
-		box-shadow:
-			0 0 30px rgba(0, 255, 255, 0.4),
-			0 0 60px rgba(217, 70, 239, 0.3),
-			inset 0 0 20px rgba(0, 255, 255, 0.1);
-
-		animation: help-card-appear 400ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-	}
-
-	@keyframes help-card-appear {
-		0% {
-			opacity: 0;
-			transform: scale(0.9) translateY(20px);
-		}
-		100% {
-			opacity: 1;
-			transform: scale(1) translateY(0);
-		}
-	}
-
 	.help-card-content {
+		width: 100%;
+		height: 100%;
+		padding: var(--space-xl);
 		position: relative;
 		z-index: 1;
 		display: flex;
@@ -211,15 +148,6 @@
 
 	/* Mobile responsive */
 	@media (max-width: 600px) {
-		.help-card {
-			max-width: 95%;
-			padding: var(--space-lg);
-			--aug-tl: 12px;
-			--aug-tr: 12px;
-			--aug-br: 12px;
-			--aug-bl: 12px;
-		}
-
 		.help-title {
 			font-size: var(--text-lg);
 		}
@@ -236,19 +164,6 @@
 
 	/* Accessibility - Reduced motion */
 	@media (prefers-reduced-motion: reduce) {
-		.help-card {
-			animation: help-card-appear-reduced 200ms ease forwards;
-		}
-
-		@keyframes help-card-appear-reduced {
-			from {
-				opacity: 0;
-			}
-			to {
-				opacity: 1;
-			}
-		}
-
 		.dismiss-button:hover {
 			transform: none;
 		}

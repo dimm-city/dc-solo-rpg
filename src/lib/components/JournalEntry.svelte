@@ -7,7 +7,7 @@
 	const currentEvents = $derived(gameState.log.filter((l) => l.round === gameState.round));
 </script>
 
-<div class="dc-journal-container" data-augmented-ui="tl-clip tr-clip br-clip bl-clip border">
+<div class="dc-journal-container">
 	<div class="journal-header-area">
 		<h6>{gameState.config?.labels?.journalEntryHeader ?? 'Journal Entry'}</h6>
 		<blockquote>
@@ -37,26 +37,6 @@
 			'header-area'
 			'text-entry-area';
 		box-sizing: border-box;
-		position: relative;
-		z-index: 200; /* Above deck visualization (10) and toolbar elements (100) */
-
-		/* Card styling with glassmorphism */
-		background: linear-gradient(135deg, rgba(10, 10, 20, 0.9), rgba(15, 15, 25, 0.85));
-		backdrop-filter: blur(16px);
-		-webkit-backdrop-filter: blur(16px);
-		border: var(--border-width-thick) solid var(--color-cyber-magenta);
-		box-shadow:
-			0 0 30px rgba(217, 70, 239, 0.3),
-			0 0 60px rgba(217, 70, 239, 0.15),
-			inset 0 0 30px rgba(217, 70, 239, 0.08);
-
-		/* Augmented UI */
-		--aug-border-all: var(--border-width-thick);
-		--aug-border-bg: linear-gradient(135deg, var(--color-cyber-magenta), var(--color-neon-cyan));
-		--aug-tl: 14px;
-		--aug-tr: 14px;
-		--aug-br: 14px;
-		--aug-bl: 14px;
 	}
 
 	.journal-header-area {
