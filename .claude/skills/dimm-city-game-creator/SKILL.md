@@ -54,7 +54,7 @@ lose-message: Defeat description
 
 **Introduction sections:**
 - `## Who You Are` - Protagonist identity, skills, situation (1-3 paragraphs)
-- `## What Happened` - Inciting incident (1-3 paragraphs)
+- `## What Happened` - Inciting incident (1-5 paragraphs)
 - `## Your Goal` - Victory condition and stakes (1-2 paragraphs)
 
 ### Step 3: Generate 52 Cards
