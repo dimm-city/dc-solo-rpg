@@ -276,7 +276,7 @@
 							data-testid="game-card-{game.slug}"
 						>
 							<h3 class="game-card-title">{game.title}</h3>
-							<p class="game-subtitle">{gameDescriptions[game.slug] || 'Begin your adventure'}</p>
+							<p class="game-subtitle">{game.subtitle || 'Welcome to the city'}</p>
 						</button>
 					{/each}
 				</div>
