@@ -23,8 +23,7 @@
 					const settings = JSON.parse(savedSettings);
 					selectedDifficulty = settings.difficulty || Difficulty.NORMAL;
 					selectedDiceTheme =
-						availableDiceThemes.find((t) => t.key === settings.diceTheme) ||
-						availableDiceThemes[0];
+						availableDiceThemes.find((t) => t.key === settings.diceTheme) || availableDiceThemes[0];
 				} catch (e) {
 					console.error('Failed to load settings:', e);
 				}
