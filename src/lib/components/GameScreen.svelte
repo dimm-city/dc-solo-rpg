@@ -241,13 +241,10 @@
 	}
 
 	function handleHelpClick() {
-		console.log('[GameScreen] Help button clicked, current showHelpModal:', showHelpModal);
 		showHelpModal = true;
-		console.log('[GameScreen] showHelpModal set to:', showHelpModal);
 	}
 
 	function handleHelpClose() {
-		console.log('[GameScreen] Closing help modal');
 		showHelpModal = false;
 	}
 
@@ -450,7 +447,9 @@
 							<RollForTasks />
 						</div>
 					{:else if currentScreen == 'drawCard'}
-						<!-- DrawCard rendered in modal at root level -->
+						<OverlayModal isVisible={true} zIndex={50}>
+							<DrawCard bind:this={drawCardRef} />
+						</OverlayModal>
 					{:else if currentScreen == 'failureCheck'}
 						<div
 							class="dc-fade-in dc-screen-container"
@@ -476,7 +475,9 @@
 							<FinalDamageRoll />
 						</div>
 					{:else if currentScreen == 'finalLog' || currentScreen == 'log'}
-						<!-- JournalEntry rendered in modal at root level -->
+						<OverlayModal isVisible={true} zIndex={50}>
+							<JournalEntry bind:journalText={journal.text} />
+						</OverlayModal>
 					{:else}
 						<div transition:fade={{ duration: TRANSITION_DURATION }}>error: {currentScreen}</div>
 					{/if}
@@ -638,16 +639,6 @@
 
 <!-- Help Modal -->
 <HelpModal isOpen={showHelpModal} onClose={handleHelpClose} />
-
-<!-- Card Modal -->
-<OverlayModal isVisible={currentScreen === 'drawCard'} zIndex={50}>
-	<DrawCard bind:this={drawCardRef} />
-</OverlayModal>
-
-<!-- Journal Modal -->
-<OverlayModal isVisible={currentScreen === 'log' || currentScreen === 'finalLog'} zIndex={50}>
-	<JournalEntry bind:journalText={journal.text} />
-</OverlayModal>
 
 <style>
 	.game-screen {

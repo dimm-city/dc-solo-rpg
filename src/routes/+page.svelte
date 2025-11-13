@@ -202,7 +202,6 @@
 				<span class="version-text">DC-S-0.1.0</span>
 			</div>
 			<div class="header-buttons">
-				
 				<a href="/about" class="header-link" aria-label="About">
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
@@ -257,7 +256,6 @@
 					>
 				</a>
 			</div>
-			
 		</div>
 		<div class="welcome-container">
 			<div class="dc-start-screen-container" data-testid="game-selector">
