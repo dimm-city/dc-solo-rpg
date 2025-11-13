@@ -698,8 +698,9 @@
 			inset 0 0 30px rgba(255, 0, 255, 0.25),
 			inset 0 0 50px rgba(0, 255, 255, 0.1);
 
-		/* Slide-in animation from bottom */
-		animation: toolbar-slide-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+		/* Slide-in animation from bottom - dramatic delayed entrance */
+		animation: toolbar-slide-in 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 1.2s forwards;
+		opacity: 0; /* Start invisible */
 	}
 
 	@keyframes toolbar-slide-in {

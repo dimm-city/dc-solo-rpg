@@ -47,9 +47,13 @@
 	</div>
 
 	<!-- Stats Grid -->
-	<div class="stats-grid slide-down" style="animation-delay: 0.2s">
+	<div class="stats-grid">
 		<div>
-			<div class="stat-item health-stat" data-augmented-ui="tl-clip tr-clip-x br-clip-x border">
+			<div
+				class="stat-item health-stat slide-down"
+				data-augmented-ui="tl-clip tr-clip-x br-clip-x border"
+				style="animation-delay: 0.2s"
+			>
 				<div class="stat-label">
 					HEALTH
 					<HelpIcon onclick={() => (showHelp = 'tower')} ariaLabel="Help: What is Health?" />
@@ -64,7 +68,11 @@
 				</div>
 			</div>
 
-			<div class="stat-item failure-stat" data-augmented-ui="l-rect tr-clip br-clip-x border">
+			<div
+				class="stat-item failure-stat slide-down"
+				data-augmented-ui="l-rect tr-clip br-clip-x border"
+				style="animation-delay: 0.35s"
+			>
 				<div class="stat-label">
 					{gameState.config?.labels?.failureCounters?.toUpperCase() ?? 'FAILURE'}
 					<HelpIcon onclick={() => (showHelp = 'kings')} ariaLabel="Help: What are Kings?" />
@@ -82,7 +90,11 @@
 		<div>
 			<!-- Digital Dice Readout -->
 			{#if gameState.diceRoll > 0}
-				<div class="dice-readout" data-augmented-ui="tl-clip tr-clip br-clip bl-clip border">
+				<div
+					class="dice-readout slide-down"
+					data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
+					style="animation-delay: 0.5s"
+				>
 					<div class="dice-label">LAST ROLL</div>
 					<div class="dice-value">{gameState.diceRoll}</div>
 					<div class="dice-pips">
@@ -95,8 +107,9 @@
 		</div>
 		<div>
 			<div
-				class="stat-item bonus-stat"
+				class="stat-item bonus-stat slide-down"
 				data-augmented-ui="tl-clip-y l-rect-y tr-clip-x br-clip-x border"
+				style="animation-delay: 0.65s"
 			>
 				<div class="stat-label">
 					LUCK
@@ -113,8 +126,9 @@
 			</div>
 
 			<div
-				class="stat-item success-stat"
+				class="stat-item success-stat slide-down"
 				data-augmented-ui=" tl-clip-inset tr-2-clip-y br-clip bl-2-clip-x border"
+				style="animation-delay: 0.8s"
 			>
 				<div class="stat-label">
 					{gameState.config?.labels?.successCounters?.toUpperCase() ?? 'SUCCESS'}
@@ -144,7 +158,7 @@
 		<div
 			class="progress-tracker slide-down"
 			data-augmented-ui="tl-2-clip-x tr-2-clip-x border"
-			style="animation-delay: 0.3s"
+			style="animation-delay: 0.95s"
 		>
 			<div class="progress-bar">
 				<div class="progress-fill" style="width: {progressPercent}%"></div>
@@ -364,9 +378,9 @@
 
 		/* Left side rectangle inset - receives puzzle tab from health */
 		/* Match health's right extension for perfect fit */
-		--aug-l-extend1: 4px;
-		--aug-l-inset1: 8px;
-		margin-inline-start: -25px;
+		--aug-l-extend1: 20px;
+		--aug-l-inset1: 10px;
+		margin-inline-start: -28px;
 		padding-inline-start: var(--space-xl);
 		/* Enhanced Glow - animation removed */
 		box-shadow:
