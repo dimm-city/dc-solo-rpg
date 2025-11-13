@@ -17,6 +17,20 @@
 	let showContent = $state(false);
 	let showModal = $state(false);
 
+	// On mount, check if we should skip splash and go straight to content
+	onMount(() => {
+		const splashAlreadyShown = sessionStorage.getItem('splashShown') === 'true';
+		if (splashAlreadyShown) {
+			// Splash already shown in this session, determine what to show
+			const instructionsSeen = hasSeenInstructions();
+			if (instructionsSeen) {
+				showContent = true;
+			} else {
+				showInstructionsChoice = true;
+			}
+		}
+	});
+
 	function selectGame(game) {
 		selectedGame = game;
 		showModal = true;
