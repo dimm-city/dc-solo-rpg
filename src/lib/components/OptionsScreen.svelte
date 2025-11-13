@@ -175,10 +175,13 @@
 		-webkit-backdrop-filter: blur(8px);
 
 		/* Custom chevron */
-		background-image: linear-gradient(135deg, rgba(0, 20, 40, 0.4), rgba(10, 10, 30, 0.6)),
+		background-image:
+			linear-gradient(135deg, rgba(0, 20, 40, 0.4), rgba(10, 10, 30, 0.6)),
 			url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2300FFFF' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
 		background-repeat: no-repeat, no-repeat;
-		background-position: 0 0, right var(--space-md) center;
+		background-position:
+			0 0,
+			right var(--space-md) center;
 	}
 
 	/* Augmented-UI styling */
@@ -207,7 +210,8 @@
 			0 0 40px rgba(217, 70, 239, 0.1),
 			inset 0 0 20px rgba(217, 70, 239, 0.05);
 
-		background-image: linear-gradient(135deg, rgba(0, 20, 40, 0.4), rgba(10, 10, 30, 0.6)),
+		background-image:
+			linear-gradient(135deg, rgba(0, 20, 40, 0.4), rgba(10, 10, 30, 0.6)),
 			url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23D946EF' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
 	}
 

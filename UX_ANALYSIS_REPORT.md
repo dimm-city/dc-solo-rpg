@@ -14,12 +14,14 @@ After playing through multiple rounds of DC Solo RPG and conducting a comprehens
 ### Implementation Status
 
 **✅ COMPLETED - Quick Wins (Phase 1) + Keyboard Shortcuts**
+
 - ✅ Problem 1: Mini Status HUD (2h) - **IMPLEMENTED**
 - ✅ Problem 2: Cards Remaining Counter (30m) - **IMPLEMENTED**
 - ✅ Problem 4: Keyboard Shortcuts (3h) - **IMPLEMENTED**
 - ✅ Problem 5: Visual Card Type Indicators (2h) - **IMPLEMENTED**
 
 **✅ COMPLETED - All UX Improvements (Phase 3)**
+
 - ✅ Problem 3: Progressive Introduction (4h) - **IMPLEMENTED**
 - ✅ Problem 6: Deck Progress Visualization (3h) - **IMPLEMENTED**
 - ✅ Problem 7: Contextual Help Icons (3h) - **IMPLEMENTED**
@@ -39,12 +41,14 @@ After playing through multiple rounds of DC Solo RPG and conducting a comprehens
 ### User Journey Map
 
 #### Phase 1: Game Selection
+
 - **Current Flow:** Click "Start Game" → Click game title → Click "Continue"
 - **Clicks:** 3
 - **Issues:** None (this flow is good)
 - **Status:** ✅ Optimal
 
 #### Phase 2: Introduction/Rules
+
 - **Current Flow:** 1500+ word text wall → Scroll → Scroll → Scroll → Click "Begin"
 - **Time Required:** 3-5 minutes of reading
 - **Issues:**
@@ -55,6 +59,7 @@ After playing through multiple rounds of DC Solo RPG and conducting a comprehens
 - **Status:** ❌ Critical Problem
 
 #### Phase 3: Main Gameplay Loop (Per Round)
+
 - **Current Flow:**
   1. View status screen (Tower/Kings/Tokens visible)
   2. Click "Draw Card"
@@ -76,6 +81,7 @@ After playing through multiple rounds of DC Solo RPG and conducting a comprehens
   - Scroll position not managed automatically
 
 #### Phase 4: Game End
+
 - **Current Flow:** Final message → Click "Play Again" or close
 - **Clicks:** 1
 - **Issues:** None
@@ -92,12 +98,14 @@ After playing through multiple rounds of DC Solo RPG and conducting a comprehens
 **Date Completed:** 2025-11-12
 
 ### Issue Description
+
 When viewing a card during gameplay, the status bar (Tower, Kings Revealed, Tokens) scrolls out of view or is hidden entirely. Players must rely on memory to track their current game state, which creates cognitive load and anxiety.
 
 **User Impact:** HIGH
 **Implementation Complexity:** LOW (2 hours)
 
 ### Current Behavior
+
 ```
 [Status visible: Tower: 54, Kings: 0, Tokens: 10]
 ↓ User clicks "Draw Card"
@@ -111,6 +119,7 @@ When viewing a card during gameplay, the status bar (Tower, Kings Revealed, Toke
 Create a persistent overlay that shows critical stats during card reveals.
 
 **Example Implementation (Svelte 5 runes):**
+
 ```svelte
 <!-- src/lib/components/MiniStatusHUD.svelte -->
 <script>
@@ -128,26 +137,63 @@ Create a persistent overlay that shows critical stats during card reveals.
 	<div class="mini-status-hud">
 		<div class="stat">
 			<!-- Heart SVG icon -->
-			<svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+			<svg
+				class="icon"
+				xmlns="http://www.w3.org/2000/svg"
+				width="16"
+				height="16"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+			>
+				<path
+					d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"
+				/>
 			</svg>
 			<span class="value">{tower}</span>
 		</div>
 		<div class="stat">
 			<!-- Skull SVG icon -->
-			<svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<circle cx="9" cy="12" r="1"/>
-				<circle cx="15" cy="12" r="1"/>
-				<path d="M8 20v2h8v-2"/>
-				<path d="m12.5 17-.5-1-.5 1h1z"/>
-				<path d="M16 20a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20"/>
+			<svg
+				class="icon"
+				xmlns="http://www.w3.org/2000/svg"
+				width="16"
+				height="16"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+			>
+				<circle cx="9" cy="12" r="1" />
+				<circle cx="15" cy="12" r="1" />
+				<path d="M8 20v2h8v-2" />
+				<path d="m12.5 17-.5-1-.5 1h1z" />
+				<path d="M16 20a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20" />
 			</svg>
 			<span class="value">{kingsRevealed}/4</span>
 		</div>
 		<div class="stat">
 			<!-- Star SVG icon -->
-			<svg class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+			<svg
+				class="icon"
+				xmlns="http://www.w3.org/2000/svg"
+				width="16"
+				height="16"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+			>
+				<polygon
+					points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+				/>
 			</svg>
 			<span class="value">{tokens}</span>
 		</div>
@@ -203,6 +249,7 @@ Create a persistent overlay that shows critical stats during card reveals.
 **Integration Point:** Add to `GameScreen.svelte`
 
 **Expected Outcome:**
+
 - Players always see current status
 - Reduced anxiety and cognitive load
 - Better decision-making (players can assess risk)
@@ -216,12 +263,14 @@ Create a persistent overlay that shows critical stats during card reveals.
 **Date Completed:** 2025-11-12
 
 ### Issue Description
+
 Players have no idea how far they've progressed through the 52-card deck. This creates uncertainty and removes the building tension that should come from approaching the end of the game.
 
 **User Impact:** HIGH
 **Implementation Complexity:** VERY LOW (30 minutes)
 
 ### Current Behavior
+
 ```
 Player draws card #1 - No feedback
 Player draws card #15 - No feedback
@@ -233,6 +282,7 @@ Player draws card #47 - No feedback (should feel TENSE!)
 Add a simple counter showing cards processed and remaining.
 
 **Example Implementation:**
+
 ```svelte
 <!-- Add to GameScreen.svelte status area -->
 <div class="progress-tracker">
@@ -293,6 +343,7 @@ Add a simple counter showing cards processed and remaining.
 ```
 
 **Expected Outcome:**
+
 - Clear sense of progression
 - Building tension as deck depletes
 - Better game pacing awareness
@@ -306,12 +357,14 @@ Add a simple counter showing cards processed and remaining.
 **Date Completed:** 2025-11-12
 
 ### Issue Description
+
 The introduction screen dumps 1500+ words of rules all at once, violating the SRD's core design principle of "progressive rule teaching." New players are overwhelmed, experienced players are frustrated by repetition.
 
 **User Impact:** HIGH
 **Implementation Complexity:** MEDIUM (4 hours)
 
 ### Current Behavior
+
 ```
 NEW PLAYER:
 [Sees wall of text]
@@ -339,19 +392,19 @@ Break introduction into digestible steps with "Learn as You Play" option.
 
 	const steps = [
 		{
-			title: "Welcome",
-			content: "Brief welcome message (2-3 sentences)",
-			duration: "quick"
+			title: 'Welcome',
+			content: 'Brief welcome message (2-3 sentences)',
+			duration: 'quick'
 		},
 		{
-			title: "The Basics",
+			title: 'The Basics',
 			content: "You'll draw cards and tell a story. That's it.",
-			duration: "quick"
+			duration: 'quick'
 		},
 		{
-			title: "Your Resources",
-			content: "Tower (health) and Tokens. Details explained during play.",
-			duration: "quick"
+			title: 'Your Resources',
+			content: 'Tower (health) and Tokens. Details explained during play.',
+			duration: 'quick'
 		}
 	];
 
@@ -373,12 +426,23 @@ Break introduction into digestible steps with "Learn as You Play" option.
 			<div class="choices">
 				<button class="choice-btn primary" onclick={() => handleChoice(true)}>
 					<!-- Gamepad2 SVG icon -->
-					<svg class="icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-						<line x1="6" x2="10" y1="12" y2="12"/>
-						<line x1="8" x2="8" y1="10" y2="14"/>
-						<line x1="15" x2="15.01" y1="13" y2="13"/>
-						<line x1="18" x2="18.01" y1="11" y2="11"/>
-						<rect width="20" height="12" x="2" y="6" rx="2"/>
+					<svg
+						class="icon"
+						xmlns="http://www.w3.org/2000/svg"
+						width="32"
+						height="32"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<line x1="6" x2="10" y1="12" y2="12" />
+						<line x1="8" x2="8" y1="10" y2="14" />
+						<line x1="15" x2="15.01" y1="13" y2="13" />
+						<line x1="18" x2="18.01" y1="11" y2="11" />
+						<rect width="20" height="12" x="2" y="6" rx="2" />
 					</svg>
 					<span class="title">Learn as I Play</span>
 					<span class="desc">Recommended for new players</span>
@@ -386,9 +450,20 @@ Break introduction into digestible steps with "Learn as You Play" option.
 
 				<button class="choice-btn" onclick={() => handleChoice(false)}>
 					<!-- BookOpen SVG icon -->
-					<svg class="icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-						<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-						<path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+					<svg
+						class="icon"
+						xmlns="http://www.w3.org/2000/svg"
+						width="32"
+						height="32"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+						<path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
 					</svg>
 					<span class="title">Read Full Introduction</span>
 					<span class="desc">All rules upfront</span>
@@ -396,8 +471,19 @@ Break introduction into digestible steps with "Learn as You Play" option.
 
 				<button class="skip-btn" onclick={skip}>
 					<!-- Play SVG icon -->
-					<svg class="inline-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-						<polygon points="5 3 19 12 5 21 5 3"/>
+					<svg
+						class="inline-icon"
+						xmlns="http://www.w3.org/2000/svg"
+						width="16"
+						height="16"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<polygon points="5 3 19 12 5 21 5 3" />
 					</svg>
 					I've played before - Skip intro
 				</button>
@@ -510,22 +596,24 @@ export const tutorialSteps = {
 	firstCardDraw: {
 		trigger: 'cardDrawn',
 		condition: (state) => state.cardsDrawn === 1,
-		title: "Your First Card",
-		message: "This is your first card! Read the story and follow the prompt.",
-		confirmText: "Got it"
+		title: 'Your First Card',
+		message: 'This is your first card! Read the story and follow the prompt.',
+		confirmText: 'Got it'
 	},
 	firstDamageRoll: {
 		trigger: 'cardDrawn',
 		condition: (state) => state.currentCard?.type === 'challenge' && state.cardsDrawn <= 5,
-		title: "Challenge Card",
-		message: "Challenge cards trigger damage rolls. Roll the dice to see how many blocks fall from your Tower.",
-		confirmText: "Understood"
+		title: 'Challenge Card',
+		message:
+			'Challenge cards trigger damage rolls. Roll the dice to see how many blocks fall from your Tower.',
+		confirmText: 'Understood'
 	},
 	firstKing: {
 		trigger: 'cardDrawn',
 		condition: (state) => state.currentCard?.card === 'K' && state.kingsRevealed === 1,
-		title: "Warning: King Revealed",
-		message: "Kings are bad news. Draw all 4 and it's game over! Keep track of how many you've revealed.",
+		title: 'Warning: King Revealed',
+		message:
+			"Kings are bad news. Draw all 4 and it's game over! Keep track of how many you've revealed.",
 		confirmText: "I'll be careful",
 		style: 'warning'
 	}
@@ -549,10 +637,7 @@ export const tutorialSteps = {
 	function handleDismiss() {
 		if (triggerKey) {
 			// Mark this tutorial step as completed
-			gameState.tutorialStepsCompleted = [
-				...(gameState.tutorialStepsCompleted || []),
-				triggerKey
-			];
+			gameState.tutorialStepsCompleted = [...(gameState.tutorialStepsCompleted || []), triggerKey];
 		}
 	}
 </script>
@@ -562,7 +647,7 @@ export const tutorialSteps = {
 		{isOpen}
 		title={currentHelp.title}
 		message={currentHelp.message}
-		confirmText={currentHelp.confirmText || "Got it"}
+		confirmText={currentHelp.confirmText || 'Got it'}
 		cancelText=""
 		onConfirm={handleDismiss}
 		onCancel={handleDismiss}
@@ -597,6 +682,7 @@ export const tutorialSteps = {
 ```
 
 **Expected Outcome:**
+
 - New players learn naturally through play
 - Experienced players skip immediately
 - Reduced bounce rate
@@ -608,11 +694,13 @@ export const tutorialSteps = {
 
 **Status:** ✅ **COMPLETED** - Implemented keyboard shortcuts
 **Implementation:**
+
 - `src/lib/components/GameScreen.svelte` (global keyboard handler)
 - `src/lib/components/KeyboardHint.svelte` (visual hint component)
-**Date Completed:** 2025-11-12
+  **Date Completed:** 2025-11-12
 
 **Implementation Details:**
+
 - Added global keyboard shortcuts (Space/Enter) to trigger primary actions
 - Works across all game screens (startRound, drawCard, continue buttons)
 - Includes visual keyboard hint for desktop users on first round
@@ -620,6 +708,7 @@ export const tutorialSteps = {
 - Respects accessibility (ignores when modals open or user is typing)
 
 ### Issue Description
+
 Players must tap/click 3-4 times per card over 52 cards = 156-208 taps per game. This creates fatigue and breaks narrative immersion, especially on touch devices.
 
 **User Impact:** HIGH
@@ -708,15 +797,35 @@ Implement swipe gestures for touch devices with optional keyboard shortcuts for 
 	<div class="gesture-hints">
 		<div class="hint hint-up">
 			<!-- ChevronUp SVG icon -->
-			<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<path d="m18 15-6-6-6 6"/>
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				width="20"
+				height="20"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+			>
+				<path d="m18 15-6-6-6 6" />
 			</svg>
 			<span>Swipe up to draw</span>
 		</div>
 		<div class="hint hint-right">
 			<!-- ChevronRight SVG icon -->
-			<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<path d="m9 18 6-6-6-6"/>
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				width="20"
+				height="20"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+			>
+				<path d="m9 18 6-6-6-6" />
 			</svg>
 			<span>Swipe right to continue</span>
 		</div>
@@ -782,6 +891,7 @@ Implement swipe gestures for touch devices with optional keyboard shortcuts for 
 ```
 
 **Expected Outcome:**
+
 - Swipe gestures reduce taps by 40%+ on touch devices
 - Keyboard shortcuts available for desktop users
 - More natural, fluid gameplay experience
@@ -796,6 +906,7 @@ Implement swipe gestures for touch devices with optional keyboard shortcuts for 
 **Date Completed:** 2025-11-12
 
 ### Issue Description
+
 All cards look identical until you read them. Players can't quickly assess card type (Challenge vs Event vs King) at a glance, reducing strategic awareness.
 
 **User Impact:** MEDIUM-HIGH
@@ -806,6 +917,7 @@ All cards look identical until you read them. Players can't quickly assess card 
 Add visual indicators for card types using color, icons, and borders.
 
 **Expected Outcome:**
+
 - Instant card type recognition using SVG icons based on type
 - Better strategic planning
 - Enhanced visual appeal
@@ -821,6 +933,7 @@ Add visual indicators for card types using color, icons, and borders.
 **Date Completed:** 2025-11-12
 
 ### Issue Description
+
 Players have no visual representation of the deck or card distribution, missing an opportunity for aesthetic engagement and strategic awareness.
 
 **User Impact:** MEDIUM
@@ -845,7 +958,7 @@ Show a stylized deck stack that depletes as cards are drawn.
 <div class="deck-container">
 	<div class="deck-stack" style="height: {deckHeight}px">
 		{#each Array(Math.min(cardsRemaining, 10)) as _, i}
-			<div class="card-layer" style="top: {i * 2}px; opacity: {1 - (i * 0.08)}"></div>
+			<div class="card-layer" style="top: {i * 2}px; opacity: {1 - i * 0.08}"></div>
 		{/each}
 	</div>
 	<div class="deck-label">
@@ -887,6 +1000,7 @@ Show a stylized deck stack that depletes as cards are drawn.
 ```
 
 **Expected Outcome:**
+
 - Visual interest
 - Better sense of progression
 - Enhanced game atmosphere
@@ -897,12 +1011,14 @@ Show a stylized deck stack that depletes as cards are drawn.
 
 **Status:** ✅ **COMPLETED** - Implemented on 2025-11-12
 **Implementation:**
+
 - `src/lib/components/HelpIcon.svelte` (new component)
 - `src/lib/components/HelpModal.svelte` (new component)
 - `src/lib/components/StatusDisplay.svelte` (modified with help icons)
-**Date Completed:** 2025-11-12
+  **Date Completed:** 2025-11-12
 
 ### Issue Description
+
 When players encounter new mechanics or forget rules, there's no quick reference available without leaving the game.
 
 **User Impact:** MEDIUM
@@ -917,20 +1033,25 @@ Add help icons that open the existing ConfirmModal component with contextual hel
 ```svelte
 <!-- src/lib/components/HelpIcon.svelte -->
 <script>
-	let { onclick, ariaLabel = "Show help" } = $props();
+	let { onclick, ariaLabel = 'Show help' } = $props();
 </script>
 
-<button
-	class="help-icon"
-	{onclick}
-	aria-label={ariaLabel}
-	type="button"
->
+<button class="help-icon" {onclick} aria-label={ariaLabel} type="button">
 	<!-- HelpCircle SVG icon -->
-	<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-		<circle cx="12" cy="12" r="10"/>
-		<path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-		<path d="M12 17h.01"/>
+	<svg
+		xmlns="http://www.w3.org/2000/svg"
+		width="18"
+		height="18"
+		viewBox="0 0 24 24"
+		fill="none"
+		stroke="currentColor"
+		stroke-width="2"
+		stroke-linecap="round"
+		stroke-linejoin="round"
+	>
+		<circle cx="12" cy="12" r="10" />
+		<path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+		<path d="M12 17h.01" />
 	</svg>
 </button>
 
@@ -976,24 +1097,30 @@ Add help icons that open the existing ConfirmModal component with contextual hel
 	// Define help content for different game concepts
 	const helpContent = {
 		tower: {
-			title: "Tower (Health)",
-			message: "Your Tower represents your health. Each time you take damage, blocks fall from the Tower. If it reaches 0, you lose the game. Start with 54 blocks."
+			title: 'Tower (Health)',
+			message:
+				'Your Tower represents your health. Each time you take damage, blocks fall from the Tower. If it reaches 0, you lose the game. Start with 54 blocks.'
 		},
 		kings: {
-			title: "Kings (Failure Counter)",
-			message: "Kings are your doom. Each time you reveal a King, you're one step closer to failure. Reveal all 4 Kings and the game ends immediately in defeat."
+			title: 'Kings (Failure Counter)',
+			message:
+				"Kings are your doom. Each time you reveal a King, you're one step closer to failure. Reveal all 4 Kings and the game ends immediately in defeat."
 		},
 		tokens: {
-			title: "Tokens (Win Condition)",
-			message: "Tokens are your path to victory. You need 10 tokens to attempt the final challenge. Gain tokens through Narrative (Bonus) cards. With 10 tokens, drawing the Ace of Hearts lets you roll for victory."
+			title: 'Tokens (Win Condition)',
+			message:
+				'Tokens are your path to victory. You need 10 tokens to attempt the final challenge. Gain tokens through Narrative (Bonus) cards. With 10 tokens, drawing the Ace of Hearts lets you roll for victory.'
 		},
 		cardTypes: {
-			title: "Card Types",
-			message: "Challenge cards (odd ranks) trigger damage rolls. Event cards (even ranks) are safe moments. Narrative cards give bonuses. Kings are threats. The Ace of Hearts is your win condition."
+			title: 'Card Types',
+			message:
+				'Challenge cards (odd ranks) trigger damage rolls. Event cards (even ranks) are safe moments. Narrative cards give bonuses. Kings are threats. The Ace of Hearts is your win condition.'
 		}
 	};
 
-	const content = $derived(helpContent[helpKey] || { title: "Help", message: "No help available for this topic." });
+	const content = $derived(
+		helpContent[helpKey] || { title: 'Help', message: 'No help available for this topic.' }
+	);
 </script>
 
 <ConfirmModal
@@ -1021,7 +1148,7 @@ Add help icons that open the existing ConfirmModal component with contextual hel
 <div class="stat-row">
 	<span class="stat-label">
 		Tower
-		<HelpIcon onclick={() => showHelp = 'tower'} ariaLabel="Help: What is the Tower?" />
+		<HelpIcon onclick={() => (showHelp = 'tower')} ariaLabel="Help: What is the Tower?" />
 	</span>
 	<span class="stat-value">{tower}</span>
 </div>
@@ -1029,19 +1156,16 @@ Add help icons that open the existing ConfirmModal component with contextual hel
 <div class="stat-row">
 	<span class="stat-label">
 		Kings Revealed
-		<HelpIcon onclick={() => showHelp = 'kings'} ariaLabel="Help: What are Kings?" />
+		<HelpIcon onclick={() => (showHelp = 'kings')} ariaLabel="Help: What are Kings?" />
 	</span>
 	<span class="stat-value">{kingsRevealed}/4</span>
 </div>
 
-<HelpContent
-	isOpen={showHelp !== null}
-	helpKey={showHelp}
-	onClose={() => showHelp = null}
-/>
+<HelpContent isOpen={showHelp !== null} helpKey={showHelp} onClose={() => (showHelp = null)} />
 ```
 
 **Expected Outcome:**
+
 - Touch-friendly help access on all devices
 - Consistent UI using existing modal component
 - Reduced confusion for new players
@@ -1052,30 +1176,27 @@ Add help icons that open the existing ConfirmModal component with contextual hel
 
 ## Implementation Priority Matrix
 
-| Priority | Problem | Impact | Effort | Time Est. | Quick Win? |
-|----------|---------|--------|--------|-----------|------------|
-| **P0** | Mini Status HUD | HIGH | LOW | 2h | ✅ Yes |
-| **P0** | Cards Remaining Counter | HIGH | VERY LOW | 30m | ✅ Yes |
-| **P0** | Progressive Introduction | HIGH | MEDIUM | 4h | No |
-| **P1** | Touch Gestures & Keyboard Shortcuts | HIGH | MEDIUM | 3h | No |
-| **P1** | Visual Card Type Indicators | MEDIUM-HIGH | LOW | 2h | ✅ Yes |
-| **P2** | Deck Progress Visualization | MEDIUM | MEDIUM | 3h | No |
-| **P2** | Contextual Help Icons | MEDIUM | MEDIUM | 3h | No |
+| Priority | Problem                             | Impact      | Effort   | Time Est. | Quick Win? |
+| -------- | ----------------------------------- | ----------- | -------- | --------- | ---------- |
+| **P0**   | Mini Status HUD                     | HIGH        | LOW      | 2h        | ✅ Yes     |
+| **P0**   | Cards Remaining Counter             | HIGH        | VERY LOW | 30m       | ✅ Yes     |
+| **P0**   | Progressive Introduction            | HIGH        | MEDIUM   | 4h        | No         |
+| **P1**   | Touch Gestures & Keyboard Shortcuts | HIGH        | MEDIUM   | 3h        | No         |
+| **P1**   | Visual Card Type Indicators         | MEDIUM-HIGH | LOW      | 2h        | ✅ Yes     |
+| **P2**   | Deck Progress Visualization         | MEDIUM      | MEDIUM   | 3h        | No         |
+| **P2**   | Contextual Help Icons               | MEDIUM      | MEDIUM   | 3h        | No         |
 
 ### Recommended Implementation Order
 
 **Phase 1: Quick Wins (4.5 hours)**
+
 1. Cards Remaining Counter (30m)
 2. Mini Status HUD (2h)
 3. Visual Card Type Indicators (2h)
 
-**Phase 2: High-Impact (7 hours)**
-4. Progressive Introduction (4h)
-5. Touch Gestures & Keyboard Shortcuts (3h)
+**Phase 2: High-Impact (7 hours)** 4. Progressive Introduction (4h) 5. Touch Gestures & Keyboard Shortcuts (3h)
 
-**Phase 3: Polish (6 hours)**
-6. Deck Progress Visualization (3h)
-7. Contextual Help Icons (3h)
+**Phase 3: Polish (6 hours)** 6. Deck Progress Visualization (3h) 7. Contextual Help Icons (3h)
 
 ---
 
@@ -1084,6 +1205,7 @@ Add help icons that open the existing ConfirmModal component with contextual hel
 To measure the impact of these improvements, track:
 
 ### Quantitative Metrics
+
 - **Average clicks per game** (target: reduce from 156-208 to 80-100)
 - **Time to first card** (target: < 30 seconds for returning players)
 - **Game completion rate** (target: > 80%)
@@ -1091,11 +1213,13 @@ To measure the impact of these improvements, track:
 - **Bounce rate on intro screen** (target: < 15%)
 
 ### Qualitative Metrics
+
 - User feedback on ease of play
 - Confusion reports (should decrease)
 - Positive sentiment about game flow
 
 ### A/B Testing Recommendations
+
 1. Test progressive vs. full introduction
 2. Test auto-continue enabled vs. disabled by default
 3. Test different card type color schemes
@@ -1105,23 +1229,28 @@ To measure the impact of these improvements, track:
 ## Additional Recommendations
 
 ### Mobile Optimization
+
 While not tested in this analysis, consider:
+
 - Touch-friendly button sizes (minimum 44x44px)
 - Swipe gestures (swipe up to draw card, swipe right to continue)
 - Bottom-sheet UI for card reveals (easier thumb access)
 
 ### Accessibility
+
 - Add ARIA labels for all interactive elements
 - Ensure keyboard navigation works without mouse
 - Test with screen readers
 - Add reduced-motion preference support
 
 ### Performance
+
 - Lazy-load card images if using images
 - Optimize dice animation for lower-end devices
 - Consider using CSS animations over JavaScript where possible
 
 ### Future Enhancements
+
 - **Save/Resume**: Auto-save progress (localStorage)
 - **Game History**: Track completed games with statistics
 - **Achievements**: Unlock badges for milestones
@@ -1140,6 +1269,7 @@ The DC Solo RPG has a solid mechanical foundation, but the user experience requi
 **For maximum impact with minimum effort:** Complete Phase 1 (Quick Wins) first. These changes will transform the experience and can be shipped quickly.
 
 **Key improvements from this update:**
+
 - All code examples updated to Svelte 5 runes syntax ($state, $derived, $props)
 - Replaced emoji icons with inline SVG icons (no additional npm packages required)
 - Touch-optimized interactions for mobile devices (swipe gestures, proper touch targets)
@@ -1179,10 +1309,12 @@ After implementing improvements, test:
 The following problems were identified during the UX analysis but have been **declined** for implementation at this time:
 
 ### Problem 6: [Title Not Specified]
+
 **Status:** DECLINED
 **Reason:** To be documented
 
 ### Problem 8: [Title Not Specified]
+
 **Status:** DECLINED
 **Reason:** To be documented
 

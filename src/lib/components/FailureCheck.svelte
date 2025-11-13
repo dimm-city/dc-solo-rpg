@@ -10,7 +10,7 @@
 				{gameState.currentCard.card} of {gameState.currentCard.suit}
 			</small>
 		</div>
-	{/if}	
+	{/if}
 </div>
 
 <style>

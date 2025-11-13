@@ -10,7 +10,9 @@
 <div class="dc-journal-container" data-augmented-ui="tl-clip tr-clip br-clip bl-clip border">
 	<div class="journal-header-area">
 		<h6>{gameState.config?.labels?.journalEntryHeader ?? 'Journal Entry'}</h6>
-		<blockquote>{gameState.config?.labels?.journalEntrySubHeader ?? 'Record your progress'}</blockquote>
+		<blockquote>
+			{gameState.config?.labels?.journalEntrySubHeader ?? 'Record your progress'}
+		</blockquote>
 
 		{#each currentEvents as event (event.id)}
 			<p>{event.description}</p>
@@ -71,7 +73,6 @@
 		min-height: 0; /* Allow flex shrinking */
 	}
 
-	
 	textarea {
 		width: 100%;
 		flex: 1;

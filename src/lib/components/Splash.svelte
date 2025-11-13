@@ -57,7 +57,6 @@
 		clearTimeout(timer);
 		clearInterval(subtitleInterval);
 	});
-
 </script>
 
 {#if isVisible}
