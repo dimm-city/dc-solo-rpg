@@ -367,8 +367,9 @@
 		position: relative;
 		width: 95%;
 		max-width: 900px;
-		height: 100%;
+		height: auto; /* Changed from 100% to auto for proper scrolling */
 		min-height: 400px;
+		max-height: 90vh; /* Ensure card doesn't exceed viewport */
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -376,6 +377,7 @@
 		opacity: 0;
 		transform: scale(0.8);
 		transition: none;
+		margin: var(--space-lg) 0; /* Add vertical margin for better spacing */
 
 		/* Augmented UI Configuration */
 		--aug-border-all: 2px;
@@ -454,8 +456,9 @@
 	.byte-shell {
 		position: relative;
 		width: 100%;
-		height: 100%;
+		height: auto; /* Changed from 100% to auto for proper content sizing */
 		min-height: 400px;
+		max-height: 85vh; /* Ensure content doesn't exceed viewport */
 		padding: var(--space-xl, 2rem);
 
 		/* Remove border/box-shadow since augmented-ui handles it on parent */
@@ -464,6 +467,7 @@
 		-webkit-backdrop-filter: blur(10px) saturate(150%);
 		overflow-y: auto; /* Allow scrolling for long content */
 		overflow-x: hidden;
+		box-sizing: border-box;
 	}
 
 	.byte-container.materializing .byte-shell {
