@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import ConfirmModal from '$lib/components/ConfirmModal.svelte';
+	import OverlayModal from '$lib/components/OverlayModal.svelte';
 	import Splash from '$lib/components/Splash.svelte';
 	import NeuralBackground from '$lib/components/NeuralBackground.svelte';
 	import {
@@ -21,6 +22,8 @@
 	let showInstructionsChoice = $state(false);
 	let showContent = $state(false);
 	let showModal = $state(false);
+	let showAboutModal = $state(false);
+	let showSettingsModal = $state(false);
 
 	// On mount, check if we should skip splash and go straight to content
 	onMount(() => {
@@ -100,6 +103,16 @@
 		setTimeout(() => {
 			showContent = true;
 		}, 300);
+	}
+
+	function handleAboutClick(e) {
+		e.preventDefault();
+		showAboutModal = true;
+	}
+
+	function handleSettingsClick(e) {
+		e.preventDefault();
+		showSettingsModal = true;
 	}
 
 	// Game descriptions/subtitles for enhanced UI
@@ -202,7 +215,7 @@
 				<span class="version-text">DC-S-0.1.0</span>
 			</div>
 			<div class="header-buttons">
-				<a href="/about" class="header-link" aria-label="About">
+				<button onclick={handleAboutClick} class="header-link" aria-label="About">
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						width="24"
@@ -218,7 +231,7 @@
 						<path d="M12 16v-4"></path>
 						<path d="M12 8h.01"></path>
 					</svg>
-				</a>
+				</button>
 				<a href="/how-to" class="header-link" aria-label="How to Play">
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
@@ -236,7 +249,7 @@
 						<path d="M12 17h.01"></path>
 					</svg>
 				</a>
-				<a href="/settings" class="header-link" aria-label="Settings">
+				<button onclick={handleSettingsClick} class="header-link" aria-label="Settings">
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						width="24"
@@ -254,7 +267,7 @@
 							r="3"
 						/></svg
 					>
-				</a>
+				</button>
 			</div>
 		</div>
 		<div class="welcome-container">
@@ -295,6 +308,70 @@
 	onConfirm={handleConfirm}
 	onCancel={handleCancel}
 />
+
+<!-- About Modal -->
+<OverlayModal isVisible={showAboutModal} zIndex={1000}>
+	<div class="info-modal-content">
+		<h2 class="info-modal-title">About DC Solo RPG</h2>
+		<div class="info-modal-body">
+			<p>
+				Dimm City Solo RPG is a narrative-driven solo role-playing game built on the Wretched and
+				Alone system. Each playthrough offers a unique adventure through the cyberpunk streets of
+				Dimm City.
+			</p>
+			<p>
+				The game uses a standard 52-card deck and dice rolls to guide your story, presenting
+				challenges and shaping the narrative as you draw cards and make decisions.
+			</p>
+			<p class="attribution">
+				This work is based on The Wretched (loottheroom.itch.io/wretched), product of Chris Bissette
+				and Loot The Room, and licensed under CC Attribution 3.0 Unported.
+			</p>
+		</div>
+		<button class="info-modal-button" onclick={() => (showAboutModal = false)}>
+			<span>Close</span>
+		</button>
+	</div>
+</OverlayModal>
+
+<!-- Settings Modal -->
+<OverlayModal isVisible={showSettingsModal} zIndex={1000}>
+	<div class="info-modal-content">
+		<h2 class="info-modal-title">Game Settings</h2>
+		<div class="info-modal-body">
+			<p>
+				Configure your global game preferences including difficulty level and dice theme. These
+				settings apply to all games you play.
+			</p>
+			<button
+				class="settings-link-button"
+				onclick={() => {
+					showSettingsModal = false;
+					goto('/settings');
+				}}
+			>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="20"
+					height="20"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+				>
+					<circle cx="12" cy="12" r="3" />
+					<path
+						d="M12 1v6m0 6v6M5.6 5.6l4.2 4.2m4.4 4.4l4.2 4.2M1 12h6m6 0h6M5.6 18.4l4.2-4.2m4.4-4.4l4.2-4.2"
+					/>
+				</svg>
+				<span>Open Settings Page</span>
+			</button>
+		</div>
+		<button class="info-modal-button" onclick={() => (showSettingsModal = false)}>
+			<span>Close</span>
+		</button>
+	</div>
+</OverlayModal>
 
 <style>
 	:global(body) {
@@ -980,6 +1057,152 @@
 	}
 
 	/* ============================================
+	   INFO MODAL STYLING (About & Settings)
+	   ============================================ */
+
+	.info-modal-content {
+		width: 100%;
+		height: 100%;
+		padding: var(--space-xl);
+		position: relative;
+		z-index: 1;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-lg);
+	}
+
+	.info-modal-title {
+		font-family: var(--font-display, 'Orbitron', monospace);
+		font-size: var(--text-2xl);
+		font-weight: 700;
+		color: var(--color-neon-cyan);
+		text-shadow:
+			0 0 15px rgba(0, 255, 255, 1),
+			0 0 30px rgba(0, 255, 255, 0.5);
+		margin: 0 0 var(--space-md) 0;
+		letter-spacing: 0.08em;
+		text-align: center;
+		text-transform: uppercase;
+		border-bottom: 2px solid rgba(0, 255, 255, 0.3);
+		padding-bottom: var(--space-md);
+	}
+
+	.info-modal-body {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-md);
+		font-family: var(--font-body, 'Inter', sans-serif);
+		font-size: var(--text-base);
+		line-height: 1.6;
+		color: rgba(255, 255, 255, 0.9);
+	}
+
+	.info-modal-body p {
+		margin: 0;
+	}
+
+	.attribution {
+		font-size: var(--text-sm);
+		color: rgba(255, 255, 255, 0.7);
+		font-style: italic;
+		padding-top: var(--space-md);
+		border-top: 1px solid rgba(255, 255, 255, 0.1);
+		margin-top: auto;
+	}
+
+	.settings-link-button {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: var(--space-sm);
+		padding: var(--space-md) var(--space-xl);
+		background: linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta));
+		border: none;
+		border-radius: 4px;
+		color: white;
+		font-family: var(--font-display, 'Orbitron', monospace);
+		font-size: var(--text-base);
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		box-shadow:
+			0 0 15px rgba(0, 255, 255, 0.3),
+			inset 0 0 10px rgba(255, 255, 255, 0.1);
+		margin-top: var(--space-md);
+	}
+
+	.settings-link-button:hover {
+		transform: translateY(-2px);
+		box-shadow:
+			0 0 25px rgba(0, 255, 255, 0.5),
+			0 0 40px rgba(217, 70, 239, 0.3),
+			inset 0 0 15px rgba(255, 255, 255, 0.15);
+	}
+
+	.settings-link-button:active {
+		transform: translateY(0);
+	}
+
+	.info-modal-button {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: var(--space-xs);
+		padding: var(--space-sm) var(--space-lg);
+		background: linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta));
+		border: none;
+		border-radius: 4px;
+		color: white;
+		font-family: var(--font-display, 'Orbitron', monospace);
+		font-size: var(--text-sm);
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		align-self: flex-end;
+		box-shadow:
+			0 0 15px rgba(0, 255, 255, 0.3),
+			inset 0 0 10px rgba(255, 255, 255, 0.1);
+	}
+
+	.info-modal-button:hover {
+		transform: translateY(-2px);
+		box-shadow:
+			0 0 25px rgba(0, 255, 255, 0.5),
+			0 0 40px rgba(217, 70, 239, 0.3),
+			inset 0 0 15px rgba(255, 255, 255, 0.15);
+	}
+
+	.info-modal-button:active {
+		transform: translateY(0);
+	}
+
+	/* Mobile responsive for info modals */
+	@media (max-width: 600px) {
+		.info-modal-content {
+			padding: var(--space-lg);
+		}
+
+		.info-modal-title {
+			font-size: var(--text-xl);
+		}
+
+		.info-modal-body {
+			font-size: var(--text-sm);
+		}
+
+		.info-modal-button,
+		.settings-link-button {
+			width: 100%;
+			padding: var(--space-md);
+		}
+	}
+
+	/* ============================================
 	   ACCESSIBILITY - REDUCED MOTION
 	   ============================================ */
 
@@ -998,6 +1221,11 @@
 		.choice-card:hover,
 		.choice-card:focus {
 			transition: none !important;
+			transform: none !important;
+		}
+
+		.info-modal-button:hover,
+		.settings-link-button:hover {
 			transform: none !important;
 		}
 	}
