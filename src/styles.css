@@ -197,6 +197,13 @@ body {
 	height: 100vh;
 }
 
+/* Allow overflow on mobile for toolbar elements to appear above toolbar */
+@media (max-width: 450px) or (max-height: 600px) {
+	body {
+		overflow: visible !important;
+	}
+}
+
 /* ============================================
    TYPOGRAPHY - DIMM CITY STYLE
    ============================================ */

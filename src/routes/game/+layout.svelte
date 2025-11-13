@@ -25,4 +25,13 @@
 		height: 100vh;
 		overflow: hidden;
 	}
+
+	/* Allow overflow on mobile for toolbar elements to appear above toolbar */
+	@media (max-width: 450px) or (max-height: 600px) {
+		.game-layout,
+		:global(body > main),
+		:global(body) {
+			overflow: visible;
+		}
+	}
 </style>

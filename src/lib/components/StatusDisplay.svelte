@@ -2,6 +2,7 @@
 	import { gameState } from '../stores/gameStore.svelte.js';
 	import HelpIcon from './HelpIcon.svelte';
 	import HelpModal from './HelpModal.svelte';
+	import { innerWidth } from 'svelte/reactivity/window';
 
 	const successPercent = $derived(10 - gameState.tokens);
 	const bonusPercent = $derived(gameState.bonus);
@@ -21,6 +22,29 @@
 			index: i,
 			active: i < successPercent
 		}))
+	);
+
+	// Reactive screen width tracking
+	const isMobile = $derived((innerWidth.current ?? 1024) <= 600);
+
+	// Reactive data-augmented-ui attribute for failure stat
+	const failureAugmentedUI = $derived(
+		isMobile ? 'bl-clip br-clip tr-clip-x border' : 'l-rect tr-clip br-clip-x border'
+	);
+
+	// Reactive data-augmented-ui attribute for health stat
+	const healthAugmentedUI = $derived(
+		isMobile ? 'tl-clip tr-clip br-clip-x border' : 'tl-clip tr-clip-x br-clip-x border'
+	);
+
+	// Reactive data-augmented-ui attribute for luck stat
+	const luckAugmentedUI = $derived(
+		isMobile ? 'tr-clip tl-clip bl-clip-x border' : 'tl-clip-y l-rect-y tr-clip-x br-clip-x border'
+	);
+
+	// Reactive data-augmented-ui attribute for success stat
+	const successAugmentedUI = $derived(
+		isMobile ? 'bl-clip br-clip tl-clip-x border' : 'tl-2-clip-x tr-2-clip-x border'
 	);
 </script>
 
@@ -51,10 +75,27 @@
 		<div>
 			<div
 				class="stat-item health-stat slide-down"
-				data-augmented-ui="tl-clip tr-clip-x br-clip-x border"
+				data-augmented-ui={healthAugmentedUI}
 				style="animation-delay: 0.2s"
 			>
 				<div class="stat-label">
+					<svg
+						class="stat-icon"
+						xmlns="http://www.w3.org/2000/svg"
+						width="16"
+						height="16"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<path
+							d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"
+						/>
+						<path d="M3.22 13H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27" />
+					</svg>
 					HEALTH
 					<HelpIcon onclick={() => (showHelp = 'tower')} ariaLabel="Help: What is Health?" />
 				</div>
@@ -68,11 +109,27 @@
 				</div>
 			</div>
 
-			<div
-				class="stat-item failure-stat slide-down"
-				data-augmented-ui="l-rect tr-clip br-clip-x border"
-			>
+			<div class="stat-item failure-stat slide-down" data-augmented-ui={failureAugmentedUI}>
 				<div class="stat-label">
+					<svg
+						class="stat-icon"
+						xmlns="http://www.w3.org/2000/svg"
+						width="16"
+						height="16"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<path d="m12.5 17-.5-1-.5 1h1z" />
+						<path
+							d="M15 22a1 1 0 0 0 1-1v-1a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20v1a1 1 0 0 0 1 1z"
+						/>
+						<circle cx="15" cy="12" r="1" />
+						<circle cx="9" cy="12" r="1" />
+					</svg>
 					{gameState.config?.labels?.failureCounters?.toUpperCase() ?? 'FAILURE'}
 					<HelpIcon onclick={() => (showHelp = 'kings')} ariaLabel="Help: What are Kings?" />
 				</div>
@@ -92,21 +149,58 @@
 				data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
 				style="animation-delay: 1.25s"
 			>
-				<div class="dice-label">LAST ROLL</div>
+				<div class="dice-label">
+					<svg
+						class="dice-icon"
+						xmlns="http://www.w3.org/2000/svg"
+						width="14"
+						height="14"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<rect width="12" height="12" x="2" y="10" rx="2" ry="2" />
+						<path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6" />
+						<path d="M6 18h.01" />
+						<path d="M10 14h.01" />
+						<path d="M15 6h.01" />
+						<path d="M18 9h.01" />
+					</svg>
+					LAST ROLL
+				</div>
 				<div class="dice-value">{gameState.diceRoll}</div>
 				<div class="dice-pips">
-					{#each Array(gameState.diceRoll) as _, i}
+					{#each Array(gameState.diceRoll) as _, i (i)}
 						<span class="pip"></span>
 					{/each}
 				</div>
 			</div>
 		</div>
 		<div>
-			<div
-				class="stat-item bonus-stat slide-down"
-				data-augmented-ui="tl-clip-y l-rect-y tr-clip-x br-clip-x border"
-			>
+			<div class="stat-item bonus-stat slide-down" data-augmented-ui={luckAugmentedUI}>
 				<div class="stat-label">
+					<svg
+						class="stat-icon"
+						xmlns="http://www.w3.org/2000/svg"
+						width="16"
+						height="16"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<path
+							d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"
+						/>
+						<path d="M20 2v4" />
+						<path d="M22 4h-4" />
+						<circle cx="4" cy="20" r="2" />
+					</svg>
 					LUCK
 					<HelpIcon onclick={() => (showHelp = 'bonus')} ariaLabel="Help: What is Luck?" />
 				</div>
@@ -122,10 +216,29 @@
 
 			<div
 				class="stat-item success-stat slide-down"
-				data-augmented-ui=" tl-clip-inset tr-2-clip-y br-clip bl-2-clip-x border"
+				data-augmented-ui={successAugmentedUI}
 				style="animation-delay: 0.5s"
 			>
 				<div class="stat-label">
+					<svg
+						class="stat-icon"
+						xmlns="http://www.w3.org/2000/svg"
+						width="16"
+						height="16"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<path d="M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978" />
+						<path d="M14 14.66v1.626a2 2 0 0 0 .976 1.696A5 5 0 0 1 17 21.978" />
+						<path d="M18 9h1.5a1 1 0 0 0 0-5H18" />
+						<path d="M4 22h16" />
+						<path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z" />
+						<path d="M6 9H4.5a1 1 0 0 1 0-5H6" />
+					</svg>
 					{gameState.config?.labels?.successCounters?.toUpperCase() ?? 'SUCCESS'}
 					<HelpIcon
 						onclick={() => (showHelp = 'tokens')}
@@ -152,7 +265,7 @@
 	{#if cardsDrawn > 0}
 		<div
 			class="progress-tracker slide-down"
-			data-augmented-ui="tl-2-clip-x tr-2-clip-x border"
+			data-augmented-ui={successAugmentedUI}
 			style="animation-delay: 0.5s"
 		>
 			<div class="progress-bar">
@@ -317,7 +430,7 @@
 			0 0 10px rgba(255, 255, 255, 1),
 			0 0 20px rgba(255, 255, 255, 0.5);
 	}
-	
+
 	.info-segment:last-of-type {
 		display: flex;
 		justify-content: flex-end;
@@ -549,6 +662,13 @@
 		gap: 0.25rem;
 	}
 
+	.stat-icon {
+		flex-shrink: 0;
+		display: inline-block;
+		vertical-align: middle;
+		filter: drop-shadow(0 0 4px currentColor);
+	}
+
 	.health-stat .stat-label {
 		color: #00ffaa;
 		text-shadow:
@@ -664,7 +784,6 @@
 		align-items: center;
 		gap: var(--space-xs);
 		padding: var(--space-sm);
-		min-width: 80px;
 		aspect-ratio: 1;
 
 		background: linear-gradient(135deg, rgba(10, 10, 20, 0.9), rgba(15, 15, 25, 0.8));
@@ -687,6 +806,16 @@
 		text-shadow:
 			0 0 10px rgba(0, 238, 255, 1),
 			0 0 20px rgba(0, 238, 255, 0.6);
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+	}
+
+	.dice-icon {
+		flex-shrink: 0;
+		display: inline-block;
+		vertical-align: middle;
+		filter: drop-shadow(0 0 4px currentColor);
 	}
 
 	.dice-value {
@@ -813,61 +942,69 @@
 		}
 	}
 
-	/* Mobile - Maintain 2x2 grid like 900-600px */
+	/* Mobile - Grid areas layout with dice in center */
 	@media (max-width: 600px) {
 		.stats-grid {
-			/* 2x2 grid with explicit positioning */
+			/* Grid with 3 columns: left stats, center dice, right stats */
 			display: grid;
-			grid-template-columns: 1fr 1fr;
+			grid-template-columns: 1fr auto 1fr;
+			grid-template-rows: auto auto;
+			grid-template-areas:
+				'health dice luck'
+				'failure dice success';
 			gap: var(--space-xs);
 		}
 
 		/* Position first column (Health + Failure) */
 		.stats-grid > div:first-of-type {
 			grid-column: 1;
-			grid-row: 1;
+			grid-row: 1 / 3;
 			display: flex;
 			flex-direction: column;
 			gap: var(--space-xs);
+			align-items: flex-end;
 		}
 
-		/* Position Dice Readout below stats, centered across both columns */
+		/* Position Dice Readout in center spanning both rows */
 		.stats-grid > div:nth-of-type(2) {
-			grid-column: 1 / -1;
-			grid-row: 2;
+			grid-column: 2;
+			grid-row: 1 / 3;
 			display: flex;
 			justify-content: center;
 			align-items: center;
-			padding: var(--space-xs);
+			padding: 0 var(--space-xs);
 		}
 
 		.dice-readout {
 			min-width: 60px;
 			padding: var(--space-xs) var(--space-sm);
+			justify-content: center;
+			aspect-ratio: 16/9;
 		}
 
 		.dice-label {
 			font-size: 0.6rem;
+			display: none;
 		}
-
 		.dice-value {
 			font-size: 1.25rem;
+			display: none;
 		}
 
 		.pip {
-			width: 4px;
-			height: 4px;
+			width: 6px;
+			height: 6px;
 		}
 
 		.dice-pips {
-			max-width: 40px;
-			gap: 2px;
+			max-width: 50px;
+			gap: 3px;
 		}
 
 		/* Position third column (Bonus + Success) */
 		.stats-grid > div:last-of-type {
-			grid-column: 2;
-			grid-row: 1;
+			grid-column: 3;
+			grid-row: 1 / 3;
 			display: flex;
 			flex-direction: column;
 			gap: var(--space-xs);
@@ -877,7 +1014,8 @@
 			padding: var(--space-xs) var(--space-sm);
 			min-height: 44px;
 			gap: 4px;
-			width: 100%;
+			min-width: 135px;
+			width: min-content;
 		}
 
 		.stat-label {
@@ -892,7 +1030,7 @@
 		}
 
 		.stat-value .current {
-			font-size: 0.85rem;
+			font-size: 1.85rem;
 		}
 
 		.stat-value .divider {
@@ -903,8 +1041,25 @@
 			font-size: 0.6rem;
 		}
 
-		/* Hide progress bars on mobile for compact layout */
+		/* Hide progress bars and labels on mobile for compact layout */
 		.stat-bar {
+			display: none;
+		}
+
+		.stat-label {
+			font-size: 0; /* Hide text but keep icons */
+			gap: 0;
+			min-width: auto;
+		}
+
+		.stat-icon {
+			font-size: 1rem; /* Reset font-size for icons to show them */
+			width: 20px;
+			height: 20px;
+		}
+
+		/* Hide help icons on mobile */
+		.stat-label :global(button) {
 			display: none;
 		}
 
@@ -912,6 +1067,9 @@
 			gap: var(--space-xs);
 		}
 
+		.info-segment:first-of-type {
+			flex-direction: column-reverse;
+		}
 		.info-segment .label {
 			font-size: 0.7rem;
 		}
@@ -929,9 +1087,11 @@
 		.player-round-bar h5 {
 			font-size: 0.8rem;
 			max-width: 150px;
+			max-height: 3.6em; /* ~3 lines */
 			overflow: hidden;
-			text-overflow: ellipsis;
-			white-space: nowrap;
+			text-wrap: balance;
+			line-height: 1.2;
+			text-align: center;
 		}
 
 		/* Mobile Puzzle Piece Interlocking - Horizontal only */
@@ -939,29 +1099,48 @@
 		.health-stat {
 			--aug-r-extend1: 20px;
 			--aug-r-inset1: 8px;
+
+			--aug-br: 12px; /* Slot ← receives Bonus's tab (desktop) OR Failure's tab (mobile) */
+			--aug-tl: 8px; /* Gentle endpoint */
+			--aug-bl: unset; /* Gentle terminus */
+			--aug-tr: unset; /* Visual anchor */
 		}
 
 		/* Failure: Top-right - receives left from Health */
 		.failure-stat {
 			--aug-l-extend1: 20px;
 			--aug-l-inset1: 8px;
-			margin-inline-start: -15px;
+			margin-inline-start: 0;
 			padding-inline-start: calc(var(--space-md) + var(--space-xs));
 		}
 
 		/* Bonus: Bottom-left - extends right to Success */
 		.bonus-stat {
-			--aug-r-extend1: 20px;
-			--aug-r-inset1: 8px;
+			--aug-bl: 12px; /* Slot ← receives Bonus's tab (desktop) OR Failure's tab (mobile) */
+			--aug-tr: 8px; /* Gentle endpoint */
+			--aug-br: unset; /* Gentle terminus */
+			--aug-tl: unset; /* Visual anchor */
 			padding-inline-start: var(--space-sm);
+			display: flex;
+			flex-direction: row-reverse;
+			.stat-value{
+				flex-direction: row-reverse;
+			}
+			.stat-label {
+				padding-inline-start: var(--space-lg);
+			}
 		}
 
 		/* Success: Bottom-right - receives left from Bonus */
 		.success-stat {
-			--aug-l-extend1: 20px;
-			--aug-l-inset1: 8px;
-			margin-inline-start: -15px;
+			margin-inline-start: 0;
 			padding-inline-start: calc(var(--space-md) + var(--space-xs));
+			display: flex;
+			flex-direction: row-reverse;
+			--aug-tl: 12px; /* Slot ← receives Bonus's tab (desktop) OR Failure's tab (mobile) */
+			--aug-tr: 8px; /* Gentle endpoint */
+			--aug-br: unset; /* Gentle terminus */
+			--aug-bl: unset; /* Visual anchor */
 		}
 
 		.token-grid {
@@ -1060,29 +1239,9 @@
 
 	/* Mobile adjustments for progress tracker */
 	@media (max-width: 600px) {
+		/* Hide progress tracker on mobile */
 		.progress-tracker {
-			padding: var(--space-xs);
-			gap: var(--space-xs);
-		}
-
-		.progress-bar {
-			height: 6px;
-		}
-
-		.progress-text .drawn {
-			font-size: 1rem;
-		}
-
-		.progress-text .separator {
-			font-size: 0.875rem;
-		}
-
-		.progress-text .total {
-			font-size: 0.875rem;
-		}
-
-		.progress-text .label {
-			font-size: 0.6rem;
+			display: none;
 		}
 	}
 

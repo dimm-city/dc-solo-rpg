@@ -493,7 +493,10 @@
 			</div>
 
 			<!-- Toolbar at bottom with exit button and deck visualization -->
-			<div class="toolbar-area" data-augmented-ui="tl-clip tr-clip br-clip bl-clip border">
+			<div class="toolbar-area">
+				<!-- Augmented UI background - doesn't clip children -->
+				<div class="toolbar-background" data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"></div>
+
 				<div class="toolbar-left">
 					<button class="toolbar-button exit-button" onclick={handleExitClick} aria-label="Exit game">
 						<svg
@@ -703,6 +706,30 @@
 	.toolbar-area {
 		grid-area: toolbar-area;
 
+		/* Layout - CSS Grid for responsive stacking */
+		display: grid;
+		grid-template-columns: auto 1fr auto;
+		grid-template-areas: 'left center right';
+		align-items: center;
+		gap: var(--space-md);
+		width: 100%;
+		min-height: 60px;
+		padding: var(--space-md);
+		position: relative;
+		z-index: 100;
+
+		/* Slide-in animation from bottom - dramatic delayed entrance */
+		animation: toolbar-slide-in 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 1.2s forwards;
+		opacity: 0; /* Start invisible */
+	}
+
+	/* Augmented UI background - positioned behind content, doesn't clip children */
+	.toolbar-background {
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		pointer-events: none;
+
 		/* Augmented UI Configuration - Match player-round-bar */
 		--aug-border-all: 2px;
 		--aug-border-bg: linear-gradient(135deg, #00eeff 0%, #ff00ff 50%, #00ffaa 100%);
@@ -710,16 +737,6 @@
 		--aug-tr: 14px;
 		--aug-br: 14px;
 		--aug-bl: 14px;
-
-		/* Layout */
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		width: 100%;
-		min-height: 60px;
-		padding: var(--space-md);
-		position: relative;
-		z-index: 100;
 
 		/* Glassmorphism Effect - Match player-round-bar */
 		background: linear-gradient(
@@ -738,10 +755,6 @@
 			0 0 90px rgba(0, 238, 255, 0.2),
 			inset 0 0 30px rgba(255, 0, 255, 0.25),
 			inset 0 0 50px rgba(0, 255, 255, 0.1);
-
-		/* Slide-in animation from bottom - dramatic delayed entrance */
-		animation: toolbar-slide-in 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 1.2s forwards;
-		opacity: 0; /* Start invisible */
 	}
 
 	@keyframes toolbar-slide-in {
@@ -756,25 +769,27 @@
 	}
 
 	.toolbar-left {
+		grid-area: left;
 		display: flex;
 		align-items: center;
+		justify-content: flex-start;
 		gap: var(--space-md);
-		flex: 0 0 auto;
 	}
 
 	.toolbar-center {
+		grid-area: center;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		flex: 1 1 auto;
 		min-width: 0;
 	}
 
 	.toolbar-right {
+		grid-area: right;
 		display: flex;
 		align-items: center;
+		justify-content: flex-end;
 		gap: var(--space-md);
-		flex: 0 0 auto;
 	}
 
 	.toolbar-button {
@@ -879,6 +894,7 @@
 		height: 100%; /* Fill available space */
 	}
 
+	/* Mobile responsiveness - Move exit and deck outside toolbar */
 	@media (max-width: 450px) or (max-height: 600px) {
 		.status-display-area {
 			width: 100%;
@@ -886,9 +902,62 @@
 			justify-content: stretch;
 		}
 
+		/* Allow overflow on parent containers so toolbar items can appear above */
+		.game-screen,
+		.ui-content-layer,
+		.main-screen-area {
+			overflow: visible;
+		}
+
+		/* Ensure main-screen-area is below toolbar-area in stacking order */
+		.main-screen-area {
+			z-index: 1;
+		}
+
+		/* Remove z-index from screen container to fix stacking context */
+		.main-screen-area > div.dc-screen-container {
+			z-index: auto;
+		}
+
+		.toolbar-area {
+			/* Keep only center area in toolbar */
+			grid-template-columns: 1fr;
+			grid-template-areas: 'center';
+			padding: var(--space-sm);
+		}
+
 		.toolbar-left,
 		.toolbar-right {
-			transform: translateY(-150px);
+			/* Position absolutely OUTSIDE and ABOVE the toolbar */
+			position: absolute;
+			bottom: calc(100% + var(--space-sm)); /* Position above the toolbar */
+			width: auto;
+			z-index: 101; /* Above toolbar */
+		}
+
+		.toolbar-left {
+			left: 0;
+			justify-content: flex-start;
+		}
+
+		.toolbar-right {
+			right: 0;
+			justify-content: flex-end;
+		}
+
+		.toolbar-center {
+			/* Full width in toolbar */
+			width: 100%;
+		}
+
+		/* Make buttons take full width */
+		.toolbar-center > :global(*) {
+			width: 100%;
+		}
+
+		.toolbar-center :global(.aug-button-wrapper),
+		.toolbar-center :global(.aug-button) {
+			width: 100%;
 		}
 	}
 </style>
