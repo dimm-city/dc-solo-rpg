@@ -1018,6 +1018,33 @@
 			width: min-content;
 		}
 
+		/* Left column stats (Health, Failure) - icons toward center (right), values toward outer edge (left) */
+		.stats-grid > div:first-of-type .stat-item {
+			flex-direction: row-reverse;
+			justify-content: space-between;
+		}
+
+		.stats-grid > div:first-of-type .stat-item .stat-label {
+			order: 2; /* Icon goes to the right (toward center) */
+		}
+
+		.stats-grid > div:first-of-type .stat-item .stat-value {
+			order: 1; /* Value goes to the left (toward outer edge) */
+		}
+
+		/* Right column stats (Bonus, Success) - icons toward center (left), values toward outer edge (right) */
+		.stats-grid > div:last-of-type .stat-item {
+			justify-content: space-between;
+		}
+
+		.stats-grid > div:last-of-type .stat-item .stat-label {
+			order: 1; /* Icon goes to the left (toward center) */
+		}
+
+		.stats-grid > div:last-of-type .stat-item .stat-value {
+			order: 2; /* Value goes to the right (toward outer edge) */
+		}
+
 		.stat-label {
 			font-size: 0.65rem;
 			min-width: 50px;

@@ -822,15 +822,26 @@
 	}
 
 	.exit-button {
-		color: var(--color-brand-red, #ff4444);
-		border-color: rgba(255, 68, 68, 0.3);
+		/* No border or background - transparent styling */
+		background: transparent;
+		border: none;
+		color: var(--color-neon-cyan);
+		backdrop-filter: none;
+		-webkit-backdrop-filter: none;
 	}
 
 	.exit-button:hover {
-		border-color: var(--color-brand-red, #ff4444);
-		box-shadow:
-			0 0 15px rgba(255, 68, 68, 0.4),
-			inset 0 0 10px rgba(255, 68, 68, 0.1);
+		background: transparent;
+		border: none;
+		/* Enhanced neon cyan glow on hover */
+		color: var(--color-neon-cyan);
+		filter: drop-shadow(0 0 8px rgba(0, 255, 255, 0.8)) drop-shadow(0 0 15px rgba(0, 255, 255, 0.5));
+		transform: scale(1.1);
+	}
+
+	.exit-button:active {
+		transform: scale(1);
+		filter: drop-shadow(0 0 12px rgba(0, 255, 255, 1)) drop-shadow(0 0 20px rgba(0, 255, 255, 0.7));
 	}
 
 	.main-screen-area {
@@ -886,6 +897,28 @@
 		height: 100%;
 		overflow-y: auto; /* Allow scrolling if content overflows */
 		overflow-x: hidden;
+	}
+
+	/* Atmospheric/ethereal dark semi-transparent background for journal */
+	.dc-journal-screen::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(
+			135deg,
+			rgba(10, 10, 30, 0.85),
+			rgba(20, 10, 40, 0.8),
+			rgba(10, 20, 40, 0.85)
+		);
+		backdrop-filter: blur(20px) saturate(180%);
+		-webkit-backdrop-filter: blur(20px) saturate(180%);
+		pointer-events: none;
+		z-index: 0;
+
+		/* Subtle ethereal glow */
+		box-shadow:
+			inset 0 0 100px rgba(0, 255, 255, 0.05),
+			inset 0 0 50px rgba(217, 70, 239, 0.03);
 	}
 
 	.dc-journal-screen :global(.dc-journal-container) {

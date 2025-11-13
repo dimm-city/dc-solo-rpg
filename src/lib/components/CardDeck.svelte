@@ -418,7 +418,8 @@
 		background: linear-gradient(135deg, rgba(10, 10, 20, 0.8), rgba(15, 15, 25, 0.7));
 		backdrop-filter: blur(10px) saturate(150%);
 		-webkit-backdrop-filter: blur(10px) saturate(150%);
-		overflow: hidden;
+		overflow-y: auto; /* Allow scrolling for long content */
+		overflow-x: hidden;
 	}
 
 	.byte-container.materializing .byte-shell {
