@@ -8,10 +8,6 @@
 	import { cubicOut } from 'svelte/easing';
 
 	let { children, isVisible = true, zIndex = 50 } = $props();
-
-	$effect(() => {
-		console.log('[OverlayModal] isVisible changed to:', isVisible, 'zIndex:', zIndex);
-	});
 </script>
 
 {#if isVisible}
