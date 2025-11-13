@@ -897,7 +897,7 @@
 		height: 100%;
 		overflow-y: auto; /* Allow scrolling if content overflows */
 		overflow-x: hidden;
-		z-index: 50; /* Above main screen elements */
+		z-index: 150; /* Above all toolbar elements (toolbar is 100, mobile toolbar items are 101) */
 	}
 
 	/* Atmospheric/ethereal dark cloud background with transparent edges */
@@ -905,26 +905,45 @@
 		content: '';
 		position: absolute;
 		inset: 0;
-		/* Radial gradient for soft, cloud-like edges */
-		background: radial-gradient(
-			ellipse at center,
-			rgba(10, 10, 30, 0.95) 0%,
-			rgba(15, 10, 35, 0.92) 30%,
-			rgba(20, 10, 40, 0.85) 50%,
-			rgba(15, 15, 35, 0.7) 70%,
-			rgba(10, 10, 30, 0.4) 85%,
+
+		/* Subtle dark background */
+		background: linear-gradient(
+			135deg,
+			rgba(10, 10, 25, 0.85),
+			rgba(15, 10, 30, 0.8),
+			rgba(10, 15, 25, 0.85)
+		);
+
+		/* Ethereal cloud-like mask with soft edges */
+		mask-image: radial-gradient(
+			ellipse 85% 90% at center,
+			rgba(0, 0, 0, 1) 0%,
+			rgba(0, 0, 0, 0.95) 40%,
+			rgba(0, 0, 0, 0.85) 60%,
+			rgba(0, 0, 0, 0.5) 80%,
+			rgba(0, 0, 0, 0.2) 92%,
 			transparent 100%
 		);
-		/* Strong blur effect for content beneath */
-		backdrop-filter: blur(12px) saturate(150%);
-		-webkit-backdrop-filter: blur(12px) saturate(150%);
+		-webkit-mask-image: radial-gradient(
+			ellipse 85% 90% at center,
+			rgba(0, 0, 0, 1) 0%,
+			rgba(0, 0, 0, 0.95) 40%,
+			rgba(0, 0, 0, 0.85) 60%,
+			rgba(0, 0, 0, 0.5) 80%,
+			rgba(0, 0, 0, 0.2) 92%,
+			transparent 100%
+		);
+
+		/* Blur effect for content beneath */
+		backdrop-filter: blur(8px) saturate(130%);
+		-webkit-backdrop-filter: blur(8px) saturate(130%);
 		pointer-events: none;
 		z-index: 0;
 
-		/* Subtle ethereal glow */
+		/* Very subtle ethereal glow */
 		box-shadow:
-			inset 0 0 120px rgba(0, 255, 255, 0.08),
-			inset 0 0 60px rgba(217, 70, 239, 0.05);
+			inset 0 0 100px rgba(0, 255, 255, 0.04),
+			inset 0 0 50px rgba(217, 70, 239, 0.02);
 	}
 
 	.dc-journal-screen :global(.dc-journal-container) {
