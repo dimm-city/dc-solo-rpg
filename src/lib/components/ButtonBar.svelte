@@ -29,6 +29,7 @@
 		padding: var(--space-md);
 		position: relative;
 		z-index: 10;
+		container-type: inline-size;
 	}
 
 	.with-border {
@@ -56,8 +57,8 @@
 		min-width: 120px;
 	}
 
-	/* Stack vertically on mobile */
-	@media (max-width: 600px) {
+	/* Stack vertically when container is less than 200px wide */
+	@container (max-width: 200px) {
 		.button-bar {
 			flex-direction: column;
 		}
