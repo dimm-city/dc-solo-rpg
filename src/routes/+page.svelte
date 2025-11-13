@@ -202,7 +202,8 @@
 				<span class="version-text">DC-S-0.1.0</span>
 			</div>
 			<div class="header-buttons">
-				<a href="/settings" class="header-link" aria-label="Settings">
+				
+				<a href="/about" class="header-link" aria-label="About">
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						width="24"
@@ -214,10 +215,9 @@
 						stroke-linecap="round"
 						stroke-linejoin="round"
 					>
-						<circle cx="12" cy="12" r="3"></circle>
-						<path
-							d="M12 1v6m0 6v6M5.6 5.6l4.2 4.2m4.4 4.4l4.2 4.2M1 12h6m6 0h6M5.6 18.4l4.2-4.2m4.4-4.4l4.2-4.2"
-						></path>
+						<circle cx="12" cy="12" r="10"></circle>
+						<path d="M12 16v-4"></path>
+						<path d="M12 8h.01"></path>
 					</svg>
 				</a>
 				<a href="/how-to" class="header-link" aria-label="How to Play">
@@ -237,7 +237,7 @@
 						<path d="M12 17h.01"></path>
 					</svg>
 				</a>
-				<a href="/about" class="header-link" aria-label="About">
+				<a href="/settings" class="header-link" aria-label="Settings">
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						width="24"
@@ -248,13 +248,16 @@
 						stroke-width="2"
 						stroke-linecap="round"
 						stroke-linejoin="round"
+						class="lucide lucide-settings2-icon lucide-settings-2"
+						><path d="M14 17H5" /><path d="M19 7h-9" /><circle cx="17" cy="17" r="3" /><circle
+							cx="7"
+							cy="7"
+							r="3"
+						/></svg
 					>
-						<circle cx="12" cy="12" r="10"></circle>
-						<path d="M12 16v-4"></path>
-						<path d="M12 8h.01"></path>
-					</svg>
 				</a>
 			</div>
+			
 		</div>
 		<div class="welcome-container">
 			<div class="dc-start-screen-container" data-testid="game-selector">
