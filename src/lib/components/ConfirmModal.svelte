@@ -89,7 +89,9 @@
 			</div>
 
 			<ButtonBar bordered={true} gameBackground={false}>
-				<AugmentedButton onclick={onCancel} text={cancelText} variant="secondary" />
+				{#if cancelText}
+					<AugmentedButton onclick={onCancel} text={cancelText} variant="secondary" />
+				{/if}
 				<AugmentedButton onclick={onConfirm} text={confirmText} variant="primary" />
 			</ButtonBar>
 		</div>
