@@ -4,7 +4,8 @@
 	 * Used for cards, journal entries, and contextual help
 	 * Provides consistent styling and UX across all modal interactions
 	 */
-	import { fade } from 'svelte/transition';
+	import { fade, scale } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
 
 	let { children, isVisible = true, zIndex = 50 } = $props();
 </script>
@@ -13,9 +14,15 @@
 	<div
 		class="overlay-modal-container"
 		style="z-index: {zIndex};"
-		transition:fade={{ duration: 300 }}
+		in:fade={{ duration: 400, easing: cubicOut }}
+		out:fade={{ duration: 300, easing: cubicOut }}
 	>
-		<div class="overlay-modal-content" data-augmented-ui="tl-clip tr-clip br-clip bl-clip border">
+		<div
+			class="overlay-modal-content"
+			data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
+			in:scale={{ duration: 500, start: 0.7, opacity: 0.3, easing: cubicOut }}
+			out:scale={{ duration: 400, start: 0.8, opacity: 0.2, easing: cubicOut }}
+		>
 			{@render children()}
 		</div>
 	</div>

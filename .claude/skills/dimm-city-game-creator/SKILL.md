@@ -10,6 +10,7 @@ Generate complete, validated `.game.md` files for Wretched & Alone solo journali
 ## Overview
 
 Create fully playable 52-card games that maintain perfect mechanical balance while incorporating:
+
 - Dimm City lore (five districts, factions, creaturepunk aesthetic)
 - Rich sensory details (sight, sound, smell, touch, taste)
 - Type-based markdown format compliance
@@ -19,6 +20,7 @@ Create fully playable 52-card games that maintain perfect mechanical balance whi
 ## Quick Start
 
 **Simple usage:**
+
 1. User provides concept: "Generate a game about [protagonist] in [district]"
 2. Read relevant references for context (`world-overview.md`, `districts.md`)
 3. Generate complete 52-card game following template structure
@@ -27,6 +29,7 @@ Create fully playable 52-card games that maintain perfect mechanical balance whi
 6. Present validation report
 
 **Example prompts:**
+
 - "Generate a gutterdruid healing toxic Wastes"
 - "Create a wirephreak escape from Tech District lockdown"
 - "Make a gang warfare game in Neon District"
@@ -34,7 +37,9 @@ Create fully playable 52-card games that maintain perfect mechanical balance whi
 ## Generation Process
 
 ### Step 1: Load Context
+
 Before generating, read these reference files:
+
 - `references/world-overview.md` - Core Dimm City lore, tone, slang
 - `references/districts.md` - District-specific details
 - `references/game-config.md` - Format specification
@@ -43,6 +48,7 @@ Before generating, read these reference files:
 ### Step 2: Generate Structure
 
 **Frontmatter (required):**
+
 ```yaml
 ---
 title: Game Title
@@ -53,6 +59,7 @@ lose-message: Defeat description
 ```
 
 **Introduction sections:**
+
 - `## Who You Are` - Protagonist identity, skills, situation (1-3 paragraphs)
 - `## What Happened` - Inciting incident (1-5 paragraphs)
 - `## Your Goal` - Victory condition and stakes (1-2 paragraphs)
@@ -60,6 +67,7 @@ lose-message: Defeat description
 ### Step 3: Generate 52 Cards
 
 **CRITICAL DISTRIBUTION (never change):**
+
 - 1 Primary Success (Ace of Hearts)
 - 4 Failure Counters (all Kings - escalating threats)
 - 3 Narrative cards (A♦, A♣, A♠ - respite/reflection)
@@ -76,6 +84,7 @@ lose-message: Defeat description
 5. **Event** - Safe moments (resources, helpful encounters, quiet moments, world-building)
 
 **Card structure:**
+
 ```markdown
 ### [Card Type]: [optional modifier]
 
@@ -87,6 +96,7 @@ lose-message: Defeat description
 ### Step 4: Apply Dimm City Aesthetic
 
 **Every card must include:**
+
 - **Sensory details** engaging multiple senses
 - **Dimm City slang** (DimmCitz, shorty, mercsercs, etc.)
 - **District-specific flavor** from `districts.md`
@@ -97,6 +107,7 @@ lose-message: Defeat description
 ### Step 5: Validate & Report
 
 Auto-validate:
+
 - Card counts (52 total, correct distribution)
 - Format (frontmatter, sections, modifiers)
 - No duplicates if using explicit assignment
@@ -109,6 +120,7 @@ Auto-correct once if needed, then present:
 **Status**: [✓ PASSED | ⚠ CORRECTED | ✗ ISSUES REMAIN]
 
 **Card Counts**:
+
 - Primary Success: 1 ✓
 - Failure Counters: 4 ✓
 - Narrative: 3 ✓
@@ -124,16 +136,19 @@ Auto-correct once if needed, then present:
 ## Iteration Support
 
 **Generate variations:**
+
 - "Make it darker" / "Add more hope"
 - "Generate 3 variations"
 - "Create combat-heavy version"
 
 **Adjust elements:**
+
 - "Focus on [faction]"
 - "Switch from [district] to [district]"
 - "Change protagonist to [role]"
 
 **Regenerate cards:**
+
 - "Regenerate all challenges"
 - "Rewrite narrative cards"
 - "Replace events 10-15"
@@ -141,15 +156,18 @@ Auto-correct once if needed, then present:
 ## Writing Guidelines
 
 **Card balance:**
+
 - Challenges: 4-6 severe, 10-12 moderate
 - Events: 10-12 helpful, 10-12 neutral, 6-8 bittersweet
 
 **Thematic cohesion:**
+
 - Recurring elements (NPCs, locations)
 - Escalating stakes
 - Consistent atmosphere
 
 **Avoid:**
+
 - Formulaic structure
 - Generic descriptions
 - Changing core mechanics
@@ -158,12 +176,14 @@ Auto-correct once if needed, then present:
 ## Key Reminders
 
 **Never change:**
+
 - 52 cards total (1+4+3+16+28)
 - Odd ranks trigger damage (3, 5, 7, 9)
 - Even ranks safe (2, 4, 6, 8, 10, J, Q, K)
 - Primary Success = Ace of Hearts
 
 **Always include:**
+
 - Sensory details (all 5 senses)
 - Dimm City slang and tone
 - District flavor
@@ -175,6 +195,7 @@ Generate games that make Dimm City bleed neon into solo journaling.
 ## Resources
 
 ### references/
+
 - `game-config.md` - Format specification
 - `game-template.game.md` - Complete template
 - `wretched-alone-mechanics-guide.md` - Mechanics reference
