@@ -80,8 +80,22 @@
 		max-height: 12rem;
 		box-sizing: border-box;
 		resize: vertical; /* Allow vertical resizing */
-		font-family: inherit;
+		font-family: 'Courier New', monospace;
 		font-size: 1rem;
-		padding: 0.5rem;
+		padding: var(--space-md);
+		/* Matching card aesthetic */
+		background: rgba(0, 0, 0, 0.4);
+		border: 2px solid rgba(0, 255, 255, 0.3);
+		border-radius: 4px;
+		color: var(--color-text);
+		transition: all 0.3s ease;
+	}
+
+	textarea:focus {
+		outline: none;
+		border-color: var(--color-neon-cyan);
+		box-shadow:
+			0 0 10px rgba(0, 255, 255, 0.3),
+			inset 0 0 10px rgba(0, 255, 255, 0.1);
 	}
 </style>
