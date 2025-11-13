@@ -402,9 +402,4 @@ export async function exitGame() {
 	gameState.stylesheet = '';
 
 	transitionTo('exitGame');
-
-	// Immediately transition to options screen after resetting state
-	setTimeout(() => {
-		transitionTo('options');
-	}, 0);
 }

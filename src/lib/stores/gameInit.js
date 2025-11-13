@@ -3,6 +3,7 @@
  * Centralized logic for initializing game state
  */
 import { gameState } from './gameStore.svelte.js';
+import { getSettings } from './settingsStore.svelte.js';
 
 /**
  * Shuffle array in place using Fisher-Yates algorithm
@@ -37,10 +38,19 @@ export function initializeGame(gameConfig, player, options = {}) {
 		throw new Error('Game configuration must include a deck');
 	}
 
-	// Merge options with config options
+	// Load saved settings from localStorage
+	const savedSettings = getSettings();
+
+	// Merge options: saved settings < config options < passed options
+	// This allows passed options to override saved settings
 	const finalConfig = {
 		...gameConfig,
-		options: { ...gameConfig.options, ...options }
+		options: {
+			...gameConfig.options,
+			difficulty: savedSettings.difficulty,
+			dice: savedSettings.diceTheme,
+			...options
+		}
 	};
 
 	// Set up deck with difficulty adjustments
@@ -65,7 +75,7 @@ export function initializeGame(gameConfig, player, options = {}) {
 		originalConfig: JSON.parse(JSON.stringify(finalConfig)), // Deep copy for restart
 		stylesheet: finalConfig.stylesheet || gameConfig.stylesheet || '',
 		systemConfig: { gameConfigUrl: `/games/${gameConfig.slug || 'default'}/` },
-		state: 'options',
+		state: 'showIntro',
 		round: 1,
 		player,
 		playerName: player.name,

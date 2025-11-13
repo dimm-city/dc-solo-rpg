@@ -3,8 +3,7 @@
  * Defines all valid state transitions
  */
 export const transitionGraph = {
-	loadGame: ['options'],
-	options: ['showIntro'],
+	loadGame: ['showIntro'],
 	showIntro: ['rollForTasks'],
 	startRound: ['rollForTasks'],
 	rollForTasks: ['drawCard'],
@@ -16,7 +15,7 @@ export const transitionGraph = {
 	finalDamageRoll: ['gameOver'],
 	gameOver: ['finalLog'],
 	finalLog: ['exitGame'],
-	exitGame: ['loadGame', 'options'],
+	exitGame: ['loadGame'],
 	errorScreen: ['loadGame']
 };
 

@@ -202,6 +202,24 @@
 				<span class="version-text">DC-S-0.1.0</span>
 			</div>
 			<div class="header-buttons">
+				<a href="/settings" class="header-link" aria-label="Settings">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="24"
+						height="24"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<circle cx="12" cy="12" r="3"></circle>
+						<path
+							d="M12 1v6m0 6v6M5.6 5.6l4.2 4.2m4.4 4.4l4.2 4.2M1 12h6m6 0h6M5.6 18.4l4.2-4.2m4.4-4.4l4.2-4.2"
+						></path>
+					</svg>
+				</a>
 				<a href="/how-to" class="header-link" aria-label="How to Play">
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
