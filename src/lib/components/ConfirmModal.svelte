@@ -84,7 +84,7 @@
 		display: flex !important;
 		align-items: center;
 		justify-content: center;
-		z-index: 99999 !important;
+		z-index: 999999 !important;
 		padding: 1rem;
 	}
 
@@ -100,6 +100,8 @@
 			inset 0 0 20px rgba(217, 70, 239, 0.05);
 		position: relative;
 		overflow: hidden;
+		z-index: 1000000;
+		pointer-events: auto;
 	}
 
 	/* Cyberpunk corner clips */

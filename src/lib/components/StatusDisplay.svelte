@@ -117,11 +117,11 @@
 				</div>
 				<div class="stat-value">
 					<span class="current">{bonusPercent}</span><span class="divider">/</span><span class="max"
-						>10</span
+						>4</span
 					>
 				</div>
 				<div class="stat-bar">
-					<div class="stat-fill bonus-fill" style="width: {(bonusPercent / 10) * 100}%"></div>
+					<div class="stat-fill bonus-fill" style="width: {(bonusPercent / 4) * 100}%"></div>
 				</div>
 			</div>
 
