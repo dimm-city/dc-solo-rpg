@@ -298,15 +298,16 @@
 	.header-logo {
 		grid-column: 2;
 		display: flex;
-		flex-direction: column;
+		flex-direction: row;
 		align-items: center;
-		gap: var(--space-xs);
+		gap: var(--space-sm);
 	}
 
 	.logo-dice {
 		width: clamp(48px, 8vw, 72px);
 		height: auto;
-		filter: drop-shadow(0 0 12px rgba(217, 70, 239, 0.6)) drop-shadow(0 0 24px rgba(217, 70, 239, 0.3));
+		filter: drop-shadow(0 0 12px rgba(217, 70, 239, 0.6))
+			drop-shadow(0 0 24px rgba(217, 70, 239, 0.3));
 		animation: float 6s ease-in-out infinite;
 	}
 

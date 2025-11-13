@@ -35,9 +35,9 @@
 		}
 	});
 </script>
-<svelte:head>
 
-		<link rel="icon" href="{data.icon || "/d20-150.png"}" />
+<svelte:head>
+	<link rel="icon" href={data.icon || '/d20-150.png'} />
 </svelte:head>
 <!-- Persistent DiceBox container that never unmounts, but can be hidden -->
 <div
@@ -53,19 +53,22 @@
 </div>
 
 <style>
-	/* Persistent DiceBox container - fills viewport, behind all content */
+	/* Persistent DiceBox container - fills viewport, behind neural background */
 	.dice-container {
 		position: fixed;
 		top: 0;
 		left: 0;
 		width: 100vw;
 		height: 100vh;
-		z-index: -1; /* Behind page content */
+		z-index: 5; /* Below neural background (10), above page content (1) */
 		pointer-events: none; /* Don't block clicks */
 		background: transparent;
+		opacity: 0.7; /* Slightly transparent when behind neural background */
+		filter: brightness(0.9); /* Slightly dimmed for depth effect */
 		transition:
-			opacity 0.3s ease,
-			z-index 1.5s ease; /* Slow transition back down */
+			opacity 1.5s ease,
+			filter 1.5s ease,
+			z-index 0.1s ease 1.5s; /* Delay z-index change until after visual transition */
 	}
 
 	.dice-container.hidden {
@@ -76,7 +79,12 @@
 	/* When rolling, bring dice to front with immediate transition */
 	.dice-container.rolling {
 		z-index: 9999;
-		transition: opacity 0.3s ease; /* No z-index transition when going up */
+		opacity: 1; /* Full opacity when rolling */
+		filter: brightness(1); /* Full brightness when on top */
+		transition:
+			opacity 0.2s ease,
+			filter 0.2s ease,
+			z-index 0s; /* Immediate z-index change when going up */
 	}
 
 	/* Canvas from DiceBox should fill the container */
