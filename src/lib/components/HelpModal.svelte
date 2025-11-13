@@ -4,6 +4,10 @@
 
 	let { isOpen = false, onClose } = $props();
 
+	$effect(() => {
+		console.log('[HelpModal] isOpen changed to:', isOpen);
+	});
+
 	// Define all help content sections
 	const helpSections = [
 		{
