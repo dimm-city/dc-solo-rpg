@@ -342,15 +342,8 @@
 				break;
 			case 'log':
 			case 'finalLog':
-				if (journalSaved) {
-					if (gameState.gameOver) {
-						// Don't auto-advance on game over journal - let user choose restart or exit
-					} else {
-						handleJournalNext();
-					}
-				} else {
-					handleJournalSave();
-				}
+				// Journal screen - user must click the save button explicitly
+				// Tapping the screen should NOT save or advance
 				break;
 		}
 	}

@@ -573,14 +573,27 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 				const config = createMockGameConfig();
 				initializeGame(config, { name: 'Test' });
 
+				// Setup: Draw 3 kings first
 				gameState.kingsRevealed = 3;
+				gameState.kingOfHearts = true;
+				gameState.kingOfDiamonds = true;
+				gameState.kingOfClubs = true;
+				gameState.kingOfSpades = false;
+
+				// Setup deck with final king
 				gameState.deck = [{ card: 'K', suit: 'spades', prompt: 'Final King' }];
 				gameState.state = 'drawCard';
 
+				// Draw the 4th king
 				drawCard();
 
+				// Verify game over with loss
 				expect(gameState.gameOver).toBe(true);
 				expect(gameState.win).toBe(false);
+				expect(gameState.kingsRevealed).toBe(4);
+				expect(gameState.kingOfSpades).toBe(true);
+				expect(gameState.status).toBe(config.labels.failureCounterLoss);
+				expect(gameState.state).toBe('gameOver');
 			});
 
 			it('should lose when deck exhausted without win condition', () => {
