@@ -3,6 +3,12 @@
 	import { gameState } from '../stores/gameStore.svelte.js';
 	import { confirmCard, drawCard } from '../stores/gameActions.svelte.js';
 
+	// Reference to CardDeck component
+	let cardDeckRef;
+
+	// Track animation stage so button state updates reactively
+	let animationStage = $state('idle');
+
 	/**
 	 * Handle card request from neural interface
 	 * Triggered when user clicks "PROCEED TO NEXT BYTE"
@@ -20,6 +26,37 @@
 		// Confirm in the game store and proceed
 		await confirmCard();
 	}
+
+	/**
+	 * Expose button click handler for toolbar
+	 */
+	export async function handleButtonClick() {
+		if (cardDeckRef) {
+			await cardDeckRef.onButtonClick();
+		}
+	}
+
+	/**
+	 * Expose button text for toolbar - derived from animation stage
+	 */
+	export function getButtonText() {
+		if (animationStage === 'idle') return 'PROCEED TO NEXT BYTE';
+		if (animationStage === 'anticipating' || animationStage === 'materializing')
+			return 'LOADING...';
+		if (animationStage === 'revealed') return 'CONTINUE';
+		return 'UPLOADING...';
+	}
+
+	/**
+	 * Expose button disabled state for toolbar - derived from animation stage
+	 */
+	export function isButtonDisabled() {
+		return (
+			animationStage === 'anticipating' ||
+			animationStage === 'materializing' ||
+			animationStage === 'dismissing'
+		);
+	}
 </script>
 
 <!-- Neural Interface Container -->
@@ -31,9 +68,12 @@
 		- 'confirmcard': When user confirms the revealed card
 
 		Card is passed reactively from the game store
+		Button is now in GameScreen toolbar
 	-->
 	<CardDeck
+		bind:this={cardDeckRef}
 		bind:card={gameState.currentCard}
+		bind:animationStage={animationStage}
 		onrequestcard={onRequestCard}
 		onconfirmcard={onConfirmCardDeck}
 	/>

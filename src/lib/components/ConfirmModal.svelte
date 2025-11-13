@@ -1,7 +1,8 @@
 <script>
-	import { fade, scale } from 'svelte/transition';
+	import { fade, fly } from 'svelte/transition';
 	import { onMount } from 'svelte';
 	import AugmentedButton from './AugmentedButton.svelte';
+	import ButtonBar from './ButtonBar.svelte';
 
 	/**
 	 * @typedef {Object} Props
@@ -24,10 +25,33 @@
 		onCancel
 	} = $props();
 
-	let modalTarget = $state(null);
+	let portalEl = $state(null);
+	let contentEl = $state(null);
 
 	onMount(() => {
-		modalTarget = document.body;
+		// Create portal container at body level
+		portalEl = document.createElement('div');
+		portalEl.className = 'modal-portal-root';
+		document.body.appendChild(portalEl);
+
+		return () => {
+			if (portalEl && document.body.contains(portalEl)) {
+				document.body.removeChild(portalEl);
+			}
+		};
+	});
+
+	// Teleport content to portal when it changes
+	$effect(() => {
+		if (contentEl && portalEl && isOpen) {
+			portalEl.appendChild(contentEl);
+		}
+
+		return () => {
+			if (contentEl && portalEl && portalEl.contains(contentEl)) {
+				portalEl.removeChild(contentEl);
+			}
+		};
 	});
 
 	function handleBackdropClick(event) {
@@ -43,34 +67,35 @@
 	}
 </script>
 
-{#if isOpen && modalTarget}
-	{#key isOpen}
-		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-		<div
-			class="modal-backdrop"
-			onclick={handleBackdropClick}
-			onkeydown={handleKeydown}
-			role="dialog"
-			aria-modal="true"
-			aria-labelledby="modal-title"
-			transition:fade={{ duration: 200 }}
-		>
-			<div class="modal-content" transition:scale={{ duration: 300, start: 0.9 }}>
-				<div class="modal-header">
-					<h2 id="modal-title">{title}</h2>
-				</div>
-
-				<div class="modal-body">
-					<p>{message}</p>
-				</div>
-
-				<div class="modal-footer">
-					<AugmentedButton onclick={onCancel} text={cancelText} variant="secondary" />
-					<AugmentedButton onclick={onConfirm} text={confirmText} variant="primary" />
-				</div>
+{#if isOpen}
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+	<div
+		bind:this={contentEl}
+		class="modal-backdrop"
+		onclick={handleBackdropClick}
+		onkeydown={handleKeydown}
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="modal-title"
+		transition:fade={{ duration: 200 }}
+	>
+		<div class="modal-content" transition:fly={{ y: -500, duration: 400, opacity: 1 }}>
+			<div class="modal-header">
+				<h2 id="modal-title">{title}</h2>
 			</div>
+
+			<div class="modal-body">
+				<p>{message}</p>
+			</div>
+
+			<ButtonBar bordered={true} gameBackground={false}>
+				{#if cancelText}
+					<AugmentedButton onclick={onCancel} text={cancelText} variant="secondary" />
+				{/if}
+				<AugmentedButton onclick={onConfirm} text={confirmText} variant="primary" />
+			</ButtonBar>
 		</div>
-	{/key}
+	</div>
 {/if}
 
 <style>
@@ -85,7 +110,7 @@
 		display: flex !important;
 		align-items: center;
 		justify-content: center;
-		z-index: 99999 !important;
+		z-index: 999999 !important;
 		padding: 1rem;
 	}
 
@@ -101,6 +126,8 @@
 			inset 0 0 20px rgba(217, 70, 239, 0.05);
 		position: relative;
 		overflow: hidden;
+		z-index: 1000000;
+		pointer-events: auto;
 	}
 
 	/* Cyberpunk corner clips */
@@ -169,46 +196,10 @@
 		line-height: var(--line-height-relaxed);
 	}
 
-	.modal-footer {
-		padding: var(--space-lg);
-		border-top: 1px solid rgba(217, 70, 239, 0.3);
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--space-md);
-		justify-content: center;
-		align-items: stretch;
-		position: relative;
-	}
-
-	.modal-footer > :global(*) {
-		flex: 1 1 auto;
-		min-width: 120px;
-	}
-
-	.modal-footer::before {
-		content: '';
-		position: absolute;
-		top: -1px;
-		left: 50%;
-		transform: translateX(-50%);
-		width: 100px;
-		height: 1px;
-		background: linear-gradient(90deg, transparent, var(--color-cyber-magenta), transparent);
-		box-shadow: 0 0 8px rgba(217, 70, 239, 0.6);
-	}
-
 	/* Responsive adjustments */
 	@media (max-width: 600px) {
 		.modal-content {
 			max-width: 100%;
-		}
-
-		.modal-footer {
-			flex-direction: column;
-		}
-
-		.modal-footer :global(.aug-button-wrapper) {
-			width: 100%;
 		}
 	}
 

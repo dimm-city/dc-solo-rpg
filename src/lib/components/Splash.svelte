@@ -1,4 +1,5 @@
 <script>
+	import { onDestroy, onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 
 	/**
@@ -10,13 +11,38 @@
 	let isVisible = $state(visible);
 	let shouldFadeOut = $state(false);
 
-	// Auto-hide after animation completes
-	$effect(() => {
+	let phrases = [
+		'Connecting to the ether...',
+		'Calibrating neural uplink...',
+		'Aligning quantum resonators...',
+		'Decrypting synaptic matrix...',
+		'Initializing dreamscape protocol...',
+		'Engaging reality filters...',
+		'Stabilizing temporal flux...',
+		'Charging psionic amplifiers...',
+		'Mapping ethereal pathways...',
+		'Synchronizing mindware...',
+		'Booting subconscious core...',
+		'Activating sensory enhancers...',
+		'Loading cognitive subroutines...'
+	];
+	let currentPhraseIndex = $state(0);
+	let subtitle = $derived(phrases[currentPhraseIndex]);
+
+	// Cycle through subtitles every 100ms while component is mounted
+
+	const subtitleInterval = setInterval(() => {
+		currentPhraseIndex = (currentPhraseIndex + 1) % phrases.length;
+	}, 375);
+
+	let timer;
+	onMount(() => {
+		// Auto-hide after animation completes
 		if (visible) {
 			isVisible = true;
 			shouldFadeOut = false;
 
-			const timer = setTimeout(() => {
+			timer = setTimeout(() => {
 				shouldFadeOut = true;
 				// Call onComplete immediately when fade starts
 				onComplete();
@@ -25,10 +51,13 @@
 					isVisible = false;
 				}, 850); // Slightly longer than fade duration
 			}, 2500); // Animation duration + slight delay
-
-			return () => clearTimeout(timer);
 		}
 	});
+	onDestroy(() => {
+		clearTimeout(timer);
+		clearInterval(subtitleInterval);
+	});
+
 </script>
 
 {#if isVisible}
@@ -39,7 +68,7 @@
 				<div class="title-divider"></div>
 				<span>C</span><span>I</span><span>T</span><span>Y</span>
 			</div>
-			<div class="subtitle">Connecting to the aether...</div>
+			<div class="subtitle">{subtitle}</div>
 		</div>
 	</div>
 {/if}
@@ -123,7 +152,7 @@
 			0 0 10px var(--neon-cyan);
 		color: var(--neon-yellow);
 	}
-.title-divider {
+	.title-divider {
 		width: 90%;
 		height: 2px;
 		margin: 0.5rem 0;

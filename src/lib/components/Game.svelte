@@ -174,4 +174,11 @@
 			min-width: 85%;
 		}
 	}
+
+	/* Allow overflow on mobile for toolbar elements to appear above toolbar */
+	@media (max-width: 450px) or (max-height: 600px) {
+		.dc-game-container {
+			overflow: visible;
+		}
+	}
 </style>

@@ -4,8 +4,8 @@
  */
 export const transitionGraph = {
 	loadGame: ['options'],
-	options: ['intro'],
-	intro: ['rollForTasks'],
+	options: ['showIntro'],
+	showIntro: ['rollForTasks'],
 	startRound: ['rollForTasks'],
 	rollForTasks: ['drawCard'],
 	drawCard: ['failureCheck', 'drawCard', 'endTurn', 'log', 'gameOver'],
@@ -14,8 +14,8 @@ export const transitionGraph = {
 	log: ['successCheck', 'startRound'],
 	successCheck: ['startRound', 'finalDamageRoll', 'gameOver'],
 	finalDamageRoll: ['gameOver'],
-	gameOver: ['finalLog', 'intro'],
-	finalLog: ['exitGame', 'intro'],
+	gameOver: ['finalLog'],
+	finalLog: ['exitGame'],
 	exitGame: ['loadGame', 'options'],
 	errorScreen: ['loadGame']
 };
