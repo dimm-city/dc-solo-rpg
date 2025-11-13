@@ -897,28 +897,34 @@
 		height: 100%;
 		overflow-y: auto; /* Allow scrolling if content overflows */
 		overflow-x: hidden;
+		z-index: 50; /* Above main screen elements */
 	}
 
-	/* Atmospheric/ethereal dark semi-transparent background for journal */
+	/* Atmospheric/ethereal dark cloud background with transparent edges */
 	.dc-journal-screen::before {
 		content: '';
 		position: absolute;
 		inset: 0;
-		background: linear-gradient(
-			135deg,
-			rgba(10, 10, 30, 0.85),
-			rgba(20, 10, 40, 0.8),
-			rgba(10, 20, 40, 0.85)
+		/* Radial gradient for soft, cloud-like edges */
+		background: radial-gradient(
+			ellipse at center,
+			rgba(10, 10, 30, 0.95) 0%,
+			rgba(15, 10, 35, 0.92) 30%,
+			rgba(20, 10, 40, 0.85) 50%,
+			rgba(15, 15, 35, 0.7) 70%,
+			rgba(10, 10, 30, 0.4) 85%,
+			transparent 100%
 		);
-		backdrop-filter: blur(20px) saturate(180%);
-		-webkit-backdrop-filter: blur(20px) saturate(180%);
+		/* Strong blur effect for content beneath */
+		backdrop-filter: blur(12px) saturate(150%);
+		-webkit-backdrop-filter: blur(12px) saturate(150%);
 		pointer-events: none;
 		z-index: 0;
 
 		/* Subtle ethereal glow */
 		box-shadow:
-			inset 0 0 100px rgba(0, 255, 255, 0.05),
-			inset 0 0 50px rgba(217, 70, 239, 0.03);
+			inset 0 0 120px rgba(0, 255, 255, 0.08),
+			inset 0 0 60px rgba(217, 70, 239, 0.05);
 	}
 
 	.dc-journal-screen :global(.dc-journal-container) {

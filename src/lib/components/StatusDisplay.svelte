@@ -1018,33 +1018,6 @@
 			width: min-content;
 		}
 
-		/* Left column stats (Health, Failure) - icons toward center (right), values toward outer edge (left) */
-		.stats-grid > div:first-of-type .stat-item {
-			flex-direction: row-reverse;
-			justify-content: space-between;
-		}
-
-		.stats-grid > div:first-of-type .stat-item .stat-label {
-			order: 2; /* Icon goes to the right (toward center) */
-		}
-
-		.stats-grid > div:first-of-type .stat-item .stat-value {
-			order: 1; /* Value goes to the left (toward outer edge) */
-		}
-
-		/* Right column stats (Bonus, Success) - icons toward center (left), values toward outer edge (right) */
-		.stats-grid > div:last-of-type .stat-item {
-			justify-content: space-between;
-		}
-
-		.stats-grid > div:last-of-type .stat-item .stat-label {
-			order: 1; /* Icon goes to the left (toward center) */
-		}
-
-		.stats-grid > div:last-of-type .stat-item .stat-value {
-			order: 2; /* Value goes to the right (toward outer edge) */
-		}
-
 		.stat-label {
 			font-size: 0.65rem;
 			min-width: 50px;
@@ -1131,6 +1104,9 @@
 			--aug-tl: 8px; /* Gentle endpoint */
 			--aug-bl: unset; /* Gentle terminus */
 			--aug-tr: unset; /* Visual anchor */
+
+			/* Icon toward center (right side) */
+			flex-direction: row-reverse;
 		}
 
 		/* Failure: Top-right - receives left from Health */
@@ -1139,6 +1115,9 @@
 			--aug-l-inset1: 8px;
 			margin-inline-start: 0;
 			padding-inline-start: calc(var(--space-md) + var(--space-xs));
+
+			/* Icon toward center (right side) */
+			flex-direction: row-reverse;
 		}
 
 		/* Bonus: Bottom-left - extends right to Success */
@@ -1148,26 +1127,22 @@
 			--aug-br: unset; /* Gentle terminus */
 			--aug-tl: unset; /* Visual anchor */
 			padding-inline-start: var(--space-sm);
-			display: flex;
-			flex-direction: row-reverse;
-			.stat-value{
-				flex-direction: row-reverse;
-			}
-			.stat-label {
-				padding-inline-start: var(--space-lg);
-			}
+
+			/* Icon toward center (left side) - override desktop row-reverse */
+			flex-direction: row;
 		}
 
 		/* Success: Bottom-right - receives left from Bonus */
 		.success-stat {
 			margin-inline-start: 0;
 			padding-inline-start: calc(var(--space-md) + var(--space-xs));
-			display: flex;
-			flex-direction: row-reverse;
 			--aug-tl: 12px; /* Slot ← receives Bonus's tab (desktop) OR Failure's tab (mobile) */
 			--aug-tr: 8px; /* Gentle endpoint */
 			--aug-br: unset; /* Gentle terminus */
 			--aug-bl: unset; /* Visual anchor */
+
+			/* Icon toward center (left side) - override desktop row-reverse */
+			flex-direction: row;
 		}
 
 		.token-grid {
