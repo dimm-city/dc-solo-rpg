@@ -58,12 +58,27 @@
 {#if showContent}
 	<section class="form-container" data-testid="home-page" transition:fade={{ duration: 600 }}>
 		<div class="page-header">
-			<a href="/about" class="about-link">About</a>
+			<h2>Select a Game</h2>
+			<a href="/about" class="about-link" aria-label="About">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="24"
+					height="24"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				>
+					<circle cx="12" cy="12" r="10"></circle>
+					<path d="M12 16v-4"></path>
+					<path d="M12 8h.01"></path>
+				</svg>
+			</a>
 		</div>
 		<div class="welcome-container">
 			<div class="dc-start-screen-container" data-testid="game-selector">
-				<h2>Select a Game</h2>
-
 				<div class="game-cards-grid">
 					{#each data.games as game, index}
 						<button
@@ -107,44 +122,64 @@
 	}
 
 	.page-header {
-		display: flex;
-		justify-content: flex-end;
+		position: sticky;
+		top: 0;
+		z-index: 100;
+		display: grid;
+		grid-template-columns: 1fr auto 1fr;
+		align-items: center;
 		padding: var(--space-md) var(--space-lg);
-		border-bottom: var(--border-width-default) solid var(--color-cyber-magenta);
-		margin-bottom: var(--space-lg);
+		background: rgba(10, 10, 20, 0.05);
+		backdrop-filter: blur(16px);
+		-webkit-backdrop-filter: blur(16px);
+	}
+
+	.page-header h2 {
+		grid-column: 2;
+		text-align: center;
+		margin: 0;
+		font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+		letter-spacing: var(--letter-spacing-widest);
+		color: var(--color-brand-yellow);
+		text-shadow: var(--text-glow-yellow);
 	}
 
 	.about-link {
-		font-family: var(--font-display);
-		font-size: var(--text-sm);
-		font-weight: 700;
+		grid-column: 3;
+		justify-self: end;
 		color: var(--color-brand-yellow);
 		text-decoration: none;
-		text-transform: uppercase;
-		letter-spacing: var(--letter-spacing-wide);
-		padding: var(--space-sm) var(--space-md);
-		border: var(--border-width-default) solid var(--color-cyber-magenta);
+		padding: var(--space-sm);
 		transition: all var(--transition-fast);
 		display: inline-flex;
 		align-items: center;
+		border-radius: 50%;
+	}
+
+	.about-link svg {
+		width: 28px;
+		height: 28px;
+		filter: drop-shadow(0 0 4px var(--color-brand-yellow));
 	}
 
 	.about-link:hover {
 		color: var(--color-neon-cyan);
-		border-color: var(--color-neon-cyan);
-		box-shadow: var(--glow-cyan);
-		transform: translateY(-2px);
-		text-shadow: var(--text-glow-cyan);
+		transform: scale(1.1);
+	}
+
+	.about-link:hover svg {
+		filter: drop-shadow(0 0 8px var(--color-neon-cyan));
 	}
 
 	.about-link:active {
-		transform: translateY(-1px);
+		transform: scale(1.05);
 	}
 
 	.welcome-container {
 		display: flex;
 		flex-direction: column;
 		justify-content: flex-start;
+		margin-top: var(--space-lg);
 		/* Fluid padding that scales with viewport */
 		padding-inline: clamp(var(--space-md), 3vw, var(--space-2xl));
 		gap: clamp(var(--space-lg), 2vw, var(--space-xl));
@@ -168,31 +203,6 @@
 		flex-direction: column;
 		gap: var(--space-xl);
 		width: 100%;
-	}
-
-	.dc-start-screen-container h2 {
-		text-align: center;
-		margin: 0;
-		/* Enhanced visual weight and glow */
-		font-size: clamp(1.25rem, 2.5vw, 1.75rem);
-		letter-spacing: var(--letter-spacing-widest);
-		position: relative;
-		padding-bottom: var(--space-md);
-		animation: fadeInContent 0.6s ease-out;
-		animation-delay: 0.2s;
-	}
-
-	/* Subtle underline accent for h2 */
-	.dc-start-screen-container h2::after {
-		content: '';
-		position: absolute;
-		bottom: 0;
-		left: 50%;
-		transform: translateX(-50%);
-		width: 30%;
-		height: 3px;
-		background: linear-gradient(90deg, transparent, var(--color-cyber-magenta), transparent);
-		box-shadow: 0 0 10px var(--color-cyber-magenta);
 	}
 
 	/* ============================================
@@ -499,7 +509,7 @@
 			padding-inline: var(--space-lg);
 		}
 
-		.dc-start-screen-container h2 {
+		.page-header h2 {
 			font-size: var(--text-2xl);
 		}
 	}
@@ -532,8 +542,17 @@
 			gap: var(--space-lg);
 		}
 
-		.dc-start-screen-container h2 {
+		.page-header {
+			padding: var(--space-sm) var(--space-md);
+		}
+
+		.page-header h2 {
 			font-size: var(--text-xl);
+		}
+
+		.about-link svg {
+			width: 24px;
+			height: 24px;
 		}
 	}
 

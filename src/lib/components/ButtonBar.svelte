@@ -24,8 +24,8 @@
 		flex-shrink: 0;
 		width: 100%;
 		display: flex;
-		flex-wrap: wrap;
-		gap: var(--space-sm);
+		flex-direction: row;
+		gap: var(--space-lg);
 		padding: var(--space-md);
 		position: relative;
 		z-index: 10;
@@ -49,6 +49,8 @@
 	/* Ensure buttons fill their wrappers */
 	.button-bar > :global(.aug-button-wrapper .aug-button) {
 		width: 100%;
+		height: 100%;
+		transition: height 0.3s ease, width 0.3s ease;
 	}
 
 	/* Direct children (non-wrapped buttons) also get flex treatment */
@@ -58,9 +60,9 @@
 	}
 
 	/* Stack vertically when container is less than 200px wide */
-	@container (max-width: 200px) {
+	@media (max-width: 300px) {
 		.button-bar {
-			flex-direction: column;
+			flex-wrap: wrap;			
 		}
 
 		.button-bar > :global(.aug-button-wrapper),

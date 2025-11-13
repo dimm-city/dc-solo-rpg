@@ -334,13 +334,18 @@
 				<h1>{gameState.config?.title || 'Game Introduction'}</h1>
 				{@html marked(gameState.config?.introduction ?? '')}
 			</div>
-			<div class="button-bar dc-game-bg">
+			<ButtonBar>
+				<ContinueButton
+					text="Back"
+					onclick={() => transitionTo('intro')}
+					testid="story-back-button"
+				/>
 				<ContinueButton
 					text="Begin Your Journey"
 					onclick={() => transitionTo('rollForTasks')}
 					testid="story-continue-button"
 				/>
-			</div>
+			</ButtonBar>
 		</div>
 	</div>
 {:else if currentScreen == 'gameOver'}
