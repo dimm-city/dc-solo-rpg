@@ -8,8 +8,8 @@ Animal-folk (Sporos) with cybernetics + magic + tech. Gritty, visceral, weird. T
 ## Five Districts
 **The Burrows**: Underground warrens, scrappy survivors, cramped communal desperation
 **Tech District**: Etherwave Transit Hub, glitching surveillance, corporate towers
-**Neon District**: Gang wars, pleasure dens, chrome and blood, cats vs rabbits
-**The Wastes**: Toxic beauty, mutated life, scavenger clans, poisoned ruins
+**The Entertainment District**: Gang wars, pleasure dens, art galleries, artists and criminals
+**The Archives**: Fallen center of knowledge and history, heart of the resistance, scavenger clans, poisoned ruins
 **The Dark**: Reality glitches, forbidden zones, things that shouldn't exist
 
 ## Sensory Palette
