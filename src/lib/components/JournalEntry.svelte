@@ -37,6 +37,8 @@
 			'header-area'
 			'text-entry-area';
 		box-sizing: border-box;
+		position: relative;
+		z-index: 200; /* Above deck visualization (10) and toolbar elements (100) */
 
 		/* Card styling with glassmorphism */
 		background: linear-gradient(135deg, rgba(10, 10, 20, 0.9), rgba(15, 15, 25, 0.85));

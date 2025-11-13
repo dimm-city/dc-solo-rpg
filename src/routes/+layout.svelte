@@ -63,12 +63,11 @@
 		z-index: -10; /* Behind everything - neural background and all content */
 		pointer-events: none; /* Don't block clicks */
 		background: transparent;
-		opacity: 0.6; /* More transparent when behind neural background */
-		filter: brightness(0.85); /* More dimmed for better depth effect */
+		opacity: 0.35; /* Very transparent when sunk into background */
+		filter: brightness(0.7) blur(1px); /* Dimmed and slightly blurred for depth */
 		transition:
-			opacity 1.5s ease,
-			filter 1.5s ease,
-			z-index 0.1s ease 1.5s; /* Delay z-index change until after visual transition */
+			opacity 2s ease-in-out,
+			filter 2s ease-in-out;
 	}
 
 	.dice-container.hidden {
@@ -80,11 +79,10 @@
 	.dice-container.rolling {
 		z-index: 9999;
 		opacity: 1; /* Full opacity when rolling */
-		filter: brightness(1); /* Full brightness when on top */
+		filter: brightness(1) blur(0px); /* Full brightness and sharp when on top */
 		transition:
-			opacity 0.2s ease,
-			filter 0.2s ease,
-			z-index 0s; /* Immediate z-index change when going up */
+			opacity 0.3s ease-out,
+			filter 0.3s ease-out;
 	}
 
 	/* Canvas from DiceBox should fill the container */
