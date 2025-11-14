@@ -310,7 +310,7 @@
 />
 
 <!-- About Modal -->
-<OverlayModal isVisible={showAboutModal} zIndex={1000}>
+<OverlayModal isVisible={showAboutModal} zIndex={1000} fixedHeight="70dvh" animateHeight={true}>
 	<div class="info-modal-content">
 		<h2 class="info-modal-title">About DC Solo RPG</h2>
 		<div class="info-modal-body">
@@ -335,7 +335,7 @@
 </OverlayModal>
 
 <!-- Settings Modal -->
-<OverlayModal isVisible={showSettingsModal} zIndex={1000}>
+<OverlayModal isVisible={showSettingsModal} zIndex={1000} fixedHeight="70dvh" animateHeight={true}>
 	<div class="info-modal-content">
 		<h2 class="info-modal-title">Game Settings</h2>
 		<div class="info-modal-body">

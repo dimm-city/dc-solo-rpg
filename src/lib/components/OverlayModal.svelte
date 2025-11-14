@@ -7,7 +7,46 @@
 	import { fade, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 
-	let { children, isVisible = true, zIndex = 50 } = $props();
+	let {
+		children,
+		isVisible = true,
+		zIndex = 50,
+		fixedHeight = null, // Optional fixed height (e.g., "70dvh")
+		animateHeight = false // Whether to animate height from 40dvh to 70dvh
+	} = $props();
+
+	/**
+	 * Custom transition that combines scale with height animation
+	 * Only used when animateHeight is true
+	 */
+	function scaleWithHeight(
+		node,
+		{
+			delay = 0,
+			duration = 500,
+			easing = cubicOut,
+			startScale = 0.7,
+			endScale = 1.0,
+			opacity: startOpacity = 0.3
+		}
+	) {
+		return {
+			delay,
+			duration,
+			easing,
+			css: (t) => {
+				const scale = startScale + (endScale - startScale) * t;
+				const height = animateHeight ? 40 + 30 * t : null; // 40dvh -> 70dvh
+				const opacity = startOpacity + (1 - startOpacity) * t;
+
+				return `
+					transform: scale(${scale});
+					${height ? `height: ${height}dvh;` : ''}
+					opacity: ${opacity};
+				`;
+			}
+		};
+	}
 </script>
 
 {#if isVisible}
@@ -19,9 +58,23 @@
 	>
 		<div
 			class="overlay-modal-content"
+			class:fixed-height={fixedHeight}
+			style={fixedHeight ? `height: ${fixedHeight};` : ''}
 			data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
-			in:scale={{ duration: 500, start: 0.7, opacity: 0.3, easing: cubicOut }}
-			out:scale={{ duration: 400, start: 0.8, opacity: 0.2, easing: cubicOut }}
+			in:scaleWithHeight={{
+				duration: 500,
+				startScale: 0.7,
+				endScale: 1.0,
+				opacity: 0.3,
+				easing: cubicOut
+			}}
+			out:scaleWithHeight={{
+				duration: 400,
+				startScale: 1.0,
+				endScale: 0.8,
+				opacity: 0.2,
+				easing: cubicOut
+			}}
 		>
 			{@render children()}
 		</div>
@@ -94,6 +147,11 @@
 			0 0 30px rgba(0, 255, 255, 0.4),
 			0 0 60px rgba(217, 70, 239, 0.3),
 			inset 0 0 20px rgba(0, 255, 255, 0.1);
+	}
+
+	/* Fixed height modals override max-height */
+	.overlay-modal-content.fixed-height {
+		max-height: none;
 	}
 
 	/* ============================================
