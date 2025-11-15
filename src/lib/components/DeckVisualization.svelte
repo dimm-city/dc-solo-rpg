@@ -19,7 +19,7 @@
 		</div>
 		<div class="deck-label">
 			<span class="count">{cardsRemaining}</span>
-			<span class="text">cards left</span>
+			<!-- <span class="text">cards left</span> -->
 		</div>
 	</div>
 {:else}
