@@ -1,8 +1,16 @@
 <script>
 	import { gameState } from '../stores/gameStore.svelte.js';
+	import ContinueButton from './ContinueButton.svelte';
+	import ButtonBar from './ButtonBar.svelte';
 
-	// Button logic moved to GameScreen toolbar
-	let { journalText = $bindable('') } = $props();
+	let {
+		journalText = $bindable(''),
+		onSave,
+		onNext,
+		onRestart,
+		onExit,
+		journalSaved = false
+	} = $props();
 
 	const currentEvents = $derived(gameState.log.filter((l) => l.round === gameState.round));
 </script>
@@ -21,7 +29,36 @@
 	<div class="text-entry-area">
 		<textarea bind:value={journalText} rows="5"></textarea>
 	</div>
-	<!-- Buttons moved to GameScreen toolbar -->
+	<div class="button-area">
+		{#if journalSaved}
+			{#if gameState.gameOver}
+				<ButtonBar bordered={false} gameBackground={false}>
+					<ContinueButton
+						text={gameState.config?.labels?.journalEntryRestartButtonText ?? 'Restart'}
+						onclick={onRestart}
+						testid="journal-restart-button"
+					/>
+					<ContinueButton
+						text={gameState.config?.labels?.journalEntryExitButtonText ?? 'Exit'}
+						onclick={onExit}
+						testid="journal-exit-button"
+					/>
+				</ButtonBar>
+			{:else}
+				<ContinueButton
+					text={gameState.config?.labels?.journalEntryNextButtonText ?? 'Continue to Next Round'}
+					onclick={onNext}
+					testid="journal-next-button"
+				/>
+			{/if}
+		{:else}
+			<ContinueButton
+				text={gameState.config?.labels?.journalEntrySaveButtonText ?? 'Record Entry'}
+				onclick={onSave}
+				testid="journal-save-button"
+			/>
+		{/if}
+	</div>
 </div>
 
 <style>
@@ -30,13 +67,21 @@
 		height: 100%;
 		padding: var(--space-xl);
 		grid-template-columns: 1fr;
-		grid-template-rows: 1fr auto;
+		grid-template-rows: 1fr auto auto;
 		row-gap: var(--space-lg);
 		grid-auto-flow: row;
 		grid-template-areas:
 			'header-area'
-			'text-entry-area';
+			'text-entry-area'
+			'button-area';
 		box-sizing: border-box;
+	}
+
+	.button-area {
+		grid-area: button-area;
+		display: flex;
+		justify-content: center;
+		align-items: center;
 	}
 
 	.journal-header-area {

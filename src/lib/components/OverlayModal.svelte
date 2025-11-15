@@ -87,7 +87,7 @@
 		left: 50%;
 		transform: translate(-50%, -50%);
 		margin: 0;
-		padding: var(--space-xl);
+		padding: 0;
 		border: none;
 		background: transparent;
 
@@ -98,25 +98,6 @@
 		/* Scrollable content within modal */
 		overflow-y: auto;
 		overflow-x: hidden;
-
-		/* Augmented UI Configuration */
-		--aug-border-all: 2px;
-		--aug-border-bg: linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta));
-		--aug-tl: 16px;
-		--aug-tr: 16px;
-		--aug-br: 16px;
-		--aug-bl: 16px;
-
-		/* Card styling with glassmorphism */
-		background: linear-gradient(135deg, rgba(10, 10, 20, 0.9), rgba(15, 15, 25, 0.85));
-		backdrop-filter: blur(16px) saturate(150%);
-		-webkit-backdrop-filter: blur(16px) saturate(150%);
-
-		/* Enhanced glow */
-		box-shadow:
-			0 0 30px rgba(0, 255, 255, 0.4),
-			0 0 60px rgba(217, 70, 239, 0.3),
-			inset 0 0 20px rgba(0, 255, 255, 0.1);
 	}
 
 	/* Fog overlay container */
@@ -180,13 +161,6 @@
 	}
 
 	@media (max-width: 768px) {
-		.modal-wrapper {
-			--aug-tl: 12px;
-			--aug-tr: 12px;
-			--aug-br: 12px;
-			--aug-bl: 12px;
-		}
-
 		.fog-overlay .cloud.back {
 			width: 250vw;
 			height: 220vh;
@@ -207,10 +181,6 @@
 		.modal-wrapper {
 			width: 100%;
 			min-height: 300px;
-			--aug-tl: 8px;
-			--aug-tr: 8px;
-			--aug-br: 8px;
-			--aug-bl: 8px;
 		}
 	}
 </style>

@@ -606,7 +606,14 @@
 						</div>
 					{:else if currentScreen == 'finalLog' || currentScreen == 'log'}
 						<OverlayModal isVisible={true} zIndex={50}>
-							<JournalEntry bind:journalText={journal.text} />
+							<JournalEntry
+							bind:journalText={journal.text}
+							{journalSaved}
+							onSave={handleJournalSave}
+							onNext={handleJournalNext}
+							onRestart={handleJournalRestart}
+							onExit={handleJournalExit}
+						/>
 						</OverlayModal>
 					{:else}
 						<div transition:fade={{ duration: TRANSITION_DURATION }}>error: {currentScreen}</div>
