@@ -56,10 +56,11 @@
 	/* Persistent DiceBox container - fills viewport, behind all content */
 	.dice-container {
 		position: fixed;
-		top: 0;
-		left: 0;
-		width: 100vw;
-		height: 100vh;
+		top: 2.5rem; /* Below toolbar */
+		left: 0.25rem;
+		right: 0.25rem;
+		bottom: 0.5rem;
+
 		z-index: -10; /* Behind everything - neural background and all content */
 		pointer-events: none; /* Don't block clicks */
 		background: transparent;

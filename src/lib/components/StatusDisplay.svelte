@@ -1,6 +1,7 @@
 <script>
 	import { gameState } from '../stores/gameStore.svelte.js';
 	import { innerWidth } from 'svelte/reactivity/window';
+	import DeckVisualization from './DeckVisualization.svelte';
 
 	let { onHelpClick, onExitClick } = $props();
 
@@ -239,12 +240,13 @@
 					</svg>
 					CARDS LEFT
 				</div>
-				<div class="deck-value">{cardsRemaining}</div>
+				<DeckVisualization />
+				<!-- <div class="deck-value">{cardsRemaining}</div>
 				<div class="deck-stack">
 					{#each Array(Math.min(cardsRemaining, 5)) as _, i (i)}
 						<div class="card-layer" style="--layer-index: {i}"></div>
 					{/each}
-				</div>
+				</div> -->
 			</div>
 		</div>
 		<div>
@@ -976,12 +978,10 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		justify-content: space-between;
 		gap: var(--space-xs);
 		padding: var(--space-sm);
 		min-width: 90px;
-		min-height: 100px;
-		margin-top: var(--space-sm);
+		height: 100px;
 
 		background: linear-gradient(135deg, rgba(10, 10, 20, 0.9), rgba(15, 15, 25, 0.8));
 		backdrop-filter: blur(10px) saturate(150%);

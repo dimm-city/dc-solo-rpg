@@ -58,7 +58,11 @@
 	const contextText = $derived.by(() => {
 		switch (currentScreen) {
 			case 'initialDamageRoll':
-				return null; // InitialDamageRoll component has its own styled text
+				return {
+					title: 'Initial Instability',
+					description: 'Before your journey begins, the situation is already precarious. Roll to see how much ground you\'ve already lost...',
+					showStats: true
+				};
 			case 'rollForTasks':
 				return {
 					title: rollTasksRolled ? `Draw ${gameState.cardsToDraw} Card${gameState.cardsToDraw !== 1 ? 's' : ''}` : 'Roll for Tasks',
@@ -644,18 +648,15 @@
 			</div>
 
 			<!-- Toolbar at bottom with exit button and deck visualization -->
-			<div class="toolbar-area">
-				<!-- Augmented UI background - doesn't clip children -->
+			<!-- <div class="toolbar-area">
 				<div
 					class="toolbar-background"
 					data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
 				></div>
 
 				<div class="toolbar-left">
-					<!-- Buttons moved to player-round bar in StatusDisplay -->
 				</div>
 				<div class="toolbar-center">
-					<!-- Action buttons will go here based on current screen -->
 					{#if currentScreen === 'startRound'}
 						<ContinueButton
 							text="Begin Round {gameState.round}"
@@ -732,7 +733,7 @@
 				<div class="toolbar-right">
 					<DeckVisualization />
 				</div>
-			</div>
+			</div> -->
 		</div>
 	</div>
 {/if}
@@ -1006,6 +1007,7 @@
 
 	.main-screen-area {
 		grid-area: main-screen-area;
+		cursor: pointer;
 		width: 100%;
 		min-width: 0;
 		margin-inline: auto;
@@ -1029,7 +1031,7 @@
 	/* Background contextual text */
 	.context-text-background {
 		position: absolute;
-		top: 50%;
+		top: 45%;
 		left: 50%;
 		transform: translate(-50%, -50%);
 		text-align: center;
@@ -1038,30 +1040,35 @@
 		-webkit-user-select: none;
 		-moz-user-select: none;
 		z-index: 0;
-		max-width: 80%;
-		opacity: 0.15;
+		max-width: 90%;
 	}
 
 	.context-title {
-		font-size: clamp(2.5rem, 8vw, 6rem);
-		font-weight: 900;
+		font-size: clamp(1.75rem, 5vw, 3.5rem);
+		font-weight: 700;
 		color: var(--color-neon-cyan);
 		text-transform: uppercase;
 		letter-spacing: 0.1em;
-		margin: 0 0 1rem 0;
+		margin: 0 0 0.75rem 0;
+		font-family: 'lixdu', 'Courier New', monospace;
+		opacity: 0.3;
 		text-shadow:
-			0 0 30px rgba(0, 255, 255, 0.3),
-			0 0 60px rgba(0, 255, 255, 0.2);
-		font-family: 'Courier New', monospace;
+			0 0 20px rgba(0, 255, 255, 0.5),
+			0 0 40px rgba(0, 255, 255, 0.3);
+		line-height: 1;
 	}
 
 	.context-description {
-		font-size: clamp(1rem, 2.5vw, 1.5rem);
-		color: rgba(255, 255, 255, 0.6);
+		font-size: clamp(0.875rem, 1.5vw, 1rem);
+		color: rgba(255, 255, 255, 0.5);
 		line-height: 1.6;
 		margin: 0;
 		max-width: 600px;
 		margin-inline: auto;
+		font-weight: 400;
+		letter-spacing: 0;
+		text-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+		opacity: 0.5;
 	}
 
 	.dc-table-bg {
