@@ -49,7 +49,7 @@
 	];
 </script>
 
-<OverlayModal isVisible={isOpen} zIndex={1000} fixedHeight="70dvh" animateHeight={true}>
+<OverlayModal isVisible={isOpen} zIndex={1000} fixedHeight="70vh" animateHeight={true}>
 	<div class="help-card-content">
 		<h2 class="help-main-title">Game Guide</h2>
 

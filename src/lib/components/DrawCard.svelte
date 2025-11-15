@@ -40,9 +40,9 @@
 	 * Expose button text for toolbar - derived from animation stage and card state
 	 */
 	export function getButtonText() {
-		if (animationStage === 'idle') return 'PROCEED TO NEXT BYTE';
+		if (animationStage === 'idle') return 'Draw Card';
 		if (animationStage === 'anticipating' || animationStage === 'materializing')
-			return 'LOADING...';
+			return 'Drawing...';
 		if (animationStage === 'revealed') {
 			// Determine what happens next based on the card
 			const card = gameState.currentCard;
@@ -52,16 +52,16 @@
 				const isOdd = oddRanks.includes(card.card);
 
 				if (isOdd) {
-					return 'TAP CARD TO ROLL FOR DAMAGE';
+					return 'Roll for Damage';
 				} else if (gameState.cardsToDraw > 0) {
-					return 'TAP CARD TO DRAW NEXT';
+					return `Draw Next Card (${gameState.cardsToDraw} left)`;
 				} else {
-					return 'TAP CARD TO CONTINUE';
+					return 'Continue';
 				}
 			}
-			return 'CONTINUE';
+			return 'Continue';
 		}
-		return 'UPLOADING...';
+		return 'Uploading...';
 	}
 
 	/**
