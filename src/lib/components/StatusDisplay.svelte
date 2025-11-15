@@ -175,13 +175,22 @@
 					</svg>
 					{gameState.config?.labels?.failureCounters?.toUpperCase() ?? 'FAILURE'}
 				</div>
-				<div class="stat-value">
-					<span class="current">{failurePercent}</span><span class="divider">/</span><span
-						class="max">4</span
-					>
-				</div>
-				<div class="stat-bar">
-					<div class="stat-fill failure-fill" style="width: {(failurePercent / 4) * 100}%"></div>
+				<div class="king-indicators">
+					{#each Array(4) as _, i (i)}
+						<div class="king-icon" class:revealed={i < failurePercent}>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							>
+								<path d="M2 20h20v-4a6 6 0 0 0-12 0v4zm0 0v-4a6 6 0 1 1 12 0v4zM12 2v4m-4-2 4 2 4-2" />
+							</svg>
+						</div>
+					{/each}
 				</div>
 			</div>
 		</div>
@@ -363,18 +372,11 @@
 		overflow: visible;
 	}
 
-	/* Professional Slide Down Animation with Bounce */
+	/* Mechanical Assembly Animation - Step 1: Linear drop */
 	@keyframes slideDown {
 		0% {
 			transform: translateY(-100%);
 			opacity: 0;
-		}
-		60% {
-			transform: translateY(4%);
-			opacity: 1;
-		}
-		80% {
-			transform: translateY(-2%);
 		}
 		100% {
 			transform: translateY(0);
@@ -383,25 +385,22 @@
 	}
 
 	.slide-down {
-		animation: slideDown 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+		animation: slideDown 0.4s linear forwards;
 		opacity: 0;
 	}
 
-	/* Slide Down and Left with Professional Easing */
+	/* Mechanical Assembly - Step 1: Linear drop, Step 2: Ease left into slot */
 	@keyframes slideDownAndLeft {
 		0% {
-			transform: translateY(-100%) translateX(80px);
+			transform: translateY(-100%) translateX(0);
 			opacity: 0;
 		}
-		50% {
-			transform: translateY(0) translateX(80px);
+		45% {
+			transform: translateY(0) translateX(0);
 			opacity: 1;
 		}
-		70% {
-			transform: translateY(0) translateX(-4px);
-		}
-		85% {
-			transform: translateY(0) translateX(2px);
+		45.01% {
+			transform: translateY(0) translateX(50px);
 		}
 		100% {
 			transform: translateY(0) translateX(0);
@@ -409,21 +408,18 @@
 		}
 	}
 
-	/* Slide Down and Right with Professional Easing */
+	/* Mechanical Assembly - Step 1: Linear drop, Step 2: Ease right into slot */
 	@keyframes slideDownAndRight {
 		0% {
-			transform: translateY(-100%) translateX(-80px);
+			transform: translateY(-100%) translateX(0);
 			opacity: 0;
 		}
-		50% {
-			transform: translateY(0) translateX(-80px);
+		45% {
+			transform: translateY(0) translateX(0);
 			opacity: 1;
 		}
-		70% {
-			transform: translateY(0) translateX(4px);
-		}
-		85% {
-			transform: translateY(0) translateX(-2px);
+		45.01% {
+			transform: translateY(0) translateX(-50px);
 		}
 		100% {
 			transform: translateY(0) translateX(0);
@@ -663,8 +659,8 @@
 	}
 
 	.failure-stat.slide-down {
-		animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 		animation-name: slideDownAndLeft;
+		animation-timing-function: linear;
 	}
 	@keyframes failure-glow-pulse {
 		0%,
@@ -704,7 +700,7 @@
 
 	.bonus-stat.slide-down {
 		animation-name: slideDownAndRight;
-		animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+		animation-timing-function: linear;
 	}
 
 	@keyframes bonus-glow-pulse {
@@ -880,10 +876,10 @@
 
 	.stat-fill {
 		height: 100%;
-		transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+		transition: width 0.3s linear;
 		position: relative;
 		box-shadow: 0 0 10px currentColor;
-		animation: fillBarGrow 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+		animation: fillBarGrow 0.5s linear forwards;
 	}
 
 	.health-fill {
@@ -899,6 +895,56 @@
 	.bonus-fill {
 		background: linear-gradient(90deg, #00d9ff, #0088cc);
 		box-shadow: 0 0 10px #00d9ff;
+	}
+
+	/* King Indicators for Failure Stat */
+	.king-indicators {
+		display: flex;
+		gap: 3px;
+		align-items: center;
+		justify-content: center;
+		flex: 0 0 auto;
+		padding: 2px;
+	}
+
+	.king-icon {
+		width: 16px;
+		height: 16px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: all 0.2s linear;
+		opacity: 0.2;
+		filter: grayscale(1);
+	}
+
+	.king-icon svg {
+		width: 100%;
+		height: 100%;
+		stroke: #ff0066;
+		filter: drop-shadow(0 0 2px rgba(255, 0, 102, 0.3));
+	}
+
+	.king-icon.revealed {
+		opacity: 1;
+		filter: grayscale(0);
+		animation: kingReveal 0.2s linear forwards;
+	}
+
+	.king-icon.revealed svg {
+		stroke: #ff0066;
+		filter: drop-shadow(0 0 6px rgba(255, 0, 102, 0.9));
+	}
+
+	@keyframes kingReveal {
+		0% {
+			transform: scale(0.7);
+			opacity: 0.2;
+		}
+		100% {
+			transform: scale(1);
+			opacity: 1;
+		}
 	}
 
 	/* Digital Dice Readout */
@@ -977,9 +1023,6 @@
 			transform: scale(0);
 			opacity: 0;
 		}
-		60% {
-			transform: scale(1.3);
-		}
 		100% {
 			transform: scale(1);
 			opacity: 1;
@@ -995,7 +1038,7 @@
 			0 0 5px rgba(0, 255, 255, 0.8),
 			0 0 10px rgba(217, 70, 239, 0.4);
 		animation:
-			pipPopIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.5s backwards,
+			pipPopIn 0.15s linear 0.5s backwards,
 			pip-pulse 2s ease-in-out 1s infinite;
 	}
 
@@ -1075,9 +1118,6 @@
 			transform: scale(0);
 			opacity: 0;
 		}
-		50% {
-			transform: scale(1.2);
-		}
 		100% {
 			transform: scale(1);
 			opacity: 1;
@@ -1091,9 +1131,9 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		transition: all 0.3s ease;
-		animation: tokenPopIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
-		animation-delay: calc(0.8s + var(--token-index) * 0.05s);
+		transition: all 0.2s linear;
+		animation: tokenPopIn 0.15s linear forwards;
+		animation-delay: calc(0.7s + var(--token-index) * 0.03s);
 		opacity: 0;
 	}
 
@@ -1391,6 +1431,19 @@
 			min-height: auto;
 			height: 100%;
 		}
+
+		/* Compact king indicators for mobile */
+		.king-indicators {
+			gap: 2px;
+			padding: 1px;
+			width: 100%;
+			justify-content: center;
+		}
+
+		.king-icon {
+			width: 12px;
+			height: 12px;
+		}
 	}
 
 	/* Progress Tracker Styles */
@@ -1432,10 +1485,10 @@
 	.progress-fill {
 		height: 100%;
 		background: linear-gradient(90deg, var(--color-neon-cyan), var(--color-cyber-magenta));
-		transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+		transition: width 0.3s linear;
 		box-shadow: 0 0 10px rgba(0, 255, 255, 0.6);
 		position: relative;
-		animation: fillBarGrow 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+		animation: fillBarGrow 0.6s linear forwards;
 	}
 
 	.progress-text {
