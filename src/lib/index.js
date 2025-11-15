@@ -4,3 +4,4 @@ export { default as GameSelector } from './components/GameSelector.svelte';
 export { default as Splash } from './components/Splash.svelte';
 export { gameState, getCurrentScreen, getGameStats } from './stores/gameStore.svelte.js';
 export * from './stores/gameActions.svelte.js';
+export { hasSavedGame, getSaveMetadata } from './stores/gameSave.js';

@@ -5,6 +5,7 @@
 import { gameState, transitionTo } from './gameStore.svelte.js';
 import { initializeGame } from './gameInit.js';
 import { logger } from '../utils/logger.js';
+import { saveGame, loadGame, clearSave, restoreGameState } from './gameSave.js';
 
 /**
  * Mock services object for test compatibility
@@ -47,6 +48,13 @@ export const startGame = (player, gameConfigOrOptions = {}, options = {}) => {
 	// If just options (from OptionsScreen), apply options and transition to intro
 	if (isFullConfig) {
 		initializeGame(gameConfig, player, options);
+		// Clear any existing save when starting a new game
+		// Extract game slug for clearing save
+		const gameSlug =
+			gameConfig.slug ||
+			gameConfig.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') ||
+			'default';
+		clearSave(gameSlug);
 	} else {
 		// Apply options to existing game state
 		if (gameState.config) {
@@ -57,6 +65,8 @@ export const startGame = (player, gameConfigOrOptions = {}, options = {}) => {
 		}
 		// Transition to showIntro screen
 		transitionTo('showIntro');
+		// Save after updating options
+		saveGame(gameState);
 	}
 };
 
@@ -172,8 +182,12 @@ export function drawCard() {
 		gameState.win = false;
 		gameState.status = gameState.config.labels.failureCounterLoss;
 		transitionTo('gameOver');
+		saveGame(gameState);
 		return card;
 	}
+
+	// Auto-save after drawing a card
+	saveGame(gameState);
 
 	// Stay in drawCard state to show the card to the user
 	// Transition will happen in confirmCard() after user sees it
@@ -316,6 +330,9 @@ export function applyPendingDiceRoll() {
 			transitionTo('log');
 		}
 	}
+
+	// Auto-save after applying damage
+	saveGame(gameState);
 }
 
 /**
@@ -351,6 +368,9 @@ export function recordRound(journalEntry) {
 	journalEntry.dateRecorded = journalEntry.dateRecorded || new Date().toISOString();
 	gameState.journalEntries.push(journalEntry);
 
+	// Auto-save after recording journal entry
+	saveGame(gameState);
+
 	// Determine and execute next action
 	if (!gameState.gameOver) {
 		if (gameState.aceOfHeartsRevealed && gameState.tokens > 0) {
@@ -384,6 +404,9 @@ export function successCheck() {
 	}
 
 	logger.debug(`[successCheck] Stored pending roll ${roll}, pending token change ${gameState.pendingUpdates.tokenChange}`);
+
+	// Auto-save after success check
+	saveGame(gameState);
 
 	return roll;
 }
@@ -559,6 +582,9 @@ export function applyPendingFinalDamageRoll() {
 	}
 
 	transitionTo('gameOver');
+
+	// Auto-save after final damage roll
+	saveGame(gameState);
 }
 
 /**
@@ -605,4 +631,38 @@ export async function exitGame() {
 	gameState.stylesheet = '';
 
 	transitionTo('exitGame');
+}
+
+/**
+ * Resume a saved game
+ * @param {string} gameSlug - Game slug or identifier
+ * @returns {boolean} Success status
+ */
+export function resumeGame(gameSlug) {
+	try {
+		const saveData = loadGame(gameSlug);
+
+		if (!saveData) {
+			logger.warn(`[resumeGame] No saved game found for ${gameSlug}`);
+			return false;
+		}
+
+		// Restore the game state
+		restoreGameState(gameState, saveData);
+
+		logger.info(`[resumeGame] Game resumed successfully for ${gameSlug}`);
+		return true;
+	} catch (error) {
+		logger.error('[resumeGame] Failed to resume game:', error);
+		return false;
+	}
+}
+
+/**
+ * Delete saved game
+ * @param {string} gameSlug - Game slug or identifier
+ * @returns {boolean} Success status
+ */
+export function deleteSavedGame(gameSlug) {
+	return clearSave(gameSlug);
 }
