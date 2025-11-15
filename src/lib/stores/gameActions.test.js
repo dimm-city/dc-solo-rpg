@@ -7,15 +7,18 @@ import {
 	startGame,
 	startRound,
 	rollForTasks,
+	applyPendingTaskRoll,
 	confirmTaskRoll,
 	drawCard,
 	confirmCard,
 	getFailureCheckRoll,
 	applyFailureCheckResult,
+	applyPendingDiceRoll,
 	failureCheck,
 	confirmFailureCheck,
 	recordRound,
 	successCheck,
+	applyPendingSuccessCheck,
 	confirmSuccessCheck,
 	restartGame,
 	exitGame,
@@ -97,8 +100,8 @@ describe('gameActions - Core Game Mechanics', () => {
 			expect(gameState.tower).toBeLessThanOrEqual(53);
 			expect(gameState.tokens).toBe(10);
 			expect(gameState.deck.length).toBeGreaterThan(0);
-			// State should be 'options' after initialization
-			expect(gameState.state).toBe('options');
+			// State should be 'showIntro' after initialization
+			expect(gameState.state).toBe('showIntro');
 		});
 
 		it('should initialize deck by shuffling config deck', () => {
@@ -174,6 +177,7 @@ describe('gameActions - Core Game Mechanics', () => {
 			gameState.getRandomNumber = vi.fn().mockReturnValue(mockRoll);
 
 			const roll = await rollForTasks();
+			applyPendingTaskRoll();
 
 			expect(roll).toBe(mockRoll);
 			expect(gameState.diceRoll).toBe(mockRoll);
@@ -239,7 +243,8 @@ describe('gameActions - Core Game Mechanics', () => {
 		it('should track King of Hearts when drawn', async () => {
 			gameState.deck = [{ card: 'K', suit: 'hearts', description: 'King' }];
 
-			await drawCard();
+			drawCard();
+			confirmCard();
 
 			expect(gameState.kingOfHearts).toBe(true);
 			expect(gameState.kingsRevealed).toBe(1);
@@ -248,7 +253,8 @@ describe('gameActions - Core Game Mechanics', () => {
 		it('should track King of Diamonds when drawn', async () => {
 			gameState.deck = [{ card: 'K', suit: 'diamonds', description: 'King' }];
 
-			await drawCard();
+			drawCard();
+			confirmCard();
 
 			expect(gameState.kingOfDiamonds).toBe(true);
 			expect(gameState.kingsRevealed).toBe(1);
@@ -257,7 +263,8 @@ describe('gameActions - Core Game Mechanics', () => {
 		it('should track King of Clubs when drawn', async () => {
 			gameState.deck = [{ card: 'K', suit: 'clubs', description: 'King' }];
 
-			await drawCard();
+			drawCard();
+			confirmCard();
 
 			expect(gameState.kingOfClubs).toBe(true);
 			expect(gameState.kingsRevealed).toBe(1);
@@ -266,7 +273,8 @@ describe('gameActions - Core Game Mechanics', () => {
 		it('should track King of Spades when drawn', async () => {
 			gameState.deck = [{ card: 'K', suit: 'spades', description: 'King' }];
 
-			await drawCard();
+			drawCard();
+			confirmCard();
 
 			expect(gameState.kingOfSpades).toBe(true);
 			expect(gameState.kingsRevealed).toBe(1);
@@ -305,7 +313,8 @@ describe('gameActions - Core Game Mechanics', () => {
 			gameState.deck = [{ card: 'A', suit: 'diamonds', description: 'Bonus ace' }];
 			gameState.bonus = 0;
 
-			await drawCard();
+			drawCard();
+			confirmCard();
 
 			expect(gameState.bonus).toBe(1);
 		});
@@ -356,6 +365,7 @@ describe('gameActions - Core Game Mechanics', () => {
 		it('should reduce tower on low roll', () => {
 			const roll = 2;
 			applyFailureCheckResult(roll);
+			applyPendingDiceRoll();
 
 			expect(gameState.diceRoll).toBe(roll);
 			expect(gameState.tower).toBe(52); // 54 - 2
@@ -365,6 +375,7 @@ describe('gameActions - Core Game Mechanics', () => {
 			const roll = 6;
 			gameState.bonus = 0;
 			applyFailureCheckResult(roll);
+			applyPendingDiceRoll();
 
 			// Damage = max(roll - bonus, 0) = max(6 - 0, 0) = 6
 			expect(gameState.tower).toBe(48); // 54 - 6
@@ -375,6 +386,7 @@ describe('gameActions - Core Game Mechanics', () => {
 			const roll = 4;
 
 			applyFailureCheckResult(roll);
+			applyPendingDiceRoll();
 
 			// Damage = max(roll - bonus, 0) = max(4 - 3, 0) = 1
 			expect(gameState.tower).toBe(53);
@@ -383,6 +395,7 @@ describe('gameActions - Core Game Mechanics', () => {
 		it('should trigger game over when tower reaches 0', async () => {
 			gameState.tower = 2;
 			applyFailureCheckResult(3); // Will reduce tower to -1
+			applyPendingDiceRoll();
 
 			expect(gameState.tower).toBe(0);
 			expect(gameState.gameOver).toBe(true);
@@ -393,6 +406,7 @@ describe('gameActions - Core Game Mechanics', () => {
 			gameState.cardsToDraw = 0;
 
 			applyFailureCheckResult(5);
+			applyPendingDiceRoll();
 
 			expect(gameState.state).toBe('log');
 		});
@@ -401,6 +415,7 @@ describe('gameActions - Core Game Mechanics', () => {
 			gameState.cardsToDraw = 2;
 
 			applyFailureCheckResult(5);
+			applyPendingDiceRoll();
 
 			expect(gameState.state).toBe('drawCard');
 		});
@@ -409,6 +424,7 @@ describe('gameActions - Core Game Mechanics', () => {
 			gameState.log = [{ card: '3', suit: 'clubs', round: 1 }];
 
 			applyFailureCheckResult(4);
+			applyPendingDiceRoll();
 
 			expect(gameState.log[0].diceRoll).toBe(4);
 		});
@@ -431,7 +447,8 @@ describe('gameActions - Core Game Mechanics', () => {
 		it('should remove token on roll of 6', async () => {
 			gameState.getRandomNumber = vi.fn().mockReturnValue(6);
 
-			await successCheck();
+			successCheck();
+			applyPendingSuccessCheck();
 
 			expect(gameState.diceRoll).toBe(6);
 			expect(gameState.tokens).toBe(9);
@@ -440,7 +457,8 @@ describe('gameActions - Core Game Mechanics', () => {
 		it('should not remove token on low roll', async () => {
 			gameState.getRandomNumber = vi.fn().mockReturnValue(2);
 
-			await successCheck();
+			successCheck();
+			applyPendingSuccessCheck();
 
 			expect(gameState.tokens).toBe(10);
 		});
@@ -450,7 +468,8 @@ describe('gameActions - Core Game Mechanics', () => {
 			gameState.bonus = 2;
 			gameState.getRandomNumber = vi.fn().mockReturnValue(4);
 
-			await successCheck();
+			successCheck();
+			applyPendingSuccessCheck();
 
 			// roll (4) + bonus (2) = 6, should remove token
 			expect(gameState.tokens).toBe(9);
@@ -460,7 +479,8 @@ describe('gameActions - Core Game Mechanics', () => {
 			gameState.tokens = 1;
 			gameState.getRandomNumber = vi.fn().mockReturnValue(6);
 
-			await successCheck();
+			successCheck();
+			applyPendingSuccessCheck();
 
 			expect(gameState.tokens).toBe(0);
 			expect(gameState.win).toBe(false); // Not won yet - must pass final damage roll
@@ -469,11 +489,14 @@ describe('gameActions - Core Game Mechanics', () => {
 
 		it('should continue to startRound if tokens remain', async () => {
 			gameState.tokens = 5;
+			gameState.round = 3;
 			gameState.getRandomNumber = vi.fn().mockReturnValue(6);
 
-			await successCheck();
+			successCheck();
+			applyPendingSuccessCheck();
 
 			expect(gameState.tokens).toBe(4);
+			expect(gameState.round).toBe(4);
 			expect(gameState.state).toBe('startRound');
 		});
 	});
@@ -561,10 +584,12 @@ describe('gameActions - Core Game Mechanics', () => {
 		it('should restart game and reset state', () => {
 			restartGame();
 
-			// restartGame() sets state to 'options' (initial state after game init)
-			expect(gameState.state).toBe('options');
+			// restartGame() sets state to 'showIntro' (initial state after game init)
+			expect(gameState.state).toBe('showIntro');
 			expect(gameState.round).toBe(1);
-			expect(gameState.tower).toBe(54);
+			// Tower starts at 54 minus initial 1d6 roll (48-53)
+			expect(gameState.tower).toBeGreaterThanOrEqual(48);
+			expect(gameState.tower).toBeLessThanOrEqual(53);
 			expect(gameState.tokens).toBe(10);
 		});
 

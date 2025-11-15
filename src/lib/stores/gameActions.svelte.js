@@ -80,11 +80,23 @@ export async function rollForTasks() {
 	const roll = gameState.getRandomNumber();
 
 	gameState.cardsToDraw = roll;
-	gameState.diceRoll = roll;
+	// Defer diceRoll update until after animation
+	gameState.pendingUpdates.diceRoll = roll;
 	gameState.currentCard = null;
 
 	logger.debug(`[rollForTasks] Dice rolled: ${roll}, setting cardsToDraw to ${roll}`);
 	return roll;
+}
+
+/**
+ * Apply pending dice roll for rollForTasks (after animation completes)
+ */
+export function applyPendingTaskRoll() {
+	if (gameState.pendingUpdates.diceRoll !== null) {
+		gameState.diceRoll = gameState.pendingUpdates.diceRoll;
+		gameState.pendingUpdates.diceRoll = null;
+		logger.debug('[applyPendingTaskRoll] Applied pending task roll');
+	}
 }
 
 /**
@@ -123,23 +135,39 @@ export function drawCard() {
 	card.round = gameState.round;
 	gameState.log.push(card);
 
-	// Track kings
+	// Store pending updates (to be applied when card is dismissed)
+	// Track kings - store in pending state
 	if (card.card === 'K') {
-		gameState.kingsRevealed += 1;
-		const suitKey = `kingOf${card.suit.charAt(0).toUpperCase() + card.suit.slice(1)}`;
-		gameState[suitKey] = true;
+		gameState.pendingUpdates.kingsChange = 1;
+		gameState.pendingUpdates.kingsSuit = card.suit;
+	} else {
+		gameState.pendingUpdates.kingsChange = null;
+		gameState.pendingUpdates.kingsSuit = null;
 	}
 
-	// Track aces
+	// Track aces - store in pending state
 	if (card.card === 'A') {
-		gameState.bonus += 1;
+		gameState.pendingUpdates.bonusChange = 1;
 		if (card.suit === 'hearts') {
+			// Ace of hearts is tracked immediately for game logic
 			gameState.aceOfHeartsRevealed = true;
 		}
+	} else {
+		gameState.pendingUpdates.bonusChange = null;
 	}
 
-	// Check for game over (4 kings)
-	if (gameState.kingsRevealed === 4) {
+	// Check for game over (4 kings) - use pending + current state
+	const totalKings =
+		gameState.kingsRevealed + (gameState.pendingUpdates.kingsChange ? 1 : 0);
+	if (totalKings === 4) {
+		// Apply pending king update before game over
+		if (gameState.pendingUpdates.kingsChange) {
+			gameState.kingsRevealed += 1;
+			const suitKey = `kingOf${gameState.pendingUpdates.kingsSuit.charAt(0).toUpperCase() + gameState.pendingUpdates.kingsSuit.slice(1)}`;
+			gameState[suitKey] = true;
+			gameState.pendingUpdates.kingsChange = null;
+			gameState.pendingUpdates.kingsSuit = null;
+		}
 		gameState.gameOver = true;
 		gameState.win = false;
 		gameState.status = gameState.config.labels.failureCounterLoss;
@@ -154,6 +182,7 @@ export function drawCard() {
 
 /**
  * Confirm drawn card and proceed
+ * This is called when the card is dismissed, so we apply pending stat updates here
  */
 export function confirmCard() {
 	logger.debug('[confirmCard] Called');
@@ -162,6 +191,22 @@ export function confirmCard() {
 	);
 
 	const card = gameState.currentCard;
+
+	// Apply pending stat updates from the card that was just displayed
+	if (gameState.pendingUpdates.bonusChange) {
+		gameState.bonus += gameState.pendingUpdates.bonusChange;
+		gameState.pendingUpdates.bonusChange = null;
+		logger.debug('[confirmCard] Applied pending bonus change');
+	}
+
+	if (gameState.pendingUpdates.kingsChange) {
+		gameState.kingsRevealed += gameState.pendingUpdates.kingsChange;
+		const suitKey = `kingOf${gameState.pendingUpdates.kingsSuit.charAt(0).toUpperCase() + gameState.pendingUpdates.kingsSuit.slice(1)}`;
+		gameState[suitKey] = true;
+		gameState.pendingUpdates.kingsChange = null;
+		gameState.pendingUpdates.kingsSuit = null;
+		logger.debug('[confirmCard] Applied pending kings change');
+	}
 
 	// Clear the current card
 	gameState.currentCard = null;
@@ -195,6 +240,7 @@ export function getFailureCheckRoll() {
 
 /**
  * Apply failure check result and update health
+ * This now stores the result in pending state to be applied after dice animation
  * @param {number} result - Dice roll result
  */
 export function applyFailureCheckResult(result) {
@@ -202,6 +248,35 @@ export function applyFailureCheckResult(result) {
 		throw new Error('The game is over, stop playing with the tower!');
 	}
 
+	// Store in pending state (to be applied after dice animation)
+	gameState.pendingUpdates.diceRoll = result;
+
+	// Calculate damage (but don't apply yet)
+	const blocksToRemove = Math.max(result - gameState.bonus, 0);
+	gameState.pendingUpdates.towerDamage = blocksToRemove;
+
+	logger.debug(
+		`[applyFailureCheckResult] Stored pending dice roll ${result}, pending damage ${blocksToRemove}`
+	);
+
+	// Note: We don't transition state here anymore
+	// The caller should call applyPendingDiceRoll() after the dice animation completes
+}
+
+/**
+ * Apply pending dice roll updates after animation completes
+ * This should be called after the dice animation finishes
+ */
+export function applyPendingDiceRoll() {
+	if (gameState.pendingUpdates.diceRoll === null) {
+		logger.warn('[applyPendingDiceRoll] No pending dice roll to apply');
+		return;
+	}
+
+	const result = gameState.pendingUpdates.diceRoll;
+	const blocksToRemove = gameState.pendingUpdates.towerDamage;
+
+	// Apply the dice roll to state
 	gameState.diceRoll = result;
 
 	// Update last log entry with dice roll
@@ -216,9 +291,16 @@ export function applyFailureCheckResult(result) {
 		];
 	}
 
-	// Calculate and apply damage
-	const blocksToRemove = Math.max(result - gameState.bonus, 0);
+	// Apply tower damage
 	gameState.tower -= blocksToRemove;
+
+	// Clear pending updates
+	gameState.pendingUpdates.diceRoll = null;
+	gameState.pendingUpdates.towerDamage = null;
+
+	logger.debug(
+		`[applyPendingDiceRoll] Applied dice roll ${result}, removed ${blocksToRemove} blocks, tower now at ${gameState.tower}`
+	);
 
 	// Check for tower collapse
 	if (gameState.tower <= 0) {
@@ -271,9 +353,12 @@ export function recordRound(journalEntry) {
 
 	// Determine and execute next action
 	if (!gameState.gameOver) {
-		if (gameState.aceOfHeartsRevealed) {
-			// Go to success check screen
+		if (gameState.aceOfHeartsRevealed && gameState.tokens > 0) {
+			// Go to success check screen (only if there are tokens to remove)
 			transitionTo('successCheck');
+		} else if (gameState.tokens === 0 && gameState.aceOfHeartsRevealed) {
+			// All tokens removed, go to final damage roll
+			transitionTo('finalDamageRoll');
 		} else {
 			// Start next round
 			startRound();
@@ -287,21 +372,54 @@ export function recordRound(journalEntry) {
  */
 export function successCheck() {
 	const roll = gameState.getRandomNumber();
-	gameState.diceRoll = roll;
 
+	// Store pending updates (to be applied after dice animation)
+	gameState.pendingUpdates.diceRoll = roll;
+
+	// Calculate token change but don't apply yet
 	if (roll === 6 || (gameState.config.difficulty > 0 && roll + gameState.bonus === 6)) {
-		gameState.tokens -= 1;
+		gameState.pendingUpdates.tokenChange = -1;
+	} else {
+		gameState.pendingUpdates.tokenChange = 0;
 	}
 
-	if (gameState.tokens === 0) {
-		// Per SRD: Don't immediately win - must face final damage roll first
-		logger.debug('[successCheck] All tokens removed, transitioning to final damage roll');
-		transitionTo('finalDamageRoll');
-	} else {
-		transitionTo('startRound');
-	}
+	logger.debug(`[successCheck] Stored pending roll ${roll}, pending token change ${gameState.pendingUpdates.tokenChange}`);
 
 	return roll;
+}
+
+/**
+ * Apply pending success check updates after dice animation completes
+ */
+export function applyPendingSuccessCheck() {
+	if (gameState.pendingUpdates.diceRoll === null) {
+		logger.warn('[applyPendingSuccessCheck] No pending success check to apply');
+		return;
+	}
+
+	// Apply dice roll
+	gameState.diceRoll = gameState.pendingUpdates.diceRoll;
+
+	// Apply token change
+	if (gameState.pendingUpdates.tokenChange !== null && gameState.pendingUpdates.tokenChange !== 0) {
+		gameState.tokens += gameState.pendingUpdates.tokenChange;
+	}
+
+	// Clear pending updates
+	gameState.pendingUpdates.diceRoll = null;
+	gameState.pendingUpdates.tokenChange = null;
+
+	logger.debug('[applyPendingSuccessCheck] Applied pending success check, tokens now:', gameState.tokens);
+
+	// Transition based on token state
+	if (gameState.tokens === 0) {
+		// Per SRD: Don't immediately win - must face final damage roll first
+		logger.debug('[applyPendingSuccessCheck] All tokens removed, transitioning to final damage roll');
+		transitionTo('finalDamageRoll');
+	} else {
+		// Continue the game - start next round
+		startRound();
+	}
 }
 
 /**
@@ -319,13 +437,41 @@ export function performFinalDamageRoll(roll) {
 		gameState.tower
 	);
 
+	// Store pending updates (to be applied after dice animation)
+	gameState.pendingUpdates.diceRoll = roll;
+
+	// Calculate damage but don't apply yet
+	const damage = Math.max(roll - gameState.bonus, 0);
+	gameState.pendingUpdates.towerDamage = damage;
+
+	logger.debug(`[performFinalDamageRoll] Stored pending roll ${roll}, pending damage: ${damage}`);
+
+	// Note: State transitions will happen in applyPendingFinalDamageRoll after animation
+}
+
+/**
+ * Apply pending final damage roll after dice animation completes
+ */
+export function applyPendingFinalDamageRoll() {
+	if (gameState.pendingUpdates.diceRoll === null) {
+		logger.warn('[applyPendingFinalDamageRoll] No pending final damage roll to apply');
+		return;
+	}
+
+	const roll = gameState.pendingUpdates.diceRoll;
+	const damage = gameState.pendingUpdates.towerDamage;
+
+	// Apply dice roll
 	gameState.diceRoll = roll;
 
-	// Calculate damage (same formula as regular damage checks)
-	const damage = Math.max(roll - gameState.bonus, 0);
+	// Apply tower damage
 	gameState.tower = Math.max(gameState.tower - damage, 0);
 
-	logger.debug(`[performFinalDamageRoll] Damage: ${damage}, Remaining Tower: ${gameState.tower}`);
+	// Clear pending updates
+	gameState.pendingUpdates.diceRoll = null;
+	gameState.pendingUpdates.towerDamage = null;
+
+	logger.debug(`[applyPendingFinalDamageRoll] Applied final damage roll: ${roll}, damage: ${damage}, tower now: ${gameState.tower}`);
 
 	// Log the final roll
 	gameState.log.push({
@@ -345,7 +491,7 @@ export function performFinalDamageRoll(roll) {
 		gameState.gameOver = true;
 		gameState.status =
 			gameState.config.labels?.successCheckWin ?? 'Victory! Against all odds, you survived.';
-		logger.info('[performFinalDamageRoll] VICTORY - Player survived final roll');
+		logger.info('[applyPendingFinalDamageRoll] VICTORY - Player survived final roll');
 	} else {
 		// DEFEAT - Victory snatched away
 		gameState.win = false;
@@ -353,7 +499,7 @@ export function performFinalDamageRoll(roll) {
 		gameState.status =
 			gameState.config.labels?.finalDamageRollLoss ??
 			'So close... Victory was within reach, but the final test proved too much.';
-		logger.info('[performFinalDamageRoll] DEFEAT - Final roll depleted tower');
+		logger.info('[applyPendingFinalDamageRoll] DEFEAT - Final roll depleted tower');
 	}
 
 	transitionTo('gameOver');
@@ -370,7 +516,8 @@ export function confirmSuccessCheck() {
  * Restart the game
  */
 export function restartGame() {
-	startGame(gameState.player, gameState.config, {});
+	// Use originalConfig to ensure clean restart
+	startGame(gameState.player, gameState.originalConfig, {});
 }
 
 /**

@@ -5,6 +5,7 @@ import {
 	confirmCard,
 	getFailureCheckRoll,
 	applyFailureCheckResult,
+	applyPendingDiceRoll,
 	confirmFailureCheck
 } from './gameActions.svelte.js';
 
@@ -83,6 +84,14 @@ describe('Card Drawing and Failure Check Flow', () => {
 
 			await drawCard();
 
+			// Kings are now tracked in pending state until confirmed
+			expect(gameState.pendingUpdates.kingsChange).toBe(1);
+			expect(gameState.pendingUpdates.kingsSuit).toBe('hearts');
+
+			// Confirm the card to apply pending updates
+			await confirmCard();
+
+			// Now the actual state should be updated
 			expect(gameState.kingsRevealed).toBe(1);
 			expect(gameState.kingOfHearts).toBe(true);
 		});
@@ -210,7 +219,15 @@ describe('Card Drawing and Failure Check Flow', () => {
 			const rollResult = 3;
 			applyFailureCheckResult(rollResult);
 
-			// Tower should be reduced
+			// Damage should be stored in pending state, not applied yet
+			expect(gameState.pendingUpdates.diceRoll).toBe(3);
+			expect(gameState.pendingUpdates.towerDamage).toBe(3);
+			expect(gameState.tower).toBe(54); // Tower not updated yet
+
+			// Now apply the pending updates
+			applyPendingDiceRoll();
+
+			// Tower should now be reduced
 			expect(gameState.tower).toBe(51); // 54 - 3
 
 			// Log should be updated with dice roll
@@ -224,8 +241,11 @@ describe('Card Drawing and Failure Check Flow', () => {
 			gameState.bonus = 0;
 			gameState.cardsToDraw = 2; // More cards to draw
 
-			// Apply failure check with roll of 2
+			// Apply failure check with roll of 2 (stores in pending state)
 			applyFailureCheckResult(2);
+
+			// Now apply the pending updates
+			applyPendingDiceRoll();
 
 			// Should transition back to drawCard since more cards remain
 			expect(gameState.state).toBe('drawCard');
@@ -239,8 +259,11 @@ describe('Card Drawing and Failure Check Flow', () => {
 			gameState.bonus = 0;
 			gameState.cardsToDraw = 0; // No more cards
 
-			// Apply failure check
+			// Apply failure check (stores in pending state)
 			applyFailureCheckResult(2);
+
+			// Now apply the pending updates
+			applyPendingDiceRoll();
 
 			// Should transition to log screen
 			expect(gameState.state).toBe('log');

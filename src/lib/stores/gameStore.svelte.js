@@ -36,6 +36,16 @@ let gameState = $state({
 	// Roll state
 	diceRoll: 0,
 
+	// Pending state updates (deferred until animations complete)
+	pendingUpdates: {
+		diceRoll: null, // Pending dice roll result
+		towerDamage: null, // Pending tower damage
+		tokenChange: null, // Pending token change from success check
+		bonusChange: null, // Pending bonus change from aces
+		kingsChange: null, // Pending king reveal
+		kingsSuit: null // Suit of pending king reveal
+	},
+
 	// King tracking
 	kingsRevealed: 0,
 	kingOfHearts: false,

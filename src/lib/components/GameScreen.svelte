@@ -28,6 +28,10 @@
 		confirmTaskRoll,
 		getFailureCheckRoll,
 		applyFailureCheckResult,
+		applyPendingDiceRoll,
+		applyPendingTaskRoll,
+		applyPendingSuccessCheck,
+		applyPendingFinalDamageRoll,
 		confirmFailureCheck,
 		successCheck,
 		startRound,
@@ -72,16 +76,19 @@
 			// Roll
 			rollTasksRolling = true;
 			const result = await rollForTasks();
+			// Roll dice and wait for animation to complete
 			await rollDice(result);
 			rollTasksRolling = false;
+			// Apply pending dice roll after animation completes
+			applyPendingTaskRoll();
 			rollTasksRolled = true;
 		}
 	}
 
 	const rollForTasksButtonText = $derived(
 		rollTasksRolled
-			? (gameState.config?.labels?.rollForTasksResultHeader ?? 'Generate Number')
-			: (gameState.config?.labels?.rollForTasksHeader ?? 'Generate Number')
+			? (gameState.config?.labels?.rollForTasksResultHeader ?? `Draw ${gameState.cardsToDraw} Card${gameState.cardsToDraw !== 1 ? 's' : ''}`)
+			: (gameState.config?.labels?.rollForTasksHeader ?? 'Roll Dice')
 	);
 	const rollForTasksButtonDisabled = $derived(rollTasksRolling || rollTasksConfirming);
 
@@ -102,9 +109,13 @@
 			failureCheckRolling = true;
 			const rollResult = getFailureCheckRoll();
 			failureCheckResult = rollResult;
+			// Store pending updates (don't apply yet)
+			applyFailureCheckResult(rollResult);
+			// Roll dice and wait for animation to complete
 			await rollDice(rollResult);
 			failureCheckRolling = false;
-			applyFailureCheckResult(rollResult);
+			// NOW apply the pending updates after dice animation completes
+			applyPendingDiceRoll();
 			await confirmFailureCheck();
 			onfailurecheckcompleted(gameState.state);
 		} else if (failureCheckResult) {
@@ -113,7 +124,7 @@
 	}
 
 	const failureCheckButtonText = $derived(
-		failureCheckResult ? 'Click to continue' : 'Roll failure check'
+		failureCheckResult ? 'Continue' : 'Roll for Damage'
 	);
 
 	// SuccessCheck button state
@@ -133,15 +144,18 @@
 			successCheckRolling = true;
 			const rollResult = await successCheck();
 			successCheckResult = rollResult;
+			// Roll dice and wait for animation to complete
 			await rollDice(rollResult);
 			successCheckRolling = false;
+			// Apply pending success check after animation completes
+			applyPendingSuccessCheck();
 		} else if (successCheckResult) {
 			await startRound();
 		}
 	}
 
 	const successCheckButtonText = $derived(
-		successCheckResult ? 'Click to continue' : 'Roll success check'
+		successCheckResult ? 'Continue' : 'Roll to Remove Token'
 	);
 
 	// FinalDamageRoll button state
@@ -164,8 +178,12 @@
 		finalDamageResult = rollResult;
 
 		try {
-			await rollDice(rollResult);
+			// Store pending updates
 			performFinalDamageRoll(rollResult);
+			// Roll dice and wait for animation to complete
+			await rollDice(rollResult);
+			// Apply pending final damage roll after animation completes
+			applyPendingFinalDamageRoll();
 		} finally {
 			finalDamageRolling = false;
 		}
@@ -174,16 +192,16 @@
 	const finalDamageButtonText = $derived(
 		finalDamageResult
 			? gameState.win
-				? 'You survived! Click to continue'
-				: 'Victory slipped away... Click to continue'
-			: 'Roll for your final test'
+				? 'Victory! Continue'
+				: 'Defeat... Continue'
+			: 'Roll Final Damage'
 	);
 
 	// DrawCard button state
 	let drawCardRef = $state();
 
 	// Reactive derived values for DrawCard button
-	const drawCardButtonText = $derived(drawCardRef?.getButtonText() ?? 'PROCEED TO NEXT BYTE');
+	const drawCardButtonText = $derived(drawCardRef?.getButtonText() ?? 'Draw Card');
 	const drawCardButtonDisabled = $derived(drawCardRef?.isButtonDisabled() ?? false);
 
 	async function handleDrawCardClick() {
@@ -540,7 +558,7 @@
 					<!-- Action buttons will go here based on current screen -->
 					{#if currentScreen === 'startRound'}
 						<ContinueButton
-							text="Generate Number"
+							text="Begin Round {gameState.round}"
 							onclick={() => transitionTo('rollForTasks')}
 							testid="start-round-button"
 						/>
@@ -597,7 +615,7 @@
 								</ButtonBar>
 							{:else}
 								<ContinueButton
-									text={gameState.config?.labels?.journalEntryNextButtonText ?? 'Next'}
+									text={gameState.config?.labels?.journalEntryNextButtonText ?? 'Continue to Next Round'}
 									onclick={handleJournalNext}
 									testid="journal-next-button"
 								/>

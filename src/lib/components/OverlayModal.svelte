@@ -1,8 +1,6 @@
 <script>
 	/**
-	 * OverlayModal - Reusable full-screen modal overlay component
-	 * Used for cards, journal entries, and contextual help
-	 * Provides consistent styling and UX across all modal interactions
+	 * OverlayModal - Dialog with layered fog effect
 	 */
 	import { fade, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -15,115 +13,87 @@
 		animateHeight = false // Whether to animate height from 40dvh to 70dvh
 	} = $props();
 
-	/**
-	 * Custom transition that combines scale with height animation
-	 * Only used when animateHeight is true
-	 */
-	function scaleWithHeight(
-		node,
-		{
-			delay = 0,
-			duration = 500,
-			easing = cubicOut,
-			startScale = 0.7,
-			endScale = 1.0,
-			opacity: startOpacity = 0.3
-		}
-	) {
+	let modalHeight = $derived(fixedHeight ?? (animateHeight ? '70dvh' : null));
+
+	function cloudFogTransition(node, { delay = 0, duration = 800 }) {
 		return {
 			delay,
 			duration,
-			easing,
-			css: (t) => {
-				const scale = startScale + (endScale - startScale) * t;
-				const height = animateHeight ? 40 + 30 * t : null; // 40dvh -> 70dvh
-				const opacity = startOpacity + (1 - startOpacity) * t;
+			tick: (t) => {
+				const eased = cubicOut(t);
+				const scale = 0.5 + (eased * 0.5); // Scale from 0.5 to 1.0
 
-				return `
-					transform: scale(${scale});
-					${height ? `height: ${height}dvh;` : ''}
-					opacity: ${opacity};
-				`;
+				const clouds = node.querySelectorAll('.cloud');
+				clouds.forEach(cloud => {
+					cloud.style.transform = `translate(-50%, -50%) scale(${scale})`;
+				});
+
+				node.style.opacity = `${eased}`;
 			}
 		};
 	}
 </script>
 
+<!-- SVG filters for realistic fog clouds -->
+<svg width="0" height="0" aria-hidden="true" style="position: absolute;">
+	<defs>
+		<!-- Back layer: subtle turbulence with soft edges -->
+		<filter id="fog-filter-back" x="-20%" y="-20%" width="140%" height="140%">
+			<feTurbulence type="fractalNoise" baseFrequency="0.006" numOctaves="4" seed="5" result="noise" />
+			<feDisplacementMap in="SourceGraphic" in2="noise" scale="160" xChannelSelector="R" yChannelSelector="G" />
+		</filter>
+		<!-- Middle layer: moderate turbulence -->
+		<filter id="fog-filter-mid" x="-20%" y="-20%" width="140%" height="140%">
+			<feTurbulence type="fractalNoise" baseFrequency="0.009" numOctaves="4" seed="7" result="noise" />
+			<feDisplacementMap in="SourceGraphic" in2="noise" scale="120" xChannelSelector="G" yChannelSelector="B" />
+		</filter>
+		<!-- Front layer: sharper details, closer to viewer -->
+		<filter id="fog-filter-front" x="-20%" y="-20%" width="140%" height="140%">
+			<feTurbulence type="fractalNoise" baseFrequency="0.013" numOctaves="3" seed="11" result="noise" />
+			<feDisplacementMap in="SourceGraphic" in2="noise" scale="90" xChannelSelector="B" yChannelSelector="R" />
+		</filter>
+	</defs>
+</svg>
+
 {#if isVisible}
+	<!-- Fog overlay with layered clouds -->
 	<div
-		class="overlay-modal-container"
-		style="z-index: {zIndex};"
-		in:fade={{ duration: 400, easing: cubicOut }}
-		out:fade={{ duration: 300, easing: cubicOut }}
+		class="fog-overlay"
+		style="z-index: {zIndex - 1};"
+		in:cloudFogTransition={{ duration: 800, delay: 0 }}
+		out:cloudFogTransition={{ duration: 800, delay: 600 }}
 	>
-		<div
-			class="overlay-modal-content"
-			class:fixed-height={fixedHeight}
-			style={fixedHeight ? `height: ${fixedHeight};` : ''}
-			data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
-			in:scaleWithHeight={{
-				duration: 500,
-				startScale: 0.7,
-				endScale: 1.0,
-				opacity: 0.3,
-				easing: cubicOut
-			}}
-			out:scaleWithHeight={{
-				duration: 400,
-				startScale: 1.0,
-				endScale: 0.8,
-				opacity: 0.2,
-				easing: cubicOut
-			}}
-		>
-			{@render children()}
-		</div>
+		<div class="cloud back"></div>
+		<div class="cloud mid"></div>
+		<div class="cloud front"></div>
+	</div>
+
+	<div
+		class="modal-wrapper"
+		style="z-index: {zIndex};"
+		style:height={modalHeight}
+		data-augmented-ui="tl-clip tr-clip br-clip bl-clip"
+		in:fade={{ duration: 600, delay: 800 }}
+		out:fade={{ duration: 600, delay: 0 }}
+	>
+		{@render children()}
 	</div>
 {/if}
 
 <style>
-	/* ============================================
-	   OVERLAY MODAL CONTAINER
-	   Full-screen overlay except toolbar
-	   ============================================ */
-
-	.overlay-modal-container {
+	.modal-wrapper {
 		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		width: 100vw;
-		height: 100vh;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		margin: 0;
+		padding: var(--space-xl);
+		border: none;
+		background: transparent;
 
-		/* No scrolling at container level */
-		overflow: hidden;
-
-		/* Semi-transparent backdrop with blur */
-		background: rgba(0, 0, 0, 0.5);
-		backdrop-filter: blur(4px);
-		-webkit-backdrop-filter: blur(4px);
-
-		/* Padding to clear toolbar at bottom and add spacing */
-		padding: var(--space-md);
-		padding-bottom: calc(60px + var(--space-lg)); /* Extra padding for toolbar */
-
-		/* Center content */
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	/* ============================================
-	   OVERLAY MODAL CONTENT
-	   Card-style container with augmented-ui
-	   ============================================ */
-
-	.overlay-modal-content {
-		position: relative;
-		width: 95%;
-		max-width: 900px;
-		max-height: calc(100vh - 60px - var(--space-lg) * 2);
+		width: stretch;
+		max-width: 90vw;
+		height: calc(100vh - 60px - var(--space-lg) * 2);
 
 		/* Scrollable content within modal */
 		overflow-y: auto;
@@ -149,47 +119,98 @@
 			inset 0 0 20px rgba(0, 255, 255, 0.1);
 	}
 
-	/* Fixed height modals override max-height */
-	.overlay-modal-content.fixed-height {
-		max-height: none;
+	/* Fog overlay container */
+	.fog-overlay {
+		position: fixed;
+		inset: 0;
+		pointer-events: none;
+		overflow: hidden;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+
+		backdrop-filter: blur(6px) brightness(0.8);
+		-webkit-backdrop-filter: blur(6px) brightness(0.8);
 	}
 
-	/* ============================================
-	   RESPONSIVE DESIGN
-	   ============================================ */
+	/* Cloud layers for realistic fog */
+	.fog-overlay .cloud {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%) scale(1);
+		border-radius: 50%;
+		opacity: 1;
+	}
+
+	/* Back layer: large, faint cloud - cyberpunk dark blue */
+	.fog-overlay .cloud.back {
+		width: 220vw;
+		height: 200vh;
+		background: rgba(8, 20, 40, 0.3);
+		box-shadow:
+			0 0 300px 150px rgba(8, 20, 40, 0.5),
+			0 0 600px 300px rgba(8, 20, 40, 0.3);
+		filter: url(#fog-filter-back);
+		opacity: 0.25;
+	}
+
+	/* Middle layer: medium cloud - purple tint */
+	.fog-overlay .cloud.mid {
+		width: 180vw;
+		height: 160vh;
+		background: rgba(20, 10, 30, 0.35);
+		box-shadow:
+			0 0 250px 120px rgba(20, 10, 30, 0.6),
+			0 0 500px 240px rgba(20, 10, 30, 0.4);
+		filter: url(#fog-filter-mid);
+		opacity: 0.4;
+	}
+
+	/* Front layer: bright cloud closest to viewer - cyan accent */
+	.fog-overlay .cloud.front {
+		width: 140vw;
+		height: 120vh;
+		background: rgba(0, 40, 60, 0.4);
+		box-shadow:
+			0 0 200px 100px rgba(0, 80, 120, 0.7),
+			0 0 400px 200px rgba(0, 60, 90, 0.5);
+		filter: url(#fog-filter-front);
+		opacity: 0.55;
+	}
 
 	@media (max-width: 768px) {
-		.overlay-modal-content {
+		.modal-wrapper {
 			--aug-tl: 12px;
 			--aug-tr: 12px;
 			--aug-br: 12px;
 			--aug-bl: 12px;
 		}
+
+		.fog-overlay .cloud.back {
+			width: 250vw;
+			height: 220vh;
+		}
+
+		.fog-overlay .cloud.mid {
+			width: 200vw;
+			height: 180vh;
+		}
+
+		.fog-overlay .cloud.front {
+			width: 160vw;
+			height: 140vh;
+		}
 	}
 
 	@media (max-width: 600px) {
-		.overlay-modal-container {
-			padding: var(--space-sm);
-			padding-bottom: calc(60px + var(--space-md));
-		}
-
-		.overlay-modal-content {
+		.modal-wrapper {
 			width: 100%;
 			min-height: 300px;
 			--aug-tl: 8px;
 			--aug-tr: 8px;
 			--aug-br: 8px;
 			--aug-bl: 8px;
-		}
-	}
-
-	/* ============================================
-	   ACCESSIBILITY - REDUCED MOTION
-	   ============================================ */
-
-	@media (prefers-reduced-motion: reduce) {
-		.overlay-modal-container {
-			transition: none !important;
 		}
 	}
 </style>
