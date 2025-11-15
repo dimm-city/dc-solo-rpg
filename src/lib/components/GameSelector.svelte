@@ -1,5 +1,7 @@
 <script>
 	import AugmentedButton from './AugmentedButton.svelte';
+	import { hasSavedGame, getSaveMetadata } from '../stores/gameSave.js';
+	import { resumeGame, deleteSavedGame } from '../stores/gameActions.svelte.js';
 
 	let {
 		players = [],
@@ -10,11 +12,71 @@
 	} = $props();
 
 	let status = $state('');
+	let savedGameExists = $state(false);
+	let saveMetadata = $state(null);
+
+	// Check for saved game when game selection changes
+	$effect(() => {
+		if (selectedGame) {
+			const gameSlug =
+				selectedGame.slug ||
+				selectedGame.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') ||
+				'default';
+			savedGameExists = hasSavedGame(gameSlug);
+			if (savedGameExists) {
+				saveMetadata = getSaveMetadata(gameSlug);
+			} else {
+				saveMetadata = null;
+			}
+		} else {
+			savedGameExists = false;
+			saveMetadata = null;
+		}
+	});
+
 	async function setConfig() {
 		if (selectedGame && selectedPlayer) {
 			ongameselected({ selectedGame, selectedPlayer });
 		} else {
 			status = 'Please select a player and a game';
+		}
+	}
+
+	function handleResumeGame() {
+		if (!selectedGame) {
+			status = 'Please select a game to resume';
+			return;
+		}
+
+		const gameSlug =
+			selectedGame.slug ||
+			selectedGame.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') ||
+			'default';
+
+		if (resumeGame(gameSlug)) {
+			// Game resumed successfully
+			status = 'Game resumed!';
+		} else {
+			status = 'Failed to resume game';
+		}
+	}
+
+	function handleDeleteSave() {
+		if (!selectedGame) {
+			return;
+		}
+
+		if (confirm('Are you sure you want to delete your saved game? This cannot be undone.')) {
+			const gameSlug =
+				selectedGame.slug ||
+				selectedGame.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') ||
+				'default';
+
+			if (deleteSavedGame(gameSlug)) {
+				savedGameExists = false;
+				saveMetadata = null;
+				status = 'Saved game deleted';
+			}
 		}
 	}
 </script>
@@ -39,7 +101,37 @@
 		</select>
 	</div>
 
-	<AugmentedButton text="Load Game" onclick={() => setConfig()} />
+	{#if savedGameExists && saveMetadata}
+		<div class="saved-game-panel">
+			<h4>Saved Game Found</h4>
+			<div class="save-info">
+				<p><strong>Player:</strong> {saveMetadata.playerName}</p>
+				<p><strong>Round:</strong> {saveMetadata.round}</p>
+				<p>
+					<strong>Tower:</strong>
+					{saveMetadata.tower} |
+					<strong>Tokens:</strong>
+					{saveMetadata.tokens}
+				</p>
+				<p class="save-time">
+					<strong>Saved:</strong>
+					{new Date(saveMetadata.timestamp).toLocaleString()}
+				</p>
+			</div>
+			<div class="button-group">
+				<AugmentedButton text="Resume Game" onclick={handleResumeGame} />
+				<AugmentedButton text="Delete Save" onclick={handleDeleteSave} />
+			</div>
+		</div>
+	{/if}
+
+	{#if !savedGameExists}
+		<AugmentedButton text="Load Game" onclick={() => setConfig()} />
+	{/if}
+
+	{#if status}
+		<p class="status-message">{status}</p>
+	{/if}
 </div>
 
 <style>
@@ -53,5 +145,63 @@
 
 	select {
 		width: 100%;
+	}
+
+	.saved-game-panel {
+		background: linear-gradient(135deg, rgba(0, 20, 40, 0.5), rgba(10, 10, 30, 0.7));
+		border: 2px solid var(--color-neon-cyan, #00ffff);
+		border-radius: 8px;
+		padding: 1rem;
+		margin: 0.5rem 0;
+		box-shadow:
+			0 0 20px rgba(0, 255, 255, 0.2),
+			inset 0 0 20px rgba(0, 255, 255, 0.05);
+	}
+
+	.saved-game-panel h4 {
+		margin: 0 0 0.75rem 0;
+		color: var(--color-neon-cyan, #00ffff);
+		text-align: center;
+		font-size: 1.1rem;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		text-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
+	}
+
+	.save-info {
+		margin-bottom: 1rem;
+		font-size: 0.9rem;
+		line-height: 1.6;
+	}
+
+	.save-info p {
+		margin: 0.25rem 0;
+		color: var(--color-text-primary, #e0e0e0);
+	}
+
+	.save-info strong {
+		color: var(--color-brand-yellow, #ffd700);
+		font-weight: 700;
+	}
+
+	.save-time {
+		margin-top: 0.75rem;
+		padding-top: 0.75rem;
+		border-top: 1px solid rgba(0, 255, 255, 0.2);
+		font-size: 0.8rem;
+		opacity: 0.8;
+	}
+
+	.button-group {
+		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+	}
+
+	.status-message {
+		text-align: center;
+		color: var(--color-brand-yellow, #ffd700);
+		font-size: 0.9rem;
+		margin: 0.5rem 0;
 	}
 </style>
