@@ -36,6 +36,7 @@
 	let showAboutModal = $state(false);
 	let showSettingsModal = $state(false);
 	let showHelpModal = $state(false);
+	let showMobileMenu = $state(false);
 	let customGames = $state([]);
 	let allGames = $state([]);
 	let fileInput = $state(null);
@@ -290,16 +291,23 @@
 	function handleAboutClick(e) {
 		e.preventDefault();
 		showAboutModal = true;
+		showMobileMenu = false;
 	}
 
 	function handleHelpClick(e) {
 		e.preventDefault();
 		showHelpModal = true;
+		showMobileMenu = false;
 	}
 
 	function handleSettingsClick(e) {
 		e.preventDefault();
 		showSettingsModal = true;
+		showMobileMenu = false;
+	}
+
+	function toggleMobileMenu() {
+		showMobileMenu = !showMobileMenu;
 	}
 
 	function saveSettings() {
@@ -424,7 +432,9 @@
 				<img src="/d20-150.png" alt="DC Solo RPG Logo" class="logo-dice" />
 				<span class="version-text">DC-S-0.1.0</span>
 			</div>
-			<div class="header-buttons">
+
+			<!-- Desktop header buttons (hidden on mobile) -->
+			<div class="header-buttons desktop-only">
 				<button
 					class="header-button upload-button"
 					onclick={handleUploadClick}
@@ -501,7 +511,121 @@
 					</svg>
 				</button>
 			</div>
+
+			<!-- Mobile hamburger menu button (visible only on small screens) -->
+			<button
+				class="hamburger-button mobile-only"
+				onclick={toggleMobileMenu}
+				aria-label="Toggle menu"
+				aria-expanded={showMobileMenu}
+			>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="28"
+					height="28"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				>
+					{#if showMobileMenu}
+						<!-- X icon when menu is open -->
+						<line x1="18" y1="6" x2="6" y2="18"></line>
+						<line x1="6" y1="6" x2="18" y2="18"></line>
+					{:else}
+						<!-- Hamburger icon when menu is closed -->
+						<line x1="3" y1="12" x2="21" y2="12"></line>
+						<line x1="3" y1="6" x2="21" y2="6"></line>
+						<line x1="3" y1="18" x2="21" y2="18"></line>
+					{/if}
+				</svg>
+			</button>
 		</div>
+
+		<!-- Mobile dropdown menu -->
+		{#if showMobileMenu}
+			<div class="mobile-menu" transition:fade={{ duration: 200 }}>
+				<button
+					class="mobile-menu-item"
+					onclick={handleUploadClick}
+					disabled={uploading}
+				>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="20"
+						height="20"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+						<polyline points="17 8 12 3 7 8"></polyline>
+						<line x1="12" x2="12" y1="3" y2="15"></line>
+					</svg>
+					<span>Upload Game</span>
+				</button>
+				<button class="mobile-menu-item" onclick={handleAboutClick}>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="20"
+						height="20"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<circle cx="12" cy="12" r="10"></circle>
+						<path d="M12 16v-4"></path>
+						<path d="M12 8h.01"></path>
+					</svg>
+					<span>About</span>
+				</button>
+				<button class="mobile-menu-item" onclick={handleHelpClick}>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="20"
+						height="20"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<circle cx="12" cy="12" r="10"></circle>
+						<path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+						<path d="M12 17h.01"></path>
+					</svg>
+					<span>Help</span>
+				</button>
+				<button class="mobile-menu-item" onclick={handleSettingsClick}>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="20"
+						height="20"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<path d="M14 17H5" />
+						<path d="M19 7h-9" />
+						<circle cx="17" cy="17" r="3" />
+						<circle cx="7" cy="7" r="3" />
+					</svg>
+					<span>Settings</span>
+				</button>
+			</div>
+		{/if}
 
 		{#if uploadStatus}
 			<div class="upload-status" transition:fade={{ duration: 200 }}>
@@ -827,6 +951,105 @@
 		display: flex;
 		gap: var(--space-md);
 		align-items: center;
+	}
+
+	/* Desktop/Mobile visibility toggles */
+	.desktop-only {
+		display: flex;
+	}
+
+	.mobile-only {
+		display: none;
+	}
+
+	/* Hamburger button styling */
+	.hamburger-button {
+		color: var(--color-brand-yellow);
+		background: none;
+		border: none;
+		padding: var(--space-sm);
+		cursor: pointer;
+		transition: all var(--transition-fast);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 50%;
+	}
+
+	.hamburger-button svg {
+		filter: drop-shadow(0 0 4px var(--color-brand-yellow));
+		transition: all var(--transition-fast);
+	}
+
+	.hamburger-button:hover {
+		color: var(--color-neon-cyan);
+		transform: scale(1.1);
+	}
+
+	.hamburger-button:hover svg {
+		filter: drop-shadow(0 0 8px var(--color-neon-cyan));
+	}
+
+	.hamburger-button:active {
+		transform: scale(1.05);
+	}
+
+	/* Mobile menu dropdown */
+	.mobile-menu {
+		position: fixed;
+		top: 80px;
+		right: var(--space-md);
+		background: linear-gradient(135deg, rgba(10, 10, 20, 0.95), rgba(15, 15, 25, 0.95));
+		backdrop-filter: blur(16px);
+		-webkit-backdrop-filter: blur(16px);
+		border: 2px solid var(--color-neon-cyan);
+		border-radius: 8px;
+		padding: var(--space-sm);
+		min-width: 200px;
+		box-shadow:
+			0 0 20px rgba(0, 255, 255, 0.3),
+			0 8px 32px rgba(0, 0, 0, 0.6);
+		z-index: 1001;
+	}
+
+	.mobile-menu-item {
+		display: flex;
+		align-items: center;
+		gap: var(--space-md);
+		width: 100%;
+		padding: var(--space-md);
+		background: transparent;
+		border: none;
+		color: var(--color-brand-yellow);
+		font-family: var(--font-display);
+		font-size: var(--text-sm);
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		cursor: pointer;
+		transition: all var(--transition-fast);
+		border-radius: 4px;
+		text-align: left;
+	}
+
+	.mobile-menu-item svg {
+		flex-shrink: 0;
+		filter: drop-shadow(0 0 4px currentColor);
+	}
+
+	.mobile-menu-item:hover:not(:disabled) {
+		background: linear-gradient(135deg, rgba(0, 255, 255, 0.15), rgba(217, 70, 239, 0.15));
+		color: var(--color-neon-cyan);
+		transform: translateX(4px);
+	}
+
+	.mobile-menu-item:active:not(:disabled) {
+		transform: translateX(2px);
+	}
+
+	.mobile-menu-item:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 
 	.header-button {
@@ -1264,6 +1487,17 @@
 		}
 	}
 
+	/* Medium screens - show hamburger menu to prevent crowding */
+	@media (max-width: 768px) {
+		.desktop-only {
+			display: none !important;
+		}
+
+		.mobile-only {
+			display: flex;
+		}
+	}
+
 	/* Small tablet - 2 columns, more compact */
 	@media (max-width: 700px) {
 		.game-card {
@@ -1307,6 +1541,31 @@
 		.header-link svg {
 			width: 24px;
 			height: 24px;
+		}
+
+		/* Show mobile menu, hide desktop buttons */
+		.desktop-only {
+			display: none !important;
+		}
+
+		.mobile-only {
+			display: flex;
+		}
+
+		/* Adjust logo and version for smaller screens */
+		.logo-dice {
+			width: 48px;
+		}
+
+		.version-text {
+			font-size: 0.75rem;
+		}
+
+		/* Mobile menu positioning */
+		.mobile-menu {
+			right: var(--space-sm);
+			left: var(--space-sm);
+			min-width: auto;
 		}
 	}
 
