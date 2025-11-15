@@ -1219,13 +1219,14 @@
 
 		/* Compact stat items for mobile */
 		.stat-item {
-			padding: var(--space-xs);
+			padding: 4px;
 			min-height: auto;
-			gap: 2px;
+			gap: 1px;
 			min-width: auto;
 			width: 100%;
 			flex-direction: column;
 			align-items: center;
+			justify-content: space-between;
 		}
 
 		/* Dice and deck - compact vertical layout */
@@ -1234,8 +1235,9 @@
 			min-width: auto;
 			width: 100%;
 			min-height: auto;
-			padding: var(--space-xs);
-			gap: 2px;
+			padding: 4px;
+			gap: 1px;
+			justify-content: space-between;
 		}
 
 		.dice-label,
@@ -1294,11 +1296,12 @@
 
 		/* Compact stat bars for mobile */
 		.stat-bar {
-			height: 3px;
+			height: 2px;
 			min-width: 100%;
 			width: 100%;
 			border-radius: 1px;
 			margin: 0;
+			margin-top: 1px;
 		}
 
 		/* Hide help icons on mobile */
@@ -1326,7 +1329,7 @@
 		.player-round-bar {
 			padding: var(--space-xs) var(--space-sm);
 			gap: 4px;
-			grid-template-columns: auto 1fr auto;
+			grid-template-columns: auto 1fr auto 1fr auto;
 			font-size: 0.75rem;
 		}
 
@@ -1334,14 +1337,10 @@
 			font-size: 0.7rem;
 			max-width: 120px;
 			overflow: hidden;
-			text-overflow: ellipsis;
-			white-space: nowrap;
+			text-wrap: balance;
+			line-height: 1.2;
 			text-align: center;
 			margin: 0;
-		}
-
-		.info-segment:last-of-type {
-			display: none; /* Hide round counter on very small screens */
 		}
 
 		.status-bar-button {
@@ -1375,12 +1374,22 @@
 		.token-grid {
 			grid-template-columns: repeat(5, 1fr);
 			gap: 1px;
-			padding: 2px;
+			padding: 1px;
+			width: 100%;
+			max-width: 100%;
 		}
 
 		.token-shape {
-			width: 10px;
-			height: 10px;
+			width: 8px;
+			height: 8px;
+		}
+
+		/* Ensure all stats have consistent height */
+		.stat-item,
+		.dice-readout,
+		.deck-readout {
+			min-height: auto;
+			height: 100%;
 		}
 	}
 
