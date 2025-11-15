@@ -53,7 +53,7 @@
 	<!-- Player and Round Info Bar with Augmented UI -->
 	<div
 		class="player-round-bar slide-down"
-		data-augmented-ui="tl-clip-x tr-2-clip-x br-clip bl-2-clip-x border"
+		data-augmented-ui="tl-2-clip-x tr-2-clip-x br-clip bl-clip border"
 		style="animation-delay: 0s; animation-duration: 0.6s"
 	>
 		<!-- Exit Button on far left -->
@@ -116,7 +116,7 @@
 			<div
 				class="stat-item health-stat slide-down"
 				data-augmented-ui={healthAugmentedUI}
-				style="animation-delay: 0.1s; animation-duration: 0.5s"
+				style="animation-delay: 0.15s; animation-duration: 0.7s"
 			>
 				<div class="stat-label">
 					<svg
@@ -148,7 +148,11 @@
 				</div>
 			</div>
 
-			<div class="stat-item failure-stat slide-down" data-augmented-ui={failureAugmentedUI}>
+			<div
+				class="stat-item failure-stat slide-down"
+				data-augmented-ui={failureAugmentedUI}
+				style="animation-delay: 0.25s; animation-duration: 0.85s"
+			>
 				<div class="stat-label">
 					<svg
 						class="stat-icon"
@@ -171,13 +175,24 @@
 					</svg>
 					{gameState.config?.labels?.failureCounters?.toUpperCase() ?? 'FAILURE'}
 				</div>
-				<div class="stat-value">
-					<span class="current">{failurePercent}</span><span class="divider">/</span><span
-						class="max">4</span
-					>
-				</div>
-				<div class="stat-bar">
-					<div class="stat-fill failure-fill" style="width: {(failurePercent / 4) * 100}%"></div>
+				<div class="king-indicators">
+					{#each Array(4) as _, i (i)}
+						<div class="king-icon" class:revealed={i < failurePercent}>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							>
+								<path
+									d="M2 20h20v-4a6 6 0 0 0-12 0v4zm0 0v-4a6 6 0 1 1 12 0v4zM12 2v4m-4-2 4 2 4-2"
+								/>
+							</svg>
+						</div>
+					{/each}
 				</div>
 			</div>
 		</div>
@@ -185,7 +200,7 @@
 			<div
 				class="dice-readout slide-down"
 				data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
-				style="animation-delay: 0.3s; animation-duration: 0.5s"
+				style="animation-delay: 0.35s; animation-duration: 0.75s"
 			>
 				<div class="dice-label">
 					<svg
@@ -220,7 +235,7 @@
 			<div
 				class="deck-readout slide-down"
 				data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
-				style="animation-delay: 0.4s; animation-duration: 0.5s"
+				style="animation-delay: 0.45s; animation-duration: 0.75s"
 			>
 				<div class="deck-label">
 					<svg
@@ -250,7 +265,11 @@
 			</div>
 		</div>
 		<div>
-			<div class="stat-item bonus-stat slide-down" data-augmented-ui={luckAugmentedUI}>
+			<div
+				class="stat-item bonus-stat slide-down"
+				data-augmented-ui={luckAugmentedUI}
+				style="animation-delay: 0.55s; animation-duration: 0.85s"
+			>
 				<div class="stat-label">
 					<svg
 						class="stat-icon"
@@ -286,7 +305,7 @@
 			<div
 				class="stat-item success-stat slide-down"
 				data-augmented-ui={successAugmentedUI}
-				style="animation-delay: 0.6s; animation-duration: 0.5s"
+				style="animation-delay: 0.65s; animation-duration: 0.75s"
 			>
 				<div class="stat-label">
 					<svg
@@ -331,7 +350,7 @@
 		<div
 			class="progress-tracker slide-down"
 			data-augmented-ui={successAugmentedUI}
-			style="animation-delay: 0.7s; animation-duration: 0.5s"
+			style="animation-delay: 0.75s; animation-duration: 0.7s"
 		>
 			<div class="progress-bar">
 				<div class="progress-fill" style="width: {progressPercent}%"></div>
@@ -355,53 +374,54 @@
 		overflow: visible;
 	}
 
-	/* Slide Down Animation */
+	/* Mechanical Assembly Animation - Step 1: Linear drop */
 	@keyframes slideDown {
-		from {
+		0% {
 			transform: translateY(-100%);
 			opacity: 0;
 		}
-		to {
+		100% {
 			transform: translateY(0);
 			opacity: 1;
 		}
 	}
 
 	.slide-down {
-		animation: slideDown 0.5s ease-in forwards;
+		animation: slideDown 0.4s linear forwards;
 		opacity: 0;
 	}
 
-	/* Slide Down Animation */
+	/* Mechanical Assembly - Step 1: Linear drop, Step 2: Ease left into slot */
 	@keyframes slideDownAndLeft {
 		0% {
-			transform: translateY(-100%) translateX(100px);
+			transform: translateY(-100%) translateX(0);
 			opacity: 0;
 		}
-		25% {
+		45% {
+			transform: translateY(0) translateX(0);
 			opacity: 1;
 		}
-		50% {
-			transform: translateY(0) translateX(100px);
-			opacity: 1;
+		45.01% {
+			transform: translateY(0) translateX(50px);
 		}
 		100% {
 			transform: translateY(0) translateX(0);
 			opacity: 1;
 		}
 	}
-	/* Slide Down Animation */
+
+	/* Mechanical Assembly - Step 1: Linear drop, Step 2: Ease right into slot */
 	@keyframes slideDownAndRight {
 		0% {
-			transform: translateY(-100%) translateX(-100px);
+			transform: translateY(-100%) translateX(0);
 			opacity: 0;
 		}
-		25% {
+		45% {
+			transform: translateY(0) translateX(0);
 			opacity: 1;
 		}
-		50% {
-			transform: translateY(0) translateX(-100px);
-			opacity: 1;
+		45.01% {
+			transform: translateY(0) translateX(-50px);
 		}
 		100% {
 			transform: translateY(0) translateX(0);
@@ -532,10 +552,11 @@
 
 	.info-segment:last-of-type {
 		display: flex;
-		justify-content: flex-end;
+		
 		& > div {
 			display: flex;
 			flex-direction: column;
+			align-items: center;
 			gap: 0;
 		}
 	}
@@ -628,10 +649,14 @@
 
 		/* Left side rectangle inset - receives puzzle tab from health */
 		/* Match health's right extension for perfect fit */
-		--aug-l-extend1: 20px;
+		--aug-l-extend1: 40px;
 		--aug-l-inset1: 10px;
-		margin-inline-start: -28px;
-		padding-inline-start: 1.25rem;
+
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		margin-inline-start: -30px;
+		padding-inline-start: 2rem;
 		/* SECONDARY importance - Reduced Glow */
 		box-shadow:
 			0 0 12px rgba(217, 70, 239, 0.4),
@@ -641,10 +666,8 @@
 	}
 
 	.failure-stat.slide-down {
-		animation-delay: 0.2s; /* Left column continues */
-		animation-duration: 0.8s; /* Slower for complex animation */
-		animation-timing-function: cubic-bezier(0.075, 0.82, 0.165, 1);
 		animation-name: slideDownAndLeft;
+		animation-timing-function: linear;
 	}
 	@keyframes failure-glow-pulse {
 		0%,
@@ -684,9 +707,7 @@
 
 	.bonus-stat.slide-down {
 		animation-name: slideDownAndRight;
-		animation-delay: 0.5s; /* Right column starts */
-		animation-duration: 0.8s; /* Slower for complex animation */
-		animation-timing-function: ease-in;
+		animation-timing-function: linear;
 	}
 
 	@keyframes bonus-glow-pulse {
@@ -850,11 +871,22 @@
 		margin-right: 2px;
 	}
 
+	@keyframes fillBarGrow {
+		from {
+			width: 0;
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
+	}
+
 	.stat-fill {
 		height: 100%;
-		transition: width 0.3s ease;
+		transition: width 0.3s linear;
 		position: relative;
 		box-shadow: 0 0 10px currentColor;
+		animation: fillBarGrow 0.5s linear forwards;
 	}
 
 	.health-fill {
@@ -870,6 +902,55 @@
 	.bonus-fill {
 		background: linear-gradient(90deg, #00d9ff, #0088cc);
 		box-shadow: 0 0 10px #00d9ff;
+	}
+
+	/* King Indicators for Failure Stat */
+	.king-indicators {
+		display: flex;
+		gap: 3px;
+		align-items: center;
+		justify-content: center;
+		flex: 0 0 auto;
+		padding: 2px;
+	}
+
+	.king-icon {
+		width: 16px;
+		height: 16px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: all 0.2s linear;
+		opacity: 0.2;
+	}
+
+	.king-icon svg {
+		width: 100%;
+		height: 100%;
+		stroke: #ff0066;
+		filter: drop-shadow(0 0 2px rgba(255, 0, 102, 0.3));
+	}
+
+	.king-icon.revealed {
+		opacity: 1;
+		filter: grayscale(0);
+		animation: kingReveal 0.2s linear forwards;
+	}
+
+	.king-icon.revealed svg {
+		stroke: #ff0066;
+		filter: drop-shadow(0 0 6px rgba(255, 0, 102, 0.9));
+	}
+
+	@keyframes kingReveal {
+		0% {
+			transform: scale(0.7);
+			opacity: 0.2;
+		}
+		100% {
+			transform: scale(1);
+			opacity: 1;
+		}
 	}
 
 	/* Digital Dice Readout */
@@ -943,6 +1024,17 @@
 		min-width: 54px;
 	}
 
+	@keyframes pipPopIn {
+		0% {
+			transform: scale(0);
+			opacity: 0;
+		}
+		100% {
+			transform: scale(1);
+			opacity: 1;
+		}
+	}
+
 	.pip {
 		width: 6px;
 		height: 6px;
@@ -951,7 +1043,9 @@
 		box-shadow:
 			0 0 5px rgba(0, 255, 255, 0.8),
 			0 0 10px rgba(217, 70, 239, 0.4);
-		animation: pip-pulse 2s ease-in-out infinite;
+		animation:
+			pipPopIn 0.15s linear 0.5s backwards,
+			pip-pulse 2s ease-in-out 1s infinite;
 	}
 
 	@keyframes pip-pulse {
@@ -1016,49 +1110,23 @@
 		filter: drop-shadow(0 0 4px currentColor);
 	}
 
-	.deck-value {
-		font-size: 2rem;
-		font-weight: 900;
-		font-family: 'Courier New', monospace;
-		color: #00eeff;
-		text-shadow:
-			0 0 15px rgba(0, 238, 255, 1),
-			0 0 30px rgba(0, 238, 255, 0.6),
-			0 0 45px rgba(0, 238, 255, 0.3);
-		line-height: 1;
-	}
-
-	.deck-stack {
-		display: flex;
-		position: relative;
-		height: 20px;
-		width: 50px;
-		justify-content: center;
-		align-items: center;
-	}
-
-	.card-layer {
-		position: absolute;
-		width: 28px;
-		height: 16px;
-		background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(0, 255, 255, 0.2));
-		border: 1px solid rgba(255, 215, 0, 0.5);
-		border-radius: 2px;
-		box-shadow:
-			0 0 5px rgba(255, 215, 0, 0.4),
-			0 0 10px rgba(0, 255, 255, 0.2);
-		/* Use 4px increments for 8px baseline grid */
-		transform: translateX(calc(var(--layer-index) * 4px))
-			translateY(calc(var(--layer-index) * -4px));
-		transition: all 0.3s ease;
-	}
-
 	/* Token Grid */
 	.token-grid {
 		display: grid;
 		grid-template-columns: repeat(5, 1fr);
 		gap: 0.25rem;
 		padding: 0.25rem;
+	}
+
+	@keyframes tokenPopIn {
+		0% {
+			transform: scale(0);
+			opacity: 0;
+		}
+		100% {
+			transform: scale(1);
+			opacity: 1;
+		}
 	}
 
 	.token-shape {
@@ -1068,7 +1136,10 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		transition: all 0.3s ease;
+		transition: all 0.2s linear;
+		animation: tokenPopIn 0.15s linear forwards;
+		animation-delay: calc(0.7s + var(--token-index) * 0.03s);
+		opacity: 0;
 	}
 
 	.token-inner {
@@ -1138,161 +1209,144 @@
 			min-height: 90px;
 		}
 
-		.deck-value {
-			font-size: 1.5rem;
-		}
-
 		.token-shape {
 			width: 16px;
 			height: 16px;
 		}
 	}
 
-	/* Mobile - Grid areas layout with dice in center */
+	/* Mobile - Simple 2x3 Grid Layout */
 	@media (max-width: 600px) {
 		.stats-grid {
-			/* Grid with 3 columns: left stats, center dice, right stats */
 			display: grid;
-			grid-template-columns: 1fr auto 1fr;
+			grid-template-columns: repeat(3, 1fr);
 			grid-template-rows: auto auto;
-			grid-template-areas:
-				'health dice luck'
-				'failure dice success';
 			gap: var(--space-xs);
+			width: 100%;
 		}
 
-		/* Position first column (Health + Failure) */
-		.stats-grid > div:first-of-type {
+		/* Reset all column positioning to auto-flow */
+		.stats-grid > div {
+			display: contents;
+		}
+
+		/* Row 1: Health, Dice, Bonus */
+		.health-stat {
 			grid-column: 1;
-			grid-row: 1 / 3;
-			display: flex;
-			flex-direction: column;
-			gap: var(--space-xs);
-			align-items: flex-end;
-		}
-
-		/* Position Dice Readout in center spanning both rows */
-		.stats-grid > div:nth-of-type(2) {
-			grid-column: 2;
-			grid-row: 1 / 3;
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			padding: 0 var(--space-xs);
+			grid-row: 1;
 		}
 
 		.dice-readout {
-			min-width: 70px;
-			min-height: 70px;
-			padding: var(--space-xs);
-			margin-top: 0;
+			grid-column: 2;
+			grid-row: 1;
 		}
 
-		.dice-label {
-			font-size: 0.6rem;
-			display: none;
-		}
-		.dice-value {
-			font-size: 1.25rem;
-			display: none;
+		.bonus-stat {
+			grid-column: 3;
+			grid-row: 1;
 		}
 
-		.pip {
-			width: 5px;
-			height: 5px;
-		}
-
-		.dice-pips {
-			min-width: 48px;
-			gap: 2.5px;
+		/* Row 2: Failure, Deck, Success */
+		.failure-stat {
+			grid-column: 1;
+			grid-row: 2;
 		}
 
 		.deck-readout {
-			min-width: 70px;
-			min-height: 70px;
-			padding: var(--space-xs);
-			margin-top: var(--space-xs);
+			grid-column: 2;
+			grid-row: 2;
 		}
 
-		.deck-label {
-			font-size: 0.6rem;
-			display: none;
-		}
-
-		.deck-value {
-			font-size: 1.25rem;
-		}
-
-		.deck-stack {
-			height: 16px;
-			width: 40px;
-		}
-
-		.card-layer {
-			width: 24px;
-			height: 14px;
-			/* Use 4px increments for 8px baseline grid */
-			transform: translateX(calc(var(--layer-index) * 4px))
-				translateY(calc(var(--layer-index) * -4px));
-		}
-
-		/* Position third column (Bonus + Success) */
-		.stats-grid > div:last-of-type {
+		.success-stat {
 			grid-column: 3;
-			grid-row: 1 / 3;
-			display: flex;
-			flex-direction: column;
-			gap: var(--space-xs);
+			grid-row: 2;
 		}
 
+		/* Compact stat items for mobile */
 		.stat-item {
-			padding: var(--space-xs) var(--space-sm);
-			min-height: 44px;
-			gap: 4px;
-			min-width: 135px;
-			width: min-content;
+			padding: 4px;
+			min-height: auto;
+			gap: 1px;
+			min-width: auto;
+			width: 100%;
+			flex-direction: column;
+			align-items: center;
+			justify-content: space-between;
+		}
+
+		/* Dice and deck - compact vertical layout */
+		.dice-readout,
+		.deck-readout {
+			min-width: auto;
+			width: 100%;
+			min-height: auto;
+			padding: 4px;
+			gap: 1px;
+			justify-content: space-between;
+		}
+
+		.dice-label,
+		.deck-label {
+			font-size: 0.55rem;
+			text-align: center;
+		}
+
+		.dice-value {
+			font-size: 1rem;
+		}
+
+		.pip {
+			width: 4px;
+			height: 4px;
+		}
+
+		.dice-pips {
+			min-width: auto;
+			gap: 2px;
+			flex-wrap: wrap;
+			max-width: 40px;
 		}
 
 		.stat-label {
-			font-size: 0.75rem; /* 12px minimum for readability */
-			min-width: 50px;
-			letter-spacing: 0.1em;
-		}
-
-		.stat-value {
-			font-size: 0.85rem;
-			min-width: 40px;
-		}
-
-		.stat-value .current {
-			font-size: 1.85rem;
-		}
-
-		.stat-value .divider {
-			font-size: 0.65rem;
-		}
-
-		.stat-value .max {
 			font-size: 0.6rem;
-		}
-
-		/* Keep stat bars but make them smaller for mobile */
-		.stat-bar {
-			height: 4px; /* Reduce from 6px */
-			min-width: 30px; /* Reduce from 40px */
-			border-radius: 1px;
-		}
-
-		.stat-label {
-			font-size: 0.75rem; /* 12px minimum - keep text visible */
-			gap: 0.25rem;
 			min-width: auto;
 			letter-spacing: 0.05em;
+			gap: 2px;
+			text-align: center;
+			white-space: nowrap;
 		}
 
 		.stat-icon {
-			width: 16px;
-			height: 16px;
+			width: 12px;
+			height: 12px;
+		}
+
+		.stat-value {
+			font-size: 0.7rem;
+			min-width: auto;
+			text-align: center;
+		}
+
+		.stat-value .current {
+			font-size: 1.1rem;
+		}
+
+		.stat-value .divider {
+			font-size: 0.55rem;
+		}
+
+		.stat-value .max {
+			font-size: 0.55rem;
+		}
+
+		/* Compact stat bars for mobile */
+		.stat-bar {
+			height: 2px;
+			min-width: 100%;
+			width: 100%;
+			border-radius: 1px;
+			margin: 0;
+			margin-top: 1px;
 		}
 
 		/* Hide help icons on mobile */
@@ -1301,38 +1355,43 @@
 		}
 
 		.info-segment {
-			gap: var(--space-xs);
+			gap: 2px;
 		}
 
 		.info-segment:first-of-type {
-			flex-direction: column-reverse;
+			flex-direction: column;
+			align-items: flex-start;
+			margin-inline-start: var(--space-md);
 		}
+
 		.info-segment .label {
-			font-size: 0.75rem; /* 12px minimum */
+			font-size: 0.6rem;
 		}
 
 		.info-segment .value {
-			font-size: 0.875rem; /* 14px for better readability */
+			font-size: 0.7rem;
 		}
 
 		.player-round-bar {
-			padding: var(--space-sm);
-			gap: var(--space-xs);
+			padding: var(--space-sm) var(--space-md);
+			gap: 4px;
 			grid-template-columns: auto 1fr auto 1fr auto;
+			font-size: 0.75rem;
 		}
 
 		.player-round-bar h5 {
-			font-size: 0.875rem; /* 14px minimum */
-			max-width: 150px;
-			max-height: 3.6em; /* ~3 lines */
+			font-size: 0.7rem;
+			max-width: 120px;
 			overflow: hidden;
 			text-wrap: balance;
-			line-height: 1.3; /* Slightly taller for readability */
+			line-height: 1.3;
 			text-align: center;
+			margin: 0;
 		}
 
 		.status-bar-button {
-			padding: var(--space-xs);
+			padding: 0;
+			margin-top: var(--space-md);
 		}
 
 		.status-bar-button svg {
@@ -1340,66 +1399,65 @@
 			height: 18px;
 		}
 
-		/* Mobile Puzzle Piece Interlocking - Horizontal only */
-		/* Health: Top-left - extends right to Failure */
-		.health-stat {
-			--aug-r-extend1: 20px;
-			--aug-r-inset1: 8px;
+	
 
-			--aug-br: 12px; /* Slot ← receives Bonus's tab (desktop) OR Failure's tab (mobile) */
-			--aug-tl: 8px; /* Gentle endpoint */
-			--aug-bl: unset; /* Gentle terminus */
-			--aug-tr: unset; /* Visual anchor */
-
-			/* Icon toward center (right side) */
-			flex-direction: row-reverse;
-		}
-
-		/* Failure: Top-right - receives left from Health */
-		.failure-stat {
-			--aug-l-extend1: 20px;
-			--aug-l-inset1: 8px;
-			margin-inline-start: 0;
-			padding-inline-start: calc(var(--space-md) + var(--space-xs));
-
-			/* Icon toward center (right side) */
-			flex-direction: row-reverse;
-		}
-
-		/* Bonus: Bottom-left - extends right to Success */
-		.bonus-stat {
-			--aug-bl: 12px; /* Slot ← receives Bonus's tab (desktop) OR Failure's tab (mobile) */
-			--aug-tr: 8px; /* Gentle endpoint */
-			--aug-br: unset; /* Gentle terminus */
-			--aug-tl: unset; /* Visual anchor */
-			padding-inline-start: var(--space-sm);
-
-			/* Icon toward center (left side) - override desktop row-reverse */
-			flex-direction: row;
-		}
-
-		/* Success: Bottom-right - receives left from Bonus */
+		/* Reset augmented-ui settings for compact mobile layout */
+		.health-stat,
+		.failure-stat,
+		.bonus-stat,
 		.success-stat {
+			--aug-tl: 6px;
+			--aug-tr: 6px;
+			--aug-br: 6px;
+			--aug-bl: 6px;
+			--aug-l-extend1: 0;
+			--aug-l-inset1: 0;
+			--aug-r-extend1: 0;
+			--aug-r-inset1: 0;
 			margin-inline-start: 0;
-			padding-inline-start: calc(var(--space-md) + var(--space-xs));
-			--aug-tl: 12px; /* Slot ← receives Bonus's tab (desktop) OR Failure's tab (mobile) */
-			--aug-tr: 8px; /* Gentle endpoint */
-			--aug-br: unset; /* Gentle terminus */
-			--aug-bl: unset; /* Visual anchor */
-
-			/* Icon toward center (left side) - override desktop row-reverse */
-			flex-direction: row;
+			padding-inline-start: var(--space-xs);
+			flex-direction: column;
 		}
 
+		.failure-stat {
+			justify-content: center;
+			gap: 5px;
+		}
+
+		/* Compact token grid for mobile */
 		.token-grid {
 			grid-template-columns: repeat(5, 1fr);
-			gap: 2px;
-			padding: var(--space-xs);
+			gap: 1px;
+			padding: 1px;
+			width: 100%;
+			max-width: 100%;
+			justify-items: center;
 		}
 
 		.token-shape {
-			width: 12px;
-			height: 12px;
+			width: 20px;
+			height: 20px;
+		}
+
+		/* Ensure all stats have consistent height */
+		.stat-item,
+		.dice-readout,
+		.deck-readout {
+			min-height: auto;
+			height: 100%;
+		}
+
+		/* Compact king indicators for mobile */
+		.king-indicators {
+			gap: 5px;
+			padding: 1px;
+			width: 100%;
+			justify-content: center;
+		}
+
+		.king-icon {
+			width: 20px;
+			height: 20px;
 		}
 	}
 
@@ -1442,9 +1500,10 @@
 	.progress-fill {
 		height: 100%;
 		background: linear-gradient(90deg, var(--color-neon-cyan), var(--color-cyber-magenta));
-		transition: width 0.3s ease;
+		transition: width 0.3s linear;
 		box-shadow: 0 0 10px rgba(0, 255, 255, 0.6);
 		position: relative;
+		animation: fillBarGrow 0.6s linear forwards;
 	}
 
 	.progress-text {
@@ -1504,13 +1563,15 @@
 		.pip,
 		.token-shape {
 			animation: none !important;
+			opacity: 1 !important;
 		}
 
 		.stat-fill,
 		.progress-fill,
-		.token-inner,
-		.card-layer {
+		.token-inner {
 			transition: none !important;
+			animation: none !important;
+			opacity: 1 !important;
 		}
 	}
 </style>

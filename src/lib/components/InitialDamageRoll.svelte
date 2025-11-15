@@ -18,7 +18,7 @@
 		display: grid;
 		text-align: center;
 		padding: 2rem;
-		align-content: center;
+		align-items: flex-start;
 	}
 
 	.dc-initial-damage-stats {
