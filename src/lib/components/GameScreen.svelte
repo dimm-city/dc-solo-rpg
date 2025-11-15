@@ -521,47 +521,6 @@
 			</ButtonBar>
 		</div>
 	</div>
-{:else if currentScreen == 'initialDamageRoll'}
-	<div class="game-screen dc-game-bg">
-		<!-- UI Content Layer -->
-		<div class="ui-content-layer">
-			<div class="status-display-area dc-fade-in" data-testid="status-display">
-				<StatusDisplay onHelpClick={handleHelpClick} onExitClick={handleExitClick} />
-			</div>
-			<div class="main-screen-area dc-table-bg" onclick={handleScreenClick}>
-				<!-- Background contextual text -->
-				{#if contextText}
-					{#key currentScreen}
-						<div class="context-text-background" transition:fade={{ duration: 400 }}>
-							<h2 class="context-title">{contextText.title}</h2>
-							<p class="context-description">{contextText.description}</p>
-						</div>
-					{/key}
-				{/if}
-
-				<div
-					class="dc-fade-in dc-screen-container"
-					data-testid="screen-initialDamageRoll"
-					transition:fade={{ duration: TRANSITION_DURATION }}
-				>
-					<InitialDamageRoll />
-				</div>
-			</div>
-
-			<!-- Toolbar at bottom -->
-			<div class="dc-toolbar-area dc-fade-in">
-				<ButtonBar>
-					<ContinueButton
-						text={initialDamageButtonText}
-						onclick={handleInitialDamageRoll}
-						disabled={initialDamageRolling}
-						testid="initial-damage-button"
-					/>
-					<button class="toolbar-button" onclick={handleExitRequest}>Exit</button>
-				</ButtonBar>
-			</div>
-		</div>
-	</div>
 {:else if currentScreen == 'gameOver'}
 	<div
 		class="dc-fade-in dc-screen-container"
@@ -593,7 +552,15 @@
 				{/if}
 
 				{#key currentScreen}
-					{#if currentScreen == 'startRound'}
+					{#if currentScreen == 'initialDamageRoll'}
+						<div
+							class="dc-fade-in dc-screen-container"
+							data-testid="screen-initialDamageRoll"
+							transition:fade={{ duration: TRANSITION_DURATION }}
+						>
+							<InitialDamageRoll />
+						</div>
+					{:else if currentScreen == 'startRound'}
 						<div
 							class="dc-fade-in dc-screen-container dc-start-round-screen"
 							data-testid="screen-startRound"
