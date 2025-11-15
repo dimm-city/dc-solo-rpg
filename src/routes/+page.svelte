@@ -183,21 +183,36 @@
 
 	function handleDeleteSave(game, event) {
 		event.stopPropagation();
-		const gameName = game.title || 'this game';
-		if (
-			confirm(
-				`Delete saved game for "${gameName}"?\n\nThis will permanently delete your saved progress. This cannot be undone.`
-			)
-		) {
-			const slug =
-				game.slug || game.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'unknown';
+		gameToDelete = game;
+		showDeleteModal = true;
+	}
 
-			if (deleteSavedGame(slug)) {
-				updateSaveData();
-				uploadStatus = 'Saved game deleted';
-				setTimeout(() => (uploadStatus = ''), 3000);
+	function confirmDeleteSave() {
+		if (!gameToDelete) return;
+
+		const slug =
+			gameToDelete.slug ||
+			gameToDelete.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') ||
+			'unknown';
+
+		if (deleteSavedGame(slug)) {
+			// Clear game state if it's the currently loaded game
+			if (gameState.config?.slug === slug) {
+				gameState.config.loaded = false;
 			}
+
+			updateSaveData();
+			uploadStatus = 'Saved game deleted';
+			setTimeout(() => (uploadStatus = ''), 3000);
 		}
+
+		showDeleteModal = false;
+		gameToDelete = null;
+	}
+
+	function cancelDeleteSave() {
+		showDeleteModal = false;
+		gameToDelete = null;
 	}
 
 	function handleRemoveCustomGame(game, event) {
