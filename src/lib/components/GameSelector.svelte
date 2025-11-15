@@ -2,6 +2,12 @@
 	import AugmentedButton from './AugmentedButton.svelte';
 	import { hasSavedGame, getSaveMetadata } from '../stores/gameSave.js';
 	import { resumeGame, deleteSavedGame } from '../stores/gameActions.svelte.js';
+	import {
+		getCustomGames,
+		addCustomGame,
+		removeCustomGame,
+		getCustomGame
+	} from '../stores/customGames.js';
 
 	let {
 		players = [],
@@ -14,6 +20,20 @@
 	let status = $state('');
 	let savedGameExists = $state(false);
 	let saveMetadata = $state(null);
+	let customGames = $state([]);
+	let allGames = $state([]);
+	let fileInput = $state(null);
+	let uploading = $state(false);
+
+	// Load custom games on mount
+	$effect(() => {
+		customGames = getCustomGames();
+	});
+
+	// Merge custom games with server games
+	$effect(() => {
+		allGames = [...customGames, ...games].sort((a, b) => a.title.localeCompare(b.title));
+	});
 
 	// Check for saved game when game selection changes
 	$effect(() => {
@@ -36,9 +56,74 @@
 
 	async function setConfig() {
 		if (selectedGame && selectedPlayer) {
-			ongameselected({ selectedGame, selectedPlayer });
+			// If this is a custom game, we need to pass the full config
+			// Otherwise pass the slug for server-side loading
+			if (selectedGame.isCustom) {
+				// For custom games, the game object is already the full config
+				ongameselected({ selectedGame, selectedPlayer });
+			} else {
+				// For server games, pass the game reference (has slug)
+				ongameselected({ selectedGame, selectedPlayer });
+			}
 		} else {
 			status = 'Please select a player and a game';
+		}
+	}
+
+	async function handleFileUpload(event) {
+		const file = event.target.files?.[0];
+		if (!file) return;
+
+		// Validate file type
+		if (!file.name.endsWith('.game.md')) {
+			status = 'Please select a .game.md file';
+			return;
+		}
+
+		uploading = true;
+		status = 'Uploading and parsing game file...';
+
+		try {
+			const text = await file.text();
+			const result = addCustomGame(text, file.name);
+
+			if (result.success) {
+				// Reload custom games list
+				customGames = getCustomGames();
+
+				// Auto-select the newly uploaded game
+				selectedGame = result.gameConfig;
+
+				status = `Successfully loaded "${result.gameConfig.title}"!`;
+			} else {
+				status = `Error: ${result.error}`;
+			}
+		} catch (error) {
+			status = `Failed to load file: ${error.message}`;
+		} finally {
+			uploading = false;
+			// Clear file input
+			if (fileInput) {
+				fileInput.value = '';
+			}
+		}
+	}
+
+	function handleUploadClick() {
+		fileInput?.click();
+	}
+
+	function handleRemoveCustomGame() {
+		if (!selectedGame?.isCustom) {
+			return;
+		}
+
+		if (confirm(`Are you sure you want to remove "${selectedGame.title}"?`)) {
+			if (removeCustomGame(selectedGame.slug)) {
+				customGames = getCustomGames();
+				selectedGame = null;
+				status = 'Custom game removed';
+			}
 		}
 	}
 
@@ -82,6 +167,15 @@
 </script>
 
 <div class="dc-start-screen-container">
+	<!-- Hidden file input -->
+	<input
+		type="file"
+		accept=".game.md,.md"
+		bind:this={fileInput}
+		onchange={handleFileUpload}
+		style="display: none;"
+	/>
+
 	<div>
 		<label for="player">Player:</label>
 		<select id="player" bind:value={selectedPlayer}>
@@ -91,14 +185,29 @@
 			{/each}
 		</select>
 	</div>
+
 	<div>
 		<label for="gameSelect">Select a Game:</label>
 		<select id="gameSelect" bind:value={selectedGame}>
 			<option value={null}>Please select a game</option>
-			{#each games as game}
-				<option value={game}>{game.title}</option>
+			{#each allGames as game}
+				<option value={game}>
+					{game.title}{game.isCustom ? ' (Custom)' : ''}
+				</option>
 			{/each}
 		</select>
+	</div>
+
+	<!-- Upload custom game button -->
+	<div class="upload-section">
+		<AugmentedButton
+			text={uploading ? 'Uploading...' : 'Upload Custom Game'}
+			onclick={handleUploadClick}
+			disabled={uploading}
+		/>
+		{#if selectedGame?.isCustom}
+			<AugmentedButton text="Remove Custom Game" onclick={handleRemoveCustomGame} />
+		{/if}
 	</div>
 
 	{#if savedGameExists && saveMetadata}
@@ -145,6 +254,16 @@
 
 	select {
 		width: 100%;
+	}
+
+	.upload-section {
+		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+		padding: 0.5rem 0;
+		border-top: 1px solid rgba(0, 255, 255, 0.2);
+		border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+		margin: 0.5rem 0;
 	}
 
 	.saved-game-panel {
