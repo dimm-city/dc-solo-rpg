@@ -9,6 +9,7 @@
 	import GameOver from './GameOver.svelte';
 	import JournalEntry from './JournalEntry.svelte';
 	import SuccessCheck from './SuccessCheck.svelte';
+	import InitialDamageRoll from './InitialDamageRoll.svelte';
 	import FinalDamageRoll from './FinalDamageRoll.svelte';
 	import RollForTasks from './RollForTasks.svelte';
 	import DrawCard from './DrawCard.svelte';
@@ -31,6 +32,8 @@
 		applyPendingDiceRoll,
 		applyPendingTaskRoll,
 		applyPendingSuccessCheck,
+		performInitialDamageRoll,
+		applyPendingInitialDamageRoll,
 		applyPendingFinalDamageRoll,
 		confirmFailureCheck,
 		successCheck,
@@ -50,6 +53,54 @@
 
 	const currentScreen = $derived(gameState.state);
 	const TRANSITION_DURATION = 300;
+
+	// Contextual background text for each screen
+	const contextText = $derived.by(() => {
+		switch (currentScreen) {
+			case 'initialDamageRoll':
+				return null; // InitialDamageRoll component has its own styled text
+			case 'rollForTasks':
+				return {
+					title: rollTasksRolled ? `Draw ${gameState.cardsToDraw} Card${gameState.cardsToDraw !== 1 ? 's' : ''}` : 'Roll for Tasks',
+					description: rollTasksRolled
+						? 'Your fate has been determined. Proceed to draw your cards.'
+						: 'Roll the dice to determine how many challenges you must face this round.',
+					showStats: true
+				};
+			case 'drawCard':
+				return null; // No background text for card drawing
+			case 'failureCheck':
+				return {
+					title: 'Damage Check',
+					description: 'An odd card demands a price. Roll to see how much damage you take.',
+					showStats: true
+				};
+			case 'successCheck':
+				return {
+					title: 'Success Check',
+					description: 'The Ace of Hearts has appeared. Roll to remove a token from your countdown.',
+					showStats: true
+				};
+			case 'finalDamageRoll':
+				return {
+					title: 'The Final Test',
+					description: 'You\'ve completed the countdown, but salvation comes with one final risk. Roll one last time to see if you truly escape...',
+					showStats: true
+				};
+			case 'startRound':
+				return {
+					title: `Round ${gameState.round}`,
+					description: 'A new chapter begins. Prepare yourself for what lies ahead.',
+					showStats: true
+				};
+			case 'log':
+				return null; // No background text for journaling
+			case 'finalLog':
+				return null; // No background text for final journal entry
+			default:
+				return null;
+		}
+	});
 
 	// RollForTasks button state
 	let rollTasksRolled = $state(false);
@@ -197,6 +248,41 @@
 			: 'Roll Final Damage'
 	);
 
+	// InitialDamageRoll button state
+	let initialDamageRolling = $state(false);
+	let initialDamageResult = $state();
+
+	$effect(() => {
+		if (currentScreen === 'initialDamageRoll') {
+			initialDamageResult = undefined;
+			initialDamageRolling = false;
+		}
+	});
+
+	async function handleInitialDamageRoll() {
+		if (initialDamageRolling || initialDamageResult !== undefined) return;
+		if (currentScreen !== 'initialDamageRoll') return;
+
+		initialDamageRolling = true;
+		const rollResult = Math.floor(Math.random() * 6) + 1;
+		initialDamageResult = rollResult;
+
+		try {
+			// Store pending updates
+			performInitialDamageRoll(rollResult);
+			// Roll dice and wait for animation to complete
+			await rollDice(rollResult);
+			// Apply pending initial damage roll after animation completes
+			applyPendingInitialDamageRoll();
+		} finally {
+			initialDamageRolling = false;
+		}
+	}
+
+	const initialDamageButtonText = $derived(
+		initialDamageResult ? 'Continue to Round 1' : 'Roll for Initial Damage'
+	);
+
 	// DrawCard button state
 	let drawCardRef = $state();
 
@@ -338,7 +424,12 @@
 		// Trigger the appropriate action based on the current screen
 		switch (currentScreen) {
 			case 'showIntro':
-				transitionTo('rollForTasks');
+				transitionTo('initialDamageRoll');
+				break;
+			case 'initialDamageRoll':
+				if (!initialDamageRolling && !initialDamageResult) {
+					handleInitialDamageRoll();
+				}
 				break;
 			case 'startRound':
 				transitionTo('rollForTasks');
@@ -420,10 +511,51 @@
 			<ButtonBar>
 				<ContinueButton
 					text="Begin Your Journey"
-					onclick={() => transitionTo('rollForTasks')}
+					onclick={() => transitionTo('initialDamageRoll')}
 					testid="story-continue-button"
 				/>
 			</ButtonBar>
+		</div>
+	</div>
+{:else if currentScreen == 'initialDamageRoll'}
+	<div class="game-screen dc-game-bg">
+		<!-- UI Content Layer -->
+		<div class="ui-content-layer">
+			<div class="status-display-area dc-fade-in" data-testid="status-display">
+				<StatusDisplay onHelpClick={handleHelpClick} onExitClick={handleExitClick} />
+			</div>
+			<div class="main-screen-area dc-table-bg" onclick={handleScreenClick}>
+				<!-- Background contextual text -->
+				{#if contextText}
+					{#key currentScreen}
+						<div class="context-text-background" transition:fade={{ duration: 400 }}>
+							<h2 class="context-title">{contextText.title}</h2>
+							<p class="context-description">{contextText.description}</p>
+						</div>
+					{/key}
+				{/if}
+
+				<div
+					class="dc-fade-in dc-screen-container"
+					data-testid="screen-initialDamageRoll"
+					transition:fade={{ duration: TRANSITION_DURATION }}
+				>
+					<InitialDamageRoll />
+				</div>
+			</div>
+
+			<!-- Toolbar at bottom -->
+			<div class="dc-toolbar-area dc-fade-in">
+				<ButtonBar>
+					<ContinueButton
+						text={initialDamageButtonText}
+						onclick={handleInitialDamageRoll}
+						disabled={initialDamageRolling}
+						testid="initial-damage-button"
+					/>
+					<button class="toolbar-button" onclick={handleExitRequest}>Exit</button>
+				</ButtonBar>
+			</div>
 		</div>
 	</div>
 {:else if currentScreen == 'gameOver'}
@@ -443,9 +575,19 @@
 		<!-- UI Content Layer -->
 		<div class="ui-content-layer">
 			<div class="status-display-area dc-fade-in" data-testid="status-display">
-				<StatusDisplay />
+				<StatusDisplay onHelpClick={handleHelpClick} onExitClick={handleExitClick} />
 			</div>
 			<div class="main-screen-area dc-table-bg" onclick={handleScreenClick}>
+				<!-- Background contextual text -->
+				{#if contextText}
+					{#key currentScreen}
+						<div class="context-text-background" transition:fade={{ duration: 400 }}>
+							<h2 class="context-title">{contextText.title}</h2>
+							<p class="context-description">{contextText.description}</p>
+						</div>
+					{/key}
+				{/if}
+
 				{#key currentScreen}
 					{#if currentScreen == 'startRound'}
 						<div
@@ -453,7 +595,7 @@
 							data-testid="screen-startRound"
 							transition:fade={{ duration: TRANSITION_DURATION }}
 						>
-							<h4>Round {gameState.round}</h4>
+							<!-- Round text now shown in background -->
 						</div>
 					{:else if currentScreen == 'rollForTasks'}
 						<div
@@ -510,49 +652,7 @@
 				></div>
 
 				<div class="toolbar-left">
-					<button
-						class="toolbar-button exit-button"
-						onclick={handleExitClick}
-						aria-label="Exit game"
-					>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							width="24"
-							height="24"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							aria-hidden="true"
-						>
-							<path d="M18 6 6 18" />
-							<path d="m6 6 12 12" />
-						</svg>
-					</button>
-					<button
-						class="toolbar-button help-button"
-						onclick={handleHelpClick}
-						aria-label="Game help"
-					>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							width="24"
-							height="24"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							aria-hidden="true"
-						>
-							<circle cx="12" cy="12" r="10" />
-							<path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-							<path d="M12 17h.01" />
-						</svg>
-					</button>
+					<!-- Buttons moved to player-round bar in StatusDisplay -->
 				</div>
 				<div class="toolbar-center">
 					<!-- Action buttons will go here based on current screen -->
@@ -924,6 +1024,44 @@
 		box-sizing: border-box;
 		position: relative; /* Ensure content appears above neural background */
 		z-index: 1;
+	}
+
+	/* Background contextual text */
+	.context-text-background {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		text-align: center;
+		pointer-events: none;
+		user-select: none;
+		-webkit-user-select: none;
+		-moz-user-select: none;
+		z-index: 0;
+		max-width: 80%;
+		opacity: 0.15;
+	}
+
+	.context-title {
+		font-size: clamp(2.5rem, 8vw, 6rem);
+		font-weight: 900;
+		color: var(--color-neon-cyan);
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		margin: 0 0 1rem 0;
+		text-shadow:
+			0 0 30px rgba(0, 255, 255, 0.3),
+			0 0 60px rgba(0, 255, 255, 0.2);
+		font-family: 'Courier New', monospace;
+	}
+
+	.context-description {
+		font-size: clamp(1rem, 2.5vw, 1.5rem);
+		color: rgba(255, 255, 255, 0.6);
+		line-height: 1.6;
+		margin: 0;
+		max-width: 600px;
+		margin-inline: auto;
 	}
 
 	.dc-table-bg {

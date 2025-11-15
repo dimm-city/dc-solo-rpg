@@ -67,13 +67,8 @@ export function initializeGame(gameConfig, player, options = {}) {
 
 	}
 
-	// Apply initial damage roll (SRD digital enhancement)
-	// Game starts at 48-53 resources instead of 54
-	const applyInitialDamage = finalConfig.options?.initialDamage !== false;
-	const initialDamageRoll = applyInitialDamage ? Math.floor(Math.random() * 6) + 1 : 0;
-	const startingTower = 54 - initialDamageRoll;
-
 	// Initialize all game state in one operation
+	// Note: Initial damage roll is now interactive, applied after intro screen
 	Object.assign(gameState, {
 		config: finalConfig,
 		originalConfig: JSON.parse(JSON.stringify(finalConfig)), // Deep copy for restart
@@ -92,7 +87,7 @@ export function initializeGame(gameConfig, player, options = {}) {
 		aceOfHeartsRevealed,
 		gameOver: false,
 		win: false,
-		tower: startingTower,
+		tower: 54, // Always start at full health, damage applied interactively
 		bonus: aceOfHeartsRevealed ? 1 : 0,
 		log: [],
 		journalEntries: [],
@@ -101,14 +96,4 @@ export function initializeGame(gameConfig, player, options = {}) {
 		diceRoll: 0,
 		deck
 	});
-
-	// Log initial damage for player visibility
-	if (applyInitialDamage) {
-		gameState.log.push({
-			type: 'system',
-			message: `Initial setup: Lost ${initialDamageRoll} resources to instability`,
-			round: 0,
-			id: '0.0'
-		});
-	}
 }
