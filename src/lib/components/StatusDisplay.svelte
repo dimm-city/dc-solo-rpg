@@ -1170,134 +1170,135 @@
 		}
 	}
 
-	/* Mobile - Grid areas layout with dice in center */
+	/* Mobile - Simple 2x3 Grid Layout */
 	@media (max-width: 600px) {
 		.stats-grid {
-			/* Grid with 3 columns: left stats, center dice, right stats */
 			display: grid;
-			grid-template-columns: 1fr auto 1fr;
+			grid-template-columns: repeat(3, 1fr);
 			grid-template-rows: auto auto;
-			grid-template-areas:
-				'health dice luck'
-				'failure dice success';
 			gap: var(--space-xs);
+			width: 100%;
 		}
 
-		/* Position first column (Health + Failure) */
-		.stats-grid > div:first-of-type {
+		/* Reset all column positioning to auto-flow */
+		.stats-grid > div {
+			display: contents;
+		}
+
+		/* Row 1: Health, Dice, Bonus */
+		.health-stat {
 			grid-column: 1;
-			grid-row: 1 / 3;
-			display: flex;
-			flex-direction: column;
-			gap: var(--space-xs);
-			align-items: flex-end;
-		}
-
-		/* Position Dice Readout in center spanning both rows */
-		.stats-grid > div:nth-of-type(2) {
-			grid-column: 2;
-			grid-row: 1 / 3;
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			padding: 0 var(--space-xs);
+			grid-row: 1;
 		}
 
 		.dice-readout {
-			min-width: 70px;
-			min-height: 70px;
-			padding: var(--space-xs);
-			margin-top: 0;
+			grid-column: 2;
+			grid-row: 1;
 		}
 
-		.dice-label {
-			font-size: 0.6rem;
-			display: none;
-		}
-		.dice-value {
-			font-size: 1.25rem;
-			display: none;
+		.bonus-stat {
+			grid-column: 3;
+			grid-row: 1;
 		}
 
-		.pip {
-			width: 5px;
-			height: 5px;
-		}
-
-		.dice-pips {
-			min-width: 48px;
-			gap: 2.5px;
+		/* Row 2: Failure, Deck, Success */
+		.failure-stat {
+			grid-column: 1;
+			grid-row: 2;
 		}
 
 		.deck-readout {
-			min-width: 70px;
-			min-height: 70px;
-			padding: var(--space-xs);
-			margin-top: var(--space-xs);
+			grid-column: 2;
+			grid-row: 2;
 		}
 
-		.deck-label {
-			font-size: 0.6rem;
-			display: none;
-		}
-
-		/* Position third column (Bonus + Success) */
-		.stats-grid > div:last-of-type {
+		.success-stat {
 			grid-column: 3;
-			grid-row: 1 / 3;
-			display: flex;
-			flex-direction: column;
-			gap: var(--space-xs);
+			grid-row: 2;
 		}
 
+		/* Compact stat items for mobile */
 		.stat-item {
-			padding: var(--space-xs) var(--space-sm);
-			min-height: 44px;
-			gap: 4px;
-			min-width: 135px;
-			width: min-content;
+			padding: var(--space-xs);
+			min-height: auto;
+			gap: 2px;
+			min-width: auto;
+			width: 100%;
+			flex-direction: column;
+			align-items: center;
+		}
+
+		/* Dice and deck - compact vertical layout */
+		.dice-readout,
+		.deck-readout {
+			min-width: auto;
+			width: 100%;
+			min-height: auto;
+			padding: var(--space-xs);
+			gap: 2px;
+		}
+
+		.dice-label,
+		.deck-label {
+			font-size: 0.55rem;
+			text-align: center;
+		}
+
+		.dice-value {
+			font-size: 1rem;
+		}
+
+		.pip {
+			width: 4px;
+			height: 4px;
+		}
+
+		.dice-pips {
+			min-width: auto;
+			gap: 2px;
+			flex-wrap: wrap;
+			max-width: 40px;
 		}
 
 		.stat-label {
-			font-size: 0.75rem; /* 12px minimum for readability */
-			min-width: 50px;
-			letter-spacing: 0.1em;
-		}
-
-		.stat-value {
-			font-size: 0.85rem;
-			min-width: 40px;
-		}
-
-		.stat-value .current {
-			font-size: 1.85rem;
-		}
-
-		.stat-value .divider {
-			font-size: 0.65rem;
-		}
-
-		.stat-value .max {
 			font-size: 0.6rem;
-		}
-
-		/* Keep stat bars but make them smaller for mobile */
-		.stat-bar {
-			height: 4px; /* Reduce from 6px */
-			min-width: 30px; /* Reduce from 40px */
-			border-radius: 1px;
-		}
-
-		.stat-label {
-			font-size: 0.75rem; /* 12px minimum - keep text visible */
-			gap: 0.25rem;
 			min-width: auto;
 			letter-spacing: 0.05em;
+			gap: 2px;
+			text-align: center;
+			white-space: nowrap;
 		}
 
 		.stat-icon {
-			width: 16px;
-			height: 16px;
+			width: 12px;
+			height: 12px;
+		}
+
+		.stat-value {
+			font-size: 0.7rem;
+			min-width: auto;
+			text-align: center;
+		}
+
+		.stat-value .current {
+			font-size: 1.1rem;
+		}
+
+		.stat-value .divider {
+			font-size: 0.55rem;
+		}
+
+		.stat-value .max {
+			font-size: 0.55rem;
+		}
+
+		/* Compact stat bars for mobile */
+		.stat-bar {
+			height: 3px;
+			min-width: 100%;
+			width: 100%;
+			border-radius: 1px;
+			margin: 0;
 		}
 
 		/* Hide help icons on mobile */
@@ -1306,34 +1307,41 @@
 		}
 
 		.info-segment {
-			gap: var(--space-xs);
+			gap: 2px;
 		}
 
 		.info-segment:first-of-type {
-			flex-direction: column-reverse;
+			flex-direction: column;
+			align-items: flex-start;
 		}
+
 		.info-segment .label {
-			font-size: 0.75rem; /* 12px minimum */
+			font-size: 0.6rem;
 		}
 
 		.info-segment .value {
-			font-size: 0.875rem; /* 14px for better readability */
+			font-size: 0.7rem;
 		}
 
 		.player-round-bar {
-			padding: var(--space-sm);
-			gap: var(--space-xs);
-			grid-template-columns: auto 1fr auto 1fr auto;
+			padding: var(--space-xs) var(--space-sm);
+			gap: 4px;
+			grid-template-columns: auto 1fr auto;
+			font-size: 0.75rem;
 		}
 
 		.player-round-bar h5 {
-			font-size: 0.875rem; /* 14px minimum */
-			max-width: 150px;
-			max-height: 3.6em; /* ~3 lines */
+			font-size: 0.7rem;
+			max-width: 120px;
 			overflow: hidden;
-			text-wrap: balance;
-			line-height: 1.3; /* Slightly taller for readability */
+			text-overflow: ellipsis;
+			white-space: nowrap;
 			text-align: center;
+			margin: 0;
+		}
+
+		.info-segment:last-of-type {
+			display: none; /* Hide round counter on very small screens */
 		}
 
 		.status-bar-button {
@@ -1345,66 +1353,34 @@
 			height: 18px;
 		}
 
-		/* Mobile Puzzle Piece Interlocking - Horizontal only */
-		/* Health: Top-left - extends right to Failure */
-		.health-stat {
-			--aug-r-extend1: 20px;
-			--aug-r-inset1: 8px;
-
-			--aug-br: 12px; /* Slot ← receives Bonus's tab (desktop) OR Failure's tab (mobile) */
-			--aug-tl: 8px; /* Gentle endpoint */
-			--aug-bl: unset; /* Gentle terminus */
-			--aug-tr: unset; /* Visual anchor */
-
-			/* Icon toward center (right side) */
-			flex-direction: row-reverse;
-		}
-
-		/* Failure: Top-right - receives left from Health */
-		.failure-stat {
-			--aug-l-extend1: 20px;
-			--aug-l-inset1: 8px;
-			margin-inline-start: 0;
-			padding-inline-start: calc(var(--space-md) + var(--space-xs));
-
-			/* Icon toward center (right side) */
-			flex-direction: row-reverse;
-		}
-
-		/* Bonus: Bottom-left - extends right to Success */
-		.bonus-stat {
-			--aug-bl: 12px; /* Slot ← receives Bonus's tab (desktop) OR Failure's tab (mobile) */
-			--aug-tr: 8px; /* Gentle endpoint */
-			--aug-br: unset; /* Gentle terminus */
-			--aug-tl: unset; /* Visual anchor */
-			padding-inline-start: var(--space-sm);
-
-			/* Icon toward center (left side) - override desktop row-reverse */
-			flex-direction: row;
-		}
-
-		/* Success: Bottom-right - receives left from Bonus */
+		/* Reset augmented-ui settings for compact mobile layout */
+		.health-stat,
+		.failure-stat,
+		.bonus-stat,
 		.success-stat {
+			--aug-tl: 6px;
+			--aug-tr: 6px;
+			--aug-br: 6px;
+			--aug-bl: 6px;
+			--aug-l-extend1: 0;
+			--aug-l-inset1: 0;
+			--aug-r-extend1: 0;
+			--aug-r-inset1: 0;
 			margin-inline-start: 0;
-			padding-inline-start: calc(var(--space-md) + var(--space-xs));
-			--aug-tl: 12px; /* Slot ← receives Bonus's tab (desktop) OR Failure's tab (mobile) */
-			--aug-tr: 8px; /* Gentle endpoint */
-			--aug-br: unset; /* Gentle terminus */
-			--aug-bl: unset; /* Visual anchor */
-
-			/* Icon toward center (left side) - override desktop row-reverse */
-			flex-direction: row;
+			padding-inline-start: var(--space-xs);
+			flex-direction: column;
 		}
 
+		/* Compact token grid for mobile */
 		.token-grid {
 			grid-template-columns: repeat(5, 1fr);
-			gap: 2px;
-			padding: var(--space-xs);
+			gap: 1px;
+			padding: 2px;
 		}
 
 		.token-shape {
-			width: 12px;
-			height: 12px;
+			width: 10px;
+			height: 10px;
 		}
 	}
 
