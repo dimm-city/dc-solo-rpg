@@ -1,6 +1,7 @@
 <script>
 	import Game from '$lib/components/Game.svelte';
 	import { initializeGame } from '$lib/stores/gameInit.js';
+	import { gameState } from '$lib/stores/gameStore.svelte.js';
 	import { getAllDiceThemes } from '$lib/configuration/DiceThemes.js';
 	import { getCustomGame } from '$lib/stores/customGames.js';
 	import { onMount } from 'svelte';
@@ -34,8 +35,15 @@
 
 		gameConfig = customGame;
 
-		// Initialize game state
-		initializeGame(gameConfig, player);
+		// Only initialize if the game isn't already loaded (e.g., from resume)
+		const isAlreadyLoaded = gameState.config?.slug === slug &&
+		                        gameState.config?.loaded === true &&
+		                        gameState.config?.isCustom === true;
+
+		if (!isAlreadyLoaded) {
+			// Initialize game state
+			initializeGame(gameConfig, player);
+		}
 	});
 </script>
 
