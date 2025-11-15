@@ -17,7 +17,12 @@
 		markInstructionsShownInSession
 	} from '$lib/utils/instructionsStorage.js';
 	import { getCustomGames, addCustomGame, removeCustomGame } from '$lib/stores/customGames.js';
-	import { hasSavedGame, getSaveMetadata } from '$lib/stores/gameSave.js';
+	import {
+		hasSavedGame,
+		getSaveMetadata,
+		migrateFromLocalStorage,
+		clearLocalStorageSaves
+	} from '$lib/stores/indexedDBStorage.js';
 	import { resumeGame, deleteSavedGame } from '$lib/stores/gameActions.svelte.js';
 	import { gameState } from '$lib/stores/gameStore.svelte.js';
 
@@ -49,7 +54,22 @@
 	const availableDiceThemes = getAllDiceThemes();
 
 	// On mount, check if we should skip splash and go straight to content
-	onMount(() => {
+	onMount(async () => {
+		// Migrate localStorage saves to IndexedDB (one-time migration)
+		if (browser && !sessionStorage.getItem('migrationComplete')) {
+			try {
+				const migratedCount = await migrateFromLocalStorage();
+				if (migratedCount > 0) {
+					console.log(`Migrated ${migratedCount} saves from localStorage to IndexedDB`);
+					// Clear old localStorage saves after successful migration
+					await clearLocalStorageSaves();
+				}
+				sessionStorage.setItem('migrationComplete', 'true');
+			} catch (error) {
+				console.error('Migration failed:', error);
+			}
+		}
+
 		const splashAlreadyShown = sessionStorage.getItem('splashShown') === 'true';
 		if (splashAlreadyShown) {
 			// Splash already shown in this session, determine what to show
@@ -88,17 +108,17 @@
 		allGames = [...customGames, ...data.games].sort((a, b) => a.title.localeCompare(b.title));
 
 		// Check for saved games
-		updateSaveData();
+		await updateSaveData();
 	});
 
-	function updateSaveData() {
+	async function updateSaveData() {
 		const saveData = {};
-		allGames.forEach((game) => {
+		for (const game of allGames) {
 			const slug = game.slug || game.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'unknown';
-			if (hasSavedGame(slug)) {
-				saveData[slug] = getSaveMetadata(slug);
+			if (await hasSavedGame(slug)) {
+				saveData[slug] = await getSaveMetadata(slug);
 			}
-		});
+		}
 		gameSaveData = saveData;
 	}
 

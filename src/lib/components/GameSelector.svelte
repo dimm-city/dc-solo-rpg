@@ -1,6 +1,6 @@
 <script>
 	import AugmentedButton from './AugmentedButton.svelte';
-	import { hasSavedGame, getSaveMetadata } from '../stores/gameSave.js';
+	import { hasSavedGame, getSaveMetadata } from '../stores/indexedDBStorage.js';
 	import { resumeGame, deleteSavedGame } from '../stores/gameActions.svelte.js';
 	import {
 		getCustomGames,
@@ -42,12 +42,19 @@
 				selectedGame.slug ||
 				selectedGame.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') ||
 				'default';
-			savedGameExists = hasSavedGame(gameSlug);
-			if (savedGameExists) {
-				saveMetadata = getSaveMetadata(gameSlug);
-			} else {
-				saveMetadata = null;
-			}
+
+			// Check for saved game (async)
+			hasSavedGame(gameSlug).then((exists) => {
+				savedGameExists = exists;
+				if (exists) {
+					// Load metadata if save exists
+					getSaveMetadata(gameSlug).then((metadata) => {
+						saveMetadata = metadata;
+					});
+				} else {
+					saveMetadata = null;
+				}
+			});
 		} else {
 			savedGameExists = false;
 			saveMetadata = null;

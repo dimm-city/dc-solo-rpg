@@ -5,7 +5,7 @@
 import { gameState, transitionTo } from './gameStore.svelte.js';
 import { initializeGame } from './gameInit.js';
 import { logger } from '../utils/logger.js';
-import { saveGame, loadGame, clearSave, restoreGameState } from './gameSave.js';
+import { saveGame, loadGame, clearSave, restoreGameState } from './indexedDBStorage.js';
 
 /**
  * Mock services object for test compatibility
@@ -356,7 +356,7 @@ export function confirmFailureCheck() {
  * @param {string} journalEntry.text - Entry text
  * @param {string} [journalEntry.audioData] - Base64 encoded audio data (optional)
  */
-export function recordRound(journalEntry) {
+export async function recordRound(journalEntry) {
 	if (journalEntry == null || (journalEntry.text == null && journalEntry.audioData == null)) {
 		throw new Error('No journal entries provided for this round');
 	}
@@ -366,8 +366,8 @@ export function recordRound(journalEntry) {
 	journalEntry.dateRecorded = journalEntry.dateRecorded || new Date().toISOString();
 	gameState.journalEntries.push(journalEntry);
 
-	// Auto-save after recording journal entry
-	saveGame(gameState);
+	// Auto-save after recording journal entry (await to ensure save completes)
+	await saveGame(gameState);
 
 	// Determine and execute next action
 	if (!gameState.gameOver) {
