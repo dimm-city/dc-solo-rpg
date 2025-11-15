@@ -2,10 +2,14 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
+	import { browser } from '$app/environment';
 	import ConfirmModal from '$lib/components/ConfirmModal.svelte';
 	import OverlayModal from '$lib/components/OverlayModal.svelte';
+	import HelpModal from '$lib/components/HelpModal.svelte';
 	import Splash from '$lib/components/Splash.svelte';
 	import NeuralBackground from '$lib/components/NeuralBackground.svelte';
+	import { Difficulty } from '$lib/configuration/DifficultyLevels.js';
+	import { getAllDiceThemes } from '$lib/configuration/DiceThemes.js';
 	import {
 		hasSeenInstructions,
 		markInstructionsAsSeen,
@@ -24,6 +28,15 @@
 	let showModal = $state(false);
 	let showAboutModal = $state(false);
 	let showSettingsModal = $state(false);
+	let showHelpModal = $state(false);
+
+	// Settings state
+	let selectedDifficulty = $state(Difficulty.NORMAL);
+	let selectedDiceTheme = $state(null);
+	let saveStatus = $state('');
+
+	// Get actual dice themes from configuration
+	const availableDiceThemes = getAllDiceThemes();
 
 	// On mount, check if we should skip splash and go straight to content
 	onMount(() => {
@@ -38,6 +51,25 @@
 				showContent = true;
 			} else {
 				showInstructionsChoice = true;
+			}
+		}
+
+		// Load settings from localStorage
+		if (browser) {
+			const savedSettings = localStorage.getItem('gameSettings');
+			if (savedSettings) {
+				try {
+					const settings = JSON.parse(savedSettings);
+					selectedDifficulty = settings.difficulty || Difficulty.NORMAL;
+					selectedDiceTheme =
+						availableDiceThemes.find((t) => t.key === settings.diceTheme) || availableDiceThemes[0];
+				} catch (e) {
+					console.error('Failed to load settings:', e);
+					selectedDiceTheme = availableDiceThemes[0];
+				}
+			} else {
+				// Set defaults if no settings exist
+				selectedDiceTheme = availableDiceThemes[0];
 			}
 		}
 	});
@@ -110,9 +142,28 @@
 		showAboutModal = true;
 	}
 
+	function handleHelpClick(e) {
+		e.preventDefault();
+		showHelpModal = true;
+	}
+
 	function handleSettingsClick(e) {
 		e.preventDefault();
 		showSettingsModal = true;
+	}
+
+	function saveSettings() {
+		if (browser) {
+			const settings = {
+				difficulty: selectedDifficulty,
+				diceTheme: selectedDiceTheme?.key || 'default'
+			};
+			localStorage.setItem('gameSettings', JSON.stringify(settings));
+			saveStatus = 'saved';
+			setTimeout(() => {
+				saveStatus = '';
+			}, 2000);
+		}
 	}
 
 	// Game descriptions/subtitles for enhanced UI
@@ -215,7 +266,7 @@
 				<span class="version-text">DC-S-0.1.0</span>
 			</div>
 			<div class="header-buttons">
-				<button onclick={handleAboutClick} class="header-link" aria-label="About">
+				<button onclick={handleAboutClick} class="header-button" aria-label="About">
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						width="24"
@@ -232,7 +283,7 @@
 						<path d="M12 8h.01"></path>
 					</svg>
 				</button>
-				<a href="/how-to" class="header-link" aria-label="How to Play">
+				<button onclick={handleHelpClick} class="header-button" aria-label="Help">
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						width="24"
@@ -248,8 +299,8 @@
 						<path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
 						<path d="M12 17h.01"></path>
 					</svg>
-				</a>
-				<button onclick={handleSettingsClick} class="header-link" aria-label="Settings">
+				</button>
+				<button onclick={handleSettingsClick} class="header-button" aria-label="Settings">
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						width="24"
@@ -260,13 +311,12 @@
 						stroke-width="2"
 						stroke-linecap="round"
 						stroke-linejoin="round"
-						class="lucide lucide-settings2-icon lucide-settings-2"
-						><path d="M14 17H5" /><path d="M19 7h-9" /><circle cx="17" cy="17" r="3" /><circle
-							cx="7"
-							cy="7"
-							r="3"
-						/></svg
 					>
+						<path d="M14 17H5" />
+						<path d="M19 7h-9" />
+						<circle cx="17" cy="17" r="3" />
+						<circle cx="7" cy="7" r="3" />
+					</svg>
 				</button>
 			</div>
 		</div>
@@ -336,42 +386,99 @@
 
 <!-- Settings Modal -->
 <OverlayModal isVisible={showSettingsModal} zIndex={1000} fixedHeight="70dvh" animateHeight={true}>
-	<div class="info-modal-content">
+	<div class="settings-modal-content">
 		<h2 class="info-modal-title">Game Settings</h2>
-		<div class="info-modal-body">
-			<p>
-				Configure your global game preferences including difficulty level and dice theme. These
-				settings apply to all games you play.
+		<div class="settings-modal-body">
+			<p class="settings-intro">
+				Configure your global game preferences. These settings will apply to all games you play.
 			</p>
-			<button
-				class="settings-link-button"
-				onclick={() => {
-					showSettingsModal = false;
-					goto('/settings');
-				}}
-			>
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					width="20"
-					height="20"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-				>
-					<circle cx="12" cy="12" r="3" />
-					<path
-						d="M12 1v6m0 6v6M5.6 5.6l4.2 4.2m4.4 4.4l4.2 4.2M1 12h6m6 0h6M5.6 18.4l4.2-4.2m4.4-4.4l4.2-4.2"
-					/>
-				</svg>
-				<span>Open Settings Page</span>
-			</button>
+
+			<div class="settings-form">
+				<div class="form-group">
+					<label for="diceSelect">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							width="20"
+							height="20"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+						>
+							<rect x="3" y="3" width="18" height="18" rx="2" />
+							<circle cx="8.5" cy="8.5" r="1.5" />
+							<circle cx="15.5" cy="15.5" r="1.5" />
+						</svg>
+						Dice Theme
+					</label>
+					<p class="field-description">Choose the visual style for your 3D dice.</p>
+					<select id="diceSelect" class="settings-select" bind:value={selectedDiceTheme}>
+						{#each availableDiceThemes as theme (theme.key)}
+							<option value={theme}>{theme.name}</option>
+						{/each}
+					</select>
+				</div>
+
+				<div class="form-group">
+					<label for="difficulty">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							width="20"
+							height="20"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+						>
+							<path
+								d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+							/>
+							<line x1="12" y1="9" x2="12" y2="13" />
+							<line x1="12" y1="17" x2="12.01" y2="17" />
+						</svg>
+						Difficulty Level
+					</label>
+					<p class="field-description">
+						Adjust the challenge level. Higher difficulty means more tower pulls.
+					</p>
+					<select id="difficulty" class="settings-select" bind:value={selectedDifficulty}>
+						{#each Difficulty.getEntries() as entry (entry.value)}
+							<option value={entry.value}>{entry.key?.replaceAll('_', ' ')}</option>
+						{/each}
+					</select>
+				</div>
+
+				<div class="button-group">
+					<button class="settings-save-button" onclick={saveSettings}>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							width="20"
+							height="20"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+						>
+							<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+							<polyline points="17 21 17 13 7 13 7 21" />
+							<polyline points="7 3 7 8 15 8" />
+						</svg>
+						<span>Save Settings</span>
+					</button>
+					{#if saveStatus === 'saved'}
+						<div class="save-status">Settings saved!</div>
+					{/if}
+				</div>
+			</div>
 		</div>
 		<button class="info-modal-button" onclick={() => (showSettingsModal = false)}>
 			<span>Close</span>
 		</button>
 	</div>
 </OverlayModal>
+
+<!-- Help Modal -->
+<HelpModal isOpen={showHelpModal} onClose={() => (showHelpModal = false)} />
 
 <style>
 	:global(body) {
@@ -432,32 +539,36 @@
 		align-items: center;
 	}
 
-	.header-link {
+	.header-button {
 		color: var(--color-brand-yellow);
-		text-decoration: none;
+		background: none;
+		border: none;
 		padding: var(--space-sm);
+		cursor: pointer;
 		transition: all var(--transition-fast);
 		display: inline-flex;
 		align-items: center;
+		justify-content: center;
 		border-radius: 50%;
 	}
 
-	.header-link svg {
+	.header-button svg {
 		width: 28px;
 		height: 28px;
 		filter: drop-shadow(0 0 4px var(--color-brand-yellow));
+		transition: all var(--transition-fast);
 	}
 
-	.header-link:hover {
+	.header-button:hover {
 		color: var(--color-neon-cyan);
 		transform: scale(1.1);
 	}
 
-	.header-link:hover svg {
+	.header-button:hover svg {
 		filter: drop-shadow(0 0 8px var(--color-neon-cyan));
 	}
 
-	.header-link:active {
+	.header-button:active {
 		transform: scale(1.05);
 	}
 
@@ -1146,6 +1257,196 @@
 		transform: translateY(0);
 	}
 
+	/* ============================================
+	   SETTINGS MODAL STYLING
+	   ============================================ */
+
+	.settings-modal-content {
+		width: 100%;
+		height: 100%;
+		padding: clamp(var(--space-lg), 3vw, var(--space-xl));
+		position: relative;
+		z-index: 1;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-lg);
+	}
+
+	.settings-modal-body {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-lg);
+		overflow-y: auto;
+	}
+
+	.settings-intro {
+		font-family: var(--font-body, 'Inter', sans-serif);
+		font-size: var(--text-base);
+		line-height: 1.6;
+		color: rgba(255, 255, 255, 0.85);
+		margin: 0;
+		text-align: center;
+		max-width: 90%;
+		margin-inline: auto;
+	}
+
+	.settings-form {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xl);
+	}
+
+	.form-group {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+	}
+
+	.form-group label {
+		font-family: var(--font-display, 'Orbitron', monospace);
+		font-size: var(--text-sm);
+		font-weight: 700;
+		color: var(--color-brand-yellow);
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+		margin: 0;
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+	}
+
+	.form-group label svg {
+		flex-shrink: 0;
+		filter: drop-shadow(0 0 6px var(--color-brand-yellow));
+	}
+
+	.field-description {
+		font-size: var(--text-sm);
+		color: rgba(255, 255, 255, 0.6);
+		margin: 0;
+		line-height: 1.5;
+	}
+
+	.settings-select {
+		width: 100%;
+		padding: var(--space-md) var(--space-lg);
+		padding-right: 48px;
+		font-family: var(--font-body, 'Inter', sans-serif);
+		font-size: var(--text-base);
+		font-weight: 600;
+		color: var(--color-text-primary);
+		background: linear-gradient(135deg, rgba(0, 20, 40, 0.6), rgba(10, 10, 30, 0.8));
+		border: 2px solid var(--color-neon-cyan);
+		border-radius: 4px;
+		cursor: pointer;
+		appearance: none;
+		outline: none;
+		text-transform: capitalize;
+		letter-spacing: 0.05em;
+		transition: all 0.3s ease;
+		background-image:
+			linear-gradient(135deg, rgba(0, 20, 40, 0.6), rgba(10, 10, 30, 0.8)),
+			url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2300FFFF' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+		background-repeat: no-repeat, no-repeat;
+		background-position:
+			0 0,
+			right var(--space-md) center;
+		box-shadow:
+			0 0 15px rgba(0, 255, 255, 0.25),
+			inset 0 0 10px rgba(0, 255, 255, 0.05);
+	}
+
+	.settings-select:hover {
+		border-color: var(--color-cyber-magenta);
+		box-shadow:
+			0 0 20px rgba(217, 70, 239, 0.3),
+			inset 0 0 15px rgba(217, 70, 239, 0.08);
+	}
+
+	.settings-select:focus {
+		border-color: var(--color-brand-yellow);
+		outline: 2px solid var(--color-brand-yellow);
+		outline-offset: 2px;
+		box-shadow:
+			0 0 25px rgba(255, 215, 0, 0.4),
+			inset 0 0 15px rgba(255, 215, 0, 0.1);
+	}
+
+	.settings-select option {
+		background: var(--color-bg-primary);
+		color: var(--color-text-primary);
+		padding: var(--space-sm);
+	}
+
+	.button-group {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-md);
+		align-items: center;
+		margin-top: var(--space-md);
+	}
+
+	.settings-save-button {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: var(--space-sm);
+		padding: var(--space-md) var(--space-xl);
+		font-family: var(--font-display, 'Orbitron', monospace);
+		font-size: var(--text-base);
+		font-weight: 700;
+		color: var(--color-brand-yellow);
+		background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(0, 255, 255, 0.1));
+		border: 2px solid var(--color-brand-yellow);
+		border-radius: 4px;
+		cursor: pointer;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		transition: all 0.2s ease;
+		box-shadow:
+			0 0 20px rgba(255, 215, 0, 0.3),
+			inset 0 0 10px rgba(255, 215, 0, 0.05);
+	}
+
+	.settings-save-button:hover {
+		color: var(--color-neon-cyan);
+		border-color: var(--color-neon-cyan);
+		background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(255, 215, 0, 0.15));
+		transform: translateY(-2px);
+		box-shadow:
+			0 0 30px rgba(0, 255, 255, 0.5),
+			inset 0 0 15px rgba(0, 255, 255, 0.1);
+	}
+
+	.settings-save-button:active {
+		transform: translateY(0);
+	}
+
+	.settings-save-button svg {
+		filter: drop-shadow(0 0 6px currentColor);
+	}
+
+	.save-status {
+		font-family: var(--font-display, 'Orbitron', monospace);
+		font-size: var(--text-sm);
+		color: var(--color-toxic-green);
+		text-shadow: 0 0 8px rgba(0, 255, 170, 0.8);
+		animation: fadeInOut 2s ease-in-out;
+	}
+
+	@keyframes fadeInOut {
+		0%,
+		100% {
+			opacity: 0;
+		}
+		10%,
+		90% {
+			opacity: 1;
+		}
+	}
+
 	.info-modal-button {
 		display: inline-flex;
 		align-items: center;
@@ -1183,8 +1484,9 @@
 
 	/* Mobile responsive for info modals */
 	@media (max-width: 600px) {
-		.info-modal-content {
-			padding: var(--space-lg);
+		.info-modal-content,
+		.settings-modal-content {
+			padding: var(--space-md);
 		}
 
 		.info-modal-title {
@@ -1195,10 +1497,33 @@
 			font-size: var(--text-sm);
 		}
 
+		.settings-intro {
+			font-size: var(--text-sm);
+		}
+
+		.form-group label {
+			font-size: var(--text-xs);
+		}
+
+		.field-description {
+			font-size: var(--text-xs);
+		}
+
+		.settings-select {
+			font-size: var(--text-sm);
+			padding: var(--space-sm) var(--space-md);
+			padding-right: 40px;
+		}
+
 		.info-modal-button,
-		.settings-link-button {
+		.settings-link-button,
+		.settings-save-button {
 			width: 100%;
 			padding: var(--space-md);
+		}
+
+		.settings-save-button {
+			font-size: var(--text-sm);
 		}
 	}
 
@@ -1225,8 +1550,16 @@
 		}
 
 		.info-modal-button:hover,
-		.settings-link-button:hover {
+		.settings-link-button:hover,
+		.settings-save-button:hover,
+		.settings-save-button:active,
+		.header-button:hover,
+		.header-button:active {
 			transform: none !important;
+		}
+
+		.save-status {
+			animation: none !important;
 		}
 	}
 </style>
