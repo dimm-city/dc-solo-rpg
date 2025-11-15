@@ -124,6 +124,9 @@ describe('gameActions - Core Game Mechanics', () => {
 			// Deck should not contain Ace of Hearts
 			const hasAceOfHearts = gameState.deck.some((c) => c.card === 'A' && c.suit === 'hearts');
 			expect(hasAceOfHearts).toBe(false);
+
+			// Tokens should be set to 0 (success checks already passed)
+			expect(gameState.tokens).toBe(0);
 		});
 
 		it('should reset all game state when starting', () => {
