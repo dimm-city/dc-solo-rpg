@@ -75,6 +75,7 @@
 			'text-entry-area'
 			'button-area';
 		box-sizing: border-box;
+		overflow: hidden; /* Prevent scrollbar on container */
 	}
 
 	.button-area {
