@@ -128,12 +128,15 @@
 		background: transparent;
 
 		width: stretch;
-		max-width: 90vw;
+		max-width: min(90vw, 1200px);
 		height: calc(100vh - 60px - var(--space-lg) * 2);
 
 		/* Scrollable content within modal */
 		overflow-y: auto;
 		overflow-x: hidden;
+
+		/* Better scrolling on mobile */
+		-webkit-overflow-scrolling: touch;
 	}
 
 	/* Fog overlay container */
@@ -213,10 +216,36 @@
 		}
 	}
 
+	/* Improved responsive behavior */
+	@media (max-width: 900px) {
+		.modal-wrapper {
+			max-width: 95vw;
+			height: 80dvh;
+		}
+	}
+
 	@media (max-width: 600px) {
 		.modal-wrapper {
 			width: 100%;
-			min-height: 300px;
+			max-width: 100vw;
+			min-height: 60dvh;
+			height: 85dvh;
+			max-height: calc(100dvh - var(--space-md) * 2);
+		}
+	}
+
+	@media (max-width: 400px) {
+		.modal-wrapper {
+			height: 90dvh;
+			max-height: calc(100dvh - var(--space-sm) * 2);
+		}
+	}
+
+	/* Landscape mobile optimization */
+	@media (max-height: 600px) and (orientation: landscape) {
+		.modal-wrapper {
+			height: 95dvh;
+			max-height: calc(100dvh - var(--space-sm));
 		}
 	}
 </style>

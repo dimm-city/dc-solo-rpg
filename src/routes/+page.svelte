@@ -426,7 +426,7 @@
 			</div>
 			<div class="header-buttons">
 				<button
-					class="header-link upload-button"
+					class="header-button upload-button"
 					onclick={handleUploadClick}
 					disabled={uploading}
 					aria-label="Upload Custom Game"
@@ -863,16 +863,22 @@
 		transform: scale(1.05);
 	}
 
-	.header-link:disabled {
+	.header-button:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
+		transform: none;
 	}
 
-	.upload-button:hover {
+	.header-button:disabled:hover {
+		color: var(--color-brand-yellow);
+		transform: none;
+	}
+
+	.upload-button:hover:not(:disabled) {
 		color: var(--color-cyber-magenta);
 	}
 
-	.upload-button:hover svg {
+	.upload-button:hover:not(:disabled) svg {
 		filter: drop-shadow(0 0 8px var(--color-cyber-magenta));
 	}
 
@@ -1827,6 +1833,128 @@
 
 	.info-modal-button:active {
 		transform: translateY(0);
+	}
+
+	/* ============================================
+	   MODAL RESPONSIVE DESIGN
+	   ============================================ */
+
+	/* Tablet breakpoint */
+	@media (max-width: 900px) {
+		.info-modal-content,
+		.settings-modal-content {
+			padding: var(--space-lg);
+		}
+
+		.info-modal-title {
+			font-size: var(--text-xl);
+		}
+
+		.settings-modal-body {
+			gap: var(--space-md);
+		}
+
+		.settings-form {
+			gap: var(--space-lg);
+		}
+	}
+
+	/* Mobile breakpoint */
+	@media (max-width: 600px) {
+		.info-modal-content,
+		.settings-modal-content {
+			padding: var(--space-md);
+			gap: var(--space-md);
+		}
+
+		.info-modal-title {
+			font-size: var(--text-lg);
+			padding-bottom: var(--space-sm);
+			margin-bottom: var(--space-sm);
+		}
+
+		.info-modal-body {
+			font-size: var(--text-sm);
+			gap: var(--space-sm);
+		}
+
+		.attribution {
+			font-size: var(--text-xs);
+		}
+
+		.settings-intro {
+			font-size: var(--text-sm);
+			max-width: 100%;
+		}
+
+		.settings-form {
+			gap: var(--space-md);
+		}
+
+		.form-group label {
+			font-size: var(--text-xs);
+		}
+
+		.field-description {
+			font-size: var(--text-xs);
+		}
+
+		.settings-select {
+			padding: var(--space-sm) var(--space-md);
+			padding-right: 40px;
+			font-size: var(--text-sm);
+		}
+
+		.button-group {
+			width: 100%;
+		}
+
+		.settings-save-button {
+			width: 100%;
+			padding: var(--space-md);
+			font-size: var(--text-sm);
+		}
+
+		.info-modal-button {
+			align-self: stretch;
+			padding: var(--space-md);
+			font-size: var(--text-sm);
+		}
+
+		.settings-link-button {
+			width: 100%;
+			padding: var(--space-md);
+		}
+	}
+
+	/* Extra small mobile */
+	@media (max-width: 400px) {
+		.info-modal-content,
+		.settings-modal-content {
+			padding: var(--space-sm);
+		}
+
+		.info-modal-title {
+			font-size: var(--text-base);
+		}
+
+		.info-modal-body {
+			font-size: var(--text-xs);
+		}
+
+		.form-group label svg {
+			width: 16px;
+			height: 16px;
+		}
+	}
+
+	/* Accessibility - Reduced motion */
+	@media (prefers-reduced-motion: reduce) {
+		.info-modal-button:hover,
+		.settings-link-button:hover,
+		.settings-save-button:hover {
+			transform: none;
+		}
 	}
 
 	/* Mobile responsive for info modals */
