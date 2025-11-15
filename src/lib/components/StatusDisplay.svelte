@@ -2,20 +2,25 @@
 	import { gameState } from '../stores/gameStore.svelte.js';
 	import { innerWidth } from 'svelte/reactivity/window';
 
-	const successPercent = $derived(10 - gameState.tokens);
+	let { onHelpClick, onExitClick } = $props();
+
+	const tokensRemaining = $derived(gameState.tokens);
 	const bonusPercent = $derived(gameState.bonus + (gameState.pendingUpdates.bonusChange || 0));
-	const failurePercent = $derived(gameState.kingsRevealed + (gameState.pendingUpdates.kingsChange || 0));
+	const failurePercent = $derived(
+		gameState.kingsRevealed + (gameState.pendingUpdates.kingsChange || 0)
+	);
 
 	// Cards progress tracking
 	const cardsDrawn = $derived(gameState.cardsDrawn || 0);
 	const totalCards = 52;
 	const progressPercent = $derived((cardsDrawn / totalCards) * 100);
+	const cardsRemaining = $derived(gameState.deck?.length || 0);
 
-	// Token visualization - create array of token states
+	// Token visualization - create array of token states (count down from 10 to 0)
 	const tokenStates = $derived(
 		Array.from({ length: 10 }, (_, i) => ({
 			index: i,
-			active: i < successPercent
+			active: i < tokensRemaining
 		}))
 	);
 
@@ -48,8 +53,27 @@
 	<div
 		class="player-round-bar slide-down"
 		data-augmented-ui="tl-clip-x tr-2-clip-x br-clip bl-2-clip-x border"
-		style="animation-delay: 0.3s"
+		style="animation-delay: 0s; animation-duration: 0.6s"
 	>
+		<!-- Exit Button on far left -->
+		<button class="status-bar-button exit-button" onclick={onExitClick} aria-label="Exit game">
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				width="20"
+				height="20"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				aria-hidden="true"
+			>
+				<path d="M18 6 6 18" />
+				<path d="m6 6 12 12" />
+			</svg>
+		</button>
+
 		<div class="info-segment">
 			<span class="label">PLAYER</span>
 			<span class="value">{gameState.player.name.toUpperCase()}</span>
@@ -63,6 +87,26 @@
 				<span class="label">{gameState.config?.labels.statusDisplayRoundText ?? 'ROUND'}</span>
 			</div>
 		</div>
+
+		<!-- Help Button on far right -->
+		<button class="status-bar-button help-button" onclick={onHelpClick} aria-label="Game help">
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				width="20"
+				height="20"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				aria-hidden="true"
+			>
+				<circle cx="12" cy="12" r="10" />
+				<path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+				<path d="M12 17h.01" />
+			</svg>
+		</button>
 	</div>
 
 	<!-- Stats Grid -->
@@ -71,7 +115,7 @@
 			<div
 				class="stat-item health-stat slide-down"
 				data-augmented-ui={healthAugmentedUI}
-				style="animation-delay: 0.2s"
+				style="animation-delay: 0.1s; animation-duration: 0.5s"
 			>
 				<div class="stat-label">
 					<svg
@@ -140,7 +184,7 @@
 			<div
 				class="dice-readout slide-down"
 				data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
-				style="animation-delay: 1.25s"
+				style="animation-delay: 0.3s; animation-duration: 0.5s"
 			>
 				<div class="dice-label">
 					<svg
@@ -168,6 +212,37 @@
 				<div class="dice-pips">
 					{#each Array(gameState.diceRoll) as _, i (i)}
 						<span class="pip"></span>
+					{/each}
+				</div>
+			</div>
+
+			<div
+				class="deck-readout slide-down"
+				data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
+				style="animation-delay: 0.4s; animation-duration: 0.5s"
+			>
+				<div class="deck-label">
+					<svg
+						class="deck-icon"
+						xmlns="http://www.w3.org/2000/svg"
+						width="14"
+						height="14"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<path d="M12 2v20M2 12h20" />
+						<rect x="4" y="4" width="16" height="16" rx="2" />
+					</svg>
+					CARDS LEFT
+				</div>
+				<div class="deck-value">{cardsRemaining}</div>
+				<div class="deck-stack">
+					{#each Array(Math.min(cardsRemaining, 5)) as _, i (i)}
+						<div class="card-layer" style="--layer-index: {i}"></div>
 					{/each}
 				</div>
 			</div>
@@ -209,7 +284,7 @@
 			<div
 				class="stat-item success-stat slide-down"
 				data-augmented-ui={successAugmentedUI}
-				style="animation-delay: 0.5s"
+				style="animation-delay: 0.6s; animation-duration: 0.5s"
 			>
 				<div class="stat-label">
 					<svg
@@ -254,7 +329,7 @@
 		<div
 			class="progress-tracker slide-down"
 			data-augmented-ui={successAugmentedUI}
-			style="animation-delay: 0.5s"
+			style="animation-delay: 0.7s; animation-duration: 0.5s"
 		>
 			<div class="progress-bar">
 				<div class="progress-fill" style="width: {progressPercent}%"></div>
@@ -342,10 +417,11 @@
 		--aug-br: 14px;
 		--aug-bl: 14px;
 
-		/* Layout */
+		/* Layout with buttons on both ends */
 		display: grid;
 		align-items: center;
-		grid-template-columns: 1fr auto 1fr;
+		grid-template-columns: auto 1fr auto 1fr auto;
+		gap: var(--space-sm);
 		padding-inline: var(--space-md);
 		padding-block: var(--space-sm);
 		position: relative;
@@ -369,6 +445,35 @@
 			inset 0 0 50px rgba(0, 255, 255, 0.1);
 
 		/* Subtle animation - removed for reduced visual noise */
+	}
+
+	/* Status Bar Buttons */
+	.status-bar-button {
+		background: transparent;
+		border: none;
+		color: #00eeff;
+		cursor: pointer;
+		padding: var(--space-xs);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 4px;
+		transition: all 0.2s ease;
+		position: relative;
+	}
+
+	.status-bar-button:hover {
+		color: #fff;
+		background: rgba(0, 238, 255, 0.1);
+		box-shadow: 0 0 10px rgba(0, 238, 255, 0.3);
+	}
+
+	.status-bar-button:active {
+		transform: scale(0.95);
+	}
+
+	.status-bar-button svg {
+		filter: drop-shadow(0 0 4px currentColor);
 	}
 
 	@keyframes bar-glow-pulse {
@@ -397,13 +502,20 @@
 		text-transform: uppercase;
 	}
 
+	.info-segment:first-of-type {
+		display: flex;
+		flex-direction: column;
+		gap: 0;
+	}
+
 	.info-segment .label {
 		font-size: var(--text-xs);
-		font-weight: bold;
-		color: #00eeff;
+		font-weight: 900; /* Increased weight for better readability */
+		color: #00ffff; /* Pure cyan for better contrast */
 		text-shadow:
-			0 0 10px rgba(0, 238, 255, 1),
-			0 0 20px rgba(0, 238, 255, 0.6);
+			0 0 12px rgba(0, 255, 255, 1),
+			0 0 24px rgba(0, 255, 255, 0.7),
+			0 1px 2px rgba(0, 0, 0, 0.9); /* Dark outline for contrast */
 		letter-spacing: 0.1em;
 	}
 
@@ -453,11 +565,11 @@
 		flex-direction: row;
 		align-items: center;
 		justify-content: space-between;
-		gap: var(--space-xs);
-		padding: var(--space-xs) var(--space-sm);
+		gap: 0.375rem;
+		padding: 0.375rem 0.625rem;
 		position: relative;
 		overflow: visible;
-		min-height: 48px;
+		min-height: 36px;
 
 		/* Darker Glassmorphism Background */
 		background: linear-gradient(135deg, rgba(10, 10, 20, 0.7), rgba(15, 15, 25, 0.6));
@@ -479,11 +591,11 @@
 		--aug-r-extend1: 30px;
 		--aug-r-inset1: 12px;
 
-		/* Enhanced Glow - animation removed */
+		/* PRIMARY importance - Enhanced Glow */
 		box-shadow:
-			0 0 20px rgba(0, 255, 255, 0.6),
-			0 0 40px rgba(0, 255, 255, 0.3),
-			inset 0 0 15px rgba(0, 255, 255, 0.15),
+			0 0 20px rgba(0, 255, 255, 0.5),
+			0 0 40px rgba(0, 255, 255, 0.25),
+			inset 0 0 15px rgba(0, 255, 255, 0.12),
 			inset 0 1px 0 rgba(255, 255, 255, 0.05);
 	}
 
@@ -517,18 +629,18 @@
 		--aug-l-extend1: 20px;
 		--aug-l-inset1: 10px;
 		margin-inline-start: -28px;
-		padding-inline-start: var(--space-xl);
-		/* Enhanced Glow - animation removed */
+		padding-inline-start: 1.25rem;
+		/* SECONDARY importance - Reduced Glow */
 		box-shadow:
-			0 0 20px rgba(217, 70, 239, 0.6),
-			0 0 40px rgba(217, 70, 239, 0.3),
-			inset 0 0 15px rgba(217, 70, 239, 0.15),
+			0 0 12px rgba(217, 70, 239, 0.4),
+			0 0 24px rgba(217, 70, 239, 0.2),
+			inset 0 0 10px rgba(217, 70, 239, 0.1),
 			inset 0 1px 0 rgba(255, 255, 255, 0.05);
 	}
 
 	.failure-stat.slide-down {
-		animation-delay: 0.35s;
-		animation-duration: 1s;
+		animation-delay: 0.2s; /* Left column continues */
+		animation-duration: 0.8s; /* Slower for complex animation */
 		animation-timing-function: cubic-bezier(0.075, 0.82, 0.165, 1);
 		animation-name: slideDownAndLeft;
 	}
@@ -558,19 +670,20 @@
 		--aug-l: 0px;
 		--aug-tr: 12px; /* Strong tab → connects to Success */
 		--aug-br: 8px; /* Gentle terminus */
-		padding: var(--space-sm);
-		padding-left: var(--space-md);
-		/* Enhanced Glow - animation removed */
+		padding: 0.375rem;
+		padding-left: 0.75rem;
+		/* TERTIARY importance - Subtle Glow */
 		box-shadow:
-			0 0 20px rgba(255, 215, 0, 0.6),
-			0 0 40px rgba(255, 215, 0, 0.3),
-			inset 0 0 15px rgba(255, 215, 0, 0.15),
+			0 0 8px rgba(255, 215, 0, 0.3),
+			0 0 16px rgba(255, 215, 0, 0.15),
+			inset 0 0 8px rgba(255, 215, 0, 0.08),
 			inset 0 1px 0 rgba(255, 255, 255, 0.05);
 	}
 
 	.bonus-stat.slide-down {
 		animation-name: slideDownAndRight;
-		animation-delay: 1s;
+		animation-delay: 0.5s; /* Right column starts */
+		animation-duration: 0.8s; /* Slower for complex animation */
 		animation-timing-function: ease-in;
 	}
 
@@ -600,12 +713,12 @@
 		--aug-br: 4px; /* Gentle terminus */
 		--aug-bl: 4px; /* Visual anchor */
 
-		padding: 1rem;
-		/* Enhanced Glow - animation removed */
+		padding: 0.5rem;
+		/* SECONDARY importance - Reduced Glow */
 		box-shadow:
-			0 0 20px rgba(0, 255, 255, 0.6),
-			0 0 40px rgba(0, 255, 255, 0.3),
-			inset 0 0 15px rgba(0, 255, 255, 0.15),
+			0 0 12px rgba(0, 255, 255, 0.4),
+			0 0 24px rgba(0, 255, 255, 0.2),
+			inset 0 0 10px rgba(0, 255, 255, 0.1),
 			inset 0 1px 0 rgba(255, 255, 255, 0.05);
 	}
 
@@ -628,66 +741,72 @@
 	}
 
 	.stat-label {
-		font-size: var(--text-xs);
+		font-size: 0.75rem; /* 12px - compact for desktop */
 		font-weight: bold;
 		text-transform: uppercase;
-		letter-spacing: 0.15em;
+		letter-spacing: 0.1em;
 		font-family: 'Courier New', monospace;
-		opacity: 0.9;
+		opacity: 1; /* Remove opacity, rely on color/shadow for hierarchy */
 		text-align: left;
 		align-self: center;
 		flex: 0 0 auto;
 		white-space: nowrap;
-		min-width: 65px;
+		min-width: 58px;
 		/* Add padding to avoid clip zones */
-		padding-left: 4px;
+		padding-left: 2px;
 		/* Display help icon inline */
 		display: flex;
 		align-items: center;
-		gap: 0.25rem;
+		gap: 0.2rem;
 	}
 
 	.stat-icon {
+		width: 14px;
+		height: 14px;
 		flex-shrink: 0;
 		display: inline-block;
 		vertical-align: middle;
-		filter: drop-shadow(0 0 4px currentColor);
+		filter: drop-shadow(0 0 3px currentColor);
 	}
 
 	.health-stat .stat-label {
 		color: #00ffaa;
 		text-shadow:
-			0 0 10px rgba(0, 255, 170, 1),
-			0 0 20px rgba(0, 255, 170, 0.6);
+			0 0 12px currentColor,
+			0 0 24px currentColor,
+			0 1px 2px rgba(0, 0, 0, 0.8); /* Add dark shadow for contrast */
 	}
 
 	.failure-stat .stat-label {
 		color: #ff0066;
 		text-shadow:
-			0 0 10px rgba(255, 0, 102, 1),
-			0 0 20px rgba(255, 0, 102, 0.6);
+			0 0 12px currentColor,
+			0 0 24px currentColor,
+			0 1px 2px rgba(0, 0, 0, 0.8); /* Add dark shadow for contrast */
 	}
 
 	.bonus-stat .stat-label {
 		color: #00eeff;
 		text-shadow:
-			0 0 10px rgba(0, 238, 255, 1),
-			0 0 20px rgba(0, 238, 255, 0.6);
+			0 0 12px currentColor,
+			0 0 24px currentColor,
+			0 1px 2px rgba(0, 0, 0, 0.8); /* Add dark shadow for contrast */
 	}
 
 	.success-stat .stat-label {
 		color: #ffee00;
 		text-shadow:
-			0 0 10px rgba(255, 238, 0, 1),
-			0 0 20px rgba(255, 238, 0, 0.6);
+			0 0 12px currentColor,
+			0 0 24px currentColor,
+			0 1px 2px rgba(0, 0, 0, 0.8); /* Add dark shadow for contrast */
 	}
 
 	.stat-value {
-		font-size: 1rem;
+		font-size: 0.875rem;
 		font-weight: bold;
 		font-family: 'Courier New', monospace;
 		color: #fff;
-		text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+		text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
 		line-height: 1;
 		display: flex;
 		align-items: baseline;
@@ -696,36 +815,37 @@
 		justify-content: center;
 		flex: 0 0 auto;
 		white-space: nowrap;
-		min-width: 50px;
+		min-width: 45px;
 	}
 
 	.stat-value .current {
-		font-size: 1rem;
+		font-size: 0.95rem;
 	}
 
 	.stat-value .divider {
-		font-size: 0.75rem;
+		font-size: 0.65rem;
 		opacity: 0.7;
 	}
 
 	.stat-value .max {
-		font-size: 0.7rem;
-		opacity: 0.8;
+		font-size: 0.65rem;
+		opacity: 0.9;
+		font-weight: 600;
 	}
 
 	/* Stat Bars */
 	.stat-bar {
-		height: 6px;
+		height: 5px;
 		background: rgba(0, 0, 0, 0.5);
 		border: 1px solid rgba(255, 255, 255, 0.2);
 		position: relative;
 		overflow: hidden;
 		align-self: center;
 		flex: 1 1 auto;
-		min-width: 40px;
+		min-width: 35px;
 		border-radius: 2px;
 		/* Add margin to avoid clip zones */
-		margin-right: 4px;
+		margin-right: 2px;
 	}
 
 	.stat-fill {
@@ -750,11 +870,6 @@
 		box-shadow: 0 0 10px #00d9ff;
 	}
 
-	.success-fill {
-		background: linear-gradient(90deg, #ffdd00, #ccaa00);
-		box-shadow: 0 0 10px #ffdd00;
-	}
-
 	/* Digital Dice Readout */
 	.dice-readout {
 		--aug-border-all: 2px;
@@ -767,18 +882,21 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
+		justify-content: space-between;
 		gap: var(--space-xs);
 		padding: var(--space-sm);
-		aspect-ratio: 1;
+		min-width: 90px;
+		min-height: 100px;
 
 		background: linear-gradient(135deg, rgba(10, 10, 20, 0.9), rgba(15, 15, 25, 0.8));
 		backdrop-filter: blur(10px) saturate(150%);
 		-webkit-backdrop-filter: blur(10px) saturate(150%);
 
+		/* TERTIARY importance - Subtle Glow */
 		box-shadow:
-			0 0 20px rgba(0, 255, 255, 0.5),
-			0 0 40px rgba(217, 70, 239, 0.3),
-			inset 0 0 20px rgba(0, 255, 255, 0.15);
+			0 0 8px rgba(0, 255, 255, 0.3),
+			0 0 16px rgba(217, 70, 239, 0.15),
+			inset 0 0 8px rgba(0, 255, 255, 0.08);
 	}
 
 	.dice-label {
@@ -818,9 +936,9 @@
 	.dice-pips {
 		display: flex;
 		gap: 3px;
-		flex-wrap: wrap;
+		flex-wrap: nowrap;
 		justify-content: center;
-		max-width: 60px;
+		min-width: 54px;
 	}
 
 	.pip {
@@ -846,17 +964,106 @@
 		}
 	}
 
+	/* Deck Readout */
+	.deck-readout {
+		--aug-border-all: 2px;
+		--aug-border-bg: linear-gradient(135deg, var(--color-brand-yellow), var(--color-neon-cyan));
+		--aug-tl: 6px;
+		--aug-tr: 6px;
+		--aug-br: 6px;
+		--aug-bl: 6px;
+
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-xs);
+		padding: var(--space-sm);
+		min-width: 90px;
+		min-height: 100px;
+		margin-top: var(--space-sm);
+
+		background: linear-gradient(135deg, rgba(10, 10, 20, 0.9), rgba(15, 15, 25, 0.8));
+		backdrop-filter: blur(10px) saturate(150%);
+		-webkit-backdrop-filter: blur(10px) saturate(150%);
+
+		/* TERTIARY importance - Subtle Glow */
+		box-shadow:
+			0 0 8px rgba(255, 215, 0, 0.3),
+			0 0 16px rgba(0, 255, 255, 0.15),
+			inset 0 0 8px rgba(255, 215, 0, 0.08);
+	}
+
+	.deck-label {
+		font-size: var(--text-xs);
+		font-weight: bold;
+		text-transform: uppercase;
+		letter-spacing: 0.15em;
+		font-family: 'Courier New', monospace;
+		color: #ffd700;
+		text-shadow:
+			0 0 10px rgba(255, 215, 0, 1),
+			0 0 20px rgba(255, 215, 0, 0.6);
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+	}
+
+	.deck-icon {
+		flex-shrink: 0;
+		display: inline-block;
+		vertical-align: middle;
+		filter: drop-shadow(0 0 4px currentColor);
+	}
+
+	.deck-value {
+		font-size: 2rem;
+		font-weight: 900;
+		font-family: 'Courier New', monospace;
+		color: #00eeff;
+		text-shadow:
+			0 0 15px rgba(0, 238, 255, 1),
+			0 0 30px rgba(0, 238, 255, 0.6),
+			0 0 45px rgba(0, 238, 255, 0.3);
+		line-height: 1;
+	}
+
+	.deck-stack {
+		display: flex;
+		position: relative;
+		height: 20px;
+		width: 50px;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.card-layer {
+		position: absolute;
+		width: 28px;
+		height: 16px;
+		background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(0, 255, 255, 0.2));
+		border: 1px solid rgba(255, 215, 0, 0.5);
+		border-radius: 2px;
+		box-shadow:
+			0 0 5px rgba(255, 215, 0, 0.4),
+			0 0 10px rgba(0, 255, 255, 0.2);
+		/* Use 4px increments for 8px baseline grid */
+		transform: translateX(calc(var(--layer-index) * 4px))
+			translateY(calc(var(--layer-index) * -4px));
+		transition: all 0.3s ease;
+	}
+
 	/* Token Grid */
 	.token-grid {
 		display: grid;
 		grid-template-columns: repeat(5, 1fr);
-		gap: var(--space-xs);
-		padding: var(--space-xs);
+		gap: 0.25rem;
+		padding: 0.25rem;
 	}
 
 	.token-shape {
-		width: 20px;
-		height: 20px;
+		width: 16px;
+		height: 16px;
 		position: relative;
 		display: flex;
 		align-items: center;
@@ -917,7 +1124,21 @@
 			padding: var(--space-sm) var(--space-md);
 		}
 
+		.dice-readout {
+			min-width: 85px;
+			min-height: 90px;
+		}
+
 		.dice-value {
+			font-size: 1.5rem;
+		}
+
+		.deck-readout {
+			min-width: 85px;
+			min-height: 90px;
+		}
+
+		.deck-value {
 			font-size: 1.5rem;
 		}
 
@@ -961,10 +1182,10 @@
 		}
 
 		.dice-readout {
-			min-width: 60px;
-			padding: var(--space-xs) var(--space-sm);
-			justify-content: center;
-			aspect-ratio: 16/9;
+			min-width: 70px;
+			min-height: 70px;
+			padding: var(--space-xs);
+			margin-top: 0;
 		}
 
 		.dice-label {
@@ -977,13 +1198,42 @@
 		}
 
 		.pip {
-			width: 6px;
-			height: 6px;
+			width: 5px;
+			height: 5px;
 		}
 
 		.dice-pips {
-			max-width: 50px;
-			gap: 3px;
+			min-width: 48px;
+			gap: 2.5px;
+		}
+
+		.deck-readout {
+			min-width: 70px;
+			min-height: 70px;
+			padding: var(--space-xs);
+			margin-top: var(--space-xs);
+		}
+
+		.deck-label {
+			font-size: 0.6rem;
+			display: none;
+		}
+
+		.deck-value {
+			font-size: 1.25rem;
+		}
+
+		.deck-stack {
+			height: 16px;
+			width: 40px;
+		}
+
+		.card-layer {
+			width: 24px;
+			height: 14px;
+			/* Use 4px increments for 8px baseline grid */
+			transform: translateX(calc(var(--layer-index) * 4px))
+				translateY(calc(var(--layer-index) * -4px));
 		}
 
 		/* Position third column (Bonus + Success) */
@@ -1004,7 +1254,7 @@
 		}
 
 		.stat-label {
-			font-size: 0.65rem;
+			font-size: 0.75rem; /* 12px minimum for readability */
 			min-width: 50px;
 			letter-spacing: 0.1em;
 		}
@@ -1026,21 +1276,23 @@
 			font-size: 0.6rem;
 		}
 
-		/* Hide progress bars and labels on mobile for compact layout */
+		/* Keep stat bars but make them smaller for mobile */
 		.stat-bar {
-			display: none;
+			height: 4px; /* Reduce from 6px */
+			min-width: 30px; /* Reduce from 40px */
+			border-radius: 1px;
 		}
 
 		.stat-label {
-			font-size: 0; /* Hide text but keep icons */
-			gap: 0;
+			font-size: 0.75rem; /* 12px minimum - keep text visible */
+			gap: 0.25rem;
 			min-width: auto;
+			letter-spacing: 0.05em;
 		}
 
 		.stat-icon {
-			font-size: 1rem; /* Reset font-size for icons to show them */
-			width: 20px;
-			height: 20px;
+			width: 16px;
+			height: 16px;
 		}
 
 		/* Hide help icons on mobile */
@@ -1056,27 +1308,36 @@
 			flex-direction: column-reverse;
 		}
 		.info-segment .label {
-			font-size: 0.7rem;
+			font-size: 0.75rem; /* 12px minimum */
 		}
 
 		.info-segment .value {
-			font-size: 0.8rem;
+			font-size: 0.875rem; /* 14px for better readability */
 		}
 
 		.player-round-bar {
-			padding: var(--space-md);
-			gap: var(--space-sm);
-			flex-wrap: wrap;
+			padding: var(--space-sm);
+			gap: var(--space-xs);
+			grid-template-columns: auto 1fr auto 1fr auto;
 		}
 
 		.player-round-bar h5 {
-			font-size: 0.8rem;
+			font-size: 0.875rem; /* 14px minimum */
 			max-width: 150px;
 			max-height: 3.6em; /* ~3 lines */
 			overflow: hidden;
 			text-wrap: balance;
-			line-height: 1.2;
+			line-height: 1.3; /* Slightly taller for readability */
 			text-align: center;
+		}
+
+		.status-bar-button {
+			padding: var(--space-xs);
+		}
+
+		.status-bar-button svg {
+			width: 18px;
+			height: 18px;
 		}
 
 		/* Mobile Puzzle Piece Interlocking - Horizontal only */
@@ -1247,7 +1508,8 @@
 
 		.stat-fill,
 		.progress-fill,
-		.token-inner {
+		.token-inner,
+		.card-layer {
 			transition: none !important;
 		}
 	}

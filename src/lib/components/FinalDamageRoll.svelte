@@ -5,17 +5,10 @@
 </script>
 
 <div class="dc-final-damage-roll-container">
-	<div class="dc-final-damage-description">
-		<h2>The Final Test</h2>
-		<p>
-			You've completed the countdown, but salvation comes with one final risk. Roll one last time to
-			see if you truly escape...
-		</p>
-		<div class="dc-final-damage-stats">
-			<p><strong>Current Resources:</strong> {gameState.tower}</p>
-			<p><strong>Bonus Counter:</strong> {gameState.bonus}</p>
-			<p><strong>Possible Damage:</strong> 1-6, reduced by bonus</p>
-		</div>
+	<div class="dc-final-damage-stats">
+		<p><strong>Current Resources:</strong> {gameState.tower}</p>
+		<p><strong>Bonus Counter:</strong> {gameState.bonus}</p>
+		<p><strong>Possible Damage:</strong> 1-6, reduced by bonus</p>
 	</div>
 </div>
 
@@ -26,34 +19,30 @@
 		display: grid;
 		text-align: center;
 		padding: 2rem;
-	}
-
-	.dc-final-damage-description {
-		margin-bottom: 2rem;
-	}
-
-	.dc-final-damage-description h2 {
-		font-size: 2rem;
-		margin-bottom: 1rem;
-		color: var(--dc-accent-color, #ff6b6b);
-	}
-
-	.dc-final-damage-description p {
-		font-size: 1.2rem;
-		margin-bottom: 1rem;
-		line-height: 1.6;
+		align-content: center;
 	}
 
 	.dc-final-damage-stats {
 		margin: 1.5rem auto;
-		padding: 1rem;
-		background: rgba(0, 0, 0, 0.2);
-		border-radius: 8px;
+		padding: 1.5rem;
+		background: linear-gradient(135deg, rgba(10, 10, 20, 0.8), rgba(15, 15, 25, 0.7));
+		border: 2px solid rgba(0, 255, 255, 0.3);
+		border-radius: var(--dc-default-border-radius);
 		max-width: 400px;
+		backdrop-filter: blur(10px);
+		box-shadow:
+			0 0 20px rgba(0, 255, 255, 0.2),
+			inset 0 0 20px rgba(0, 255, 255, 0.05);
 	}
 
 	.dc-final-damage-stats p {
 		margin: 0.5rem 0;
 		font-size: 1.1rem;
+		color: rgba(255, 255, 255, 0.9);
+	}
+
+	.dc-final-damage-stats strong {
+		color: var(--color-neon-cyan, #00eeff);
+		text-shadow: 0 0 10px rgba(0, 238, 255, 0.6);
 	}
 </style>

@@ -423,6 +423,62 @@ export function applyPendingSuccessCheck() {
 }
 
 /**
+ * Perform the initial damage roll before round 1
+ * This is the SRD's digital enhancement - game starts with some instability
+ * @param {number} roll - Dice roll result (1-6)
+ */
+export function performInitialDamageRoll(roll) {
+	logger.debug('[performInitialDamageRoll] Roll:', roll, 'Tower:', gameState.tower);
+
+	// Store pending updates (to be applied after dice animation)
+	gameState.pendingUpdates.diceRoll = roll;
+	gameState.pendingUpdates.towerDamage = roll;
+
+	logger.debug(`[performInitialDamageRoll] Stored pending roll ${roll}, pending damage: ${roll}`);
+
+	// Note: State transitions will happen in applyPendingInitialDamageRoll after animation
+}
+
+/**
+ * Apply pending initial damage roll after dice animation completes
+ */
+export function applyPendingInitialDamageRoll() {
+	if (gameState.pendingUpdates.diceRoll === null) {
+		logger.warn('[applyPendingInitialDamageRoll] No pending initial damage roll to apply');
+		return;
+	}
+
+	const roll = gameState.pendingUpdates.diceRoll;
+	const damage = gameState.pendingUpdates.towerDamage;
+
+	// Apply dice roll
+	gameState.diceRoll = roll;
+
+	// Apply tower damage
+	gameState.tower = Math.max(gameState.tower - damage, 0);
+
+	// Clear pending updates
+	gameState.pendingUpdates.diceRoll = null;
+	gameState.pendingUpdates.towerDamage = null;
+
+	logger.debug(`[applyPendingInitialDamageRoll] Applied initial damage: ${damage}, tower now: ${gameState.tower}`);
+
+	// Log the initial damage
+	gameState.log.push({
+		type: 'initial-damage',
+		roll,
+		damage,
+		tower: gameState.tower,
+		timestamp: Date.now(),
+		round: 0,
+		id: '0.0'
+	});
+
+	// Transition to first round
+	transitionTo('rollForTasks');
+}
+
+/**
  * Perform the final damage roll after all tokens are removed
  * This is the SRD's "salvation with risk" mechanic - victory can be snatched away at the last moment
  * @param {number} roll - Dice roll result
