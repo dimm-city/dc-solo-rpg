@@ -1029,13 +1029,12 @@
 		color: var(--color-neon-cyan);
 		text-transform: uppercase;
 		letter-spacing: 0.1em;
+		line-height: 1.35;
 		margin: 0 0 0.75rem 0;
 		font-family: 'lixdu', 'Courier New', monospace;
 		opacity: 0.3;
 		text-shadow:
-			0 0 20px rgba(0, 255, 255, 0.5),
-			0 0 40px rgba(0, 255, 255, 0.3);
-		line-height: 1;
+			0 0 10px var(--yellow);
 	}
 
 	.context-description {
