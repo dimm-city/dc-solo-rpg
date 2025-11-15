@@ -53,7 +53,7 @@
 	<!-- Player and Round Info Bar with Augmented UI -->
 	<div
 		class="player-round-bar slide-down"
-		data-augmented-ui="tl-clip-x tr-2-clip-x br-clip bl-2-clip-x border"
+		data-augmented-ui="tl-2-clip-x tr-2-clip-x br-clip bl-clip border"
 		style="animation-delay: 0s; animation-duration: 0.6s"
 	>
 		<!-- Exit Button on far left -->
@@ -149,10 +149,10 @@
 			</div>
 
 			<div
-			class="stat-item failure-stat slide-down"
-			data-augmented-ui={failureAugmentedUI}
-			style="animation-delay: 0.25s; animation-duration: 0.85s"
-		>
+				class="stat-item failure-stat slide-down"
+				data-augmented-ui={failureAugmentedUI}
+				style="animation-delay: 0.25s; animation-duration: 0.85s"
+			>
 				<div class="stat-label">
 					<svg
 						class="stat-icon"
@@ -187,7 +187,9 @@
 								stroke-linecap="round"
 								stroke-linejoin="round"
 							>
-								<path d="M2 20h20v-4a6 6 0 0 0-12 0v4zm0 0v-4a6 6 0 1 1 12 0v4zM12 2v4m-4-2 4 2 4-2" />
+								<path
+									d="M2 20h20v-4a6 6 0 0 0-12 0v4zm0 0v-4a6 6 0 1 1 12 0v4zM12 2v4m-4-2 4 2 4-2"
+								/>
 							</svg>
 						</div>
 					{/each}
@@ -264,10 +266,10 @@
 		</div>
 		<div>
 			<div
-			class="stat-item bonus-stat slide-down"
-			data-augmented-ui={luckAugmentedUI}
-			style="animation-delay: 0.55s; animation-duration: 0.85s"
-		>
+				class="stat-item bonus-stat slide-down"
+				data-augmented-ui={luckAugmentedUI}
+				style="animation-delay: 0.55s; animation-duration: 0.85s"
+			>
 				<div class="stat-label">
 					<svg
 						class="stat-icon"
@@ -550,10 +552,11 @@
 
 	.info-segment:last-of-type {
 		display: flex;
-		justify-content: flex-end;
+		
 		& > div {
 			display: flex;
 			flex-direction: column;
+			align-items: center;
 			gap: 0;
 		}
 	}
@@ -646,10 +649,14 @@
 
 		/* Left side rectangle inset - receives puzzle tab from health */
 		/* Match health's right extension for perfect fit */
-		--aug-l-extend1: 20px;
+		--aug-l-extend1: 40px;
 		--aug-l-inset1: 10px;
-		margin-inline-start: -28px;
-		padding-inline-start: 1.25rem;
+
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		margin-inline-start: -30px;
+		padding-inline-start: 2rem;
 		/* SECONDARY importance - Reduced Glow */
 		box-shadow:
 			0 0 12px rgba(217, 70, 239, 0.4),
@@ -915,7 +922,6 @@
 		justify-content: center;
 		transition: all 0.2s linear;
 		opacity: 0.2;
-		filter: grayscale(1);
 	}
 
 	.king-icon svg {
@@ -1103,7 +1109,6 @@
 		vertical-align: middle;
 		filter: drop-shadow(0 0 4px currentColor);
 	}
-
 
 	/* Token Grid */
 	.token-grid {
@@ -1356,6 +1361,7 @@
 		.info-segment:first-of-type {
 			flex-direction: column;
 			align-items: flex-start;
+			margin-inline-start: var(--space-md);
 		}
 
 		.info-segment .label {
@@ -1367,7 +1373,7 @@
 		}
 
 		.player-round-bar {
-			padding: var(--space-xs) var(--space-sm);
+			padding: var(--space-sm) var(--space-md);
 			gap: 4px;
 			grid-template-columns: auto 1fr auto 1fr auto;
 			font-size: 0.75rem;
@@ -1378,19 +1384,22 @@
 			max-width: 120px;
 			overflow: hidden;
 			text-wrap: balance;
-			line-height: 1.2;
+			line-height: 1.3;
 			text-align: center;
 			margin: 0;
 		}
 
 		.status-bar-button {
-			padding: var(--space-xs);
+			padding: 0;
+			margin-top: var(--space-md);
 		}
 
 		.status-bar-button svg {
 			width: 18px;
 			height: 18px;
 		}
+
+	
 
 		/* Reset augmented-ui settings for compact mobile layout */
 		.health-stat,
@@ -1410,6 +1419,11 @@
 			flex-direction: column;
 		}
 
+		.failure-stat {
+			justify-content: center;
+			gap: 5px;
+		}
+
 		/* Compact token grid for mobile */
 		.token-grid {
 			grid-template-columns: repeat(5, 1fr);
@@ -1417,11 +1431,12 @@
 			padding: 1px;
 			width: 100%;
 			max-width: 100%;
+			justify-items: center;
 		}
 
 		.token-shape {
-			width: 8px;
-			height: 8px;
+			width: 20px;
+			height: 20px;
 		}
 
 		/* Ensure all stats have consistent height */
@@ -1434,15 +1449,15 @@
 
 		/* Compact king indicators for mobile */
 		.king-indicators {
-			gap: 2px;
+			gap: 5px;
 			padding: 1px;
 			width: 100%;
 			justify-content: center;
 		}
 
 		.king-icon {
-			width: 12px;
-			height: 12px;
+			width: 20px;
+			height: 20px;
 		}
 	}
 
