@@ -5,5 +5,10 @@ export { default as Splash } from './components/Splash.svelte';
 export { gameState, getCurrentScreen, getGameStats } from './stores/gameStore.svelte.js';
 export * from './stores/gameActions.svelte.js';
 export { hasSavedGame, getSaveMetadata } from './stores/gameSave.js';
-export { getCustomGames, getCustomGame, addCustomGame, removeCustomGame } from './stores/customGames.js';
+export {
+	getCustomGames,
+	getCustomGame,
+	addCustomGame,
+	removeCustomGame
+} from './stores/customGames.js';
 export { parseGameFile, ValidationError } from './parsers/markdownParser.js';

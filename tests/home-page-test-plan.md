@@ -29,13 +29,16 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 ### 1. Initial Page Load and Splash Screen
 
 #### 1.1 First-Time Visit - Splash Screen Display
+
 **Prerequisites:** Fresh browser session, localStorage cleared
 
 **Steps:**
+
 1. Navigate to the home page at `http://localhost:5173/`
 2. Wait for page to fully load
 
 **Expected Results:**
+
 - Splash screen component is visible on first load
 - NeuralBackground component renders animated background
 - Splash screen displays application branding/animation
@@ -43,18 +46,22 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 - Splash screen completes after animation duration (approximately 3-5 seconds)
 
 **Validation:**
+
 - Verify `showSplash` state is `true` initially
 - Verify `sessionStorage.getItem('splashShown')` is `null` or does not exist
 - After completion, verify `sessionStorage.getItem('splashShown')` is `'true'`
 
 #### 1.2 Returning Visit - Skip Splash Screen
+
 **Prerequisites:** Same browser session (splash already shown)
 
 **Steps:**
+
 1. Navigate to the home page
 2. Observe initial render
 
 **Expected Results:**
+
 - Splash screen is NOT displayed
 - User is taken directly to either:
   - Instructions choice screen (if never skipped)
@@ -62,14 +69,17 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 - sessionStorage contains `splashShown: 'true'`
 
 #### 1.3 Splash to Instructions Flow
+
 **Prerequisites:** Fresh session, instructions not seen
 
 **Steps:**
+
 1. Navigate to home page
 2. Wait for splash screen to complete
 3. Observe transition
 
 **Expected Results:**
+
 - Splash screen fades out (850ms total: 800ms fade + 50ms buffer)
 - Instructions choice screen fades in after splash completes
 - No content flash or layout shift during transition
@@ -80,13 +90,16 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 ### 2. Instructions Choice Screen
 
 #### 2.1 Instructions Choice Display
+
 **Prerequisites:** Splash complete, instructions not previously seen
 
 **Steps:**
+
 1. Wait for instructions choice screen to appear
 2. Examine all elements on screen
 
 **Expected Results:**
+
 - Screen displays with fade-in animation (600ms duration)
 - Title "How To Play" is visible and properly styled
 - Subtitle asks: "Would you like to learn the game mechanics, or skip straight to the games?"
@@ -103,23 +116,29 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 - Proper spacing and responsive layout
 
 #### 2.2 Learn How to Play Button
+
 **Steps:**
+
 1. From instructions choice screen
 2. Click "Learn How to Play" card
 3. Observe navigation
 
 **Expected Results:**
+
 - User is navigated to `/how-to` route
 - SessionStorage is updated with instructions shown marker
 - Function `markInstructionsShownInSession()` is called
 
 #### 2.3 Skip Once Button
+
 **Steps:**
+
 1. From instructions choice screen
 2. Click "Skip Once" card
 3. Wait for transition
 
 **Expected Results:**
+
 - Instructions choice screen fades out (300ms)
 - Game selection screen fades in after 300ms delay
 - SessionStorage is updated (instructions shown this session)
@@ -127,13 +146,16 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 - On next browser session, instructions choice will be shown again
 
 #### 2.4 Skip Always Button
+
 **Steps:**
+
 1. From instructions choice screen
 2. Click "Skip Always" card
 3. Observe behavior
 4. Close browser and reopen
 
 **Expected Results:**
+
 - Instructions choice screen fades out (300ms)
 - Game selection screen fades in
 - Both sessionStorage AND localStorage are updated
@@ -142,12 +164,15 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 - On future visits, instructions are never shown again
 
 #### 2.5 Instructions Choice - Accessibility
+
 **Steps:**
+
 1. Use keyboard Tab to navigate between cards
 2. Use Enter/Space to select a card
 3. Verify focus states
 
 **Expected Results:**
+
 - Tab key moves focus between the three cards
 - Focused card shows visual indication (border or outline)
 - Enter or Space key activates the focused card
@@ -158,13 +183,16 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 ### 3. Game Selection Screen
 
 #### 3.1 Game Selection Screen Display
+
 **Prerequisites:** Instructions flow complete or skipped
 
 **Steps:**
+
 1. Reach game selection screen
 2. Examine all elements
 
 **Expected Results:**
+
 - Screen displays with fade-in animation (600ms)
 - Page header is visible and sticky at top
 - Header contains:
@@ -186,7 +214,9 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 - Each game card has `data-testid="game-card-{slug}"` attribute
 
 #### 3.2 Game Cards - Visual States
+
 **Steps:**
+
 1. Hover mouse over each game card
 2. Click a game card (but don't confirm)
 3. Click outside to deselect
@@ -195,6 +225,7 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 **Expected Results:**
 
 **Hover State:**
+
 - Card lifts up (translateY(-6px))
 - Card scales slightly (scale 1.02)
 - Brightness increases (filter: brightness 1.2)
@@ -202,6 +233,7 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 - Transition is smooth (0.35s cubic-bezier)
 
 **Selected State:**
+
 - Card has persistent lift effect (translateY(-6px))
 - Border thickness increases (--aug-border-all: 3px)
 - Enhanced glow effect
@@ -209,11 +241,14 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 - CSS class `.selected` is applied
 
 **Active State (click):**
+
 - Card depresses slightly (translateY(-2px))
 - Immediate visual feedback
 
 #### 3.3 Game Cards - Responsive Behavior
+
 **Steps:**
+
 1. Resize browser to various widths:
    - 1400px (desktop)
    - 1000px (large tablet)
@@ -224,31 +259,38 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 **Expected Results:**
 
 **Desktop (> 1200px):**
+
 - 3 columns grid
 - Full spacing and padding
 
 **Large Tablet (900px - 1200px):**
+
 - 3 columns grid
 - Tighter gaps
 
 **Tablet (600px - 900px):**
+
 - 2 columns grid
 - Medium gaps
 - Adjusted padding
 
 **Mobile (< 600px):**
+
 - 1 column (full width)
 - Compact padding
 - Cards remain fully functional
 
 #### 3.4 Game Selection - Keyboard Navigation
+
 **Steps:**
+
 1. Use Tab key to navigate game cards
 2. Use Enter/Space to select
 3. Use Tab to reach modal buttons
 4. Use Escape to cancel
 
 **Expected Results:**
+
 - Tab key navigates through all interactive elements
 - Game cards receive focus indicators
 - Enter/Space activates card selection
@@ -256,13 +298,16 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 - Escape key cancels modal and returns focus
 
 #### 3.5 Game Card Staggered Animation
+
 **Prerequisites:** Fresh page load
 
 **Steps:**
+
 1. Load game selection screen
 2. Observe cards appearing
 
 **Expected Results:**
+
 - Cards fade in with staggered timing
 - Card 1: 0.1s delay
 - Card 2: 0.2s delay
@@ -277,12 +322,15 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 ### 4. Game Confirmation Modal
 
 #### 4.1 Open Game Confirmation Modal
+
 **Steps:**
+
 1. From game selection screen
 2. Click any game card (e.g., "Future Lost")
 3. Observe modal appearance
 
 **Expected Results:**
+
 - ConfirmModal component appears
 - Modal uses portal rendering (appends to document.body)
 - Backdrop is semi-transparent black (rgba 0,0,0,0.85) with blur
@@ -297,24 +345,30 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 - Modal is centered on screen
 
 #### 4.2 Confirm Game Selection
+
 **Steps:**
+
 1. Open game confirmation modal
 2. Click "START GAME" button
 3. Observe navigation
 
 **Expected Results:**
+
 - User navigates to `/game/{game-slug}` route
 - Modal closes immediately
 - Smooth transition to game page
 - Selected game state is cleared
 
 #### 4.3 Cancel Game Selection
+
 **Steps:**
+
 1. Open game confirmation modal
 2. Click "CANCEL" button
 3. Observe behavior
 
 **Expected Results:**
+
 - Modal closes with fade-out animation
 - User remains on game selection screen
 - selectedGame state is reset to null
@@ -322,24 +376,30 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 - Game card is no longer selected (no .selected class)
 
 #### 4.4 Cancel via Backdrop Click
+
 **Steps:**
+
 1. Open game confirmation modal
 2. Click outside modal (on backdrop)
 3. Observe behavior
 
 **Expected Results:**
+
 - Same as Cancel button behavior
 - Modal closes
 - Selection is cleared
 - User returns to game selection
 
 #### 4.5 Cancel via Escape Key
+
 **Steps:**
+
 1. Open game confirmation modal
 2. Press Escape key
 3. Observe behavior
 
 **Expected Results:**
+
 - Same as Cancel button behavior
 - Modal closes immediately
 - Focus returns to game selection screen
@@ -349,12 +409,15 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 ### 5. About Modal
 
 #### 5.1 Open About Modal
+
 **Steps:**
+
 1. From game selection screen
 2. Click About button (info icon with circle) in header
 3. Observe modal appearance
 
 **Expected Results:**
+
 - OverlayModal component renders
 - Modal appears with combined fade-in (400ms) and scale-with-height animation (500ms)
 - Modal scales from 0.7 to 1.0 and opacity from 0.3 to 1.0
@@ -372,14 +435,17 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 - z-index: 1000
 
 #### 5.2 About Modal - Content Scrolling
+
 **Prerequisites:** Small viewport or zoomed view
 
 **Steps:**
+
 1. Open About modal
 2. Scroll within modal content
 3. Observe behavior
 
 **Expected Results:**
+
 - Modal content area is scrollable (overflow-y: auto)
 - Scrollbar appears if content exceeds modal height
 - Backdrop and modal frame remain fixed
@@ -387,12 +453,15 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 - Title remains visible at top (sticky not required, but all content accessible)
 
 #### 5.3 Close About Modal
+
 **Steps:**
+
 1. Open About modal
 2. Click "Close" button
 3. Observe animation
 
 **Expected Results:**
+
 - Modal scales down (1.0 to 0.8) with fade-out (400ms)
 - Modal and backdrop both fade out
 - showAboutModal state becomes false
@@ -400,13 +469,16 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 - Focus returns to About button (accessibility)
 
 #### 5.4 About Modal - Accessibility
+
 **Steps:**
+
 1. Open About modal
 2. Use Tab to navigate
 3. Check ARIA attributes
 4. Test with screen reader (optional)
 
 **Expected Results:**
+
 - Modal title uses semantic heading tag (h2)
 - Modal has proper heading hierarchy
 - Close button is keyboard accessible
@@ -419,12 +491,15 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 ### 6. Settings Modal
 
 #### 6.1 Open Settings Modal
+
 **Steps:**
+
 1. From game selection screen
 2. Click Settings button (gear icon) in header
 3. Observe modal appearance
 
 **Expected Results:**
+
 - OverlayModal component renders with same animations as About modal
 - Modal displays:
   - Title: "Game Settings" (cyan, glowing)
@@ -436,24 +511,30 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 - z-index: 1000
 
 #### 6.2 Navigate to Settings Page
+
 **Steps:**
+
 1. Open Settings modal
 2. Click "Open Settings Page" button
 3. Observe navigation
 
 **Expected Results:**
+
 - User navigates to `/settings` route
 - Modal closes immediately (showSettingsModal set to false)
 - Navigation is handled by goto('/settings')
 - Smooth transition to settings page
 
 #### 6.3 Close Settings Modal
+
 **Steps:**
+
 1. Open Settings modal
 2. Click "Close" button
 3. Observe behavior
 
 **Expected Results:**
+
 - Same close animation as About modal
 - Modal fades out and scales down
 - showSettingsModal state becomes false
@@ -465,12 +546,15 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 ### 7. Help/How To Play Navigation
 
 #### 7.1 Navigate to How To Play
+
 **Steps:**
+
 1. From game selection screen
 2. Click "How to Play" link (question mark icon) in header
 3. Observe navigation
 
 **Expected Results:**
+
 - User navigates to `/how-to` route
 - Link uses standard anchor tag (not modal)
 - No modal interaction
@@ -482,23 +566,29 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 ### 8. Header and Navigation
 
 #### 8.1 Header Sticky Behavior
+
 **Steps:**
+
 1. Load game selection screen
 2. Scroll down page (if content is long enough)
 3. Observe header position
 
 **Expected Results:**
+
 - Header remains at top of viewport (position: sticky, top: 0)
 - Header has semi-transparent background with backdrop-filter blur
 - Header stays visible while scrolling
 - z-index: 100 (below modals but above content)
 
 #### 8.2 Logo and Version Display
+
 **Steps:**
+
 1. Examine header logo area
 2. Verify visual styling
 
 **Expected Results:**
+
 - D20 dice logo (150px image) is displayed
 - Logo has drop-shadow with purple/magenta glow
 - Logo has floating animation (6s infinite)
@@ -508,7 +598,9 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 - Logo and version are horizontally aligned
 
 #### 8.3 Header Button Interactions
+
 **Steps:**
+
 1. Hover over each header button (About, Help, Settings)
 2. Click each button
 3. Observe visual feedback
@@ -516,26 +608,32 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 **Expected Results:**
 
 **Hover State:**
+
 - Icon color changes from yellow to cyan
 - Icon scales up (transform: scale 1.1)
 - Drop-shadow changes to cyan glow
 - Transition is smooth (var(--transition-fast))
 
 **Active State:**
+
 - Icon scales down slightly (scale 1.05)
 - Provides tactile feedback
 
 **Click:**
+
 - About button opens About modal
 - How to Play navigates to /how-to
 - Settings button opens Settings modal
 
 #### 8.4 Header Responsive Behavior
+
 **Steps:**
+
 1. Resize browser to mobile width (< 600px)
 2. Examine header layout
 
 **Expected Results:**
+
 - Header padding reduces (var(--space-sm) var(--space-md))
 - Logo size scales down (clamp 48px to 72px)
 - Button spacing reduces (gap: var(--space-sm))
@@ -547,12 +645,15 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 ### 9. Modal Overlay System
 
 #### 9.1 Multiple Modal Prevention
+
 **Steps:**
+
 1. Open About modal
 2. Attempt to open Settings modal (via header button)
 3. Observe behavior
 
 **Expected Results:**
+
 - Only one modal should be open at a time
 - If implementation allows, clicking another modal button should:
   - Either: Close first modal and open second
@@ -560,23 +661,29 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 - No z-index conflicts or stacking issues
 
 #### 9.2 Modal z-index Stacking
+
 **Steps:**
+
 1. Open game confirmation modal (z-index: 999999)
 2. Close and open About modal (z-index: 1000)
 3. Verify proper layering
 
 **Expected Results:**
+
 - Game confirmation modal always appears above everything (z-index: 999999)
 - Overlay modals (About, Settings) use z-index: 1000
 - No content bleeds through modals
 - Backdrops properly obscure content below
 
 #### 9.3 Modal Backdrop Blur Effect
+
 **Steps:**
+
 1. Open any modal
 2. Observe background content
 
 **Expected Results:**
+
 - Game confirmation modal: backdrop-filter blur(8px)
 - Overlay modals: backdrop-filter blur(4px)
 - Background content is visibly blurred but still recognizable
@@ -588,13 +695,16 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 ### 10. Reduced Motion Accessibility
 
 #### 10.1 Reduced Motion - Animations Disabled
+
 **Prerequisites:** Enable "Reduce Motion" in OS settings
 
 **Steps:**
+
 1. Navigate to home page
 2. Observe all transitions and animations
 
 **Expected Results:**
+
 - All animations are disabled or significantly reduced
 - No floating animations on cards or logo
 - No scale/transform transitions on hover
@@ -608,12 +718,15 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 ### 11. Performance and Loading
 
 #### 11.1 Initial Page Load Performance
+
 **Steps:**
+
 1. Clear browser cache
 2. Navigate to home page
 3. Measure load time
 
 **Expected Results:**
+
 - Page loads within 2-3 seconds on typical connection
 - NeuralBackground renders without blocking
 - Game cards appear smoothly
@@ -621,11 +734,14 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 - No console errors
 
 #### 11.2 Game Data Loading
+
 **Steps:**
+
 1. Check browser DevTools Network tab
 2. Observe requests on page load
 
 **Expected Results:**
+
 - Server loads game data from `/static/games/*.game.md` files
 - Page data includes array of games with:
   - slug (filename without .game.md)
@@ -636,11 +752,14 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 - Data is available on initial render (SSR)
 
 #### 11.3 Image and Asset Loading
+
 **Steps:**
+
 1. Check Network tab for asset requests
 2. Verify all resources load
 
 **Expected Results:**
+
 - Logo image `/d20-150.png` loads successfully
 - All SVG icons are inline (no external requests)
 - Fonts load correctly
@@ -651,34 +770,43 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 ### 12. Browser Compatibility
 
 #### 12.1 Chrome/Edge (Chromium)
+
 **Steps:**
+
 1. Test all features in Chrome or Edge
 2. Verify visual appearance
 3. Test all interactions
 
 **Expected Results:**
+
 - All features work correctly
 - Backdrop-filter blur effects work
 - Animations are smooth
 - No console errors
 
 #### 12.2 Firefox
+
 **Steps:**
+
 1. Test all features in Firefox
 2. Verify visual appearance
 
 **Expected Results:**
+
 - All features work correctly
 - Backdrop-filter may require enabling in about:config
 - Alternative styling if blur not supported
 - No functionality loss
 
 #### 12.3 Safari (Desktop and iOS)
+
 **Steps:**
+
 1. Test in Safari
 2. Test on iOS device or simulator
 
 **Expected Results:**
+
 - All features work correctly
 - -webkit-backdrop-filter is used for blur support
 - Touch interactions work on mobile
@@ -689,25 +817,31 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 ### 13. Edge Cases and Error Handling
 
 #### 13.1 No Games Available
+
 **Prerequisites:** Empty `/static/games/` directory
 
 **Steps:**
+
 1. Navigate to home page
 2. Reach game selection screen
 
 **Expected Results:**
+
 - Game grid displays empty or with message
 - No JavaScript errors
 - Application remains functional
 - User sees appropriate feedback
 
 #### 13.2 Rapid Button Clicking
+
 **Steps:**
+
 1. Rapidly click header buttons
 2. Rapidly open/close modals
 3. Quickly select/deselect games
 
 **Expected Results:**
+
 - No race conditions
 - State updates consistently
 - Animations don't conflict
@@ -715,23 +849,29 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 - No console errors
 
 #### 13.3 Deep Linking
+
 **Steps:**
+
 1. Navigate directly to home page with fragment/hash
 2. Test URL variations
 
 **Expected Results:**
+
 - Page loads normally regardless of URL parameters
 - Splash behavior is consistent
 - No URL-based errors
 
 #### 13.4 LocalStorage Unavailable
+
 **Prerequisites:** Disable localStorage (browser privacy mode)
 
 **Steps:**
+
 1. Navigate to home page in private/incognito mode
 2. Test instructions flow
 
 **Expected Results:**
+
 - App handles localStorage errors gracefully
 - Instructions may show every time (acceptable)
 - SessionStorage still works
@@ -742,11 +882,14 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 ### 14. Mobile-Specific Testing
 
 #### 14.1 Mobile Touch Interactions
+
 **Steps:**
+
 1. Test on mobile device or emulator
 2. Tap all interactive elements
 
 **Expected Results:**
+
 - All buttons and cards respond to touch
 - No hover-only interactions
 - Touch targets are appropriately sized (min 44x44px)
@@ -754,12 +897,15 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 - Smooth scrolling
 
 #### 14.2 Mobile Modal Interactions
+
 **Steps:**
+
 1. Open modals on mobile device
 2. Scroll modal content
 3. Close modals
 
 **Expected Results:**
+
 - Modals fill viewport appropriately
 - Close buttons are easily tappable
 - Scroll works within modals
@@ -767,21 +913,27 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 - Modals are readable on small screens
 
 #### 14.3 Mobile Keyboard
+
 **Steps:**
+
 1. Test on device with touch keyboard
 2. Interact with any inputs (if present)
 
 **Expected Results:**
+
 - Keyboard doesn't obscure important content
 - Viewport adjusts appropriately
 - Modal remains accessible with keyboard open
 
 #### 14.4 Landscape vs Portrait
+
 **Steps:**
+
 1. Rotate device between portrait and landscape
 2. Verify all screens adapt
 
 **Expected Results:**
+
 - Layout adapts to orientation change
 - No content is cut off
 - Modals remain centered
@@ -792,35 +944,44 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 ### 15. Session and State Management
 
 #### 15.1 Browser Refresh
+
 **Steps:**
+
 1. Reach game selection screen
 2. Refresh browser (F5 or Cmd+R)
 3. Observe behavior
 
 **Expected Results:**
+
 - Splash screen is not shown (session persists)
 - User returns to game selection screen
 - SessionStorage persists within tab
 - No data loss
 
 #### 15.2 New Tab
+
 **Steps:**
+
 1. Reach game selection screen
 2. Open home page in new tab
 3. Observe behavior
 
 **Expected Results:**
+
 - New tab shows splash screen (new session)
 - Instructions flow runs if applicable
 - SessionStorage is separate per tab
 
 #### 15.3 Close and Reopen Browser
+
 **Steps:**
+
 1. Complete instructions flow (skip always)
 2. Close browser completely
 3. Reopen and navigate to home page
 
 **Expected Results:**
+
 - LocalStorage persists (instructions preference)
 - Splash shows (new session)
 - Instructions are skipped (localStorage remembered)
@@ -831,7 +992,9 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 ### 16. Visual Regression Testing
 
 #### 16.1 Screenshot Comparison - Desktop
+
 **Steps:**
+
 1. Capture screenshots of:
    - Splash screen
    - Instructions choice screen
@@ -842,16 +1005,20 @@ The DC Solo RPG home page is the entry point to a SvelteKit-based solo role-play
 2. Compare with baseline images
 
 **Expected Results:**
+
 - No unexpected visual changes
 - Colors, spacing, typography match design
 - Animations render correctly in screenshots
 
 #### 16.2 Screenshot Comparison - Mobile
+
 **Steps:**
+
 1. Capture mobile screenshots (375px width) of all screens
 2. Compare with mobile baselines
 
 **Expected Results:**
+
 - Mobile layouts match design
 - Text is readable
 - Buttons are appropriately sized
@@ -944,51 +1111,51 @@ A successful test execution should verify:
 
 ```javascript
 // Page container
-'[data-testid="home-page"]'
+'[data-testid="home-page"]';
 
 // Game selector
-'[data-testid="game-selector"]'
+'[data-testid="game-selector"]';
 
 // Individual game cards
-'[data-testid="game-card-future-lost"]'
-'[data-testid="game-card-artful-detective"]'
+'[data-testid="game-card-future-lost"]';
+'[data-testid="game-card-artful-detective"]';
 // etc.
 
 // Header buttons
-'button[aria-label="About"]'
-'a[aria-label="How to Play"]'
-'button[aria-label="Settings"]'
+'button[aria-label="About"]';
+'a[aria-label="How to Play"]';
+'button[aria-label="Settings"]';
 
 // Modals
-'.overlay-modal-container'
-'.modal-backdrop'
+'.overlay-modal-container';
+'.modal-backdrop';
 
 // Buttons in modals
-'button:has-text("Close")'
-'button:has-text("Open Settings Page")'
+'button:has-text("Close")';
+'button:has-text("Open Settings Page")';
 ```
 
 ### Sample Playwright Test
 
 ```javascript
 test('should open and close About modal', async ({ page }) => {
-  await page.goto('/');
+	await page.goto('/');
 
-  // Wait for game selection to load
-  await page.waitForSelector('[data-testid="home-page"]', { timeout: 5000 });
+	// Wait for game selection to load
+	await page.waitForSelector('[data-testid="home-page"]', { timeout: 5000 });
 
-  // Click About button
-  await page.click('button[aria-label="About"]');
+	// Click About button
+	await page.click('button[aria-label="About"]');
 
-  // Verify modal is visible
-  await expect(page.locator('.overlay-modal-container')).toBeVisible();
-  await expect(page.locator('h2:has-text("About DC Solo RPG")')).toBeVisible();
+	// Verify modal is visible
+	await expect(page.locator('.overlay-modal-container')).toBeVisible();
+	await expect(page.locator('h2:has-text("About DC Solo RPG")')).toBeVisible();
 
-  // Close modal
-  await page.click('button:has-text("Close")');
+	// Close modal
+	await page.click('button:has-text("Close")');
 
-  // Verify modal is closed
-  await expect(page.locator('.overlay-modal-container')).not.toBeVisible();
+	// Verify modal is closed
+	await expect(page.locator('.overlay-modal-container')).not.toBeVisible();
 });
 ```
 

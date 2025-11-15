@@ -60,12 +60,15 @@
 			case 'initialDamageRoll':
 				return {
 					title: 'Initial Instability',
-					description: 'Before your journey begins, the situation is already precarious. Roll to see how much ground you\'ve already lost...',
+					description:
+						"Before your journey begins, the situation is already precarious. Roll to see how much ground you've already lost...",
 					showStats: true
 				};
 			case 'rollForTasks':
 				return {
-					title: rollTasksRolled ? `Draw ${gameState.cardsToDraw} Card${gameState.cardsToDraw !== 1 ? 's' : ''}` : 'Roll for Tasks',
+					title: rollTasksRolled
+						? `Draw ${gameState.cardsToDraw} Card${gameState.cardsToDraw !== 1 ? 's' : ''}`
+						: 'Roll for Tasks',
 					description: rollTasksRolled
 						? 'Your fate has been determined. Proceed to draw your cards.'
 						: 'Roll the dice to determine how many challenges you must face this round.',
@@ -82,13 +85,15 @@
 			case 'successCheck':
 				return {
 					title: 'Success Check',
-					description: 'The Ace of Hearts has appeared. Roll to remove a token from your countdown.',
+					description:
+						'The Ace of Hearts has appeared. Roll to remove a token from your countdown.',
 					showStats: true
 				};
 			case 'finalDamageRoll':
 				return {
 					title: 'The Final Test',
-					description: 'You\'ve completed the countdown, but salvation comes with one final risk. Roll one last time to see if you truly escape...',
+					description:
+						"You've completed the countdown, but salvation comes with one final risk. Roll one last time to see if you truly escape...",
 					showStats: true
 				};
 			case 'startRound':
@@ -142,7 +147,8 @@
 
 	const rollForTasksButtonText = $derived(
 		rollTasksRolled
-			? (gameState.config?.labels?.rollForTasksResultHeader ?? `Draw ${gameState.cardsToDraw} Card${gameState.cardsToDraw !== 1 ? 's' : ''}`)
+			? (gameState.config?.labels?.rollForTasksResultHeader ??
+					`Draw ${gameState.cardsToDraw} Card${gameState.cardsToDraw !== 1 ? 's' : ''}`)
 			: (gameState.config?.labels?.rollForTasksHeader ?? 'Roll Dice')
 	);
 	const rollForTasksButtonDisabled = $derived(rollTasksRolling || rollTasksConfirming);
@@ -178,9 +184,7 @@
 		}
 	}
 
-	const failureCheckButtonText = $derived(
-		failureCheckResult ? 'Continue' : 'Roll for Damage'
-	);
+	const failureCheckButtonText = $derived(failureCheckResult ? 'Continue' : 'Roll for Damage');
 
 	// SuccessCheck button state
 	let successCheckRolling = $state(false);
@@ -209,9 +213,7 @@
 		}
 	}
 
-	const successCheckButtonText = $derived(
-		successCheckResult ? 'Continue' : 'Roll to Remove Token'
-	);
+	const successCheckButtonText = $derived(successCheckResult ? 'Continue' : 'Roll to Remove Token');
 
 	// FinalDamageRoll button state
 	let finalDamageRolling = $state(false);
@@ -302,7 +304,7 @@
 
 	// JournalEntry button state
 	let journalSaved = $state(false);
-	const journal = $state({ text: '' });
+	const journal = $state({ text: '', audioData: null });
 
 	// Reset journal state when screen changes to log/finalLog
 	$effect(() => {
@@ -312,10 +314,14 @@
 	});
 
 	async function handleJournalSave() {
-		await recordRound(journal);
-		journal.text = '';
-		journalSaved = true;
-		onjournalsaved(journal);
+		// Only save if there's text or audio
+		if (journal.text || journal.audioData) {
+			await recordRound(journal);
+			journal.text = '';
+			journal.audioData = null;
+			journalSaved = true;
+			onjournalsaved(journal);
+		}
 	}
 
 	async function handleJournalNext() {
@@ -607,13 +613,14 @@
 					{:else if currentScreen == 'finalLog' || currentScreen == 'log'}
 						<OverlayModal isVisible={true} zIndex={50}>
 							<JournalEntry
-							bind:journalText={journal.text}
-							{journalSaved}
-							onSave={handleJournalSave}
-							onNext={handleJournalNext}
-							onRestart={handleJournalRestart}
-							onExit={handleJournalExit}
-						/>
+								bind:journalText={journal.text}
+								bind:audioData={journal.audioData}
+								{journalSaved}
+								onSave={handleJournalSave}
+								onNext={handleJournalNext}
+								onRestart={handleJournalRestart}
+								onExit={handleJournalExit}
+							/>
 						</OverlayModal>
 					{:else}
 						<div transition:fade={{ duration: TRANSITION_DURATION }}>error: {currentScreen}</div>
@@ -829,7 +836,6 @@
 		min-height: 60px;
 		padding: var(--space-md);
 		position: relative;
-	
 
 		/* Slide-in animation from bottom - dramatic delayed entrance */
 		animation: toolbar-slide-in 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 1.2s forwards;

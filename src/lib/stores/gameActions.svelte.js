@@ -51,9 +51,7 @@ export const startGame = (player, gameConfigOrOptions = {}, options = {}) => {
 		// Clear any existing save when starting a new game
 		// Extract game slug for clearing save
 		const gameSlug =
-			gameConfig.slug ||
-			gameConfig.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') ||
-			'default';
+			gameConfig.slug || gameConfig.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'default';
 		clearSave(gameSlug);
 	} else {
 		// Apply options to existing game state
@@ -167,8 +165,7 @@ export function drawCard() {
 	}
 
 	// Check for game over (4 kings) - use pending + current state
-	const totalKings =
-		gameState.kingsRevealed + (gameState.pendingUpdates.kingsChange ? 1 : 0);
+	const totalKings = gameState.kingsRevealed + (gameState.pendingUpdates.kingsChange ? 1 : 0);
 	if (totalKings === 4) {
 		// Apply pending king update before game over
 		if (gameState.pendingUpdates.kingsChange) {
@@ -357,9 +354,10 @@ export function confirmFailureCheck() {
  * Record round in journal
  * @param {object} journalEntry - Journal entry
  * @param {string} journalEntry.text - Entry text
+ * @param {string} [journalEntry.audioData] - Base64 encoded audio data (optional)
  */
 export function recordRound(journalEntry) {
-	if (journalEntry == null || journalEntry.text == null) {
+	if (journalEntry == null || (journalEntry.text == null && journalEntry.audioData == null)) {
 		throw new Error('No journal entries provided for this round');
 	}
 
@@ -403,7 +401,9 @@ export function successCheck() {
 		gameState.pendingUpdates.tokenChange = 0;
 	}
 
-	logger.debug(`[successCheck] Stored pending roll ${roll}, pending token change ${gameState.pendingUpdates.tokenChange}`);
+	logger.debug(
+		`[successCheck] Stored pending roll ${roll}, pending token change ${gameState.pendingUpdates.tokenChange}`
+	);
 
 	// Auto-save after success check
 	saveGame(gameState);
@@ -432,12 +432,17 @@ export function applyPendingSuccessCheck() {
 	gameState.pendingUpdates.diceRoll = null;
 	gameState.pendingUpdates.tokenChange = null;
 
-	logger.debug('[applyPendingSuccessCheck] Applied pending success check, tokens now:', gameState.tokens);
+	logger.debug(
+		'[applyPendingSuccessCheck] Applied pending success check, tokens now:',
+		gameState.tokens
+	);
 
 	// Transition based on token state
 	if (gameState.tokens === 0) {
 		// Per SRD: Don't immediately win - must face final damage roll first
-		logger.debug('[applyPendingSuccessCheck] All tokens removed, transitioning to final damage roll');
+		logger.debug(
+			'[applyPendingSuccessCheck] All tokens removed, transitioning to final damage roll'
+		);
 		transitionTo('finalDamageRoll');
 	} else {
 		// Continue the game - start next round
@@ -484,7 +489,9 @@ export function applyPendingInitialDamageRoll() {
 	gameState.pendingUpdates.diceRoll = null;
 	gameState.pendingUpdates.towerDamage = null;
 
-	logger.debug(`[applyPendingInitialDamageRoll] Applied initial damage: ${damage}, tower now: ${gameState.tower}`);
+	logger.debug(
+		`[applyPendingInitialDamageRoll] Applied initial damage: ${damage}, tower now: ${gameState.tower}`
+	);
 
 	// Log the initial damage
 	gameState.log.push({
@@ -550,7 +557,9 @@ export function applyPendingFinalDamageRoll() {
 	gameState.pendingUpdates.diceRoll = null;
 	gameState.pendingUpdates.towerDamage = null;
 
-	logger.debug(`[applyPendingFinalDamageRoll] Applied final damage roll: ${roll}, damage: ${damage}, tower now: ${gameState.tower}`);
+	logger.debug(
+		`[applyPendingFinalDamageRoll] Applied final damage roll: ${roll}, damage: ${damage}, tower now: ${gameState.tower}`
+	);
 
 	// Log the final roll
 	gameState.log.push({
