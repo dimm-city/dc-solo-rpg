@@ -3,8 +3,8 @@
 	import { innerWidth } from 'svelte/reactivity/window';
 
 	const successPercent = $derived(10 - gameState.tokens);
-	const bonusPercent = $derived(gameState.bonus);
-	const failurePercent = $derived(gameState.kingsRevealed);
+	const bonusPercent = $derived(gameState.bonus + (gameState.pendingUpdates.bonusChange || 0));
+	const failurePercent = $derived(gameState.kingsRevealed + (gameState.pendingUpdates.kingsChange || 0));
 
 	// Cards progress tracking
 	const cardsDrawn = $derived(gameState.cardsDrawn || 0);

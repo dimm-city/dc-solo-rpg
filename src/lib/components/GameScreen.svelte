@@ -754,7 +754,7 @@
 		min-height: 60px;
 		padding: var(--space-md);
 		position: relative;
-		z-index: 100;
+	
 
 		/* Slide-in animation from bottom - dramatic delayed entrance */
 		animation: toolbar-slide-in 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 1.2s forwards;
@@ -989,7 +989,6 @@
 			position: absolute;
 			bottom: calc(100% + var(--space-sm)); /* Position above the toolbar */
 			width: auto;
-			z-index: 101; /* Above toolbar */
 		}
 
 		.toolbar-left {

@@ -58,9 +58,13 @@ export function initializeGame(gameConfig, player, options = {}) {
 
 	// Handle difficulty 0 (easy mode - remove Ace of Hearts)
 	let aceOfHeartsRevealed = false;
+	let startingTokens = finalConfig.options?.startingTokens || 10;
+
 	if (finalConfig.options?.difficulty === 0) {
 		aceOfHeartsRevealed = true;
 		deck = deck.filter((c) => !(c.card === 'A' && c.suit === 'hearts'));
+		
+
 	}
 
 	// Apply initial damage roll (SRD digital enhancement)
@@ -79,7 +83,7 @@ export function initializeGame(gameConfig, player, options = {}) {
 		round: 1,
 		player,
 		playerName: player.name,
-		tokens: finalConfig.options?.startingTokens || 10,
+		tokens: 10,
 		kingsRevealed: 0,
 		kingOfHearts: false,
 		kingOfDiamonds: false,
@@ -89,7 +93,7 @@ export function initializeGame(gameConfig, player, options = {}) {
 		gameOver: false,
 		win: false,
 		tower: startingTower,
-		bonus: 0,
+		bonus: aceOfHeartsRevealed ? 1 : 0,
 		log: [],
 		journalEntries: [],
 		cardsToDraw: 0,
