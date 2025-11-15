@@ -67,7 +67,8 @@
 				<div class="title-divider"></div>
 				<span>C</span><span>I</span><span>T</span><span>Y</span>
 			</div>
-			<div class="subtitle">{subtitle}</div>
+			<div class="game-type">S-RPG</div>
+		<div class="subtitle">{subtitle}</div>
 		</div>
 	</div>
 {/if}
@@ -206,6 +207,33 @@
 		}
 	}
 
+	/* Game type text - S-RPG */
+	.game-type {
+		margin-top: 1rem;
+		font-family: 'lixdu', 'Orbitron', sans-serif;
+		font-size: 1.5rem;
+		text-transform: uppercase;
+		letter-spacing: 0.15em;
+		color: var(--neon-magenta);
+		text-shadow:
+			0 0 2px var(--neon-magenta),
+			0 0 5px var(--neon-magenta),
+			0 0 10px var(--neon-cyan);
+		opacity: 0;
+		animation: fadeIn 0.8s forwards 1.3s;
+	}
+
+	@keyframes fadeIn {
+		from {
+			opacity: 0;
+			transform: translateY(10px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
 	/* Subtitle with flicker effect */
 	.subtitle {
 		margin-top: 1rem;
@@ -240,6 +268,10 @@
 			font-size: 3rem;
 		}
 
+		.game-type {
+			font-size: 1.25rem;
+		}
+
 		.subtitle {
 			font-size: 0.875rem;
 		}
@@ -248,6 +280,10 @@
 	@media (max-width: 480px) {
 		.title {
 			font-size: 2rem;
+		}
+
+		.game-type {
+			font-size: 1rem;
 		}
 
 		.subtitle {
