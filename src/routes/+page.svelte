@@ -16,12 +16,13 @@
 		hasShownInstructionsInSession,
 		markInstructionsShownInSession
 	} from '$lib/utils/instructionsStorage.js';
+	import { getCustomGames, addCustomGame, removeCustomGame } from '$lib/stores/customGames.js';
 	import {
-		getCustomGames,
-		addCustomGame,
-		removeCustomGame
-	} from '$lib/stores/customGames.js';
-	import { hasSavedGame, getSaveMetadata } from '$lib/stores/gameSave.js';
+		hasSavedGame,
+		getSaveMetadata,
+		migrateFromLocalStorage,
+		clearLocalStorageSaves
+	} from '$lib/stores/indexedDBStorage.js';
 	import { resumeGame, deleteSavedGame } from '$lib/stores/gameActions.svelte.js';
 	import { gameState } from '$lib/stores/gameStore.svelte.js';
 
@@ -53,7 +54,22 @@
 	const availableDiceThemes = getAllDiceThemes();
 
 	// On mount, check if we should skip splash and go straight to content
-	onMount(() => {
+	onMount(async () => {
+		// Migrate localStorage saves to IndexedDB (one-time migration)
+		if (browser && !sessionStorage.getItem('migrationComplete')) {
+			try {
+				const migratedCount = await migrateFromLocalStorage();
+				if (migratedCount > 0) {
+					console.log(`Migrated ${migratedCount} saves from localStorage to IndexedDB`);
+					// Clear old localStorage saves after successful migration
+					await clearLocalStorageSaves();
+				}
+				sessionStorage.setItem('migrationComplete', 'true');
+			} catch (error) {
+				console.error('Migration failed:', error);
+			}
+		}
+
 		const splashAlreadyShown = sessionStorage.getItem('splashShown') === 'true';
 		if (splashAlreadyShown) {
 			// Splash already shown in this session, determine what to show
@@ -92,18 +108,17 @@
 		allGames = [...customGames, ...data.games].sort((a, b) => a.title.localeCompare(b.title));
 
 		// Check for saved games
-		updateSaveData();
+		await updateSaveData();
 	});
 
-	function updateSaveData() {
+	async function updateSaveData() {
 		const saveData = {};
-		allGames.forEach((game) => {
-			const slug =
-				game.slug || game.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'unknown';
-			if (hasSavedGame(slug)) {
-				saveData[slug] = getSaveMetadata(slug);
+		for (const game of allGames) {
+			const slug = game.slug || game.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'unknown';
+			if (await hasSavedGame(slug)) {
+				saveData[slug] = await getSaveMetadata(slug);
 			}
-		});
+		}
 		gameSaveData = saveData;
 	}
 
@@ -137,9 +152,7 @@
 			if (result.success) {
 				// Reload custom games list
 				customGames = getCustomGames();
-				allGames = [...customGames, ...data.games].sort((a, b) =>
-					a.title.localeCompare(b.title)
-				);
+				allGames = [...customGames, ...data.games].sort((a, b) => a.title.localeCompare(b.title));
 				updateSaveData();
 
 				uploadStatus = `Successfully loaded "${result.gameConfig.title}"!`;
@@ -220,9 +233,7 @@
 		if (confirm(`Are you sure you want to remove "${game.title}"?`)) {
 			if (removeCustomGame(game.slug)) {
 				customGames = getCustomGames();
-				allGames = [...customGames, ...data.games].sort((a, b) =>
-					a.title.localeCompare(b.title)
-				);
+				allGames = [...customGames, ...data.games].sort((a, b) => a.title.localeCompare(b.title));
 				updateSaveData();
 				uploadStatus = 'Custom game removed';
 				setTimeout(() => (uploadStatus = ''), 3000);
@@ -501,7 +512,8 @@
 			<div class="dc-start-screen-container" data-testid="game-selector">
 				<div class="game-cards-grid">
 					{#each allGames as game, index}
-						{@const gameSlug = game.slug || game.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'unknown'}
+						{@const gameSlug =
+							game.slug || game.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'unknown'}
 						{@const saveData = gameSaveData[gameSlug]}
 						<div class="game-card-wrapper">
 							<div
@@ -525,7 +537,9 @@
 									{/if}
 								</h3>
 								<p class="game-subtitle">
-									{game.isCustom ? 'Your custom adventure' : gameDescriptions[game.slug] || 'Begin your adventure'}
+									{game.isCustom
+										? 'Your custom adventure'
+										: gameDescriptions[game.slug] || 'Begin your adventure'}
 								</p>
 
 								<!-- Action buttons on card -->

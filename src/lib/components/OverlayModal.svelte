@@ -21,10 +21,10 @@
 			duration,
 			tick: (t) => {
 				const eased = cubicOut(t);
-				const scale = 0.5 + (eased * 0.5); // Scale from 0.5 to 1.0
+				const scale = 0.5 + eased * 0.5; // Scale from 0.5 to 1.0
 
 				const clouds = node.querySelectorAll('.cloud');
-				clouds.forEach(cloud => {
+				clouds.forEach((cloud) => {
 					cloud.style.transform = `translate(-50%, -50%) scale(${scale})`;
 				});
 
@@ -39,18 +39,54 @@
 	<defs>
 		<!-- Back layer: subtle turbulence with soft edges -->
 		<filter id="fog-filter-back" x="-20%" y="-20%" width="140%" height="140%">
-			<feTurbulence type="fractalNoise" baseFrequency="0.006" numOctaves="4" seed="5" result="noise" />
-			<feDisplacementMap in="SourceGraphic" in2="noise" scale="160" xChannelSelector="R" yChannelSelector="G" />
+			<feTurbulence
+				type="fractalNoise"
+				baseFrequency="0.006"
+				numOctaves="4"
+				seed="5"
+				result="noise"
+			/>
+			<feDisplacementMap
+				in="SourceGraphic"
+				in2="noise"
+				scale="160"
+				xChannelSelector="R"
+				yChannelSelector="G"
+			/>
 		</filter>
 		<!-- Middle layer: moderate turbulence -->
 		<filter id="fog-filter-mid" x="-20%" y="-20%" width="140%" height="140%">
-			<feTurbulence type="fractalNoise" baseFrequency="0.009" numOctaves="4" seed="7" result="noise" />
-			<feDisplacementMap in="SourceGraphic" in2="noise" scale="120" xChannelSelector="G" yChannelSelector="B" />
+			<feTurbulence
+				type="fractalNoise"
+				baseFrequency="0.009"
+				numOctaves="4"
+				seed="7"
+				result="noise"
+			/>
+			<feDisplacementMap
+				in="SourceGraphic"
+				in2="noise"
+				scale="120"
+				xChannelSelector="G"
+				yChannelSelector="B"
+			/>
 		</filter>
 		<!-- Front layer: sharper details, closer to viewer -->
 		<filter id="fog-filter-front" x="-20%" y="-20%" width="140%" height="140%">
-			<feTurbulence type="fractalNoise" baseFrequency="0.013" numOctaves="3" seed="11" result="noise" />
-			<feDisplacementMap in="SourceGraphic" in2="noise" scale="90" xChannelSelector="B" yChannelSelector="R" />
+			<feTurbulence
+				type="fractalNoise"
+				baseFrequency="0.013"
+				numOctaves="3"
+				seed="11"
+				result="noise"
+			/>
+			<feDisplacementMap
+				in="SourceGraphic"
+				in2="noise"
+				scale="90"
+				xChannelSelector="B"
+				yChannelSelector="R"
+			/>
 		</filter>
 	</defs>
 </svg>

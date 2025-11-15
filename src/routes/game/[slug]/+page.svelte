@@ -13,8 +13,8 @@
 	onMount(() => {
 		// Only initialize if the game isn't already loaded (e.g., from resume)
 		// Check if the current gameState matches this game
-		const isAlreadyLoaded = gameState.config?.slug === data.gameConfig.slug &&
-		                        gameState.config?.loaded === true;
+		const isAlreadyLoaded =
+			gameState.config?.slug === data.gameConfig.slug && gameState.config?.loaded === true;
 
 		if (!isAlreadyLoaded) {
 			// Initialize game state using centralized initialization logic

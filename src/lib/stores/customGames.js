@@ -109,8 +109,7 @@ export function addCustomGame(markdown, filename) {
 			filename
 				.replace('.game.md', '')
 				.toLowerCase()
-				.replace(/[^a-z0-9]+/g, '-') ||
-			parsed.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+				.replace(/[^a-z0-9]+/g, '-') || parsed.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
 		// Convert to game config
 		const gameConfig = convertToGameConfig(parsed, slug);

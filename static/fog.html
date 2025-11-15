@@ -1,29 +1,29 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fog Dialog Demo</title>
-<style>
-  /* Basic reset */
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Fog Dialog Demo</title>
+		<style>
+			/* Basic reset */
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
 
-  body {
-    font-family: system-ui, sans-serif;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    /* Dark, ethereal background with a subtle radial gradient to hint at depth */
-    background: radial-gradient(circle at 50% 30%, #1c2331 0%, #0c1020 100%);
-    color: #d5d8e0;
-  }
+			body {
+				font-family: system-ui, sans-serif;
+				min-height: 100vh;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				/* Dark, ethereal background with a subtle radial gradient to hint at depth */
+				background: radial-gradient(circle at 50% 30%, #1c2331 0%, #0c1020 100%);
+				color: #d5d8e0;
+			}
 
-  /*
+			/*
     Fog overlay styling
     This overlay sits behind the dialog and on top of the page content. It uses multiple
     radial gradients to simulate thick clouds and a custom SVG mask to give the
@@ -32,38 +32,40 @@
     rolling in and dissipating. The z-index ensures the overlay sits beneath
     the dialog but above the rest of the page.
   */
-  .overlay {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 5;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    /* Start hidden and no blur */
-    opacity: 0;
-    backdrop-filter: blur(0px) brightness(1);
-    -webkit-backdrop-filter: blur(0px) brightness(1);
-    transition: opacity 0.8s ease, backdrop-filter 0.8s ease;
-  }
+			.overlay {
+				position: fixed;
+				inset: 0;
+				pointer-events: none;
+				z-index: 5;
+				overflow: hidden;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				/* Start hidden and no blur */
+				opacity: 0;
+				backdrop-filter: blur(0px) brightness(1);
+				-webkit-backdrop-filter: blur(0px) brightness(1);
+				transition:
+					opacity 0.8s ease,
+					backdrop-filter 0.8s ease;
+			}
 
-  /* Fade in and darken the page when active */
-  .overlay.active {
-    opacity: 1;
-    /* Slightly lighten the backdrop rather than darkening it completely so that the cloud layers stand out */
-    backdrop-filter: blur(6px) brightness(0.8);
-    -webkit-backdrop-filter: blur(6px) brightness(0.8);
-  }
+			/* Fade in and darken the page when active */
+			.overlay.active {
+				opacity: 1;
+				/* Slightly lighten the backdrop rather than darkening it completely so that the cloud layers stand out */
+				backdrop-filter: blur(6px) brightness(0.8);
+				-webkit-backdrop-filter: blur(6px) brightness(0.8);
+			}
 
-  /* Fade out and remove blur when closing */
-  .overlay.closing {
-    opacity: 0;
-    backdrop-filter: blur(0px) brightness(1);
-    -webkit-backdrop-filter: blur(0px) brightness(1);
-  }
+			/* Fade out and remove blur when closing */
+			.overlay.closing {
+				opacity: 0;
+				backdrop-filter: blur(0px) brightness(1);
+				-webkit-backdrop-filter: blur(0px) brightness(1);
+			}
 
-  /*
+			/*
     Cloud layers for realistic fog
     We create three nested divs inside the overlay. Each cloud has an enormous size,
     border-radius to make it circular, and very large box-shadows that cast
@@ -74,199 +76,249 @@
     transform and opacity allow the clouds to scale smoothly when the overlay
     appears and disappears.
   */
-  .overlay .cloud {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0.8);
-    border-radius: 50%;
-    transition: transform 0.8s ease, opacity 0.8s ease;
-    will-change: transform, opacity;
-  }
-  .overlay.active .cloud {
-    transform: translate(-50%, -50%) scale(1);
-  }
-  .overlay.closing .cloud {
-    transform: translate(-50%, -50%) scale(0.6);
-  }
-  /* Back layer: large, faint cloud in the distance */
-  .overlay .cloud.back {
-    width: 220vw;
-    height: 200vh;
-    /* Very faint colour; the turbulence filter will displace both the div and this large shadow */
-    background: rgba(220, 225, 250, 0.08);
-    box-shadow: 0 0 300px 150px rgba(220, 225, 250, 0.5), 0 0 600px 300px rgba(220, 225, 250, 0.3);
-    filter: url(#filter-back);
-    opacity: 0.25;
-  }
-  /* Middle layer: medium-sized cloud */
-  .overlay .cloud.mid {
-    width: 180vw;
-    height: 160vh;
-    background: rgba(235, 240, 255, 0.10);
-    box-shadow: 0 0 250px 120px rgba(235, 240, 255, 0.6), 0 0 500px 240px rgba(235, 240, 255, 0.4);
-    filter: url(#filter-mid);
-    opacity: 0.4;
-  }
-  /* Front layer: bright cloud closest to the viewer */
-  .overlay .cloud.front {
-    width: 140vw;
-    height: 120vh;
-    background: rgba(255, 255, 255, 0.15);
-    box-shadow: 0 0 200px 100px rgba(255, 255, 255, 0.8), 0 0 400px 200px rgba(255, 255, 255, 0.5);
-    filter: url(#filter-front);
-    opacity: 0.55;
-  }
+			.overlay .cloud {
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%) scale(0.8);
+				border-radius: 50%;
+				transition:
+					transform 0.8s ease,
+					opacity 0.8s ease;
+				will-change: transform, opacity;
+			}
+			.overlay.active .cloud {
+				transform: translate(-50%, -50%) scale(1);
+			}
+			.overlay.closing .cloud {
+				transform: translate(-50%, -50%) scale(0.6);
+			}
+			/* Back layer: large, faint cloud in the distance */
+			.overlay .cloud.back {
+				width: 220vw;
+				height: 200vh;
+				/* Very faint colour; the turbulence filter will displace both the div and this large shadow */
+				background: rgba(220, 225, 250, 0.08);
+				box-shadow:
+					0 0 300px 150px rgba(220, 225, 250, 0.5),
+					0 0 600px 300px rgba(220, 225, 250, 0.3);
+				filter: url(#filter-back);
+				opacity: 0.25;
+			}
+			/* Middle layer: medium-sized cloud */
+			.overlay .cloud.mid {
+				width: 180vw;
+				height: 160vh;
+				background: rgba(235, 240, 255, 0.1);
+				box-shadow:
+					0 0 250px 120px rgba(235, 240, 255, 0.6),
+					0 0 500px 240px rgba(235, 240, 255, 0.4);
+				filter: url(#filter-mid);
+				opacity: 0.4;
+			}
+			/* Front layer: bright cloud closest to the viewer */
+			.overlay .cloud.front {
+				width: 140vw;
+				height: 120vh;
+				background: rgba(255, 255, 255, 0.15);
+				box-shadow:
+					0 0 200px 100px rgba(255, 255, 255, 0.8),
+					0 0 400px 200px rgba(255, 255, 255, 0.5);
+				filter: url(#filter-front);
+				opacity: 0.55;
+			}
 
-  /* Remove the native backdrop styling because we handle it with the overlay */
-  dialog::backdrop {
-    background: none;
-  }
+			/* Remove the native backdrop styling because we handle it with the overlay */
+			dialog::backdrop {
+				background: none;
+			}
 
-  button {
-    padding: 0.75rem 1.25rem;
-    font-size: 1rem;
-    border: none;
-    background-color: #38466b;
-    color: #e0e3ea;
-    border-radius: 0.5rem;
-    cursor: pointer;
-    transition: background-color 0.2s ease-in-out;
-  }
+			button {
+				padding: 0.75rem 1.25rem;
+				font-size: 1rem;
+				border: none;
+				background-color: #38466b;
+				color: #e0e3ea;
+				border-radius: 0.5rem;
+				cursor: pointer;
+				transition: background-color 0.2s ease-in-out;
+			}
 
-  button:hover {
-    background-color: #2b3657;
-  }
+			button:hover {
+				background-color: #2b3657;
+			}
 
-  /* Dialog styling */
-  dialog {
-    border: none;
-    /* Remove visible borders and corners for a smoother appearance */
-    border-radius: 0;
-    padding: 2rem;
-    width: clamp(300px, 50%, 600px);
-    max-width: 90vw;
-    line-height: 1.6;
-    color: #e0e3ea;
-    /* Dark background for ethereal look */
-    background-color: #1f2637;
-    box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.6);
-    opacity: 0;
-    /* Blur the content initially so it appears behind the cloud mask */
-    filter: blur(10px);
-    /* Position fixed and center the dialog using translate */
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0.8);
-    transition: opacity 0.8s ease, transform 0.8s ease, filter 0.8s ease;
-    /* Place the dialog above the overlay */
-    z-index: 10;
-  }
+			/* Dialog styling */
+			dialog {
+				border: none;
+				/* Remove visible borders and corners for a smoother appearance */
+				border-radius: 0;
+				padding: 2rem;
+				width: clamp(300px, 50%, 600px);
+				max-width: 90vw;
+				line-height: 1.6;
+				color: #e0e3ea;
+				/* Dark background for ethereal look */
+				background-color: #1f2637;
+				box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.6);
+				opacity: 0;
+				/* Blur the content initially so it appears behind the cloud mask */
+				filter: blur(10px);
+				/* Position fixed and center the dialog using translate */
+				position: fixed;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%) scale(0.8);
+				transition:
+					opacity 0.8s ease,
+					transform 0.8s ease,
+					filter 0.8s ease;
+				/* Place the dialog above the overlay */
+				z-index: 10;
+			}
 
-  dialog h2 {
-    margin-top: 0;
-    margin-bottom: 0.5rem;
-    color: #f0f4fc;
-  }
+			dialog h2 {
+				margin-top: 0;
+				margin-bottom: 0.5rem;
+				color: #f0f4fc;
+			}
 
-  dialog[open] {
-    opacity: 1;
-    /* maintain centering while scaling back up */
-    transform: translate(-50%, -50%) scale(1);
-    filter: blur(0);
-  }
+			dialog[open] {
+				opacity: 1;
+				/* maintain centering while scaling back up */
+				transform: translate(-50%, -50%) scale(1);
+				filter: blur(0);
+			}
 
-  /* While closing, fade and shrink the dialog so it appears to sink back into the fog */
-  dialog.closing {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.8);
-    filter: blur(10px);
-  }
-
-</style>
-</head>
-<body>
-  <button id="openBtn">Open Fog Dialog</button>
-  <!-- Overlay for the fog/backdrop. It lives outside the dialog so we can apply
+			/* While closing, fade and shrink the dialog so it appears to sink back into the fog */
+			dialog.closing {
+				opacity: 0;
+				transform: translate(-50%, -50%) scale(0.8);
+				filter: blur(10px);
+			}
+		</style>
+	</head>
+	<body>
+		<button id="openBtn">Open Fog Dialog</button>
+		<!-- Overlay for the fog/backdrop. It lives outside the dialog so we can apply
        a mask and control its animation independently of the native dialog
        backdrop. -->
-  <div id="fogOverlay" class="overlay">
-    <div class="cloud back"></div>
-    <div class="cloud mid"></div>
-    <div class="cloud front"></div>
-  </div>
-  <!-- SVG filters for realistic clouds. These filters use fractal noise and
+		<div id="fogOverlay" class="overlay">
+			<div class="cloud back"></div>
+			<div class="cloud mid"></div>
+			<div class="cloud front"></div>
+		</div>
+		<!-- SVG filters for realistic clouds. These filters use fractal noise and
        displacement maps to distort the cloud shapes and their shadows. Adjusting
        baseFrequency, numOctaves and scale values allows us to fine‑tune the
        character of each layer. Including a seed attribute generates unique
        perlin noise patterns【577556840792199†L287-L301】【577556840792199†L224-L244】. The filters are hidden
        by setting the SVG dimensions to zero. -->
-  <svg width="0" height="0" aria-hidden="true" focusable="false">
-    <!-- Back layer filter: subtle turbulence with more octaves and higher scale -->
-    <filter id="filter-back" x="-20%" y="-20%" width="140%" height="140%">
-      <!-- A low baseFrequency yields rounder, softer noise; four octaves add depth【577556840792199†L287-L301】 -->
-      <feTurbulence type="fractalNoise" baseFrequency="0.006" numOctaves="4" seed="5" result="noise" />
-      <feDisplacementMap in="SourceGraphic" in2="noise" scale="160" xChannelSelector="R" yChannelSelector="G" />
-    </filter>
-    <!-- Middle layer filter: moderate turbulence for mid‑distance clouds -->
-    <filter id="filter-mid" x="-20%" y="-20%" width="140%" height="140%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.009" numOctaves="4" seed="7" result="noise" />
-      <feDisplacementMap in="SourceGraphic" in2="noise" scale="120" xChannelSelector="G" yChannelSelector="B" />
-    </filter>
-    <!-- Front layer filter: higher baseFrequency and lower scale for sharper, closer details -->
-    <filter id="filter-front" x="-20%" y="-20%" width="140%" height="140%">
-      <feTurbulence type="fractalNoise" baseFrequency="0.013" numOctaves="3" seed="11" result="noise" />
-      <feDisplacementMap in="SourceGraphic" in2="noise" scale="90" xChannelSelector="B" yChannelSelector="R" />
-    </filter>
-  </svg>
-  <dialog id="fogDialog">
-    <h2>Cloudy Dialog</h2>
-    <p>This dialog demonstrates a fog or cloud-like backdrop that grows and dissipates when you open or close it. The edges of the fog are irregular and semi‑transparent, allowing parts of the page to peek through.</p>
-    <button id="closeBtn">Close</button>
-  </dialog>
+		<svg width="0" height="0" aria-hidden="true" focusable="false">
+			<!-- Back layer filter: subtle turbulence with more octaves and higher scale -->
+			<filter id="filter-back" x="-20%" y="-20%" width="140%" height="140%">
+				<!-- A low baseFrequency yields rounder, softer noise; four octaves add depth【577556840792199†L287-L301】 -->
+				<feTurbulence
+					type="fractalNoise"
+					baseFrequency="0.006"
+					numOctaves="4"
+					seed="5"
+					result="noise"
+				/>
+				<feDisplacementMap
+					in="SourceGraphic"
+					in2="noise"
+					scale="160"
+					xChannelSelector="R"
+					yChannelSelector="G"
+				/>
+			</filter>
+			<!-- Middle layer filter: moderate turbulence for mid‑distance clouds -->
+			<filter id="filter-mid" x="-20%" y="-20%" width="140%" height="140%">
+				<feTurbulence
+					type="fractalNoise"
+					baseFrequency="0.009"
+					numOctaves="4"
+					seed="7"
+					result="noise"
+				/>
+				<feDisplacementMap
+					in="SourceGraphic"
+					in2="noise"
+					scale="120"
+					xChannelSelector="G"
+					yChannelSelector="B"
+				/>
+			</filter>
+			<!-- Front layer filter: higher baseFrequency and lower scale for sharper, closer details -->
+			<filter id="filter-front" x="-20%" y="-20%" width="140%" height="140%">
+				<feTurbulence
+					type="fractalNoise"
+					baseFrequency="0.013"
+					numOctaves="3"
+					seed="11"
+					result="noise"
+				/>
+				<feDisplacementMap
+					in="SourceGraphic"
+					in2="noise"
+					scale="90"
+					xChannelSelector="B"
+					yChannelSelector="R"
+				/>
+			</filter>
+		</svg>
+		<dialog id="fogDialog">
+			<h2>Cloudy Dialog</h2>
+			<p>
+				This dialog demonstrates a fog or cloud-like backdrop that grows and dissipates when you
+				open or close it. The edges of the fog are irregular and semi‑transparent, allowing parts of
+				the page to peek through.
+			</p>
+			<button id="closeBtn">Close</button>
+		</dialog>
 
-  <script>
-    const dialog = document.getElementById('fogDialog');
-    const openBtn = document.getElementById('openBtn');
-    const closeBtn = document.getElementById('closeBtn');
-    const overlay = document.getElementById('fogOverlay');
+		<script>
+			const dialog = document.getElementById('fogDialog');
+			const openBtn = document.getElementById('openBtn');
+			const closeBtn = document.getElementById('closeBtn');
+			const overlay = document.getElementById('fogOverlay');
 
-    openBtn.addEventListener('click', () => {
-      // Remove any closing classes from previous animations
-      dialog.classList.remove('closing');
-      overlay.classList.remove('closing');
-      // Activate the fog overlay; this triggers the overlayIn animation
-      overlay.classList.add('active');
-      // Show the dialog. It will fade and scale in due to CSS transitions
-      dialog.showModal();
-    });
+			openBtn.addEventListener('click', () => {
+				// Remove any closing classes from previous animations
+				dialog.classList.remove('closing');
+				overlay.classList.remove('closing');
+				// Activate the fog overlay; this triggers the overlayIn animation
+				overlay.classList.add('active');
+				// Show the dialog. It will fade and scale in due to CSS transitions
+				dialog.showModal();
+			});
 
-    closeBtn.addEventListener('click', () => {
-      // Trigger the closing animations on both overlay and dialog
-      dialog.classList.add('closing');
-      overlay.classList.add('closing');
-      // Wait for the overlayOut animation to finish, then close and reset
-      const duration = 800; // must match overlayOut animation duration
-      setTimeout(() => {
-        dialog.close();
-        dialog.classList.remove('closing');
-        overlay.classList.remove('active', 'closing');
-      }, duration);
-    });
+			closeBtn.addEventListener('click', () => {
+				// Trigger the closing animations on both overlay and dialog
+				dialog.classList.add('closing');
+				overlay.classList.add('closing');
+				// Wait for the overlayOut animation to finish, then close and reset
+				const duration = 800; // must match overlayOut animation duration
+				setTimeout(() => {
+					dialog.close();
+					dialog.classList.remove('closing');
+					overlay.classList.remove('active', 'closing');
+				}, duration);
+			});
 
-    // Close dialog with escape key triggers closing animation
-    dialog.addEventListener('cancel', (event) => {
-      event.preventDefault();
-      dialog.classList.add('closing');
-      overlay.classList.add('closing');
-      const duration = 800;
-      setTimeout(() => {
-        dialog.close();
-        dialog.classList.remove('closing');
-        overlay.classList.remove('active', 'closing');
-      }, duration);
-    });
-  </script>
-</body>
+			// Close dialog with escape key triggers closing animation
+			dialog.addEventListener('cancel', (event) => {
+				event.preventDefault();
+				dialog.classList.add('closing');
+				overlay.classList.add('closing');
+				const duration = 800;
+				setTimeout(() => {
+					dialog.close();
+					dialog.classList.remove('closing');
+					overlay.classList.remove('active', 'closing');
+				}, duration);
+			});
+		</script>
+	</body>
 </html>

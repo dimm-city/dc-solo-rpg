@@ -63,8 +63,6 @@ export function initializeGame(gameConfig, player, options = {}) {
 	if (finalConfig.options?.difficulty === 0) {
 		aceOfHeartsRevealed = true;
 		deck = deck.filter((c) => !(c.card === 'A' && c.suit === 'hearts'));
-		
-
 	}
 
 	// Initialize all game state in one operation
