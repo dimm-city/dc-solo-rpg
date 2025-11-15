@@ -353,12 +353,12 @@ export function confirmFailureCheck() {
 /**
  * Record round in journal
  * @param {object} journalEntry - Journal entry
- * @param {string} journalEntry.text - Entry text
+ * @param {string} [journalEntry.text] - Entry text (optional)
  * @param {string} [journalEntry.audioData] - Base64 encoded audio data (optional)
  */
 export async function recordRound(journalEntry) {
-	if (journalEntry == null || (journalEntry.text == null && journalEntry.audioData == null)) {
-		throw new Error('No journal entries provided for this round');
+	if (journalEntry == null) {
+		throw new Error('Journal entry object is required');
 	}
 
 	journalEntry.id = gameState.round;
@@ -645,11 +645,11 @@ export async function exitGame() {
 /**
  * Resume a saved game
  * @param {string} gameSlug - Game slug or identifier
- * @returns {boolean} Success status
+ * @returns {Promise<boolean>} Success status
  */
-export function resumeGame(gameSlug) {
+export async function resumeGame(gameSlug) {
 	try {
-		const saveData = loadGame(gameSlug);
+		const saveData = await loadGame(gameSlug);
 
 		if (!saveData) {
 			logger.warn(`[resumeGame] No saved game found for ${gameSlug}`);

@@ -134,7 +134,7 @@
 		}
 	}
 
-	function handleResumeGame() {
+	async function handleResumeGame() {
 		if (!selectedGame) {
 			status = 'Please select a game to resume';
 			return;
@@ -145,7 +145,7 @@
 			selectedGame.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') ||
 			'default';
 
-		if (resumeGame(gameSlug)) {
+		if (await resumeGame(gameSlug)) {
 			// Game resumed successfully
 			status = 'Game resumed!';
 		} else {

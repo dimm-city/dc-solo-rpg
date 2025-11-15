@@ -314,14 +314,12 @@
 	});
 
 	async function handleJournalSave() {
-		// Only save if there's text or audio
-		if (journal.text || journal.audioData) {
-			await recordRound(journal);
-			journal.text = '';
-			journal.audioData = null;
-			journalSaved = true;
-			onjournalsaved(journal);
-		}
+		// Always save journal entry (text and audio are both optional)
+		await recordRound(journal);
+		journal.text = '';
+		journal.audioData = null;
+		journalSaved = true;
+		onjournalsaved(journal);
 	}
 
 	async function handleJournalNext() {

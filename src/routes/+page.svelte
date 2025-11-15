@@ -177,11 +177,11 @@
 		fileInput?.click();
 	}
 
-	function handleResumeGame(game, event) {
+	async function handleResumeGame(game, event) {
 		event.stopPropagation();
 		const slug = game.slug || game.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'unknown';
 
-		if (resumeGame(slug)) {
+		if (await resumeGame(slug)) {
 			// Game resumed successfully - navigate directly without confirmation
 			if (game.isCustom) {
 				goto(`/game/custom/${slug}`);
