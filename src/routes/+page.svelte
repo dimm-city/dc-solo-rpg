@@ -16,6 +16,14 @@
 		hasShownInstructionsInSession,
 		markInstructionsShownInSession
 	} from '$lib/utils/instructionsStorage.js';
+	import {
+		getCustomGames,
+		addCustomGame,
+		removeCustomGame
+	} from '$lib/stores/customGames.js';
+	import { hasSavedGame, getSaveMetadata } from '$lib/stores/gameSave.js';
+	import { resumeGame, deleteSavedGame } from '$lib/stores/gameActions.svelte.js';
+	import { gameState } from '$lib/stores/gameStore.svelte.js';
 
 	/** @type {import('./$types').PageData} */
 	let { data } = $props();
@@ -29,6 +37,14 @@
 	let showAboutModal = $state(false);
 	let showSettingsModal = $state(false);
 	let showHelpModal = $state(false);
+	let customGames = $state([]);
+	let allGames = $state([]);
+	let fileInput = $state(null);
+	let uploading = $state(false);
+	let uploadStatus = $state('');
+	let gameSaveData = $state({});
+	let showDeleteModal = $state(false);
+	let gameToDelete = $state(null);
 
 	// Settings state
 	let selectedDifficulty = $state(Difficulty.NORMAL);
@@ -72,7 +88,26 @@
 				selectedDiceTheme = availableDiceThemes[0];
 			}
 		}
+
+		// Load custom games
+		customGames = getCustomGames();
+		allGames = [...customGames, ...data.games].sort((a, b) => a.title.localeCompare(b.title));
+
+		// Check for saved games
+		updateSaveData();
 	});
+
+	function updateSaveData() {
+		const saveData = {};
+		allGames.forEach((game) => {
+			const slug =
+				game.slug || game.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'unknown';
+			if (hasSavedGame(slug)) {
+				saveData[slug] = getSaveMetadata(slug);
+			}
+		});
+		gameSaveData = saveData;
+	}
 
 	function selectGame(game) {
 		selectedGame = game;
@@ -81,7 +116,12 @@
 
 	function handleConfirm() {
 		if (selectedGame) {
-			goto(`/game/${selectedGame.slug}`);
+			// Navigate to custom game route if it's a custom game
+			if (selectedGame.isCustom) {
+				goto(`/game/custom/${selectedGame.slug}`);
+			} else {
+				goto(`/game/${selectedGame.slug}`);
+			}
 		}
 		showModal = false;
 	}
@@ -89,6 +129,99 @@
 	function handleCancel() {
 		showModal = false;
 		selectedGame = null;
+	}
+
+	async function handleFileUpload(event) {
+		const file = event.target.files?.[0];
+		if (!file) return;
+
+		// Validate file type
+		if (!file.name.endsWith('.game.md')) {
+			uploadStatus = 'Please select a .game.md file';
+			setTimeout(() => (uploadStatus = ''), 3000);
+			return;
+		}
+
+		uploading = true;
+		uploadStatus = 'Uploading and parsing game file...';
+
+		try {
+			const text = await file.text();
+			const result = addCustomGame(text, file.name);
+
+			if (result.success) {
+				// Reload custom games list
+				customGames = getCustomGames();
+				allGames = [...customGames, ...data.games].sort((a, b) =>
+					a.title.localeCompare(b.title)
+				);
+				updateSaveData();
+
+				uploadStatus = `Successfully loaded "${result.gameConfig.title}"!`;
+				setTimeout(() => (uploadStatus = ''), 5000);
+			} else {
+				uploadStatus = `Error: ${result.error}`;
+				setTimeout(() => (uploadStatus = ''), 5000);
+			}
+		} catch (error) {
+			uploadStatus = `Failed to load file: ${error.message}`;
+			setTimeout(() => (uploadStatus = ''), 5000);
+		} finally {
+			uploading = false;
+			// Clear file input
+			if (fileInput) {
+				fileInput.value = '';
+			}
+		}
+	}
+
+	function handleUploadClick() {
+		fileInput?.click();
+	}
+
+	function handleResumeGame(game) {
+		const slug = game.slug || game.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'unknown';
+
+		if (resumeGame(slug)) {
+			// Game resumed successfully - the resumeGame function sets the game state
+			// Just navigate directly to show the resumed game
+			if (game.isCustom) {
+				goto(`/game/custom/${slug}`);
+			} else {
+				goto(`/game/${slug}`);
+			}
+		} else {
+			uploadStatus = 'Failed to resume game';
+			setTimeout(() => (uploadStatus = ''), 3000);
+		}
+	}
+
+	function handleDeleteSave(game) {
+		if (confirm('Are you sure you want to delete your saved game? This cannot be undone.')) {
+			const slug =
+				game.slug || game.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'unknown';
+
+			if (deleteSavedGame(slug)) {
+				updateSaveData();
+				uploadStatus = 'Saved game deleted';
+				setTimeout(() => (uploadStatus = ''), 3000);
+			}
+		}
+	}
+
+	function handleRemoveCustomGame(game, event) {
+		event.stopPropagation(); // Prevent card selection
+		if (confirm(`Are you sure you want to remove "${game.title}"?`)) {
+			if (removeCustomGame(game.slug)) {
+				customGames = getCustomGames();
+				allGames = [...customGames, ...data.games].sort((a, b) =>
+					a.title.localeCompare(b.title)
+				);
+				updateSaveData();
+				uploadStatus = 'Custom game removed';
+				setTimeout(() => (uploadStatus = ''), 3000);
+			}
+		}
 	}
 
 	function handleSplashComplete() {
@@ -260,12 +393,44 @@
 
 {#if showContent}
 	<section class="form-container" data-testid="home-page" transition:fade={{ duration: 600 }}>
+		<!-- Hidden file input -->
+		<input
+			type="file"
+			accept=".game.md,.md"
+			bind:this={fileInput}
+			onchange={handleFileUpload}
+			style="display: none;"
+		/>
+
 		<div class="page-header">
 			<div class="header-logo">
 				<img src="/d20-150.png" alt="DC Solo RPG Logo" class="logo-dice" />
 				<span class="version-text">DC-S-0.1.0</span>
 			</div>
 			<div class="header-buttons">
+				<button
+					class="header-link upload-button"
+					onclick={handleUploadClick}
+					disabled={uploading}
+					aria-label="Upload Custom Game"
+					title="Upload Custom Game"
+				>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="24"
+						height="24"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+						<polyline points="17 8 12 3 7 8"></polyline>
+						<line x1="12" x2="12" y1="3" y2="15"></line>
+					</svg>
+				</button>
 				<button onclick={handleAboutClick} class="header-button" aria-label="About">
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
@@ -320,28 +485,107 @@
 				</button>
 			</div>
 		</div>
+
+		{#if uploadStatus}
+			<div class="upload-status" transition:fade={{ duration: 200 }}>
+				{uploadStatus}
+			</div>
+		{/if}
 		<div class="welcome-container">
 			<div class="dc-start-screen-container" data-testid="game-selector">
 				<div class="game-cards-grid">
-					{#each data.games as game, index}
-						<button
-							class="game-card game-card-{index + 1}"
-							class:selected={selectedGame?.slug === game.slug}
-							onclick={() => selectGame(game)}
-							data-augmented-ui={index === 0
-								? 'tl-clip tr-clip-x br-clip-x border'
-								: index === 1
-									? 'tl-clip-y tr-clip br-clip-x border'
-									: index === 2
-										? 'tl-clip-y tr-clip-x br-clip border'
-										: index === 3
-											? 'tl-clip tr-clip-y br-clip-x bl-clip border'
-											: 'tl-clip-x tr-clip br-clip-y bl-clip border'}
-							data-testid="game-card-{game.slug}"
-						>
-							<h3 class="game-card-title">{game.title}</h3>
-							<p class="game-subtitle">{game.subtitle || 'Welcome to the city'}</p>
-						</button>
+					{#each allGames as game, index}
+						{@const gameSlug = game.slug || game.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'unknown'}
+						{@const saveData = gameSaveData[gameSlug]}
+						<div class="game-card-wrapper">
+							<button
+								class="game-card game-card-{(index % 5) + 1}"
+								class:selected={selectedGame?.slug === game.slug}
+								class:has-custom={game.isCustom}
+								onclick={() => selectGame(game)}
+								data-augmented-ui={index % 5 === 0
+									? 'tl-clip tr-clip-x br-clip-x border'
+									: index % 5 === 1
+										? 'tl-clip-y tr-clip br-clip-x border'
+										: index % 5 === 2
+											? 'tl-clip-y tr-clip-x br-clip border'
+											: index % 5 === 3
+												? 'tl-clip tr-clip-y br-clip-x bl-clip border'
+												: 'tl-clip-x tr-clip br-clip-y bl-clip border'}
+								data-testid="game-card-{game.slug}"
+							>
+								<h3 class="game-card-title">
+									{game.title}
+									{#if game.isCustom}
+										<span class="custom-badge">Custom</span>
+									{/if}
+								</h3>
+								<p class="game-subtitle">
+									{game.isCustom ? 'Your custom adventure' : gameDescriptions[game.slug] || 'Begin your adventure'}
+								</p>
+							</button>
+
+							<!-- Save/Resume buttons -->
+							{#if saveData}
+								<div class="game-card-actions">
+									<button class="action-btn resume-btn" onclick={() => handleResumeGame(game)}>
+										<svg
+											width="16"
+											height="16"
+											viewBox="0 0 24 24"
+											fill="none"
+											stroke="currentColor"
+											stroke-width="2"
+										>
+											<polygon points="5 3 19 12 5 21 5 3"></polygon>
+										</svg>
+										Resume
+									</button>
+									<button
+										class="action-btn delete-btn"
+										onclick={(e) => {
+											e.stopPropagation();
+											handleDeleteSave(game);
+										}}
+									>
+										<svg
+											width="16"
+											height="16"
+											viewBox="0 0 24 24"
+											fill="none"
+											stroke="currentColor"
+											stroke-width="2"
+										>
+											<polyline points="3 6 5 6 21 6"></polyline>
+											<path
+												d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+											></path>
+										</svg>
+									</button>
+								</div>
+							{/if}
+
+							<!-- Remove button for custom games -->
+							{#if game.isCustom}
+								<button
+									class="action-btn remove-btn"
+									onclick={(e) => handleRemoveCustomGame(game, e)}
+									title="Remove custom game"
+								>
+									<svg
+										width="16"
+										height="16"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="2"
+									>
+										<line x1="18" y1="6" x2="6" y2="18"></line>
+										<line x1="6" y1="6" x2="18" y2="18"></line>
+									</svg>
+								</button>
+							{/if}
+						</div>
 					{/each}
 				</div>
 			</div>
@@ -541,6 +785,7 @@
 
 	.header-button {
 		color: var(--color-brand-yellow);
+		text-decoration: none;
 		background: none;
 		border: none;
 		padding: var(--space-sm);
@@ -570,6 +815,31 @@
 
 	.header-button:active {
 		transform: scale(1.05);
+	}
+
+	.header-link:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.upload-button:hover {
+		color: var(--color-cyber-magenta);
+	}
+
+	.upload-button:hover svg {
+		filter: drop-shadow(0 0 8px var(--color-cyber-magenta));
+	}
+
+	.upload-status {
+		text-align: center;
+		padding: var(--space-md);
+		background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(217, 70, 239, 0.1));
+		border: 1px solid rgba(0, 255, 255, 0.3);
+		border-radius: 8px;
+		margin: var(--space-md) var(--space-lg);
+		color: var(--color-neon-cyan);
+		font-size: var(--text-sm);
+		text-shadow: 0 0 4px rgba(0, 255, 255, 0.5);
 	}
 
 	.welcome-container {
@@ -616,6 +886,12 @@
 	/* ============================================
 	   GAME CARD BASE STYLES
 	   ============================================ */
+	.game-card-wrapper {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+	}
+
 	.game-card {
 		/* Layout */
 		display: flex;
@@ -882,6 +1158,95 @@
 		line-height: var(--line-height-relaxed);
 		/* Subtle glow for better readability */
 		text-shadow: 0 0 4px rgba(0, 255, 255, 0.15);
+	}
+
+	.custom-badge {
+		display: inline-block;
+		margin-left: var(--space-xs);
+		padding: 2px 8px;
+		font-size: 0.65rem;
+		background: linear-gradient(135deg, var(--color-cyber-magenta), var(--color-brand-yellow));
+		border-radius: 4px;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: #000;
+		font-weight: 700;
+	}
+
+	/* ============================================
+	   GAME CARD ACTIONS (Resume/Delete/Remove)
+	   ============================================ */
+	.game-card-actions {
+		display: flex;
+		gap: var(--space-sm);
+		margin-top: var(--space-sm);
+		justify-content: center;
+	}
+
+	.action-btn {
+		background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(217, 70, 239, 0.2));
+		border: 1px solid rgba(0, 255, 255, 0.4);
+		color: var(--color-neon-cyan);
+		padding: var(--space-xs) var(--space-md);
+		border-radius: 4px;
+		cursor: pointer;
+		transition: all 0.3s ease;
+		font-size: 0.85rem;
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-xs);
+		text-shadow: 0 0 4px rgba(0, 255, 255, 0.5);
+	}
+
+	.action-btn:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+		border-color: var(--color-neon-cyan);
+	}
+
+	.action-btn svg {
+		width: 16px;
+		height: 16px;
+	}
+
+	.resume-btn {
+		flex: 1;
+	}
+
+	.delete-btn {
+		background: linear-gradient(135deg, rgba(255, 0, 0, 0.2), rgba(255, 100, 100, 0.2));
+		border-color: rgba(255, 100, 100, 0.4);
+		color: #ff6b6b;
+	}
+
+	.delete-btn:hover {
+		border-color: #ff6b6b;
+		box-shadow: 0 0 15px rgba(255, 100, 100, 0.4);
+	}
+
+	.remove-btn {
+		position: absolute;
+		top: var(--space-sm);
+		right: var(--space-sm);
+		background: rgba(255, 0, 0, 0.8);
+		border: 1px solid #ff6b6b;
+		color: white;
+		padding: var(--space-xs);
+		border-radius: 50%;
+		width: 32px;
+		height: 32px;
+		cursor: pointer;
+		transition: all 0.3s ease;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 10;
+	}
+
+	.remove-btn:hover {
+		background: rgba(255, 0, 0, 1);
+		transform: rotate(90deg) scale(1.1);
+		box-shadow: 0 0 15px rgba(255, 0, 0, 0.6);
 	}
 
 	/* ============================================
