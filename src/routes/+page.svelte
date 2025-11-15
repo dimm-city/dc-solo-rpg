@@ -28,12 +28,10 @@
 	/** @type {import('./$types').PageData} */
 	let { data } = $props();
 
-	let selectedGame = $state(null);
 	// Check if splash was already shown in this session
 	let showSplash = $state(typeof window !== 'undefined' && !sessionStorage.getItem('splashShown'));
 	let showInstructionsChoice = $state(false);
 	let showContent = $state(false);
-	let showModal = $state(false);
 	let showAboutModal = $state(false);
 	let showSettingsModal = $state(false);
 	let showHelpModal = $state(false);
@@ -109,26 +107,13 @@
 		gameSaveData = saveData;
 	}
 
-	function selectGame(game) {
-		selectedGame = game;
-		showModal = true;
-	}
-
-	function handleConfirm() {
-		if (selectedGame) {
-			// Navigate to custom game route if it's a custom game
-			if (selectedGame.isCustom) {
-				goto(`/game/custom/${selectedGame.slug}`);
-			} else {
-				goto(`/game/${selectedGame.slug}`);
-			}
+	function handleStartGame(game) {
+		// Navigate to game without confirmation
+		if (game.isCustom) {
+			goto(`/game/custom/${game.slug}`);
+		} else {
+			goto(`/game/${game.slug}`);
 		}
-		showModal = false;
-	}
-
-	function handleCancel() {
-		showModal = false;
-		selectedGame = null;
 	}
 
 	async function handleFileUpload(event) {
@@ -179,12 +164,12 @@
 		fileInput?.click();
 	}
 
-	function handleResumeGame(game) {
+	function handleResumeGame(game, event) {
+		event.stopPropagation();
 		const slug = game.slug || game.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'unknown';
 
 		if (resumeGame(slug)) {
-			// Game resumed successfully - the resumeGame function sets the game state
-			// Just navigate directly to show the resumed game
+			// Game resumed successfully - navigate directly without confirmation
 			if (game.isCustom) {
 				goto(`/game/custom/${slug}`);
 			} else {
@@ -196,8 +181,14 @@
 		}
 	}
 
-	function handleDeleteSave(game) {
-		if (confirm('Are you sure you want to delete your saved game? This cannot be undone.')) {
+	function handleDeleteSave(game, event) {
+		event.stopPropagation();
+		const gameName = game.title || 'this game';
+		if (
+			confirm(
+				`Delete saved game for "${gameName}"?\n\nThis will permanently delete your saved progress. This cannot be undone.`
+			)
+		) {
 			const slug =
 				game.slug || game.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'unknown';
 
@@ -498,11 +489,9 @@
 						{@const gameSlug = game.slug || game.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'unknown'}
 						{@const saveData = gameSaveData[gameSlug]}
 						<div class="game-card-wrapper">
-							<button
+							<div
 								class="game-card game-card-{(index % 5) + 1}"
-								class:selected={selectedGame?.slug === game.slug}
 								class:has-custom={game.isCustom}
-								onclick={() => selectGame(game)}
 								data-augmented-ui={index % 5 === 0
 									? 'tl-clip tr-clip-x br-clip-x border'
 									: index % 5 === 1
@@ -523,54 +512,79 @@
 								<p class="game-subtitle">
 									{game.isCustom ? 'Your custom adventure' : gameDescriptions[game.slug] || 'Begin your adventure'}
 								</p>
-							</button>
 
-							<!-- Save/Resume buttons -->
-							{#if saveData}
-								<div class="game-card-actions">
-									<button class="action-btn resume-btn" onclick={() => handleResumeGame(game)}>
-										<svg
-											width="16"
-											height="16"
-											viewBox="0 0 24 24"
-											fill="none"
-											stroke="currentColor"
-											stroke-width="2"
+								<!-- Action buttons on card -->
+								<div class="card-action-buttons">
+									{#if saveData}
+										<!-- Resume button -->
+										<button
+											class="icon-action-btn resume-btn"
+											onclick={(e) => handleResumeGame(game, e)}
+											title="Resume saved game"
+											aria-label="Resume saved game"
 										>
-											<polygon points="5 3 19 12 5 21 5 3"></polygon>
-										</svg>
-										Resume
-									</button>
-									<button
-										class="action-btn delete-btn"
-										onclick={(e) => {
-											e.stopPropagation();
-											handleDeleteSave(game);
-										}}
-									>
-										<svg
-											width="16"
-											height="16"
-											viewBox="0 0 24 24"
-											fill="none"
-											stroke="currentColor"
-											stroke-width="2"
+											<svg
+												width="20"
+												height="20"
+												viewBox="0 0 24 24"
+												fill="none"
+												stroke="currentColor"
+												stroke-width="2"
+											>
+												<polygon points="5 3 19 12 5 21 5 3"></polygon>
+											</svg>
+										</button>
+										<!-- Delete save button -->
+										<button
+											class="icon-action-btn delete-btn"
+											onclick={(e) => handleDeleteSave(game, e)}
+											title="Delete saved game"
+											aria-label="Delete saved game"
 										>
-											<polyline points="3 6 5 6 21 6"></polyline>
-											<path
-												d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
-											></path>
-										</svg>
-									</button>
+											<svg
+												width="20"
+												height="20"
+												viewBox="0 0 24 24"
+												fill="none"
+												stroke="currentColor"
+												stroke-width="2"
+											>
+												<polyline points="3 6 5 6 21 6"></polyline>
+												<path
+													d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+												></path>
+											</svg>
+										</button>
+									{:else}
+										<!-- Start/Play button -->
+										<button
+											class="icon-action-btn start-btn"
+											onclick={() => handleStartGame(game)}
+											title="Start new game"
+											aria-label="Start new game"
+										>
+											<svg
+												width="20"
+												height="20"
+												viewBox="0 0 24 24"
+												fill="none"
+												stroke="currentColor"
+												stroke-width="2"
+											>
+												<polygon points="5 3 19 12 5 21 5 3"></polygon>
+											</svg>
+										</button>
+									{/if}
 								</div>
-							{/if}
+							</div>
 
 							<!-- Remove button for custom games -->
 							{#if game.isCustom}
 								<button
-									class="action-btn remove-btn"
+									class="remove-custom-btn"
 									onclick={(e) => handleRemoveCustomGame(game, e)}
 									title="Remove custom game"
+									aria-label="Remove custom game"
 								>
 									<svg
 										width="16"
@@ -593,14 +607,17 @@
 	</section>
 {/if}
 
+<!-- Delete Confirmation Modal -->
 <ConfirmModal
-	isOpen={showModal}
-	title="Load Game"
-	message={selectedGame ? `Start "${selectedGame.title}"?` : 'Loading game...'}
-	confirmText="START GAME"
+	isOpen={showDeleteModal}
+	title="Delete Saved Game"
+	message={gameToDelete
+		? `Are you sure you want to delete your saved game for "${gameToDelete.title}"?\n\nThis will permanently delete your saved progress. This cannot be undone.`
+		: 'Delete saved game?'}
+	confirmText="DELETE"
 	cancelText="CANCEL"
-	onConfirm={handleConfirm}
-	onCancel={handleCancel}
+	onConfirm={confirmDeleteSave}
+	onCancel={cancelDeleteSave}
 />
 
 <!-- About Modal -->
@@ -907,14 +924,12 @@
 		backdrop-filter: blur(16px);
 		-webkit-backdrop-filter: blur(16px);
 
-		/* Remove default button styling */
+		/* Remove default styling */
 		border: none;
-		cursor: pointer;
 		position: relative;
 
 		/* Transitions */
 		transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-		will-change: transform, box-shadow, filter;
 
 		/* Staggered fade-in animation */
 		animation:
@@ -1038,97 +1053,83 @@
 	}
 
 	/* ============================================
-	   GAME CARD INTERACTIVE STATES
+	   GAME CARD ACTION BUTTONS
 	   ============================================ */
 
-	.game-card:hover {
-		transform: translateY(-6px) scale(1.02);
-		filter: brightness(1.2);
+	.card-action-buttons {
+		display: flex;
+		gap: var(--space-md);
+		margin-top: var(--space-md);
+		justify-content: center;
+		align-items: center;
 	}
 
-	.game-card-1:hover {
-		box-shadow:
-			0 0 20px rgba(0, 255, 255, 0.6),
-			0 0 40px rgba(0, 255, 255, 0.3),
-			inset 0 0 15px rgba(0, 255, 255, 0.15);
+	.icon-action-btn {
+		background: linear-gradient(135deg, rgba(0, 255, 255, 0.15), rgba(217, 70, 239, 0.15));
+		border: 2px solid rgba(0, 255, 255, 0.5);
+		color: var(--color-neon-cyan);
+		padding: var(--space-sm);
+		border-radius: 50%;
+		cursor: pointer;
+		transition: all 0.3s ease;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 48px;
+		height: 48px;
+		position: relative;
+		box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
 	}
 
-	.game-card-2:hover {
-		box-shadow:
-			0 0 20px rgba(217, 70, 239, 0.6),
-			0 0 40px rgba(217, 70, 239, 0.3),
-			inset 0 0 15px rgba(217, 70, 239, 0.15);
+	.icon-action-btn:hover {
+		transform: translateY(-3px) scale(1.1);
+		box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+		border-color: var(--color-neon-cyan);
+		background: linear-gradient(135deg, rgba(0, 255, 255, 0.25), rgba(217, 70, 239, 0.25));
 	}
 
-	.game-card-3:hover {
-		box-shadow:
-			0 0 20px rgba(255, 215, 0, 0.6),
-			0 0 40px rgba(255, 215, 0, 0.3),
-			inset 0 0 15px rgba(255, 215, 0, 0.15);
+	.icon-action-btn:active {
+		transform: translateY(-1px) scale(1.05);
 	}
 
-	.game-card-4:hover {
-		box-shadow:
-			0 0 20px rgba(0, 255, 255, 0.6),
-			0 0 40px rgba(0, 255, 255, 0.3),
-			inset 0 0 15px rgba(0, 255, 255, 0.15);
+	.icon-action-btn svg {
+		width: 20px;
+		height: 20px;
+		filter: drop-shadow(0 0 4px currentColor);
 	}
 
-	.game-card-5:hover {
-		box-shadow:
-			0 0 20px rgba(217, 70, 239, 0.6),
-			0 0 40px rgba(217, 70, 239, 0.3),
-			inset 0 0 15px rgba(217, 70, 239, 0.15);
+	.start-btn {
+		background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(217, 70, 239, 0.2));
+		border-color: rgba(0, 255, 255, 0.6);
+		color: var(--color-neon-cyan);
 	}
 
-	/* Selected State - Enhanced glow and thicker border */
-	.game-card.selected {
-		--aug-border-all: 3px;
-		transform: translateY(-6px) scale(1.03);
+	.start-btn:hover {
+		border-color: var(--color-neon-cyan);
+		box-shadow: 0 0 25px rgba(0, 255, 255, 0.7);
 	}
 
-	.game-card-1.selected {
-		box-shadow:
-			0 0 25px rgba(0, 255, 255, 0.8),
-			0 0 50px rgba(0, 255, 255, 0.4),
-			inset 0 0 20px rgba(0, 255, 255, 0.2);
+	.resume-btn {
+		background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(0, 255, 255, 0.15));
+		border-color: rgba(255, 215, 0, 0.5);
+		color: var(--color-brand-yellow);
 	}
 
-	.game-card-2.selected {
-		box-shadow:
-			0 0 25px rgba(217, 70, 239, 0.8),
-			0 0 50px rgba(217, 70, 239, 0.4),
-			inset 0 0 20px rgba(217, 70, 239, 0.2);
+	.resume-btn:hover {
+		border-color: var(--color-brand-yellow);
+		box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
 	}
 
-	.game-card-3.selected {
-		box-shadow:
-			0 0 25px rgba(255, 215, 0, 0.8),
-			0 0 50px rgba(255, 215, 0, 0.4),
-			inset 0 0 20px rgba(255, 215, 0, 0.2);
+	.delete-btn {
+		background: linear-gradient(135deg, rgba(255, 0, 0, 0.15), rgba(255, 100, 100, 0.15));
+		border-color: rgba(255, 100, 100, 0.5);
+		color: #ff6b6b;
 	}
 
-	.game-card-4.selected {
-		box-shadow:
-			0 0 25px rgba(0, 255, 255, 0.8),
-			0 0 50px rgba(0, 255, 255, 0.4),
-			inset 0 0 20px rgba(0, 255, 255, 0.2);
-	}
-
-	.game-card-5.selected {
-		box-shadow:
-			0 0 25px rgba(217, 70, 239, 0.8),
-			0 0 50px rgba(217, 70, 239, 0.4),
-			inset 0 0 20px rgba(217, 70, 239, 0.2);
-	}
-
-	.game-card:active {
-		transform: translateY(-2px);
-	}
-
-	.game-card:focus-visible {
-		outline: 2px solid var(--color-neon-cyan);
-		outline-offset: 4px;
+	.delete-btn:hover {
+		border-color: #ff6b6b;
+		box-shadow: 0 0 20px rgba(255, 100, 100, 0.6);
+		background: linear-gradient(135deg, rgba(255, 0, 0, 0.25), rgba(255, 100, 100, 0.25));
 	}
 
 	/* ============================================
@@ -1174,57 +1175,9 @@
 	}
 
 	/* ============================================
-	   GAME CARD ACTIONS (Resume/Delete/Remove)
+	   CUSTOM GAME REMOVE BUTTON
 	   ============================================ */
-	.game-card-actions {
-		display: flex;
-		gap: var(--space-sm);
-		margin-top: var(--space-sm);
-		justify-content: center;
-	}
-
-	.action-btn {
-		background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(217, 70, 239, 0.2));
-		border: 1px solid rgba(0, 255, 255, 0.4);
-		color: var(--color-neon-cyan);
-		padding: var(--space-xs) var(--space-md);
-		border-radius: 4px;
-		cursor: pointer;
-		transition: all 0.3s ease;
-		font-size: 0.85rem;
-		display: inline-flex;
-		align-items: center;
-		gap: var(--space-xs);
-		text-shadow: 0 0 4px rgba(0, 255, 255, 0.5);
-	}
-
-	.action-btn:hover {
-		transform: translateY(-2px);
-		box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
-		border-color: var(--color-neon-cyan);
-	}
-
-	.action-btn svg {
-		width: 16px;
-		height: 16px;
-	}
-
-	.resume-btn {
-		flex: 1;
-	}
-
-	.delete-btn {
-		background: linear-gradient(135deg, rgba(255, 0, 0, 0.2), rgba(255, 100, 100, 0.2));
-		border-color: rgba(255, 100, 100, 0.4);
-		color: #ff6b6b;
-	}
-
-	.delete-btn:hover {
-		border-color: #ff6b6b;
-		box-shadow: 0 0 15px rgba(255, 100, 100, 0.4);
-	}
-
-	.remove-btn {
+	.remove-custom-btn {
 		position: absolute;
 		top: var(--space-sm);
 		right: var(--space-sm);
@@ -1243,7 +1196,7 @@
 		z-index: 10;
 	}
 
-	.remove-btn:hover {
+	.remove-custom-btn:hover {
 		background: rgba(255, 0, 0, 1);
 		transform: rotate(90deg) scale(1.1);
 		box-shadow: 0 0 15px rgba(255, 0, 0, 0.6);
@@ -1903,11 +1856,8 @@
 			animation: none !important;
 		}
 
-		.game-card:hover,
-		.game-card.selected,
-		.game-card:active,
-		.about-link:hover,
-		.about-link:active,
+		.icon-action-btn:hover,
+		.icon-action-btn:active,
 		.choice-card:hover,
 		.choice-card:focus {
 			transition: none !important;
