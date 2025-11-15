@@ -116,7 +116,7 @@
 			<div
 				class="stat-item health-stat slide-down"
 				data-augmented-ui={healthAugmentedUI}
-				style="animation-delay: 0.1s; animation-duration: 0.5s"
+				style="animation-delay: 0.15s; animation-duration: 0.7s"
 			>
 				<div class="stat-label">
 					<svg
@@ -148,7 +148,11 @@
 				</div>
 			</div>
 
-			<div class="stat-item failure-stat slide-down" data-augmented-ui={failureAugmentedUI}>
+			<div
+			class="stat-item failure-stat slide-down"
+			data-augmented-ui={failureAugmentedUI}
+			style="animation-delay: 0.25s; animation-duration: 0.85s"
+		>
 				<div class="stat-label">
 					<svg
 						class="stat-icon"
@@ -185,7 +189,7 @@
 			<div
 				class="dice-readout slide-down"
 				data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
-				style="animation-delay: 0.3s; animation-duration: 0.5s"
+				style="animation-delay: 0.35s; animation-duration: 0.75s"
 			>
 				<div class="dice-label">
 					<svg
@@ -220,7 +224,7 @@
 			<div
 				class="deck-readout slide-down"
 				data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
-				style="animation-delay: 0.4s; animation-duration: 0.5s"
+				style="animation-delay: 0.45s; animation-duration: 0.75s"
 			>
 				<div class="deck-label">
 					<svg
@@ -250,7 +254,11 @@
 			</div>
 		</div>
 		<div>
-			<div class="stat-item bonus-stat slide-down" data-augmented-ui={luckAugmentedUI}>
+			<div
+			class="stat-item bonus-stat slide-down"
+			data-augmented-ui={luckAugmentedUI}
+			style="animation-delay: 0.55s; animation-duration: 0.85s"
+		>
 				<div class="stat-label">
 					<svg
 						class="stat-icon"
@@ -286,7 +294,7 @@
 			<div
 				class="stat-item success-stat slide-down"
 				data-augmented-ui={successAugmentedUI}
-				style="animation-delay: 0.6s; animation-duration: 0.5s"
+				style="animation-delay: 0.65s; animation-duration: 0.75s"
 			>
 				<div class="stat-label">
 					<svg
@@ -331,7 +339,7 @@
 		<div
 			class="progress-tracker slide-down"
 			data-augmented-ui={successAugmentedUI}
-			style="animation-delay: 0.7s; animation-duration: 0.5s"
+			style="animation-delay: 0.75s; animation-duration: 0.7s"
 		>
 			<div class="progress-bar">
 				<div class="progress-fill" style="width: {progressPercent}%"></div>
@@ -355,53 +363,67 @@
 		overflow: visible;
 	}
 
-	/* Slide Down Animation */
+	/* Professional Slide Down Animation with Bounce */
 	@keyframes slideDown {
-		from {
+		0% {
 			transform: translateY(-100%);
 			opacity: 0;
 		}
-		to {
+		60% {
+			transform: translateY(4%);
+			opacity: 1;
+		}
+		80% {
+			transform: translateY(-2%);
+		}
+		100% {
 			transform: translateY(0);
 			opacity: 1;
 		}
 	}
 
 	.slide-down {
-		animation: slideDown 0.5s ease-in forwards;
+		animation: slideDown 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 		opacity: 0;
 	}
 
-	/* Slide Down Animation */
+	/* Slide Down and Left with Professional Easing */
 	@keyframes slideDownAndLeft {
 		0% {
-			transform: translateY(-100%) translateX(100px);
+			transform: translateY(-100%) translateX(80px);
 			opacity: 0;
 		}
-		25% {
+		50% {
+			transform: translateY(0) translateX(80px);
 			opacity: 1;
 		}
-		50% {
-			transform: translateY(0) translateX(100px);
-			opacity: 1;
+		70% {
+			transform: translateY(0) translateX(-4px);
+		}
+		85% {
+			transform: translateY(0) translateX(2px);
 		}
 		100% {
 			transform: translateY(0) translateX(0);
 			opacity: 1;
 		}
 	}
-	/* Slide Down Animation */
+
+	/* Slide Down and Right with Professional Easing */
 	@keyframes slideDownAndRight {
 		0% {
-			transform: translateY(-100%) translateX(-100px);
+			transform: translateY(-100%) translateX(-80px);
 			opacity: 0;
 		}
-		25% {
+		50% {
+			transform: translateY(0) translateX(-80px);
 			opacity: 1;
 		}
-		50% {
-			transform: translateY(0) translateX(-100px);
-			opacity: 1;
+		70% {
+			transform: translateY(0) translateX(4px);
+		}
+		85% {
+			transform: translateY(0) translateX(-2px);
 		}
 		100% {
 			transform: translateY(0) translateX(0);
@@ -641,9 +663,7 @@
 	}
 
 	.failure-stat.slide-down {
-		animation-delay: 0.2s; /* Left column continues */
-		animation-duration: 0.8s; /* Slower for complex animation */
-		animation-timing-function: cubic-bezier(0.075, 0.82, 0.165, 1);
+		animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 		animation-name: slideDownAndLeft;
 	}
 	@keyframes failure-glow-pulse {
@@ -684,9 +704,7 @@
 
 	.bonus-stat.slide-down {
 		animation-name: slideDownAndRight;
-		animation-delay: 0.5s; /* Right column starts */
-		animation-duration: 0.8s; /* Slower for complex animation */
-		animation-timing-function: ease-in;
+		animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 	}
 
 	@keyframes bonus-glow-pulse {
@@ -850,11 +868,22 @@
 		margin-right: 2px;
 	}
 
+	@keyframes fillBarGrow {
+		from {
+			width: 0;
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
+	}
+
 	.stat-fill {
 		height: 100%;
-		transition: width 0.3s ease;
+		transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 		position: relative;
 		box-shadow: 0 0 10px currentColor;
+		animation: fillBarGrow 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 	}
 
 	.health-fill {
@@ -943,6 +972,20 @@
 		min-width: 54px;
 	}
 
+	@keyframes pipPopIn {
+		0% {
+			transform: scale(0);
+			opacity: 0;
+		}
+		60% {
+			transform: scale(1.3);
+		}
+		100% {
+			transform: scale(1);
+			opacity: 1;
+		}
+	}
+
 	.pip {
 		width: 6px;
 		height: 6px;
@@ -951,7 +994,9 @@
 		box-shadow:
 			0 0 5px rgba(0, 255, 255, 0.8),
 			0 0 10px rgba(217, 70, 239, 0.4);
-		animation: pip-pulse 2s ease-in-out infinite;
+		animation:
+			pipPopIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.5s backwards,
+			pip-pulse 2s ease-in-out 1s infinite;
 	}
 
 	@keyframes pip-pulse {
@@ -1016,42 +1061,6 @@
 		filter: drop-shadow(0 0 4px currentColor);
 	}
 
-	.deck-value {
-		font-size: 2rem;
-		font-weight: 900;
-		font-family: 'Courier New', monospace;
-		color: #00eeff;
-		text-shadow:
-			0 0 15px rgba(0, 238, 255, 1),
-			0 0 30px rgba(0, 238, 255, 0.6),
-			0 0 45px rgba(0, 238, 255, 0.3);
-		line-height: 1;
-	}
-
-	.deck-stack {
-		display: flex;
-		position: relative;
-		height: 20px;
-		width: 50px;
-		justify-content: center;
-		align-items: center;
-	}
-
-	.card-layer {
-		position: absolute;
-		width: 28px;
-		height: 16px;
-		background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(0, 255, 255, 0.2));
-		border: 1px solid rgba(255, 215, 0, 0.5);
-		border-radius: 2px;
-		box-shadow:
-			0 0 5px rgba(255, 215, 0, 0.4),
-			0 0 10px rgba(0, 255, 255, 0.2);
-		/* Use 4px increments for 8px baseline grid */
-		transform: translateX(calc(var(--layer-index) * 4px))
-			translateY(calc(var(--layer-index) * -4px));
-		transition: all 0.3s ease;
-	}
 
 	/* Token Grid */
 	.token-grid {
@@ -1059,6 +1068,20 @@
 		grid-template-columns: repeat(5, 1fr);
 		gap: 0.25rem;
 		padding: 0.25rem;
+	}
+
+	@keyframes tokenPopIn {
+		0% {
+			transform: scale(0);
+			opacity: 0;
+		}
+		50% {
+			transform: scale(1.2);
+		}
+		100% {
+			transform: scale(1);
+			opacity: 1;
+		}
 	}
 
 	.token-shape {
@@ -1069,6 +1092,9 @@
 		align-items: center;
 		justify-content: center;
 		transition: all 0.3s ease;
+		animation: tokenPopIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+		animation-delay: calc(0.8s + var(--token-index) * 0.05s);
+		opacity: 0;
 	}
 
 	.token-inner {
@@ -1136,10 +1162,6 @@
 		.deck-readout {
 			min-width: 85px;
 			min-height: 90px;
-		}
-
-		.deck-value {
-			font-size: 1.5rem;
 		}
 
 		.token-shape {
@@ -1217,23 +1239,6 @@
 		.deck-label {
 			font-size: 0.6rem;
 			display: none;
-		}
-
-		.deck-value {
-			font-size: 1.25rem;
-		}
-
-		.deck-stack {
-			height: 16px;
-			width: 40px;
-		}
-
-		.card-layer {
-			width: 24px;
-			height: 14px;
-			/* Use 4px increments for 8px baseline grid */
-			transform: translateX(calc(var(--layer-index) * 4px))
-				translateY(calc(var(--layer-index) * -4px));
 		}
 
 		/* Position third column (Bonus + Success) */
@@ -1442,9 +1447,10 @@
 	.progress-fill {
 		height: 100%;
 		background: linear-gradient(90deg, var(--color-neon-cyan), var(--color-cyber-magenta));
-		transition: width 0.3s ease;
+		transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 		box-shadow: 0 0 10px rgba(0, 255, 255, 0.6);
 		position: relative;
+		animation: fillBarGrow 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 	}
 
 	.progress-text {
@@ -1504,13 +1510,15 @@
 		.pip,
 		.token-shape {
 			animation: none !important;
+			opacity: 1 !important;
 		}
 
 		.stat-fill,
 		.progress-fill,
-		.token-inner,
-		.card-layer {
+		.token-inner {
 			transition: none !important;
+			animation: none !important;
+			opacity: 1 !important;
 		}
 	}
 </style>
