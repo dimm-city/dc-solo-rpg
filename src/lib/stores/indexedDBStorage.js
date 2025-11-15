@@ -208,7 +208,12 @@ export async function saveGame(gameState) {
 
 		// Save game state (without audio data)
 		const saveData = getSerializableState(gameState);
-		await db.put(SAVE_STORE, saveData, gameSlug);
+
+		// Ensure data is fully serializable by doing a JSON round-trip
+		// This removes functions and non-cloneable objects that IndexedDB can't handle
+		const cleanedSaveData = JSON.parse(JSON.stringify(saveData));
+
+		await db.put(SAVE_STORE, cleanedSaveData, gameSlug);
 
 		// Save audio data separately as Blobs
 		const audioData = {};
@@ -439,8 +444,11 @@ export async function migrateFromLocalStorage() {
 						// Update version to new format
 						parsed.version = SAVE_VERSION;
 
+						// Ensure data is fully serializable (should already be, but double-check)
+						const cleanedData = JSON.parse(JSON.stringify(parsed));
+
 						// Save to IndexedDB
-						await db.put(SAVE_STORE, parsed, gameSlug);
+						await db.put(SAVE_STORE, cleanedData, gameSlug);
 						migratedCount++;
 
 						logger.info(`[migrateFromLocalStorage] Migrated save for ${gameSlug}`);
