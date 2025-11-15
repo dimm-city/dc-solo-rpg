@@ -183,6 +183,14 @@ html {
 	scroll-behavior: smooth;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
+	/* Prevent mobile viewport scrolling */
+	position: fixed;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	/* Prevent pull-to-refresh and overscroll */
+	overscroll-behavior: none;
+	-webkit-overflow-scrolling: touch;
 }
 
 body {
@@ -195,6 +203,15 @@ body {
 	padding: 0;
 	overflow: hidden;
 	height: 100vh;
+	/* Mobile viewport fixes */
+	position: fixed;
+	width: 100%;
+	/* Prevent pull-to-refresh */
+	overscroll-behavior-y: none;
+	/* Prevent bounce scrolling on iOS */
+	-webkit-overflow-scrolling: touch;
+	/* Prevent text selection on touch */
+	-webkit-touch-callout: none;
 }
 
 /* Allow overflow on mobile for toolbar elements to appear above toolbar */
