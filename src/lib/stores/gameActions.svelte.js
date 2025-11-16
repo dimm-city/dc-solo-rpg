@@ -139,9 +139,14 @@ export function drawCard() {
 		`[drawCard] Drew ${card.card} of ${card.suit}, cardsToDrawRemaining: ${gameState.cardsToDraw}`
 	);
 
-	// Add to log
+	// Add to log with game state snapshot
 	card.id = `${gameState.round}.${gameState.log.filter((l) => l.round === gameState.round).length + 1}`;
 	card.round = gameState.round;
+	card.gameState = {
+		tower: gameState.tower,
+		tokens: gameState.tokens,
+		kingsRevealed: gameState.kingsRevealed
+	};
 	gameState.log.push(card);
 
 	// Store pending updates (to be applied when card is dismissed)

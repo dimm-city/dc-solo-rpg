@@ -17,9 +17,47 @@
 	let currentRoundIndex = $state(0);
 	let isNavigating = $state(false);
 
-	// Get total rounds from card log
-	let totalRounds = $derived(savedGame?.cardLog?.length || 0);
-	let currentRound = $derived(savedGame?.cardLog?.[currentRoundIndex] || null);
+	// Merge card log with journal entries to create complete round data
+	let enrichedRounds = $derived.by(() => {
+		if (!savedGame?.cardLog) return [];
+
+		const cardLog = savedGame.cardLog;
+		const journalEntries = savedGame.journalEntries || [];
+
+		// Filter out non-card entries (like 'initial-damage', 'final-damage')
+		const cardEntries = cardLog.filter(entry => entry.type !== 'initial-damage' && entry.type !== 'final-damage');
+
+		// Create enriched rounds by merging card data with journal entries
+		return cardEntries.map(cardEntry => {
+			// Find matching journal entry by round number
+			const journalEntry = journalEntries.find(j => j.round === cardEntry.round);
+
+			// Create round object with card and journal
+			return {
+				card: {
+					card: cardEntry.card,
+					suit: cardEntry.suit,
+					type: cardEntry.type,
+					modifier: cardEntry.modifier,
+					description: cardEntry.description,
+					story: cardEntry.story
+				},
+				journalEntry: journalEntry ? {
+					text: journalEntry.text,
+					audio: journalEntry.audioData
+				} : null,
+				gameState: cardEntry.gameState || {
+					tower: 'N/A',
+					tokens: 'N/A',
+					kingsRevealed: undefined
+				}
+			};
+		});
+	});
+
+	// Get total rounds from enriched data
+	let totalRounds = $derived(enrichedRounds.length);
+	let currentRound = $derived(enrichedRounds[currentRoundIndex] || null);
 	let canGoPrevious = $derived(currentRoundIndex > 0);
 	let canGoNext = $derived(currentRoundIndex < totalRounds - 1);
 
@@ -527,38 +565,108 @@
 	/* Mobile optimizations */
 	@media (max-width: 640px) {
 		.story-mode {
-			padding: var(--space-md);
-			gap: var(--space-lg);
+			padding: var(--space-sm);
+			gap: var(--space-md);
+			min-height: 100vh;
+			min-height: 100dvh; /* Dynamic viewport height for mobile browsers */
 		}
 
 		.story-header {
 			flex-direction: column;
-			padding: var(--space-lg);
+			align-items: stretch;
+			padding: var(--space-md);
+			position: relative;
+			gap: var(--space-md);
 		}
 
-		.game-title {
-			font-size: 1.5rem;
+		.game-info {
+			padding-right: 56px; /* Space for exit button */
 		}
 
-		.meta-info {
+		.game-title-section {
 			flex-direction: column;
 			align-items: flex-start;
 			gap: var(--space-sm);
 		}
 
-		.exit-button {
-			position: absolute;
-			top: var(--space-lg);
-			right: var(--space-lg);
+		.game-title {
+			font-size: 1.25rem;
+			line-height: 1.3;
+			word-break: break-word;
 		}
 
-		.navigation-controls {
-			flex-wrap: wrap;
-			padding: var(--space-lg);
+		.outcome-badge {
+			align-self: flex-start;
+			padding: var(--space-xs) var(--space-md);
+		}
+
+		.outcome-text {
+			font-size: 0.75rem;
+		}
+
+		.meta-info {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: var(--space-xs);
+			font-size: 0.8125rem;
+		}
+
+		.exit-button {
+			position: absolute;
+			top: var(--space-md);
+			right: var(--space-md);
+			width: 40px;
+			height: 40px;
+		}
+
+		.exit-button svg {
+			width: 20px;
+			height: 20px;
+		}
+
+		.progress-section {
+			padding: 0 var(--space-md);
+		}
+
+		.progress-track {
+			height: 6px;
 		}
 
 		.progress-markers {
 			display: none; /* Too many markers on mobile */
+		}
+
+		.round-container {
+			overflow-x: hidden;
+		}
+
+		.navigation-controls {
+			flex-direction: row;
+			justify-content: space-between;
+			padding: var(--space-md);
+			gap: var(--space-md);
+		}
+
+		.navigation-controls :global(button) {
+			flex: 1;
+			min-width: 0;
+			font-size: 0.875rem;
+			padding: var(--space-sm) var(--space-md);
+		}
+
+		.round-indicator {
+			position: relative;
+			flex-shrink: 0;
+			gap: var(--space-xs);
+		}
+
+		.round-indicator .current {
+			font-size: 1.5rem;
+		}
+
+		.round-indicator .separator,
+		.round-indicator .total {
+			font-size: 1rem;
 		}
 
 		.keyboard-hints {
@@ -566,7 +674,12 @@
 		}
 	}
 
-	@media (max-width: 1024px) {
+	/* Tablet optimizations */
+	@media (min-width: 641px) and (max-width: 1024px) {
+		.story-mode {
+			padding: var(--space-md);
+		}
+
 		.progress-marker {
 			max-width: 36px;
 			height: 28px;
@@ -574,6 +687,38 @@
 
 		.marker-number {
 			font-size: 0.625rem;
+		}
+	}
+
+	/* Extra small screens */
+	@media (max-width: 375px) {
+		.story-mode {
+			padding: var(--space-xs);
+		}
+
+		.story-header {
+			padding: var(--space-sm);
+		}
+
+		.game-title {
+			font-size: 1.125rem;
+		}
+
+		.meta-info {
+			font-size: 0.75rem;
+		}
+
+		.exit-button {
+			width: 36px;
+			height: 36px;
+		}
+
+		.navigation-controls {
+			padding: var(--space-sm);
+		}
+
+		.round-indicator .current {
+			font-size: 1.25rem;
 		}
 	}
 </style>

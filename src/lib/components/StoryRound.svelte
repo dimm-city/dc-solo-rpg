@@ -398,26 +398,101 @@
 	/* Mobile optimizations */
 	@media (max-width: 640px) {
 		.story-round {
-			padding: var(--space-md);
-			gap: var(--space-lg);
+			padding: var(--space-sm);
+			gap: var(--space-md);
+			max-width: 100%;
 		}
 
 		.round-header {
 			flex-direction: column;
 			align-items: flex-start;
+			padding: var(--space-md);
+			gap: var(--space-sm);
+		}
+
+		.round-number {
+			width: 100%;
+		}
+
+		.round-number .number {
+			font-size: 1.5rem;
+		}
+
+		.card-type-badge {
+			width: 100%;
+			justify-content: center;
+			padding: var(--space-xs) var(--space-md);
 		}
 
 		.card-display,
 		.journal-section {
-			padding: var(--space-lg);
+			padding: var(--space-md);
+			gap: var(--space-md);
+		}
+
+		.card-header {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: var(--space-sm);
 		}
 
 		.card-name {
-			font-size: 1.25rem;
+			font-size: 1.125rem;
+			word-break: break-word;
+		}
+
+		.card-modifier {
+			font-size: 0.7rem;
+		}
+
+		.description-text {
+			font-size: 1rem;
+		}
+
+		.story-content {
+			font-size: 0.9rem;
+			line-height: 1.6;
+		}
+
+		.journal-text {
+			font-size: 0.9rem;
+			padding: var(--space-md);
 		}
 
 		.round-stats {
 			flex-wrap: wrap;
+			padding: var(--space-md);
+			gap: var(--space-sm);
+		}
+
+		.stat-item {
+			flex: 1 1 30%;
+			min-width: 80px;
+		}
+
+		.stat-value {
+			font-size: 1rem;
+		}
+	}
+
+	/* Extra small screens */
+	@media (max-width: 375px) {
+		.story-round {
+			padding: var(--space-xs);
+		}
+
+		.card-name {
+			font-size: 1rem;
+		}
+
+		.description-text,
+		.story-content,
+		.journal-text {
+			font-size: 0.875rem;
+		}
+
+		.stat-item {
+			flex: 1 1 45%;
 		}
 	}
 </style>
