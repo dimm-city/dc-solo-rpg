@@ -18,17 +18,17 @@
 	function getCardTypeInfo(type) {
 		switch (type) {
 			case 'primary-success':
-				return { label: 'Victory', icon: '👑', color: 'var(--color-brand-yellow)' };
+				return { label: 'Victory', color: 'var(--color-brand-yellow)' };
 			case 'failure-counter':
-				return { label: 'Doom', icon: '💀', color: 'var(--color-cyber-red)' };
+				return { label: 'Doom', color: 'var(--color-cyber-red)' };
 			case 'narrative':
-				return { label: 'Bonus', icon: '⭐', color: 'var(--color-neon-cyan)' };
+				return { label: 'Bonus', color: 'var(--color-neon-cyan)' };
 			case 'challenge':
-				return { label: 'Challenge', icon: '⚔️', color: 'var(--color-toxic-green)' };
+				return { label: 'Challenge', color: 'var(--color-toxic-green)' };
 			case 'event':
-				return { label: 'Event', icon: '📖', color: 'var(--color-cyber-magenta)' };
+				return { label: 'Event', color: 'var(--color-cyber-magenta)' };
 			default:
-				return { label: 'Unknown', icon: '❓', color: '#ffffff' };
+				return { label: 'Unknown', color: '#ffffff' };
 		}
 	}
 
@@ -56,7 +56,6 @@
 
 			{#if typeInfo}
 				<div class="card-type-badge" style="--badge-color: {typeInfo.color}">
-					<span class="type-icon">{typeInfo.icon}</span>
 					<span class="type-label">{typeInfo.label}</span>
 				</div>
 			{/if}
@@ -95,7 +94,6 @@
 		{#if round.journalEntry}
 			<div class="journal-section" data-augmented-ui="tl-clip tr-clip br-clip bl-clip border">
 				<div class="journal-header">
-					<span class="journal-icon">📝</span>
 					<h3>Journal Entry</h3>
 				</div>
 
@@ -119,18 +117,15 @@
 		{#if showStats}
 			<div class="round-stats" data-augmented-ui="tl-clip tr-clip border">
 				<div class="stat-item">
-					<span class="stat-icon">🏗️</span>
 					<span class="stat-label">Tower</span>
 					<span class="stat-value">{round.gameState?.tower ?? 'N/A'}</span>
 				</div>
 				<div class="stat-item">
-					<span class="stat-icon">🎯</span>
 					<span class="stat-label">Tokens</span>
 					<span class="stat-value">{round.gameState?.tokens ?? 'N/A'}</span>
 				</div>
 				{#if round.gameState?.kingsRevealed !== undefined}
 					<div class="stat-item">
-						<span class="stat-icon">💀</span>
 						<span class="stat-label">Kings</span>
 						<span class="stat-value">{round.gameState.kingsRevealed}/4</span>
 					</div>
@@ -207,10 +202,6 @@
 		border-radius: 6px;
 		backdrop-filter: blur(4px);
 		-webkit-backdrop-filter: blur(4px);
-	}
-
-	.type-icon {
-		font-size: 1.25rem;
 	}
 
 	.type-label {
@@ -338,10 +329,6 @@
 		gap: var(--space-md);
 	}
 
-	.journal-icon {
-		font-size: 1.5rem;
-	}
-
 	.journal-header h3 {
 		font-family: var(--font-display);
 		font-size: 1.25rem;
@@ -391,10 +378,6 @@
 		flex-direction: column;
 		align-items: center;
 		gap: var(--space-xs);
-	}
-
-	.stat-icon {
-		font-size: 1.5rem;
 	}
 
 	.stat-label {

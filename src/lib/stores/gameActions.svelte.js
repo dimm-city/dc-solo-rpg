@@ -127,6 +127,7 @@ export function drawCard() {
 	if (gameState.deck.length === 0) {
 		gameState.gameOver = true;
 		transitionTo('gameOver');
+		saveGame(gameState);
 		return null;
 	}
 
@@ -208,6 +209,18 @@ export function confirmCard() {
 		gameState.bonus += gameState.pendingUpdates.bonusChange;
 		gameState.pendingUpdates.bonusChange = null;
 		logger.debug('[confirmCard] Applied pending bonus change');
+
+		// Check for all 4 aces revealed (automatic win condition)
+		if (gameState.bonus === 4) {
+			gameState.win = true;
+			gameState.gameOver = true;
+			gameState.status =
+				gameState.config.labels?.successCheckWin ?? 'Victory! All four aces revealed - you have achieved the impossible!';
+			logger.info('[confirmCard] VICTORY - All 4 aces revealed');
+			transitionTo('gameOver');
+			saveGame(gameState);
+			return; // Exit early, no need to continue with card logic
+		}
 	}
 
 	if (gameState.pendingUpdates.kingsChange) {

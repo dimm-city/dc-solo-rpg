@@ -134,7 +134,20 @@
 			</div>
 		{:else if sortedGames.length === 0}
 			<div class="empty-state" transition:fade={{ duration: 200 }}>
-				<div class="empty-icon">📚</div>
+				<div class="empty-icon">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="64"
+						height="64"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+					>
+						<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+						<path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+					</svg>
+				</div>
 				<h2>No Completed Games</h2>
 				<p>Complete a game to view it here in story mode!</p>
 				<button class="start-button" onclick={onBack}>Start a New Game</button>
@@ -151,7 +164,29 @@
 					>
 						<!-- Outcome Badge -->
 						<div class="outcome-indicator" class:won={game.isWon}>
-							<span class="outcome-icon">{game.isWon ? '👑' : '💀'}</span>
+							{#if game.isWon}
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									width="24"
+									height="24"
+									viewBox="0 0 24 24"
+									fill="currentColor"
+								>
+									<path d="M12 2L15 8.5L22 9.5L17 14.5L18 21.5L12 18.5L6 21.5L7 14.5L2 9.5L9 8.5L12 2Z" />
+								</svg>
+							{:else}
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									width="24"
+									height="24"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+								>
+									<path d="M18 6L6 18M6 6l12 12" />
+								</svg>
+							{/if}
 						</div>
 
 						<!-- Game Info -->
@@ -161,22 +196,18 @@
 
 						<div class="game-meta">
 							<div class="meta-row">
-								<span class="meta-icon">👤</span>
 								<span class="meta-label">Player:</span>
 								<span class="meta-value">{game.playerName || 'Anonymous'}</span>
 							</div>
 							<div class="meta-row">
-								<span class="meta-icon">📖</span>
 								<span class="meta-label">Journey:</span>
 								<span class="meta-value">{formatDuration(game.roundsSurvived)}</span>
 							</div>
 							<div class="meta-row">
-								<span class="meta-icon">🏗️</span>
 								<span class="meta-label">Tower:</span>
 								<span class="meta-value">{game.finalTower ?? 'N/A'}</span>
 							</div>
 							<div class="meta-row">
-								<span class="meta-icon">📅</span>
 								<span class="meta-label">Completed:</span>
 								<span class="meta-value">{formatDate(game.lastPlayed || game.savedAt)}</span>
 							</div>
@@ -351,7 +382,8 @@
 
 	.error-icon,
 	.empty-icon {
-		font-size: 4rem;
+		color: var(--color-cyber-magenta);
+		filter: drop-shadow(0 0 20px rgba(217, 70, 239, 0.6));
 	}
 
 	.empty-state h2 {
@@ -489,14 +521,10 @@
 
 	.meta-row {
 		display: grid;
-		grid-template-columns: 24px auto 1fr;
-		gap: var(--space-xs);
+		grid-template-columns: auto 1fr;
+		gap: var(--space-sm);
 		align-items: center;
 		font-size: 0.875rem;
-	}
-
-	.meta-icon {
-		font-size: 1rem;
 	}
 
 	.meta-label {

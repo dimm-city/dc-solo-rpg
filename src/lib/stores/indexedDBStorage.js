@@ -147,6 +147,14 @@ function getSerializableState(gameState) {
 		win: gameState.win,
 		bonus: gameState.bonus,
 
+		// Completion metadata (for story mode)
+		isWon: gameState.win,
+		finalTower: gameState.tower,
+		roundsSurvived: gameState.round,
+		gameTitle: gameState.config?.title || 'Unknown Game',
+		lastPlayed: new Date().toISOString(),
+		cardLog: gameState.log || [],
+
 		// Journal (without audio data)
 		journalEntries: journalEntriesWithoutAudio,
 
@@ -181,7 +189,7 @@ function getSerializableState(gameState) {
  */
 export async function saveGame(gameState) {
 	try {
-		// Only save if game is in progress (not on initial screens or game over)
+		// Only save if game is in progress OR completed (include gameOver for completion tracking)
 		const validStatesForSaving = [
 			'showIntro',
 			'startRound',
@@ -190,7 +198,8 @@ export async function saveGame(gameState) {
 			'failureCheck',
 			'log',
 			'successCheck',
-			'finalDamageRoll'
+			'finalDamageRoll',
+			'gameOver' // Include to save completed games
 		];
 
 		if (!validStatesForSaving.includes(gameState.state)) {

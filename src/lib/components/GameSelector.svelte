@@ -221,7 +221,7 @@
 	<!-- Browse Completed Games -->
 	<div class="browse-section">
 		<AugmentedButton
-			text="📚 Browse Story Library"
+			text="Browse Story Library"
 			onclick={onbrowsestories}
 			style="secondary"
 		/>

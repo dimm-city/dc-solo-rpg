@@ -85,22 +85,21 @@
 				<div class="game-title-section">
 					<h1 class="game-title">{gameTitle}</h1>
 					<div class="outcome-badge" class:won={isWon}>
-						<span class="outcome-icon">{isWon ? '👑' : '💀'}</span>
 						<span class="outcome-text">{isWon ? 'Victory' : 'Defeat'}</span>
 					</div>
 				</div>
 				<div class="meta-info">
 					<span class="player-name">
-						<span class="icon">👤</span>
+						<strong>Player:</strong>
 						{playerName}
 					</span>
 					<span class="rounds-survived">
-						<span class="icon">📖</span>
-						{roundsSurvived} rounds
+						<strong>Rounds:</strong>
+						{roundsSurvived}
 					</span>
 					<span class="final-tower">
-						<span class="icon">🏗️</span>
-						Tower: {finalTower}
+						<strong>Tower:</strong>
+						{finalTower}
 					</span>
 				</div>
 			</div>
@@ -339,10 +338,6 @@
 		display: flex;
 		align-items: center;
 		gap: var(--space-xs);
-	}
-
-	.meta-info .icon {
-		font-size: 1rem;
 	}
 
 	.player-name {
