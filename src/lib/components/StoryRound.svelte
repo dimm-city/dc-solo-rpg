@@ -114,20 +114,34 @@
 		{/if}
 
 		<!-- Game State Stats -->
-		{#if showStats}
+		{#if showStats && round.gameState}
 			<div class="round-stats" data-augmented-ui="tl-clip tr-clip border">
 				<div class="stat-item">
 					<span class="stat-label">Tower</span>
-					<span class="stat-value">{round.gameState?.tower ?? 'N/A'}</span>
+					<span class="stat-value">{round.gameState.tower ?? 'N/A'}</span>
 				</div>
-				<div class="stat-item">
-					<span class="stat-label">Tokens</span>
-					<span class="stat-value">{round.gameState?.tokens ?? 'N/A'}</span>
-				</div>
-				{#if round.gameState?.kingsRevealed !== undefined}
+				{#if round.gameState.kingsRevealed !== undefined}
 					<div class="stat-item">
-						<span class="stat-label">Kings</span>
+						<span class="stat-label">Failures</span>
 						<span class="stat-value">{round.gameState.kingsRevealed}/4</span>
+					</div>
+				{/if}
+				{#if round.gameState.tokens !== undefined}
+					<div class="stat-item">
+						<span class="stat-label">
+							{round.gameState.aceOfHeartsRevealed ? 'Success' : 'Tokens'}
+						</span>
+						<span class="stat-value">
+							{round.gameState.aceOfHeartsRevealed
+								? `${10 - round.gameState.tokens}/10`
+								: round.gameState.tokens}
+						</span>
+					</div>
+				{/if}
+				{#if round.gameState.bonus !== undefined && round.gameState.bonus > 0}
+					<div class="stat-item">
+						<span class="stat-label">Bonus</span>
+						<span class="stat-value">{round.gameState.bonus}</span>
 					</div>
 				{/if}
 			</div>

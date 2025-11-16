@@ -64,7 +64,9 @@
 					gameState: lastCard.gameState || {
 						tower: 'N/A',
 						tokens: 'N/A',
-						kingsRevealed: undefined
+						bonus: 0,
+						kingsRevealed: 0,
+						aceOfHeartsRevealed: false
 					}
 				};
 			});

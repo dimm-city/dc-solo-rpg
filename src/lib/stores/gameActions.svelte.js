@@ -145,7 +145,9 @@ export function drawCard() {
 	card.gameState = {
 		tower: gameState.tower,
 		tokens: gameState.tokens,
-		kingsRevealed: gameState.kingsRevealed
+		bonus: gameState.bonus,
+		kingsRevealed: gameState.kingsRevealed,
+		aceOfHeartsRevealed: gameState.aceOfHeartsRevealed
 	};
 	gameState.log.push(card);
 
