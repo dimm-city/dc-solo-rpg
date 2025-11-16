@@ -8,7 +8,7 @@
 	import { fade, fly } from 'svelte/transition';
 
 	let {
-		round = null, // Round data from cardLog
+		round = null, // Round data with cards array
 		roundNumber = 0,
 		totalRounds = 0,
 		showStats = true
@@ -32,12 +32,10 @@
 		}
 	}
 
-	let typeInfo = $derived(round?.card ? getCardTypeInfo(round.card.type) : null);
-
-	// Format card identifier
-	let cardDisplay = $derived(
-		round?.card ? `${round.card.card} of ${capitalize(round.card.suit)}` : ''
-	);
+	// Format card identifier (for reference)
+	function formatCardIdentifier(card) {
+		return `${card.card} of ${capitalize(card.suit)}`;
+	}
 
 	function capitalize(str) {
 		return str.charAt(0).toUpperCase() + str.slice(1);
@@ -45,7 +43,7 @@
 </script>
 
 {#if round}
-	<div class="story-round" transition:fade={{ duration: 400 }}>
+	<div class="story-round" transition:fade={{ duration: 300 }}>
 		<!-- Round Header -->
 		<div class="round-header" data-augmented-ui="tl-clip tr-clip border">
 			<div class="round-number">
@@ -53,42 +51,44 @@
 				<span class="number">{roundNumber}</span>
 				<span class="total">of {totalRounds}</span>
 			</div>
-
-			{#if typeInfo}
-				<div class="card-type-badge" style="--badge-color: {typeInfo.color}">
-					<span class="type-label">{typeInfo.label}</span>
-				</div>
-			{/if}
 		</div>
 
-		<!-- Card Display -->
-		<div class="card-display" data-augmented-ui="tl-clip tr-clip br-clip bl-clip border">
-			<div class="card-header">
-				<div class="card-identifier">
-					<span class="card-name">{cardDisplay}</span>
+		<!-- Cards Display - Loop through all cards in this round -->
+		{#each round.cards || [] as card, index (index)}
+			{@const typeInfo = getCardTypeInfo(card.type)}
+			<div class="card-display" data-augmented-ui="tl-clip tr-clip br-clip bl-clip border">
+				<div class="card-header">
+					<!-- Card Type Badge (prominent) -->
+					<div class="card-type-badge-large" style="--badge-color: {typeInfo.color}">
+						<span class="type-label">{typeInfo.label}</span>
+					</div>
+					<!-- Card identifier (subtle reference) -->
+					<div class="card-identifier-small">
+						{formatCardIdentifier(card)}
+					</div>
+					{#if card.modifier}
+						<div class="card-modifier">
+							<span class="modifier-icon">✨</span>
+							<span>{card.modifier.replace('-', ' ')}</span>
+						</div>
+					{/if}
 				</div>
-				{#if round.card?.modifier}
-					<div class="card-modifier">
-						<span class="modifier-icon">✨</span>
-						<span>{round.card.modifier.replace('-', ' ')}</span>
+
+				{#if card.description}
+					<div class="card-description">
+						<p class="description-text">{card.description}</p>
+					</div>
+				{/if}
+
+				{#if card.story}
+					<div class="card-story">
+						<div class="story-content">
+							{@html card.story.replace(/\n/g, '<br>')}
+						</div>
 					</div>
 				{/if}
 			</div>
-
-			{#if round.card?.description}
-				<div class="card-description">
-					<p class="description-text">{round.card.description}</p>
-				</div>
-			{/if}
-
-			{#if round.card?.story}
-				<div class="card-story">
-					<div class="story-content">
-						{@html round.card.story.replace(/\n/g, '<br>')}
-					</div>
-				</div>
-			{/if}
-		</div>
+		{/each}
 
 		<!-- Journal Entry -->
 		{#if round.journalEntry}
@@ -144,13 +144,14 @@
 		max-width: 900px;
 		margin: 0 auto;
 		width: 100%;
+		min-height: 60vh; /* Prevent layout jumping */
 	}
 
 	/* Round Header */
 	.round-header {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
+		justify-content: center;
 		gap: var(--space-md);
 		padding: var(--space-lg);
 		background: linear-gradient(135deg, rgba(0, 0, 0, 0.6), rgba(26, 26, 26, 0.6));
@@ -214,6 +215,41 @@
 		text-shadow: 0 0 10px color-mix(in srgb, var(--badge-color) 50%, transparent);
 	}
 
+	/* Large Card Type Badge (prominent) */
+	.card-type-badge-large {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: var(--space-md) var(--space-xl);
+		background: linear-gradient(
+			135deg,
+			color-mix(in srgb, var(--badge-color) 25%, transparent),
+			color-mix(in srgb, var(--badge-color) 15%, transparent)
+		);
+		border: 3px solid var(--badge-color);
+		border-radius: 8px;
+		backdrop-filter: blur(6px);
+		-webkit-backdrop-filter: blur(6px);
+		box-shadow: 0 0 20px color-mix(in srgb, var(--badge-color) 30%, transparent);
+	}
+
+	.card-type-badge-large .type-label {
+		font-size: 1.125rem;
+		font-weight: 700;
+		letter-spacing: 0.15em;
+	}
+
+	/* Small Card Identifier (subtle reference) */
+	.card-identifier-small {
+		font-size: 0.75rem;
+		color: rgba(255, 255, 255, 0.4);
+		font-family: 'Courier New', monospace;
+		padding: var(--space-xs) var(--space-sm);
+		background: rgba(0, 0, 0, 0.3);
+		border-radius: 4px;
+		letter-spacing: 0.05em;
+	}
+
 	/* Card Display */
 	.card-display {
 		display: flex;
@@ -232,10 +268,9 @@
 
 	.card-header {
 		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		flex-wrap: wrap;
-		gap: var(--space-md);
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--space-sm);
 	}
 
 	.card-identifier {

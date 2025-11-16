@@ -17,7 +17,7 @@
 	let currentRoundIndex = $state(0);
 	let isNavigating = $state(false);
 
-	// Merge card log with journal entries to create complete round data
+	// Group cards by round number and merge with journal entries
 	let enrichedRounds = $derived.by(() => {
 		if (!savedGame?.cardLog) return [];
 
@@ -27,32 +27,47 @@
 		// Filter out non-card entries (like 'initial-damage', 'final-damage')
 		const cardEntries = cardLog.filter(entry => entry.type !== 'initial-damage' && entry.type !== 'final-damage');
 
-		// Create enriched rounds by merging card data with journal entries
-		return cardEntries.map(cardEntry => {
-			// Find matching journal entry by round number
-			const journalEntry = journalEntries.find(j => j.round === cardEntry.round);
+		// Group cards by round number
+		const roundsMap = new Map();
+		for (const cardEntry of cardEntries) {
+			const roundNum = cardEntry.round;
+			if (!roundsMap.has(roundNum)) {
+				roundsMap.set(roundNum, []);
+			}
+			roundsMap.get(roundNum).push(cardEntry);
+		}
 
-			// Create round object with card and journal
-			return {
-				card: {
-					card: cardEntry.card,
-					suit: cardEntry.suit,
-					type: cardEntry.type,
-					modifier: cardEntry.modifier,
-					description: cardEntry.description,
-					story: cardEntry.story
-				},
-				journalEntry: journalEntry ? {
-					text: journalEntry.text,
-					audio: journalEntry.audioData
-				} : null,
-				gameState: cardEntry.gameState || {
-					tower: 'N/A',
-					tokens: 'N/A',
-					kingsRevealed: undefined
-				}
-			};
-		});
+		// Convert map to array of round objects
+		return Array.from(roundsMap.entries())
+			.sort((a, b) => a[0] - b[0]) // Sort by round number
+			.map(([roundNum, cards]) => {
+				// Find journal entry for this round
+				const journalEntry = journalEntries.find(j => j.round === roundNum);
+
+				// Get game state from the last card in the round (most recent state)
+				const lastCard = cards[cards.length - 1];
+
+				return {
+					roundNumber: roundNum,
+					cards: cards.map(cardEntry => ({
+						card: cardEntry.card,
+						suit: cardEntry.suit,
+						type: cardEntry.type,
+						modifier: cardEntry.modifier,
+						description: cardEntry.description,
+						story: cardEntry.story
+					})),
+					journalEntry: journalEntry ? {
+						text: journalEntry.text,
+						audio: journalEntry.audioData
+					} : null,
+					gameState: lastCard.gameState || {
+						tower: 'N/A',
+						tokens: 'N/A',
+						kingsRevealed: undefined
+					}
+				};
+			});
 	});
 
 	// Get total rounds from enriched data
@@ -182,14 +197,10 @@
 		<!-- Current Round Display -->
 		<div class="round-container">
 			{#key currentRoundIndex}
-				<div
-					class="round-wrapper"
-					in:fly={{ x: 100, duration: 400, easing: quintOut }}
-					out:fly={{ x: -100, duration: 200 }}
-				>
+				<div class="round-wrapper" transition:fade={{ duration: 300 }}>
 					<StoryRound
 						round={currentRound}
-						roundNumber={currentRoundIndex + 1}
+						roundNumber={currentRound?.roundNumber || currentRoundIndex + 1}
 						{totalRounds}
 						showStats={true}
 					/>
