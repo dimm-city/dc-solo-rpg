@@ -1,0 +1,584 @@
+<script>
+	/**
+	 * StoryMode - Immersive story viewer for completed games
+	 * Allows users to navigate through their completed game rounds
+	 */
+
+	import StoryRound from './StoryRound.svelte';
+	import AugmentedButton from './AugmentedButton.svelte';
+	import { fade, fly } from 'svelte/transition';
+	import { quintOut } from 'svelte/easing';
+
+	let {
+		savedGame = null, // Complete saved game object
+		onExit = () => {} // Callback when user exits story mode
+	} = $props();
+
+	let currentRoundIndex = $state(0);
+	let isNavigating = $state(false);
+
+	// Get total rounds from card log
+	let totalRounds = $derived(savedGame?.cardLog?.length || 0);
+	let currentRound = $derived(savedGame?.cardLog?.[currentRoundIndex] || null);
+	let canGoPrevious = $derived(currentRoundIndex > 0);
+	let canGoNext = $derived(currentRoundIndex < totalRounds - 1);
+
+	// Game metadata
+	let gameTitle = $derived(savedGame?.gameTitle || 'Untitled Game');
+	let playerName = $derived(savedGame?.playerName || 'Anonymous');
+	let isWon = $derived(savedGame?.isWon || false);
+	let roundsSurvived = $derived(savedGame?.roundsSurvived || 0);
+	let finalTower = $derived(savedGame?.finalTower || 0);
+
+	function previousRound() {
+		if (!canGoPrevious || isNavigating) return;
+		isNavigating = true;
+		setTimeout(() => {
+			currentRoundIndex--;
+			isNavigating = false;
+		}, 150);
+	}
+
+	function nextRound() {
+		if (!canGoNext || isNavigating) return;
+		isNavigating = true;
+		setTimeout(() => {
+			currentRoundIndex++;
+			isNavigating = false;
+		}, 150);
+	}
+
+	function jumpToRound(index) {
+		if (index === currentRoundIndex || isNavigating) return;
+		if (index < 0 || index >= totalRounds) return;
+		isNavigating = true;
+		setTimeout(() => {
+			currentRoundIndex = index;
+			isNavigating = false;
+		}, 150);
+	}
+
+	function handleKeyboard(event) {
+		if (event.key === 'ArrowLeft') {
+			previousRound();
+		} else if (event.key === 'ArrowRight') {
+			nextRound();
+		} else if (event.key === 'Escape') {
+			onExit();
+		}
+	}
+
+	// Keyboard navigation
+	$effect(() => {
+		window.addEventListener('keydown', handleKeyboard);
+		return () => {
+			window.removeEventListener('keydown', handleKeyboard);
+		};
+	});
+</script>
+
+{#if savedGame}
+	<div class="story-mode" transition:fade={{ duration: 300 }}>
+		<!-- Header with game info and controls -->
+		<div class="story-header" data-augmented-ui="tl-clip tr-clip border">
+			<div class="game-info">
+				<div class="game-title-section">
+					<h1 class="game-title">{gameTitle}</h1>
+					<div class="outcome-badge" class:won={isWon}>
+						<span class="outcome-icon">{isWon ? '👑' : '💀'}</span>
+						<span class="outcome-text">{isWon ? 'Victory' : 'Defeat'}</span>
+					</div>
+				</div>
+				<div class="meta-info">
+					<span class="player-name">
+						<span class="icon">👤</span>
+						{playerName}
+					</span>
+					<span class="rounds-survived">
+						<span class="icon">📖</span>
+						{roundsSurvived} rounds
+					</span>
+					<span class="final-tower">
+						<span class="icon">🏗️</span>
+						Tower: {finalTower}
+					</span>
+				</div>
+			</div>
+
+			<button class="exit-button" onclick={onExit} aria-label="Exit story mode">
+				<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M6 18L18 6M6 6l12 12"
+					/>
+				</svg>
+			</button>
+		</div>
+
+		<!-- Progress Bar -->
+		<div class="progress-section">
+			<div class="progress-bar-container">
+				<div class="progress-track">
+					<div
+						class="progress-fill"
+						style="width: {((currentRoundIndex + 1) / totalRounds) * 100}%"
+					></div>
+				</div>
+				<div class="progress-markers">
+					{#each Array(totalRounds) as _, i}
+						<button
+							class="progress-marker"
+							class:active={i === currentRoundIndex}
+							class:completed={i < currentRoundIndex}
+							onclick={() => jumpToRound(i)}
+							aria-label="Jump to round {i + 1}"
+						>
+							<span class="marker-number">{i + 1}</span>
+						</button>
+					{/each}
+				</div>
+			</div>
+		</div>
+
+		<!-- Current Round Display -->
+		<div class="round-container">
+			{#key currentRoundIndex}
+				<div
+					class="round-wrapper"
+					in:fly={{ x: 100, duration: 400, easing: quintOut }}
+					out:fly={{ x: -100, duration: 200 }}
+				>
+					<StoryRound
+						round={currentRound}
+						roundNumber={currentRoundIndex + 1}
+						{totalRounds}
+						showStats={true}
+					/>
+				</div>
+			{/key}
+		</div>
+
+		<!-- Navigation Controls -->
+		<div class="navigation-controls" data-augmented-ui="tl-clip tr-clip border">
+			<AugmentedButton
+				onclick={previousRound}
+				disabled={!canGoPrevious}
+				label="Previous Round"
+				style="secondary"
+			>
+				<svg
+					width="20"
+					height="20"
+					viewBox="0 0 20 20"
+					fill="none"
+					stroke="currentColor"
+					slot="icon"
+				>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M12 16l-6-6 6-6"
+					/>
+				</svg>
+				Previous
+			</AugmentedButton>
+
+			<div class="round-indicator">
+				<span class="current">{currentRoundIndex + 1}</span>
+				<span class="separator">/</span>
+				<span class="total">{totalRounds}</span>
+			</div>
+
+			<AugmentedButton
+				onclick={nextRound}
+				disabled={!canGoNext}
+				label="Next Round"
+				style="secondary"
+			>
+				Next
+				<svg
+					width="20"
+					height="20"
+					viewBox="0 0 20 20"
+					fill="none"
+					stroke="currentColor"
+					slot="icon"
+				>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M8 4l6 6-6 6"
+					/>
+				</svg>
+			</AugmentedButton>
+		</div>
+
+		<!-- Keyboard hints -->
+		<div class="keyboard-hints">
+			<span class="hint">
+				<kbd>←</kbd>
+				Previous
+			</span>
+			<span class="hint">
+				<kbd>→</kbd>
+				Next
+			</span>
+			<span class="hint">
+				<kbd>Esc</kbd>
+				Exit
+			</span>
+		</div>
+	</div>
+{/if}
+
+<style>
+	.story-mode {
+		display: flex;
+		flex-direction: column;
+		min-height: 100vh;
+		background: linear-gradient(
+			180deg,
+			rgba(10, 10, 10, 0.95),
+			rgba(26, 26, 26, 0.95),
+			rgba(10, 10, 10, 0.95)
+		);
+		padding: var(--space-lg);
+		gap: var(--space-xl);
+		overflow-y: auto;
+	}
+
+	/* Header */
+	.story-header {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: var(--space-lg);
+		padding: var(--space-xl);
+		background: linear-gradient(135deg, rgba(0, 0, 0, 0.6), rgba(26, 26, 26, 0.6));
+		border: 2px solid rgba(255, 215, 0, 0.3);
+		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
+		--aug-border-bg: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 165, 0, 0.1));
+		--aug-border: 2px;
+		--aug-border-fallback-color: rgba(255, 215, 0, 0.3);
+	}
+
+	.game-info {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-md);
+	}
+
+	.game-title-section {
+		display: flex;
+		align-items: center;
+		gap: var(--space-lg);
+		flex-wrap: wrap;
+	}
+
+	.game-title {
+		font-family: var(--font-display);
+		font-size: 2rem;
+		font-weight: 700;
+		color: var(--color-brand-yellow);
+		text-shadow: var(--text-glow-yellow);
+		margin: 0;
+		line-height: 1.2;
+	}
+
+	.outcome-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-sm);
+		padding: var(--space-sm) var(--space-lg);
+		background: linear-gradient(135deg, rgba(220, 20, 60, 0.2), rgba(139, 0, 0, 0.3));
+		border: 2px solid rgba(220, 20, 60, 0.5);
+		border-radius: 6px;
+		backdrop-filter: blur(4px);
+		-webkit-backdrop-filter: blur(4px);
+	}
+
+	.outcome-badge.won {
+		background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 165, 0, 0.15));
+		border-color: rgba(255, 215, 0, 0.5);
+	}
+
+	.outcome-icon {
+		font-size: 1.25rem;
+	}
+
+	.outcome-text {
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: 0.875rem;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		color: rgba(220, 20, 60, 1);
+	}
+
+	.outcome-badge.won .outcome-text {
+		color: var(--color-brand-yellow);
+		text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+	}
+
+	.meta-info {
+		display: flex;
+		align-items: center;
+		gap: var(--space-xl);
+		flex-wrap: wrap;
+		font-size: 0.875rem;
+		color: rgba(255, 255, 255, 0.7);
+	}
+
+	.meta-info > span {
+		display: flex;
+		align-items: center;
+		gap: var(--space-xs);
+	}
+
+	.meta-info .icon {
+		font-size: 1rem;
+	}
+
+	.player-name {
+		color: var(--color-neon-cyan);
+		font-weight: 600;
+	}
+
+	.exit-button {
+		flex-shrink: 0;
+		width: 48px;
+		height: 48px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: linear-gradient(135deg, rgba(220, 20, 60, 0.2), rgba(139, 0, 0, 0.3));
+		border: 2px solid rgba(220, 20, 60, 0.5);
+		border-radius: 50%;
+		color: rgba(220, 20, 60, 1);
+		cursor: pointer;
+		transition: all var(--transition-base);
+	}
+
+	.exit-button:hover {
+		background: linear-gradient(135deg, rgba(220, 20, 60, 0.3), rgba(139, 0, 0, 0.4));
+		border-color: rgba(220, 20, 60, 0.8);
+		box-shadow: 0 0 20px rgba(220, 20, 60, 0.5);
+		transform: scale(1.05);
+	}
+
+	/* Progress Section */
+	.progress-section {
+		padding: 0 var(--space-xl);
+	}
+
+	.progress-bar-container {
+		position: relative;
+		width: 100%;
+	}
+
+	.progress-track {
+		width: 100%;
+		height: 8px;
+		background: rgba(255, 255, 255, 0.1);
+		border-radius: 4px;
+		overflow: hidden;
+		box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+	}
+
+	.progress-fill {
+		height: 100%;
+		background: linear-gradient(90deg, var(--color-cyber-magenta), var(--color-neon-cyan));
+		border-radius: 4px;
+		transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+		box-shadow: 0 0 15px rgba(217, 70, 239, 0.6);
+	}
+
+	.progress-markers {
+		display: flex;
+		justify-content: space-between;
+		margin-top: var(--space-md);
+		gap: var(--space-xs);
+	}
+
+	.progress-marker {
+		flex: 1;
+		max-width: 48px;
+		height: 32px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: rgba(255, 255, 255, 0.05);
+		border: 2px solid rgba(255, 255, 255, 0.2);
+		border-radius: 4px;
+		cursor: pointer;
+		transition: all var(--transition-base);
+		position: relative;
+	}
+
+	.progress-marker:hover {
+		background: rgba(255, 255, 255, 0.1);
+		border-color: rgba(255, 255, 255, 0.4);
+		transform: translateY(-2px);
+	}
+
+	.progress-marker.active {
+		background: linear-gradient(135deg, var(--color-cyber-magenta), var(--color-neon-cyan));
+		border-color: var(--color-neon-cyan);
+		box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+	}
+
+	.progress-marker.completed {
+		background: rgba(0, 255, 255, 0.2);
+		border-color: rgba(0, 255, 255, 0.4);
+	}
+
+	.marker-number {
+		font-family: 'Courier New', monospace;
+		font-size: 0.75rem;
+		font-weight: 700;
+		color: rgba(255, 255, 255, 0.6);
+	}
+
+	.progress-marker.active .marker-number {
+		color: rgba(10, 10, 10, 1);
+	}
+
+	/* Round Container */
+	.round-container {
+		flex: 1;
+		position: relative;
+		overflow: hidden;
+	}
+
+	.round-wrapper {
+		width: 100%;
+	}
+
+	/* Navigation Controls */
+	.navigation-controls {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-lg);
+		padding: var(--space-xl);
+		background: linear-gradient(135deg, rgba(0, 0, 0, 0.6), rgba(26, 26, 26, 0.6));
+		border: 2px solid rgba(138, 43, 226, 0.3);
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
+		--aug-border-bg: linear-gradient(135deg, rgba(138, 43, 226, 0.2), rgba(75, 0, 130, 0.1));
+		--aug-border: 2px;
+		--aug-border-fallback-color: rgba(138, 43, 226, 0.3);
+	}
+
+	.round-indicator {
+		display: flex;
+		align-items: baseline;
+		gap: var(--space-xs);
+		font-family: 'Courier New', monospace;
+	}
+
+	.round-indicator .current {
+		font-size: 2rem;
+		font-weight: 700;
+		color: var(--color-neon-cyan);
+		text-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+	}
+
+	.round-indicator .separator {
+		font-size: 1.25rem;
+		color: rgba(255, 255, 255, 0.4);
+	}
+
+	.round-indicator .total {
+		font-size: 1.25rem;
+		color: rgba(255, 255, 255, 0.6);
+	}
+
+	/* Keyboard Hints */
+	.keyboard-hints {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: var(--space-xl);
+		padding: var(--space-md);
+		color: rgba(255, 255, 255, 0.5);
+		font-size: 0.875rem;
+	}
+
+	.hint {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+	}
+
+	kbd {
+		padding: var(--space-xs) var(--space-sm);
+		background: rgba(255, 255, 255, 0.1);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		border-radius: 4px;
+		font-family: 'Courier New', monospace;
+		font-size: 0.75rem;
+		font-weight: 700;
+		color: rgba(255, 255, 255, 0.8);
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+	}
+
+	/* Mobile optimizations */
+	@media (max-width: 640px) {
+		.story-mode {
+			padding: var(--space-md);
+			gap: var(--space-lg);
+		}
+
+		.story-header {
+			flex-direction: column;
+			padding: var(--space-lg);
+		}
+
+		.game-title {
+			font-size: 1.5rem;
+		}
+
+		.meta-info {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: var(--space-sm);
+		}
+
+		.exit-button {
+			position: absolute;
+			top: var(--space-lg);
+			right: var(--space-lg);
+		}
+
+		.navigation-controls {
+			flex-wrap: wrap;
+			padding: var(--space-lg);
+		}
+
+		.progress-markers {
+			display: none; /* Too many markers on mobile */
+		}
+
+		.keyboard-hints {
+			display: none; /* Hide on mobile */
+		}
+	}
+
+	@media (max-width: 1024px) {
+		.progress-marker {
+			max-width: 36px;
+			height: 28px;
+		}
+
+		.marker-number {
+			font-size: 0.625rem;
+		}
+	}
+</style>

@@ -334,6 +334,34 @@ export async function getSaveMetadata(gameSlug) {
 }
 
 /**
+ * Load all saved games from IndexedDB
+ * @returns {Promise<Array>} Array of all saved games
+ */
+export async function loadAllSaves() {
+	try {
+		const db = await initDB();
+		const allKeys = await db.getAllKeys(SAVE_STORE);
+		const allSaves = [];
+
+		for (const key of allKeys) {
+			const saveData = await db.get(SAVE_STORE, key);
+			if (saveData) {
+				allSaves.push({
+					id: key,
+					...saveData
+				});
+			}
+		}
+
+		logger.info(`[loadAllSaves] Loaded ${allSaves.length} saves`);
+		return allSaves;
+	} catch (error) {
+		logger.error('[loadAllSaves] Failed to load all saves:', error);
+		return [];
+	}
+}
+
+/**
  * Clear saved game from IndexedDB
  * @param {string} gameSlug - Game slug or identifier
  * @returns {Promise<boolean>} Success status
