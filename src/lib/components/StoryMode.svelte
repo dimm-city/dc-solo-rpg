@@ -55,7 +55,9 @@
 						type: cardEntry.type,
 						modifier: cardEntry.modifier,
 						description: cardEntry.description,
-						story: cardEntry.story
+						story: cardEntry.story,
+						damageRoll: cardEntry.damageRoll,
+						damageDealt: cardEntry.damageDealt
 					})),
 					journalEntry: journalEntry ? {
 						text: journalEntry.text,

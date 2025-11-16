@@ -172,23 +172,15 @@ export function drawCard() {
 		gameState.pendingUpdates.bonusChange = null;
 	}
 
-	// Check for game over (4 kings) - use pending + current state
+	// Check for game over (4 kings) - mark as pending, don't trigger immediately
 	const totalKings = gameState.kingsRevealed + (gameState.pendingUpdates.kingsChange ? 1 : 0);
 	if (totalKings === 4) {
-		// Apply pending king update before game over
-		if (gameState.pendingUpdates.kingsChange) {
-			gameState.kingsRevealed += 1;
-			const suitKey = `kingOf${gameState.pendingUpdates.kingsSuit.charAt(0).toUpperCase() + gameState.pendingUpdates.kingsSuit.slice(1)}`;
-			gameState[suitKey] = true;
-			gameState.pendingUpdates.kingsChange = null;
-			gameState.pendingUpdates.kingsSuit = null;
-		}
-		gameState.gameOver = true;
-		gameState.win = false;
-		gameState.status = gameState.config.labels.failureCounterLoss;
-		transitionTo('gameOver');
-		saveGame(gameState);
-		return card;
+		// Mark that game will end after this card is confirmed
+		gameState.pendingUpdates.gameOverCondition = {
+			type: 'kingsRevealed',
+			win: false,
+			status: gameState.config.labels.failureCounterLoss
+		};
 	}
 
 	// Auto-save after drawing a card
@@ -237,6 +229,19 @@ export function confirmCard() {
 		gameState.pendingUpdates.kingsChange = null;
 		gameState.pendingUpdates.kingsSuit = null;
 		logger.debug('[confirmCard] Applied pending kings change');
+	}
+
+	// Check for pending game over condition (4 kings, tower collapse, etc.)
+	if (gameState.pendingUpdates.gameOverCondition) {
+		const condition = gameState.pendingUpdates.gameOverCondition;
+		gameState.gameOver = true;
+		gameState.win = condition.win;
+		gameState.status = condition.status;
+		gameState.pendingUpdates.gameOverCondition = null;
+		logger.info(`[confirmCard] Game Over - ${condition.type}`);
+		transitionTo('gameOver');
+		saveGame(gameState);
+		return; // Exit early, game is over
 	}
 
 	// Clear the current card
@@ -317,7 +322,8 @@ export function applyPendingDiceRoll() {
 			...gameState.log.slice(0, -1),
 			{
 				...lastLog,
-				diceRoll: result
+				damageRoll: result,
+				damageDealt: blocksToRemove
 			}
 		];
 	}

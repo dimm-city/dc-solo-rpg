@@ -87,6 +87,29 @@
 						</div>
 					</div>
 				{/if}
+
+				<!-- Damage Roll Result (if this card triggered a damage check) -->
+				{#if card.damageRoll !== undefined}
+					<div class="damage-roll-result">
+						<div class="roll-header">
+							<span class="roll-label">Damage Check</span>
+						</div>
+						<div class="roll-details">
+							<div class="roll-die">
+								<svg class="die-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+									<rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
+									<circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+								</svg>
+								<span class="roll-number">{card.damageRoll}</span>
+							</div>
+							<div class="damage-dealt">
+								<span class="damage-arrow">→</span>
+								<span class="damage-value">-{card.damageDealt}</span>
+								<span class="damage-label">tower</span>
+							</div>
+						</div>
+					</div>
+				{/if}
 			</div>
 		{/each}
 
@@ -355,6 +378,83 @@
 	.story-content :global(em) {
 		color: var(--color-cyber-magenta);
 		font-style: italic;
+	}
+
+	/* Damage Roll Result */
+	.damage-roll-result {
+		margin-top: var(--space-md);
+		padding: var(--space-lg);
+		background: linear-gradient(135deg, rgba(255, 69, 0, 0.1), rgba(220, 20, 60, 0.1));
+		border: 2px solid rgba(255, 69, 0, 0.3);
+		border-radius: 8px;
+		backdrop-filter: blur(4px);
+		-webkit-backdrop-filter: blur(4px);
+	}
+
+	.roll-header {
+		margin-bottom: var(--space-md);
+	}
+
+	.roll-label {
+		font-family: var(--font-display);
+		font-size: 0.875rem;
+		font-weight: 700;
+		color: rgba(255, 255, 255, 0.7);
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+	}
+
+	.roll-details {
+		display: flex;
+		align-items: center;
+		gap: var(--space-lg);
+		flex-wrap: wrap;
+	}
+
+	.roll-die {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+	}
+
+	.die-icon {
+		width: 32px;
+		height: 32px;
+		color: var(--color-brand-yellow);
+		filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.5));
+	}
+
+	.roll-number {
+		font-family: var(--font-display);
+		font-size: 2rem;
+		font-weight: 700;
+		color: var(--color-brand-yellow);
+		text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+	}
+
+	.damage-dealt {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+	}
+
+	.damage-arrow {
+		font-size: 1.25rem;
+		color: rgba(255, 255, 255, 0.4);
+	}
+
+	.damage-value {
+		font-family: var(--font-display);
+		font-size: 1.5rem;
+		font-weight: 700;
+		color: #ff4500;
+		text-shadow: 0 0 10px rgba(255, 69, 0, 0.5);
+	}
+
+	.damage-label {
+		font-size: 0.875rem;
+		color: rgba(255, 255, 255, 0.6);
+		text-transform: lowercase;
 	}
 
 	/* Journal Section */
