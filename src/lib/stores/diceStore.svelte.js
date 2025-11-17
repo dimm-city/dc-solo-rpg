@@ -12,7 +12,6 @@ import { randomInt } from '../services/random.js';
 let diceBoxInstance = $state(null);
 let isInitialized = $state(false);
 let containerElement = $state(null);
-let isUpdatingTheme = $state(false);
 
 /**
  * Dice rolling state - wrapped in object to allow export
@@ -26,14 +25,6 @@ let diceState = $state({
  * Export diceState for reactive access in components
  */
 export { diceState };
-
-/**
- * Check if a theme update is in progress
- * Used by +layout.svelte to prevent duplicate initialization during theme changes
- */
-export function isThemeUpdating() {
-	return isUpdatingTheme;
-}
 
 /**
  * Initialize the DiceBox instance
@@ -281,9 +272,6 @@ export async function updateDiceTheme(theme) {
 
 	console.log('[diceStore] Updating dice theme to:', theme.key);
 
-	// Set flag to prevent $effect from re-initializing
-	isUpdatingTheme = true;
-
 	// Update gameState config
 	if (gameState.config) {
 		gameState.config.options = {
@@ -325,7 +313,4 @@ export async function updateDiceTheme(theme) {
 
 		console.log('[diceStore] Dice theme updated successfully');
 	}
-
-	// Clear the flag after theme update is complete
-	isUpdatingTheme = false;
 }
