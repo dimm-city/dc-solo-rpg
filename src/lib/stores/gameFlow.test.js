@@ -328,11 +328,12 @@ describe('WAAStore', () => {
 
 	// Test recordRound
 	describe('recordRound', () => {
-		test('should record the round and update the game state (ace of hearts revealed)', async () => {
+		test('should record the round and transition to startRound', async () => {
 			const journalEntry = { text: 'Journal entry 1' };
 			const initialState = {
 				round: 1,
 				aceOfHeartsRevealed: true,
+				tokens: 5,
 				gameOver: false,
 				journalEntries: [],
 				state: 'log'
@@ -345,10 +346,11 @@ describe('WAAStore', () => {
 			expect(gameState.journalEntries).toEqual([
 				expect.objectContaining({ text: journalEntry.text, round: initialState.round })
 			]);
-			expect(gameState.state).toBe('successCheck');
+			// recordRound now always transitions to startRound (success check happens before journal)
+			expect(gameState.state).toBe('startRound');
 		});
 
-		test('should record the round and update the game state (ace of hearts not revealed)', async () => {
+		test('should record the round and transition to startRound (no ace)', async () => {
 			const journalEntry = { text: 'Journal entry 1' };
 			const initialState = {
 				round: 1,
@@ -368,14 +370,12 @@ describe('WAAStore', () => {
 			expect(gameState.state).toBe('startRound');
 		});
 
-		test('should throw an error if no journal entry provided', () => {
-			expect(() => recordRound(null)).toThrow('No journal entries provided for this round');
+		test('should throw an error if no journal entry provided', async () => {
+			await expect(recordRound(null)).rejects.toThrow('Journal entry object is required');
 		});
 
-		test('should throw an error if journal entry text is null', () => {
-			const journalEntry = { text: null };
-
-			expect(() => recordRound(journalEntry)).toThrow('No journal entries provided for this round');
+		test('should throw an error if journal entry is undefined', async () => {
+			await expect(recordRound(undefined)).rejects.toThrow('Journal entry object is required');
 		});
 	});
 

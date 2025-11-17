@@ -10,8 +10,8 @@ describe('transitions', () => {
 		it('should have all required game states', () => {
 			const requiredStates = [
 				'loadGame',
-				'options',
-				'intro',
+				'showIntro',
+				'initialDamageRoll',
 				'startRound',
 				'rollForTasks',
 				'drawCard',
@@ -19,6 +19,7 @@ describe('transitions', () => {
 				'endTurn',
 				'log',
 				'successCheck',
+				'finalDamageRoll',
 				'gameOver',
 				'finalLog',
 				'exitGame',
@@ -38,12 +39,12 @@ describe('transitions', () => {
 		});
 
 		it('should define valid game flow from loadGame to intro', () => {
-			expect(transitionGraph.loadGame).toContain('options');
-			expect(transitionGraph.options).toContain('intro');
+			expect(transitionGraph.loadGame).toContain('showIntro');
+			expect(transitionGraph.showIntro).toContain('initialDamageRoll');
 		});
 
 		it('should define valid game flow through main gameplay', () => {
-			expect(transitionGraph.intro).toContain('rollForTasks');
+			expect(transitionGraph.initialDamageRoll).toContain('rollForTasks');
 			expect(transitionGraph.rollForTasks).toContain('drawCard');
 			expect(transitionGraph.drawCard).toContain('failureCheck');
 			expect(transitionGraph.drawCard).toContain('endTurn');
@@ -64,9 +65,9 @@ describe('transitions', () => {
 			expect(transitionGraph.finalLog).toContain('exitGame');
 		});
 
-		it('should allow restarting from game over', () => {
-			expect(transitionGraph.gameOver).toContain('intro');
-			expect(transitionGraph.finalLog).toContain('intro');
+		it('should allow exiting via exitGame -> loadGame', () => {
+			expect(transitionGraph.finalLog).toContain('exitGame');
+			expect(transitionGraph.exitGame).toContain('loadGame');
 		});
 
 		it('should allow exiting to loadGame', () => {
@@ -77,12 +78,12 @@ describe('transitions', () => {
 	describe('getValidNextStates', () => {
 		it('should return valid next states for loadGame', () => {
 			const states = getValidNextStates('loadGame');
-			expect(states).toEqual(['options']);
+			expect(states).toEqual(['showIntro']);
 		});
 
-		it('should return valid next states for intro', () => {
-			const states = getValidNextStates('intro');
-			expect(states).toEqual(['rollForTasks']);
+		it('should return valid next states for showIntro', () => {
+			const states = getValidNextStates('showIntro');
+			expect(states).toEqual(['initialDamageRoll']);
 		});
 
 		it('should return valid next states for drawCard', () => {
@@ -91,6 +92,7 @@ describe('transitions', () => {
 			expect(states).toContain('drawCard');
 			expect(states).toContain('endTurn');
 			expect(states).toContain('log');
+			expect(states).toContain('successCheck');
 			expect(states).toContain('gameOver');
 		});
 
@@ -109,16 +111,16 @@ describe('transitions', () => {
 
 	describe('isValidTransition', () => {
 		describe('Valid Transitions', () => {
-			it('should validate loadGame -> options', () => {
-				expect(isValidTransition('loadGame', 'options')).toBe(true);
+			it('should validate loadGame -> showIntro', () => {
+				expect(isValidTransition('loadGame', 'showIntro')).toBe(true);
 			});
 
-			it('should validate options -> intro', () => {
-				expect(isValidTransition('options', 'intro')).toBe(true);
+			it('should validate showIntro -> initialDamageRoll', () => {
+				expect(isValidTransition('showIntro', 'initialDamageRoll')).toBe(true);
 			});
 
-			it('should validate intro -> rollForTasks', () => {
-				expect(isValidTransition('intro', 'rollForTasks')).toBe(true);
+			it('should validate initialDamageRoll -> rollForTasks', () => {
+				expect(isValidTransition('initialDamageRoll', 'rollForTasks')).toBe(true);
 			});
 
 			it('should validate rollForTasks -> drawCard', () => {
@@ -159,20 +161,20 @@ describe('transitions', () => {
 		});
 
 		describe('Invalid Transitions', () => {
-			it('should reject loadGame -> intro (skipping options)', () => {
-				expect(isValidTransition('loadGame', 'intro')).toBe(false);
+			it('should reject loadGame -> initialDamageRoll (skipping showIntro)', () => {
+				expect(isValidTransition('loadGame', 'initialDamageRoll')).toBe(false);
 			});
 
 			it('should reject loadGame -> drawCard', () => {
 				expect(isValidTransition('loadGame', 'drawCard')).toBe(false);
 			});
 
-			it('should reject intro -> gameOver', () => {
-				expect(isValidTransition('intro', 'gameOver')).toBe(false);
+			it('should reject showIntro -> gameOver', () => {
+				expect(isValidTransition('showIntro', 'gameOver')).toBe(false);
 			});
 
-			it('should reject options -> rollForTasks (skipping intro)', () => {
-				expect(isValidTransition('options', 'rollForTasks')).toBe(false);
+			it('should reject showIntro -> rollForTasks (skipping initialDamageRoll)', () => {
+				expect(isValidTransition('showIntro', 'rollForTasks')).toBe(false);
 			});
 
 			it('should reject endTurn -> drawCard (must go through log)', () => {
@@ -221,14 +223,13 @@ describe('transitions', () => {
 		describe('Complex Game Flows', () => {
 			it('should validate complete game flow: start to win', () => {
 				const flow = [
-					['loadGame', 'options'],
-					['options', 'intro'],
-					['intro', 'rollForTasks'],
+					['loadGame', 'showIntro'],
+					['showIntro', 'initialDamageRoll'],
+					['initialDamageRoll', 'rollForTasks'],
 					['rollForTasks', 'drawCard'],
-					['drawCard', 'endTurn'],
-					['endTurn', 'log'],
-					['log', 'successCheck'],
-					['successCheck', 'startRound'],
+					['drawCard', 'successCheck'],
+					['successCheck', 'log'],
+					['log', 'startRound'],
 					['startRound', 'rollForTasks']
 				];
 
@@ -239,9 +240,9 @@ describe('transitions', () => {
 
 			it('should validate complete game flow: start to loss', () => {
 				const flow = [
-					['loadGame', 'options'],
-					['options', 'intro'],
-					['intro', 'rollForTasks'],
+					['loadGame', 'showIntro'],
+					['showIntro', 'initialDamageRoll'],
+					['initialDamageRoll', 'rollForTasks'],
 					['rollForTasks', 'drawCard'],
 					['drawCard', 'gameOver'],
 					['gameOver', 'finalLog'],

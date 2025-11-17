@@ -420,8 +420,12 @@ export function confirmCard() {
 			// More cards to draw
 			transitionTo('drawCard');
 		} else {
-			// All cards drawn, go to journal
-			transitionTo('log');
+			// All cards drawn - check for success check first, then journal
+			if (gameState.aceOfHeartsRevealed && gameState.tokens > 0) {
+				transitionTo('successCheck');
+			} else {
+				transitionTo('log');
+			}
 		}
 	}
 }
@@ -546,7 +550,12 @@ export function applyPendingDiceRoll() {
 		if (gameState.cardsToDraw > 0) {
 			transitionTo('drawCard');
 		} else {
-			transitionTo('log');
+			// All cards drawn - check for success check first, then journal
+			if (gameState.aceOfHeartsRevealed && gameState.tokens > 0) {
+				transitionTo('successCheck');
+			} else {
+				transitionTo('log');
+			}
 		}
 	}
 
@@ -614,18 +623,9 @@ export async function recordRound(journalEntry) {
 	await saveGame(gameState);
 
 	// Determine and execute next action
+	// Success check now happens BEFORE journal entry, so we just start the next round
 	if (!gameState.gameOver) {
-		if (gameState.aceOfHeartsRevealed && gameState.tokens > 0) {
-			// Go to success check screen (only if there are tokens to remove)
-			transitionTo('successCheck');
-		} else if (gameState.tokens === 0 && gameState.aceOfHeartsRevealed) {
-			// Legacy d6 system: All tokens removed, go to final damage roll
-			// D20 system: This path is unreachable - victory occurs in applyPendingSuccessCheck()
-			transitionTo('finalDamageRoll');
-		} else {
-			// Start next round
-			startRound();
-		}
+		startRound();
 	}
 }
 
@@ -711,8 +711,8 @@ export function applyPendingSuccessCheck() {
 		// Auto-save after victory
 		saveGame(gameState);
 	} else {
-		// Continue the game - start next round
-		startRound();
+		// Continue the game - go to journal entry before starting next round
+		transitionTo('log');
 	}
 }
 

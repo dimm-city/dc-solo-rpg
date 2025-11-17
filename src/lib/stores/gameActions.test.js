@@ -561,12 +561,21 @@ describe('gameActions - Core Game Mechanics', () => {
 			expect(gameState.state).toBe('startRound');
 		});
 
-		it('should throw error if no journal entry provided', () => {
-			expect(() => recordRound()).toThrow('No journal entries provided for this round');
+		it('should throw error if no journal entry provided', async () => {
+			await expect(recordRound()).rejects.toThrow('Journal entry object is required');
 		});
 
-		it('should throw error if journal entry has no text', () => {
-			expect(() => recordRound({})).toThrow('No journal entries provided for this round');
+		it('should accept empty journal entry (text and audio are optional)', async () => {
+			// Set up valid initial state
+			gameState.state = 'log';
+			gameState.round = 1;
+			gameState.journalEntries = [];
+			gameState.gameOver = false;
+
+			// Empty journal entry should be accepted (both text and audio are optional)
+			await expect(recordRound({})).resolves.not.toThrow();
+			expect(gameState.journalEntries).toHaveLength(1);
+			expect(gameState.journalEntries[0].text).toBe('');
 		});
 	});
 
