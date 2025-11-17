@@ -246,3 +246,38 @@ export async function rollDice(value = null, options = {}) {
 		isSurreal
 	};
 }
+
+/**
+ * Update the dice theme and reinitialize DiceBox
+ * @param {Object} theme - The new theme object with key, name, category, description
+ */
+export async function updateDiceTheme(theme) {
+	if (!theme || !theme.key) {
+		console.warn('[diceStore] Invalid theme provided to updateDiceTheme');
+		return;
+	}
+
+	console.log('[diceStore] Updating dice theme to:', theme.key);
+
+	// Update gameState config
+	if (gameState.config) {
+		gameState.config.options = {
+			...gameState.config.options,
+			dice: theme
+		};
+	}
+
+	// If DiceBox is initialized, we need to reinitialize it with the new theme
+	if (diceBoxInstance && containerElement) {
+		// Clear the existing instance
+		resetDiceBox();
+
+		// Wait a moment for cleanup
+		await new Promise((resolve) => setTimeout(resolve, 100));
+
+		// Reinitialize with new theme
+		await initializeDiceBox(containerElement);
+
+		console.log('[diceStore] Dice theme updated successfully');
+	}
+}

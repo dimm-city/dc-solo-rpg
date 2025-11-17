@@ -5,6 +5,7 @@
 import { gameState } from './gameStore.svelte.js';
 import { getSettings } from './settingsStore.svelte.js';
 import { shuffleArray } from '../services/random.js';
+import { getDiceTheme } from '../configuration/DiceThemes.js';
 
 /**
  * Shuffle array in place using Fisher-Yates algorithm
@@ -37,13 +38,18 @@ export function initializeGame(gameConfig, player, options = {}) {
 	// Load saved settings from localStorage
 	const savedSettings = getSettings();
 
+	// Convert saved dice theme key to full theme object
+	const savedDiceTheme = savedSettings.diceTheme
+		? getDiceTheme(savedSettings.diceTheme)
+		: null;
+
 	// Merge options: config options < saved settings < passed options
 	// Note: Difficulty is controlled by game config, not user settings
 	const finalConfig = {
 		...gameConfig,
 		options: {
 			...gameConfig.options,
-			dice: savedSettings.diceTheme,
+			...(savedDiceTheme && { dice: savedDiceTheme }),
 			...options
 		}
 	};

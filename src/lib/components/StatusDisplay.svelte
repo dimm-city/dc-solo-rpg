@@ -2,8 +2,11 @@
 	import { gameState } from '../stores/gameStore.svelte.js';
 	import { innerWidth } from 'svelte/reactivity/window';
 	import DeckVisualization from './DeckVisualization.svelte';
+	import DiceThemePicker from './DiceThemePicker.svelte';
 
 	let { onHelpClick, onExitClick } = $props();
+
+	let showDiceThemePicker = $state(false);
 
 	const tokensRemaining = $derived(gameState.tokens);
 	const bonusPercent = $derived(gameState.acesRevealed + (gameState.pendingUpdates.aceChange || 0));
@@ -135,6 +138,29 @@
 			</div>
 		</div>
 
+		<!-- Dice Theme Picker Button -->
+		<button class="status-bar-button dice-theme-button" onclick={() => showDiceThemePicker = true} aria-label="Change dice theme">
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				width="20"
+				height="20"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				aria-hidden="true"
+			>
+				<rect width="12" height="12" x="2" y="10" rx="2" ry="2" />
+				<path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6" />
+				<path d="M6 18h.01" />
+				<path d="M10 14h.01" />
+				<path d="M15 6h.01" />
+				<path d="M18 9h.01" />
+			</svg>
+		</button>
+
 		<!-- Help Button on far right -->
 		<button class="status-bar-button help-button" onclick={onHelpClick} aria-label="Game help">
 			<svg
@@ -155,6 +181,9 @@
 			</svg>
 		</button>
 	</div>
+
+	<!-- Dice Theme Picker Modal -->
+	<DiceThemePicker bind:isOpen={showDiceThemePicker} />
 
 	<!-- Stats Grid -->
 	<div class="stats-grid">
@@ -518,10 +547,10 @@
 		--aug-br: 14px;
 		--aug-bl: 14px;
 
-		/* Layout with buttons on both ends */
+		/* Layout with buttons on both ends + dice theme picker */
 		display: grid;
 		align-items: center;
-		grid-template-columns: auto 1fr auto 1fr auto;
+		grid-template-columns: auto 1fr auto 1fr auto auto;
 		gap: var(--space-sm);
 		padding-inline: var(--space-md);
 		padding-block: var(--space-sm);
@@ -1575,7 +1604,7 @@
 		.player-round-bar {
 			padding: var(--space-sm) var(--space-md);
 			gap: 4px;
-			grid-template-columns: auto 1fr auto 1fr auto;
+			grid-template-columns: auto 1fr auto 1fr auto auto;
 			font-size: 0.75rem;
 		}
 
