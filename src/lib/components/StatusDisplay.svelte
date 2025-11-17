@@ -371,11 +371,11 @@
 						<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>
 					</svg>
 				</div>
-				<div class="stat-value">
+				<!-- <div class="stat-value">
 					<span class="current">{bonusPercent}</span><span class="divider">/</span><span class="max"
 						>4</span
 					>
-				</div>
+				</div> -->
 				<div class="stat-bar">
 					<div class="stat-fill bonus-fill" style="width: {(bonusPercent / 4) * 100}%"></div>
 				</div>
@@ -609,6 +609,7 @@
 		flex-direction: column;
 		gap: 0;
 		justify-content: center;
+		align-items: center;
 	}
 
 	.info-segment .label {
@@ -1481,7 +1482,6 @@
 			min-height: auto;
 			padding: 4px;
 			gap: 1px;
-			justify-content: space-between;
 		}
 
 		.dice-label,
@@ -1560,7 +1560,6 @@
 
 		.info-segment:first-of-type {
 			flex-direction: column;
-			align-items: flex-start;
 			margin-inline-start: var(--space-md);
 			justify-content: center;
 		}
