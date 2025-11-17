@@ -24,13 +24,12 @@ test.describe('Header and Navigation', () => {
 		// Verify logo is visible
 		await expect(header.locator('.logo-dice')).toBeVisible();
 
-		// Verify version text
-		await expect(header.locator('.version-text')).toContainText('DC-S-0.1.0');
+		// Verify version text (now shows "Dream Console")
+		await expect(header.locator('.version-text')).toContainText('Dream Console');
 
-		// Verify header buttons
+		// Verify header buttons (Settings button removed from home screen)
 		await expect(header.locator('button[aria-label="About"]')).toBeVisible();
-		await expect(header.locator('a[aria-label="How to Play"]')).toBeVisible();
-		await expect(header.locator('button[aria-label="Settings"]')).toBeVisible();
+		await expect(header.locator('button[aria-label="Help"]')).toBeVisible();
 	});
 
 	test('should have sticky header', async ({ page }) => {
@@ -74,25 +73,9 @@ test.describe('Header and Navigation', () => {
 		expect(transform).toContain('scale');
 	});
 
-	test('should navigate to How to Play page when clicking link', async ({ page }) => {
-		// Click How to Play link
-		await page.click('a[aria-label="How to Play"]');
-
-		// Verify navigation
-		await expect(page).toHaveURL('/how-to');
-	});
-
 	test('should open About modal when clicking About button', async ({ page }) => {
 		// Click About button
 		await page.click('button[aria-label="About"]');
-
-		// Verify modal opens
-		await expect(page.locator('.overlay-modal-container')).toBeVisible();
-	});
-
-	test('should open Settings modal when clicking Settings button', async ({ page }) => {
-		// Click Settings button
-		await page.click('button[aria-label="Settings"]');
 
 		// Verify modal opens
 		await expect(page.locator('.overlay-modal-container')).toBeVisible();

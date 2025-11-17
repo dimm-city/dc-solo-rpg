@@ -15,13 +15,20 @@
 
 	let modalHeight = $derived(fixedHeight ?? (animateHeight ? '70dvh' : null));
 
-	function cloudFogTransition(node, { delay = 0, duration = 800 }) {
+	/**
+	 * Cloud fog transition for modal backdrop
+	 * Speed: 200ms (mechanical/ethereal aesthetic)
+	 * Easing: cubicOut for natural deceleration on entry, cubicIn for acceleration on exit
+	 * Effect: Fades in/out fog with subtle scale (0.95 to 1.0)
+	 */
+	function cloudFogTransition(node, { delay = 0, duration = 200 }) {
 		return {
 			delay,
 			duration,
 			tick: (t) => {
+				// Use cubicOut for smoother easing (matches the scale transition)
 				const eased = cubicOut(t);
-				const scale = 0.5 + eased * 0.5; // Scale from 0.5 to 1.0
+				const scale = 0.95 + eased * 0.05; // Subtle scale from 0.95 to 1.0
 
 				const clouds = node.querySelectorAll('.cloud');
 				clouds.forEach((cloud) => {
@@ -93,24 +100,28 @@
 
 {#if isVisible}
 	<!-- Fog overlay with layered clouds -->
+	<!-- Animation: Fades in/out simultaneously with modal at 200ms -->
 	<div
 		class="fog-overlay"
 		style="z-index: {zIndex - 1};"
-		in:cloudFogTransition={{ duration: 800, delay: 0 }}
-		out:cloudFogTransition={{ duration: 800, delay: 600 }}
+		in:cloudFogTransition={{ duration: 200, delay: 0 }}
+		out:cloudFogTransition={{ duration: 200, delay: 0 }}
 	>
 		<div class="cloud back"></div>
 		<div class="cloud mid"></div>
 		<div class="cloud front"></div>
 	</div>
 
+	<!-- Modal content wrapper -->
+	<!-- Animation: Fades in/out with scale (0.95 to 1.0) simultaneously with fog at 200ms -->
+	<!-- Entry: ease-out for deceleration, Exit: ease-in for acceleration (modal pattern) -->
 	<div
 		class="modal-wrapper"
 		style="z-index: {zIndex};"
 		style:height={modalHeight}
 		data-augmented-ui="tl-clip tr-clip br-clip bl-clip"
-		in:fade={{ duration: 600, delay: 800 }}
-		out:fade={{ duration: 600, delay: 0 }}
+		in:scale={{ duration: 200, delay: 0, start: 0.95, opacity: 0, easing: cubicOut }}
+		out:scale={{ duration: 200, delay: 0, start: 0.95, opacity: 0, easing: cubicOut }}
 	>
 		{@render children()}
 	</div>
@@ -140,10 +151,11 @@
 	}
 
 	/* Fog overlay container */
+	/* CRITICAL: pointer-events: auto to capture all clicks and prevent interaction with content below */
 	.fog-overlay {
 		position: fixed;
 		inset: 0;
-		pointer-events: none;
+		pointer-events: auto; /* CHANGED: Capture clicks to prevent clicking through to game content */
 		overflow: hidden;
 		display: flex;
 		align-items: center;
@@ -152,6 +164,7 @@
 		opacity: 0.75;
 		backdrop-filter: blur(6px) brightness(0.8);
 		-webkit-backdrop-filter: blur(6px) brightness(0.8);
+		cursor: default; /* Show default cursor on backdrop */
 	}
 
 	/* Cloud layers for realistic fog */

@@ -236,10 +236,10 @@ export async function rollDice(value = null, options = {}) {
 
 	const result = await diceBoxInstance.roll(rollString);
 
-	// After roll completes, wait 2 seconds before transitioning z-index back down
+	// After roll completes, wait 500ms then trigger fade-out animation
 	setTimeout(() => {
 		diceState.isRolling = false;
-	}, 2000);
+	}, 500);
 
 	// Return detailed result object
 	const rolls = result.rolls?.length ? result.rolls.map((r) => r.value) : [result.total];

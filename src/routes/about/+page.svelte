@@ -30,7 +30,7 @@
 			</svg>
 			Back to Home
 		</button>
-		<h1 class="page-title">About DC Solo RPG</h1>
+		<h1 class="page-title">About Dream Console</h1>
 	</nav>
 
 	<article class="content-wrapper">
@@ -177,7 +177,7 @@
 				<h3>Easy Game Creation</h3>
 			</div>
 			<p>
-				The game creation process for the DC Solo RPG system uses a simple markdown-based format.
+				The game creation process for Dream Console uses a simple markdown-based format.
 				Create a game by writing a single <code>.game.md</code> file with:
 			</p>
 			<ol class="creation-steps">

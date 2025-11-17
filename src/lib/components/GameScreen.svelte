@@ -52,7 +52,8 @@
 	} = $props();
 
 	const currentScreen = $derived(gameState.state);
-	const TRANSITION_DURATION = 300;
+	// Reduced from 300ms to 200ms for snappier, more mechanical feel
+	const TRANSITION_DURATION = 200;
 
 	// Contextual background text for each screen
 	const contextText = $derived.by(() => {
@@ -1070,6 +1071,8 @@
 		width: 100%;
 		opacity: 0.9;
 		grid-area: status-area;
+		z-index: 100;
+		position: relative;
 	}
 
 	.dc-start-round-screen {

@@ -1,5 +1,5 @@
 /**
- * IndexedDB Storage for DC Solo RPG
+ * IndexedDB Storage for Dream Console
  * Handles persisting game state and audio data using IndexedDB
  * Replaces localStorage to support larger audio recordings
  */

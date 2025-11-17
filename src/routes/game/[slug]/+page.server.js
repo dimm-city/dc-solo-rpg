@@ -39,7 +39,7 @@ export async function load({ params, fetch }) {
 			deck: parsed.deck,
 			introduction: formatIntroduction(parsed.introduction),
 			loaded: true,
-			stylesheet: `/games/${slug}/game.css`, // Optional stylesheet
+			stylesheet: '', // `/games/${slug}/game.css`, // Optional stylesheet
 			metadata: parsed.metadata
 		};
 

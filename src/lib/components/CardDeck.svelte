@@ -89,20 +89,27 @@
 
 	/**
 	 * Handle dismiss/continue - upload animation and notify parent
+	 * CRITICAL: Animation must complete BEFORE state transition to prevent jarring jumps
+	 * Total sequence: 600ms dismiss + 100ms pause = 700ms before next screen appears
 	 */
 	async function onDismiss() {
 		if (animationStage !== 'revealed') return;
 
+		// Start dismiss animation (600ms)
 		animationStage = 'dismissing';
 		await sleep(600);
 
-		// Notify parent that card was confirmed
-		onconfirmcard();
-
-		// Reset state
+		// Reset card state FIRST (before notifying parent)
 		animationStage = 'idle';
 		particles = []; // Clear particles
 		card = null;
+
+		// Small pause for visual clarity (100ms)
+		await sleep(100);
+
+		// NOW notify parent that card was confirmed
+		// This triggers the state transition to failureCheck/successCheck/etc
+		onconfirmcard();
 	}
 
 	/**
@@ -379,19 +386,7 @@
 	/* Clickable state when revealed */
 	.byte-container.clickable {
 		cursor: pointer;
-		transition: all var(--transition-fast);
-	}
-
-	.byte-container.clickable:hover {
-		transform: scale(1.02);
-		box-shadow:
-			0 0 40px rgba(0, 255, 255, 0.5),
-			0 0 80px rgba(217, 70, 239, 0.3),
-			inset 0 0 40px rgba(0, 255, 255, 0.15);
-	}
-
-	.byte-container.clickable:active {
-		transform: scale(0.98);
+		transition: none;
 	}
 
 	.byte-container.materializing {
@@ -404,7 +399,7 @@
 	}
 
 	.byte-container.dismissing {
-		animation: byte-dismiss 600ms cubic-bezier(0.4, 0, 1, 1) forwards;
+		animation: byte-dismiss 600ms cubic-bezier(0.4, 0, 0.6, 1) forwards;
 	}
 
 	@keyframes byte-materialize {
@@ -432,8 +427,8 @@
 		}
 		100% {
 			opacity: 0;
-			transform: translateY(-50px) scale(0.9);
-			filter: brightness(2) blur(5px);
+			transform: translateY(-30px) scale(0.95);
+			filter: blur(3px);
 		}
 	}
 
@@ -497,19 +492,19 @@
 		border: 2px solid var(--color-cyber-magenta, #d946ef);
 		border-radius: 50%;
 		transform: translate(-50%, -50%);
-		animation: bio-pulse-ring 2s ease-out infinite;
+		animation: bio-pulse-ring 4s ease-out infinite;
 		opacity: 0;
 	}
 
 	.bio-pulse::after {
-		animation-delay: 1s;
+		animation-delay: 2s;
 	}
 
 	@keyframes bio-pulse-ring {
 		0% {
 			width: 100px;
 			height: 100px;
-			opacity: 0.6;
+			opacity: 0.2;
 		}
 		100% {
 			width: 300px;
@@ -531,13 +526,14 @@
 		background: linear-gradient(
 			45deg,
 			transparent 30%,
-			rgba(0, 255, 255, 0.03) 50%,
+			rgba(0, 255, 255, 0.015) 50%,
 			transparent 70%
 		);
 		background-size: 200% 200%;
-		animation: corruption-scan 3s linear infinite;
+		animation: corruption-scan 8s linear infinite;
 		pointer-events: none;
 		z-index: 1;
+		filter: blur(2px);
 	}
 
 	@keyframes corruption-scan {
@@ -560,6 +556,23 @@
 		flex-direction: column;
 		gap: var(--space-lg, 1.5rem);
 		color: var(--color-text-primary, #fff);
+		background: linear-gradient(
+			180deg,
+			rgba(0, 0, 0, 0.5) 0%,
+			rgba(0, 0, 0, 0.4) 100%
+		);
+		padding: var(--space-lg, 1.5rem);
+		border-radius: 8px;
+		backdrop-filter: blur(4px);
+		-webkit-backdrop-filter: blur(4px);
+	}
+
+	.byte-content p {
+		color: #ffffff;
+		text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9), 0 0 4px rgba(0, 0, 0, 0.8);
+		font-weight: 400;
+		line-height: 1.6;
+		margin: 0;
 	}
 
 	/* Card Type Badge Styles */
@@ -576,7 +589,7 @@
 		letter-spacing: 0.1em;
 		align-self: flex-start;
 		opacity: 0;
-		animation: badge-materialize 600ms ease-out 400ms forwards;
+		animation: badge-materialize 180ms ease-out 400ms forwards;
 		border: 2px solid;
 		backdrop-filter: blur(4px);
 		-webkit-backdrop-filter: blur(4px);
@@ -660,11 +673,11 @@
 	@keyframes badge-materialize {
 		0% {
 			opacity: 0;
-			transform: translateX(-20px);
+			transform: scale(0.95);
 		}
 		100% {
 			opacity: 1;
-			transform: translateX(0);
+			transform: scale(1);
 		}
 	}
 
@@ -680,10 +693,12 @@
 		font-family: var(--font-body, 'Inter', sans-serif);
 		font-size: var(--text-lg, 1.125rem);
 		line-height: var(--line-height-relaxed, 1.75);
-		color: var(--color-text-secondary, rgba(255, 255, 255, 0.85));
+		color: #ffffff;
 		margin: 0;
 		opacity: 0;
 		animation: text-materialize 800ms ease-out 200ms forwards;
+		text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9), 0 0 4px rgba(0, 0, 0, 0.8);
+		font-weight: 500;
 	}
 
 	.byte-id {
@@ -694,6 +709,11 @@
 		text-transform: uppercase;
 		opacity: 0;
 		animation: text-materialize 600ms ease-out 600ms forwards;
+		text-shadow:
+			0 0 12px rgba(0, 255, 255, 1),
+			0 0 24px rgba(0, 255, 255, 0.7),
+			0 2px 6px rgba(0, 0, 0, 0.9);
+		font-weight: 700;
 	}
 
 	@keyframes text-materialize {
@@ -903,7 +923,7 @@
 		}
 
 		.byte-container.dismissing {
-			animation: byte-dismiss-reduced 200ms ease forwards;
+			animation: byte-dismiss-reduced 200ms ease-in forwards;
 		}
 
 		@keyframes byte-materialize-reduced {
