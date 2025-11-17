@@ -27,7 +27,20 @@
 		console.log('[StoryMode] Processing saved game:', {
 			totalCards: cardLog.length,
 			totalJournals: journalEntries.length,
-			journalRounds: journalEntries.map(j => j.round)
+			journalRounds: journalEntries.map(j => j.round),
+			fullJournalData: journalEntries
+		});
+
+		// Log each journal entry in detail
+		journalEntries.forEach((j, idx) => {
+			console.log(`[StoryMode] Journal ${idx}:`, {
+				round: j.round,
+				id: j.id,
+				hasText: !!j.text,
+				textLength: j.text?.length || 0,
+				hasAudio: !!j.audioData,
+				dateRecorded: j.dateRecorded
+			});
 		});
 
 		// Filter out non-card entries (like 'initial-damage', 'final-damage')

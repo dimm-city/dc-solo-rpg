@@ -355,6 +355,19 @@ export async function loadAllSaves() {
 		for (const key of allKeys) {
 			const saveData = await db.get(SAVE_STORE, key);
 			if (saveData) {
+				// Load audio data if it exists
+				const audioData = await db.get(AUDIO_STORE, key);
+
+				// Reattach audio data to journal entries
+				if (audioData && saveData.journalEntries) {
+					for (const entry of saveData.journalEntries) {
+						if (entry.hasAudio && audioData[entry.id]) {
+							// Convert Blob back to base64 for audio player
+							entry.audioData = await blobToBase64(audioData[entry.id]);
+						}
+					}
+				}
+
 				allSaves.push({
 					id: key,
 					...saveData
@@ -362,7 +375,7 @@ export async function loadAllSaves() {
 			}
 		}
 
-		logger.info(`[loadAllSaves] Loaded ${allSaves.length} saves`);
+		logger.info(`[loadAllSaves] Loaded ${allSaves.length} saves with audio data`);
 		return allSaves;
 	} catch (error) {
 		logger.error('[loadAllSaves] Failed to load all saves:', error);
