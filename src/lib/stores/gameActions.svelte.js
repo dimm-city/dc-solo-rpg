@@ -387,6 +387,17 @@ export async function recordRound(journalEntry) {
 		throw new Error('Journal entry object is required');
 	}
 
+	// Check if a journal entry already exists for this round
+	const existingEntry = gameState.journalEntries.find(entry => entry.round === gameState.round);
+	if (existingEntry) {
+		logger.error(`[recordRound] ERROR: Journal entry already exists for round ${gameState.round}. Preventing duplicate.`, {
+			existingEntry,
+			attemptedEntry: journalEntry
+		});
+		console.error(`[recordRound] ERROR: Cannot save journal entry - an entry already exists for round ${gameState.round}. Each round can only have one journal entry.`);
+		return; // Prevent duplicate
+	}
+
 	// Create a new object to avoid mutating the passed reference
 	const newEntry = {
 		round: gameState.round,
@@ -399,7 +410,8 @@ export async function recordRound(journalEntry) {
 	logger.debug(`[recordRound] Saved journal for round ${gameState.round}:`, {
 		round: newEntry.round,
 		hasText: !!newEntry.text,
-		hasAudio: !!newEntry.audioData
+		hasAudio: !!newEntry.audioData,
+		totalEntries: gameState.journalEntries.length
 	});
 
 	// Auto-save after recording journal entry (await to ensure save completes)
