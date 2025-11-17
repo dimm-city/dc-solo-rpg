@@ -213,6 +213,8 @@ describe('WAAStore', () => {
 			confirmTaskRoll();
 
 			await drawCard();
+			// Must call confirmCard() to apply pending king tracking
+			confirmCard();
 
 			// Drawing the 4th king immediately transitions to gameOver
 			expect(gameState.log).toEqual([expect.objectContaining({ ...card, round: 1 })]);
@@ -242,7 +244,8 @@ describe('WAAStore', () => {
 
 			expect(gameState.log).toEqual([expect.objectContaining({ ...card, round: 1 })]);
 			expect(gameState.kingsRevealed).toBe(3);
-			expect(gameState.bonus).toBe(1);
+			// D20 system: Aces increase acesRevealed (for Salvation threshold), not bonus
+			expect(gameState.acesRevealed).toBe(1);
 			expect(gameState.aceOfHeartsRevealed).toBe(true);
 			// Ace is an odd card, so it triggers failure check
 			expect(gameState.state).toBe('failureCheck');
