@@ -332,6 +332,7 @@
 
 	async function handleJournalExit() {
 		await exitGame();
+		goto('/'); // Navigate back to home page
 	}
 
 	// Show mini HUD during card-related screens

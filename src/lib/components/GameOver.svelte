@@ -1,17 +1,22 @@
 <script>
 	import { gameState, transitionTo } from '../stores/gameStore.svelte.js';
 	import ContinueButton from './ContinueButton.svelte';
+
+	// Determine if this is a victory or loss
+	let isVictory = $derived(gameState.win === true);
+	let titleText = $derived(isVictory ? 'VICTORY' : 'GAME OVER');
+	let titleLetters = $derived(titleText.split(''));
 </script>
 
-<div class="game-over-overlay">
+<div class="game-over-overlay" class:victory={isVictory}>
 	<div class="game-over-content">
-		<div class="game-over-title">
-			<span>G</span><span>A</span><span>M</span><span>E</span>
-			<span>&nbsp;</span>
-			<span>O</span><span>V</span><span>E</span><span>R</span>
+		<div class="game-over-title" class:victory={isVictory}>
+			{#each titleLetters as letter, index}
+				<span style="animation-delay: {0.1 + index * 0.15}s">{letter}</span>
+			{/each}
 		</div>
 
-		<div class="game-over-message">
+		<div class="game-over-message" class:victory={isVictory}>
 			{#if gameState.kingsRevealed == 4}
 				<p>
 					{gameState.config?.labels?.failureCounterLoss ?? 'Four kings revealed - the game is over'}
@@ -55,6 +60,13 @@
 		justify-content: center;
 		overflow: hidden;
 		z-index: 100;
+	}
+
+	/* Victory state - positive colors */
+	.game-over-overlay.victory {
+		background-image:
+			radial-gradient(circle at 50% 50%, rgba(255, 215, 0, 0.12), transparent 75%),
+			radial-gradient(circle at 25% 75%, rgba(0, 255, 100, 0.1), transparent 70%);
 	}
 
 	/* Scanlines overlay */
@@ -110,40 +122,20 @@
 			0 0 35px var(--neon-magenta);
 	}
 
+	/* Victory title - gold and green */
+	.game-over-title.victory {
+		color: var(--neon-yellow);
+		text-shadow:
+			0 0 5px var(--neon-yellow),
+			0 0 20px rgba(255, 215, 0, 0.8),
+			0 0 35px rgba(0, 255, 100, 0.6);
+	}
+
 	.game-over-title span {
 		display: inline-block;
 		opacity: 0;
 		transform: translateY(-80px);
 		animation: dropIn 0.9s forwards;
-	}
-
-	/* Delays for each letter */
-	.game-over-title span:nth-child(1) {
-		animation-delay: 0.1s;
-	}
-	.game-over-title span:nth-child(2) {
-		animation-delay: 0.25s;
-	}
-	.game-over-title span:nth-child(3) {
-		animation-delay: 0.4s;
-	}
-	.game-over-title span:nth-child(4) {
-		animation-delay: 0.55s;
-	}
-	.game-over-title span:nth-child(5) {
-		animation-delay: 0.7s;
-	}
-	.game-over-title span:nth-child(6) {
-		animation-delay: 0.85s;
-	}
-	.game-over-title span:nth-child(7) {
-		animation-delay: 1s;
-	}
-	.game-over-title span:nth-child(8) {
-		animation-delay: 1.15s;
-	}
-	.game-over-title span:nth-child(9) {
-		animation-delay: 1.3s;
 	}
 
 	@keyframes dropIn {
@@ -168,6 +160,12 @@
 		animation: flicker 3s infinite;
 		text-align: center;
 		max-width: 80%;
+	}
+
+	/* Victory message - green/gold */
+	.game-over-message.victory {
+		color: #00ff64;
+		text-shadow: 0 0 10px #00ff64;
 	}
 
 	.game-over-message p {
