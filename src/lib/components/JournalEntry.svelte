@@ -407,7 +407,7 @@
 			'button-area';
 		box-sizing: border-box;
 		overflow: hidden;
-		align-content: end;
+		align-items: end;
 	}
 
 	.button-area {
@@ -420,7 +420,7 @@
 	.journal-header-area {
 		grid-area: header-area;
 		overflow-y: auto;
-		max-height: 20vh;
+		max-height: calc(100svh - 250px);
 		p {
 			margin: var(--space-xs) 0;
 		}

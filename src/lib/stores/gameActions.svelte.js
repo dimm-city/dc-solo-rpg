@@ -643,14 +643,15 @@ export async function recordRound(journalEntry) {
 		totalEntries: gameState.journalEntries.length
 	});
 
-	// Auto-save after recording journal entry (await to ensure save completes)
-	await saveGame(gameState);
-
-	// Determine and execute next action
+	// Determine and execute next action BEFORE saving
 	// Success check now happens BEFORE journal entry, so we just start the next round
+	// Transition state first so that when game is saved, it's in the next round state
 	if (!gameState.gameOver) {
 		startRound();
 	}
+
+	// Auto-save after recording journal entry and transitioning state
+	await saveGame(gameState);
 }
 
 /**
@@ -1001,6 +1002,18 @@ export async function resumeGame(gameSlug) {
 
 		// Restore the game state
 		restoreGameState(gameState, saveData);
+
+		// Safety check: If we're on the recordRound screen and a journal entry already exists,
+		// automatically transition to the next round to avoid duplicate journal entry warnings
+		if (gameState.state === 'recordRound') {
+			const existingEntry = gameState.journalEntries.find(entry => entry.round === gameState.round);
+			if (existingEntry) {
+				logger.info(`[resumeGame] Journal entry already exists for round ${gameState.round}, transitioning to next round`);
+				if (!gameState.gameOver) {
+					startRound();
+				}
+			}
+		}
 
 		logger.info(`[resumeGame] Game resumed successfully for ${gameSlug}`);
 		return true;
