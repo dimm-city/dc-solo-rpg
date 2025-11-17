@@ -1,6 +1,7 @@
 import { onMount } from 'svelte';
 import DiceBox from '@3d-dice/dice-box-threejs';
 import { gameState } from './gameStore.svelte.js';
+import { convertD20ToD6, getD20ValueForD6 } from '../utils/diceConversion.js';
 
 /**
  * Shared DiceBox instance for the entire application
@@ -187,7 +188,9 @@ export async function rollDice(value = null) {
 	// Set rolling state to true immediately
 	isRolling = true;
 
-	const rollString = value ? `1d6@${value}` : '1d6';
+	// Use 1d20 instead of 1d6
+	// If preset value provided, convert d6 to d20 for display
+	const rollString = value ? `1d20@${getD20ValueForD6(value)}` : '1d20';
 	const result = await diceBoxInstance.roll(rollString);
 
 	// After roll completes, wait 2 seconds before transitioning z-index back down
@@ -195,5 +198,6 @@ export async function rollDice(value = null) {
 		isRolling = false;
 	}, 2000);
 
-	return result.total;
+	// Convert d20 result to d6 value for game logic
+	return convertD20ToD6(result.total);
 }

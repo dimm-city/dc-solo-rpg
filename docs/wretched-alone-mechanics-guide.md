@@ -56,13 +56,31 @@ The Wretched & Alone framework is a **solo journaling RPG system** that creates:
 
 ## 2. Core Components
 
+### 2.0 Dice System (D20 with D6 Conversion)
+
+**Important:** This implementation uses a d20 (20-sided die) for visual variety, but all game mechanics are based on d6 (6-sided die) values through automatic conversion.
+
+**Conversion Mapping:**
+- D20 rolls 1-3 → D6 value 1 (15% probability)
+- D20 rolls 4-7 → D6 value 2 (20% probability)
+- D20 rolls 8-10 → D6 value 3 (15% probability)
+- D20 rolls 11-14 → D6 value 4 (20% probability)
+- D20 rolls 15-17 → D6 value 5 (15% probability)
+- D20 rolls 18-20 → D6 value 6 (15% probability)
+
+**Why this matters:**
+- All references to "d6" or "1d6" in this document refer to the **resulting d6 value** after conversion
+- The physical d20 die is displayed to the player for visual appeal
+- Game balance and mechanics remain identical to the original d6-based system
+- When testing or implementing, use `convertD20ToD6()` utility function
+
 ### 2.1 Materials Required
 
 ```mermaid
 graph TB
     subgraph Physical["Physical Table Version"]
         A[Standard 52-Card Deck<br/>No Jokers]
-        B[Six-Sided Die<br/>1d6]
+        B[Twenty-Sided Die<br/>1d20 converted to 1-6]
         C[Resource Tracker<br/>Physical tower/54 blocks]
         D[10 Success Tokens<br/>Any small objects]
         E[Recording Method<br/>Audio/video/journal]
@@ -70,7 +88,7 @@ graph TB
 
     subgraph Digital["Digital Implementation"]
         A2[Virtual Card Deck<br/>52 cards shuffled]
-        B2[Random Number Generator<br/>1-6]
+        B2[D20 Random Generator<br/>1-20 → 1-6 conversion]
         C2[Resource Counter<br/>54 → 0 HP]
         D2[Success Token Counter<br/>10 → 0]
         E2[Text Journal<br/>Database storage]

@@ -3,10 +3,12 @@
  * This replaces the old gameStore and eliminates the StateMachine class
  */
 import { transitionGraph } from './transitions.js';
+import { convertD20ToD6 } from '../utils/diceConversion.js';
 
 // Helper for random number generation
+// Generate d20 value and convert to d6
 let getRandomNumber = () => {
-	return Math.floor(Math.random() * 6) + 1;
+	return convertD20ToD6(Math.floor(Math.random() * 20) + 1);
 };
 
 /**

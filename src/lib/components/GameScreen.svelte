@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { marked } from 'marked';
 	import '../../game.css';
+	import { convertD20ToD6 } from '../utils/diceConversion.js';
 
 	import LoadScreen from './LoadScreen.svelte';
 	import GameOver from './GameOver.svelte';
@@ -231,7 +232,7 @@
 		if (currentScreen !== 'finalDamageRoll') return;
 
 		finalDamageRolling = true;
-		const rollResult = Math.floor(Math.random() * 6) + 1;
+		const rollResult = convertD20ToD6(Math.floor(Math.random() * 20) + 1);
 		finalDamageResult = rollResult;
 
 		try {
@@ -270,7 +271,7 @@
 		if (currentScreen !== 'initialDamageRoll') return;
 
 		initialDamageRolling = true;
-		const rollResult = Math.floor(Math.random() * 6) + 1;
+		const rollResult = convertD20ToD6(Math.floor(Math.random() * 20) + 1);
 		initialDamageResult = rollResult;
 
 		try {
