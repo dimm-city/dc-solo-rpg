@@ -315,9 +315,9 @@ export function drawCard() {
 	card.gameState = {
 		tower: gameState.tower,
 		tokens: gameState.tokens,
-		bonus: gameState.bonus,
 		kingsRevealed: gameState.kingsRevealed,
-		aceOfHeartsRevealed: gameState.aceOfHeartsRevealed
+		aceOfHeartsRevealed: gameState.aceOfHeartsRevealed,
+		acesRevealed: gameState.acesRevealed // D20 system: track total Aces for salvation threshold
 	};
 	gameState.log.push(card);
 
@@ -507,8 +507,8 @@ export function applyPendingDiceRoll() {
 			...gameState.log.slice(0, -1),
 			{
 				...lastLog,
-				damageRoll: result,
-				damageDealt: blocksToRemove
+				diceRoll: result,
+				damageDealt: stabilityLoss
 			}
 		];
 	}

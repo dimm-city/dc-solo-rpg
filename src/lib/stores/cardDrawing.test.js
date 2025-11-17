@@ -40,7 +40,6 @@ describe('Card Drawing and Failure Check Flow', () => {
 		gameState.log = [];
 		gameState.round = 1;
 		gameState.tower = 20; // D20 system: starts at 20 stability
-		gameState.bonus = 0;
 		gameState.kingsRevealed = 0;
 		gameState.gameOver = false;
 	});
@@ -216,8 +215,7 @@ describe('Card Drawing and Failure Check Flow', () => {
 				}
 			];
 			gameState.tower = 20; // D20 system: starts at 20
-			gameState.bonus = 0;
-
+	
 			// Roll a 3 (D20 system: roll 3 in range 2-5 → -2 stability)
 			const rollResult = 3;
 			applyFailureCheckResult(rollResult);
@@ -241,8 +239,7 @@ describe('Card Drawing and Failure Check Flow', () => {
 			gameState.state = 'failureCheck';
 			gameState.log = [{ card: '5', suit: 'hearts', description: 'Test', round: 1, id: '1.1' }];
 			gameState.tower = 20; // D20 system: starts at 20 stability
-			gameState.bonus = 0;
-			gameState.cardsToDraw = 2; // More cards to draw
+				gameState.cardsToDraw = 2; // More cards to draw
 
 			// Apply failure check with roll of 2 (stores in pending state)
 			applyFailureCheckResult(2);
@@ -259,8 +256,7 @@ describe('Card Drawing and Failure Check Flow', () => {
 			gameState.state = 'failureCheck';
 			gameState.log = [{ card: '5', suit: 'hearts', description: 'Test', round: 1, id: '1.1' }];
 			gameState.tower = 20; // D20 system: starts at 20 stability
-			gameState.bonus = 0;
-			gameState.cardsToDraw = 0; // No more cards
+				gameState.cardsToDraw = 0; // No more cards
 
 			// Apply failure check (stores in pending state)
 			applyFailureCheckResult(2);
@@ -360,25 +356,31 @@ describe('Card Drawing and Failure Check Flow', () => {
 			expect(gameState.state).toBe('failureCheck');
 		});
 
-		test('should handle multiple kings triggering game over', async () => {
-			// Setup config to avoid null reference
-			gameState.config = {
-				labels: {
-					failureCounterLoss: 'All kings revealed - game over'
-				}
-			};
+	test('should handle multiple kings triggering game over', async () => {
+		// Setup config to avoid null reference
+		gameState.config = {
+			labels: {
+				failureCounterLoss: 'All kings revealed - game over'
+			}
+		};
 
-			gameState.deck = [{ card: 'K', suit: 'hearts', description: 'Fourth King' }];
-			gameState.kingsRevealed = 3; // Already have 3 kings
-			gameState.cardsToDraw = 1;
+		gameState.deck = [{ card: 'K', suit: 'hearts', description: 'Fourth King' }];
+		gameState.kingsRevealed = 3; // Already have 3 kings
+		gameState.cardsToDraw = 1;
 
-			await drawCard();
+		await drawCard();
 
-			// Should trigger game over
-			expect(gameState.kingsRevealed).toBe(4);
-			expect(gameState.gameOver).toBe(true);
-			expect(gameState.state).toBe('gameOver');
-		});
+		// Kings are tracked in pending state until confirmCard() is called
+		expect(gameState.pendingUpdates.kingsChange).toBe(1);
+
+		// Confirm the card to apply pending updates
+		confirmCard();
+
+		// Should trigger game over
+		expect(gameState.kingsRevealed).toBe(4);
+		expect(gameState.gameOver).toBe(true);
+		expect(gameState.state).toBe('gameOver');
+	});
 	});
 
 	describe('rollForTasks() - D20 Card Draw System', () => {
