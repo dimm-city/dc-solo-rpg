@@ -3,6 +3,7 @@
 	import { sleep } from '../utils/timing.js';
 	import { logger } from '../utils/logger.js';
 	import ContinueButton from './ContinueButton.svelte';
+	import TTSRegion from '$lib/tts/TTSRegion.svelte';
 
 	let {
 		card = $bindable(null),
@@ -32,6 +33,19 @@
 		animationStage === 'anticipating' ||
 			animationStage === 'materializing' ||
 			animationStage === 'dismissing'
+	);
+
+	// Combine description and story for TTS
+	let cardText = $derived.by(() => {
+		if (!card) return '';
+		const desc = card.description || '';
+		const story = card.story || '';
+		return desc && story ? `${desc}. ${story}` : desc || story;
+	});
+
+	// Create unique region ID for each card
+	let cardRegionId = $derived(
+		card ? `card-${card.card}-${card.suit}` : 'card-placeholder'
 	);
 
 	/**
@@ -330,13 +344,15 @@
 							</div>
 						{/if}
 
-						<p class="byte-data">{card.description || ''}</p>
-						<small class="byte-id">
-							BYTE-{card.card}-{card.suit?.slice(0, 3).toUpperCase() || 'UNK'}
-						</small>
-						<p>
-							{card.story}
-						</p>
+						<TTSRegion regionId={cardRegionId} text={cardText}>
+							<p class="byte-data">{card.description || ''}</p>
+							<small class="byte-id">
+								BYTE-{card.card}-{card.suit?.slice(0, 3).toUpperCase() || 'UNK'}
+							</small>
+							<p>
+								{card.story}
+							</p>
+						</TTSRegion>
 					</div>
 				{/if}
 			</div>
