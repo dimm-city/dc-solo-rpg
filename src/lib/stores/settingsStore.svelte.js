@@ -1,16 +1,15 @@
 import { browser } from '$app/environment';
-import { Difficulty } from '../configuration/DifficultyLevels.js';
 
 /**
  * Settings store with localStorage persistence
  * Manages global user preferences for the game
+ * Note: Difficulty is controlled by game config, not user settings
  */
 
 const SETTINGS_KEY = 'gameSettings';
 
 // Default settings
 const DEFAULT_SETTINGS = {
-	difficulty: Difficulty.NORMAL,
 	diceTheme: 'default'
 };
 
@@ -28,7 +27,6 @@ function loadSettings() {
 		if (stored) {
 			const parsed = JSON.parse(stored);
 			return {
-				difficulty: parsed.difficulty ?? DEFAULT_SETTINGS.difficulty,
 				diceTheme: parsed.diceTheme ?? DEFAULT_SETTINGS.diceTheme
 			};
 		}
@@ -72,14 +70,6 @@ export function updateSettings(newSettings) {
  */
 export function getSettings() {
 	return { ...settings };
-}
-
-/**
- * Get difficulty setting
- * @returns {string} Current difficulty level
- */
-export function getDifficulty() {
-	return settings.difficulty;
 }
 
 /**

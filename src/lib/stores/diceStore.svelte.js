@@ -1,6 +1,7 @@
 import { onMount } from 'svelte';
 import DiceBox from '@3d-dice/dice-box-threejs';
 import { gameState } from './gameStore.svelte.js';
+import { randomInt } from '../services/random.js';
 
 /**
  * Shared DiceBox instance for the entire application
@@ -204,11 +205,11 @@ export async function rollDice(value = null, options = {}) {
 			// Generate two dice values that produce the desired result
 			if (isLucid) {
 				// For advantage, one die = value, other die = random <= value
-				const otherDie = Math.floor(Math.random() * value) + 1;
+				const otherDie = randomInt(1, value);
 				presetValues = [value, otherDie];
 			} else {
 				// For disadvantage, one die = value, other die = random >= value
-				const otherDie = Math.floor(Math.random() * (21 - value)) + value;
+				const otherDie = randomInt(value, 20);
 				presetValues = [value, otherDie];
 			}
 			rollString = `2d20@${presetValues[0]},${presetValues[1]}`;

@@ -2,7 +2,6 @@
 	import { goto } from '$app/navigation';
 	import { gameState } from '../stores/gameStore.svelte.js';
 	import { startGame } from '../stores/gameActions.svelte.js';
-	import { Difficulty } from '../configuration/DifficultyLevels.js';
 	import ContinueButton from './ContinueButton.svelte';
 	import ButtonBar from './ButtonBar.svelte';
 
@@ -39,22 +38,6 @@
 				>
 					{#each systemSettings?.availableDiceThemes as theme (theme.name)}
 						<option value={theme}>{theme.name}</option>
-					{/each}
-				</select>
-			</div>
-
-			<div class="form-group">
-				<label for="difficulty">Select a Difficulty:</label>
-				<select
-					id="difficulty"
-					class="augmented-select difficulty-select"
-					bind:value={options.difficulty}
-					aria-label="Select difficulty level"
-					data-testid="difficulty-select"
-					data-augmented-ui="tl-clip-x tr-clip br-clip border"
-				>
-					{#each Difficulty.getEntries() as entry (entry.value)}
-						<option value={entry.value}>{entry.key?.replaceAll('_', ' ')}</option>
 					{/each}
 				</select>
 			</div>
@@ -198,23 +181,6 @@
 			inset 0 0 20px rgba(0, 255, 255, 0.05);
 	}
 
-	.difficulty-select {
-		--aug-border-all: 2px;
-		--aug-border-bg: linear-gradient(135deg, var(--color-cyber-magenta), var(--color-brand-yellow));
-		--aug-tl: 16px;
-		--aug-tr: 12px;
-		--aug-br: 16px;
-
-		box-shadow:
-			0 0 20px rgba(217, 70, 239, 0.25),
-			0 0 40px rgba(217, 70, 239, 0.1),
-			inset 0 0 20px rgba(217, 70, 239, 0.05);
-
-		background-image:
-			linear-gradient(135deg, rgba(0, 20, 40, 0.4), rgba(10, 10, 30, 0.6)),
-			url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23D946EF' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
-	}
-
 	.augmented-select:hover {
 		--aug-border-all: 3px;
 		transform: translateY(-2px);
@@ -226,13 +192,6 @@
 			0 0 30px rgba(0, 255, 255, 0.4),
 			0 0 60px rgba(0, 255, 255, 0.15),
 			inset 0 0 30px rgba(0, 255, 255, 0.08);
-	}
-
-	.difficulty-select:hover {
-		box-shadow:
-			0 0 30px rgba(217, 70, 239, 0.4),
-			0 0 60px rgba(217, 70, 239, 0.15),
-			inset 0 0 30px rgba(217, 70, 239, 0.08);
 	}
 
 	.augmented-select:focus {

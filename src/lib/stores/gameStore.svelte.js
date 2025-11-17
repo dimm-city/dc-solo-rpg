@@ -3,11 +3,12 @@
  * This replaces the old gameStore and eliminates the StateMachine class
  */
 import { transitionGraph } from './transitions.js';
+import { rollDie, rollAdvantage, rollDisadvantage } from '../services/random.js';
 
 // Helper for random number generation
 // D20 system: returns 1-20
 let getRandomNumber = () => {
-	return Math.floor(Math.random() * 20) + 1;
+	return rollDie(20);
 };
 
 /**
@@ -17,28 +18,25 @@ let getRandomNumber = () => {
  * @returns {Object} { roll: number, wasLucid: boolean, wasSurreal: boolean }
  */
 let rollWithModifiers = () => {
-	let roll1 = Math.floor(Math.random() * 20) + 1;
-
 	// Check for Lucid state (advantage)
 	if (gameState.isLucid) {
-		const roll2 = Math.floor(Math.random() * 20) + 1;
-		const roll = Math.max(roll1, roll2);
-		console.log(`[rollWithModifiers] Lucid roll: ${roll1}, ${roll2} → ${roll}`);
+		const roll = rollAdvantage(20);
+		console.log(`[rollWithModifiers] Lucid roll (advantage): ${roll}`);
 		gameState.isLucid = false; // Clear state after use
 		return { roll, wasLucid: true, wasSurreal: false };
 	}
 
 	// Check for Surreal state (disadvantage)
 	if (gameState.isSurreal) {
-		const roll2 = Math.floor(Math.random() * 20) + 1;
-		const roll = Math.min(roll1, roll2);
-		console.log(`[rollWithModifiers] Surreal roll: ${roll1}, ${roll2} → ${roll}`);
+		const roll = rollDisadvantage(20);
+		console.log(`[rollWithModifiers] Surreal roll (disadvantage): ${roll}`);
 		gameState.isSurreal = false; // Clear state after use
 		return { roll, wasSurreal: true, wasLucid: false };
 	}
 
 	// Normal roll
-	return { roll: roll1, wasLucid: false, wasSurreal: false };
+	const roll = rollDie(20);
+	return { roll, wasLucid: false, wasSurreal: false };
 };
 
 /**
