@@ -176,18 +176,34 @@ export function resetDiceBox() {
 
 /**
  * Roll the dice with optional preset value
- * @param {number|null} value - Optional preset dice value (1-6)
+ * D20 system with Lucid/Surreal support
+ * @param {number|null} value - Optional preset dice value (1-20)
+ * @param {Object} options - Roll options
+ * @param {boolean} options.isLucid - Roll with advantage (2d20 keep high)
+ * @param {boolean} options.isSurreal - Roll with disadvantage (2d20 keep low)
  * @returns {Promise<number>} The dice roll result
  */
-export async function rollDice(value = null) {
+export async function rollDice(value = null, options = {}) {
 	if (!diceBoxInstance) {
 		throw new Error('DiceBox not initialized. Call initializeDiceBox first.');
 	}
 
+	const { isLucid = false, isSurreal = false } = options;
+
 	// Set rolling state to true immediately
 	isRolling = true;
 
-	const rollString = value ? `1d6@${value}` : '1d6';
+	let rollString;
+
+	if (isLucid || isSurreal) {
+		// Roll 2d20 for advantage/disadvantage
+		// DiceBox will show both dice, keep high/low is handled in game logic
+		rollString = value ? `2d20@${value}` : '2d20';
+	} else {
+		// Normal roll
+		rollString = value ? `1d20@${value}` : '1d20';
+	}
+
 	const result = await diceBoxInstance.roll(rollString);
 
 	// After roll completes, wait 2 seconds before transitioning z-index back down

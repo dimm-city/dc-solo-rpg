@@ -5,8 +5,40 @@
 import { transitionGraph } from './transitions.js';
 
 // Helper for random number generation
+// D20 system: returns 1-20
 let getRandomNumber = () => {
-	return Math.floor(Math.random() * 6) + 1;
+	return Math.floor(Math.random() * 20) + 1;
+};
+
+/**
+ * Roll with Lucid/Surreal modifiers
+ * Lucid (advantage): Roll 2d20, keep highest
+ * Surreal (disadvantage): Roll 2d20, keep lowest
+ * @returns {Object} { roll: number, wasLucid: boolean, wasSurreal: boolean }
+ */
+let rollWithModifiers = () => {
+	let roll1 = Math.floor(Math.random() * 20) + 1;
+
+	// Check for Lucid state (advantage)
+	if (gameState.isLucid) {
+		const roll2 = Math.floor(Math.random() * 20) + 1;
+		const roll = Math.max(roll1, roll2);
+		console.log(`[rollWithModifiers] Lucid roll: ${roll1}, ${roll2} → ${roll}`);
+		gameState.isLucid = false; // Clear state after use
+		return { roll, wasLucid: true, wasSurreal: false };
+	}
+
+	// Check for Surreal state (disadvantage)
+	if (gameState.isSurreal) {
+		const roll2 = Math.floor(Math.random() * 20) + 1;
+		const roll = Math.min(roll1, roll2);
+		console.log(`[rollWithModifiers] Surreal roll: ${roll1}, ${roll2} → ${roll}`);
+		gameState.isSurreal = false; // Clear state after use
+		return { roll, wasSurreal: true, wasLucid: false };
+	}
+
+	// Normal roll
+	return { roll: roll1, wasLucid: false, wasSurreal: false };
 };
 
 /**
@@ -36,12 +68,20 @@ let gameState = $state({
 	// Roll state
 	diceRoll: 0,
 
+	// D20 Mechanics: Lucid/Surreal states
+	isLucid: false, // True if next roll should be 2d20 keep high
+	isSurreal: false, // True if next roll should be 2d20 keep low
+
+	// D20 Mechanics: Ace tracking (for salvation threshold)
+	acesRevealed: 0, // 0-4, determines salvation success threshold
+
 	// Pending state updates (deferred until animations complete)
 	pendingUpdates: {
 		diceRoll: null, // Pending dice roll result
 		towerDamage: null, // Pending tower damage
+		towerGain: null, // Pending tower gain (from natural 20 on stability checks)
 		tokenChange: null, // Pending token change from success check
-		bonusChange: null, // Pending bonus change from aces
+		aceChange: null, // Pending ace reveal (replaces bonusChange)
 		kingsChange: null, // Pending king reveal
 		kingsSuit: null // Suit of pending king reveal
 	},
@@ -59,7 +99,7 @@ let gameState = $state({
 	// Game over state
 	gameOver: false,
 	win: false,
-	bonus: 0,
+	bonus: 0, // TODO: Remove in Phase 5 - replaced by acesRevealed threshold system
 
 	// Journal
 	journalEntries: [],
@@ -75,7 +115,8 @@ let gameState = $state({
 	player: null,
 
 	// Functions
-	getRandomNumber: getRandomNumber
+	getRandomNumber: getRandomNumber,
+	rollWithModifiers: rollWithModifiers
 });
 
 /**
