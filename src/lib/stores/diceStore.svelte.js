@@ -12,7 +12,19 @@ import { randomInt } from '../services/random.js';
 let diceBoxInstance = $state(null);
 let isInitialized = $state(false);
 let containerElement = $state(null);
-let isRolling = $state(false);
+
+/**
+ * Dice rolling state - wrapped in object to allow export
+ * Svelte 5 requires exported state to be objects (not reassigned primitives)
+ */
+let diceState = $state({
+	isRolling: false
+});
+
+/**
+ * Export diceState for reactive access in components
+ */
+export { diceState };
 
 /**
  * Initialize the DiceBox instance
@@ -139,9 +151,10 @@ export function isDiceBoxInitialized() {
 
 /**
  * Get whether dice are currently rolling
+ * @deprecated Use diceState.isRolling directly for reactivity
  */
 export function getDiceRolling() {
-	return isRolling;
+	return diceState.isRolling;
 }
 
 /**
@@ -192,7 +205,7 @@ export async function rollDice(value = null, options = {}) {
 	const { isLucid = false, isSurreal = false } = options;
 
 	// Set rolling state to true immediately
-	isRolling = true;
+	diceState.isRolling = true;
 
 	let rollString;
 	let presetValues = null;
@@ -225,7 +238,7 @@ export async function rollDice(value = null, options = {}) {
 
 	// After roll completes, wait 2 seconds before transitioning z-index back down
 	setTimeout(() => {
-		isRolling = false;
+		diceState.isRolling = false;
 	}, 2000);
 
 	// Return detailed result object

@@ -3,14 +3,14 @@
 	import { onNavigate } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import { page } from '$app/stores';
-	import { initializeDiceBox, getDiceRolling } from '$lib/stores/diceStore.svelte.js';
+	import { initializeDiceBox, diceState } from '$lib/stores/diceStore.svelte.js';
 
 	let { children, data } = $props();
 	let diceContainer = $state();
 
 	// Show dice only when on game screens (not home, not about)
 	const showDice = $derived($page.url.pathname.startsWith('/game/'));
-	const diceRolling = $derived(getDiceRolling());
+	const diceRolling = $derived(diceState.isRolling);
 
 	onNavigate((navigation) => {
 		// Only run in browser environment (SSR safety)
