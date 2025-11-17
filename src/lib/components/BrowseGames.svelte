@@ -7,6 +7,7 @@
 	import { loadAllSaves } from '$lib/stores/indexedDBStorage.js';
 	import { fade, fly } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
+	import { ANIMATION_DURATION } from '$lib/constants/animations.js';
 
 	let {
 		onSelectGame = (game) => {}, // Callback when game is selected
@@ -91,7 +92,11 @@
 	}
 </script>
 
-<div class="browse-games" transition:fade={{ duration: 300 }}>
+<div
+	class="browse-games"
+	in:fly={{ y: 20, duration: ANIMATION_DURATION.STORY_MODE, easing: quintOut }}
+	out:fade={{ duration: ANIMATION_DURATION.STORY_MODE }}
+>
 	<!-- Header -->
 	<div class="browse-header" data-augmented-ui="tl-clip tr-clip border">
 		<div class="header-content">
@@ -126,18 +131,18 @@
 	<!-- Content -->
 	<div class="browse-content">
 		{#if isLoading}
-			<div class="loading-state" transition:fade={{ duration: 200 }}>
+			<div class="loading-state" transition:fade={{ duration: ANIMATION_DURATION.NORMAL }}>
 				<div class="loading-spinner"></div>
 				<p>Loading your stories...</p>
 			</div>
 		{:else if error}
-			<div class="error-state" transition:fade={{ duration: 200 }}>
+			<div class="error-state" transition:fade={{ duration: ANIMATION_DURATION.NORMAL }}>
 				<div class="error-icon">⚠️</div>
 				<p class="error-message">{error}</p>
 				<button class="retry-button" onclick={loadCompletedGames}>Try Again</button>
 			</div>
 		{:else if sortedGames.length === 0}
-			<div class="empty-state" transition:fade={{ duration: 200 }}>
+			<div class="empty-state" transition:fade={{ duration: ANIMATION_DURATION.NORMAL }}>
 				<div class="empty-icon">
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
@@ -164,7 +169,12 @@
 						class:won={game.isWon}
 						onclick={() => onSelectGame(game)}
 						data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
-						in:fly={{ y: 20, duration: 400, delay: index * 50, easing: quintOut }}
+						in:fly={{
+							y: 20,
+							duration: ANIMATION_DURATION.SLOW,
+							delay: index * 50,
+							easing: quintOut
+						}}
 					>
 						<!-- Outcome Badge -->
 						<div class="outcome-indicator" class:won={game.isWon}>
@@ -176,7 +186,9 @@
 									viewBox="0 0 24 24"
 									fill="currentColor"
 								>
-									<path d="M12 2L15 8.5L22 9.5L17 14.5L18 21.5L12 18.5L6 21.5L7 14.5L2 9.5L9 8.5L12 2Z" />
+									<path
+										d="M12 2L15 8.5L22 9.5L17 14.5L18 21.5L12 18.5L6 21.5L7 14.5L2 9.5L9 8.5L12 2Z"
+									/>
 								</svg>
 							{:else}
 								<svg
@@ -682,6 +694,15 @@
 
 		.sort-controls :global(button) {
 			flex: 1 1 100%;
+		}
+	}
+
+	/* Accessibility - Reduced motion */
+	@media (prefers-reduced-motion: reduce) {
+		.browse-games,
+		.game-card {
+			animation: none !important;
+			transition: opacity 0.1s linear !important;
 		}
 	}
 </style>

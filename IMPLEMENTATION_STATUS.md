@@ -120,6 +120,7 @@
 ```
 
 **All tests passing!** ✅
+
 - 8 new tests for rollForTasks() d20 conversion
 - All existing tests still passing (no regressions)
 
@@ -179,6 +180,7 @@
 ```
 
 **All tests passing!** ✅
+
 - Updated cardDrawing tests for d20 stability values
 - All existing tests still passing (no regressions)
 
@@ -235,6 +237,7 @@
 ### Test Results
 
 Added 26 new tests to `cardDrawing.test.js`:
+
 - 3 tests for Ace tracking (aceChange and acesRevealed)
 - 5 tests for successCheck() with 1 Ace (threshold 17)
 - 3 tests for successCheck() with multiple Aces (thresholds 14, 11, 0)
@@ -546,6 +549,7 @@ Status: NOT RUN
 ## D20 Mechanics Refactor - COMPLETE! 🎉
 
 All 6 phases have been successfully implemented and tested:
+
 - ✅ Phase 1: Core Dice System (d20, Lucid/Surreal)
 - ✅ Phase 2: Card Draw System (d20 to card count conversion)
 - ✅ Phase 3: Stability System (20 points, variable loss)

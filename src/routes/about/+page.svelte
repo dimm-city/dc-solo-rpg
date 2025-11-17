@@ -177,8 +177,8 @@
 				<h3>Easy Game Creation</h3>
 			</div>
 			<p>
-				The game creation process for Dream Console uses a simple markdown-based format.
-				Create a game by writing a single <code>.game.md</code> file with:
+				The game creation process for Dream Console uses a simple markdown-based format. Create a
+				game by writing a single <code>.game.md</code> file with:
 			</p>
 			<ol class="creation-steps">
 				<li>YAML frontmatter with title, subtitle, win/lose messages</li>

@@ -4,6 +4,7 @@
 	 */
 	import { fade, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
+	import { ANIMATION_DURATION } from '$lib/constants/animations.js';
 
 	let {
 		children,
@@ -21,7 +22,7 @@
 	 * Easing: cubicOut for natural deceleration on entry, cubicIn for acceleration on exit
 	 * Effect: Fades in/out fog with subtle scale (0.95 to 1.0)
 	 */
-	function cloudFogTransition(node, { delay = 0, duration = 200 }) {
+	function cloudFogTransition(node, { delay = 0, duration = ANIMATION_DURATION.NORMAL }) {
 		return {
 			delay,
 			duration,
@@ -104,8 +105,8 @@
 	<div
 		class="fog-overlay"
 		style="z-index: {zIndex - 1};"
-		in:cloudFogTransition={{ duration: 200, delay: 0 }}
-		out:cloudFogTransition={{ duration: 200, delay: 0 }}
+		in:cloudFogTransition={{ duration: ANIMATION_DURATION.NORMAL, delay: 0 }}
+		out:cloudFogTransition={{ duration: ANIMATION_DURATION.NORMAL, delay: 0 }}
 	>
 		<div class="cloud back"></div>
 		<div class="cloud mid"></div>
@@ -120,8 +121,20 @@
 		style="z-index: {zIndex};"
 		style:height={modalHeight}
 		data-augmented-ui="tl-clip tr-clip br-clip bl-clip"
-		in:scale={{ duration: 200, delay: 0, start: 0.95, opacity: 0, easing: cubicOut }}
-		out:scale={{ duration: 200, delay: 0, start: 0.95, opacity: 0, easing: cubicOut }}
+		in:scale={{
+			duration: ANIMATION_DURATION.NORMAL,
+			delay: 0,
+			start: 0.95,
+			opacity: 0,
+			easing: cubicOut
+		}}
+		out:scale={{
+			duration: ANIMATION_DURATION.NORMAL,
+			delay: 0,
+			start: 0.95,
+			opacity: 0,
+			easing: cubicOut
+		}}
 	>
 		{@render children()}
 	</div>

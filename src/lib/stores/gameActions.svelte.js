@@ -391,7 +391,10 @@ export function confirmCard() {
 	if (gameState.pendingUpdates.aceChange) {
 		gameState.acesRevealed += gameState.pendingUpdates.aceChange;
 		gameState.pendingUpdates.aceChange = null;
-		logger.debug('[confirmCard] Applied pending ace change, acesRevealed now:', gameState.acesRevealed);
+		logger.debug(
+			'[confirmCard] Applied pending ace change, acesRevealed now:',
+			gameState.acesRevealed
+		);
 	}
 
 	if (gameState.pendingUpdates.kingsChange) {
@@ -617,13 +620,18 @@ export async function recordRound(journalEntry) {
 	}
 
 	// Check if a journal entry already exists for this round
-	const existingEntry = gameState.journalEntries.find(entry => entry.round === gameState.round);
+	const existingEntry = gameState.journalEntries.find((entry) => entry.round === gameState.round);
 	if (existingEntry) {
-		logger.warn(`[recordRound] WARNING: Journal entry already exists for round ${gameState.round}. Preventing duplicate.`, {
-			existingEntry,
-			attemptedEntry: journalEntry
-		});
-		console.warn(`[recordRound] WARNING: Cannot save journal entry - an entry already exists for round ${gameState.round}. Each round can only have one journal entry.`);
+		logger.warn(
+			`[recordRound] WARNING: Journal entry already exists for round ${gameState.round}. Preventing duplicate.`,
+			{
+				existingEntry,
+				attemptedEntry: journalEntry
+			}
+		);
+		console.warn(
+			`[recordRound] WARNING: Cannot save journal entry - an entry already exists for round ${gameState.round}. Each round can only have one journal entry.`
+		);
 		return; // Prevent duplicate
 	}
 
@@ -859,12 +867,7 @@ export function applyPendingInitialDamageRoll() {
  * @deprecated D20 system handles victory in applyPendingSuccessCheck()
  */
 export function performFinalDamageRoll(roll) {
-	logger.debug(
-		'[performFinalDamageRoll] Roll:',
-		roll,
-		'Tower:',
-		gameState.tower
-	);
+	logger.debug('[performFinalDamageRoll] Roll:', roll, 'Tower:', gameState.tower);
 
 	// Store pending updates (to be applied after dice animation)
 	gameState.pendingUpdates.diceRoll = roll;
@@ -1006,9 +1009,13 @@ export async function resumeGame(gameSlug) {
 		// Safety check: If we're on the recordRound screen and a journal entry already exists,
 		// automatically transition to the next round to avoid duplicate journal entry warnings
 		if (gameState.state === 'recordRound') {
-			const existingEntry = gameState.journalEntries.find(entry => entry.round === gameState.round);
+			const existingEntry = gameState.journalEntries.find(
+				(entry) => entry.round === gameState.round
+			);
 			if (existingEntry) {
-				logger.info(`[resumeGame] Journal entry already exists for round ${gameState.round}, transitioning to next round`);
+				logger.info(
+					`[resumeGame] Journal entry already exists for round ${gameState.round}, transitioning to next round`
+				);
 				if (!gameState.gameOver) {
 					startRound();
 				}

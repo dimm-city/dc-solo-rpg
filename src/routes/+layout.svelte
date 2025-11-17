@@ -3,7 +3,11 @@
 	import { onNavigate } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import { page } from '$app/stores';
-	import { initializeDiceBox, diceState, isDiceBoxInitialized } from '$lib/stores/diceStore.svelte.js';
+	import {
+		initializeDiceBox,
+		diceState,
+		isDiceBoxInitialized
+	} from '$lib/stores/diceStore.svelte.js';
 
 	let { children, data } = $props();
 	let diceContainer = $state();

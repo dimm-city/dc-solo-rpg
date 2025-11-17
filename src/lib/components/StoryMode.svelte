@@ -7,8 +7,15 @@
 	import StoryRound from './StoryRound.svelte';
 	import AugmentedButton from './AugmentedButton.svelte';
 	import StoryGenerationPanel from './StoryGenerationPanel.svelte';
-	import { fade, fly } from 'svelte/transition';
-	import { quintOut } from 'svelte/easing';
+	import { fade, scale, crossfade } from 'svelte/transition';
+	import { quintOut, cubicOut } from 'svelte/easing';
+	import { ANIMATION_DURATION } from '$lib/constants/animations.js';
+
+	// Create crossfade for smooth round transitions
+	const [send, receive] = crossfade({
+		duration: ANIMATION_DURATION.ROUND_TRANSITION,
+		easing: cubicOut
+	});
 
 	let {
 		savedGame = null, // Complete saved game object
@@ -28,7 +35,7 @@
 		console.log('[StoryMode] Processing saved game:', {
 			totalCards: cardLog.length,
 			totalJournals: journalEntries.length,
-			journalRounds: journalEntries.map(j => j.round),
+			journalRounds: journalEntries.map((j) => j.round),
 			fullJournalData: journalEntries
 		});
 
@@ -45,7 +52,9 @@
 		});
 
 		// Filter out non-card entries (like 'initial-damage', 'final-damage')
-		const cardEntries = cardLog.filter(entry => entry.type !== 'initial-damage' && entry.type !== 'final-damage');
+		const cardEntries = cardLog.filter(
+			(entry) => entry.type !== 'initial-damage' && entry.type !== 'final-damage'
+		);
 
 		// Group cards by round number
 		const roundsMap = new Map();
@@ -67,7 +76,7 @@
 			.sort((a, b) => a[0] - b[0]) // Sort by round number
 			.map(([roundNum, cards], index, array) => {
 				// Find journal entry for this round
-				const journalEntry = journalEntries.find(j => j.round === roundNum);
+				const journalEntry = journalEntries.find((j) => j.round === roundNum);
 
 				console.log(`[StoryMode] Round ${roundNum}:`, {
 					cardCount: cards.length,
@@ -83,7 +92,7 @@
 
 				return {
 					roundNumber: roundNum,
-					cards: cards.map(cardEntry => ({
+					cards: cards.map((cardEntry) => ({
 						card: cardEntry.card,
 						suit: cardEntry.suit,
 						type: cardEntry.type,
@@ -93,10 +102,12 @@
 						damageRoll: cardEntry.damageRoll,
 						damageDealt: cardEntry.damageDealt
 					})),
-					journalEntry: journalEntry ? {
-						text: journalEntry.text,
-						audio: journalEntry.audioData
-					} : null,
+					journalEntry: journalEntry
+						? {
+								text: journalEntry.text,
+								audio: journalEntry.audioData
+							}
+						: null,
 					gameState: lastCard.gameState || {
 						tower: 'N/A',
 						tokens: 'N/A',
@@ -133,7 +144,7 @@
 		setTimeout(() => {
 			currentRoundIndex--;
 			isNavigating = false;
-		}, 150);
+		}, ANIMATION_DURATION.FAST);
 	}
 
 	function nextRound() {
@@ -142,7 +153,7 @@
 		setTimeout(() => {
 			currentRoundIndex++;
 			isNavigating = false;
-		}, 150);
+		}, ANIMATION_DURATION.FAST);
 	}
 
 	function jumpToRound(index) {
@@ -152,7 +163,7 @@
 		setTimeout(() => {
 			currentRoundIndex = index;
 			isNavigating = false;
-		}, 150);
+		}, ANIMATION_DURATION.FAST);
 	}
 
 	function handleKeyboard(event) {
@@ -175,7 +186,21 @@
 </script>
 
 {#if savedGame}
-	<div class="story-mode" transition:fade={{ duration: 300 }}>
+	<div
+		class="story-mode"
+		in:scale={{
+			duration: ANIMATION_DURATION.STORY_MODE,
+			start: 0.95,
+			opacity: 0,
+			easing: cubicOut
+		}}
+		out:scale={{
+			duration: ANIMATION_DURATION.STORY_MODE,
+			start: 0.95,
+			opacity: 0,
+			easing: cubicOut
+		}}
+	>
 		<!-- Header with game info and controls -->
 		<div class="story-header" data-augmented-ui="tl-clip tr-clip border">
 			<div class="game-info">
@@ -246,7 +271,11 @@
 		<!-- Current Round Display -->
 		<div class="round-container">
 			{#key currentRoundIndex}
-				<div class="round-wrapper" transition:fade={{ duration: 300 }}>
+				<div
+					class="round-wrapper"
+					in:receive={{ key: currentRoundIndex }}
+					out:send={{ key: currentRoundIndex }}
+				>
 					<StoryRound
 						round={currentRound}
 						roundNumber={currentRound?.roundNumber || currentRoundIndex + 1}
@@ -304,12 +333,7 @@
 					stroke="currentColor"
 					slot="icon"
 				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M8 4l6 6-6 6"
-					/>
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4l6 6-6 6" />
 				</svg>
 			</AugmentedButton>
 		</div>
@@ -788,6 +812,15 @@
 
 		.round-indicator .current {
 			font-size: 1.25rem;
+		}
+	}
+
+	/* Accessibility - Reduced motion */
+	@media (prefers-reduced-motion: reduce) {
+		.story-mode,
+		.round-wrapper {
+			animation: none !important;
+			transition: opacity 0.1s linear !important;
 		}
 	}
 </style>

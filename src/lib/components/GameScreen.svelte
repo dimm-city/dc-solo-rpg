@@ -1041,8 +1041,7 @@
 		margin: 0 0 0.75rem 0;
 		font-family: 'lixdu', 'Courier New', monospace;
 		opacity: 0.3;
-		text-shadow:
-			0 0 10px var(--yellow);
+		text-shadow: 0 0 10px var(--yellow);
 	}
 
 	.context-description {

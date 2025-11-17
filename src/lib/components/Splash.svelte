@@ -68,7 +68,7 @@
 				<span>C</span><span>I</span><span>T</span><span>Y</span>
 			</div>
 			<div class="game-type">S-RPG</div>
-		<div class="subtitle">{subtitle}</div>
+			<div class="subtitle">{subtitle}</div>
 		</div>
 	</div>
 {/if}

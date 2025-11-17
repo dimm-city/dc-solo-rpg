@@ -2,6 +2,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { sleep } from '../utils/timing.js';
 	import { logger } from '../utils/logger.js';
+	import { ANIMATION_DURATION } from '$lib/constants/animations.js';
 	import ContinueButton from './ContinueButton.svelte';
 
 	let {
@@ -97,7 +98,7 @@
 
 		// Start dismiss animation (600ms)
 		animationStage = 'dismissing';
-		await sleep(600);
+		await sleep(ANIMATION_DURATION.CARD_DISMISS);
 
 		// Reset card state FIRST (before notifying parent)
 		animationStage = 'idle';
@@ -399,7 +400,7 @@
 	}
 
 	.byte-container.dismissing {
-		animation: byte-dismiss 600ms cubic-bezier(0.4, 0, 0.6, 1) forwards;
+		animation: byte-dismiss 600ms cubic-bezier(0.4, 0, 0.6, 1) forwards; /* Uses ANIMATION_DURATION.CARD_DISMISS in JS */
 	}
 
 	@keyframes byte-materialize {
@@ -556,11 +557,7 @@
 		flex-direction: column;
 		gap: var(--space-lg, 1.5rem);
 		color: var(--color-text-primary, #fff);
-		background: linear-gradient(
-			180deg,
-			rgba(0, 0, 0, 0.5) 0%,
-			rgba(0, 0, 0, 0.4) 100%
-		);
+		background: linear-gradient(180deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.4) 100%);
 		padding: var(--space-lg, 1.5rem);
 		border-radius: 8px;
 		backdrop-filter: blur(4px);
@@ -569,7 +566,9 @@
 
 	.byte-content p {
 		color: #ffffff;
-		text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9), 0 0 4px rgba(0, 0, 0, 0.8);
+		text-shadow:
+			0 2px 8px rgba(0, 0, 0, 0.9),
+			0 0 4px rgba(0, 0, 0, 0.8);
 		font-weight: 400;
 		line-height: 1.6;
 		margin: 0;
@@ -589,7 +588,7 @@
 		letter-spacing: 0.1em;
 		align-self: flex-start;
 		opacity: 0;
-		animation: badge-materialize 180ms ease-out 400ms forwards;
+		animation: badge-materialize 150ms ease-out 400ms forwards; /* Uses ANIMATION_DURATION.FAST */
 		border: 2px solid;
 		backdrop-filter: blur(4px);
 		-webkit-backdrop-filter: blur(4px);
@@ -679,7 +678,7 @@
 			opacity: 1;
 			transform: scale(1);
 		}
-	}
+	} /* Duration: 150ms (ANIMATION_DURATION.FAST) */
 
 	.type-icon {
 		flex-shrink: 0;
@@ -697,7 +696,9 @@
 		margin: 0;
 		opacity: 0;
 		animation: text-materialize 800ms ease-out 200ms forwards;
-		text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9), 0 0 4px rgba(0, 0, 0, 0.8);
+		text-shadow:
+			0 2px 8px rgba(0, 0, 0, 0.9),
+			0 0 4px rgba(0, 0, 0, 0.8);
 		font-weight: 500;
 	}
 

@@ -19,6 +19,7 @@ The Phase 1 implementation plan has been analyzed and organized for maximum para
 ## Work Stream Organization
 
 ### Stream 1: Branding and Content
+
 - **Agent:** `svelte5-expert-dev`
 - **Issues:** 1, 2, 3
 - **Duration:** 2-3 hours
@@ -26,6 +27,7 @@ The Phase 1 implementation plan has been analyzed and organized for maximum para
 - **Start:** Day 1, immediately
 
 **Work:**
+
 1. Replace all "DC-S-0.1.0" and "SRPG" with "Dream Console"
 2. Add version number to About modal
 3. Remove Settings button from home screen
@@ -35,6 +37,7 @@ The Phase 1 implementation plan has been analyzed and organized for maximum para
 ---
 
 ### Stream 2: Modal System Foundation (CRITICAL PATH)
+
 - **Agent:** `web-design-expert`
 - **Issues:** 9, 8, 5
 - **Duration:** 4-5 hours
@@ -42,6 +45,7 @@ The Phase 1 implementation plan has been analyzed and organized for maximum para
 - **Start:** Day 1, immediately (Issue 9 first)
 
 **Work:**
+
 1. **Issue 9 (FIRST):** Optimize Help Modal to 200ms, create reusable pattern
 2. **Issue 8:** Add click blocking to game content when modals open
 3. **Issue 5:** Apply pattern to home page modals (About, Help)
@@ -53,6 +57,7 @@ The Phase 1 implementation plan has been analyzed and organized for maximum para
 ---
 
 ### Stream 3: Card System Polish
+
 - **Agent:** `web-design-expert`
 - **Issues:** 10, 11, 12, 13, 14
 - **Duration:** 5-6 hours
@@ -60,6 +65,7 @@ The Phase 1 implementation plan has been analyzed and organized for maximum para
 - **Start:** Day 1, immediately (parallel with Stream 2)
 
 **Work:**
+
 1. Subtle card background animation
 2. Minimal badge animation (fade + scale)
 3. Remove card hover effects
@@ -71,6 +77,7 @@ The Phase 1 implementation plan has been analyzed and organized for maximum para
 ---
 
 ### Stream 4: State Transitions
+
 - **Agent:** `svelte5-expert-dev`
 - **Issues:** 15, 16, 6
 - **Duration:** 4-5 hours
@@ -78,6 +85,7 @@ The Phase 1 implementation plan has been analyzed and organized for maximum para
 - **Start:** Day 3, after Stream 3
 
 **Work:**
+
 1. **Issues 15 & 16 (parallel):** Card-to-stability-check transition, journal close transition
 2. **Issue 6:** Story Mode animations (if accessible)
 
@@ -88,6 +96,7 @@ The Phase 1 implementation plan has been analyzed and organized for maximum para
 ---
 
 ### Stream 5: Dice Animation
+
 - **Agent:** `svelte5-expert-dev`
 - **Issues:** 7
 - **Duration:** 2-3 hours
@@ -95,6 +104,7 @@ The Phase 1 implementation plan has been analyzed and organized for maximum para
 - **Start:** Day 1, immediately
 
 **Work:**
+
 1. Fix dice fade-out jumping
 2. Reduce delay to ~500ms
 3. Smooth opacity + scale transition (200-300ms)
@@ -105,6 +115,7 @@ The Phase 1 implementation plan has been analyzed and organized for maximum para
 ---
 
 ### Stream 6: Animation Standards (QUALITY GATE)
+
 - **Agent:** `web-design-expert`
 - **Issues:** 4
 - **Duration:** 2 hours
@@ -112,6 +123,7 @@ The Phase 1 implementation plan has been analyzed and organized for maximum para
 - **Start:** Day 5, after all streams
 
 **Work:**
+
 1. Review all animation implementations
 2. Ensure mechanical/ethereal feel (no bounce)
 3. Verify 150-300ms timing (500ms max for major changes)
@@ -140,6 +152,7 @@ Stream 5 (Dice) ──────────┘                               
 ```
 
 **Key Insights:**
+
 - Only ONE true dependency: Stream 3 → Stream 4
 - Stream 2 has internal dependency: Issue 9 → Issues 5 & 8
 - Streams 1, 2, 3, 5 can all start in parallel on Day 1
@@ -150,7 +163,9 @@ Stream 5 (Dice) ──────────┘                               
 ## Execution Timeline
 
 ### Day 1 (Monday) - Parallel Launch
+
 **9:00 AM:** Launch 4 streams in parallel
+
 - Stream 1: Branding (`svelte5-expert-dev`)
 - Stream 2: Modal System - Issue 9 first (`web-design-expert`)
 - Stream 3: Card System (`web-design-expert`)
@@ -160,6 +175,7 @@ Stream 5 (Dice) ──────────┘                               
 **5:00 PM:** Stream 5 completes
 
 ### Day 2 (Tuesday) - Modal Completion
+
 **Morning:** Stream 2 Issue 9 completes
 **Afternoon:** Stream 2 Issues 5 & 8 work in parallel
 **5:00 PM:** Stream 2 completes
@@ -167,15 +183,18 @@ Stream 5 (Dice) ──────────┘                               
 Stream 3 continues throughout day
 
 ### Day 3 (Wednesday) - Transition to Dependent Work
+
 **Morning:** Stream 3 completes
 **Afternoon:** Launch Stream 4 (Issues 15 & 16 in parallel)
 
 ### Day 4 (Thursday) - Wrap Up Transitions
+
 - Complete Stream 4 Issues 15 & 16
 - Attempt Stream 4 Issue 6 (Story Mode) if accessible
 - If not accessible, defer Issue 6 to Phase 2
 
 ### Day 5 (Friday) - Quality Gate
+
 - Stream 6: Final review and validation
 - Cross-stream consistency check
 - Performance profiling
@@ -187,6 +206,7 @@ Stream 3 continues throughout day
 ## Agent Assignments Summary
 
 ### `svelte5-expert-dev` (9 hours total)
+
 - Stream 1: Branding and Content (2-3h)
 - Stream 5: Dice Animation (2-3h)
 - Stream 4: State Transitions (4-5h)
@@ -194,6 +214,7 @@ Stream 3 continues throughout day
 **Strengths:** Svelte 5 components, runes, transition API, store integration
 
 ### `web-design-expert` (13 hours total)
+
 - Stream 2: Modal System (4-5h)
 - Stream 3: Card System (5-6h)
 - Stream 6: Animation Standards (2h)
@@ -206,9 +227,11 @@ Stream 3 continues throughout day
 ## Risk Analysis
 
 ### High Risk
+
 **None identified** - All risks have mitigation strategies
 
 ### Medium Risk
+
 1. **Modal System blocks other modal work**
    - **Mitigation:** Issue 9 is isolated and quick. Issues 5 & 8 can run in parallel after.
    - **Impact:** Contained to Stream 2 only
@@ -218,6 +241,7 @@ Stream 3 continues throughout day
    - **Impact:** May extend timeline by 1 day if sequential execution chosen
 
 ### Low Risk
+
 1. **Story Mode not testable**
    - **Mitigation:** Issue 6 is lowest priority. Defer to Phase 2 if needed.
    - **Impact:** None, doesn't block other work
@@ -242,6 +266,7 @@ Stream 3 continues throughout day
 ## Validation Protocol
 
 ### After Each Stream Completes:
+
 1. Agent captures "after" screenshots/videos
 2. Compare against before assets in `specs/assets/phase1/`
 3. Manual QA in browser
@@ -249,6 +274,7 @@ Stream 3 continues throughout day
 5. Tag design expert for review if needed
 
 ### After Stream 6 Completes:
+
 1. Full regression test of all animations
 2. Cross-browser testing (Chrome, Firefox, Safari, Edge)
 3. Performance profiling with Chrome DevTools
@@ -256,6 +282,7 @@ Stream 3 continues throughout day
 5. Final design expert sign-off
 
 ### AAA Quality Criteria (must meet all 5):
+
 1. **Visual Polish** - Smooth, mechanical/ethereal animations
 2. **Functional Correctness** - Works as intended, no regressions
 3. **Design Consistency** - Matches neural/dreamlike aesthetic
@@ -267,16 +294,19 @@ Stream 3 continues throughout day
 ## Optimization Achievements
 
 **Parallelization Gains:**
+
 - **Sequential Execution:** 22 hours = ~12-14 days (1.5-2 weeks)
 - **Parallel Execution:** ~5 days (1 week)
 - **Time Savings:** ~60%
 
 **Agent Utilization:**
+
 - 2 agents working simultaneously on 4 streams (Day 1)
 - Balanced workload: 9h vs 13h
 - Minimal idle time between streams
 
 **Dependency Minimization:**
+
 - Only 1 cross-stream dependency (Stream 3 → Stream 4)
 - Only 1 intra-stream dependency (Stream 2: Issue 9 → 5 & 8)
 - All other work fully parallelizable
@@ -286,16 +316,19 @@ Stream 3 continues throughout day
 ## Recommendations
 
 ### For Immediate Execution:
+
 1. **Launch Stream 1 first** - Quick win, high visibility, builds momentum
 2. **Monitor Stream 2 Issue 9 closely** - Critical path item
 3. **Consider sequential execution of Streams 2 & 3** - If single web-design-expert agent prefers focus over context-switching
 
 ### For Future Phases:
+
 1. **Reuse Stream 6 quality gate pattern** - Consistent review process
 2. **Document modal pattern from Issue 9** - Template for future modals
 3. **Establish CSS custom properties early** - Makes future animation work easier
 
 ### For Communication:
+
 1. **Daily standups** - Coordinate between agents
 2. **Stream completion notifications** - Trigger dependent work
 3. **Issue 17 constant reminder** - Preserve neural background
@@ -316,4 +349,3 @@ Stream 3 continues throughout day
 **Plan Status:** READY FOR EXECUTION
 **Approval Required From:** User
 **Start Date:** TBD (awaiting user approval)
-

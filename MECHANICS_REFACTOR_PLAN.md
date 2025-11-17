@@ -38,41 +38,43 @@ This refactor migrates the entire game from **d6-based mechanics to d20-based me
 
 ### 1. Dice System
 
-| Aspect | Current (d6) | Target (d20) |
-|--------|-------------|--------------|
-| **Dice Type** | d6 (1-6) | d20 (1-20) |
-| **Implementation** | `Math.floor(Math.random() * 6) + 1` | `Math.floor(Math.random() * 20) + 1` |
-| **Special States** | None | Lucid (roll 20), Surreal (roll 1) |
-| **Roll Modifiers** | Bonus counter only | Lucid (2d20 keep high), Surreal (2d20 keep low) |
-| **File Location** | `src/lib/stores/gameStore.svelte.js:8-10` | Multiple locations (needs implementation) |
+| Aspect             | Current (d6)                              | Target (d20)                                    |
+| ------------------ | ----------------------------------------- | ----------------------------------------------- |
+| **Dice Type**      | d6 (1-6)                                  | d20 (1-20)                                      |
+| **Implementation** | `Math.floor(Math.random() * 6) + 1`       | `Math.floor(Math.random() * 20) + 1`            |
+| **Special States** | None                                      | Lucid (roll 20), Surreal (roll 1)               |
+| **Roll Modifiers** | Bonus counter only                        | Lucid (2d20 keep high), Surreal (2d20 keep low) |
+| **File Location**  | `src/lib/stores/gameStore.svelte.js:8-10` | Multiple locations (needs implementation)       |
 
 ### 2. Daily Card Draw
 
-| Aspect | Current | Target |
-|--------|---------|--------|
-| **Mechanic** | Direct 1d6 = 1-6 cards | 1d20 with conversion table |
-| **Card Ranges** | 1-6 (linear) | 1→1, 2-5→2, 6-10→3, 11-15→4, 16-19→5, 20→6 |
-| **Average Cards** | 3.5 cards/round | ~3.5 cards/round (preserved) |
-| **Special Effects** | None | Roll 1 → Surreal next roll, Roll 20 → Lucid next roll |
-| **File Location** | `gameActions.svelte.js:87-97` | Needs new conversion function |
+| Aspect              | Current                       | Target                                                |
+| ------------------- | ----------------------------- | ----------------------------------------------------- |
+| **Mechanic**        | Direct 1d6 = 1-6 cards        | 1d20 with conversion table                            |
+| **Card Ranges**     | 1-6 (linear)                  | 1→1, 2-5→2, 6-10→3, 11-15→4, 16-19→5, 20→6            |
+| **Average Cards**   | 3.5 cards/round               | ~3.5 cards/round (preserved)                          |
+| **Special Effects** | None                          | Roll 1 → Surreal next roll, Roll 20 → Lucid next roll |
+| **File Location**   | `gameActions.svelte.js:87-97` | Needs new conversion function                         |
 
 ### 3. Tower/Stability System
 
-| Aspect | Current | Target |
-|--------|---------|--------|
-| **Starting Value** | 54 resources | 20 stability |
-| **Mechanic Name** | "Tower" | "Stability" |
-| **Damage Source** | Odd-ranked cards (3,5,7,9) | Same trigger, different damage table |
-| **Damage Formula** | `max(roll - bonus, 0)` | Stability Check Table (see below) |
-| **Bonus Impact** | Subtracts from damage | NO LONGER APPLIES to stability checks |
-| **File Locations** | `gameStore.svelte.js:22`, `gameActions.svelte.js:266-267` | Multiple updates needed |
+| Aspect             | Current                                                   | Target                                |
+| ------------------ | --------------------------------------------------------- | ------------------------------------- |
+| **Starting Value** | 54 resources                                              | 20 stability                          |
+| **Mechanic Name**  | "Tower"                                                   | "Stability"                           |
+| **Damage Source**  | Odd-ranked cards (3,5,7,9)                                | Same trigger, different damage table  |
+| **Damage Formula** | `max(roll - bonus, 0)`                                    | Stability Check Table (see below)     |
+| **Bonus Impact**   | Subtracts from damage                                     | NO LONGER APPLIES to stability checks |
+| **File Locations** | `gameStore.svelte.js:22`, `gameActions.svelte.js:266-267` | Multiple updates needed               |
 
 **Current Damage Formula:**
+
 ```javascript
 damage = Math.max(roll - bonus, 0);
 ```
 
 **Target Stability Check Table:**
+
 ```
 Roll 20:    0 loss, optional +1 temp stability, Lucid next roll
 Roll 11-19: 0 loss
@@ -85,54 +87,55 @@ Roll 1:     -3 stability, Surreal next roll
 
 #### Current Implementation:
 
-| Aspect | Current |
-|--------|---------|
-| **Tokens** | 10 (fixed) |
-| **Check Frequency** | Once per round after Ace of Hearts revealed |
-| **Success Threshold** | Roll 6 OR (roll + bonus = 6) if difficulty > 0 |
-| **Success Effect** | Remove 1 token |
-| **Failure Effect** | No change |
-| **Ace Impact** | Bonus counter helps reach threshold |
-| **Final Step** | Final damage roll (1d6) after all tokens removed |
+| Aspect                | Current                                          |
+| --------------------- | ------------------------------------------------ |
+| **Tokens**            | 10 (fixed)                                       |
+| **Check Frequency**   | Once per round after Ace of Hearts revealed      |
+| **Success Threshold** | Roll 6 OR (roll + bonus = 6) if difficulty > 0   |
+| **Success Effect**    | Remove 1 token                                   |
+| **Failure Effect**    | No change                                        |
+| **Ace Impact**        | Bonus counter helps reach threshold              |
+| **Final Step**        | Final damage roll (1d6) after all tokens removed |
 
 #### Target Implementation:
 
-| Aspect | Target |
-|--------|---------|
-| **Tokens** | 10 (unchanged) |
-| **Check Frequency** | Once per day after Ace of Hearts appears (unchanged) |
-| **Success Threshold** | **ACE-DEPENDENT:** 1 Ace=17-20, 2 Aces=14-20, 3 Aces=11-20, 4 Aces=auto |
-| **Success Effects** | Roll 20: Remove 2 tokens + Lucid<br>Threshold-19: Remove 1 token |
-| **Failure Effects** | 6-(threshold-1): No change<br>2-5: Add 1 token<br>1: Add 2 tokens + Surreal |
-| **Ace Impact** | Directly modifies success threshold (not bonus) |
-| **Final Step** | Escape when tokens = 0 (no final damage roll mentioned) |
+| Aspect                | Target                                                                      |
+| --------------------- | --------------------------------------------------------------------------- |
+| **Tokens**            | 10 (unchanged)                                                              |
+| **Check Frequency**   | Once per day after Ace of Hearts appears (unchanged)                        |
+| **Success Threshold** | **ACE-DEPENDENT:** 1 Ace=17-20, 2 Aces=14-20, 3 Aces=11-20, 4 Aces=auto     |
+| **Success Effects**   | Roll 20: Remove 2 tokens + Lucid<br>Threshold-19: Remove 1 token            |
+| **Failure Effects**   | 6-(threshold-1): No change<br>2-5: Add 1 token<br>1: Add 2 tokens + Surreal |
+| **Ace Impact**        | Directly modifies success threshold (not bonus)                             |
+| **Final Step**        | Escape when tokens = 0 (no final damage roll mentioned)                     |
 
 **Critical Difference:** Aces now **modify the success threshold** rather than providing a bonus to the roll. This fundamentally changes the Ace mechanic.
 
 ### 5. Bonus Counter System
 
-| Aspect | Current | Target |
-|--------|---------|--------|
-| **Source** | +1 per Ace (max 4) | Eliminated for stability/salvation |
-| **Impact on Damage** | Reduces damage: `max(roll - bonus, 0)` | No longer applies to stability checks |
+| Aspect                | Current                                  | Target                                   |
+| --------------------- | ---------------------------------------- | ---------------------------------------- |
+| **Source**            | +1 per Ace (max 4)                       | Eliminated for stability/salvation       |
+| **Impact on Damage**  | Reduces damage: `max(roll - bonus, 0)`   | No longer applies to stability checks    |
 | **Impact on Success** | Helps reach threshold (roll + bonus = 6) | **Replaced by Ace-dependent thresholds** |
-| **Status** | Core mechanic | **REMOVED/REPLACED** |
+| **Status**            | Core mechanic                            | **REMOVED/REPLACED**                     |
 
 **CRITICAL:** The bonus counter is **eliminated** in the new system. Aces now work differently:
+
 - **Old:** Aces give bonus → bonus reduces damage and helps success checks
 - **New:** Aces modify salvation threshold directly, NO IMPACT on stability damage
 
 ### 6. Lucid/Surreal States (NEW)
 
-| Aspect | Target Implementation |
-|--------|---------------------|
-| **Lucid Trigger** | Roll natural 20 on ANY roll type |
-| **Lucid Effect** | Next roll: 2d20, keep highest |
-| **Surreal Trigger** | Roll natural 1 on ANY roll type |
-| **Surreal Effect** | Next roll: 2d20, keep lowest |
-| **Duration** | One roll only (then clears) |
-| **Stacking** | Not specified - assume NO |
-| **State Storage** | New gameState properties needed |
+| Aspect              | Target Implementation            |
+| ------------------- | -------------------------------- |
+| **Lucid Trigger**   | Roll natural 20 on ANY roll type |
+| **Lucid Effect**    | Next roll: 2d20, keep highest    |
+| **Surreal Trigger** | Roll natural 1 on ANY roll type  |
+| **Surreal Effect**  | Next roll: 2d20, keep lowest     |
+| **Duration**        | One roll only (then clears)      |
+| **Stacking**        | Not specified - assume NO        |
+| **State Storage**   | New gameState properties needed  |
 
 ---
 
@@ -141,6 +144,7 @@ Roll 1:     -3 stability, Surreal next roll
 ### Priority 1: Core Dice System
 
 **Files to Modify:**
+
 1. `src/lib/stores/gameStore.svelte.js`
 2. `src/lib/stores/diceStore.svelte.js`
 3. `src/lib/components/ThreeJSDiceBoxRoller.svelte`
@@ -152,22 +156,24 @@ Roll 1:     -3 stability, Surreal next roll
 **File:** `src/lib/stores/gameStore.svelte.js:8-10`
 
 **Current:**
+
 ```javascript
 let getRandomNumber = () => {
-    return Math.floor(Math.random() * 6) + 1;
+	return Math.floor(Math.random() * 6) + 1;
 };
 ```
 
 **Target:**
+
 ```javascript
 // New d20 generator
 let getRandomNumber = () => {
-    return Math.floor(Math.random() * 20) + 1;
+	return Math.floor(Math.random() * 20) + 1;
 };
 
 // Optional: Keep d6 generator for backwards compatibility during transition
 let getRandomD6 = () => {
-    return Math.floor(Math.random() * 6) + 1;
+	return Math.floor(Math.random() * 6) + 1;
 };
 ```
 
@@ -176,15 +182,16 @@ let getRandomD6 = () => {
 **File:** `src/lib/stores/gameStore.svelte.js:15-30` (gameState initialization)
 
 **Add new state properties:**
+
 ```javascript
 let gameState = $state({
-    // ... existing properties ...
+	// ... existing properties ...
 
-    // NEW: Lucid/Surreal state tracking
-    isLucid: false,        // True if next roll should be 2d20 keep high
-    isSurreal: false,      // True if next roll should be 2d20 keep low
+	// NEW: Lucid/Surreal state tracking
+	isLucid: false, // True if next roll should be 2d20 keep high
+	isSurreal: false // True if next roll should be 2d20 keep low
 
-    // ... rest of existing properties ...
+	// ... rest of existing properties ...
 });
 ```
 
@@ -193,34 +200,35 @@ let gameState = $state({
 **File:** `src/lib/stores/gameStore.svelte.js` (add new function)
 
 **New function:**
+
 ```javascript
 /**
  * Roll with Lucid/Surreal modifiers
  * @returns {Object} { roll: number, wasLucid: boolean, wasSurreal: boolean }
  */
 let rollWithModifiers = () => {
-    let roll1 = Math.floor(Math.random() * 20) + 1;
+	let roll1 = Math.floor(Math.random() * 20) + 1;
 
-    // Check for Lucid state (advantage)
-    if (gameState.isLucid) {
-        const roll2 = Math.floor(Math.random() * 20) + 1;
-        roll = Math.max(roll1, roll2);
-        logger.debug(`[rollWithModifiers] Lucid roll: ${roll1}, ${roll2} → ${roll}`);
-        gameState.isLucid = false; // Clear state after use
-        return { roll, wasLucid: true, wasSurreal: false };
-    }
+	// Check for Lucid state (advantage)
+	if (gameState.isLucid) {
+		const roll2 = Math.floor(Math.random() * 20) + 1;
+		roll = Math.max(roll1, roll2);
+		logger.debug(`[rollWithModifiers] Lucid roll: ${roll1}, ${roll2} → ${roll}`);
+		gameState.isLucid = false; // Clear state after use
+		return { roll, wasLucid: true, wasSurreal: false };
+	}
 
-    // Check for Surreal state (disadvantage)
-    if (gameState.isSurreal) {
-        const roll2 = Math.floor(Math.random() * 20) + 1;
-        roll = Math.min(roll1, roll2);
-        logger.debug(`[rollWithModifiers] Surreal roll: ${roll1}, ${roll2} → ${roll}`);
-        gameState.isSurreal = false; // Clear state after use
-        return { roll, wasSurreal: true, wasLucid: false };
-    }
+	// Check for Surreal state (disadvantage)
+	if (gameState.isSurreal) {
+		const roll2 = Math.floor(Math.random() * 20) + 1;
+		roll = Math.min(roll1, roll2);
+		logger.debug(`[rollWithModifiers] Surreal roll: ${roll1}, ${roll2} → ${roll}`);
+		gameState.isSurreal = false; // Clear state after use
+		return { roll, wasSurreal: true, wasLucid: false };
+	}
 
-    // Normal roll
-    return { roll: roll1, wasLucid: false, wasSurreal: false };
+	// Normal roll
+	return { roll: roll1, wasLucid: false, wasSurreal: false };
 };
 ```
 
@@ -229,32 +237,34 @@ let rollWithModifiers = () => {
 **File:** `src/lib/stores/diceStore.svelte.js:182-199`
 
 **Current:**
+
 ```javascript
 export async function rollDice(value = null) {
-    const rollString = value ? `1d6@${value}` : '1d6';
-    const result = await diceBoxInstance.roll(rollString);
-    return result.total;
+	const rollString = value ? `1d6@${value}` : '1d6';
+	const result = await diceBoxInstance.roll(rollString);
+	return result.total;
 }
 ```
 
 **Target:**
+
 ```javascript
 export async function rollDice(value = null, options = {}) {
-    const { isLucid = false, isSurreal = false } = options;
+	const { isLucid = false, isSurreal = false } = options;
 
-    let rollString;
+	let rollString;
 
-    if (isLucid || isSurreal) {
-        // Roll 2d20 for advantage/disadvantage
-        // Note: DiceBox will show both dice, we handle keep high/low in code
-        rollString = value ? `2d20@${value}` : '2d20';
-    } else {
-        // Normal roll
-        rollString = value ? `1d20@${value}` : '1d20';
-    }
+	if (isLucid || isSurreal) {
+		// Roll 2d20 for advantage/disadvantage
+		// Note: DiceBox will show both dice, we handle keep high/low in code
+		rollString = value ? `2d20@${value}` : '2d20';
+	} else {
+		// Normal roll
+		rollString = value ? `1d20@${value}` : '1d20';
+	}
 
-    const result = await diceBoxInstance.roll(rollString);
-    return result.total;
+	const result = await diceBoxInstance.roll(rollString);
+	return result.total;
 }
 ```
 
@@ -263,6 +273,7 @@ export async function rollDice(value = null, options = {}) {
 ### Priority 2: Daily Card Draw Conversion
 
 **Files to Modify:**
+
 1. `src/lib/stores/gameActions.svelte.js:87-97`
 
 **Changes:**
@@ -279,16 +290,16 @@ export async function rollDice(value = null, options = {}) {
  * @returns {number} Number of cards to draw (1-6)
  */
 function convertD20ToCardCount(roll) {
-    if (roll === 1) return 1;
-    if (roll >= 2 && roll <= 5) return 2;
-    if (roll >= 6 && roll <= 10) return 3;
-    if (roll >= 11 && roll <= 15) return 4;
-    if (roll >= 16 && roll <= 19) return 5;
-    if (roll === 20) return 6;
+	if (roll === 1) return 1;
+	if (roll >= 2 && roll <= 5) return 2;
+	if (roll >= 6 && roll <= 10) return 3;
+	if (roll >= 11 && roll <= 15) return 4;
+	if (roll >= 16 && roll <= 19) return 5;
+	if (roll === 20) return 6;
 
-    // Fallback (should never happen)
-    logger.error(`[convertD20ToCardCount] Invalid roll: ${roll}`);
-    return 3;
+	// Fallback (should never happen)
+	logger.error(`[convertD20ToCardCount] Invalid roll: ${roll}`);
+	return 3;
 }
 ```
 
@@ -297,49 +308,54 @@ function convertD20ToCardCount(roll) {
 **File:** `src/lib/stores/gameActions.svelte.js:87-97`
 
 **Current:**
+
 ```javascript
 export async function rollForTasks() {
-    const roll = gameState.getRandomNumber();
+	const roll = gameState.getRandomNumber();
 
-    gameState.cardsToDraw = roll;
-    gameState.pendingUpdates.diceRoll = roll;
-    gameState.currentCard = null;
+	gameState.cardsToDraw = roll;
+	gameState.pendingUpdates.diceRoll = roll;
+	gameState.currentCard = null;
 
-    logger.debug(`[rollForTasks] Dice rolled: ${roll}, setting cardsToDraw to ${roll}`);
-    return roll;
+	logger.debug(`[rollForTasks] Dice rolled: ${roll}, setting cardsToDraw to ${roll}`);
+	return roll;
 }
 ```
 
 **Target:**
+
 ```javascript
 export async function rollForTasks() {
-    // Roll d20 with Lucid/Surreal modifiers
-    const { roll, wasLucid, wasSurreal } = gameState.rollWithModifiers();
+	// Roll d20 with Lucid/Surreal modifiers
+	const { roll, wasLucid, wasSurreal } = gameState.rollWithModifiers();
 
-    // Convert d20 result to card count
-    const cardCount = convertD20ToCardCount(roll);
+	// Convert d20 result to card count
+	const cardCount = convertD20ToCardCount(roll);
 
-    gameState.cardsToDraw = cardCount;
-    gameState.pendingUpdates.diceRoll = roll; // Store actual d20 roll
-    gameState.currentCard = null;
+	gameState.cardsToDraw = cardCount;
+	gameState.pendingUpdates.diceRoll = roll; // Store actual d20 roll
+	gameState.currentCard = null;
 
-    // Handle Lucid/Surreal state changes
-    if (roll === 20) {
-        gameState.isLucid = true;
-        logger.debug(`[rollForTasks] Natural 20! Next roll will be Lucid (advantage)`);
-    } else if (roll === 1) {
-        gameState.isSurreal = true;
-        logger.debug(`[rollForTasks] Natural 1! Next roll will be Surreal (disadvantage)`);
-    }
+	// Handle Lucid/Surreal state changes
+	if (roll === 20) {
+		gameState.isLucid = true;
+		logger.debug(`[rollForTasks] Natural 20! Next roll will be Lucid (advantage)`);
+	} else if (roll === 1) {
+		gameState.isSurreal = true;
+		logger.debug(`[rollForTasks] Natural 1! Next roll will be Surreal (disadvantage)`);
+	}
 
-    logger.debug(`[rollForTasks] D20 rolled: ${roll} (${wasLucid ? 'LUCID' : wasSurreal ? 'SURREAL' : 'normal'}) → ${cardCount} cards`);
-    return roll;
+	logger.debug(
+		`[rollForTasks] D20 rolled: ${roll} (${wasLucid ? 'LUCID' : wasSurreal ? 'SURREAL' : 'normal'}) → ${cardCount} cards`
+	);
+	return roll;
 }
 ```
 
 ### Priority 3: Tower → Stability System Overhaul
 
 **Files to Modify:**
+
 1. `src/lib/stores/gameStore.svelte.js:22`
 2. `src/lib/stores/gameInit.js:88`
 3. `src/lib/stores/gameActions.svelte.js` (multiple functions)
@@ -352,11 +368,13 @@ export async function rollForTasks() {
 **File:** `src/lib/stores/gameStore.svelte.js:22`
 
 **Current:**
+
 ```javascript
 tower: 54,
 ```
 
 **Target:**
+
 ```javascript
 tower: 20, // Now represents "Stability" in d20 system
 ```
@@ -364,11 +382,13 @@ tower: 20, // Now represents "Stability" in d20 system
 **File:** `src/lib/stores/gameInit.js:88`
 
 **Current:**
+
 ```javascript
 tower: 54, // Always start at full health, damage applied interactively
 ```
 
 **Target:**
+
 ```javascript
 tower: 20, // Always start at 20 Stability (Dimm City d20 system)
 ```
@@ -385,35 +405,35 @@ tower: 20, // Always start at 20 Stability (Dimm City d20 system)
  * @returns {Object} { loss: number, gainedLucid: boolean, gainedSurreal: boolean, optionalGain: number }
  */
 function calculateStabilityLoss(roll) {
-    if (roll === 20) {
-        return {
-            loss: 0,
-            gainedLucid: true,
-            gainedSurreal: false,
-            optionalGain: 1 // "optional +1 temp stability"
-        };
-    }
-    if (roll >= 11 && roll <= 19) {
-        return { loss: 0, gainedLucid: false, gainedSurreal: false, optionalGain: 0 };
-    }
-    if (roll >= 6 && roll <= 10) {
-        return { loss: 1, gainedLucid: false, gainedSurreal: false, optionalGain: 0 };
-    }
-    if (roll >= 2 && roll <= 5) {
-        return { loss: 2, gainedLucid: false, gainedSurreal: false, optionalGain: 0 };
-    }
-    if (roll === 1) {
-        return {
-            loss: 3,
-            gainedLucid: false,
-            gainedSurreal: true,
-            optionalGain: 0
-        };
-    }
+	if (roll === 20) {
+		return {
+			loss: 0,
+			gainedLucid: true,
+			gainedSurreal: false,
+			optionalGain: 1 // "optional +1 temp stability"
+		};
+	}
+	if (roll >= 11 && roll <= 19) {
+		return { loss: 0, gainedLucid: false, gainedSurreal: false, optionalGain: 0 };
+	}
+	if (roll >= 6 && roll <= 10) {
+		return { loss: 1, gainedLucid: false, gainedSurreal: false, optionalGain: 0 };
+	}
+	if (roll >= 2 && roll <= 5) {
+		return { loss: 2, gainedLucid: false, gainedSurreal: false, optionalGain: 0 };
+	}
+	if (roll === 1) {
+		return {
+			loss: 3,
+			gainedLucid: false,
+			gainedSurreal: true,
+			optionalGain: 0
+		};
+	}
 
-    // Fallback
-    logger.error(`[calculateStabilityLoss] Invalid roll: ${roll}`);
-    return { loss: 0, gainedLucid: false, gainedSurreal: false, optionalGain: 0 };
+	// Fallback
+	logger.error(`[calculateStabilityLoss] Invalid roll: ${roll}`);
+	return { loss: 0, gainedLucid: false, gainedSurreal: false, optionalGain: 0 };
 }
 ```
 
@@ -422,54 +442,58 @@ function calculateStabilityLoss(roll) {
 **File:** `src/lib/stores/gameActions.svelte.js:248-275`
 
 **Current:**
+
 ```javascript
 export function getFailureCheckRoll() {
-    return gameState.getRandomNumber();
+	return gameState.getRandomNumber();
 }
 
 export function applyFailureCheckResult(result) {
-    gameState.pendingUpdates.diceRoll = result;
+	gameState.pendingUpdates.diceRoll = result;
 
-    // Calculate damage (but don't apply yet)
-    const blocksToRemove = Math.max(result - gameState.bonus, 0);
-    gameState.pendingUpdates.towerDamage = blocksToRemove;
+	// Calculate damage (but don't apply yet)
+	const blocksToRemove = Math.max(result - gameState.bonus, 0);
+	gameState.pendingUpdates.towerDamage = blocksToRemove;
 }
 ```
 
 **Target:**
+
 ```javascript
 export function getFailureCheckRoll() {
-    // Roll d20 with Lucid/Surreal modifiers
-    const { roll, wasLucid, wasSurreal } = gameState.rollWithModifiers();
+	// Roll d20 with Lucid/Surreal modifiers
+	const { roll, wasLucid, wasSurreal } = gameState.rollWithModifiers();
 
-    logger.debug(`[getFailureCheckRoll] D20 roll: ${roll} (${wasLucid ? 'LUCID' : wasSurreal ? 'SURREAL' : 'normal'})`);
-    return roll;
+	logger.debug(
+		`[getFailureCheckRoll] D20 roll: ${roll} (${wasLucid ? 'LUCID' : wasSurreal ? 'SURREAL' : 'normal'})`
+	);
+	return roll;
 }
 
 export function applyFailureCheckResult(result) {
-    gameState.pendingUpdates.diceRoll = result;
+	gameState.pendingUpdates.diceRoll = result;
 
-    // Calculate stability loss using d20 table (bonus no longer applies)
-    const { loss, gainedLucid, gainedSurreal, optionalGain } = calculateStabilityLoss(result);
+	// Calculate stability loss using d20 table (bonus no longer applies)
+	const { loss, gainedLucid, gainedSurreal, optionalGain } = calculateStabilityLoss(result);
 
-    gameState.pendingUpdates.towerDamage = loss;
+	gameState.pendingUpdates.towerDamage = loss;
 
-    // Handle Lucid/Surreal state changes
-    if (gainedLucid) {
-        gameState.isLucid = true;
-        logger.debug(`[applyFailureCheckResult] Natural 20! Next roll will be Lucid`);
-    } else if (gainedSurreal) {
-        gameState.isSurreal = true;
-        logger.debug(`[applyFailureCheckResult] Natural 1! Next roll will be Surreal`);
-    }
+	// Handle Lucid/Surreal state changes
+	if (gainedLucid) {
+		gameState.isLucid = true;
+		logger.debug(`[applyFailureCheckResult] Natural 20! Next roll will be Lucid`);
+	} else if (gainedSurreal) {
+		gameState.isSurreal = true;
+		logger.debug(`[applyFailureCheckResult] Natural 1! Next roll will be Surreal`);
+	}
 
-    // Note: optionalGain not automatically applied - could be player choice
-    // For now, auto-apply it
-    if (optionalGain > 0) {
-        gameState.pendingUpdates.towerGain = optionalGain;
-    }
+	// Note: optionalGain not automatically applied - could be player choice
+	// For now, auto-apply it
+	if (optionalGain > 0) {
+		gameState.pendingUpdates.towerGain = optionalGain;
+	}
 
-    logger.debug(`[applyFailureCheckResult] Stability loss: ${loss}, optional gain: ${optionalGain}`);
+	logger.debug(`[applyFailureCheckResult] Stability loss: ${loss}, optional gain: ${optionalGain}`);
 }
 ```
 
@@ -478,59 +502,67 @@ export function applyFailureCheckResult(result) {
 **File:** `src/lib/stores/gameActions.svelte.js:278-321`
 
 **Current:**
+
 ```javascript
 export function applyPendingDiceRoll() {
-    // Apply dice roll
-    gameState.diceRoll = gameState.pendingUpdates.diceRoll;
+	// Apply dice roll
+	gameState.diceRoll = gameState.pendingUpdates.diceRoll;
 
-    // Apply tower damage if any
-    if (gameState.pendingUpdates.towerDamage !== null && gameState.pendingUpdates.towerDamage > 0) {
-        const blocksToRemove = gameState.pendingUpdates.towerDamage;
-        gameState.tower -= blocksToRemove;
+	// Apply tower damage if any
+	if (gameState.pendingUpdates.towerDamage !== null && gameState.pendingUpdates.towerDamage > 0) {
+		const blocksToRemove = gameState.pendingUpdates.towerDamage;
+		gameState.tower -= blocksToRemove;
 
-        // ... rest of logic
-    }
+		// ... rest of logic
+	}
 }
 ```
 
 **Target:**
+
 ```javascript
 export function applyPendingDiceRoll() {
-    // Apply dice roll
-    gameState.diceRoll = gameState.pendingUpdates.diceRoll;
+	// Apply dice roll
+	gameState.diceRoll = gameState.pendingUpdates.diceRoll;
 
-    // Apply stability gain if any (from natural 20)
-    if (gameState.pendingUpdates.towerGain !== null && gameState.pendingUpdates.towerGain > 0) {
-        const stabilityGain = gameState.pendingUpdates.towerGain;
-        gameState.tower += stabilityGain;
-        logger.debug(`[applyPendingDiceRoll] Stability gained: ${stabilityGain}, new stability: ${gameState.tower}`);
-        gameState.pendingUpdates.towerGain = null;
-    }
+	// Apply stability gain if any (from natural 20)
+	if (gameState.pendingUpdates.towerGain !== null && gameState.pendingUpdates.towerGain > 0) {
+		const stabilityGain = gameState.pendingUpdates.towerGain;
+		gameState.tower += stabilityGain;
+		logger.debug(
+			`[applyPendingDiceRoll] Stability gained: ${stabilityGain}, new stability: ${gameState.tower}`
+		);
+		gameState.pendingUpdates.towerGain = null;
+	}
 
-    // Apply stability loss if any
-    if (gameState.pendingUpdates.towerDamage !== null && gameState.pendingUpdates.towerDamage > 0) {
-        const stabilityLoss = gameState.pendingUpdates.towerDamage;
-        gameState.tower -= stabilityLoss;
+	// Apply stability loss if any
+	if (gameState.pendingUpdates.towerDamage !== null && gameState.pendingUpdates.towerDamage > 0) {
+		const stabilityLoss = gameState.pendingUpdates.towerDamage;
+		gameState.tower -= stabilityLoss;
 
-        logger.debug(`[applyPendingDiceRoll] Stability lost: ${stabilityLoss}, remaining: ${gameState.tower}`);
+		logger.debug(
+			`[applyPendingDiceRoll] Stability lost: ${stabilityLoss}, remaining: ${gameState.tower}`
+		);
 
-        // Check for game over (stability depleted)
-        if (gameState.tower <= 0) {
-            gameState.tower = 0;
-            gameState.status = gameState.config.labels?.failureCheckLoss ?? 'Stability collapsed completely';
-            gameState.gameOver = true;
-            transitionTo('gameOver');
-            return;
-        }
+		// Check for game over (stability depleted)
+		if (gameState.tower <= 0) {
+			gameState.tower = 0;
+			gameState.status =
+				gameState.config.labels?.failureCheckLoss ?? 'Stability collapsed completely';
+			gameState.gameOver = true;
+			transitionTo('gameOver');
+			return;
+		}
 
-        gameState.pendingUpdates.towerDamage = null;
-    }
+		gameState.pendingUpdates.towerDamage = null;
+	}
 }
 ```
 
 ### Priority 4: Salvation System Overhaul (Most Complex)
 
 **Files to Modify:**
+
 1. `src/lib/stores/gameActions.svelte.js:391-451` (successCheck function)
 2. `src/lib/stores/gameActions.svelte.js:516-597` (final damage roll - possibly remove)
 3. `src/lib/stores/gameStore.svelte.js` (state tracking for Aces revealed count)
@@ -542,14 +574,15 @@ export function applyPendingDiceRoll() {
 **File:** `src/lib/stores/gameStore.svelte.js:15-30`
 
 **Add new state property:**
+
 ```javascript
 let gameState = $state({
-    // ... existing properties ...
+	// ... existing properties ...
 
-    // NEW: Track how many Aces have been revealed (for salvation threshold)
-    acesRevealed: 0, // 0-4
+	// NEW: Track how many Aces have been revealed (for salvation threshold)
+	acesRevealed: 0 // 0-4
 
-    // ... rest of existing properties ...
+	// ... rest of existing properties ...
 });
 ```
 
@@ -558,27 +591,29 @@ let gameState = $state({
 **File:** `src/lib/stores/gameActions.svelte.js:156-162`
 
 **Current:**
+
 ```javascript
 // Track aces - store in pending state
 if (card.card === 'A') {
-    gameState.pendingUpdates.bonusChange = 1;
-    if (card.suit === 'hearts') {
-        gameState.aceOfHeartsRevealed = true;
-    }
+	gameState.pendingUpdates.bonusChange = 1;
+	if (card.suit === 'hearts') {
+		gameState.aceOfHeartsRevealed = true;
+	}
 }
 ```
 
 **Target:**
+
 ```javascript
 // Track aces - store in pending state
 if (card.card === 'A') {
-    // NO LONGER: gameState.pendingUpdates.bonusChange = 1;
-    // Instead, track Ace count for salvation threshold
-    gameState.pendingUpdates.aceChange = 1;
+	// NO LONGER: gameState.pendingUpdates.bonusChange = 1;
+	// Instead, track Ace count for salvation threshold
+	gameState.pendingUpdates.aceChange = 1;
 
-    if (card.suit === 'hearts') {
-        gameState.aceOfHeartsRevealed = true;
-    }
+	if (card.suit === 'hearts') {
+		gameState.aceOfHeartsRevealed = true;
+	}
 }
 ```
 
@@ -587,20 +622,22 @@ if (card.card === 'A') {
 **File:** `src/lib/stores/gameActions.svelte.js:207-211`
 
 **Current:**
+
 ```javascript
 if (gameState.pendingUpdates.bonusChange) {
-    gameState.bonus += gameState.pendingUpdates.bonusChange;
-    gameState.pendingUpdates.bonusChange = null;
+	gameState.bonus += gameState.pendingUpdates.bonusChange;
+	gameState.pendingUpdates.bonusChange = null;
 }
 ```
 
 **Target:**
+
 ```javascript
 // Replace bonus system with Ace count tracking
 if (gameState.pendingUpdates.aceChange) {
-    gameState.acesRevealed += gameState.pendingUpdates.aceChange;
-    gameState.pendingUpdates.aceChange = null;
-    logger.debug(`[confirmCard] Aces revealed: ${gameState.acesRevealed}/4`);
+	gameState.acesRevealed += gameState.pendingUpdates.aceChange;
+	gameState.pendingUpdates.aceChange = null;
+	logger.debug(`[confirmCard] Aces revealed: ${gameState.acesRevealed}/4`);
 }
 ```
 
@@ -616,15 +653,19 @@ if (gameState.pendingUpdates.aceChange) {
  * @returns {number} Minimum roll needed for success (1-20, or 0 for auto-success)
  */
 function getSalvationThreshold(acesRevealed) {
-    switch (acesRevealed) {
-        case 1: return 17; // Success on 17-20 (~20% chance)
-        case 2: return 14; // Success on 14-20 (~35% chance)
-        case 3: return 11; // Success on 11-20 (~50% chance)
-        case 4: return 0;  // Automatic success
-        default:
-            logger.error(`[getSalvationThreshold] Invalid Aces count: ${acesRevealed}`);
-            return 20; // Impossible if no Aces
-    }
+	switch (acesRevealed) {
+		case 1:
+			return 17; // Success on 17-20 (~20% chance)
+		case 2:
+			return 14; // Success on 14-20 (~35% chance)
+		case 3:
+			return 11; // Success on 11-20 (~50% chance)
+		case 4:
+			return 0; // Automatic success
+		default:
+			logger.error(`[getSalvationThreshold] Invalid Aces count: ${acesRevealed}`);
+			return 20; // Impossible if no Aces
+	}
 }
 
 /**
@@ -634,63 +675,63 @@ function getSalvationThreshold(acesRevealed) {
  * @returns {Object} { tokenChange: number, gainedLucid: boolean, gainedSurreal: boolean }
  */
 function calculateSalvationResult(roll, threshold) {
-    // Auto-success if 4 Aces (threshold = 0)
-    if (threshold === 0) {
-        return {
-            tokenChange: -1,
-            gainedLucid: false,
-            gainedSurreal: false
-        };
-    }
+	// Auto-success if 4 Aces (threshold = 0)
+	if (threshold === 0) {
+		return {
+			tokenChange: -1,
+			gainedLucid: false,
+			gainedSurreal: false
+		};
+	}
 
-    // Natural 20: Remove 2 tokens + Lucid
-    if (roll === 20) {
-        return {
-            tokenChange: -2,
-            gainedLucid: true,
-            gainedSurreal: false
-        };
-    }
+	// Natural 20: Remove 2 tokens + Lucid
+	if (roll === 20) {
+		return {
+			tokenChange: -2,
+			gainedLucid: true,
+			gainedSurreal: false
+		};
+	}
 
-    // Success (threshold to 19): Remove 1 token
-    if (roll >= threshold && roll <= 19) {
-        return {
-            tokenChange: -1,
-            gainedLucid: false,
-            gainedSurreal: false
-        };
-    }
+	// Success (threshold to 19): Remove 1 token
+	if (roll >= threshold && roll <= 19) {
+		return {
+			tokenChange: -1,
+			gainedLucid: false,
+			gainedSurreal: false
+		};
+	}
 
-    // Partial failure (6 to threshold-1): No change
-    if (roll >= 6 && roll < threshold) {
-        return {
-            tokenChange: 0,
-            gainedLucid: false,
-            gainedSurreal: false
-        };
-    }
+	// Partial failure (6 to threshold-1): No change
+	if (roll >= 6 && roll < threshold) {
+		return {
+			tokenChange: 0,
+			gainedLucid: false,
+			gainedSurreal: false
+		};
+	}
 
-    // Failure (2-5): Add 1 token
-    if (roll >= 2 && roll <= 5) {
-        return {
-            tokenChange: 1,
-            gainedLucid: false,
-            gainedSurreal: false
-        };
-    }
+	// Failure (2-5): Add 1 token
+	if (roll >= 2 && roll <= 5) {
+		return {
+			tokenChange: 1,
+			gainedLucid: false,
+			gainedSurreal: false
+		};
+	}
 
-    // Critical failure (1): Add 2 tokens + Surreal
-    if (roll === 1) {
-        return {
-            tokenChange: 2,
-            gainedLucid: false,
-            gainedSurreal: true
-        };
-    }
+	// Critical failure (1): Add 2 tokens + Surreal
+	if (roll === 1) {
+		return {
+			tokenChange: 2,
+			gainedLucid: false,
+			gainedSurreal: true
+		};
+	}
 
-    // Fallback
-    logger.error(`[calculateSalvationResult] Unexpected roll: ${roll}, threshold: ${threshold}`);
-    return { tokenChange: 0, gainedLucid: false, gainedSurreal: false };
+	// Fallback
+	logger.error(`[calculateSalvationResult] Unexpected roll: ${roll}, threshold: ${threshold}`);
+	return { tokenChange: 0, gainedLucid: false, gainedSurreal: false };
 }
 ```
 
@@ -699,50 +740,54 @@ function calculateSalvationResult(roll, threshold) {
 **File:** `src/lib/stores/gameActions.svelte.js:391-451`
 
 **Current:**
+
 ```javascript
 export function successCheck() {
-    const roll = gameState.getRandomNumber();
+	const roll = gameState.getRandomNumber();
 
-    gameState.pendingUpdates.diceRoll = roll;
+	gameState.pendingUpdates.diceRoll = roll;
 
-    if (roll === 6 || (gameState.config.difficulty > 0 && roll + gameState.bonus === 6)) {
-        gameState.pendingUpdates.tokenChange = -1;
-    } else {
-        gameState.pendingUpdates.tokenChange = 0;
-    }
+	if (roll === 6 || (gameState.config.difficulty > 0 && roll + gameState.bonus === 6)) {
+		gameState.pendingUpdates.tokenChange = -1;
+	} else {
+		gameState.pendingUpdates.tokenChange = 0;
+	}
 
-    return roll;
+	return roll;
 }
 ```
 
 **Target:**
+
 ```javascript
 export function successCheck() {
-    // Roll d20 with Lucid/Surreal modifiers
-    const { roll, wasLucid, wasSurreal } = gameState.rollWithModifiers();
+	// Roll d20 with Lucid/Surreal modifiers
+	const { roll, wasLucid, wasSurreal } = gameState.rollWithModifiers();
 
-    gameState.pendingUpdates.diceRoll = roll;
+	gameState.pendingUpdates.diceRoll = roll;
 
-    // Get threshold based on Aces revealed
-    const threshold = getSalvationThreshold(gameState.acesRevealed);
+	// Get threshold based on Aces revealed
+	const threshold = getSalvationThreshold(gameState.acesRevealed);
 
-    // Calculate result
-    const { tokenChange, gainedLucid, gainedSurreal } = calculateSalvationResult(roll, threshold);
+	// Calculate result
+	const { tokenChange, gainedLucid, gainedSurreal } = calculateSalvationResult(roll, threshold);
 
-    gameState.pendingUpdates.tokenChange = tokenChange;
+	gameState.pendingUpdates.tokenChange = tokenChange;
 
-    // Handle Lucid/Surreal state changes FROM THIS ROLL
-    if (gainedLucid) {
-        gameState.isLucid = true;
-        logger.debug(`[successCheck] Natural 20! Next roll will be Lucid`);
-    } else if (gainedSurreal) {
-        gameState.isSurreal = true;
-        logger.debug(`[successCheck] Natural 1! Next roll will be Surreal`);
-    }
+	// Handle Lucid/Surreal state changes FROM THIS ROLL
+	if (gainedLucid) {
+		gameState.isLucid = true;
+		logger.debug(`[successCheck] Natural 20! Next roll will be Lucid`);
+	} else if (gainedSurreal) {
+		gameState.isSurreal = true;
+		logger.debug(`[successCheck] Natural 1! Next roll will be Surreal`);
+	}
 
-    logger.debug(`[successCheck] D20 roll: ${roll} (${wasLucid ? 'LUCID' : wasSurreal ? 'SURREAL' : 'normal'}), threshold: ${threshold}, token change: ${tokenChange}`);
+	logger.debug(
+		`[successCheck] D20 roll: ${roll} (${wasLucid ? 'LUCID' : wasSurreal ? 'SURREAL' : 'normal'}), threshold: ${threshold}, token change: ${tokenChange}`
+	);
 
-    return roll;
+	return roll;
 }
 ```
 
@@ -751,52 +796,57 @@ export function successCheck() {
 **File:** `src/lib/stores/gameActions.svelte.js:413-451`
 
 **Current:**
+
 ```javascript
 export function applyPendingSuccessCheck() {
-    gameState.diceRoll = gameState.pendingUpdates.diceRoll;
+	gameState.diceRoll = gameState.pendingUpdates.diceRoll;
 
-    if (gameState.pendingUpdates.tokenChange !== null && gameState.pendingUpdates.tokenChange !== 0) {
-        gameState.tokens += gameState.pendingUpdates.tokenChange;
-    }
+	if (gameState.pendingUpdates.tokenChange !== null && gameState.pendingUpdates.tokenChange !== 0) {
+		gameState.tokens += gameState.pendingUpdates.tokenChange;
+	}
 
-    if (gameState.tokens === 0) {
-        transitionTo('finalDamageRoll');
-    } else {
-        startRound();
-    }
+	if (gameState.tokens === 0) {
+		transitionTo('finalDamageRoll');
+	} else {
+		startRound();
+	}
 }
 ```
 
 **Target:**
+
 ```javascript
 export function applyPendingSuccessCheck() {
-    gameState.diceRoll = gameState.pendingUpdates.diceRoll;
+	gameState.diceRoll = gameState.pendingUpdates.diceRoll;
 
-    // Apply token change (can be negative, zero, or positive)
-    if (gameState.pendingUpdates.tokenChange !== null) {
-        const oldTokens = gameState.tokens;
-        gameState.tokens += gameState.pendingUpdates.tokenChange;
+	// Apply token change (can be negative, zero, or positive)
+	if (gameState.pendingUpdates.tokenChange !== null) {
+		const oldTokens = gameState.tokens;
+		gameState.tokens += gameState.pendingUpdates.tokenChange;
 
-        // Ensure tokens don't go below 0 or above reasonable limit (e.g., 20)
-        gameState.tokens = Math.max(0, Math.min(gameState.tokens, 20));
+		// Ensure tokens don't go below 0 or above reasonable limit (e.g., 20)
+		gameState.tokens = Math.max(0, Math.min(gameState.tokens, 20));
 
-        logger.debug(`[applyPendingSuccessCheck] Tokens: ${oldTokens} → ${gameState.tokens} (change: ${gameState.pendingUpdates.tokenChange})`);
+		logger.debug(
+			`[applyPendingSuccessCheck] Tokens: ${oldTokens} → ${gameState.tokens} (change: ${gameState.pendingUpdates.tokenChange})`
+		);
 
-        gameState.pendingUpdates.tokenChange = null;
-    }
+		gameState.pendingUpdates.tokenChange = null;
+	}
 
-    // Check for escape condition
-    if (gameState.tokens === 0) {
-        // VICTORY - No final damage roll in new system
-        gameState.win = true;
-        gameState.gameOver = true;
-        gameState.status = gameState.config.labels?.successCheckWin ??
-            'Escape achieved! Against all odds, you survived.';
-        transitionTo('gameOver');
-    } else {
-        // Continue game
-        startRound();
-    }
+	// Check for escape condition
+	if (gameState.tokens === 0) {
+		// VICTORY - No final damage roll in new system
+		gameState.win = true;
+		gameState.gameOver = true;
+		gameState.status =
+			gameState.config.labels?.successCheckWin ??
+			'Escape achieved! Against all odds, you survived.';
+		transitionTo('gameOver');
+	} else {
+		// Continue game
+		startRound();
+	}
 }
 ```
 
@@ -809,12 +859,14 @@ export function applyPendingSuccessCheck() {
 **Options:**
 
 **Option A: Remove Final Damage Roll Entirely**
+
 - Delete `performFinalDamageRoll` function
 - Delete `applyPendingFinalDamageRoll` function
 - Remove `finalDamageRoll` state from transitions
 - Victory happens immediately when tokens reach 0
 
 **Option B: Keep as Optional Mode**
+
 - Preserve existing code
 - Add difficulty setting to enable/disable final damage roll
 - Document as "classic mode" vs "d20 mode"
@@ -824,6 +876,7 @@ export function applyPendingSuccessCheck() {
 ### Priority 5: Remove Bonus Counter System
 
 **Files to Modify:**
+
 1. `src/lib/stores/gameStore.svelte.js` (remove bonus property)
 2. `src/lib/stores/gameActions.svelte.js` (remove all bonus references)
 3. All test files referencing bonus
@@ -835,11 +888,13 @@ export function applyPendingSuccessCheck() {
 **File:** `src/lib/stores/gameStore.svelte.js:25`
 
 **Current:**
+
 ```javascript
 bonus: 0,
 ```
 
 **Target:**
+
 ```javascript
 // REMOVED - bonus counter no longer exists in d20 system
 // Aces now modify salvation threshold instead
@@ -850,6 +905,7 @@ bonus: 0,
 **File:** `src/lib/stores/gameStore.svelte.js:35-45`
 
 **Current:**
+
 ```javascript
 pendingUpdates: {
     bonusChange: null,
@@ -858,6 +914,7 @@ pendingUpdates: {
 ```
 
 **Target:**
+
 ```javascript
 pendingUpdates: {
     aceChange: null, // Tracks Ace reveals for threshold modification
@@ -869,10 +926,12 @@ pendingUpdates: {
 #### 5.3 Remove Bonus References in All Functions
 
 **Files:** Search entire codebase for `bonus` and remove/replace:
+
 - `gameState.bonus` → Remove or replace with appropriate logic
 - `gameState.pendingUpdates.bonusChange` → Replace with `aceChange`
 
 **Key locations:**
+
 - `src/lib/stores/gameActions.svelte.js:156-162` (Ace tracking)
 - `src/lib/stores/gameActions.svelte.js:207-211` (confirmCard)
 - `src/lib/stores/gameActions.svelte.js:266-267` (damage calculation)
@@ -881,6 +940,7 @@ pendingUpdates: {
 ### Priority 6: Update Difficulty System
 
 **Files to Modify:**
+
 1. `src/lib/configuration/DifficultyLevels.js`
 2. `src/lib/stores/gameInit.js` (difficulty impact on initialization)
 3. `src/lib/stores/gameActions.svelte.js` (remove difficulty impact on success)
@@ -892,23 +952,26 @@ pendingUpdates: {
 **File:** `src/lib/configuration/DifficultyLevels.js`
 
 **Current:**
+
 ```javascript
 class DifficultyLevels {
-    constructor() {
-        this.IMPOSSIBLE = 0;
-        this.VERY_HARD = 1;
-        this.HARD = 2;
-        this.MEDIUM = 3;
-        this.EASY = 4;
-    }
+	constructor() {
+		this.IMPOSSIBLE = 0;
+		this.VERY_HARD = 1;
+		this.HARD = 2;
+		this.MEDIUM = 3;
+		this.EASY = 4;
+	}
 }
 ```
 
 **Analysis:** The new specification doesn't mention difficulty modes explicitly. The old system used difficulty to:
+
 1. Enable bonus help on success checks (difficulty > 0)
 2. Easy mode (difficulty = 0) removes Ace of Hearts
 
 **Target Decision Required:**
+
 - Keep difficulty system for other purposes?
 - Remove entirely since salvation thresholds are now Ace-dependent?
 - Repurpose for other modifiers (starting stability, etc.)?
@@ -920,13 +983,15 @@ class DifficultyLevels {
 **File:** `src/lib/stores/gameActions.svelte.js:398-401`
 
 **Current:**
+
 ```javascript
 if (roll === 6 || (gameState.config.difficulty > 0 && roll + gameState.bonus === 6)) {
-    gameState.pendingUpdates.tokenChange = -1;
+	gameState.pendingUpdates.tokenChange = -1;
 }
 ```
 
 **Target:**
+
 ```javascript
 // REMOVED - success is now purely Ace-threshold based
 // See new successCheck() implementation in Priority 4.5
@@ -941,6 +1006,7 @@ if (roll === 6 || (gameState.config.difficulty > 0 && roll + gameState.bonus ===
 **Estimated Effort:** 2-3 hours
 
 **Steps:**
+
 1. Update `gameStore.svelte.js`:
    - Change `getRandomNumber()` to return 1-20
    - Add `rollWithModifiers()` function
@@ -960,6 +1026,7 @@ if (roll === 6 || (gameState.config.difficulty > 0 && roll + gameState.bonus ===
    - `calculateSalvationResult(roll, threshold)`
 
 **Testing:**
+
 - Unit test `rollWithModifiers()` with Lucid/Surreal states
 - Unit test `convertD20ToCardCount()` for all values 1-20
 - Unit test `calculateStabilityLoss()` for all values 1-20
@@ -970,6 +1037,7 @@ if (roll === 6 || (gameState.config.difficulty > 0 && roll + gameState.bonus ===
 **Estimated Effort:** 1-2 hours
 
 **Steps:**
+
 1. Update `rollForTasks()`:
    - Use `rollWithModifiers()`
    - Apply `convertD20ToCardCount()`
@@ -981,6 +1049,7 @@ if (roll === 6 || (gameState.config.difficulty > 0 && roll + gameState.bonus ===
    - Update any text mentioning "1-6 cards"
 
 **Testing:**
+
 - Unit test card draw conversion for all d20 values
 - Unit test Lucid/Surreal triggers (1 and 20)
 - Integration test full round with card drawing
@@ -990,6 +1059,7 @@ if (roll === 6 || (gameState.config.difficulty > 0 && roll + gameState.bonus ===
 **Estimated Effort:** 3-4 hours
 
 **Steps:**
+
 1. Update starting stability:
    - `gameStore.svelte.js`: Change 54 → 20
    - `gameInit.js`: Change 54 → 20
@@ -1008,6 +1078,7 @@ if (roll === 6 || (gameState.config.difficulty > 0 && roll + gameState.bonus ===
    - Update visual representations for 0-20 range
 
 **Testing:**
+
 - Unit test stability loss for all d20 values
 - Unit test stability gains (natural 20)
 - Unit test Lucid/Surreal triggers
@@ -1019,6 +1090,7 @@ if (roll === 6 || (gameState.config.difficulty > 0 && roll + gameState.bonus ===
 **Estimated Effort:** 4-5 hours (most complex)
 
 **Steps:**
+
 1. Update Ace tracking:
    - `drawCard()`: Track `acesRevealed` instead of bonus
    - `confirmCard()`: Apply Ace count
@@ -1044,6 +1116,7 @@ if (roll === 6 || (gameState.config.difficulty > 0 && roll + gameState.bonus ===
    - Update tests
 
 **Testing:**
+
 - Unit test threshold calculation for 1-4 Aces
 - Unit test salvation results for all d20 values at each threshold
 - Unit test token addition on failures
@@ -1057,6 +1130,7 @@ if (roll === 6 || (gameState.config.difficulty > 0 && roll + gameState.bonus ===
 **Estimated Effort:** 2-3 hours
 
 **Steps:**
+
 1. Remove bonus system:
    - Search and remove all `gameState.bonus` references
    - Remove `bonusChange` from pending updates
@@ -1077,6 +1151,7 @@ if (roll === 6 || (gameState.config.difficulty > 0 && roll + gameState.bonus ===
    - Inline code comments
 
 **Testing:**
+
 - Full regression suite
 - All existing tests updated to d20 system
 
@@ -1143,49 +1218,50 @@ All existing test files need updates:
 Create new test file: `src/lib/stores/d20Mechanics.test.js`
 
 **Test coverage:**
+
 ```javascript
 describe('D20 Mechanics', () => {
-    describe('Lucid/Surreal States', () => {
-        it('should set Lucid state on natural 20')
-        it('should set Surreal state on natural 1')
-        it('should roll 2d20 keep high when Lucid')
-        it('should roll 2d20 keep low when Surreal')
-        it('should clear Lucid state after one roll')
-        it('should clear Surreal state after one roll')
-    });
+	describe('Lucid/Surreal States', () => {
+		it('should set Lucid state on natural 20');
+		it('should set Surreal state on natural 1');
+		it('should roll 2d20 keep high when Lucid');
+		it('should roll 2d20 keep low when Surreal');
+		it('should clear Lucid state after one roll');
+		it('should clear Surreal state after one roll');
+	});
 
-    describe('D20 to Card Count Conversion', () => {
-        it('should return 1 card for roll of 1')
-        it('should return 2 cards for rolls 2-5')
-        it('should return 3 cards for rolls 6-10')
-        it('should return 4 cards for rolls 11-15')
-        it('should return 5 cards for rolls 16-19')
-        it('should return 6 cards for roll of 20')
-    });
+	describe('D20 to Card Count Conversion', () => {
+		it('should return 1 card for roll of 1');
+		it('should return 2 cards for rolls 2-5');
+		it('should return 3 cards for rolls 6-10');
+		it('should return 4 cards for rolls 11-15');
+		it('should return 5 cards for rolls 16-19');
+		it('should return 6 cards for roll of 20');
+	});
 
-    describe('Stability Loss Calculation', () => {
-        it('should return 0 loss for natural 20 and set Lucid')
-        it('should return 0 loss for rolls 11-19')
-        it('should return -1 for rolls 6-10')
-        it('should return -2 for rolls 2-5')
-        it('should return -3 for natural 1 and set Surreal')
-        it('should provide optional +1 gain for natural 20')
-    });
+	describe('Stability Loss Calculation', () => {
+		it('should return 0 loss for natural 20 and set Lucid');
+		it('should return 0 loss for rolls 11-19');
+		it('should return -1 for rolls 6-10');
+		it('should return -2 for rolls 2-5');
+		it('should return -3 for natural 1 and set Surreal');
+		it('should provide optional +1 gain for natural 20');
+	});
 
-    describe('Salvation Thresholds', () => {
-        it('should return threshold 17 for 1 Ace')
-        it('should return threshold 14 for 2 Aces')
-        it('should return threshold 11 for 3 Aces')
-        it('should return threshold 0 for 4 Aces (auto-success)')
-    });
+	describe('Salvation Thresholds', () => {
+		it('should return threshold 17 for 1 Ace');
+		it('should return threshold 14 for 2 Aces');
+		it('should return threshold 11 for 3 Aces');
+		it('should return threshold 0 for 4 Aces (auto-success)');
+	});
 
-    describe('Salvation Results', () => {
-        it('should remove 2 tokens on natural 20')
-        it('should remove 1 token on threshold success')
-        it('should not change tokens on near-miss (6 to threshold-1)')
-        it('should add 1 token on failure (2-5)')
-        it('should add 2 tokens on critical failure (1)')
-    });
+	describe('Salvation Results', () => {
+		it('should remove 2 tokens on natural 20');
+		it('should remove 1 token on threshold success');
+		it('should not change tokens on near-miss (6 to threshold-1)');
+		it('should add 1 token on failure (2-5)');
+		it('should add 2 tokens on critical failure (1)');
+	});
 });
 ```
 
@@ -1387,6 +1463,7 @@ This refactor represents a **complete overhaul** of the game's core mechanics. T
 4. Ensuring no regressions in game flow
 
 **Recommended Approach:**
+
 - Implement in phases as outlined
 - Test thoroughly after each phase
 - Use feature flags if deploying incrementally
@@ -1394,6 +1471,7 @@ This refactor represents a **complete overhaul** of the game's core mechanics. T
 - Plan for comprehensive QA before release
 
 **Success Criteria:**
+
 - All tests passing
 - Game playable from start to all win/loss conditions
 - Lucid/Surreal states working correctly

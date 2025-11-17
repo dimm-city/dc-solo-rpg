@@ -36,7 +36,7 @@ The project has established a comprehensive set of animation timing standards in
 --anim-very-slow: 1.2s;
 
 /* Easing Functions */
---ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);      /* NOT USED - Good! */
+--ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1); /* NOT USED - Good! */
 --ease-smooth: cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Subtle overshoot */
 --ease-out: cubic-bezier(0.215, 0.61, 0.355, 1);
 --ease-in-out: cubic-bezier(0.645, 0.045, 0.355, 1);
@@ -48,33 +48,33 @@ The project has established a comprehensive set of animation timing standards in
 
 ### 1.2 Complete Animation Inventory by Component
 
-| Component | Animation Type | Duration | Easing | Aesthetic | Standard Compliance | Performance |
-|-----------|---------------|----------|--------|-----------|-------------------|-------------|
+| Component                  | Animation Type      | Duration          | Easing                              | Aesthetic  | Standard Compliance | Performance |
+| -------------------------- | ------------------- | ----------------- | ----------------------------------- | ---------- | ------------------- | ----------- |
 | **STREAM 2: MODAL SYSTEM** |
-| OverlayModal (fog) | Fade + Scale | 200ms | cubicOut | Ethereal | ✅ PASS | ✅ 60fps |
-| OverlayModal (content) | Scale + Fade | 200ms | cubicOut | Mechanical | ✅ PASS | ✅ 60fps |
-| HelpModal (dismiss btn) | Transform + Shadow | 200ms | ease | Mechanical | ✅ PASS | ✅ 60fps |
-| AboutModal (transitions) | Fade + Scale | 200ms | cubicOut | Ethereal | ✅ PASS | ✅ 60fps |
-| **STREAM 3: CARD SYSTEM** |
-| Card Background | Gradient shift | 10s | cubic-bezier(0.375, 0.5, 0.32, 0.9) | Ethereal | ⚠️ LONG | ✅ GPU |
-| Game Card Float | Transform Y | 25s | ease-in-out | Ethereal | ⚠️ LONG | ✅ 60fps |
-| Game Card Fade-In | Opacity + Transform | 600ms | ease-out | Mechanical | ✅ PASS | ✅ 60fps |
-| Card Action Buttons | Transform + Shadow | 200-300ms | ease | Mechanical | ✅ PASS | ✅ 60fps |
-| **STREAM 4: TRANSITIONS** |
-| Page Transition (out) | Fade + Scale | 300ms | --ease-out | Mechanical | ✅ PASS | ✅ 60fps |
-| Page Transition (in) | Fade + Rise | 300ms | --ease-out | Ethereal | ✅ PASS | ✅ 60fps |
-| Round Transition | Page turn effect | 800ms | --ease-in-out | Mechanical | ✅ PASS | ✅ 60fps |
-| Journal Transition | Book open effect | 1200ms | --ease-smooth | Ethereal | ⚠️ SLOW | ✅ 60fps |
-| **STREAM 5: DICE** |
-| Dice Fade Out | Opacity + Scale | 250ms | ease-out | Mechanical | ✅ PASS | ✅ 60fps |
-| Dice Z-Index | Immediate/Delayed | 0s / 250ms | N/A | Mechanical | ✅ PASS | ✅ Perfect |
-| Dice Background Fade | Opacity + Filter | 2000ms | ease-in-out | Ethereal | ⚠️ LONG | ✅ 60fps |
-| **OTHER COMPONENTS** |
-| Story Mode | Fade transitions | 300ms | N/A | Ethereal | ✅ PASS | ✅ 60fps |
-| Splash Screen | Multiple animations | 800-1300ms | Various | Mechanical | ✅ PASS | ✅ 60fps |
-| Game Over | Scan + flicker | 10s / 3s infinite | linear | Ethereal | ✅ PASS | ✅ 60fps |
-| Audio Player | Progress bar | 100ms | linear | Mechanical | ✅ PASS | ✅ 60fps |
-| Keyboard Hints | Fade in/out | 5000ms | ease-in-out | Ethereal | ⚠️ LONG | ✅ 60fps |
+| OverlayModal (fog)         | Fade + Scale        | 200ms             | cubicOut                            | Ethereal   | ✅ PASS             | ✅ 60fps    |
+| OverlayModal (content)     | Scale + Fade        | 200ms             | cubicOut                            | Mechanical | ✅ PASS             | ✅ 60fps    |
+| HelpModal (dismiss btn)    | Transform + Shadow  | 200ms             | ease                                | Mechanical | ✅ PASS             | ✅ 60fps    |
+| AboutModal (transitions)   | Fade + Scale        | 200ms             | cubicOut                            | Ethereal   | ✅ PASS             | ✅ 60fps    |
+| **STREAM 3: CARD SYSTEM**  |
+| Card Background            | Gradient shift      | 10s               | cubic-bezier(0.375, 0.5, 0.32, 0.9) | Ethereal   | ⚠️ LONG             | ✅ GPU      |
+| Game Card Float            | Transform Y         | 25s               | ease-in-out                         | Ethereal   | ⚠️ LONG             | ✅ 60fps    |
+| Game Card Fade-In          | Opacity + Transform | 600ms             | ease-out                            | Mechanical | ✅ PASS             | ✅ 60fps    |
+| Card Action Buttons        | Transform + Shadow  | 200-300ms         | ease                                | Mechanical | ✅ PASS             | ✅ 60fps    |
+| **STREAM 4: TRANSITIONS**  |
+| Page Transition (out)      | Fade + Scale        | 300ms             | --ease-out                          | Mechanical | ✅ PASS             | ✅ 60fps    |
+| Page Transition (in)       | Fade + Rise         | 300ms             | --ease-out                          | Ethereal   | ✅ PASS             | ✅ 60fps    |
+| Round Transition           | Page turn effect    | 800ms             | --ease-in-out                       | Mechanical | ✅ PASS             | ✅ 60fps    |
+| Journal Transition         | Book open effect    | 1200ms            | --ease-smooth                       | Ethereal   | ⚠️ SLOW             | ✅ 60fps    |
+| **STREAM 5: DICE**         |
+| Dice Fade Out              | Opacity + Scale     | 250ms             | ease-out                            | Mechanical | ✅ PASS             | ✅ 60fps    |
+| Dice Z-Index               | Immediate/Delayed   | 0s / 250ms        | N/A                                 | Mechanical | ✅ PASS             | ✅ Perfect  |
+| Dice Background Fade       | Opacity + Filter    | 2000ms            | ease-in-out                         | Ethereal   | ⚠️ LONG             | ✅ 60fps    |
+| **OTHER COMPONENTS**       |
+| Story Mode                 | Fade transitions    | 300ms             | N/A                                 | Ethereal   | ✅ PASS             | ✅ 60fps    |
+| Splash Screen              | Multiple animations | 800-1300ms        | Various                             | Mechanical | ✅ PASS             | ✅ 60fps    |
+| Game Over                  | Scan + flicker      | 10s / 3s infinite | linear                              | Ethereal   | ✅ PASS             | ✅ 60fps    |
+| Audio Player               | Progress bar        | 100ms             | linear                              | Mechanical | ✅ PASS             | ✅ 60fps    |
+| Keyboard Hints             | Fade in/out         | 5000ms            | ease-in-out                         | Ethereal   | ⚠️ LONG             | ✅ 60fps    |
 
 ---
 
@@ -91,6 +91,7 @@ The project has established a comprehensive set of animation timing standards in
 - Dice fade: 250ms (within acceptable range)
 
 **Exceptions (Justified):**
+
 - Card background gradient: 10s (ambient, non-blocking)
 - Game card float: 25s (ambient, non-blocking)
 - Splash screen animations: 800-1300ms (one-time intro sequence)
@@ -101,6 +102,7 @@ The project has established a comprehensive set of animation timing standards in
 **PASS** ✅
 
 **Approved Easing Functions:**
+
 - `cubic-bezier(0.4, 0, 0.2, 1)` - Material Design standard (equivalent to ease-out)
 - `cubicOut` from Svelte (smooth deceleration)
 - `ease`, `ease-out`, `ease-in-out` - Standard CSS
@@ -109,6 +111,7 @@ The project has established a comprehensive set of animation timing standards in
 **Violations Found:** NONE ❌
 
 **Notable:**
+
 - `--ease-bounce` is defined but **never used** in the codebase (excellent restraint!)
 - `--ease-smooth` has slight overshoot (1.275) but is tastefully applied to journal opening
 - All custom bezier curves are within reasonable bounds
@@ -118,12 +121,14 @@ The project has established a comprehensive set of animation timing standards in
 **PASS** ✅
 
 **Mechanical Animations:**
+
 - Modal scale transitions (precise, snappy)
 - Button transforms (immediate feedback)
 - Z-index transitions (instantaneous state changes)
 - Card dismissal (deliberate, controlled)
 
 **Ethereal Animations:**
+
 - Fog overlay fade (dreamy, atmospheric)
 - Background gradients (slow, ambient)
 - Floating cards (weightless, suspended)
@@ -136,11 +141,13 @@ The project has established a comprehensive set of animation timing standards in
 **PASS** ✅
 
 **GPU-Accelerated Properties Used:**
+
 - `transform` (translate, scale, rotate)
 - `opacity`
 - `filter` (backdrop-filter)
 
 **Performance Optimizations Observed:**
+
 - Transitions use `transform` instead of `top/left/width/height`
 - Z-index transitions use strategic delays to avoid reflows
 - Background animations are isolated to GPU layer
@@ -191,11 +198,13 @@ The project has established a comprehensive set of animation timing standards in
 **PASS** ✅
 
 All components include `@media (prefers-reduced-motion: reduce)` blocks that:
+
 - Disable animations
 - Remove transitions
 - Respect user preferences
 
 **Example from multiple files:**
+
 ```css
 @media (prefers-reduced-motion: reduce) {
 	.animation-class {
@@ -214,6 +223,7 @@ All components include `@media (prefers-reduced-motion: reduce)` blocks that:
 **Method:** Live browser testing with Performance profiler
 
 **Results:**
+
 - **Frame Rate:** Consistent 60fps during all transitions
 - **Scripting Time:** < 5ms per frame (excellent)
 - **Rendering Time:** < 10ms per frame (excellent)
@@ -223,21 +233,25 @@ All components include `@media (prefers-reduced-motion: reduce)` blocks that:
 ### 4.2 Animation Smoothness
 
 **Modal Fog Transition:**
+
 - Entrance: Smooth fade-in with subtle scale
 - Exit: Clean fade-out with no visual artifacts
 - No jank or stuttering observed
 
 **Card Float Animation:**
+
 - Smooth sinusoidal motion
 - No layout recalculation during animation
 - Runs continuously without performance degradation
 
 **Dice Fade Transition:**
+
 - Z-index timing prevents visual "pop"
 - Fade-out is smooth and natural
 - No flicker between states
 
 **Page Transitions:**
+
 - View Transition API used where supported
 - Graceful degradation for older browsers
 - No content shift or layout jump
@@ -247,6 +261,7 @@ All components include `@media (prefers-reduced-motion: reduce)` blocks that:
 ## 5. Stream-Specific Review
 
 ### Stream 1: Branding (Issues 1-3)
+
 **Status:** ✅ PASS
 
 - No animations added during branding updates
@@ -254,6 +269,7 @@ All components include `@media (prefers-reduced-motion: reduce)` blocks that:
 - No unintended side effects observed
 
 ### Stream 2: Modal System (Issues 9, 8, 5)
+
 **Status:** ✅ PASS
 
 - Help modal: 200ms fade + scale (perfect)
@@ -266,6 +282,7 @@ All components include `@media (prefers-reduced-motion: reduce)` blocks that:
 **Highlight:** Custom `cloudFogTransition` function is creative and performant.
 
 ### Stream 3: Card System (Issues 10-14)
+
 **Status:** ✅ PASS WITH NOTE
 
 - Card background: 8s gradient animation (ambient, acceptable)
@@ -276,6 +293,7 @@ All components include `@media (prefers-reduced-motion: reduce)` blocks that:
 **Note:** Long animations (8s, 25s) are justified as ambient effects that don't block user interaction.
 
 ### Stream 4: Transitions (Issues 15, 16)
+
 **Status:** ✅ PASS
 
 - Card dismiss: 600ms with appropriate easing
@@ -288,6 +306,7 @@ All components include `@media (prefers-reduced-motion: reduce)` blocks that:
 **Highlight:** View Transition API implementation is clean and progressive.
 
 ### Stream 5: Dice (Issue 7)
+
 **Status:** ✅ PASS - EXCELLENT
 
 - Dice fade: 250ms with scale
@@ -305,23 +324,25 @@ All components include `@media (prefers-reduced-motion: reduce)` blocks that:
 ### 6.1 High Priority (Optional Improvements)
 
 1. **Create Animation Constants File**
+
    ```javascript
    // src/lib/constants/animations.js
    export const DURATION = {
-     FAST: 150,
-     NORMAL: 300,
-     SLOW: 500
+   	FAST: 150,
+   	NORMAL: 300,
+   	SLOW: 500
    };
 
    export const EASING = {
-     OUT: 'cubic-bezier(0.4, 0, 0.2, 1)',
-     IN_OUT: 'cubic-bezier(0.645, 0.045, 0.355, 1)'
+   	OUT: 'cubic-bezier(0.4, 0, 0.2, 1)',
+   	IN_OUT: 'cubic-bezier(0.645, 0.045, 0.355, 1)'
    };
    ```
 
    **Benefit:** Consistency between Svelte transitions (JS) and CSS custom properties
 
 2. **Standardize Inline Transitions**
+
    ```css
    /* Replace this: */
    transition: all 0.2s ease;
@@ -347,12 +368,13 @@ All components include `@media (prefers-reduced-motion: reduce)` blocks that:
 ### 6.3 Low Priority (Future Enhancements)
 
 5. **Consider Animation Preferences**
+
    ```javascript
    // Allow users to control animation speed
    const ANIMATION_SPEED = {
-     FAST: 0.5,   // 50% faster
-     NORMAL: 1.0,  // Standard speed
-     SLOW: 1.5     // 50% slower
+   	FAST: 0.5, // 50% faster
+   	NORMAL: 1.0, // Standard speed
+   	SLOW: 1.5 // 50% slower
    };
    ```
 
@@ -365,6 +387,7 @@ All components include `@media (prefers-reduced-motion: reduce)` blocks that:
 ## 7. CSS Custom Properties Proposal
 
 ### 7.1 Current State
+
 The project already has excellent CSS custom properties for animations.
 
 ### 7.2 Suggested Additions (Optional)
@@ -390,16 +413,16 @@ The project already has excellent CSS custom properties for animations.
 
 ### 8.1 Quality Gate Criteria
 
-| Criterion | Target | Actual | Status |
-|-----------|--------|--------|--------|
-| Timing Standards | 150-300ms | 150-300ms (95% compliance) | ✅ PASS |
-| Long animations justified | N/A | All ambient/non-blocking | ✅ PASS |
-| Easing Standards | linear/ease-out/ease-in-out | 100% compliance | ✅ PASS |
-| No spring/bounce | 0 violations | 0 violations | ✅ PASS |
-| Mechanical/Ethereal | Consistent | Excellent balance | ✅ PASS |
-| Performance (60fps) | 60fps | 60fps consistent | ✅ PASS |
-| Accessibility | Reduced motion support | Full support | ✅ PASS |
-| Consistency | CSS custom properties | Well-structured | ✅ PASS |
+| Criterion                 | Target                      | Actual                     | Status  |
+| ------------------------- | --------------------------- | -------------------------- | ------- |
+| Timing Standards          | 150-300ms                   | 150-300ms (95% compliance) | ✅ PASS |
+| Long animations justified | N/A                         | All ambient/non-blocking   | ✅ PASS |
+| Easing Standards          | linear/ease-out/ease-in-out | 100% compliance            | ✅ PASS |
+| No spring/bounce          | 0 violations                | 0 violations               | ✅ PASS |
+| Mechanical/Ethereal       | Consistent                  | Excellent balance          | ✅ PASS |
+| Performance (60fps)       | 60fps                       | 60fps consistent           | ✅ PASS |
+| Accessibility             | Reduced motion support      | Full support               | ✅ PASS |
+| Consistency               | CSS custom properties       | Well-structured            | ✅ PASS |
 
 ### 8.2 Overall Score Breakdown
 
@@ -419,6 +442,7 @@ The project already has excellent CSS custom properties for animations.
 The DC Solo RPG application demonstrates **exemplary animation standards** across all components. All animations adhere to the mechanical/ethereal aesthetic, perform at 60fps, and use appropriate timing and easing functions. The few minor inconsistencies found are non-critical and do not impact user experience.
 
 **Highlights:**
+
 - Dice z-index transition timing is a masterclass in animation choreography
 - Modal fog effect is creative and performant
 - Excellent use of CSS custom properties for standardization
@@ -443,12 +467,14 @@ The DC Solo RPG application demonstrates **exemplary animation standards** acros
 ## Appendix A: Animation Files Reference
 
 ### Core Animation Files
+
 - `src/styles.css` - Global animation standards (CSS custom properties)
 - `src/game.css` - Card background gradient animations
 - `src/routes/+layout.svelte` - Dice container transitions, page transitions
 - `src/routes/+page.svelte` - Game card animations, button hovers
 
 ### Component Animation Files
+
 - `src/lib/components/OverlayModal.svelte` - Modal and fog transitions
 - `src/lib/components/HelpModal.svelte` - Help modal content
 - `src/lib/components/Splash.svelte` - Intro sequence animations
@@ -457,6 +483,7 @@ The DC Solo RPG application demonstrates **exemplary animation standards** acros
 - `src/lib/components/StoryMode.svelte` - Story mode transitions
 
 ### Page Animation Files
+
 - `src/routes/about/+page.svelte` - About page interactions
 - `src/routes/how-to/+page.svelte` - Tutorial page interactions
 - `src/routes/settings/+page.svelte` - Settings page interactions
@@ -466,6 +493,7 @@ The DC Solo RPG application demonstrates **exemplary animation standards** acros
 ## Appendix B: Testing Methodology
 
 ### Browser Testing
+
 - **Browser:** Chrome (latest)
 - **URL:** http://localhost:5176/
 - **Tools Used:** Chrome DevTools, Performance profiler, take_screenshot
@@ -477,6 +505,7 @@ The DC Solo RPG application demonstrates **exemplary animation standards** acros
   - Accessibility (reduced motion)
 
 ### Code Review
+
 - **Method:** Systematic grep and file reading
 - **Files Reviewed:** 30+ component and style files
 - **Focus Areas:**
@@ -486,6 +515,7 @@ The DC Solo RPG application demonstrates **exemplary animation standards** acros
   - Performance optimizations
 
 ### Performance Profiling
+
 - **Frame Rate Monitoring:** Visual observation during animations
 - **GPU Acceleration:** Verified use of transform/opacity
 - **Layout Thrashing:** No occurrences detected
@@ -493,4 +523,4 @@ The DC Solo RPG application demonstrates **exemplary animation standards** acros
 
 ---
 
-*End of Report*
+_End of Report_

@@ -215,7 +215,7 @@ describe('Card Drawing and Failure Check Flow', () => {
 				}
 			];
 			gameState.tower = 20; // D20 system: starts at 20
-	
+
 			// Roll a 3 (D20 system: roll 3 in range 2-5 → -2 stability)
 			const rollResult = 3;
 			applyFailureCheckResult(rollResult);
@@ -239,7 +239,7 @@ describe('Card Drawing and Failure Check Flow', () => {
 			gameState.state = 'failureCheck';
 			gameState.log = [{ card: '5', suit: 'hearts', description: 'Test', round: 1, id: '1.1' }];
 			gameState.tower = 20; // D20 system: starts at 20 stability
-				gameState.cardsToDraw = 2; // More cards to draw
+			gameState.cardsToDraw = 2; // More cards to draw
 
 			// Apply failure check with roll of 2 (stores in pending state)
 			applyFailureCheckResult(2);
@@ -256,7 +256,7 @@ describe('Card Drawing and Failure Check Flow', () => {
 			gameState.state = 'failureCheck';
 			gameState.log = [{ card: '5', suit: 'hearts', description: 'Test', round: 1, id: '1.1' }];
 			gameState.tower = 20; // D20 system: starts at 20 stability
-				gameState.cardsToDraw = 0; // No more cards
+			gameState.cardsToDraw = 0; // No more cards
 
 			// Apply failure check (stores in pending state)
 			applyFailureCheckResult(2);
@@ -356,31 +356,31 @@ describe('Card Drawing and Failure Check Flow', () => {
 			expect(gameState.state).toBe('failureCheck');
 		});
 
-	test('should handle multiple kings triggering game over', async () => {
-		// Setup config to avoid null reference
-		gameState.config = {
-			labels: {
-				failureCounterLoss: 'All kings revealed - game over'
-			}
-		};
+		test('should handle multiple kings triggering game over', async () => {
+			// Setup config to avoid null reference
+			gameState.config = {
+				labels: {
+					failureCounterLoss: 'All kings revealed - game over'
+				}
+			};
 
-		gameState.deck = [{ card: 'K', suit: 'hearts', description: 'Fourth King' }];
-		gameState.kingsRevealed = 3; // Already have 3 kings
-		gameState.cardsToDraw = 1;
+			gameState.deck = [{ card: 'K', suit: 'hearts', description: 'Fourth King' }];
+			gameState.kingsRevealed = 3; // Already have 3 kings
+			gameState.cardsToDraw = 1;
 
-		await drawCard();
+			await drawCard();
 
-		// Kings are tracked in pending state until confirmCard() is called
-		expect(gameState.pendingUpdates.kingsChange).toBe(1);
+			// Kings are tracked in pending state until confirmCard() is called
+			expect(gameState.pendingUpdates.kingsChange).toBe(1);
 
-		// Confirm the card to apply pending updates
-		confirmCard();
+			// Confirm the card to apply pending updates
+			confirmCard();
 
-		// Should trigger game over
-		expect(gameState.kingsRevealed).toBe(4);
-		expect(gameState.gameOver).toBe(true);
-		expect(gameState.state).toBe('gameOver');
-	});
+			// Should trigger game over
+			expect(gameState.kingsRevealed).toBe(4);
+			expect(gameState.gameOver).toBe(true);
+			expect(gameState.state).toBe('gameOver');
+		});
 	});
 
 	describe('rollForTasks() - D20 Card Draw System', () => {
@@ -599,7 +599,11 @@ describe('Card Drawing and Failure Check Flow', () => {
 
 			test('should remove 2 tokens on natural 20 and set Lucid', () => {
 				const originalRoll = gameState.rollWithModifiers;
-				gameState.rollWithModifiers = vi.fn(() => ({ roll: 20, wasLucid: false, wasSurreal: false }));
+				gameState.rollWithModifiers = vi.fn(() => ({
+					roll: 20,
+					wasLucid: false,
+					wasSurreal: false
+				}));
 
 				successCheck();
 
@@ -679,7 +683,11 @@ describe('Card Drawing and Failure Check Flow', () => {
 
 			test('should add 2 tokens on natural 1 and set Surreal', () => {
 				const originalRoll = gameState.rollWithModifiers;
-				gameState.rollWithModifiers = vi.fn(() => ({ roll: 1, wasLucid: false, wasSurreal: false }));
+				gameState.rollWithModifiers = vi.fn(() => ({
+					roll: 1,
+					wasLucid: false,
+					wasSurreal: false
+				}));
 
 				successCheck();
 
@@ -696,13 +704,21 @@ describe('Card Drawing and Failure Check Flow', () => {
 				const originalRoll = gameState.rollWithModifiers;
 
 				// Test threshold boundary (14 should succeed)
-				gameState.rollWithModifiers = vi.fn(() => ({ roll: 14, wasLucid: false, wasSurreal: false }));
+				gameState.rollWithModifiers = vi.fn(() => ({
+					roll: 14,
+					wasLucid: false,
+					wasSurreal: false
+				}));
 				successCheck();
 				expect(gameState.pendingUpdates.tokenChange).toBe(-1);
 
 				// Clear and test just below threshold (13 should be near-miss)
 				gameState.pendingUpdates.tokenChange = null;
-				gameState.rollWithModifiers = vi.fn(() => ({ roll: 13, wasLucid: false, wasSurreal: false }));
+				gameState.rollWithModifiers = vi.fn(() => ({
+					roll: 13,
+					wasLucid: false,
+					wasSurreal: false
+				}));
 				successCheck();
 				expect(gameState.pendingUpdates.tokenChange).toBe(0);
 
@@ -714,13 +730,21 @@ describe('Card Drawing and Failure Check Flow', () => {
 				const originalRoll = gameState.rollWithModifiers;
 
 				// Test threshold boundary (11 should succeed)
-				gameState.rollWithModifiers = vi.fn(() => ({ roll: 11, wasLucid: false, wasSurreal: false }));
+				gameState.rollWithModifiers = vi.fn(() => ({
+					roll: 11,
+					wasLucid: false,
+					wasSurreal: false
+				}));
 				successCheck();
 				expect(gameState.pendingUpdates.tokenChange).toBe(-1);
 
 				// Clear and test just below threshold (10 should be near-miss)
 				gameState.pendingUpdates.tokenChange = null;
-				gameState.rollWithModifiers = vi.fn(() => ({ roll: 10, wasLucid: false, wasSurreal: false }));
+				gameState.rollWithModifiers = vi.fn(() => ({
+					roll: 10,
+					wasLucid: false,
+					wasSurreal: false
+				}));
 				successCheck();
 				expect(gameState.pendingUpdates.tokenChange).toBe(0);
 

@@ -44,7 +44,9 @@
 	let showMobileMenu = $state(false);
 
 	// Computed: true when any modal is open (for accessibility and click blocking)
-	const anyModalOpen = $derived(showAboutModal || showSettingsModal || showHelpModal || showDeleteModal);
+	const anyModalOpen = $derived(
+		showAboutModal || showSettingsModal || showHelpModal || showDeleteModal
+	);
 	let customGames = $state([]);
 	let allGames = $state([]);
 	let fileInput = $state(null);
@@ -359,6 +361,22 @@
 		showBrowseGames = true;
 	}
 
+	// Keyboard event handler for modals
+	function handleKeydown(event) {
+		if (event.key === 'Escape') {
+			// Close any open modal when Escape is pressed
+			if (showAboutModal) {
+				showAboutModal = false;
+			} else if (showSettingsModal) {
+				showSettingsModal = false;
+			} else if (showHelpModal) {
+				showHelpModal = false;
+			} else if (showDeleteModal) {
+				cancelDeleteSave();
+			}
+		}
+	}
+
 	// Game descriptions/subtitles for enhanced UI
 	const gameDescriptions = {
 		'artful-detective': 'Solve mysteries in a noir-cyberpunk city',
@@ -369,6 +387,8 @@
 	};
 </script>
 
+<svelte:window on:keydown={handleKeydown} />
+
 <NeuralBackground />
 <Splash visible={showSplash} onComplete={handleSplashComplete} />
 
@@ -377,6 +397,7 @@
 		class="instructions-choice-container"
 		transition:fade={{ duration: 600 }}
 		inert={anyModalOpen ? true : undefined}
+		aria-hidden={anyModalOpen ? 'true' : undefined}
 	>
 		<div class="choice-content">
 			<h1>How To Play</h1>
@@ -467,6 +488,7 @@
 		data-testid="home-page"
 		transition:fade={{ duration: 600 }}
 		inert={anyModalOpen ? true : undefined}
+		aria-hidden={anyModalOpen ? 'true' : undefined}
 	>
 		<!-- Hidden file input -->
 		<input
@@ -600,11 +622,7 @@
 		<!-- Mobile dropdown menu -->
 		{#if showMobileMenu}
 			<div class="mobile-menu" transition:fade={{ duration: 200 }}>
-				<button
-					class="mobile-menu-item"
-					onclick={handleUploadClick}
-					disabled={uploading}
-				>
+				<button class="mobile-menu-item" onclick={handleUploadClick} disabled={uploading}>
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						width="20"
@@ -830,9 +848,9 @@
 		<h2 class="info-modal-title">About Dream Console</h2>
 		<div class="info-modal-body">
 			<p>
-				Dream Console is a narrative-driven solo role-playing game built on the Wretched and
-				Alone system. Each playthrough offers a unique adventure through the cyberpunk streets of
-				Dimm City.
+				Dream Console is a narrative-driven solo role-playing game built on the Wretched and Alone
+				system. Each playthrough offers a unique adventure through the cyberpunk streets of Dimm
+				City.
 			</p>
 			<p>
 				The game uses a standard 52-card deck and dice rolls to guide your story, presenting
@@ -1896,11 +1914,11 @@
 
 	.version-info {
 		font-size: var(--text-sm);
-		color: var(--color-brand-yellow);
-		font-weight: 600;
+		color: rgba(255, 255, 255, 0.5); /* Subtle 50% white - more understated */
+		font-weight: 400; /* Normal weight - lighter than before */
 		text-align: center;
 		margin-top: var(--space-md);
-		text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+		text-shadow: 0 0 4px rgba(255, 255, 255, 0.2); /* Very subtle glow for readability */
 	}
 
 	.attribution {

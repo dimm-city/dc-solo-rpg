@@ -96,9 +96,22 @@
 						</div>
 						<div class="roll-details">
 							<div class="roll-die">
-								<svg class="die-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-									<rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
-									<circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+								<svg
+									class="die-icon"
+									viewBox="0 0 24 24"
+									fill="none"
+									xmlns="http://www.w3.org/2000/svg"
+								>
+									<rect
+										x="3"
+										y="3"
+										width="18"
+										height="18"
+										rx="2"
+										stroke="currentColor"
+										stroke-width="2"
+									/>
+									<circle cx="12" cy="12" r="1.5" fill="currentColor" />
 								</svg>
 								<span class="roll-number">{card.damageRoll}</span>
 							</div>

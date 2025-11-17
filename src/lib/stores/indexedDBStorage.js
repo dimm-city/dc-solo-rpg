@@ -231,7 +231,7 @@ export async function saveGame(gameState) {
 
 		// Determine save key based on game completion status
 		let saveKey;
-		if (gameState.gameOver && (gameState.win !== undefined)) {
+		if (gameState.gameOver && gameState.win !== undefined) {
 			// Game is completed - save as completed with timestamp
 			const timestamp = Date.now();
 			saveKey = `${gameSlug}:completed:${timestamp}`;
@@ -264,7 +264,9 @@ export async function saveGame(gameState) {
 
 		if (Object.keys(audioData).length > 0) {
 			await db.put(AUDIO_STORE, audioData, saveKey);
-			logger.info(`[saveGame] Saved ${Object.keys(audioData).length} audio recordings for ${saveKey}`);
+			logger.info(
+				`[saveGame] Saved ${Object.keys(audioData).length} audio recordings for ${saveKey}`
+			);
 		}
 
 		logger.info(`[saveGame] Game saved successfully as ${saveKey}`);
@@ -408,7 +410,8 @@ export async function loadAllSaves() {
 				// Parse key to extract game slug and timestamp
 				// Format: "gameSlug:completed:timestamp"
 				const keyParts = key.split(':');
-				const timestamp = keyParts.length >= 3 ? parseInt(keyParts[keyParts.length - 1]) : Date.now();
+				const timestamp =
+					keyParts.length >= 3 ? parseInt(keyParts[keyParts.length - 1]) : Date.now();
 
 				completedSaves.push({
 					id: key,

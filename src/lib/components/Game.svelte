@@ -39,6 +39,7 @@
 	class:modal-active={showHelpModal}
 	data-testid="game-container"
 	inert={showHelpModal ? true : undefined}
+	aria-hidden={showHelpModal ? 'true' : undefined}
 >
 	<NeuralBackground />
 	<GameScreen {systemSettings} {onfailurecheckcompleted} {onjournalsaved} bind:showHelpModal />

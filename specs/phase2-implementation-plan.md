@@ -3,12 +3,14 @@
 ## Overview
 
 Phase 1 achieved an overall **4.85/5.0 AAA quality rating** across 16 completed issues. This Phase 2 plan addresses:
+
 1. Remaining recommendations from Phase 1 design reviews
 2. Deferred Issue 6 (Story Mode Animations)
 3. Quality improvements and polish
 4. Documentation and maintainability
 
 **Phase 1 Completion Summary:**
+
 - ✅ Stream 1: Branding (Issues 1-3) - 4.83/5
 - ✅ Stream 2: Modal System (Issues 9, 8, 5) - 5.0/5
 - ✅ Stream 3: Card System (Issues 10-14) - 4.6/5
@@ -21,23 +23,27 @@ Phase 1 achieved an overall **4.85/5.0 AAA quality rating** across 16 completed 
 ## Phase 2 Issues
 
 ### Issue 18: Story Mode Animations (Deferred from Phase 1)
+
 **Priority:** High
 **Source:** Issue 6 from Phase 1, deferred due to accessibility
 
 **Goal:** Implement smooth animations for Story Mode transitions
 
 **Requirements:**
+
 - Opening story mode: 250-300ms with ease-out
 - Opening a game save: smooth fade with subtle upward motion
 - Moving between rounds: crossfade between states
 - Closing a game: fade out with subtle scale-down
 
 **Files to Modify:**
+
 - `src/lib/components/StoryMode.svelte`
 - `src/lib/components/StoryRound.svelte`
 - Related routing/navigation components
 
 **Acceptance Criteria:**
+
 - All transitions follow mechanical/ethereal aesthetic
 - Timing consistent with Phase 1 (200-300ms)
 - No jarring jumps or incomplete animations
@@ -49,12 +55,14 @@ Phase 1 achieved an overall **4.85/5.0 AAA quality rating** across 16 completed 
 ---
 
 ### Issue 19: Card Display Verification in Gameplay
+
 **Priority:** High
 **Source:** Stream 3 review - Issues 13 & 14 need live testing
 
 **Goal:** Verify card display changes work correctly across all card types
 
 **Testing Required:**
+
 - Play through actual game to draw all card types:
   - Primary Success (Ace of Hearts)
   - Failure Counter (Kings)
@@ -63,6 +71,7 @@ Phase 1 achieved an overall **4.85/5.0 AAA quality rating** across 16 completed 
   - Event (Even ranks: 2, 4, 6, 8, 10, J, Q)
 
 **Verification Points:**
+
 - Issue 10: Background animation is subtle and non-distracting
 - Issue 11: Badge appears with gentle fade+scale
 - Issue 12: No hover effects on cards
@@ -70,6 +79,7 @@ Phase 1 achieved an overall **4.85/5.0 AAA quality rating** across 16 completed 
 - Issue 14: Text contrast meets WCAG AA (4.5:1) on all card types
 
 **Acceptance Criteria:**
+
 - Capture screenshots of all 5 card types
 - Verify 4.5:1 contrast ratio using color picker
 - Confirm status display visible in all cases
@@ -81,18 +91,21 @@ Phase 1 achieved an overall **4.85/5.0 AAA quality rating** across 16 completed 
 ---
 
 ### Issue 20: Journal Entry Close Verification
+
 **Priority:** Medium
 **Source:** Stream 4 review - Issue 16 needs visual testing
 
 **Goal:** Visually verify journal entry close transition in actual gameplay
 
 **Testing Required:**
+
 - Complete a game round to access journal entry
 - Test journal entry save and close animations
 - Verify smooth fade-out with scale-down
 - Confirm backdrop fades simultaneously
 
 **Acceptance Criteria:**
+
 - Capture before/after screenshots
 - Verify 200ms timing
 - Confirm scale effect (1.0 → 0.95)
@@ -104,24 +117,29 @@ Phase 1 achieved an overall **4.85/5.0 AAA quality rating** across 16 completed 
 ---
 
 ### Issue 21: Version Number Styling Refinement (Optional)
+
 **Priority:** Low
 **Source:** Stream 1 review - Minor visual refinement
 
 **Goal:** Make version number more subtle in About modal
 
 **Current State:**
+
 - Version displays in yellow/gold color (matches brand)
 - Visually prominent
 
 **Proposed Changes:**
+
 - Consider lighter font weight (400 instead of 500)
 - Or use subdued color (rgba(255, 255, 255, 0.6) instead of yellow)
 - Maintain readability while reducing visual weight
 
 **Files to Modify:**
+
 - About modal component
 
 **Acceptance Criteria:**
+
 - Version number is readable but less prominent
 - Still maintains brand consistency
 - Captures before/after screenshots
@@ -132,26 +150,29 @@ Phase 1 achieved an overall **4.85/5.0 AAA quality rating** across 16 completed 
 ---
 
 ### Issue 22: Animation Constants Consolidation
+
 **Priority:** Medium
 **Source:** Stream 6 quality gate recommendations
 
 **Goal:** Create centralized animation constants for consistency
 
 **Requirements:**
+
 1. **JavaScript Constants File** (`src/lib/constants/animations.js`):
+
    ```javascript
    export const ANIMATION_DURATION = {
-     FAST: 150,
-     NORMAL: 200,
-     SLOW: 300,
-     CARD_DISMISS: 600,
-     DICE_FADE: 250,
+   	FAST: 150,
+   	NORMAL: 200,
+   	SLOW: 300,
+   	CARD_DISMISS: 600,
+   	DICE_FADE: 250
    };
 
    export const ANIMATION_EASING = {
-     MECHANICAL: 'cubic-bezier(0.4, 0, 0.6, 1)',
-     EASE_OUT: 'ease-out',
-     EASE_IN: 'ease-in',
+   	MECHANICAL: 'cubic-bezier(0.4, 0, 0.6, 1)',
+   	EASE_OUT: 'ease-out',
+   	EASE_IN: 'ease-in'
    };
    ```
 
@@ -164,11 +185,13 @@ Phase 1 achieved an overall **4.85/5.0 AAA quality rating** across 16 completed 
    - Ensure alignment with JS constants
 
 **Files to Modify:**
+
 - Create `src/lib/constants/animations.js`
 - Update components using Svelte transitions
 - Verify CSS custom properties alignment
 
 **Acceptance Criteria:**
+
 - All Svelte transitions use constants
 - Constants documented with usage examples
 - No regression in animation timing
@@ -179,6 +202,7 @@ Phase 1 achieved an overall **4.85/5.0 AAA quality rating** across 16 completed 
 ---
 
 ### Issue 23: Animation Style Guide Documentation
+
 **Priority:** Medium
 **Source:** Stream 6 quality gate recommendations
 
@@ -213,6 +237,7 @@ Phase 1 achieved an overall **4.85/5.0 AAA quality rating** across 16 completed 
    - Common mistakes to avoid
 
 **Acceptance Criteria:**
+
 - Comprehensive guide with code examples
 - Screenshots/GIFs demonstrating patterns
 - Easily understood by new developers
@@ -223,12 +248,14 @@ Phase 1 achieved an overall **4.85/5.0 AAA quality rating** across 16 completed 
 ---
 
 ### Issue 24: Accessibility Audit Enhancement
+
 **Priority:** Medium
 **Source:** Stream 4 recommendations
 
 **Goal:** Enhance accessibility for state transitions
 
 **Tasks:**
+
 1. **Add aria-hidden to game content when modal open**
    - Currently using `inert` attribute
    - Add `aria-hidden="true"` for screen reader clarity
@@ -244,11 +271,13 @@ Phase 1 achieved an overall **4.85/5.0 AAA quality rating** across 16 completed 
    - Ensure game state changes are announced
 
 **Files to Modify:**
+
 - `src/lib/components/Game.svelte`
 - `src/routes/+page.svelte`
 - Modal components
 
 **Acceptance Criteria:**
+
 - All modals have proper `aria-hidden` coordination
 - Keyboard navigation works flawlessly
 - Screen reader announces state changes appropriately
@@ -260,12 +289,14 @@ Phase 1 achieved an overall **4.85/5.0 AAA quality rating** across 16 completed 
 ---
 
 ### Issue 25: Performance Profiling on Mobile
+
 **Priority:** Low
 **Source:** Stream 6 recommendations
 
 **Goal:** Verify 60fps performance on mobile/low-end devices
 
 **Testing Required:**
+
 - Test on actual mobile devices (iOS, Android)
 - Use Chrome DevTools mobile emulation with CPU throttling
 - Profile animations under various conditions:
@@ -274,12 +305,14 @@ Phase 1 achieved an overall **4.85/5.0 AAA quality rating** across 16 completed 
   - Low-end device presets
 
 **Metrics to Capture:**
+
 - Frame rate during animations
 - Scripting time per frame
 - Rendering/painting time
 - Memory usage during continuous animations
 
 **Acceptance Criteria:**
+
 - Animations maintain ≥30fps on 4x CPU throttling
 - No memory leaks during extended gameplay
 - Identify any performance bottlenecks
@@ -291,24 +324,29 @@ Phase 1 achieved an overall **4.85/5.0 AAA quality rating** across 16 completed 
 ---
 
 ### Issue 26: Status Display Text Shadow Enhancement (Optional)
+
 **Priority:** Low
 **Source:** Stream 3 review recommendations
 
 **Goal:** Enhance status display visibility through fog overlays
 
 **Current State:**
+
 - Status display already has text-shadows
 - Visible through most fog conditions
 
 **Proposed Enhancement:**
+
 - Add subtle glow effect to status numbers
 - Increase shadow spread for better separation from background
 - Test visibility during card display
 
 **Files to Modify:**
+
 - `src/lib/components/StatusDisplay.svelte`
 
 **Acceptance Criteria:**
+
 - Status numbers clearly visible through fog
 - Glow effect subtle and not distracting
 - Works across all game states
@@ -321,6 +359,7 @@ Phase 1 achieved an overall **4.85/5.0 AAA quality rating** across 16 completed 
 ## Work Stream Organization
 
 ### Stream 7: Verification and Testing
+
 **Issues:** 19, 20, 25
 **Agent:** `web-design-expert`
 **Dependencies:** None
@@ -332,6 +371,7 @@ Phase 1 achieved an overall **4.85/5.0 AAA quality rating** across 16 completed 
 ---
 
 ### Stream 8: Story Mode Enhancement
+
 **Issues:** 18
 **Agent:** `web-design-expert`
 **Dependencies:** None
@@ -343,6 +383,7 @@ Phase 1 achieved an overall **4.85/5.0 AAA quality rating** across 16 completed 
 ---
 
 ### Stream 9: Code Quality and Documentation
+
 **Issues:** 22, 23, 24
 **Agent:** `svelte5-expert-dev` (Issue 22, 24), `web-design-expert` (Issue 23)
 **Dependencies:** Stream 7 should complete first for reference
@@ -354,6 +395,7 @@ Phase 1 achieved an overall **4.85/5.0 AAA quality rating** across 16 completed 
 ---
 
 ### Stream 10: Optional Polish
+
 **Issues:** 21, 26
 **Agent:** `web-design-expert` or `svelte5-expert-dev`
 **Dependencies:** All other streams
@@ -367,23 +409,29 @@ Phase 1 achieved an overall **4.85/5.0 AAA quality rating** across 16 completed 
 ## Execution Strategy
 
 ### Week 1: Verification and Story Mode
+
 **Day 1-2:** Launch Stream 7 (Verification)
+
 - Test card displays across all types
 - Verify journal entry transitions
 - Mobile performance profiling
 
 **Day 3-5:** Launch Stream 8 (Story Mode)
+
 - Implement Story Mode animations
 - Apply OverlayModal pattern
 - Test all Story Mode transitions
 
 ### Week 2: Quality and Documentation
+
 **Day 6-8:** Launch Stream 9 (Code Quality)
+
 - Create animation constants
 - Write style guide documentation
 - Accessibility enhancements
 
 **Day 9-10:** Stream 10 (Optional Polish)
+
 - Version number styling
 - Status display enhancements
 - Final QA pass
@@ -418,12 +466,14 @@ Phase 2 will be considered complete when:
 ## Phase 3 Planning
 
 After Phase 2 completion, evaluate need for Phase 3 based on:
+
 - Web-design-expert feedback on completed work
 - User testing results (if conducted)
 - Any new issues discovered during Phase 2
 - Additional polish opportunities
 
 **Potential Phase 3 Topics:**
+
 - User-configurable animation speeds
 - Skeleton loading screens
 - Advanced accessibility features
