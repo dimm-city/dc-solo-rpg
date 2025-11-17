@@ -1,6 +1,7 @@
 <script>
 	import { fade } from 'svelte/transition';
 	import OverlayModal from './OverlayModal.svelte';
+	import TTSRegion from '$lib/tts/TTSRegion.svelte';
 
 	let { isOpen = false, onClose } = $props();
 
@@ -58,10 +59,12 @@
 	<div class="help-card-content">
 		<h2 class="help-main-title">Game Guide</h2>
 
-		{#each helpSections as section}
+		{#each helpSections as section, index}
 			<div class="help-section">
 				<h3 class="help-title">{section.title}</h3>
-				<p class="help-message">{section.message}</p>
+				<TTSRegion regionId="help-section-{index}" text={section.message}>
+					<p class="help-message">{section.message}</p>
+				</TTSRegion>
 			</div>
 		{/each}
 
