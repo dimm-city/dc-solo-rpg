@@ -341,6 +341,20 @@ describe('gameActions - Core Game Mechanics', () => {
 			expect(gameState.state).toBe('log');
 		});
 
+		it('should transition to successCheck when Ace revealed and even card drawn last', async () => {
+			// D20 workflow: success checks happen during confirmCard after all cards drawn
+			// First reveal Ace of Hearts, then draw an even card to trigger success check
+			gameState.aceOfHeartsRevealed = true;
+			gameState.deck = [{ card: '4', suit: 'diamonds', description: 'Even card' }];
+			gameState.cardsToDraw = 1;
+			gameState.tokens = 5;
+
+			await drawCard();
+			await confirmCard();
+
+			expect(gameState.state).toBe('successCheck');
+		});
+
 		it('should handle Ace of Hearts (primary success)', async () => {
 			gameState.deck = [{ card: 'A', suit: 'hearts', description: 'Primary success' }];
 
@@ -442,8 +456,7 @@ describe('gameActions - Core Game Mechanics', () => {
 			expect(gameState.tower).toBe(16); // 15 + 1
 		});
 
-		it.skip('should not exceed 20 Stability on natural 20', () => {
-			// TODO: Implement Stability cap at 20 - currently not enforced
+		it('should not exceed 20 Stability on natural 20', () => {
 			gameState.tower = 20;
 			const roll = 20;
 			applyFailureCheckResult(roll);
@@ -686,13 +699,15 @@ describe('gameActions - Core Game Mechanics', () => {
 			expect(gameState.journalEntries[0].dateRecorded).toBeDefined();
 		});
 
-		it.skip('should transition to success check if Ace of Hearts revealed', async () => {
-			// TODO: D20 workflow - success checks happen at different point in flow
+		it('should transition to startRound regardless of Ace status', async () => {
+			// D20 workflow: success checks happen during confirmCard, not after recordRound
+			// recordRound always transitions to startRound (success check happens before journal)
 			gameState.aceOfHeartsRevealed = true;
+			gameState.state = 'log';
 
 			await recordRound({ text: 'Entry' });
 
-			expect(gameState.state).toBe('successCheck');
+			expect(gameState.state).toBe('startRound');
 		});
 
 		it('should start new round if Ace not yet revealed', async () => {
