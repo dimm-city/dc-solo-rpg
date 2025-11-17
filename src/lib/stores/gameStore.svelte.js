@@ -99,7 +99,6 @@ let gameState = $state({
 	// Game over state
 	gameOver: false,
 	win: false,
-	bonus: 0, // TODO: Remove in Phase 5 - replaced by acesRevealed threshold system
 
 	// Journal
 	journalEntries: [],

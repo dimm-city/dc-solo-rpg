@@ -583,7 +583,8 @@ export async function recordRound(journalEntry) {
 			// Go to success check screen (only if there are tokens to remove)
 			transitionTo('successCheck');
 		} else if (gameState.tokens === 0 && gameState.aceOfHeartsRevealed) {
-			// All tokens removed, go to final damage roll
+			// Legacy d6 system: All tokens removed, go to final damage roll
+			// D20 system: This path is unreachable - victory occurs in applyPendingSuccessCheck()
 			transitionTo('finalDamageRoll');
 		} else {
 			// Start next round
@@ -767,15 +768,15 @@ export function applyPendingInitialDamageRoll() {
 
 /**
  * Perform the final damage roll after all tokens are removed
- * This is the SRD's "salvation with risk" mechanic - victory can be snatched away at the last moment
+ * NOTE: This function is for legacy d6 system compatibility only
+ * D20 system does not use final damage roll - victory occurs immediately when tokens = 0
  * @param {number} roll - Dice roll result
+ * @deprecated D20 system handles victory in applyPendingSuccessCheck()
  */
 export function performFinalDamageRoll(roll) {
 	logger.debug(
 		'[performFinalDamageRoll] Roll:',
 		roll,
-		'Bonus:',
-		gameState.bonus,
 		'Tower:',
 		gameState.tower
 	);
@@ -783,8 +784,8 @@ export function performFinalDamageRoll(roll) {
 	// Store pending updates (to be applied after dice animation)
 	gameState.pendingUpdates.diceRoll = roll;
 
-	// Calculate damage but don't apply yet
-	const damage = Math.max(roll - gameState.bonus, 0);
+	// Calculate damage (D20 system: no bonus modifier)
+	const damage = Math.max(roll, 0);
 	gameState.pendingUpdates.towerDamage = damage;
 
 	logger.debug(`[performFinalDamageRoll] Stored pending roll ${roll}, pending damage: ${damage}`);
@@ -794,6 +795,8 @@ export function performFinalDamageRoll(roll) {
 
 /**
  * Apply pending final damage roll after dice animation completes
+ * NOTE: For legacy d6 system compatibility only
+ * @deprecated D20 system handles victory in applyPendingSuccessCheck()
  */
 export function applyPendingFinalDamageRoll() {
 	if (gameState.pendingUpdates.diceRoll === null) {
@@ -885,8 +888,7 @@ export async function exitGame() {
 	gameState.aceOfHeartsRevealed = false;
 	gameState.gameOver = false;
 	gameState.win = false;
-	gameState.tower = 54;
-	gameState.bonus = 0;
+	gameState.tower = 20; // D20 system: starts at 20 stability
 	gameState.log = [];
 	gameState.journalEntries = [];
 	gameState.round = 0;
