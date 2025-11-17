@@ -25,6 +25,7 @@ import {
 	services
 } from './gameActions.svelte.js';
 import { gameState, transitionTo } from './gameStore.svelte.js';
+import { getD20ValueForD6 } from '../utils/diceConversion.js';
 
 describe('gameActions - Core Game Mechanics', () => {
 	// Mock game configuration
@@ -176,7 +177,7 @@ describe('gameActions - Core Game Mechanics', () => {
 
 		it('should roll dice and set cardsToDraw', async () => {
 			// Mock the random number generator
-			const mockRoll = 4;
+			const mockRoll = getD20ValueForD6(4);
 			gameState.getRandomNumber = vi.fn().mockReturnValue(mockRoll);
 
 			const roll = await rollForTasks();
@@ -188,7 +189,7 @@ describe('gameActions - Core Game Mechanics', () => {
 		});
 
 		it('should transition to drawCard state after confirming roll', async () => {
-			gameState.getRandomNumber = vi.fn().mockReturnValue(3);
+			gameState.getRandomNumber = vi.fn().mockReturnValue(getD20ValueForD6(3));
 			await rollForTasks();
 			await confirmTaskRoll();
 
@@ -196,7 +197,7 @@ describe('gameActions - Core Game Mechanics', () => {
 		});
 
 		it('should handle roll of 1', async () => {
-			gameState.getRandomNumber = vi.fn().mockReturnValue(1);
+			gameState.getRandomNumber = vi.fn().mockReturnValue(getD20ValueForD6(1));
 
 			await rollForTasks();
 
@@ -204,7 +205,7 @@ describe('gameActions - Core Game Mechanics', () => {
 		});
 
 		it('should handle roll of 6', async () => {
-			gameState.getRandomNumber = vi.fn().mockReturnValue(6);
+			gameState.getRandomNumber = vi.fn().mockReturnValue(getD20ValueForD6(6));
 
 			await rollForTasks();
 
@@ -448,7 +449,7 @@ describe('gameActions - Core Game Mechanics', () => {
 		});
 
 		it('should remove token on roll of 6', async () => {
-			gameState.getRandomNumber = vi.fn().mockReturnValue(6);
+			gameState.getRandomNumber = vi.fn().mockReturnValue(getD20ValueForD6(6));
 
 			successCheck();
 			applyPendingSuccessCheck();
@@ -458,7 +459,7 @@ describe('gameActions - Core Game Mechanics', () => {
 		});
 
 		it('should not remove token on low roll', async () => {
-			gameState.getRandomNumber = vi.fn().mockReturnValue(2);
+			gameState.getRandomNumber = vi.fn().mockReturnValue(getD20ValueForD6(2));
 
 			successCheck();
 			applyPendingSuccessCheck();
@@ -469,7 +470,7 @@ describe('gameActions - Core Game Mechanics', () => {
 		it('should apply bonus on non-easy difficulty', async () => {
 			gameState.config.difficulty = 1;
 			gameState.bonus = 2;
-			gameState.getRandomNumber = vi.fn().mockReturnValue(4);
+			gameState.getRandomNumber = vi.fn().mockReturnValue(getD20ValueForD6(4));
 
 			successCheck();
 			applyPendingSuccessCheck();
@@ -480,7 +481,7 @@ describe('gameActions - Core Game Mechanics', () => {
 
 		it('should transition to finalDamageRoll when all tokens removed', async () => {
 			gameState.tokens = 1;
-			gameState.getRandomNumber = vi.fn().mockReturnValue(6);
+			gameState.getRandomNumber = vi.fn().mockReturnValue(getD20ValueForD6(6));
 
 			successCheck();
 			applyPendingSuccessCheck();
@@ -493,7 +494,7 @@ describe('gameActions - Core Game Mechanics', () => {
 		it('should continue to startRound if tokens remain', async () => {
 			gameState.tokens = 5;
 			gameState.round = 3;
-			gameState.getRandomNumber = vi.fn().mockReturnValue(6);
+			gameState.getRandomNumber = vi.fn().mockReturnValue(getD20ValueForD6(6));
 
 			successCheck();
 			applyPendingSuccessCheck();

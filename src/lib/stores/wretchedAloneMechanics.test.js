@@ -23,6 +23,7 @@ import {
 	successCheck
 } from './gameActions.svelte.js';
 import { initializeGame } from './gameInit.js';
+import { getD20ValueForD6 } from '../utils/diceConversion.js';
 
 describe('Wretched & Alone Framework - Core Mechanics', () => {
 	// ==========================
@@ -375,7 +376,7 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 				gameState.aceOfHeartsRevealed = true;
 				gameState.config = { difficulty: 0 };
 
-				vi.spyOn(gameState, 'getRandomNumber').mockReturnValue(6);
+				vi.spyOn(gameState, 'getRandomNumber').mockReturnValue(getD20ValueForD6(6));
 				successCheck();
 
 				expect(gameState.tokens).toBe(9);
@@ -386,7 +387,7 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 				gameState.aceOfHeartsRevealed = true;
 				gameState.config = { difficulty: 0 };
 
-				vi.spyOn(gameState, 'getRandomNumber').mockReturnValue(3);
+				vi.spyOn(gameState, 'getRandomNumber').mockReturnValue(getD20ValueForD6(3));
 				successCheck();
 
 				expect(gameState.tokens).toBe(10);
@@ -399,7 +400,7 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 				gameState.config = { difficulty: 1 };
 
 				// Roll 5, but with bonus should succeed
-				vi.spyOn(gameState, 'getRandomNumber').mockReturnValue(5);
+				vi.spyOn(gameState, 'getRandomNumber').mockReturnValue(getD20ValueForD6(5));
 				successCheck();
 
 				expect(gameState.tokens).toBe(9);
@@ -530,7 +531,7 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 				gameState.state = 'successCheck';
 
 				// Success on token roll
-				vi.spyOn(gameState, 'getRandomNumber').mockReturnValueOnce(6);
+				vi.spyOn(gameState, 'getRandomNumber').mockReturnValueOnce(getD20ValueForD6(6));
 				successCheck();
 
 				expect(gameState.tokens).toBe(0);
@@ -840,9 +841,9 @@ describe('Wretched & Alone Framework - Core Mechanics', () => {
 
 			// Three successful rolls
 			vi.spyOn(gameState, 'getRandomNumber')
-				.mockReturnValueOnce(6)
-				.mockReturnValueOnce(6)
-				.mockReturnValueOnce(6);
+				.mockReturnValueOnce(getD20ValueForD6(6))
+				.mockReturnValueOnce(getD20ValueForD6(6))
+				.mockReturnValueOnce(getD20ValueForD6(6));
 
 			successCheck();
 			expect(gameState.tokens).toBe(2);

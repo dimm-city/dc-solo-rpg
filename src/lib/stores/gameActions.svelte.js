@@ -6,6 +6,7 @@ import { gameState, transitionTo } from './gameStore.svelte.js';
 import { initializeGame } from './gameInit.js';
 import { logger } from '../utils/logger.js';
 import { saveGame, loadGame, clearSave, restoreGameState } from './indexedDBStorage.js';
+import { convertD20ToD6 } from '../utils/diceConversion.js';
 
 /**
  * Mock services object for test compatibility
@@ -85,7 +86,8 @@ export const startRound = () => {
  * @returns {Promise<number>} Dice roll result
  */
 export async function rollForTasks() {
-	const roll = gameState.getRandomNumber();
+	const d20Roll = gameState.getRandomNumber();
+	const roll = convertD20ToD6(d20Roll);
 
 	gameState.cardsToDraw = roll;
 	// Defer diceRoll update until after animation
@@ -271,7 +273,7 @@ export function confirmCard() {
  * @returns {number} Dice roll result
  */
 export function getFailureCheckRoll() {
-	return gameState.getRandomNumber();
+	return convertD20ToD6(gameState.getRandomNumber());
 }
 
 /**
@@ -437,7 +439,8 @@ export async function recordRound(journalEntry) {
  * @returns {number} Dice roll result
  */
 export function successCheck() {
-	const roll = gameState.getRandomNumber();
+	const d20Roll = gameState.getRandomNumber();
+	const roll = convertD20ToD6(d20Roll);
 
 	// Store pending updates (to be applied after dice animation)
 	gameState.pendingUpdates.diceRoll = roll;

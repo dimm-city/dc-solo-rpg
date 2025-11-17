@@ -24,6 +24,7 @@
 	import OverlayModal from './OverlayModal.svelte';
 	import { onMount } from 'svelte';
 	import { rollDice } from '../stores/diceStore.svelte.js';
+	import { convertD20ToD6 } from '../utils/diceConversion.js';
 	import {
 		rollForTasks,
 		confirmTaskRoll,
@@ -231,7 +232,7 @@
 		if (currentScreen !== 'finalDamageRoll') return;
 
 		finalDamageRolling = true;
-		const rollResult = Math.floor(Math.random() * 6) + 1;
+		const rollResult = convertD20ToD6(Math.floor(Math.random() * 20) + 1);
 		finalDamageResult = rollResult;
 
 		try {
@@ -270,7 +271,7 @@
 		if (currentScreen !== 'initialDamageRoll') return;
 
 		initialDamageRolling = true;
-		const rollResult = Math.floor(Math.random() * 6) + 1;
+		const rollResult = convertD20ToD6(Math.floor(Math.random() * 20) + 1);
 		initialDamageResult = rollResult;
 
 		try {

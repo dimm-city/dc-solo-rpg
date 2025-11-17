@@ -16,6 +16,7 @@ import {
 	confirmTaskRoll,
 	services
 } from './gameActions.svelte.js';
+import { getD20ValueForD6 } from '../utils/diceConversion.js';
 
 global.fetch = vi.fn();
 
@@ -124,7 +125,7 @@ describe('WAAStore', () => {
 		gameState.state = 'rollForTasks';
 
 		// Mock the getRandomNumber function
-		gameState.getRandomNumber = vi.fn(() => 5);
+		gameState.getRandomNumber = vi.fn(() => getD20ValueForD6(5));
 
 		const result = await rollForTasks();
 
@@ -264,7 +265,7 @@ describe('WAAStore', () => {
 	describe('failureCheck', () => {
 		test('should perform the failure check and update the game state (tower collapsed)', async () => {
 			// Mock the getRandomNumber function
-			gameState.getRandomNumber = vi.fn(() => 5);
+			gameState.getRandomNumber = vi.fn(() => getD20ValueForD6(5));
 			gameState.state = 'failureCheck';
 			gameState.gameOver = false;
 			gameState.diceRoll = 0;
@@ -291,7 +292,7 @@ describe('WAAStore', () => {
 
 		test('should perform the failure check and update the game state (tower not collapsed)', async () => {
 			// Mock the getRandomNumber function
-			gameState.getRandomNumber = vi.fn(() => 2);
+			gameState.getRandomNumber = vi.fn(() => getD20ValueForD6(2));
 			gameState.state = 'failureCheck';
 			gameState.gameOver = false;
 			gameState.diceRoll = 0;
@@ -383,7 +384,7 @@ describe('WAAStore', () => {
 	describe('successCheck', () => {
 		test('should transition to finalDamageRoll when all tokens removed', async () => {
 			// Mock the getRandomNumber function
-			gameState.getRandomNumber = vi.fn(() => 6);
+			gameState.getRandomNumber = vi.fn(() => getD20ValueForD6(6));
 			const initialState = {
 				diceRoll: 0,
 				tokens: 1,
@@ -411,7 +412,7 @@ describe('WAAStore', () => {
 
 		test('should perform the success check and update the game state (failure)', async () => {
 			// Mock the getRandomNumber function
-			gameState.getRandomNumber = vi.fn(() => 4);
+			gameState.getRandomNumber = vi.fn(() => getD20ValueForD6(4));
 			gameState.state = 'successCheck';
 			gameState.diceRoll = 0;
 			gameState.tokens = 2;

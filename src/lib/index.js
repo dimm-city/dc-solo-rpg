@@ -23,3 +23,8 @@ export {
 	removeCustomGame
 } from './stores/customGames.js';
 export { parseGameFile, ValidationError } from './parsers/markdownParser.js';
+export {
+	convertD20ToD6,
+	getD20ValueForD6,
+	getRandomD20ValueForD6
+} from './utils/diceConversion.js';
