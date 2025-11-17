@@ -3,7 +3,7 @@
 	import { onNavigate } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import { page } from '$app/stores';
-	import { initializeDiceBox, diceState } from '$lib/stores/diceStore.svelte.js';
+	import { initializeDiceBox, diceState, isDiceBoxInitialized } from '$lib/stores/diceStore.svelte.js';
 
 	let { children, data } = $props();
 	let diceContainer = $state();
@@ -29,8 +29,9 @@
 
 	// Initialize DiceBox when the container becomes visible
 	$effect(() => {
-		// Only initialize if showing dice and container exists
-		if (showDice && diceContainer) {
+		// Only initialize if showing dice, container exists, and not already initialized
+		// This prevents duplicate initialization during theme changes
+		if (showDice && diceContainer && !isDiceBoxInitialized()) {
 			initializeDiceBox(diceContainer);
 		}
 	});

@@ -12,6 +12,7 @@ import { randomInt } from '../services/random.js';
 let diceBoxInstance = $state(null);
 let isInitialized = $state(false);
 let containerElement = $state(null);
+let isUpdatingTheme = $state(false);
 
 /**
  * Dice rolling state - wrapped in object to allow export
@@ -25,6 +26,14 @@ let diceState = $state({
  * Export diceState for reactive access in components
  */
 export { diceState };
+
+/**
+ * Check if a theme update is in progress
+ * Used by +layout.svelte to prevent duplicate initialization during theme changes
+ */
+export function isThemeUpdating() {
+	return isUpdatingTheme;
+}
 
 /**
  * Initialize the DiceBox instance
@@ -272,6 +281,9 @@ export async function updateDiceTheme(theme) {
 
 	console.log('[diceStore] Updating dice theme to:', theme.key);
 
+	// Set flag to prevent $effect from re-initializing
+	isUpdatingTheme = true;
+
 	// Update gameState config
 	if (gameState.config) {
 		gameState.config.options = {
@@ -282,18 +294,38 @@ export async function updateDiceTheme(theme) {
 
 	// If DiceBox is initialized, we need to reinitialize it with the new theme
 	if (diceBoxInstance && containerElement) {
-		// Save container reference before reset (resetDiceBox sets containerElement to null)
 		const savedContainer = containerElement;
 
-		// Clear the existing instance
-		resetDiceBox();
+		console.log('[diceStore] Cleaning up DiceBox for theme change');
 
-		// Wait a moment for cleanup
-		await new Promise((resolve) => setTimeout(resolve, 100));
+		// Call DiceBox's clear method to properly dispose of resources
+		try {
+			if (typeof diceBoxInstance.clear === 'function') {
+				diceBoxInstance.clear();
+			}
+		} catch (error) {
+			console.warn('[diceStore] Error calling diceBox.clear():', error);
+		}
 
-		// Reinitialize with new theme using saved container reference
+		// Clear the container manually (don't use resetDiceBox to keep state intact)
+		console.log('[diceStore] Clearing container DOM');
+		while (savedContainer.firstChild) {
+			savedContainer.removeChild(savedContainer.firstChild);
+		}
+
+		// Wait for DOM cleanup and WebGL context release
+		await new Promise((resolve) => setTimeout(resolve, 200));
+
+		// Reset instance references but keep containerElement
+		diceBoxInstance = null;
+		isInitialized = false;
+
+		// Reinitialize with new theme
 		await initializeDiceBox(savedContainer);
 
 		console.log('[diceStore] Dice theme updated successfully');
 	}
+
+	// Clear the flag after theme update is complete
+	isUpdatingTheme = false;
 }
