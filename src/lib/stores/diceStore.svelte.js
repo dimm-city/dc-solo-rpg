@@ -269,14 +269,17 @@ export async function updateDiceTheme(theme) {
 
 	// If DiceBox is initialized, we need to reinitialize it with the new theme
 	if (diceBoxInstance && containerElement) {
+		// Save container reference before reset (resetDiceBox sets containerElement to null)
+		const savedContainer = containerElement;
+
 		// Clear the existing instance
 		resetDiceBox();
 
 		// Wait a moment for cleanup
 		await new Promise((resolve) => setTimeout(resolve, 100));
 
-		// Reinitialize with new theme
-		await initializeDiceBox(containerElement);
+		// Reinitialize with new theme using saved container reference
+		await initializeDiceBox(savedContainer);
 
 		console.log('[diceStore] Dice theme updated successfully');
 	}
