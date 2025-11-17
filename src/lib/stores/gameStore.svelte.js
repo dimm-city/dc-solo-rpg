@@ -51,7 +51,7 @@ let gameState = $state({
 
 	// Player state
 	playerName: '',
-	tower: 54,
+	tower: 20, // D20 system: Stability starts at 20 (was 54 in d6 system)
 	tokens: 10,
 
 	// Round state

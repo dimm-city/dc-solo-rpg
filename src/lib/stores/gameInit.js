@@ -85,7 +85,7 @@ export function initializeGame(gameConfig, player, options = {}) {
 		aceOfHeartsRevealed,
 		gameOver: false,
 		win: false,
-		tower: 54, // Always start at full health, damage applied interactively
+		tower: 20, // D20 system: Always start at 20 Stability (was 54 in d6 system)
 		bonus: aceOfHeartsRevealed ? 1 : 0,
 		log: [],
 		journalEntries: [],

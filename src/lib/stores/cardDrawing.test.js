@@ -37,7 +37,7 @@ describe('Card Drawing and Failure Check Flow', () => {
 		];
 		gameState.log = [];
 		gameState.round = 1;
-		gameState.tower = 54;
+		gameState.tower = 20; // D20 system: starts at 20 stability
 		gameState.bonus = 0;
 		gameState.kingsRevealed = 0;
 		gameState.gameOver = false;
@@ -213,23 +213,23 @@ describe('Card Drawing and Failure Check Flow', () => {
 					id: '1.1'
 				}
 			];
-			gameState.tower = 54;
+			gameState.tower = 20; // D20 system: starts at 20
 			gameState.bonus = 0;
 
-			// Roll a 3 (will remove 3 blocks)
+			// Roll a 3 (D20 system: roll 3 in range 2-5 → -2 stability)
 			const rollResult = 3;
 			applyFailureCheckResult(rollResult);
 
 			// Damage should be stored in pending state, not applied yet
 			expect(gameState.pendingUpdates.diceRoll).toBe(3);
-			expect(gameState.pendingUpdates.towerDamage).toBe(3);
-			expect(gameState.tower).toBe(54); // Tower not updated yet
+			expect(gameState.pendingUpdates.towerDamage).toBe(2); // D20 system: roll 2-5 → -2 stability
+			expect(gameState.tower).toBe(20); // Tower not updated yet
 
 			// Now apply the pending updates
 			applyPendingDiceRoll();
 
-			// Tower should now be reduced
-			expect(gameState.tower).toBe(51); // 54 - 3
+			// Stability should now be reduced
+			expect(gameState.tower).toBe(18); // 20 - 2
 
 			// Log should be updated with dice roll
 			expect(gameState.log[0].diceRoll).toBe(3);
@@ -238,7 +238,7 @@ describe('Card Drawing and Failure Check Flow', () => {
 		test('should transition correctly after failure check', () => {
 			gameState.state = 'failureCheck';
 			gameState.log = [{ card: '5', suit: 'hearts', description: 'Test', round: 1, id: '1.1' }];
-			gameState.tower = 54;
+			gameState.tower = 20; // D20 system: starts at 20 stability
 			gameState.bonus = 0;
 			gameState.cardsToDraw = 2; // More cards to draw
 
@@ -256,7 +256,7 @@ describe('Card Drawing and Failure Check Flow', () => {
 		test('should transition to log after failure check if no cards remain', () => {
 			gameState.state = 'failureCheck';
 			gameState.log = [{ card: '5', suit: 'hearts', description: 'Test', round: 1, id: '1.1' }];
-			gameState.tower = 54;
+			gameState.tower = 20; // D20 system: starts at 20 stability
 			gameState.bonus = 0;
 			gameState.cardsToDraw = 0; // No more cards
 

@@ -413,16 +413,24 @@ export function confirmCard() {
 
 /**
  * Get failure check roll (without applying damage)
- * @returns {number} Dice roll result
+ * D20 system: Uses rollWithModifiers() for Lucid/Surreal advantage/disadvantage
+ * @returns {number} D20 roll result
  */
 export function getFailureCheckRoll() {
-	return gameState.getRandomNumber();
+	// Roll d20 with Lucid/Surreal modifiers
+	const { roll, wasLucid, wasSurreal } = gameState.rollWithModifiers();
+
+	logger.debug(
+		`[getFailureCheckRoll] D20 roll: ${roll} (${wasLucid ? 'LUCID' : wasSurreal ? 'SURREAL' : 'normal'})`
+	);
+	return roll;
 }
 
 /**
  * Apply failure check result and update health
- * This now stores the result in pending state to be applied after dice animation
- * @param {number} result - Dice roll result
+ * D20 system: Uses calculateStabilityLoss() and handles Lucid/Surreal state changes
+ * Stores result in pending state to be applied after dice animation
+ * @param {number} result - D20 roll result
  */
 export function applyFailureCheckResult(result) {
 	if (gameState.gameOver) {
@@ -432,12 +440,27 @@ export function applyFailureCheckResult(result) {
 	// Store in pending state (to be applied after dice animation)
 	gameState.pendingUpdates.diceRoll = result;
 
-	// Calculate damage (but don't apply yet)
-	const blocksToRemove = Math.max(result - gameState.bonus, 0);
-	gameState.pendingUpdates.towerDamage = blocksToRemove;
+	// Calculate stability loss using d20 table (bonus no longer applies)
+	const { loss, gainedLucid, gainedSurreal, optionalGain } = calculateStabilityLoss(result);
+
+	gameState.pendingUpdates.towerDamage = loss;
+
+	// Handle Lucid/Surreal state changes from this roll
+	if (gainedLucid) {
+		gameState.isLucid = true;
+		logger.debug(`[applyFailureCheckResult] Natural 20! Next roll will be Lucid`);
+	} else if (gainedSurreal) {
+		gameState.isSurreal = true;
+		logger.debug(`[applyFailureCheckResult] Natural 1! Next roll will be Surreal`);
+	}
+
+	// Handle optional stability gain (auto-apply for now)
+	if (optionalGain > 0) {
+		gameState.pendingUpdates.towerGain = optionalGain;
+	}
 
 	logger.debug(
-		`[applyFailureCheckResult] Stored pending dice roll ${result}, pending damage ${blocksToRemove}`
+		`[applyFailureCheckResult] Stored pending dice roll ${result}, pending stability loss ${loss}, optional gain ${optionalGain}`
 	);
 
 	// Note: We don't transition state here anymore
@@ -446,6 +469,7 @@ export function applyFailureCheckResult(result) {
 
 /**
  * Apply pending dice roll updates after animation completes
+ * D20 system: Handles both stability loss and stability gain
  * This should be called after the dice animation finishes
  */
 export function applyPendingDiceRoll() {
@@ -455,7 +479,8 @@ export function applyPendingDiceRoll() {
 	}
 
 	const result = gameState.pendingUpdates.diceRoll;
-	const blocksToRemove = gameState.pendingUpdates.towerDamage;
+	const stabilityLoss = gameState.pendingUpdates.towerDamage || 0;
+	const stabilityGain = gameState.pendingUpdates.towerGain || 0;
 
 	// Apply the dice roll to state
 	gameState.diceRoll = result;
@@ -472,21 +497,32 @@ export function applyPendingDiceRoll() {
 		];
 	}
 
-	// Apply tower damage
-	gameState.tower -= blocksToRemove;
+	// Apply stability gain first (if any, from natural 20)
+	if (stabilityGain > 0) {
+		gameState.tower += stabilityGain;
+		logger.debug(
+			`[applyPendingDiceRoll] Applied stability gain +${stabilityGain}, stability now at ${gameState.tower}`
+		);
+	}
+
+	// Apply stability loss
+	if (stabilityLoss > 0) {
+		gameState.tower -= stabilityLoss;
+		logger.debug(
+			`[applyPendingDiceRoll] Applied stability loss -${stabilityLoss}, stability now at ${gameState.tower}`
+		);
+	}
 
 	// Clear pending updates
 	gameState.pendingUpdates.diceRoll = null;
 	gameState.pendingUpdates.towerDamage = null;
+	gameState.pendingUpdates.towerGain = null;
 
-	logger.debug(
-		`[applyPendingDiceRoll] Applied dice roll ${result}, removed ${blocksToRemove} blocks, tower now at ${gameState.tower}`
-	);
-
-	// Check for tower collapse
+	// Check for stability collapse
 	if (gameState.tower <= 0) {
 		gameState.tower = 0;
-		gameState.status = gameState.config.labels?.failureCheckLoss ?? 'The tower has fallen';
+		gameState.status =
+			gameState.config.labels?.failureCheckLoss ?? 'Stability collapsed completely';
 		gameState.gameOver = true;
 		transitionTo('gameOver');
 	} else {
@@ -622,23 +658,44 @@ export function applyPendingSuccessCheck() {
 
 /**
  * Perform the initial damage roll before round 1
+ * D20 system: Uses calculateStabilityLoss() and handles Lucid/Surreal triggers
  * This is the SRD's digital enhancement - game starts with some instability
- * @param {number} roll - Dice roll result (1-6)
+ * @param {number} roll - D20 roll result (1-20)
  */
 export function performInitialDamageRoll(roll) {
-	logger.debug('[performInitialDamageRoll] Roll:', roll, 'Tower:', gameState.tower);
+	logger.debug('[performInitialDamageRoll] D20 Roll:', roll, 'Stability:', gameState.tower);
+
+	// Calculate stability loss using d20 table
+	const { loss, gainedLucid, gainedSurreal, optionalGain } = calculateStabilityLoss(roll);
 
 	// Store pending updates (to be applied after dice animation)
 	gameState.pendingUpdates.diceRoll = roll;
-	gameState.pendingUpdates.towerDamage = roll;
+	gameState.pendingUpdates.towerDamage = loss;
 
-	logger.debug(`[performInitialDamageRoll] Stored pending roll ${roll}, pending damage: ${roll}`);
+	// Handle Lucid/Surreal state changes from this roll
+	if (gainedLucid) {
+		gameState.isLucid = true;
+		logger.debug(`[performInitialDamageRoll] Natural 20! Next roll will be Lucid`);
+	} else if (gainedSurreal) {
+		gameState.isSurreal = true;
+		logger.debug(`[performInitialDamageRoll] Natural 1! Next roll will be Surreal`);
+	}
+
+	// Handle optional stability gain (auto-apply for now)
+	if (optionalGain > 0) {
+		gameState.pendingUpdates.towerGain = optionalGain;
+	}
+
+	logger.debug(
+		`[performInitialDamageRoll] Stored pending roll ${roll}, pending stability loss: ${loss}, optional gain: ${optionalGain}`
+	);
 
 	// Note: State transitions will happen in applyPendingInitialDamageRoll after animation
 }
 
 /**
  * Apply pending initial damage roll after dice animation completes
+ * D20 system: Handles both stability loss and stability gain
  */
 export function applyPendingInitialDamageRoll() {
 	if (gameState.pendingUpdates.diceRoll === null) {
@@ -647,27 +704,34 @@ export function applyPendingInitialDamageRoll() {
 	}
 
 	const roll = gameState.pendingUpdates.diceRoll;
-	const damage = gameState.pendingUpdates.towerDamage;
+	const stabilityLoss = gameState.pendingUpdates.towerDamage || 0;
+	const stabilityGain = gameState.pendingUpdates.towerGain || 0;
 
 	// Apply dice roll
 	gameState.diceRoll = roll;
 
-	// Apply tower damage
-	gameState.tower = Math.max(gameState.tower - damage, 0);
+	// Apply stability gain first (if any, from natural 20)
+	if (stabilityGain > 0) {
+		gameState.tower += stabilityGain;
+	}
+
+	// Apply stability loss
+	gameState.tower = Math.max(gameState.tower - stabilityLoss, 0);
 
 	// Clear pending updates
 	gameState.pendingUpdates.diceRoll = null;
 	gameState.pendingUpdates.towerDamage = null;
+	gameState.pendingUpdates.towerGain = null;
 
 	logger.debug(
-		`[applyPendingInitialDamageRoll] Applied initial damage: ${damage}, tower now: ${gameState.tower}`
+		`[applyPendingInitialDamageRoll] Applied initial stability: loss=${stabilityLoss}, gain=${stabilityGain}, stability now: ${gameState.tower}`
 	);
 
 	// Log the initial damage
 	gameState.log.push({
 		type: 'initial-damage',
 		roll,
-		damage,
+		damage: stabilityLoss,
 		tower: gameState.tower,
 		timestamp: Date.now(),
 		round: 0,
