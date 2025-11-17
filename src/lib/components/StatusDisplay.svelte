@@ -47,6 +47,44 @@
 	const successAugmentedUI = $derived(
 		isMobile ? 'bl-clip br-clip tl-clip-x border' : 'tl-2-clip-x tr-2-clip-x border'
 	);
+
+	// Stability gradient - changes based on value (low = red, high = green)
+	const stabilityGradient = $derived(() => {
+		const stability = gameState.tower;
+		if (stability >= 10) {
+			// High stability - positive colors (green)
+			return 'linear-gradient(90deg, #00ff88, #00cc66)';
+		} else {
+			// Low stability - warning/danger colors (red/magenta)
+			return 'linear-gradient(90deg, #ff0055, #d946ef)';
+		}
+	});
+
+	const stabilityGlow = $derived(() => {
+		const stability = gameState.tower;
+		return stability >= 10 ? '#00ff88' : '#ff0055';
+	});
+
+	// Binary pips - convert dice roll to 5-bit binary representation
+	const binaryPips = $derived(() => {
+		const roll = gameState.diceRoll || 0;
+		// Convert to binary and pad to 5 bits (max value is 20 = 10100)
+		const binary = roll.toString(2).padStart(5, '0');
+		return binary.split('').map((bit) => bit === '1');
+	});
+
+	// Modifier state display
+	const modifierState = $derived(() => {
+		if (gameState.isLucid) return 'LUCID';
+		if (gameState.isSurreal) return 'SURREAL';
+		return null;
+	});
+
+	const modifierColor = $derived(() => {
+		if (gameState.isLucid) return '#00ffaa'; // Green for advantage
+		if (gameState.isSurreal) return '#ff0066'; // Red for disadvantage
+		return null;
+	});
 </script>
 
 <div class="status-display-container">
@@ -136,15 +174,13 @@
 						/>
 						<path d="M3.22 13H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27" />
 					</svg>
-					HEALTH
+					STABILITY
 				</div>
-				<div class="stat-value">
-					<span class="current">{gameState.tower}</span><span class="divider">/</span><span
-						class="max">100</span
-					>
-				</div>
-				<div class="stat-bar">
-					<div class="stat-fill health-fill" style="width: {gameState.tower}%"></div>
+				<div class="stat-bar stability-bar">
+					<div
+						class="stat-fill stability-fill"
+						style="width: {(gameState.tower / 20) * 100}%; background: {stabilityGradient()}; box-shadow: 0 0 10px {stabilityGlow()}"
+					></div>
 				</div>
 			</div>
 
@@ -224,10 +260,17 @@
 					</svg>
 					LAST ROLL
 				</div>
+				{#if modifierState()}
+					<div class="modifier-state" style="color: {modifierColor()}">
+						{modifierState()}
+					</div>
+				{/if}
 				<div class="dice-value">{gameState.diceRoll}</div>
-				<div class="dice-pips">
-					{#each Array(gameState.diceRoll) as _, i (i)}
-						<span class="pip"></span>
+				<div class="dice-pips binary-pips">
+					{#each binaryPips() as bit, i (i)}
+						<span class="binary-pip" class:active={bit}>
+							<span class="pip-inner"></span>
+						</span>
 					{/each}
 				</div>
 			</div>
@@ -889,6 +932,18 @@
 		animation: fillBarGrow 0.5s linear forwards;
 	}
 
+	/* Stability bar - larger since no stat value */
+	.stability-bar {
+		height: 12px;
+		flex: 1 1 auto;
+		min-width: 80px;
+	}
+
+	/* Stability fill - gradient and glow set via inline styles (reactive) */
+	.stability-fill {
+		transition: all 0.3s ease;
+	}
+
 	.health-fill {
 		background: linear-gradient(90deg, #00ff88, #00cc66);
 		box-shadow: 0 0 10px #00ff88;
@@ -1004,6 +1059,29 @@
 		filter: drop-shadow(0 0 4px currentColor);
 	}
 
+	/* Modifier state indicator */
+	.modifier-state {
+		font-size: var(--text-xs);
+		font-weight: bold;
+		text-transform: uppercase;
+		letter-spacing: 0.2em;
+		font-family: 'Courier New', monospace;
+		text-shadow:
+			0 0 10px currentColor,
+			0 0 20px currentColor;
+		animation: modifier-pulse 1s ease-in-out infinite;
+	}
+
+	@keyframes modifier-pulse {
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.6;
+		}
+	}
+
 	.dice-value {
 		font-size: 2rem;
 		font-weight: 900;
@@ -1016,6 +1094,89 @@
 		line-height: 1;
 	}
 
+	/* Binary pips container */
+	.binary-pips {
+		display: flex;
+		gap: 4px;
+		justify-content: center;
+		align-items: center;
+	}
+
+	/* Binary pip - box shape with inner fill */
+	.binary-pip {
+		width: 10px;
+		height: 10px;
+		border: 1px solid rgba(0, 255, 255, 0.4);
+		border-radius: 2px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		position: relative;
+		transition: all 0.2s ease;
+		animation: binary-pip-in 0.2s ease-out backwards;
+		animation-delay: calc(0.5s + var(--pip-index, 0) * 0.05s);
+	}
+
+	.binary-pip:nth-child(1) {
+		--pip-index: 0;
+	}
+	.binary-pip:nth-child(2) {
+		--pip-index: 1;
+	}
+	.binary-pip:nth-child(3) {
+		--pip-index: 2;
+	}
+	.binary-pip:nth-child(4) {
+		--pip-index: 3;
+	}
+	.binary-pip:nth-child(5) {
+		--pip-index: 4;
+	}
+
+	@keyframes binary-pip-in {
+		0% {
+			opacity: 0;
+			transform: scale(0.5);
+		}
+		100% {
+			opacity: 1;
+			transform: scale(1);
+		}
+	}
+
+	/* Inner fill for active bits (1) */
+	.pip-inner {
+		width: 6px;
+		height: 6px;
+		border-radius: 1px;
+		background: transparent;
+		transition: all 0.2s ease;
+	}
+
+	.binary-pip.active {
+		border-color: rgba(0, 255, 255, 1);
+		box-shadow: 0 0 8px rgba(0, 255, 255, 0.6);
+	}
+
+	.binary-pip.active .pip-inner {
+		background: linear-gradient(135deg, #00eeff, #d946ef);
+		box-shadow:
+			0 0 5px rgba(0, 255, 255, 0.8),
+			inset 0 0 3px rgba(255, 255, 255, 0.4);
+		animation: binary-glow 2s ease-in-out infinite;
+	}
+
+	@keyframes binary-glow {
+		0%,
+		100% {
+			filter: brightness(1);
+		}
+		50% {
+			filter: brightness(1.3);
+		}
+	}
+
+	/* Legacy decimal pips (keep for compatibility if needed elsewhere) */
 	.dice-pips {
 		display: flex;
 		gap: 3px;

@@ -237,7 +237,7 @@ export const startRound = () => {
 /**
  * Roll for number of tasks (cards to draw)
  * D20 system: Roll d20, convert to 1-6 cards, handle Lucid/Surreal states
- * @returns {Promise<number>} D20 roll result (not card count)
+ * @returns {Promise<{roll: number, wasLucid: boolean, wasSurreal: boolean}>} Roll result and modifier flags
  */
 export async function rollForTasks() {
 	// Roll d20 with Lucid/Surreal modifiers
@@ -263,7 +263,7 @@ export async function rollForTasks() {
 	logger.debug(
 		`[rollForTasks] D20 rolled: ${roll} (${wasLucid ? 'LUCID' : wasSurreal ? 'SURREAL' : 'normal'}) → ${cardCount} cards`
 	);
-	return roll;
+	return { roll, wasLucid, wasSurreal };
 }
 
 /**
@@ -429,7 +429,7 @@ export function confirmCard() {
 /**
  * Get failure check roll (without applying damage)
  * D20 system: Uses rollWithModifiers() for Lucid/Surreal advantage/disadvantage
- * @returns {number} D20 roll result
+ * @returns {{roll: number, wasLucid: boolean, wasSurreal: boolean}} Roll result and modifier flags
  */
 export function getFailureCheckRoll() {
 	// Roll d20 with Lucid/Surreal modifiers
@@ -438,7 +438,7 @@ export function getFailureCheckRoll() {
 	logger.debug(
 		`[getFailureCheckRoll] D20 roll: ${roll} (${wasLucid ? 'LUCID' : wasSurreal ? 'SURREAL' : 'normal'})`
 	);
-	return roll;
+	return { roll, wasLucid, wasSurreal };
 }
 
 /**
@@ -632,7 +632,7 @@ export async function recordRound(journalEntry) {
 /**
  * Perform success check
  * D20 system: Uses Ace-dependent thresholds and graduated token changes
- * @returns {number} Dice roll result
+ * @returns {{roll: number, wasLucid: boolean, wasSurreal: boolean}} Roll result and modifier flags
  */
 export function successCheck() {
 	// Roll d20 with Lucid/Surreal modifiers
@@ -665,7 +665,7 @@ export function successCheck() {
 	// Auto-save after success check
 	saveGame(gameState);
 
-	return roll;
+	return { roll, wasLucid, wasSurreal };
 }
 
 /**
