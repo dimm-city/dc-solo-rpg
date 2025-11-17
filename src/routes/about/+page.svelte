@@ -1,9 +1,13 @@
 <script>
 	import { goto } from '$app/navigation';
 	import NeuralBackground from '$lib/components/NeuralBackground.svelte';
+	import TTSRegion from '$lib/tts/TTSRegion.svelte';
 
 	/** @type {import('./$types').PageData} */
 	let { data } = $props();
+
+	const overviewText =
+		'The Dimm City Solo RPG is a narrative-driven, solo role-playing game that takes players on a thrilling adventure that changes each time they play. The game is designed to be played alone, with the game system guiding the player through the story, presenting challenges, and shaping the narrative based on the cards that are drawn and the roll of the dice.';
 
 	function goHome() {
 		goto('/');
@@ -57,12 +61,11 @@
 
 		<section class="content-card" data-augmented-ui="tl-clip-x tr-clip br-clip-y bl-clip border">
 			<h3>Overview</h3>
-			<p>
-				The Dimm City Solo RPG is a narrative-driven, solo role-playing game that takes players on a
-				thrilling adventure that changes each time they play. The game is designed to be played
-				alone, with the game system guiding the player through the story, presenting challenges, and
-				shaping the narrative based on the cards that are drawn and the roll of the dice.
-			</p>
+			<TTSRegion regionId="about-overview" text={overviewText}>
+				<p>
+					{overviewText}
+				</p>
+			</TTSRegion>
 		</section>
 
 		<section
