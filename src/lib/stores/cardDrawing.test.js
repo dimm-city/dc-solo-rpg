@@ -6,7 +6,8 @@ import {
 	getFailureCheckRoll,
 	applyFailureCheckResult,
 	applyPendingDiceRoll,
-	confirmFailureCheck
+	confirmFailureCheck,
+	rollForTasks
 } from './gameActions.svelte.js';
 
 /**
@@ -375,6 +376,141 @@ describe('Card Drawing and Failure Check Flow', () => {
 			expect(gameState.kingsRevealed).toBe(4);
 			expect(gameState.gameOver).toBe(true);
 			expect(gameState.state).toBe('gameOver');
+		});
+	});
+
+	describe('rollForTasks() - D20 Card Draw System', () => {
+		beforeEach(() => {
+			gameState.isLucid = false;
+			gameState.isSurreal = false;
+			gameState.cardsToDraw = 0;
+			gameState.pendingUpdates.diceRoll = null;
+		});
+
+		test('should roll d20 and convert to card count', async () => {
+			// Mock rollWithModifiers to return a specific value
+			const originalRoll = gameState.rollWithModifiers;
+			gameState.rollWithModifiers = vi.fn(() => ({ roll: 15, wasLucid: false, wasSurreal: false }));
+
+			const roll = await rollForTasks();
+
+			// Should return the d20 roll
+			expect(roll).toBe(15);
+
+			// Should convert to 4 cards (15 is in range 11-15)
+			expect(gameState.cardsToDraw).toBe(4);
+
+			// Should store roll in pending updates
+			expect(gameState.pendingUpdates.diceRoll).toBe(15);
+
+			// Restore original function
+			gameState.rollWithModifiers = originalRoll;
+		});
+
+		test('should set Lucid state on natural 20', async () => {
+			const originalRoll = gameState.rollWithModifiers;
+			gameState.rollWithModifiers = vi.fn(() => ({ roll: 20, wasLucid: false, wasSurreal: false }));
+
+			await rollForTasks();
+
+			// Should set Lucid state for next roll
+			expect(gameState.isLucid).toBe(true);
+
+			// Should set 6 cards (max)
+			expect(gameState.cardsToDraw).toBe(6);
+
+			gameState.rollWithModifiers = originalRoll;
+		});
+
+		test('should set Surreal state on natural 1', async () => {
+			const originalRoll = gameState.rollWithModifiers;
+			gameState.rollWithModifiers = vi.fn(() => ({ roll: 1, wasLucid: false, wasSurreal: false }));
+
+			await rollForTasks();
+
+			// Should set Surreal state for next roll
+			expect(gameState.isSurreal).toBe(true);
+
+			// Should set 1 card (min)
+			expect(gameState.cardsToDraw).toBe(1);
+
+			gameState.rollWithModifiers = originalRoll;
+		});
+
+		test('should handle Lucid roll (advantage)', async () => {
+			gameState.isLucid = true;
+
+			// Let it roll naturally with advantage
+			const roll = await rollForTasks();
+
+			// Roll should be in valid range
+			expect(roll).toBeGreaterThanOrEqual(1);
+			expect(roll).toBeLessThanOrEqual(20);
+
+			// Cards should be in valid range
+			expect(gameState.cardsToDraw).toBeGreaterThanOrEqual(1);
+			expect(gameState.cardsToDraw).toBeLessThanOrEqual(6);
+
+			// Lucid state should be cleared (rollWithModifiers clears it)
+			expect(gameState.isLucid).toBe(false);
+		});
+
+		test('should handle Surreal roll (disadvantage)', async () => {
+			gameState.isSurreal = true;
+
+			// Let it roll naturally with disadvantage
+			const roll = await rollForTasks();
+
+			// Roll should be in valid range
+			expect(roll).toBeGreaterThanOrEqual(1);
+			expect(roll).toBeLessThanOrEqual(20);
+
+			// Cards should be in valid range
+			expect(gameState.cardsToDraw).toBeGreaterThanOrEqual(1);
+			expect(gameState.cardsToDraw).toBeLessThanOrEqual(6);
+
+			// Surreal state should be cleared
+			expect(gameState.isSurreal).toBe(false);
+		});
+
+		test('should clear currentCard', async () => {
+			gameState.currentCard = { card: '5', suit: 'hearts' };
+
+			await rollForTasks();
+
+			expect(gameState.currentCard).toBeNull();
+		});
+
+		test('should convert d20 rolls correctly to card counts', async () => {
+			const originalRoll = gameState.rollWithModifiers;
+
+			// Test each range
+			const testCases = [
+				{ roll: 1, expectedCards: 1 },
+				{ roll: 2, expectedCards: 2 },
+				{ roll: 5, expectedCards: 2 },
+				{ roll: 6, expectedCards: 3 },
+				{ roll: 10, expectedCards: 3 },
+				{ roll: 11, expectedCards: 4 },
+				{ roll: 15, expectedCards: 4 },
+				{ roll: 16, expectedCards: 5 },
+				{ roll: 19, expectedCards: 5 },
+				{ roll: 20, expectedCards: 6 }
+			];
+
+			for (const testCase of testCases) {
+				gameState.rollWithModifiers = vi.fn(() => ({
+					roll: testCase.roll,
+					wasLucid: false,
+					wasSurreal: false
+				}));
+
+				await rollForTasks();
+
+				expect(gameState.cardsToDraw).toBe(testCase.expectedCards);
+			}
+
+			gameState.rollWithModifiers = originalRoll;
 		});
 	});
 });

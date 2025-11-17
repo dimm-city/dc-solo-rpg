@@ -235,18 +235,34 @@ export const startRound = () => {
 };
 
 /**
- * Generate Number
- * @returns {Promise<number>} Dice roll result
+ * Roll for number of tasks (cards to draw)
+ * D20 system: Roll d20, convert to 1-6 cards, handle Lucid/Surreal states
+ * @returns {Promise<number>} D20 roll result (not card count)
  */
 export async function rollForTasks() {
-	const roll = gameState.getRandomNumber();
+	// Roll d20 with Lucid/Surreal modifiers
+	const { roll, wasLucid, wasSurreal } = gameState.rollWithModifiers();
 
-	gameState.cardsToDraw = roll;
-	// Defer diceRoll update until after animation
+	// Convert d20 result to card count (1-6)
+	const cardCount = convertD20ToCardCount(roll);
+
+	gameState.cardsToDraw = cardCount;
+	// Defer diceRoll update until after animation (store actual d20 roll)
 	gameState.pendingUpdates.diceRoll = roll;
 	gameState.currentCard = null;
 
-	logger.debug(`[rollForTasks] Dice rolled: ${roll}, setting cardsToDraw to ${roll}`);
+	// Handle Lucid/Surreal state changes from this roll
+	if (roll === 20) {
+		gameState.isLucid = true;
+		logger.debug(`[rollForTasks] Natural 20! Next roll will be Lucid (advantage)`);
+	} else if (roll === 1) {
+		gameState.isSurreal = true;
+		logger.debug(`[rollForTasks] Natural 1! Next roll will be Surreal (disadvantage)`);
+	}
+
+	logger.debug(
+		`[rollForTasks] D20 rolled: ${roll} (${wasLucid ? 'LUCID' : wasSurreal ? 'SURREAL' : 'normal'}) → ${cardCount} cards`
+	);
 	return roll;
 }
 
