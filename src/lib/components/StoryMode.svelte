@@ -24,6 +24,12 @@
 		const cardLog = savedGame.cardLog;
 		const journalEntries = savedGame.journalEntries || [];
 
+		console.log('[StoryMode] Processing saved game:', {
+			totalCards: cardLog.length,
+			totalJournals: journalEntries.length,
+			journalRounds: journalEntries.map(j => j.round)
+		});
+
 		// Filter out non-card entries (like 'initial-damage', 'final-damage')
 		const cardEntries = cardLog.filter(entry => entry.type !== 'initial-damage' && entry.type !== 'final-damage');
 
@@ -38,11 +44,17 @@
 		}
 
 		// Convert map to array of round objects
-		return Array.from(roundsMap.entries())
+		const rounds = Array.from(roundsMap.entries())
 			.sort((a, b) => a[0] - b[0]) // Sort by round number
 			.map(([roundNum, cards]) => {
 				// Find journal entry for this round
 				const journalEntry = journalEntries.find(j => j.round === roundNum);
+
+				console.log(`[StoryMode] Round ${roundNum}:`, {
+					cardCount: cards.length,
+					hasJournal: !!journalEntry,
+					journalText: journalEntry?.text?.substring(0, 50)
+				});
 
 				// Get game state from the last card in the round (most recent state)
 				const lastCard = cards[cards.length - 1];
@@ -72,6 +84,9 @@
 					}
 				};
 			});
+
+		console.log('[StoryMode] Total enriched rounds:', rounds.length);
+		return rounds;
 	});
 
 	// Get total rounds from enriched data
