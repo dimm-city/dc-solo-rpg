@@ -222,7 +222,27 @@ export async function saveGame(gameState) {
 		// This removes functions and non-cloneable objects that IndexedDB can't handle
 		const cleanedSaveData = JSON.parse(JSON.stringify(saveData));
 
-		await db.put(SAVE_STORE, cleanedSaveData, gameSlug);
+		// Determine save key based on game completion status
+		let saveKey;
+		if (gameState.gameOver && (gameState.win !== undefined)) {
+			// Game is completed - save as completed with timestamp
+			const timestamp = Date.now();
+			saveKey = `${gameSlug}:completed:${timestamp}`;
+
+			// Also clear the active save since game is now completed
+			try {
+				await db.delete(SAVE_STORE, `${gameSlug}:active`);
+				await db.delete(AUDIO_STORE, `${gameSlug}:active`);
+				logger.info(`[saveGame] Cleared active save for completed game ${gameSlug}`);
+			} catch (err) {
+				logger.warn('[saveGame] Could not clear active save:', err);
+			}
+		} else {
+			// Game is in progress - save as active
+			saveKey = `${gameSlug}:active`;
+		}
+
+		await db.put(SAVE_STORE, cleanedSaveData, saveKey);
 
 		// Save audio data separately as Blobs (keyed by round number)
 		const audioData = {};
@@ -236,11 +256,11 @@ export async function saveGame(gameState) {
 		}
 
 		if (Object.keys(audioData).length > 0) {
-			await db.put(AUDIO_STORE, audioData, gameSlug);
-			logger.info(`[saveGame] Saved ${Object.keys(audioData).length} audio recordings`);
+			await db.put(AUDIO_STORE, audioData, saveKey);
+			logger.info(`[saveGame] Saved ${Object.keys(audioData).length} audio recordings for ${saveKey}`);
 		}
 
-		logger.info(`[saveGame] Game saved successfully for ${gameSlug}`);
+		logger.info(`[saveGame] Game saved successfully as ${saveKey}`);
 		return true;
 	} catch (error) {
 		logger.error('[saveGame] Failed to save game:', error);

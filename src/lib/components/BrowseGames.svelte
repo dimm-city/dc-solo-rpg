@@ -17,10 +17,14 @@
 	let isLoading = $state(true);
 	let error = $state(null);
 	let sortBy = $state('recent'); // recent, oldest, won, lost
+	let mounted = $state(false);
 
-	// Load completed games on mount
+	// Load completed games on mount (run only once)
 	$effect(() => {
-		loadCompletedGames();
+		if (!mounted) {
+			mounted = true;
+			loadCompletedGames();
+		}
 	});
 
 	async function loadCompletedGames() {
