@@ -149,6 +149,7 @@
 		align-items: center;
 		justify-content: center;
 
+		opacity: 0.75;
 		backdrop-filter: blur(6px) brightness(0.8);
 		-webkit-backdrop-filter: blur(6px) brightness(0.8);
 	}

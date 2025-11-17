@@ -207,13 +207,46 @@
 
 	<div class="audio-entry-area">
 		<div class="audio-section-header">
-			<span class="audio-icon">🎙️</span>
+			<svg
+				class="audio-header-icon"
+				xmlns="http://www.w3.org/2000/svg"
+				width="16"
+				height="16"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+			>
+				<circle cx="12" cy="10" r="3" />
+				<path d="M9 10v2a3 3 0 006 0v-2" />
+				<path d="M12 15v5" />
+				<path d="M9 20h6" />
+			</svg>
 			<span>Audio Recording (Optional)</span>
 		</div>
 
 		{#if audioError}
 			<div class="audio-error">
-				<span class="error-icon">⚠️</span>
+				<svg
+					class="error-icon"
+					xmlns="http://www.w3.org/2000/svg"
+					width="16"
+					height="16"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				>
+					<path
+						d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+					/>
+					<line x1="12" y1="9" x2="12" y2="13" />
+					<line x1="12" y1="17" x2="12.01" y2="17" />
+				</svg>
 				{audioError}
 			</div>
 		{/if}
@@ -361,18 +394,20 @@
 	.dc-journal-container {
 		display: grid;
 		height: 100%;
-		padding: var(--space-xl);
+		padding: var(--space-md);
 		grid-template-columns: 1fr;
-		grid-template-rows: 1fr auto auto auto;
-		row-gap: var(--space-lg);
+		grid-template-rows: auto 1fr auto auto auto;
+		row-gap: var(--space-md);
 		grid-auto-flow: row;
 		grid-template-areas:
+			'.'
 			'header-area'
 			'text-entry-area'
 			'audio-entry-area'
 			'button-area';
 		box-sizing: border-box;
 		overflow: hidden;
+		align-content: end;
 	}
 
 	.button-area {
@@ -385,9 +420,9 @@
 	.journal-header-area {
 		grid-area: header-area;
 		overflow-y: auto;
-		max-height: 30vh;
+		max-height: 20vh;
 		p {
-			margin: var(--space-sm) 0;
+			margin: var(--space-xs) 0;
 		}
 	}
 
@@ -401,13 +436,13 @@
 	textarea {
 		width: 100%;
 		flex: 1;
-		min-height: 6rem;
-		max-height: 10rem;
+		min-height: 4rem;
+		max-height: 8rem;
 		box-sizing: border-box;
 		resize: vertical;
 		font-family: 'Courier New', monospace;
-		font-size: 1rem;
-		padding: var(--space-md);
+		font-size: 0.875rem;
+		padding: var(--space-sm);
 		background: rgba(0, 0, 0, 0.4);
 		border: 2px solid rgba(0, 255, 255, 0.3);
 		border-radius: 4px;
@@ -437,10 +472,10 @@
 		grid-area: audio-entry-area;
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-md);
-		padding: var(--space-md);
+		gap: var(--space-sm);
+		padding: var(--space-sm);
 		background: rgba(0, 0, 0, 0.3);
-		border: 2px solid rgba(138, 43, 226, 0.3);
+		border: 2px solid rgba(0, 255, 255, 0.3);
 		border-radius: 4px;
 		min-height: 0;
 	}
@@ -448,33 +483,33 @@
 	.audio-section-header {
 		display: flex;
 		align-items: center;
-		gap: var(--space-sm);
-		font-size: 0.875rem;
-		color: rgba(138, 43, 226, 0.9);
+		gap: var(--space-xs);
+		font-size: 0.75rem;
+		color: rgba(0, 255, 255, 0.9);
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
 	}
 
-	.audio-icon {
-		font-size: 1.25rem;
-		filter: drop-shadow(0 0 4px rgba(138, 43, 226, 0.6));
+	.audio-header-icon {
+		flex-shrink: 0;
+		filter: drop-shadow(0 0 4px rgba(0, 255, 255, 0.6));
 	}
 
 	.audio-error {
 		display: flex;
 		align-items: center;
-		gap: var(--space-sm);
-		padding: var(--space-sm);
+		gap: var(--space-xs);
+		padding: var(--space-xs);
 		background: rgba(255, 0, 0, 0.1);
 		border: 1px solid rgba(255, 0, 0, 0.3);
 		border-radius: 4px;
 		color: rgba(255, 100, 100, 0.9);
-		font-size: 0.875rem;
+		font-size: 0.75rem;
 	}
 
 	.error-icon {
-		font-size: 1rem;
+		flex-shrink: 0;
 	}
 
 	/* Audio Buttons */
@@ -482,28 +517,28 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: var(--space-sm);
-		padding: var(--space-md) var(--space-lg);
-		background: linear-gradient(135deg, rgba(138, 43, 226, 0.2), rgba(75, 0, 130, 0.3));
-		border: 2px solid rgba(138, 43, 226, 0.5);
+		gap: var(--space-xs);
+		padding: var(--space-sm) var(--space-md);
+		background: linear-gradient(135deg, rgba(0, 255, 255, 0.15), rgba(0, 139, 139, 0.25));
+		border: 2px solid rgba(0, 255, 255, 0.4);
 		border-radius: 4px;
-		color: rgba(186, 85, 211, 1);
+		color: rgba(0, 255, 255, 1);
 		font-family: 'Courier New', monospace;
-		font-size: 0.875rem;
+		font-size: 0.75rem;
 		font-weight: 600;
 		cursor: pointer;
 		transition: all 0.3s ease;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
-		min-height: 44px;
+		min-height: 36px;
 	}
 
 	.audio-button:hover:not(:disabled) {
-		background: linear-gradient(135deg, rgba(138, 43, 226, 0.3), rgba(75, 0, 130, 0.4));
-		border-color: rgba(186, 85, 211, 0.8);
+		background: linear-gradient(135deg, rgba(0, 255, 255, 0.25), rgba(0, 139, 139, 0.35));
+		border-color: rgba(0, 255, 255, 0.7);
 		box-shadow:
-			0 0 15px rgba(138, 43, 226, 0.4),
-			inset 0 0 10px rgba(138, 43, 226, 0.1);
+			0 0 15px rgba(0, 255, 255, 0.4),
+			inset 0 0 10px rgba(0, 255, 255, 0.1);
 		transform: translateY(-2px);
 	}
 
@@ -530,15 +565,15 @@
 	.recording-controls {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-md);
+		gap: var(--space-sm);
 		align-items: center;
 	}
 
 	.recording-indicator {
 		display: flex;
 		align-items: center;
-		gap: var(--space-md);
-		padding: var(--space-md);
+		gap: var(--space-sm);
+		padding: var(--space-sm);
 		background: rgba(220, 20, 60, 0.1);
 		border: 2px solid rgba(220, 20, 60, 0.4);
 		border-radius: 4px;
@@ -606,36 +641,36 @@
 	.playback-controls {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-md);
+		gap: var(--space-sm);
 	}
 
 	.audio-info {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		padding: var(--space-sm) var(--space-md);
-		background: rgba(138, 43, 226, 0.1);
-		border: 1px solid rgba(138, 43, 226, 0.3);
+		padding: var(--space-xs) var(--space-sm);
+		background: rgba(0, 255, 255, 0.1);
+		border: 1px solid rgba(0, 255, 255, 0.3);
 		border-radius: 4px;
 	}
 
 	.audio-duration {
 		font-family: 'Courier New', monospace;
-		font-size: 1rem;
-		color: rgba(186, 85, 211, 1);
+		font-size: 0.875rem;
+		color: rgba(0, 255, 255, 1);
 		font-weight: 700;
 		letter-spacing: 0.1em;
 	}
 
 	.audio-status {
-		font-size: 0.875rem;
-		color: rgba(186, 85, 211, 0.8);
+		font-size: 0.75rem;
+		color: rgba(0, 255, 255, 0.8);
 		font-style: italic;
 	}
 
 	.playback-buttons {
 		display: flex;
-		gap: var(--space-md);
+		gap: var(--space-sm);
 		width: 100%;
 	}
 
@@ -673,26 +708,26 @@
 	/* Responsive Design */
 	@media (max-width: 640px) {
 		.dc-journal-container {
-			padding: var(--space-md);
-			row-gap: var(--space-md);
+			padding: var(--space-sm);
+			row-gap: var(--space-sm);
 		}
 
 		.audio-entry-area {
-			padding: var(--space-sm);
+			padding: var(--space-xs);
 		}
 
 		.audio-section-header {
-			font-size: 0.75rem;
+			font-size: 0.7rem;
 		}
 
 		.audio-button {
-			padding: var(--space-sm) var(--space-md);
-			font-size: 0.75rem;
-			min-height: 40px;
+			padding: var(--space-xs) var(--space-sm);
+			font-size: 0.7rem;
+			min-height: 32px;
 		}
 
 		.recording-time {
-			font-size: 1rem;
+			font-size: 0.875rem;
 		}
 
 		.playback-buttons {
@@ -706,27 +741,27 @@
 
 	@media (max-height: 700px) {
 		.dc-journal-container {
-			padding: var(--space-md);
-			row-gap: var(--space-sm);
+			padding: var(--space-sm);
+			row-gap: var(--space-xs);
 		}
 
 		.journal-header-area {
-			max-height: 20vh;
+			max-height: 15vh;
 		}
 
 		textarea {
-			min-height: 4rem;
-			max-height: 6rem;
+			min-height: 3rem;
+			max-height: 5rem;
 		}
 
 		.audio-entry-area {
-			padding: var(--space-sm);
+			padding: var(--space-xs);
 		}
 
 		.audio-button {
-			padding: var(--space-sm);
-			font-size: 0.75rem;
-			min-height: 36px;
+			padding: var(--space-xs);
+			font-size: 0.7rem;
+			min-height: 32px;
 		}
 	}
 </style>

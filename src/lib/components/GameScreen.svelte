@@ -78,8 +78,8 @@
 				return null; // No background text for card drawing
 			case 'failureCheck':
 				return {
-					title: 'Damage Check',
-					description: 'An odd card demands a price. Roll to see how much damage you take.',
+					title: 'Stability Check',
+					description: 'An odd card demands a price. Roll to see how much stability you lose.',
 					showStats: true
 				};
 			case 'successCheck':

@@ -88,11 +88,11 @@
 					</div>
 				{/if}
 
-				<!-- Damage Roll Result (if this card triggered a damage check) -->
+				<!-- Stability Roll Result (if this card triggered a stability check) -->
 				{#if card.damageRoll !== undefined}
 					<div class="damage-roll-result">
 						<div class="roll-header">
-							<span class="roll-label">Damage Check</span>
+							<span class="roll-label">Stability Check</span>
 						</div>
 						<div class="roll-details">
 							<div class="roll-die">

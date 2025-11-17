@@ -65,12 +65,20 @@
 		return stability >= 10 ? '#00ff88' : '#ff0055';
 	});
 
-	// Binary pips - convert dice roll to 5-bit binary representation
-	const binaryPips = $derived(() => {
+	// Dice pips - convert dice roll to 5 pips (dice pattern)
+	// Pips are arranged like 5 on a six-sided die: 4 corners + 1 center
+	const dicePips = $derived(() => {
 		const roll = gameState.diceRoll || 0;
-		// Convert to binary and pad to 5 bits (max value is 20 = 10100)
+		// Create array of 5 boolean values - which pips are active based on the roll value
+		const pips = [false, false, false, false, false];
+
+		// Map d20 roll to pip pattern (0-20 range, using 5-bit binary)
 		const binary = roll.toString(2).padStart(5, '0');
-		return binary.split('').map((bit) => bit === '1');
+		for (let i = 0; i < 5; i++) {
+			pips[i] = binary[i] === '1';
+		}
+
+		return pips;
 	});
 
 	// Modifier state display
@@ -262,16 +270,45 @@
 				</div>
 				{#if modifierState()}
 					<div class="modifier-state" style="color: {modifierColor()}">
-						{modifierState()}
+						{#if gameState.isLucid}
+							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+								<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+								<polyline points="16 7 22 7 22 13"></polyline>
+							</svg>
+						{:else if gameState.isSurreal}
+							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+								<polyline points="22 17 13.5 8.5 8.5 13.5 2 7"></polyline>
+								<polyline points="16 17 22 17 22 11"></polyline>
+							</svg>
+						{/if}
 					</div>
 				{/if}
 				<div class="dice-value">{gameState.diceRoll}</div>
-				<div class="dice-pips binary-pips">
-					{#each binaryPips() as bit, i (i)}
-						<span class="binary-pip" class:active={bit}>
-							<span class="pip-inner"></span>
+				<div class="dice-pips">
+					<!-- Top row -->
+					<div class="pip-row">
+						<span class="dice-pip" class:active={dicePips()[0]} style="--pip-delay: 0ms">
+							<span class="pip-dot"></span>
 						</span>
-					{/each}
+						<span class="dice-pip" class:active={dicePips()[1]} style="--pip-delay: 150ms">
+							<span class="pip-dot"></span>
+						</span>
+					</div>
+					<!-- Center row -->
+					<div class="pip-row center-row">
+						<span class="dice-pip center-pip" class:active={dicePips()[2]} style="--pip-delay: 300ms">
+							<span class="pip-dot"></span>
+						</span>
+					</div>
+					<!-- Bottom row -->
+					<div class="pip-row">
+						<span class="dice-pip" class:active={dicePips()[3]} style="--pip-delay: 450ms">
+							<span class="pip-dot"></span>
+						</span>
+						<span class="dice-pip" class:active={dicePips()[4]} style="--pip-delay: 600ms">
+							<span class="pip-dot"></span>
+						</span>
+					</div>
 				</div>
 			</div>
 
@@ -314,26 +351,25 @@
 				style="animation-delay: 0.55s; animation-duration: 0.85s"
 			>
 				<div class="stat-label">
-					<svg
-						class="stat-icon"
-						xmlns="http://www.w3.org/2000/svg"
-						width="16"
-						height="16"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					>
-						<path
-							d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"
-						/>
-						<path d="M20 2v4" />
-						<path d="M22 4h-4" />
-						<circle cx="4" cy="20" r="2" />
+					ABILITIES
+				</div>
+				<div class="ability-icons">
+					<!-- Sparkles - Luck/Fortune -->
+					<svg class="ability-icon" class:active={bonusPercent >= 1} xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/>
 					</svg>
-					LUCK
+					<!-- Shield - Protection/Defense -->
+					<svg class="ability-icon" class:active={bonusPercent >= 2} xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>
+					</svg>
+					<!-- Heart - Health/Resilience -->
+					<svg class="ability-icon" class:active={bonusPercent >= 3} xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+					</svg>
+					<!-- Zap - Energy/Action -->
+					<svg class="ability-icon" class:active={bonusPercent >= 4} xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>
+					</svg>
 				</div>
 				<div class="stat-value">
 					<span class="current">{bonusPercent}</span><span class="divider">/</span><span class="max"
@@ -565,12 +601,14 @@
 		display: flex;
 		gap: 0.5rem;
 		text-transform: uppercase;
+		justify-content: center;
 	}
 
 	.info-segment:first-of-type {
 		display: flex;
 		flex-direction: column;
 		gap: 0;
+		justify-content: center;
 	}
 
 	.info-segment .label {
@@ -1517,12 +1555,14 @@
 
 		.info-segment {
 			gap: 2px;
+			justify-content: center;
 		}
 
 		.info-segment:first-of-type {
 			flex-direction: column;
 			align-items: flex-start;
 			margin-inline-start: var(--space-md);
+			justify-content: center;
 		}
 
 		.info-segment .label {
@@ -1733,6 +1773,101 @@
 			transition: none !important;
 			animation: none !important;
 			opacity: 1 !important;
+		}
+	}
+
+	/* Dice pips styles */
+	.pip-row {
+		display: flex;
+		gap: 8px;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	.pip-row.center-row {
+		justify-content: center;
+	}
+
+	.dice-pip {
+		width: 6px;
+		height: 6px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		position: relative;
+		opacity: 0.3;
+		transition: opacity 0.3s ease;
+	}
+
+	.dice-pip.active {
+		opacity: 1;
+	}
+
+	.pip-dot {
+		width: 100%;
+		height: 100%;
+		border-radius: 50%;
+		background: transparent;
+		border: 1px solid rgba(0, 255, 255, 0.4);
+		transition: all 0.3s ease;
+	}
+
+	.dice-pip.active .pip-dot {
+		background: linear-gradient(135deg, #00eeff, #d946ef);
+		border-color: rgba(0, 255, 255, 1);
+		box-shadow:
+			0 0 6px rgba(0, 255, 255, 0.8),
+			inset 0 0 3px rgba(255, 255, 255, 0.4);
+		animation: pip-pulse 2s ease-in-out infinite;
+		animation-delay: var(--pip-delay, 0ms);
+	}
+
+	@keyframes pip-pulse {
+		0%,
+		100% {
+			opacity: 1;
+			transform: scale(1);
+			box-shadow:
+				0 0 6px rgba(0, 255, 255, 0.8),
+				inset 0 0 3px rgba(255, 255, 255, 0.4);
+		}
+		50% {
+			opacity: 0.7;
+			transform: scale(0.9);
+			box-shadow:
+				0 0 4px rgba(0, 255, 255, 0.5),
+				inset 0 0 2px rgba(255, 255, 255, 0.2);
+		}
+	}
+
+	/* Ability icons */
+	.ability-icons {
+		display: flex;
+		gap: 6px;
+		justify-content: center;
+		align-items: center;
+		margin-top: 4px;
+	}
+
+	.ability-icon {
+		opacity: 0.3;
+		transition: all 0.3s ease;
+		filter: drop-shadow(0 0 2px rgba(0, 255, 255, 0.3));
+	}
+
+	.ability-icon.active {
+		opacity: 1;
+		filter: drop-shadow(0 0 4px rgba(0, 255, 255, 0.8));
+		animation: ability-glow 2s ease-in-out infinite;
+	}
+
+	@keyframes ability-glow {
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.7;
 		}
 	}
 </style>
