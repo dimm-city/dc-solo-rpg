@@ -332,7 +332,12 @@
 
 	async function handleJournalExit() {
 		await exitGame();
-		goto('/'); // Navigate back to home page
+		// Full page reload to ensure clean state
+		if (typeof window !== 'undefined') {
+			window.location.href = '/';
+		} else {
+			goto('/');
+		}
 	}
 
 	// Show mini HUD during card-related screens
