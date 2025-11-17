@@ -277,10 +277,11 @@ export async function loadGame(gameSlug) {
 	try {
 		const db = await initDB();
 
-		// Load game state
-		const saveData = await db.get(SAVE_STORE, gameSlug);
+		// Load active game state (in-progress saves only)
+		const saveKey = `${gameSlug}:active`;
+		const saveData = await db.get(SAVE_STORE, saveKey);
 		if (!saveData) {
-			logger.debug(`[loadGame] No saved game found for ${gameSlug}`);
+			logger.debug(`[loadGame] No active saved game found for ${gameSlug}`);
 			return null;
 		}
 
@@ -292,7 +293,7 @@ export async function loadGame(gameSlug) {
 		}
 
 		// Load audio data
-		const audioData = (await db.get(AUDIO_STORE, gameSlug)) || {};
+		const audioData = (await db.get(AUDIO_STORE, saveKey)) || {};
 
 		// Restore audio data to journal entries
 		if (saveData.journalEntries) {
@@ -319,14 +320,15 @@ export async function loadGame(gameSlug) {
 }
 
 /**
- * Check if a saved game exists
+ * Check if a saved game exists (active/in-progress save only)
  * @param {string} gameSlug - Game slug or identifier
- * @returns {Promise<boolean>} True if a save exists
+ * @returns {Promise<boolean>} True if an active save exists
  */
 export async function hasSavedGame(gameSlug) {
 	try {
 		const db = await initDB();
-		const saveData = await db.get(SAVE_STORE, gameSlug);
+		const saveKey = `${gameSlug}:active`;
+		const saveData = await db.get(SAVE_STORE, saveKey);
 		return saveData !== undefined;
 	} catch (error) {
 		logger.error('[hasSavedGame] Error checking for saved game:', error);
@@ -335,14 +337,15 @@ export async function hasSavedGame(gameSlug) {
 }
 
 /**
- * Get saved game metadata without loading full state
+ * Get saved game metadata without loading full state (active/in-progress save only)
  * @param {string} gameSlug - Game slug or identifier
  * @returns {Promise<object|null>} Save metadata (timestamp, playerName, etc.)
  */
 export async function getSaveMetadata(gameSlug) {
 	try {
 		const db = await initDB();
-		const saveData = await db.get(SAVE_STORE, gameSlug);
+		const saveKey = `${gameSlug}:active`;
+		const saveData = await db.get(SAVE_STORE, saveKey);
 
 		if (!saveData) {
 			return null;
@@ -364,16 +367,22 @@ export async function getSaveMetadata(gameSlug) {
 }
 
 /**
- * Load all saved games from IndexedDB
- * @returns {Promise<Array>} Array of all saved games
+ * Load all completed games from IndexedDB (excludes active/in-progress saves)
+ * @returns {Promise<Array>} Array of all completed games
  */
 export async function loadAllSaves() {
 	try {
 		const db = await initDB();
 		const allKeys = await db.getAllKeys(SAVE_STORE);
-		const allSaves = [];
+		const completedSaves = [];
 
 		for (const key of allKeys) {
+			// Only load completed saves (format: gameSlug:completed:timestamp)
+			// Skip active saves (format: gameSlug:active)
+			if (!key.includes(':completed:')) {
+				continue;
+			}
+
 			const saveData = await db.get(SAVE_STORE, key);
 			if (saveData) {
 				// Load audio data if it exists
@@ -389,15 +398,22 @@ export async function loadAllSaves() {
 					}
 				}
 
-				allSaves.push({
+				// Parse key to extract game slug and timestamp
+				// Format: "gameSlug:completed:timestamp"
+				const keyParts = key.split(':');
+				const timestamp = keyParts.length >= 3 ? parseInt(keyParts[keyParts.length - 1]) : Date.now();
+
+				completedSaves.push({
 					id: key,
+					gameSlug: keyParts[0],
+					completedAt: timestamp,
 					...saveData
 				});
 			}
 		}
 
-		logger.info(`[loadAllSaves] Loaded ${allSaves.length} saves with audio data`);
-		return allSaves;
+		logger.info(`[loadAllSaves] Loaded ${completedSaves.length} completed games with audio data`);
+		return completedSaves;
 	} catch (error) {
 		logger.error('[loadAllSaves] Failed to load all saves:', error);
 		return [];
@@ -405,16 +421,17 @@ export async function loadAllSaves() {
 }
 
 /**
- * Clear saved game from IndexedDB
+ * Clear active saved game from IndexedDB (in-progress save only)
  * @param {string} gameSlug - Game slug or identifier
  * @returns {Promise<boolean>} Success status
  */
 export async function clearSave(gameSlug) {
 	try {
 		const db = await initDB();
-		await db.delete(SAVE_STORE, gameSlug);
-		await db.delete(AUDIO_STORE, gameSlug);
-		logger.info(`[clearSave] Saved game cleared for ${gameSlug}`);
+		const saveKey = `${gameSlug}:active`;
+		await db.delete(SAVE_STORE, saveKey);
+		await db.delete(AUDIO_STORE, saveKey);
+		logger.info(`[clearSave] Active saved game cleared for ${gameSlug}`);
 		return true;
 	} catch (error) {
 		logger.error('[clearSave] Failed to clear save:', error);
