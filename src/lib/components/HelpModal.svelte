@@ -7,44 +7,49 @@
 	// Define all help content sections
 	const helpSections = [
 		{
-			title: 'Health (Tower)',
+			title: 'Stability (Your Life)',
 			message:
-				'Your Tower represents your health. Each time you take damage, blocks fall from the Tower. If it reaches 0, you lose the game. Start with 54 blocks (on normal difficulty).'
+				'Stability represents your mental and physical state. You start with 20 Stability. Failing challenges causes you to lose Stability. If it reaches 0, you lose the game.'
+		},
+		{
+			title: 'Tokens (Path to Victory)',
+			message:
+				'You start with 10 Tokens. Your goal is to remove all tokens to escape. Draw the Ace of Hearts to unlock Salvation checks. Each Ace you reveal makes success easier. Remove all tokens to win!'
+		},
+		{
+			title: 'Abilities (Aces)',
+			message:
+				'Narrative cards (Aces) are powerful abilities. Each Ace you reveal improves your chances in Salvation checks. With 1 Ace: 20% success. With 2 Aces: 35% success. With 3 Aces: 50% success. With 4 Aces: automatic success!'
 		},
 		{
 			title: 'Failure Counter (Kings)',
 			message:
-				"Kings are your doom. Each time you reveal a King, you're one step closer to failure. Reveal all 4 Kings and the game ends immediately in defeat."
+				"Kings represent looming doom. Each King revealed brings you closer to failure. Reveal all 4 Kings and the game ends immediately in defeat."
 		},
 		{
-			title: 'Luck (Bonus)',
+			title: 'Lucid & Surreal States',
 			message:
-				'Luck tokens reduce damage you take. Each Luck token absorbs one point of damage when you fail a challenge. Gain Luck by drawing Narrative cards (Aces).'
-		},
-		{
-			title: 'Success (Tokens)',
-			message:
-				'Tokens are your path to victory. You need 10 tokens to attempt the final challenge. Gain tokens through Narrative (Bonus) cards. With 10 tokens, drawing the Ace of Hearts lets you roll for victory.'
+				'Roll a natural 20 to gain Lucid (advantage on next roll). Roll a natural 1 to gain Surreal (disadvantage on next roll). These states add tactical depth to your decisions.'
 		},
 		{
 			title: 'Card Types',
 			message:
-				'Challenge cards (odd ranks: 3, 5, 7, 9) trigger damage rolls. Event cards (even ranks: 2, 4, 6, 8, 10, J, Q) are safe moments. Narrative cards (Aces) give bonuses. Kings are threats. The Ace of Hearts is your win condition.'
+				'Challenge cards (odd ranks: 3, 5, 7, 9) trigger Stability checks. Event cards (even ranks: 2, 4, 6, 8, 10, J, Q) are safe moments. Narrative cards (Aces) improve your abilities. Kings are threats. The Ace of Hearts unlocks Salvation.'
 		},
 		{
 			title: 'The Deck',
 			message:
-				"You play with a standard 52-card deck. Watch the deck shrink as you progress through your journey. Each card contains a new challenge, story moment, or turning point. The progress bar shows how many cards you've drawn - every card brings you closer to victory or defeat."
+				"You play with a standard 52-card deck. Each round, roll a d20 to determine how many cards to draw. The deck shrinks as your journey progresses. Watch the progress bar to see how close you are to the end."
 		},
 		{
 			title: 'How to Win',
 			message:
-				'Collect 10 tokens by drawing Narrative cards. Then, if you draw the Ace of Hearts, you can attempt the final challenge by rolling dice. Roll higher than your remaining tower blocks to win.'
+				'Draw the Ace of Hearts to unlock Salvation checks. Collect more Aces to improve your success rate. Successfully remove all 10 tokens through Salvation checks to escape and win!'
 		},
 		{
 			title: 'How to Lose',
 			message:
-				'You lose if your Tower (health) reaches 0 from failed challenges, or if you reveal all 4 Kings. Manage your resources carefully to survive until you can attempt victory.'
+				'You lose if your Stability reaches 0 from failed challenges, or if you reveal all 4 Kings. Manage your resources and states carefully to survive until you can achieve victory.'
 		}
 	];
 </script>
