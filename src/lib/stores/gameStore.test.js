@@ -20,10 +20,13 @@ describe('gameStore', () => {
 		it('should have correct initial state values', () => {
 			expect(gameState.state).toBe('loadGame');
 			expect(gameState.playerName).toBe('');
-			expect(gameState.tower).toBe(54);
+			expect(gameState.tower).toBe(20); // D20 system: starts at 20 Stability
 			expect(gameState.tokens).toBe(10);
 			expect(gameState.round).toBe(0);
 			expect(gameState.kingsRevealed).toBe(0);
+			expect(gameState.acesRevealed).toBe(0); // D20 system: tracks Aces for Salvation
+			expect(gameState.isLucid).toBe(false); // D20 system: advantage state
+			expect(gameState.isSurreal).toBe(false); // D20 system: disadvantage state
 			expect(gameState.gameOver).toBe(false);
 			expect(gameState.win).toBe(false);
 		});
@@ -65,7 +68,7 @@ describe('gameStore', () => {
 		it('should return game statistics', () => {
 			const stats = getGameStats();
 			expect(stats).toEqual({
-				tower: 54,
+				tower: 20, // D20 system: 20 Stability
 				tokens: 10,
 				round: 0,
 				cardsRemaining: 0
@@ -83,7 +86,7 @@ describe('gameStore', () => {
 	describe('getHasWon', () => {
 		beforeEach(() => {
 			gameState.tokens = 10;
-			gameState.tower = 54;
+			gameState.tower = 20; // D20 system: 20 Stability
 		});
 
 		it('should return true when tokens are 0 and tower > 0', () => {
@@ -107,7 +110,7 @@ describe('gameStore', () => {
 
 	describe('getHasLost', () => {
 		beforeEach(() => {
-			gameState.tower = 54;
+			gameState.tower = 20; // D20 system: 20 Stability
 			gameState.kingsRevealed = 0;
 		});
 
@@ -172,8 +175,8 @@ describe('gameStore', () => {
 
 	describe('validateTransition', () => {
 		it('should allow valid transitions', () => {
-			expect(() => validateTransition('loadGame', 'options')).not.toThrow();
-			expect(() => validateTransition('intro', 'rollForTasks')).not.toThrow();
+			expect(() => validateTransition('loadGame', 'showIntro')).not.toThrow();
+			expect(() => validateTransition('showIntro', 'initialDamageRoll')).not.toThrow();
 			expect(() => validateTransition('rollForTasks', 'drawCard')).not.toThrow();
 		});
 
@@ -208,8 +211,8 @@ describe('gameStore', () => {
 		});
 
 		it('should update state for valid transitions', () => {
-			transitionTo('options');
-			expect(gameState.state).toBe('options');
+			transitionTo('showIntro');
+			expect(gameState.state).toBe('showIntro');
 		});
 
 		it('should throw error for invalid transitions', () => {
@@ -219,11 +222,11 @@ describe('gameStore', () => {
 		});
 
 		it('should allow chained valid transitions', () => {
-			transitionTo('options');
-			expect(gameState.state).toBe('options');
+			transitionTo('showIntro');
+			expect(gameState.state).toBe('showIntro');
 
-			transitionTo('intro');
-			expect(gameState.state).toBe('intro');
+			transitionTo('initialDamageRoll');
+			expect(gameState.state).toBe('initialDamageRoll');
 
 			transitionTo('rollForTasks');
 			expect(gameState.state).toBe('rollForTasks');
@@ -232,31 +235,31 @@ describe('gameStore', () => {
 
 	describe('updateGameState', () => {
 		beforeEach(() => {
-			gameState.tower = 54;
+			gameState.tower = 20; // D20 system: 20 Stability
 			gameState.tokens = 10;
 			gameState.round = 0;
 		});
 
 		it('should update single property', () => {
-			updateGameState({ tower: 50 });
-			expect(gameState.tower).toBe(50);
+			updateGameState({ tower: 15 });
+			expect(gameState.tower).toBe(15);
 		});
 
 		it('should update multiple properties', () => {
 			updateGameState({
-				tower: 40,
+				tower: 12,
 				tokens: 8,
 				round: 1
 			});
 
-			expect(gameState.tower).toBe(40);
+			expect(gameState.tower).toBe(12);
 			expect(gameState.tokens).toBe(8);
 			expect(gameState.round).toBe(1);
 		});
 
 		it('should not affect unspecified properties', () => {
 			const originalTokens = gameState.tokens;
-			updateGameState({ tower: 45 });
+			updateGameState({ tower: 15 });
 			expect(gameState.tokens).toBe(originalTokens);
 		});
 
@@ -267,14 +270,71 @@ describe('gameStore', () => {
 		});
 	});
 
-	describe('getRandomNumber', () => {
-		it('should return a number between 1 and 6', () => {
-			for (let i = 0; i < 100; i++) {
-				const num = gameState.getRandomNumber();
-				expect(num).toBeGreaterThanOrEqual(1);
-				expect(num).toBeLessThanOrEqual(6);
-				expect(Number.isInteger(num)).toBe(true);
-			}
+	describe('D20 Mechanics - Lucid and Surreal States', () => {
+		beforeEach(() => {
+			gameState.isLucid = false;
+			gameState.isSurreal = false;
+		});
+
+		it('should track Lucid state (advantage)', () => {
+			updateGameState({ isLucid: true });
+			expect(gameState.isLucid).toBe(true);
+			expect(gameState.isSurreal).toBe(false);
+		});
+
+		it('should track Surreal state (disadvantage)', () => {
+			updateGameState({ isSurreal: true });
+			expect(gameState.isSurreal).toBe(true);
+			expect(gameState.isLucid).toBe(false);
+		});
+
+		it('should allow clearing Lucid state', () => {
+			gameState.isLucid = true;
+			updateGameState({ isLucid: false });
+			expect(gameState.isLucid).toBe(false);
+		});
+
+		it('should allow clearing Surreal state', () => {
+			gameState.isSurreal = true;
+			updateGameState({ isSurreal: false });
+			expect(gameState.isSurreal).toBe(false);
+		});
+
+		it('should have rollWithModifiers function', () => {
+			expect(typeof gameState.rollWithModifiers).toBe('function');
+		});
+
+		it('should roll normally when neither Lucid nor Surreal', () => {
+			const result = gameState.rollWithModifiers();
+
+			expect(result.roll).toBeGreaterThanOrEqual(1);
+			expect(result.roll).toBeLessThanOrEqual(20);
+			expect(result.wasLucid).toBe(false);
+			expect(result.wasSurreal).toBe(false);
+		});
+	});
+
+	describe('D20 Mechanics - Aces Tracking', () => {
+		beforeEach(() => {
+			gameState.acesRevealed = 0;
+		});
+
+		it('should track number of Aces revealed', () => {
+			updateGameState({ acesRevealed: 1 });
+			expect(gameState.acesRevealed).toBe(1);
+
+			updateGameState({ acesRevealed: 2 });
+			expect(gameState.acesRevealed).toBe(2);
+
+			updateGameState({ acesRevealed: 3 });
+			expect(gameState.acesRevealed).toBe(3);
+
+			updateGameState({ acesRevealed: 4 });
+			expect(gameState.acesRevealed).toBe(4);
+		});
+
+		it('should initialize at 0', () => {
+			expect(gameState.acesRevealed).toBe(0);
 		});
 	});
 
