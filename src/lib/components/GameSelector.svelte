@@ -14,7 +14,8 @@
 		games = [],
 		selectedGame = $bindable(null), //games.find((g) => g.title == gameConfig.title);
 		selectedPlayer = $bindable(null), // players?.find((p) => p.name == gameState.player);
-		ongameselected = () => {}
+		ongameselected = () => {},
+		onbrowsestories = () => {} // Callback when user wants to browse completed games
 	} = $props();
 
 	let status = $state('');
@@ -217,6 +218,15 @@
 		{/if}
 	</div>
 
+	<!-- Browse Completed Games -->
+	<div class="browse-section">
+		<AugmentedButton
+			text="Browse Story Library"
+			onclick={onbrowsestories}
+			style="secondary"
+		/>
+	</div>
+
 	{#if savedGameExists && saveMetadata}
 		<div class="saved-game-panel">
 			<h4>Saved Game Found</h4>
@@ -269,7 +279,16 @@
 		flex-wrap: wrap;
 		padding: 0.5rem 0;
 		border-top: 1px solid rgba(0, 255, 255, 0.2);
-		border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+		margin: 0.5rem 0;
+	}
+
+	.browse-section {
+		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+		padding: 0.5rem 0;
+		border-top: 1px solid rgba(138, 43, 226, 0.3);
+		border-bottom: 1px solid rgba(138, 43, 226, 0.3);
 		margin: 0.5rem 0;
 	}
 

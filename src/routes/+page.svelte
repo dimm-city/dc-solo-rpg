@@ -8,6 +8,8 @@
 	import HelpModal from '$lib/components/HelpModal.svelte';
 	import Splash from '$lib/components/Splash.svelte';
 	import NeuralBackground from '$lib/components/NeuralBackground.svelte';
+	import BrowseGames from '$lib/components/BrowseGames.svelte';
+	import StoryMode from '$lib/components/StoryMode.svelte';
 	import { Difficulty } from '$lib/configuration/DifficultyLevels.js';
 	import { getAllDiceThemes } from '$lib/configuration/DiceThemes.js';
 	import {
@@ -45,6 +47,10 @@
 	let gameSaveData = $state({});
 	let showDeleteModal = $state(false);
 	let gameToDelete = $state(null);
+	// Story mode state
+	let showBrowseGames = $state(false);
+	let showStoryMode = $state(false);
+	let selectedStoryGame = $state(null);
 
 	// Settings state
 	let selectedDifficulty = $state(Difficulty.NORMAL);
@@ -324,6 +330,29 @@
 		}
 	}
 
+	// Story mode handlers
+	function handleBrowseStories() {
+		showBrowseGames = true;
+		showStoryMode = false;
+		showMobileMenu = false;
+	}
+
+	function handleSelectStoryGame(game) {
+		selectedStoryGame = game;
+		showBrowseGames = false;
+		showStoryMode = true;
+	}
+
+	function handleExitBrowseGames() {
+		showBrowseGames = false;
+		selectedStoryGame = null;
+	}
+
+	function handleExitStoryMode() {
+		showStoryMode = false;
+		showBrowseGames = true;
+	}
+
 	// Game descriptions/subtitles for enhanced UI
 	const gameDescriptions = {
 		'artful-detective': 'Solve mysteries in a noir-cyberpunk city',
@@ -416,7 +445,12 @@
 	</section>
 {/if}
 
-{#if showContent}
+<!-- Story Mode Views -->
+{#if showStoryMode && selectedStoryGame}
+	<StoryMode savedGame={selectedStoryGame} onExit={handleExitStoryMode} />
+{:else if showBrowseGames}
+	<BrowseGames onSelectGame={handleSelectStoryGame} onBack={handleExitBrowseGames} />
+{:else if showContent}
 	<section class="form-container" data-testid="home-page" transition:fade={{ duration: 600 }}>
 		<!-- Hidden file input -->
 		<input
@@ -456,6 +490,27 @@
 						<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
 						<polyline points="17 8 12 3 7 8"></polyline>
 						<line x1="12" x2="12" y1="3" y2="15"></line>
+					</svg>
+				</button>
+				<button
+					onclick={handleBrowseStories}
+					class="header-button library-button"
+					aria-label="Browse Story Library"
+					title="Browse Story Library"
+				>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="24"
+						height="24"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+						<path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
 					</svg>
 				</button>
 				<button onclick={handleAboutClick} class="header-button" aria-label="About">
@@ -568,6 +623,23 @@
 						<line x1="12" x2="12" y1="3" y2="15"></line>
 					</svg>
 					<span>Upload Game</span>
+				</button>
+				<button class="mobile-menu-item" onclick={handleBrowseStories}>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="20"
+						height="20"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+						<path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+					</svg>
+					<span>Story Library</span>
 				</button>
 				<button class="mobile-menu-item" onclick={handleAboutClick}>
 					<svg
@@ -1102,6 +1174,14 @@
 	}
 
 	.upload-button:hover:not(:disabled) svg {
+		filter: drop-shadow(0 0 8px var(--color-cyber-magenta));
+	}
+
+	.library-button:hover {
+		color: var(--color-cyber-magenta);
+	}
+
+	.library-button:hover svg {
 		filter: drop-shadow(0 0 8px var(--color-cyber-magenta));
 	}
 

@@ -127,6 +127,7 @@ export function drawCard() {
 	if (gameState.deck.length === 0) {
 		gameState.gameOver = true;
 		transitionTo('gameOver');
+		saveGame(gameState);
 		return null;
 	}
 
@@ -138,9 +139,16 @@ export function drawCard() {
 		`[drawCard] Drew ${card.card} of ${card.suit}, cardsToDrawRemaining: ${gameState.cardsToDraw}`
 	);
 
-	// Add to log
+	// Add to log with game state snapshot
 	card.id = `${gameState.round}.${gameState.log.filter((l) => l.round === gameState.round).length + 1}`;
 	card.round = gameState.round;
+	card.gameState = {
+		tower: gameState.tower,
+		tokens: gameState.tokens,
+		bonus: gameState.bonus,
+		kingsRevealed: gameState.kingsRevealed,
+		aceOfHeartsRevealed: gameState.aceOfHeartsRevealed
+	};
 	gameState.log.push(card);
 
 	// Store pending updates (to be applied when card is dismissed)
@@ -164,23 +172,15 @@ export function drawCard() {
 		gameState.pendingUpdates.bonusChange = null;
 	}
 
-	// Check for game over (4 kings) - use pending + current state
+	// Check for game over (4 kings) - mark as pending, don't trigger immediately
 	const totalKings = gameState.kingsRevealed + (gameState.pendingUpdates.kingsChange ? 1 : 0);
 	if (totalKings === 4) {
-		// Apply pending king update before game over
-		if (gameState.pendingUpdates.kingsChange) {
-			gameState.kingsRevealed += 1;
-			const suitKey = `kingOf${gameState.pendingUpdates.kingsSuit.charAt(0).toUpperCase() + gameState.pendingUpdates.kingsSuit.slice(1)}`;
-			gameState[suitKey] = true;
-			gameState.pendingUpdates.kingsChange = null;
-			gameState.pendingUpdates.kingsSuit = null;
-		}
-		gameState.gameOver = true;
-		gameState.win = false;
-		gameState.status = gameState.config.labels.failureCounterLoss;
-		transitionTo('gameOver');
-		saveGame(gameState);
-		return card;
+		// Mark that game will end after this card is confirmed
+		gameState.pendingUpdates.gameOverCondition = {
+			type: 'kingsRevealed',
+			win: false,
+			status: gameState.config.labels.failureCounterLoss
+		};
 	}
 
 	// Auto-save after drawing a card
@@ -208,6 +208,18 @@ export function confirmCard() {
 		gameState.bonus += gameState.pendingUpdates.bonusChange;
 		gameState.pendingUpdates.bonusChange = null;
 		logger.debug('[confirmCard] Applied pending bonus change');
+
+		// Check for all 4 aces revealed (automatic win condition)
+		if (gameState.bonus === 4) {
+			gameState.win = true;
+			gameState.gameOver = true;
+			gameState.status =
+				gameState.config.labels?.successCheckWin ?? 'Victory! All four aces revealed - you have achieved the impossible!';
+			logger.info('[confirmCard] VICTORY - All 4 aces revealed');
+			transitionTo('gameOver');
+			saveGame(gameState);
+			return; // Exit early, no need to continue with card logic
+		}
 	}
 
 	if (gameState.pendingUpdates.kingsChange) {
@@ -217,6 +229,19 @@ export function confirmCard() {
 		gameState.pendingUpdates.kingsChange = null;
 		gameState.pendingUpdates.kingsSuit = null;
 		logger.debug('[confirmCard] Applied pending kings change');
+	}
+
+	// Check for pending game over condition (4 kings, tower collapse, etc.)
+	if (gameState.pendingUpdates.gameOverCondition) {
+		const condition = gameState.pendingUpdates.gameOverCondition;
+		gameState.gameOver = true;
+		gameState.win = condition.win;
+		gameState.status = condition.status;
+		gameState.pendingUpdates.gameOverCondition = null;
+		logger.info(`[confirmCard] Game Over - ${condition.type}`);
+		transitionTo('gameOver');
+		saveGame(gameState);
+		return; // Exit early, game is over
 	}
 
 	// Clear the current card
@@ -297,7 +322,8 @@ export function applyPendingDiceRoll() {
 			...gameState.log.slice(0, -1),
 			{
 				...lastLog,
-				diceRoll: result
+				damageRoll: result,
+				damageDealt: blocksToRemove
 			}
 		];
 	}
@@ -361,10 +387,32 @@ export async function recordRound(journalEntry) {
 		throw new Error('Journal entry object is required');
 	}
 
-	journalEntry.id = gameState.round;
-	journalEntry.round = gameState.round;
-	journalEntry.dateRecorded = journalEntry.dateRecorded || new Date().toISOString();
-	gameState.journalEntries.push(journalEntry);
+	// Check if a journal entry already exists for this round
+	const existingEntry = gameState.journalEntries.find(entry => entry.round === gameState.round);
+	if (existingEntry) {
+		logger.error(`[recordRound] ERROR: Journal entry already exists for round ${gameState.round}. Preventing duplicate.`, {
+			existingEntry,
+			attemptedEntry: journalEntry
+		});
+		console.error(`[recordRound] ERROR: Cannot save journal entry - an entry already exists for round ${gameState.round}. Each round can only have one journal entry.`);
+		return; // Prevent duplicate
+	}
+
+	// Create a new object to avoid mutating the passed reference
+	const newEntry = {
+		round: gameState.round,
+		text: journalEntry.text || '',
+		audioData: journalEntry.audioData || null,
+		dateRecorded: journalEntry.dateRecorded || new Date().toISOString()
+	};
+
+	gameState.journalEntries.push(newEntry);
+	logger.debug(`[recordRound] Saved journal for round ${gameState.round}:`, {
+		round: newEntry.round,
+		hasText: !!newEntry.text,
+		hasAudio: !!newEntry.audioData,
+		totalEntries: gameState.journalEntries.length
+	});
 
 	// Auto-save after recording journal entry (await to ensure save completes)
 	await saveGame(gameState);
