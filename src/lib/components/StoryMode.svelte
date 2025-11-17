@@ -56,10 +56,15 @@
 			roundsMap.get(roundNum).push(cardEntry);
 		}
 
+		// Get win/lose message from game config
+		const winMessage = savedGame.config?.['win-message'] || savedGame.config?.winMessage;
+		const loseMessage = savedGame.config?.['lose-message'] || savedGame.config?.loseMessage;
+		const gameOverMessage = savedGame.isWon ? winMessage : loseMessage;
+
 		// Convert map to array of round objects
 		const rounds = Array.from(roundsMap.entries())
 			.sort((a, b) => a[0] - b[0]) // Sort by round number
-			.map(([roundNum, cards]) => {
+			.map(([roundNum, cards], index, array) => {
 				// Find journal entry for this round
 				const journalEntry = journalEntries.find(j => j.round === roundNum);
 
@@ -71,6 +76,9 @@
 
 				// Get game state from the last card in the round (most recent state)
 				const lastCard = cards[cards.length - 1];
+
+				// Check if this is the final round
+				const isFinalRound = index === array.length - 1;
 
 				return {
 					roundNumber: roundNum,
@@ -94,7 +102,10 @@
 						bonus: 0,
 						kingsRevealed: 0,
 						aceOfHeartsRevealed: false
-					}
+					},
+					// Add game over message to final round
+					gameOverMessage: isFinalRound ? gameOverMessage : null,
+					isWon: savedGame.isWon
 				};
 			});
 

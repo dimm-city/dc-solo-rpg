@@ -136,6 +136,22 @@
 			</div>
 		{/if}
 
+		<!-- Game Over Message (Victory/Loss) -->
+		{#if round.gameOverMessage}
+			<div
+				class="game-over-section"
+				class:victory={round.isWon}
+				data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
+			>
+				<div class="game-over-header">
+					<h3>{round.isWon ? 'Victory' : 'Defeat'}</h3>
+				</div>
+				<div class="game-over-content">
+					<p class="game-over-message">{round.gameOverMessage}</p>
+				</div>
+			</div>
+		{/if}
+
 		<!-- Game State Stats -->
 		{#if showStats && round.gameState}
 			<div class="round-stats" data-augmented-ui="tl-clip tr-clip border">
@@ -504,6 +520,69 @@
 		line-height: 1.8;
 		color: rgba(255, 255, 255, 0.9);
 		white-space: pre-wrap;
+	}
+
+	/* Game Over Section (Victory/Loss Message) */
+	.game-over-section {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-lg);
+		padding: var(--space-xl);
+		background: linear-gradient(135deg, rgba(220, 20, 60, 0.15), rgba(139, 0, 0, 0.2));
+		border: 3px solid rgba(220, 20, 60, 0.6);
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
+		--aug-border-bg: linear-gradient(135deg, rgba(220, 20, 60, 0.3), rgba(139, 0, 0, 0.2));
+		--aug-border: 3px;
+		--aug-border-fallback-color: rgba(220, 20, 60, 0.6);
+		box-shadow: 0 0 25px rgba(220, 20, 60, 0.4);
+	}
+
+	.game-over-section.victory {
+		background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(0, 255, 100, 0.1));
+		border-color: rgba(255, 215, 0, 0.6);
+		--aug-border-bg: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(0, 255, 100, 0.2));
+		--aug-border-fallback-color: rgba(255, 215, 0, 0.6);
+		box-shadow: 0 0 25px rgba(255, 215, 0, 0.4);
+	}
+
+	.game-over-header {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: var(--space-md);
+	}
+
+	.game-over-header h3 {
+		font-family: var(--font-display);
+		font-size: 1.75rem;
+		font-weight: 700;
+		color: rgba(220, 20, 60, 1);
+		text-transform: uppercase;
+		letter-spacing: 0.15em;
+		text-shadow: 0 0 15px rgba(220, 20, 60, 0.8);
+		margin: 0;
+	}
+
+	.game-over-section.victory .game-over-header h3 {
+		color: var(--color-brand-yellow);
+		text-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+	}
+
+	.game-over-content {
+		padding: var(--space-lg);
+		background: rgba(0, 0, 0, 0.4);
+		border-radius: 8px;
+		border: 1px solid rgba(255, 255, 255, 0.1);
+	}
+
+	.game-over-message {
+		font-size: 1.125rem;
+		line-height: 1.7;
+		color: rgba(255, 255, 255, 0.95);
+		font-family: var(--font-body);
+		margin: 0;
+		text-align: center;
 	}
 
 	/* Round Stats */
