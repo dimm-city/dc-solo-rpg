@@ -18,12 +18,14 @@
 	// Reactive derivations
 	let mode = $derived(get(prefsStore).mode);
 	let voiceName = $derived(get(prefsStore).voiceName);
+	let showModeMenu = $state(false);
 
 	function changeMode(newMode: TTSMode) {
 		setRegionMode(regionId, newMode);
 		if (newMode === 'off') {
 			ttsManager.stop(regionId);
 		}
+		showModeMenu = false;
 	}
 
 	function play() {
@@ -39,6 +41,10 @@
 		ttsManager.stop(regionId);
 	}
 
+	function toggleModeMenu() {
+		showModeMenu = !showModeMenu;
+	}
+
 	onDestroy(() => {
 		ttsManager.stop(regionId);
 	});
@@ -46,44 +52,65 @@
 
 <div class="tts-region">
 	<div class="tts-controls">
-		<button type="button" aria-label="Play narration" onclick={play} disabled={mode === 'off'}>
-			▶
+		<button
+			type="button"
+			class="tts-btn play-btn"
+			aria-label="Play narration"
+			onclick={play}
+			disabled={mode === 'off'}
+			title="Play"
+		>
+			<svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
+				<path d="M2 1 L2 9 L8 5 Z" />
+			</svg>
 		</button>
 
-		<button type="button" aria-label="Stop narration" onclick={stop}> ⏹ </button>
+		<button
+			type="button"
+			class="tts-btn stop-btn"
+			aria-label="Stop narration"
+			onclick={stop}
+			title="Stop"
+		>
+			<svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
+				<rect x="2" y="2" width="6" height="6" />
+			</svg>
+		</button>
 
-		<label>
-			<input
-				type="radio"
-				name={`tts-mode-${regionId}`}
-				value="manual"
-				checked={mode === 'manual'}
-				onchange={() => changeMode('manual')}
-			/>
-			Click to play
-		</label>
+		<button
+			type="button"
+			class="tts-btn mode-btn"
+			aria-label="TTS mode"
+			onclick={toggleModeMenu}
+			title="TTS Mode: {mode}"
+		>
+			<svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
+				<circle cx="5" cy="5" r="1.5" />
+				<circle cx="5" cy="5" r="3" fill="none" stroke="currentColor" stroke-width="0.5" />
+			</svg>
+		</button>
 
-		<label>
-			<input
-				type="radio"
-				name={`tts-mode-${regionId}`}
-				value="auto"
-				checked={mode === 'auto'}
-				onchange={() => changeMode('auto')}
-			/>
-			Autoplay
-		</label>
-
-		<label>
-			<input
-				type="radio"
-				name={`tts-mode-${regionId}`}
-				value="off"
-				checked={mode === 'off'}
-				onchange={() => changeMode('off')}
-			/>
-			Off
-		</label>
+		{#if showModeMenu}
+			<div class="mode-menu">
+				<button
+					class="mode-option"
+					class:active={mode === 'manual'}
+					onclick={() => changeMode('manual')}
+				>
+					Manual
+				</button>
+				<button
+					class="mode-option"
+					class:active={mode === 'auto'}
+					onclick={() => changeMode('auto')}
+				>
+					Auto
+				</button>
+				<button class="mode-option" class:active={mode === 'off'} onclick={() => changeMode('off')}>
+					Off
+				</button>
+			</div>
+		{/if}
 	</div>
 
 	<!--
@@ -102,49 +129,100 @@
 	}
 
 	.tts-controls {
+		position: absolute;
+		top: 0;
+		right: 0;
 		display: flex;
-		gap: 0.5rem;
+		gap: 2px;
 		align-items: center;
-		font-size: 0.85rem;
-		opacity: 0.75;
-		margin-bottom: 0.5rem;
+		opacity: 0.15;
+		transition: opacity 0.2s ease;
+		z-index: 10;
 	}
 
-	.tts-controls button {
-		background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(217, 70, 239, 0.1));
-		border: 1px solid var(--color-neon-cyan, #00ffff);
-		color: var(--color-text-primary, #ffffff);
-		padding: 0.25rem 0.5rem;
+	.tts-controls:hover {
+		opacity: 0.8;
+	}
+
+	.tts-btn {
+		background: rgba(0, 0, 0, 0.2);
+		border: none;
+		color: rgba(255, 255, 255, 0.6);
+		padding: 4px;
 		cursor: pointer;
-		font-size: 1rem;
-		transition: all 0.2s;
-		min-width: 2rem;
+		transition: all 0.2s ease;
+		border-radius: 2px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 18px;
+		height: 18px;
 	}
 
-	.tts-controls button:hover:not(:disabled) {
-		background: linear-gradient(135deg, rgba(0, 255, 255, 0.3), rgba(217, 70, 239, 0.2));
-		box-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+	.tts-btn:hover:not(:disabled) {
+		background: rgba(0, 255, 255, 0.15);
+		color: rgba(0, 255, 255, 0.9);
 	}
 
-	.tts-controls button:disabled {
-		opacity: 0.3;
+	.tts-btn:disabled {
+		opacity: 0.2;
 		cursor: not-allowed;
 	}
 
-	.tts-controls label {
-		display: flex;
-		align-items: center;
-		gap: 0.25rem;
-		font-size: 0.8rem;
-		color: var(--color-text-secondary, #cccccc);
-		cursor: pointer;
+	.tts-btn svg {
+		width: 10px;
+		height: 10px;
 	}
 
-	.tts-controls input[type='radio'] {
+	.mode-menu {
+		position: absolute;
+		top: 100%;
+		right: 0;
+		margin-top: 2px;
+		background: rgba(10, 10, 20, 0.95);
+		border: 1px solid rgba(0, 255, 255, 0.2);
+		border-radius: 3px;
+		padding: 2px;
+		display: flex;
+		flex-direction: column;
+		gap: 1px;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+		min-width: 60px;
+	}
+
+	.mode-option {
+		background: transparent;
+		border: none;
+		color: rgba(255, 255, 255, 0.6);
+		padding: 4px 8px;
 		cursor: pointer;
+		font-size: 0.7rem;
+		text-align: left;
+		transition: all 0.15s ease;
+		border-radius: 2px;
+	}
+
+	.mode-option:hover {
+		background: rgba(0, 255, 255, 0.1);
+		color: rgba(0, 255, 255, 0.9);
+	}
+
+	.mode-option.active {
+		background: rgba(0, 255, 255, 0.15);
+		color: rgba(0, 255, 255, 1);
 	}
 
 	.tts-content {
-		margin-top: 0.25rem;
+		position: relative;
+	}
+
+	/* Accessibility - make controls more visible for keyboard users */
+	.tts-controls:focus-within {
+		opacity: 0.9;
+	}
+
+	.tts-btn:focus-visible {
+		outline: 1px solid rgba(0, 255, 255, 0.5);
+		outline-offset: 1px;
 	}
 </style>
