@@ -324,14 +324,15 @@ export function drawCard() {
 	}
 
 	// Track aces - store in pending state
+	// D20 system: Aces modify salvation threshold via acesRevealed counter
 	if (card.card === 'A') {
-		gameState.pendingUpdates.bonusChange = 1;
+		gameState.pendingUpdates.aceChange = 1;
 		if (card.suit === 'hearts') {
 			// Ace of hearts is tracked immediately for game logic
 			gameState.aceOfHeartsRevealed = true;
 		}
 	} else {
-		gameState.pendingUpdates.bonusChange = null;
+		gameState.pendingUpdates.aceChange = null;
 	}
 
 	// Check for game over (4 kings) - use pending + current state
@@ -374,10 +375,11 @@ export function confirmCard() {
 	const card = gameState.currentCard;
 
 	// Apply pending stat updates from the card that was just displayed
-	if (gameState.pendingUpdates.bonusChange) {
-		gameState.bonus += gameState.pendingUpdates.bonusChange;
-		gameState.pendingUpdates.bonusChange = null;
-		logger.debug('[confirmCard] Applied pending bonus change');
+	// D20 system: Aces increment acesRevealed counter (used for salvation threshold)
+	if (gameState.pendingUpdates.aceChange) {
+		gameState.acesRevealed += gameState.pendingUpdates.aceChange;
+		gameState.pendingUpdates.aceChange = null;
+		logger.debug('[confirmCard] Applied pending ace change, acesRevealed now:', gameState.acesRevealed);
 	}
 
 	if (gameState.pendingUpdates.kingsChange) {
@@ -592,23 +594,35 @@ export async function recordRound(journalEntry) {
 
 /**
  * Perform success check
+ * D20 system: Uses Ace-dependent thresholds and graduated token changes
  * @returns {number} Dice roll result
  */
 export function successCheck() {
-	const roll = gameState.getRandomNumber();
+	// Roll d20 with Lucid/Surreal modifiers
+	const { roll, wasLucid, wasSurreal } = gameState.rollWithModifiers();
 
 	// Store pending updates (to be applied after dice animation)
 	gameState.pendingUpdates.diceRoll = roll;
 
-	// Calculate token change but don't apply yet
-	if (roll === 6 || (gameState.config.difficulty > 0 && roll + gameState.bonus === 6)) {
-		gameState.pendingUpdates.tokenChange = -1;
-	} else {
-		gameState.pendingUpdates.tokenChange = 0;
+	// Get threshold based on Aces revealed
+	const threshold = getSalvationThreshold(gameState.acesRevealed);
+
+	// Calculate token change using salvation table
+	const { tokenChange, gainedLucid, gainedSurreal } = calculateSalvationResult(roll, threshold);
+
+	gameState.pendingUpdates.tokenChange = tokenChange;
+
+	// Handle Lucid/Surreal state changes from this roll
+	if (gainedLucid) {
+		gameState.isLucid = true;
+		logger.debug(`[successCheck] Natural 20! Next roll will be Lucid`);
+	} else if (gainedSurreal) {
+		gameState.isSurreal = true;
+		logger.debug(`[successCheck] Natural 1! Next roll will be Surreal`);
 	}
 
 	logger.debug(
-		`[successCheck] Stored pending roll ${roll}, pending token change ${gameState.pendingUpdates.tokenChange}`
+		`[successCheck] D20 roll: ${roll} (${wasLucid ? 'LUCID' : wasSurreal ? 'SURREAL' : 'normal'}), threshold: ${threshold}, pending token change: ${tokenChange}`
 	);
 
 	// Auto-save after success check
@@ -619,6 +633,7 @@ export function successCheck() {
 
 /**
  * Apply pending success check updates after dice animation completes
+ * D20 system: Handles graduated token changes (+2 to -2) and victory when tokens = 0
  */
 export function applyPendingSuccessCheck() {
 	if (gameState.pendingUpdates.diceRoll === null) {
@@ -629,9 +644,12 @@ export function applyPendingSuccessCheck() {
 	// Apply dice roll
 	gameState.diceRoll = gameState.pendingUpdates.diceRoll;
 
-	// Apply token change
+	// Apply token change (can be negative for success, positive for failure)
 	if (gameState.pendingUpdates.tokenChange !== null && gameState.pendingUpdates.tokenChange !== 0) {
 		gameState.tokens += gameState.pendingUpdates.tokenChange;
+
+		// Ensure tokens don't go below 0
+		gameState.tokens = Math.max(gameState.tokens, 0);
 	}
 
 	// Clear pending updates
@@ -645,11 +663,16 @@ export function applyPendingSuccessCheck() {
 
 	// Transition based on token state
 	if (gameState.tokens === 0) {
-		// Per SRD: Don't immediately win - must face final damage roll first
-		logger.debug(
-			'[applyPendingSuccessCheck] All tokens removed, transitioning to final damage roll'
-		);
-		transitionTo('finalDamageRoll');
+		// D20 System: Victory when tokens reach 0 (no final damage roll)
+		gameState.win = true;
+		gameState.gameOver = true;
+		gameState.status =
+			gameState.config.labels?.successCheckWin ?? 'Victory! Against all odds, you escaped.';
+		logger.info('[applyPendingSuccessCheck] VICTORY - All tokens removed');
+		transitionTo('gameOver');
+
+		// Auto-save after victory
+		saveGame(gameState);
 	} else {
 		// Continue the game - start next round
 		startRound();
