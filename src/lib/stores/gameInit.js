@@ -4,20 +4,16 @@
  */
 import { gameState } from './gameStore.svelte.js';
 import { getSettings } from './settingsStore.svelte.js';
+import { shuffleArray } from '../services/random.js';
 
 /**
  * Shuffle array in place using Fisher-Yates algorithm
+ * @deprecated Use shuffleArray from random service instead
  * @param {Array} array - Array to shuffle
  * @returns {Array} Shuffled array
  */
 export function shuffle(array) {
-	let currentIndex = array.length;
-	while (currentIndex !== 0) {
-		const randomIndex = Math.floor(Math.random() * currentIndex);
-		currentIndex -= 1;
-		[array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
-	}
-	return array;
+	return shuffleArray(array);
 }
 
 /**
@@ -41,13 +37,12 @@ export function initializeGame(gameConfig, player, options = {}) {
 	// Load saved settings from localStorage
 	const savedSettings = getSettings();
 
-	// Merge options: saved settings < config options < passed options
-	// This allows passed options to override saved settings
+	// Merge options: config options < saved settings < passed options
+	// Note: Difficulty is controlled by game config, not user settings
 	const finalConfig = {
 		...gameConfig,
 		options: {
 			...gameConfig.options,
-			difficulty: savedSettings.difficulty,
 			dice: savedSettings.diceTheme,
 			...options
 		}
@@ -76,17 +71,17 @@ export function initializeGame(gameConfig, player, options = {}) {
 		round: 1,
 		player,
 		playerName: player.name,
-		tokens: 10,
+		tokens: startingTokens,
 		kingsRevealed: 0,
 		kingOfHearts: false,
 		kingOfDiamonds: false,
 		kingOfClubs: false,
 		kingOfSpades: false,
 		aceOfHeartsRevealed,
+		acesRevealed: aceOfHeartsRevealed ? 1 : 0, // D20 system: Track Aces for salvation threshold
 		gameOver: false,
 		win: false,
-		tower: 54, // Always start at full health, damage applied interactively
-		bonus: aceOfHeartsRevealed ? 1 : 0,
+		tower: 20, // D20 system: Always start at 20 Stability (was 54 in d6 system)
 		log: [],
 		journalEntries: [],
 		cardsToDraw: 0,

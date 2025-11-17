@@ -149,6 +149,7 @@
 		align-items: center;
 		justify-content: center;
 
+		opacity: 0.75;
 		backdrop-filter: blur(6px) brightness(0.8);
 		-webkit-backdrop-filter: blur(6px) brightness(0.8);
 	}
@@ -231,6 +232,8 @@
 			min-height: 60dvh;
 			height: 85dvh;
 			max-height: calc(100dvh - var(--space-md) * 2);
+			/* Shift modal down to avoid covering status display */
+			top: calc(50% + 30px);
 		}
 	}
 
@@ -238,6 +241,8 @@
 		.modal-wrapper {
 			height: 90dvh;
 			max-height: calc(100dvh - var(--space-sm) * 2);
+			/* Shift modal down further on very small screens */
+			top: calc(50% + 35px);
 		}
 	}
 

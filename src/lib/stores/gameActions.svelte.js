@@ -15,6 +15,160 @@ export const services = {
 	gameSettings: null
 };
 
+// ============================================================================
+// D20 Mechanics Helper Functions
+// ============================================================================
+
+/**
+ * Convert d20 roll to number of cards to draw
+ * Per Dimm City D20 Module specification
+ * @param {number} roll - D20 roll result (1-20)
+ * @returns {number} Number of cards to draw (1-6)
+ */
+export function convertD20ToCardCount(roll) {
+	if (roll === 1) return 1;
+	if (roll >= 2 && roll <= 5) return 2;
+	if (roll >= 6 && roll <= 10) return 3;
+	if (roll >= 11 && roll <= 15) return 4;
+	if (roll >= 16 && roll <= 19) return 5;
+	if (roll === 20) return 6;
+
+	// Fallback (should never happen)
+	logger.error(`[convertD20ToCardCount] Invalid roll: ${roll}`);
+	return 3;
+}
+
+/**
+ * Calculate stability loss based on d20 roll
+ * Per Dimm City D20 Module specification
+ * @param {number} roll - D20 roll result (1-20)
+ * @returns {Object} { loss: number, gainedLucid: boolean, gainedSurreal: boolean, optionalGain: number }
+ */
+export function calculateStabilityLoss(roll) {
+	if (roll === 20) {
+		return {
+			loss: 0,
+			gainedLucid: true,
+			gainedSurreal: false,
+			optionalGain: 1 // "optional +1 temp stability"
+		};
+	}
+	if (roll >= 11 && roll <= 19) {
+		return { loss: 0, gainedLucid: false, gainedSurreal: false, optionalGain: 0 };
+	}
+	if (roll >= 6 && roll <= 10) {
+		return { loss: 1, gainedLucid: false, gainedSurreal: false, optionalGain: 0 };
+	}
+	if (roll >= 2 && roll <= 5) {
+		return { loss: 2, gainedLucid: false, gainedSurreal: false, optionalGain: 0 };
+	}
+	if (roll === 1) {
+		return {
+			loss: 3,
+			gainedLucid: false,
+			gainedSurreal: true,
+			optionalGain: 0
+		};
+	}
+
+	// Fallback
+	logger.error(`[calculateStabilityLoss] Invalid roll: ${roll}`);
+	return { loss: 0, gainedLucid: false, gainedSurreal: false, optionalGain: 0 };
+}
+
+/**
+ * Get salvation success threshold based on number of Aces revealed
+ * Per Dimm City D20 Module specification
+ * @param {number} acesRevealed - Number of Aces revealed (0-4)
+ * @returns {number} Minimum roll needed for success (1-20, or 0 for auto-success)
+ */
+export function getSalvationThreshold(acesRevealed) {
+	switch (acesRevealed) {
+		case 1:
+			return 17; // Success on 17-20 (~20% chance)
+		case 2:
+			return 14; // Success on 14-20 (~35% chance)
+		case 3:
+			return 11; // Success on 11-20 (~50% chance)
+		case 4:
+			return 0; // Automatic success
+		default:
+			logger.error(`[getSalvationThreshold] Invalid Aces count: ${acesRevealed}`);
+			return 20; // Impossible if no Aces
+	}
+}
+
+/**
+ * Calculate salvation check results based on d20 roll and Ace threshold
+ * Per Dimm City D20 Module specification
+ * @param {number} roll - D20 roll result (1-20)
+ * @param {number} threshold - Success threshold from getSalvationThreshold
+ * @returns {Object} { tokenChange: number, gainedLucid: boolean, gainedSurreal: boolean }
+ */
+export function calculateSalvationResult(roll, threshold) {
+	// Auto-success if 4 Aces (threshold = 0)
+	if (threshold === 0) {
+		return {
+			tokenChange: -1,
+			gainedLucid: false,
+			gainedSurreal: false
+		};
+	}
+
+	// Natural 20: Remove 2 tokens + Lucid
+	if (roll === 20) {
+		return {
+			tokenChange: -2,
+			gainedLucid: true,
+			gainedSurreal: false
+		};
+	}
+
+	// Success (threshold to 19): Remove 1 token
+	if (roll >= threshold && roll <= 19) {
+		return {
+			tokenChange: -1,
+			gainedLucid: false,
+			gainedSurreal: false
+		};
+	}
+
+	// Partial failure (6 to threshold-1): No change
+	if (roll >= 6 && roll < threshold) {
+		return {
+			tokenChange: 0,
+			gainedLucid: false,
+			gainedSurreal: false
+		};
+	}
+
+	// Failure (2-5): Add 1 token
+	if (roll >= 2 && roll <= 5) {
+		return {
+			tokenChange: 1,
+			gainedLucid: false,
+			gainedSurreal: false
+		};
+	}
+
+	// Critical failure (1): Add 2 tokens + Surreal
+	if (roll === 1) {
+		return {
+			tokenChange: 2,
+			gainedLucid: false,
+			gainedSurreal: true
+		};
+	}
+
+	// Fallback
+	logger.error(`[calculateSalvationResult] Unexpected roll: ${roll}, threshold: ${threshold}`);
+	return { tokenChange: 0, gainedLucid: false, gainedSurreal: false };
+}
+
+// ============================================================================
+// End D20 Mechanics Helper Functions
+// ============================================================================
+
 /**
  * Start a new game
  * @param {object} player - Player object with name
@@ -81,19 +235,35 @@ export const startRound = () => {
 };
 
 /**
- * Generate Number
- * @returns {Promise<number>} Dice roll result
+ * Roll for number of tasks (cards to draw)
+ * D20 system: Roll d20, convert to 1-6 cards, handle Lucid/Surreal states
+ * @returns {Promise<{roll: number, wasLucid: boolean, wasSurreal: boolean}>} Roll result and modifier flags
  */
 export async function rollForTasks() {
-	const roll = gameState.getRandomNumber();
+	// Roll d20 with Lucid/Surreal modifiers
+	const { roll, wasLucid, wasSurreal } = gameState.rollWithModifiers();
 
-	gameState.cardsToDraw = roll;
-	// Defer diceRoll update until after animation
+	// Convert d20 result to card count (1-6)
+	const cardCount = convertD20ToCardCount(roll);
+
+	gameState.cardsToDraw = cardCount;
+	// Defer diceRoll update until after animation (store actual d20 roll)
 	gameState.pendingUpdates.diceRoll = roll;
 	gameState.currentCard = null;
 
-	logger.debug(`[rollForTasks] Dice rolled: ${roll}, setting cardsToDraw to ${roll}`);
-	return roll;
+	// Handle Lucid/Surreal state changes from this roll (deferred until after animation)
+	if (roll === 20) {
+		gameState.pendingUpdates.isLucid = true;
+		logger.debug(`[rollForTasks] Natural 20! Next roll will be Lucid (advantage)`);
+	} else if (roll === 1) {
+		gameState.pendingUpdates.isSurreal = true;
+		logger.debug(`[rollForTasks] Natural 1! Next roll will be Surreal (disadvantage)`);
+	}
+
+	logger.debug(
+		`[rollForTasks] D20 rolled: ${roll} (${wasLucid ? 'LUCID' : wasSurreal ? 'SURREAL' : 'normal'}) → ${cardCount} cards`
+	);
+	return { roll, wasLucid, wasSurreal };
 }
 
 /**
@@ -104,6 +274,18 @@ export function applyPendingTaskRoll() {
 		gameState.diceRoll = gameState.pendingUpdates.diceRoll;
 		gameState.pendingUpdates.diceRoll = null;
 		logger.debug('[applyPendingTaskRoll] Applied pending task roll');
+	}
+
+	// Apply pending modifier state changes (after animation)
+	if (gameState.pendingUpdates.isLucid !== null) {
+		gameState.isLucid = gameState.pendingUpdates.isLucid;
+		gameState.pendingUpdates.isLucid = null;
+		logger.debug('[applyPendingTaskRoll] Applied pending Lucid state');
+	}
+	if (gameState.pendingUpdates.isSurreal !== null) {
+		gameState.isSurreal = gameState.pendingUpdates.isSurreal;
+		gameState.pendingUpdates.isSurreal = null;
+		logger.debug('[applyPendingTaskRoll] Applied pending Surreal state');
 	}
 }
 
@@ -145,9 +327,9 @@ export function drawCard() {
 	card.gameState = {
 		tower: gameState.tower,
 		tokens: gameState.tokens,
-		bonus: gameState.bonus,
 		kingsRevealed: gameState.kingsRevealed,
-		aceOfHeartsRevealed: gameState.aceOfHeartsRevealed
+		aceOfHeartsRevealed: gameState.aceOfHeartsRevealed,
+		acesRevealed: gameState.acesRevealed // D20 system: track total Aces for salvation threshold
 	};
 	gameState.log.push(card);
 
@@ -162,14 +344,15 @@ export function drawCard() {
 	}
 
 	// Track aces - store in pending state
+	// D20 system: Aces modify salvation threshold via acesRevealed counter
 	if (card.card === 'A') {
-		gameState.pendingUpdates.bonusChange = 1;
+		gameState.pendingUpdates.aceChange = 1;
 		if (card.suit === 'hearts') {
 			// Ace of hearts is tracked immediately for game logic
 			gameState.aceOfHeartsRevealed = true;
 		}
 	} else {
-		gameState.pendingUpdates.bonusChange = null;
+		gameState.pendingUpdates.aceChange = null;
 	}
 
 	// Check for game over (4 kings) - mark as pending, don't trigger immediately
@@ -204,22 +387,11 @@ export function confirmCard() {
 	const card = gameState.currentCard;
 
 	// Apply pending stat updates from the card that was just displayed
-	if (gameState.pendingUpdates.bonusChange) {
-		gameState.bonus += gameState.pendingUpdates.bonusChange;
-		gameState.pendingUpdates.bonusChange = null;
-		logger.debug('[confirmCard] Applied pending bonus change');
-
-		// Check for all 4 aces revealed (automatic win condition)
-		if (gameState.bonus === 4) {
-			gameState.win = true;
-			gameState.gameOver = true;
-			gameState.status =
-				gameState.config.labels?.successCheckWin ?? 'Victory! All four aces revealed - you have achieved the impossible!';
-			logger.info('[confirmCard] VICTORY - All 4 aces revealed');
-			transitionTo('gameOver');
-			saveGame(gameState);
-			return; // Exit early, no need to continue with card logic
-		}
+	// D20 system: Aces increment acesRevealed counter (used for salvation threshold)
+	if (gameState.pendingUpdates.aceChange) {
+		gameState.acesRevealed += gameState.pendingUpdates.aceChange;
+		gameState.pendingUpdates.aceChange = null;
+		logger.debug('[confirmCard] Applied pending ace change, acesRevealed now:', gameState.acesRevealed);
 	}
 
 	if (gameState.pendingUpdates.kingsChange) {
@@ -260,24 +432,36 @@ export function confirmCard() {
 			// More cards to draw
 			transitionTo('drawCard');
 		} else {
-			// All cards drawn, go to journal
-			transitionTo('log');
+			// All cards drawn - check for success check first, then journal
+			if (gameState.aceOfHeartsRevealed && gameState.tokens > 0) {
+				transitionTo('successCheck');
+			} else {
+				transitionTo('log');
+			}
 		}
 	}
 }
 
 /**
  * Get failure check roll (without applying damage)
- * @returns {number} Dice roll result
+ * D20 system: Uses rollWithModifiers() for Lucid/Surreal advantage/disadvantage
+ * @returns {{roll: number, wasLucid: boolean, wasSurreal: boolean}} Roll result and modifier flags
  */
 export function getFailureCheckRoll() {
-	return gameState.getRandomNumber();
+	// Roll d20 with Lucid/Surreal modifiers
+	const { roll, wasLucid, wasSurreal } = gameState.rollWithModifiers();
+
+	logger.debug(
+		`[getFailureCheckRoll] D20 roll: ${roll} (${wasLucid ? 'LUCID' : wasSurreal ? 'SURREAL' : 'normal'})`
+	);
+	return { roll, wasLucid, wasSurreal };
 }
 
 /**
  * Apply failure check result and update health
- * This now stores the result in pending state to be applied after dice animation
- * @param {number} result - Dice roll result
+ * D20 system: Uses calculateStabilityLoss() and handles Lucid/Surreal state changes
+ * Stores result in pending state to be applied after dice animation
+ * @param {number} result - D20 roll result
  */
 export function applyFailureCheckResult(result) {
 	if (gameState.gameOver) {
@@ -287,12 +471,27 @@ export function applyFailureCheckResult(result) {
 	// Store in pending state (to be applied after dice animation)
 	gameState.pendingUpdates.diceRoll = result;
 
-	// Calculate damage (but don't apply yet)
-	const blocksToRemove = Math.max(result - gameState.bonus, 0);
-	gameState.pendingUpdates.towerDamage = blocksToRemove;
+	// Calculate stability loss using d20 table (bonus no longer applies)
+	const { loss, gainedLucid, gainedSurreal, optionalGain } = calculateStabilityLoss(result);
+
+	gameState.pendingUpdates.towerDamage = loss;
+
+	// Handle Lucid/Surreal state changes from this roll (deferred until after animation)
+	if (gainedLucid) {
+		gameState.pendingUpdates.isLucid = true;
+		logger.debug(`[applyFailureCheckResult] Natural 20! Next roll will be Lucid`);
+	} else if (gainedSurreal) {
+		gameState.pendingUpdates.isSurreal = true;
+		logger.debug(`[applyFailureCheckResult] Natural 1! Next roll will be Surreal`);
+	}
+
+	// Handle optional stability gain (auto-apply for now)
+	if (optionalGain > 0) {
+		gameState.pendingUpdates.towerGain = optionalGain;
+	}
 
 	logger.debug(
-		`[applyFailureCheckResult] Stored pending dice roll ${result}, pending damage ${blocksToRemove}`
+		`[applyFailureCheckResult] Stored pending dice roll ${result}, pending stability loss ${loss}, optional gain ${optionalGain}`
 	);
 
 	// Note: We don't transition state here anymore
@@ -301,6 +500,7 @@ export function applyFailureCheckResult(result) {
 
 /**
  * Apply pending dice roll updates after animation completes
+ * D20 system: Handles both stability loss and stability gain
  * This should be called after the dice animation finishes
  */
 export function applyPendingDiceRoll() {
@@ -310,7 +510,8 @@ export function applyPendingDiceRoll() {
 	}
 
 	const result = gameState.pendingUpdates.diceRoll;
-	const blocksToRemove = gameState.pendingUpdates.towerDamage;
+	const stabilityLoss = gameState.pendingUpdates.towerDamage || 0;
+	const stabilityGain = gameState.pendingUpdates.towerGain || 0;
 
 	// Apply the dice roll to state
 	gameState.diceRoll = result;
@@ -322,27 +523,50 @@ export function applyPendingDiceRoll() {
 			...gameState.log.slice(0, -1),
 			{
 				...lastLog,
-				damageRoll: result,
-				damageDealt: blocksToRemove
+				diceRoll: result,
+				damageDealt: stabilityLoss
 			}
 		];
 	}
 
-	// Apply tower damage
-	gameState.tower -= blocksToRemove;
+	// Apply stability gain first (if any, from natural 20)
+	if (stabilityGain > 0) {
+		gameState.tower += stabilityGain;
+		logger.debug(
+			`[applyPendingDiceRoll] Applied stability gain +${stabilityGain}, stability now at ${gameState.tower}`
+		);
+	}
+
+	// Apply stability loss
+	if (stabilityLoss > 0) {
+		gameState.tower -= stabilityLoss;
+		logger.debug(
+			`[applyPendingDiceRoll] Applied stability loss -${stabilityLoss}, stability now at ${gameState.tower}`
+		);
+	}
+
+	// Apply pending modifier state changes (after animation)
+	if (gameState.pendingUpdates.isLucid !== null) {
+		gameState.isLucid = gameState.pendingUpdates.isLucid;
+		gameState.pendingUpdates.isLucid = null;
+		logger.debug('[applyPendingDiceRoll] Applied pending Lucid state');
+	}
+	if (gameState.pendingUpdates.isSurreal !== null) {
+		gameState.isSurreal = gameState.pendingUpdates.isSurreal;
+		gameState.pendingUpdates.isSurreal = null;
+		logger.debug('[applyPendingDiceRoll] Applied pending Surreal state');
+	}
 
 	// Clear pending updates
 	gameState.pendingUpdates.diceRoll = null;
 	gameState.pendingUpdates.towerDamage = null;
+	gameState.pendingUpdates.towerGain = null;
 
-	logger.debug(
-		`[applyPendingDiceRoll] Applied dice roll ${result}, removed ${blocksToRemove} blocks, tower now at ${gameState.tower}`
-	);
-
-	// Check for tower collapse
+	// Check for stability collapse
 	if (gameState.tower <= 0) {
 		gameState.tower = 0;
-		gameState.status = gameState.config.labels?.failureCheckLoss ?? 'The tower has fallen';
+		gameState.status =
+			gameState.config.labels?.failureCheckLoss ?? 'Stability collapsed completely';
 		gameState.gameOver = true;
 		transitionTo('gameOver');
 	} else {
@@ -350,7 +574,12 @@ export function applyPendingDiceRoll() {
 		if (gameState.cardsToDraw > 0) {
 			transitionTo('drawCard');
 		} else {
-			transitionTo('log');
+			// All cards drawn - check for success check first, then journal
+			if (gameState.aceOfHeartsRevealed && gameState.tokens > 0) {
+				transitionTo('successCheck');
+			} else {
+				transitionTo('log');
+			}
 		}
 	}
 
@@ -390,11 +619,11 @@ export async function recordRound(journalEntry) {
 	// Check if a journal entry already exists for this round
 	const existingEntry = gameState.journalEntries.find(entry => entry.round === gameState.round);
 	if (existingEntry) {
-		logger.error(`[recordRound] ERROR: Journal entry already exists for round ${gameState.round}. Preventing duplicate.`, {
+		logger.warn(`[recordRound] WARNING: Journal entry already exists for round ${gameState.round}. Preventing duplicate.`, {
 			existingEntry,
 			attemptedEntry: journalEntry
 		});
-		console.error(`[recordRound] ERROR: Cannot save journal entry - an entry already exists for round ${gameState.round}. Each round can only have one journal entry.`);
+		console.warn(`[recordRound] WARNING: Cannot save journal entry - an entry already exists for round ${gameState.round}. Each round can only have one journal entry.`);
 		return; // Prevent duplicate
 	}
 
@@ -414,53 +643,59 @@ export async function recordRound(journalEntry) {
 		totalEntries: gameState.journalEntries.length
 	});
 
-	// Auto-save after recording journal entry (await to ensure save completes)
-	await saveGame(gameState);
-
-	// Determine and execute next action
+	// Determine and execute next action BEFORE saving
+	// Success check now happens BEFORE journal entry, so we just start the next round
+	// Transition state first so that when game is saved, it's in the next round state
 	if (!gameState.gameOver) {
-		if (gameState.aceOfHeartsRevealed && gameState.tokens > 0) {
-			// Go to success check screen (only if there are tokens to remove)
-			transitionTo('successCheck');
-		} else if (gameState.tokens === 0 && gameState.aceOfHeartsRevealed) {
-			// All tokens removed, go to final damage roll
-			transitionTo('finalDamageRoll');
-		} else {
-			// Start next round
-			startRound();
-		}
+		startRound();
 	}
+
+	// Auto-save after recording journal entry and transitioning state
+	await saveGame(gameState);
 }
 
 /**
  * Perform success check
- * @returns {number} Dice roll result
+ * D20 system: Uses Ace-dependent thresholds and graduated token changes
+ * @returns {{roll: number, wasLucid: boolean, wasSurreal: boolean}} Roll result and modifier flags
  */
 export function successCheck() {
-	const roll = gameState.getRandomNumber();
+	// Roll d20 with Lucid/Surreal modifiers
+	const { roll, wasLucid, wasSurreal } = gameState.rollWithModifiers();
 
 	// Store pending updates (to be applied after dice animation)
 	gameState.pendingUpdates.diceRoll = roll;
 
-	// Calculate token change but don't apply yet
-	if (roll === 6 || (gameState.config.difficulty > 0 && roll + gameState.bonus === 6)) {
-		gameState.pendingUpdates.tokenChange = -1;
-	} else {
-		gameState.pendingUpdates.tokenChange = 0;
+	// Get threshold based on Aces revealed
+	const threshold = getSalvationThreshold(gameState.acesRevealed);
+
+	// Calculate token change using salvation table
+	const { tokenChange, gainedLucid, gainedSurreal } = calculateSalvationResult(roll, threshold);
+
+	gameState.pendingUpdates.tokenChange = tokenChange;
+
+	// Handle Lucid/Surreal state changes from this roll (deferred until after animation)
+	if (gainedLucid) {
+		gameState.pendingUpdates.isLucid = true;
+		logger.debug(`[successCheck] Natural 20! Next roll will be Lucid`);
+	} else if (gainedSurreal) {
+		gameState.pendingUpdates.isSurreal = true;
+		logger.debug(`[successCheck] Natural 1! Next roll will be Surreal`);
 	}
 
 	logger.debug(
-		`[successCheck] Stored pending roll ${roll}, pending token change ${gameState.pendingUpdates.tokenChange}`
+		`[successCheck] D20 roll: ${roll} (${wasLucid ? 'LUCID' : wasSurreal ? 'SURREAL' : 'normal'}), threshold: ${threshold}, pending token change: ${tokenChange}`
 	);
 
 	// Auto-save after success check
 	saveGame(gameState);
 
-	return roll;
+	return { roll, wasLucid, wasSurreal };
 }
 
 /**
  * Apply pending success check updates after dice animation completes
+ * D20 system: Handles graduated token changes (+2 to -2) and victory when tokens = 0
  */
 export function applyPendingSuccessCheck() {
 	if (gameState.pendingUpdates.diceRoll === null) {
@@ -471,9 +706,24 @@ export function applyPendingSuccessCheck() {
 	// Apply dice roll
 	gameState.diceRoll = gameState.pendingUpdates.diceRoll;
 
-	// Apply token change
+	// Apply token change (can be negative for success, positive for failure)
 	if (gameState.pendingUpdates.tokenChange !== null && gameState.pendingUpdates.tokenChange !== 0) {
 		gameState.tokens += gameState.pendingUpdates.tokenChange;
+
+		// Ensure tokens don't go below 0
+		gameState.tokens = Math.max(gameState.tokens, 0);
+	}
+
+	// Apply pending modifier state changes (after animation)
+	if (gameState.pendingUpdates.isLucid !== null) {
+		gameState.isLucid = gameState.pendingUpdates.isLucid;
+		gameState.pendingUpdates.isLucid = null;
+		logger.debug('[applyPendingSuccessCheck] Applied pending Lucid state');
+	}
+	if (gameState.pendingUpdates.isSurreal !== null) {
+		gameState.isSurreal = gameState.pendingUpdates.isSurreal;
+		gameState.pendingUpdates.isSurreal = null;
+		logger.debug('[applyPendingSuccessCheck] Applied pending Surreal state');
 	}
 
 	// Clear pending updates
@@ -487,36 +737,62 @@ export function applyPendingSuccessCheck() {
 
 	// Transition based on token state
 	if (gameState.tokens === 0) {
-		// Per SRD: Don't immediately win - must face final damage roll first
-		logger.debug(
-			'[applyPendingSuccessCheck] All tokens removed, transitioning to final damage roll'
-		);
-		transitionTo('finalDamageRoll');
+		// D20 System: Victory when tokens reach 0 (no final damage roll)
+		gameState.win = true;
+		gameState.gameOver = true;
+		gameState.status =
+			gameState.config.labels?.successCheckWin ?? 'Victory! Against all odds, you escaped.';
+		logger.info('[applyPendingSuccessCheck] VICTORY - All tokens removed');
+		transitionTo('gameOver');
+
+		// Auto-save after victory
+		saveGame(gameState);
 	} else {
-		// Continue the game - start next round
-		startRound();
+		// Continue the game - go to journal entry before starting next round
+		transitionTo('log');
 	}
 }
 
 /**
  * Perform the initial damage roll before round 1
+ * D20 system: Uses calculateStabilityLoss() and handles Lucid/Surreal triggers
  * This is the SRD's digital enhancement - game starts with some instability
- * @param {number} roll - Dice roll result (1-6)
+ * @param {number} roll - D20 roll result (1-20)
  */
 export function performInitialDamageRoll(roll) {
-	logger.debug('[performInitialDamageRoll] Roll:', roll, 'Tower:', gameState.tower);
+	logger.debug('[performInitialDamageRoll] D20 Roll:', roll, 'Stability:', gameState.tower);
+
+	// Calculate stability loss using d20 table
+	const { loss, gainedLucid, gainedSurreal, optionalGain } = calculateStabilityLoss(roll);
 
 	// Store pending updates (to be applied after dice animation)
 	gameState.pendingUpdates.diceRoll = roll;
-	gameState.pendingUpdates.towerDamage = roll;
+	gameState.pendingUpdates.towerDamage = loss;
 
-	logger.debug(`[performInitialDamageRoll] Stored pending roll ${roll}, pending damage: ${roll}`);
+	// Handle Lucid/Surreal state changes from this roll (deferred until after animation)
+	if (gainedLucid) {
+		gameState.pendingUpdates.isLucid = true;
+		logger.debug(`[performInitialDamageRoll] Natural 20! Next roll will be Lucid`);
+	} else if (gainedSurreal) {
+		gameState.pendingUpdates.isSurreal = true;
+		logger.debug(`[performInitialDamageRoll] Natural 1! Next roll will be Surreal`);
+	}
+
+	// Handle optional stability gain (auto-apply for now)
+	if (optionalGain > 0) {
+		gameState.pendingUpdates.towerGain = optionalGain;
+	}
+
+	logger.debug(
+		`[performInitialDamageRoll] Stored pending roll ${roll}, pending stability loss: ${loss}, optional gain: ${optionalGain}`
+	);
 
 	// Note: State transitions will happen in applyPendingInitialDamageRoll after animation
 }
 
 /**
  * Apply pending initial damage roll after dice animation completes
+ * D20 system: Handles both stability loss and stability gain
  */
 export function applyPendingInitialDamageRoll() {
 	if (gameState.pendingUpdates.diceRoll === null) {
@@ -525,27 +801,46 @@ export function applyPendingInitialDamageRoll() {
 	}
 
 	const roll = gameState.pendingUpdates.diceRoll;
-	const damage = gameState.pendingUpdates.towerDamage;
+	const stabilityLoss = gameState.pendingUpdates.towerDamage || 0;
+	const stabilityGain = gameState.pendingUpdates.towerGain || 0;
 
 	// Apply dice roll
 	gameState.diceRoll = roll;
 
-	// Apply tower damage
-	gameState.tower = Math.max(gameState.tower - damage, 0);
+	// Apply stability gain first (if any, from natural 20)
+	if (stabilityGain > 0) {
+		gameState.tower += stabilityGain;
+	}
+
+	// Apply stability loss
+	gameState.tower = Math.max(gameState.tower - stabilityLoss, 0);
+
+	// Apply pending modifier state changes (after animation)
+	if (gameState.pendingUpdates.isLucid !== null) {
+		gameState.isLucid = gameState.pendingUpdates.isLucid;
+		gameState.pendingUpdates.isLucid = null;
+		logger.debug('[applyPendingInitialDamageRoll] Applied pending Lucid state');
+	}
+	if (gameState.pendingUpdates.isSurreal !== null) {
+		gameState.isSurreal = gameState.pendingUpdates.isSurreal;
+		gameState.pendingUpdates.isSurreal = null;
+		logger.debug('[applyPendingInitialDamageRoll] Applied pending Surreal state');
+	}
 
 	// Clear pending updates
 	gameState.pendingUpdates.diceRoll = null;
 	gameState.pendingUpdates.towerDamage = null;
+	gameState.pendingUpdates.towerGain = null;
 
 	logger.debug(
-		`[applyPendingInitialDamageRoll] Applied initial damage: ${damage}, tower now: ${gameState.tower}`
+		`[applyPendingInitialDamageRoll] Applied initial stability: loss=${stabilityLoss}, gain=${stabilityGain}, stability now: ${gameState.tower}`
 	);
 
 	// Log the initial damage
 	gameState.log.push({
 		type: 'initial-damage',
 		roll,
-		damage,
+		damage: stabilityLoss,
 		tower: gameState.tower,
 		timestamp: Date.now(),
 		round: 0,
@@ -558,15 +853,15 @@ export function applyPendingInitialDamageRoll() {
 
 /**
  * Perform the final damage roll after all tokens are removed
- * This is the SRD's "salvation with risk" mechanic - victory can be snatched away at the last moment
+ * NOTE: This function is for legacy d6 system compatibility only
+ * D20 system does not use final damage roll - victory occurs immediately when tokens = 0
  * @param {number} roll - Dice roll result
+ * @deprecated D20 system handles victory in applyPendingSuccessCheck()
  */
 export function performFinalDamageRoll(roll) {
 	logger.debug(
 		'[performFinalDamageRoll] Roll:',
 		roll,
-		'Bonus:',
-		gameState.bonus,
 		'Tower:',
 		gameState.tower
 	);
@@ -574,8 +869,8 @@ export function performFinalDamageRoll(roll) {
 	// Store pending updates (to be applied after dice animation)
 	gameState.pendingUpdates.diceRoll = roll;
 
-	// Calculate damage but don't apply yet
-	const damage = Math.max(roll - gameState.bonus, 0);
+	// Calculate damage (D20 system: no bonus modifier)
+	const damage = Math.max(roll, 0);
 	gameState.pendingUpdates.towerDamage = damage;
 
 	logger.debug(`[performFinalDamageRoll] Stored pending roll ${roll}, pending damage: ${damage}`);
@@ -585,6 +880,8 @@ export function performFinalDamageRoll(roll) {
 
 /**
  * Apply pending final damage roll after dice animation completes
+ * NOTE: For legacy d6 system compatibility only
+ * @deprecated D20 system handles victory in applyPendingSuccessCheck()
  */
 export function applyPendingFinalDamageRoll() {
 	if (gameState.pendingUpdates.diceRoll === null) {
@@ -676,8 +973,7 @@ export async function exitGame() {
 	gameState.aceOfHeartsRevealed = false;
 	gameState.gameOver = false;
 	gameState.win = false;
-	gameState.tower = 54;
-	gameState.bonus = 0;
+	gameState.tower = 20; // D20 system: starts at 20 stability
 	gameState.log = [];
 	gameState.journalEntries = [];
 	gameState.round = 0;
@@ -706,6 +1002,18 @@ export async function resumeGame(gameSlug) {
 
 		// Restore the game state
 		restoreGameState(gameState, saveData);
+
+		// Safety check: If we're on the recordRound screen and a journal entry already exists,
+		// automatically transition to the next round to avoid duplicate journal entry warnings
+		if (gameState.state === 'recordRound') {
+			const existingEntry = gameState.journalEntries.find(entry => entry.round === gameState.round);
+			if (existingEntry) {
+				logger.info(`[resumeGame] Journal entry already exists for round ${gameState.round}, transitioning to next round`);
+				if (!gameState.gameOver) {
+					startRound();
+				}
+			}
+		}
 
 		logger.info(`[resumeGame] Game resumed successfully for ${gameSlug}`);
 		return true;

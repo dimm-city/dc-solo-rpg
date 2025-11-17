@@ -87,9 +87,12 @@ The project uses **Svelte 5 runes** for reactive state management. The old State
 // gameStore.svelte.js - Single source of truth
 let gameState = $state({
 	state: 'loadGame',
-	tower: 54,
+	tower: 20, // D20 system: Stability (was 54 in old d6 system)
 	tokens: 10,
-	deck: []
+	deck: [],
+	acesRevealed: 0, // D20 system: Tracks Aces for Salvation threshold
+	isLucid: false, // D20 system: Advantage on next roll (natural 20)
+	isSurreal: false // D20 system: Disadvantage on next roll (natural 1)
 	// ... all game state
 });
 
@@ -149,7 +152,7 @@ lose-message: Defeat message
 
 ### Narrative
 
-[3 cards - Remaining Aces - reflective moments, bonus/help]
+[3 cards - Remaining Aces - reflective moments, abilities]
 
 ### Challenge
 
@@ -216,7 +219,7 @@ describe('Game State', () => {
 	});
 
 	it('should initialize correctly', () => {
-		expect(gameState.tower).toBe(54);
+		expect(gameState.tower).toBe(20); // D20 system: 20 Stability
 	});
 });
 ```
@@ -227,36 +230,97 @@ describe('Game State', () => {
 npm run test:unit -- --coverage
 ```
 
-## Game Mechanics (Wretched and Alone SRD)
+## Game Mechanics (D20 System)
 
-The game implements standard Wretched and Alone mechanics:
+The game uses a **D20 dice system** inspired by Wretched and Alone mechanics but with tactical depth:
+
+### Core Resources
+
+- **Stability**: 20 points (your life). Reaches 0 = instant loss.
+- **Tokens**: Start with 10. Remove all to win.
+- **Aces Revealed**: 0-4. Determines Salvation success threshold.
+
+### D20 Rolling Mechanics
+
+- **Standard Roll**: 1d20 for all checks
+- **Lucid State (Advantage)**: Roll 2d20, keep highest. Triggered by natural 20 on Stability checks.
+- **Surreal State (Disadvantage)**: Roll 2d20, keep lowest. Triggered by natural 1 on Stability checks.
+
+### Salvation System (Win Condition)
+
+Drawing the Ace of Hearts unlocks Salvation checks. Each subsequent Ace improves success rate:
+
+- **1 Ace**: Roll ≥17 to remove 1 token (20% success, 5% chance)
+- **2 Aces**: Roll ≥14 to remove 1 token (35% success)
+- **3 Aces**: Roll ≥11 to remove 1 token (50% success)
+- **4 Aces**: Automatic success (100% success)
+
+**Graduated Token Changes:**
+- Natural 1: +2 tokens (critical failure)
+- Below threshold: +1 token (failure)
+- At/above threshold: -1 token (success)
+- Natural 20: -2 tokens (critical success)
 
 ### Card Types
 
 1. **Primary Success (Salvation)** - Ace of Hearts
-   - Activates win condition (10 tokens, roll to remove)
-   - <1% win rate by design (journey matters more than victory)
+   - Unlocks Salvation checks
+   - First Ace sets threshold to 17 (20% win chance)
 
 2. **Failure Counter** - All 4 Kings
    - Revealing all 4 = instant game over
    - Escalating existential threat
 
-3. **Narrative (Bonus/Help)** - Remaining 3 Aces
+3. **Narrative (Abilities)** - Remaining 3 Aces
    - Reflective moments, emotional beats
-   - Increment bonus counter (reduces damage)
+   - Each Ace improves Salvation threshold
    - Optional special modifiers (skip-damage, return-king)
 
 4. **Challenge** - Odd cards (3, 5, 7, 9) - 16 cards
-   - **Usually** trigger damage checks (tower pulls)
-   - SRD uses "usually" to preserve designer flexibility
+   - **Usually** trigger Stability checks (d20 roll)
+   - Failure: Lose Stability equal to card rank
+   - Natural 20: +1 Stability (max 20) + Lucid state
+   - Natural 1: Surreal state
 
 5. **Event** - Even cards (2, 4, 6, 8, 10, J, Q) - 28 cards
-   - **Usually** safe from damage
+   - **Usually** safe from Stability checks
    - Respite, discovery, world-building
 
 ### Progressive Rule Teaching
 
 Per SRD, rules should be revealed **through play**, not presented upfront. Card prompts teach mechanics naturally.
+
+### Random Number Generation
+
+All randomness goes through `src/lib/services/random.js`:
+
+```javascript
+import { rollDie, rollAdvantage, rollDisadvantage } from '$lib/services/random.js';
+
+// Standard roll
+const roll = rollDie(20); // 1-20
+
+// Advantage (Lucid)
+const lucidRoll = rollAdvantage(20); // 2d20 keep high
+
+// Disadvantage (Surreal)
+const surrealRoll = rollDisadvantage(20); // 2d20 keep low
+```
+
+**Testing Support:** The random service can be mocked for deterministic tests:
+
+```javascript
+import { mockDieRoll, mockDieRollSequence, resetRNG } from '$lib/services/random.js';
+
+// Mock a single roll
+mockDieRoll(20); // Next roll will be natural 20
+
+// Mock a sequence
+mockDieRollSequence([1, 10, 20]); // Next 3 rolls
+
+// Reset to Math.random
+resetRNG();
+```
 
 ## Configuration Objects
 
@@ -269,11 +333,14 @@ Per SRD, rules should be revealed **through play**, not presented upfront. Card 
   introduction: { /* markdown sections */ },
   deck: [ /* 52 card objects */ ],
   options: {
-    difficulty: "normal", // easy, normal, hard
-    diceTheme: "default"  // default, neon, etc.
+    difficulty: 0, // 0 = easy (Ace of Hearts pre-revealed), 1 = normal
+    startingTokens: 10, // Number of tokens to start with
+    diceTheme: "pinkdreams"  // Dice theme (user can change in settings)
   }
 }
 ```
+
+**Note:** Difficulty is controlled by the game author in the config frontmatter, not by user settings. Users can only change dice theme.
 
 **Card Object:**
 
@@ -299,10 +366,10 @@ Per SRD, rules should be revealed **through play**, not presented upfront. Card 
 
 ### Game Mechanics
 
-- `src/lib/stores/wretchedAloneMechanics.test.js` - Wretched and Alone mechanics tests
-- `src/lib/stores/cardDrawing.test.js` - Card drawing logic tests
-- `src/lib/stores/gameBalance.test.js` - Game balance tests
-- `src/lib/stores/finalDamageRoll.test.js` - Final damage roll tests
+- `src/lib/services/random.js` - Centralized RNG service (mockable for testing)
+- `src/lib/stores/cardDrawing.test.js` - Card drawing logic tests (D20 system)
+- `src/lib/stores/gameBalance.test.js` - Game balance tests (D20 system)
+- `src/lib/stores/diceStore.svelte.js` - 3D dice visualization with DiceBox
 
 ### Parsing
 

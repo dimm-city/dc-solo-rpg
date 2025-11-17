@@ -78,8 +78,8 @@
 				return null; // No background text for card drawing
 			case 'failureCheck':
 				return {
-					title: 'Damage Check',
-					description: 'An odd card demands a price. Roll to see how much damage you take.',
+					title: 'Stability Check',
+					description: 'An odd card demands a price. Roll to see how much stability you lose.',
 					showStats: true
 				};
 			case 'successCheck':
@@ -135,9 +135,10 @@
 		} else {
 			// Roll
 			rollTasksRolling = true;
-			const result = await rollForTasks();
+			const { roll, wasLucid, wasSurreal } = await rollForTasks();
 			// Roll dice and wait for animation to complete
-			await rollDice(result);
+			// Pass modifier state for visual dice roll (2d20 if was Lucid/Surreal)
+			await rollDice(roll, { isLucid: wasLucid, isSurreal: wasSurreal });
 			rollTasksRolling = false;
 			// Apply pending dice roll after animation completes
 			applyPendingTaskRoll();
@@ -168,12 +169,13 @@
 		if (failureCheckRolling) return;
 		if (currentScreen == 'failureCheck' && !failureCheckResult) {
 			failureCheckRolling = true;
-			const rollResult = getFailureCheckRoll();
-			failureCheckResult = rollResult;
+			const { roll, wasLucid, wasSurreal } = getFailureCheckRoll();
+			failureCheckResult = roll;
 			// Store pending updates (don't apply yet)
-			applyFailureCheckResult(rollResult);
+			applyFailureCheckResult(roll);
 			// Roll dice and wait for animation to complete
-			await rollDice(rollResult);
+			// Pass modifier state for visual dice roll (2d20 if was Lucid/Surreal)
+			await rollDice(roll, { isLucid: wasLucid, isSurreal: wasSurreal });
 			failureCheckRolling = false;
 			// NOW apply the pending updates after dice animation completes
 			applyPendingDiceRoll();
@@ -201,10 +203,11 @@
 		if (successCheckRolling) return;
 		if (currentScreen == 'successCheck' && !successCheckResult) {
 			successCheckRolling = true;
-			const rollResult = await successCheck();
-			successCheckResult = rollResult;
+			const { roll, wasLucid, wasSurreal } = await successCheck();
+			successCheckResult = roll;
 			// Roll dice and wait for animation to complete
-			await rollDice(rollResult);
+			// Pass modifier state for visual dice roll (2d20 if was Lucid/Surreal)
+			await rollDice(roll, { isLucid: wasLucid, isSurreal: wasSurreal });
 			successCheckRolling = false;
 			// Apply pending success check after animation completes
 			applyPendingSuccessCheck();

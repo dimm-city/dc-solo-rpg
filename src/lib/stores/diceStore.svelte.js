@@ -1,6 +1,7 @@
 import { onMount } from 'svelte';
 import DiceBox from '@3d-dice/dice-box-threejs';
 import { gameState } from './gameStore.svelte.js';
+import { randomInt } from '../services/random.js';
 
 /**
  * Shared DiceBox instance for the entire application
@@ -176,18 +177,50 @@ export function resetDiceBox() {
 
 /**
  * Roll the dice with optional preset value
- * @param {number|null} value - Optional preset dice value (1-6)
- * @returns {Promise<number>} The dice roll result
+ * D20 system with Lucid/Surreal support
+ * @param {number|null} value - Optional preset dice value (1-20). For 2d20, can be array [val1, val2]
+ * @param {Object} options - Roll options
+ * @param {boolean} options.isLucid - Roll with advantage (2d20 keep high)
+ * @param {boolean} options.isSurreal - Roll with disadvantage (2d20 keep low)
+ * @returns {Promise<Object>} Object with { total, rolls, finalValue } where finalValue is the kept die
  */
-export async function rollDice(value = null) {
+export async function rollDice(value = null, options = {}) {
 	if (!diceBoxInstance) {
 		throw new Error('DiceBox not initialized. Call initializeDiceBox first.');
 	}
 
+	const { isLucid = false, isSurreal = false } = options;
+
 	// Set rolling state to true immediately
 	isRolling = true;
 
-	const rollString = value ? `1d6@${value}` : '1d6';
+	let rollString;
+	let presetValues = null;
+
+	if (isLucid || isSurreal) {
+		// Roll 2d20 for advantage/disadvantage
+		// If value is provided, it should be the FINAL value after advantage/disadvantage
+		// We need to generate two values where the max/min equals the desired value
+		if (value) {
+			// Generate two dice values that produce the desired result
+			if (isLucid) {
+				// For advantage, one die = value, other die = random <= value
+				const otherDie = randomInt(1, value);
+				presetValues = [value, otherDie];
+			} else {
+				// For disadvantage, one die = value, other die = random >= value
+				const otherDie = randomInt(value, 20);
+				presetValues = [value, otherDie];
+			}
+			rollString = `2d20@${presetValues[0]},${presetValues[1]}`;
+		} else {
+			rollString = '2d20';
+		}
+	} else {
+		// Normal roll
+		rollString = value ? `1d20@${value}` : '1d20';
+	}
+
 	const result = await diceBoxInstance.roll(rollString);
 
 	// After roll completes, wait 2 seconds before transitioning z-index back down
@@ -195,5 +228,21 @@ export async function rollDice(value = null) {
 		isRolling = false;
 	}, 2000);
 
-	return result.total;
+	// Return detailed result object
+	const rolls = result.rolls?.length ? result.rolls.map((r) => r.value) : [result.total];
+
+	let finalValue = result.total;
+	if (isLucid && rolls.length === 2) {
+		finalValue = Math.max(rolls[0], rolls[1]);
+	} else if (isSurreal && rolls.length === 2) {
+		finalValue = Math.min(rolls[0], rolls[1]);
+	}
+
+	return {
+		total: result.total,
+		rolls: rolls,
+		finalValue: finalValue,
+		isLucid,
+		isSurreal
+	};
 }

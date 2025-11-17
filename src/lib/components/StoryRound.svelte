@@ -22,7 +22,7 @@
 			case 'failure-counter':
 				return { label: 'Doom', color: 'var(--color-cyber-red)' };
 			case 'narrative':
-				return { label: 'Bonus', color: 'var(--color-neon-cyan)' };
+				return { label: 'Ability', color: 'var(--color-neon-cyan)' };
 			case 'challenge':
 				return { label: 'Challenge', color: 'var(--color-toxic-green)' };
 			case 'event':
@@ -88,11 +88,11 @@
 					</div>
 				{/if}
 
-				<!-- Damage Roll Result (if this card triggered a damage check) -->
+				<!-- Stability Roll Result (if this card triggered a stability check) -->
 				{#if card.damageRoll !== undefined}
 					<div class="damage-roll-result">
 						<div class="roll-header">
-							<span class="roll-label">Damage Check</span>
+							<span class="roll-label">Stability Check</span>
 						</div>
 						<div class="roll-details">
 							<div class="roll-die">
@@ -177,10 +177,10 @@
 						</span>
 					</div>
 				{/if}
-				{#if round.gameState.bonus !== undefined && round.gameState.bonus > 0}
+				{#if round.gameState.acesRevealed !== undefined && round.gameState.acesRevealed > 0}
 					<div class="stat-item">
-						<span class="stat-label">Bonus</span>
-						<span class="stat-value">{round.gameState.bonus}</span>
+						<span class="stat-label">Abilities</span>
+						<span class="stat-value">{round.gameState.acesRevealed}</span>
 					</div>
 				{/if}
 			</div>

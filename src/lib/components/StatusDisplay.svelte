@@ -6,7 +6,7 @@
 	let { onHelpClick, onExitClick } = $props();
 
 	const tokensRemaining = $derived(gameState.tokens);
-	const bonusPercent = $derived(gameState.bonus + (gameState.pendingUpdates.bonusChange || 0));
+	const bonusPercent = $derived(gameState.acesRevealed + (gameState.pendingUpdates.aceChange || 0));
 	const failurePercent = $derived(
 		gameState.kingsRevealed + (gameState.pendingUpdates.kingsChange || 0)
 	);
@@ -47,6 +47,52 @@
 	const successAugmentedUI = $derived(
 		isMobile ? 'bl-clip br-clip tl-clip-x border' : 'tl-2-clip-x tr-2-clip-x border'
 	);
+
+	// Stability gradient - changes based on value (low = red, high = green)
+	const stabilityGradient = $derived(() => {
+		const stability = gameState.tower;
+		if (stability >= 10) {
+			// High stability - positive colors (green)
+			return 'linear-gradient(90deg, #00ff88, #00cc66)';
+		} else {
+			// Low stability - warning/danger colors (red/magenta)
+			return 'linear-gradient(90deg, #ff0055, #d946ef)';
+		}
+	});
+
+	const stabilityGlow = $derived(() => {
+		const stability = gameState.tower;
+		return stability >= 10 ? '#00ff88' : '#ff0055';
+	});
+
+	// Dice pips - convert dice roll to 5 pips (dice pattern)
+	// Pips are arranged like 5 on a six-sided die: 4 corners + 1 center
+	const dicePips = $derived(() => {
+		const roll = gameState.diceRoll || 0;
+		// Create array of 5 boolean values - which pips are active based on the roll value
+		const pips = [false, false, false, false, false];
+
+		// Map d20 roll to pip pattern (0-20 range, using 5-bit binary)
+		const binary = roll.toString(2).padStart(5, '0');
+		for (let i = 0; i < 5; i++) {
+			pips[i] = binary[i] === '1';
+		}
+
+		return pips;
+	});
+
+	// Modifier state display
+	const modifierState = $derived(() => {
+		if (gameState.isLucid) return 'LUCID';
+		if (gameState.isSurreal) return 'SURREAL';
+		return null;
+	});
+
+	const modifierColor = $derived(() => {
+		if (gameState.isLucid) return '#00ffaa'; // Green for advantage
+		if (gameState.isSurreal) return '#ff0066'; // Red for disadvantage
+		return null;
+	});
 </script>
 
 <div class="status-display-container">
@@ -136,15 +182,13 @@
 						/>
 						<path d="M3.22 13H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27" />
 					</svg>
-					HEALTH
+					STABILITY
 				</div>
-				<div class="stat-value">
-					<span class="current">{gameState.tower}</span><span class="divider">/</span><span
-						class="max">100</span
-					>
-				</div>
-				<div class="stat-bar">
-					<div class="stat-fill health-fill" style="width: {gameState.tower}%"></div>
+				<div class="stat-bar stability-bar">
+					<div
+						class="stat-fill stability-fill"
+						style="width: {(gameState.tower / 20) * 100}%; background: {stabilityGradient()}; box-shadow: 0 0 10px {stabilityGlow()}"
+					></div>
 				</div>
 			</div>
 
@@ -224,11 +268,47 @@
 					</svg>
 					LAST ROLL
 				</div>
+				{#if modifierState()}
+					<div class="modifier-state" style="color: {modifierColor()}">
+						{#if gameState.isLucid}
+							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+								<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+								<polyline points="16 7 22 7 22 13"></polyline>
+							</svg>
+						{:else if gameState.isSurreal}
+							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+								<polyline points="22 17 13.5 8.5 8.5 13.5 2 7"></polyline>
+								<polyline points="16 17 22 17 22 11"></polyline>
+							</svg>
+						{/if}
+					</div>
+				{/if}
 				<div class="dice-value">{gameState.diceRoll}</div>
 				<div class="dice-pips">
-					{#each Array(gameState.diceRoll) as _, i (i)}
-						<span class="pip"></span>
-					{/each}
+					<!-- Top row -->
+					<div class="pip-row">
+						<span class="dice-pip" class:active={dicePips()[0]} style="--pip-delay: 0ms">
+							<span class="pip-dot"></span>
+						</span>
+						<span class="dice-pip" class:active={dicePips()[1]} style="--pip-delay: 150ms">
+							<span class="pip-dot"></span>
+						</span>
+					</div>
+					<!-- Center row -->
+					<div class="pip-row center-row">
+						<span class="dice-pip center-pip" class:active={dicePips()[2]} style="--pip-delay: 300ms">
+							<span class="pip-dot"></span>
+						</span>
+					</div>
+					<!-- Bottom row -->
+					<div class="pip-row">
+						<span class="dice-pip" class:active={dicePips()[3]} style="--pip-delay: 450ms">
+							<span class="pip-dot"></span>
+						</span>
+						<span class="dice-pip" class:active={dicePips()[4]} style="--pip-delay: 600ms">
+							<span class="pip-dot"></span>
+						</span>
+					</div>
 				</div>
 			</div>
 
@@ -271,32 +351,31 @@
 				style="animation-delay: 0.55s; animation-duration: 0.85s"
 			>
 				<div class="stat-label">
-					<svg
-						class="stat-icon"
-						xmlns="http://www.w3.org/2000/svg"
-						width="16"
-						height="16"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					>
-						<path
-							d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"
-						/>
-						<path d="M20 2v4" />
-						<path d="M22 4h-4" />
-						<circle cx="4" cy="20" r="2" />
-					</svg>
-					LUCK
+					ABILITIES
 				</div>
-				<div class="stat-value">
+				<div class="ability-icons">
+					<!-- Sparkles - Luck/Fortune -->
+					<svg class="ability-icon" class:active={bonusPercent >= 1} xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/>
+					</svg>
+					<!-- Shield - Protection/Defense -->
+					<svg class="ability-icon" class:active={bonusPercent >= 2} xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>
+					</svg>
+					<!-- Heart - Health/Resilience -->
+					<svg class="ability-icon" class:active={bonusPercent >= 3} xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+					</svg>
+					<!-- Zap - Energy/Action -->
+					<svg class="ability-icon" class:active={bonusPercent >= 4} xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>
+					</svg>
+				</div>
+				<!-- <div class="stat-value">
 					<span class="current">{bonusPercent}</span><span class="divider">/</span><span class="max"
 						>4</span
 					>
-				</div>
+				</div> -->
 				<div class="stat-bar">
 					<div class="stat-fill bonus-fill" style="width: {(bonusPercent / 4) * 100}%"></div>
 				</div>
@@ -522,12 +601,15 @@
 		display: flex;
 		gap: 0.5rem;
 		text-transform: uppercase;
+		justify-content: center;
 	}
 
 	.info-segment:first-of-type {
 		display: flex;
 		flex-direction: column;
 		gap: 0;
+		justify-content: center;
+		align-items: center;
 	}
 
 	.info-segment .label {
@@ -889,6 +971,18 @@
 		animation: fillBarGrow 0.5s linear forwards;
 	}
 
+	/* Stability bar - larger since no stat value */
+	.stability-bar {
+		height: 12px;
+		flex: 1 1 auto;
+		min-width: 80px;
+	}
+
+	/* Stability fill - gradient and glow set via inline styles (reactive) */
+	.stability-fill {
+		transition: all 0.3s ease;
+	}
+
 	.health-fill {
 		background: linear-gradient(90deg, #00ff88, #00cc66);
 		box-shadow: 0 0 10px #00ff88;
@@ -1004,6 +1098,29 @@
 		filter: drop-shadow(0 0 4px currentColor);
 	}
 
+	/* Modifier state indicator */
+	.modifier-state {
+		font-size: var(--text-xs);
+		font-weight: bold;
+		text-transform: uppercase;
+		letter-spacing: 0.2em;
+		font-family: 'Courier New', monospace;
+		text-shadow:
+			0 0 10px currentColor,
+			0 0 20px currentColor;
+		animation: modifier-pulse 1s ease-in-out infinite;
+	}
+
+	@keyframes modifier-pulse {
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.6;
+		}
+	}
+
 	.dice-value {
 		font-size: 2rem;
 		font-weight: 900;
@@ -1016,6 +1133,89 @@
 		line-height: 1;
 	}
 
+	/* Binary pips container */
+	.binary-pips {
+		display: flex;
+		gap: 4px;
+		justify-content: center;
+		align-items: center;
+	}
+
+	/* Binary pip - box shape with inner fill */
+	.binary-pip {
+		width: 10px;
+		height: 10px;
+		border: 1px solid rgba(0, 255, 255, 0.4);
+		border-radius: 2px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		position: relative;
+		transition: all 0.2s ease;
+		animation: binary-pip-in 0.2s ease-out backwards;
+		animation-delay: calc(0.5s + var(--pip-index, 0) * 0.05s);
+	}
+
+	.binary-pip:nth-child(1) {
+		--pip-index: 0;
+	}
+	.binary-pip:nth-child(2) {
+		--pip-index: 1;
+	}
+	.binary-pip:nth-child(3) {
+		--pip-index: 2;
+	}
+	.binary-pip:nth-child(4) {
+		--pip-index: 3;
+	}
+	.binary-pip:nth-child(5) {
+		--pip-index: 4;
+	}
+
+	@keyframes binary-pip-in {
+		0% {
+			opacity: 0;
+			transform: scale(0.5);
+		}
+		100% {
+			opacity: 1;
+			transform: scale(1);
+		}
+	}
+
+	/* Inner fill for active bits (1) */
+	.pip-inner {
+		width: 6px;
+		height: 6px;
+		border-radius: 1px;
+		background: transparent;
+		transition: all 0.2s ease;
+	}
+
+	.binary-pip.active {
+		border-color: rgba(0, 255, 255, 1);
+		box-shadow: 0 0 8px rgba(0, 255, 255, 0.6);
+	}
+
+	.binary-pip.active .pip-inner {
+		background: linear-gradient(135deg, #00eeff, #d946ef);
+		box-shadow:
+			0 0 5px rgba(0, 255, 255, 0.8),
+			inset 0 0 3px rgba(255, 255, 255, 0.4);
+		animation: binary-glow 2s ease-in-out infinite;
+	}
+
+	@keyframes binary-glow {
+		0%,
+		100% {
+			filter: brightness(1);
+		}
+		50% {
+			filter: brightness(1.3);
+		}
+	}
+
+	/* Legacy decimal pips (keep for compatibility if needed elsewhere) */
 	.dice-pips {
 		display: flex;
 		gap: 3px;
@@ -1282,7 +1482,6 @@
 			min-height: auto;
 			padding: 4px;
 			gap: 1px;
-			justify-content: space-between;
 		}
 
 		.dice-label,
@@ -1356,12 +1555,13 @@
 
 		.info-segment {
 			gap: 2px;
+			justify-content: center;
 		}
 
 		.info-segment:first-of-type {
 			flex-direction: column;
-			align-items: flex-start;
 			margin-inline-start: var(--space-md);
+			justify-content: center;
 		}
 
 		.info-segment .label {
@@ -1572,6 +1772,101 @@
 			transition: none !important;
 			animation: none !important;
 			opacity: 1 !important;
+		}
+	}
+
+	/* Dice pips styles */
+	.pip-row {
+		display: flex;
+		gap: 8px;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	.pip-row.center-row {
+		justify-content: center;
+	}
+
+	.dice-pip {
+		width: 6px;
+		height: 6px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		position: relative;
+		opacity: 0.3;
+		transition: opacity 0.3s ease;
+	}
+
+	.dice-pip.active {
+		opacity: 1;
+	}
+
+	.pip-dot {
+		width: 100%;
+		height: 100%;
+		border-radius: 50%;
+		background: transparent;
+		border: 1px solid rgba(0, 255, 255, 0.4);
+		transition: all 0.3s ease;
+	}
+
+	.dice-pip.active .pip-dot {
+		background: linear-gradient(135deg, #00eeff, #d946ef);
+		border-color: rgba(0, 255, 255, 1);
+		box-shadow:
+			0 0 6px rgba(0, 255, 255, 0.8),
+			inset 0 0 3px rgba(255, 255, 255, 0.4);
+		animation: pip-pulse 2s ease-in-out infinite;
+		animation-delay: var(--pip-delay, 0ms);
+	}
+
+	@keyframes pip-pulse {
+		0%,
+		100% {
+			opacity: 1;
+			transform: scale(1);
+			box-shadow:
+				0 0 6px rgba(0, 255, 255, 0.8),
+				inset 0 0 3px rgba(255, 255, 255, 0.4);
+		}
+		50% {
+			opacity: 0.7;
+			transform: scale(0.9);
+			box-shadow:
+				0 0 4px rgba(0, 255, 255, 0.5),
+				inset 0 0 2px rgba(255, 255, 255, 0.2);
+		}
+	}
+
+	/* Ability icons */
+	.ability-icons {
+		display: flex;
+		gap: 6px;
+		justify-content: center;
+		align-items: center;
+		margin-top: 4px;
+	}
+
+	.ability-icon {
+		opacity: 0.3;
+		transition: all 0.3s ease;
+		filter: drop-shadow(0 0 2px rgba(0, 255, 255, 0.3));
+	}
+
+	.ability-icon.active {
+		opacity: 1;
+		filter: drop-shadow(0 0 4px rgba(0, 255, 255, 0.8));
+		animation: ability-glow 2s ease-in-out infinite;
+	}
+
+	@keyframes ability-glow {
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.7;
 		}
 	}
 </style>

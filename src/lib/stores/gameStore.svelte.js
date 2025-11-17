@@ -3,10 +3,40 @@
  * This replaces the old gameStore and eliminates the StateMachine class
  */
 import { transitionGraph } from './transitions.js';
+import { rollDie, rollAdvantage, rollDisadvantage } from '../services/random.js';
 
 // Helper for random number generation
+// D20 system: returns 1-20
 let getRandomNumber = () => {
-	return Math.floor(Math.random() * 6) + 1;
+	return rollDie(20);
+};
+
+/**
+ * Roll with Lucid/Surreal modifiers
+ * Lucid (advantage): Roll 2d20, keep highest
+ * Surreal (disadvantage): Roll 2d20, keep lowest
+ * @returns {Object} { roll: number, wasLucid: boolean, wasSurreal: boolean }
+ */
+let rollWithModifiers = () => {
+	// Check for Lucid state (advantage)
+	if (gameState.isLucid) {
+		const roll = rollAdvantage(20);
+		console.log(`[rollWithModifiers] Lucid roll (advantage): ${roll}`);
+		gameState.isLucid = false; // Clear state after use
+		return { roll, wasLucid: true, wasSurreal: false };
+	}
+
+	// Check for Surreal state (disadvantage)
+	if (gameState.isSurreal) {
+		const roll = rollDisadvantage(20);
+		console.log(`[rollWithModifiers] Surreal roll (disadvantage): ${roll}`);
+		gameState.isSurreal = false; // Clear state after use
+		return { roll, wasSurreal: true, wasLucid: false };
+	}
+
+	// Normal roll
+	const roll = rollDie(20);
+	return { roll, wasLucid: false, wasSurreal: false };
 };
 
 /**
@@ -19,7 +49,7 @@ let gameState = $state({
 
 	// Player state
 	playerName: '',
-	tower: 54,
+	tower: 20, // D20 system: Stability starts at 20 (was 54 in d6 system)
 	tokens: 10,
 
 	// Round state
@@ -36,14 +66,24 @@ let gameState = $state({
 	// Roll state
 	diceRoll: 0,
 
+	// D20 Mechanics: Lucid/Surreal states
+	isLucid: false, // True if next roll should be 2d20 keep high
+	isSurreal: false, // True if next roll should be 2d20 keep low
+
+	// D20 Mechanics: Ace tracking (for salvation threshold)
+	acesRevealed: 0, // 0-4, determines salvation success threshold
+
 	// Pending state updates (deferred until animations complete)
 	pendingUpdates: {
 		diceRoll: null, // Pending dice roll result
 		towerDamage: null, // Pending tower damage
+		towerGain: null, // Pending tower gain (from natural 20 on stability checks)
 		tokenChange: null, // Pending token change from success check
-		bonusChange: null, // Pending bonus change from aces
+		aceChange: null, // Pending ace reveal (replaces bonusChange)
 		kingsChange: null, // Pending king reveal
-		kingsSuit: null // Suit of pending king reveal
+		kingsSuit: null, // Suit of pending king reveal
+		isLucid: null, // Pending Lucid state (advantage for next roll)
+		isSurreal: null // Pending Surreal state (disadvantage for next roll)
 	},
 
 	// King tracking
@@ -59,7 +99,6 @@ let gameState = $state({
 	// Game over state
 	gameOver: false,
 	win: false,
-	bonus: 0,
 
 	// Journal
 	journalEntries: [],
@@ -75,7 +114,8 @@ let gameState = $state({
 	player: null,
 
 	// Functions
-	getRandomNumber: getRandomNumber
+	getRandomNumber: getRandomNumber,
+	rollWithModifiers: rollWithModifiers
 });
 
 /**

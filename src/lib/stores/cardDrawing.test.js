@@ -6,7 +6,10 @@ import {
 	getFailureCheckRoll,
 	applyFailureCheckResult,
 	applyPendingDiceRoll,
-	confirmFailureCheck
+	confirmFailureCheck,
+	rollForTasks,
+	successCheck,
+	applyPendingSuccessCheck
 } from './gameActions.svelte.js';
 
 /**
@@ -36,8 +39,7 @@ describe('Card Drawing and Failure Check Flow', () => {
 		];
 		gameState.log = [];
 		gameState.round = 1;
-		gameState.tower = 54;
-		gameState.bonus = 0;
+		gameState.tower = 20; // D20 system: starts at 20 stability
 		gameState.kingsRevealed = 0;
 		gameState.gameOver = false;
 	});
@@ -212,23 +214,22 @@ describe('Card Drawing and Failure Check Flow', () => {
 					id: '1.1'
 				}
 			];
-			gameState.tower = 54;
-			gameState.bonus = 0;
-
-			// Roll a 3 (will remove 3 blocks)
+			gameState.tower = 20; // D20 system: starts at 20
+	
+			// Roll a 3 (D20 system: roll 3 in range 2-5 → -2 stability)
 			const rollResult = 3;
 			applyFailureCheckResult(rollResult);
 
 			// Damage should be stored in pending state, not applied yet
 			expect(gameState.pendingUpdates.diceRoll).toBe(3);
-			expect(gameState.pendingUpdates.towerDamage).toBe(3);
-			expect(gameState.tower).toBe(54); // Tower not updated yet
+			expect(gameState.pendingUpdates.towerDamage).toBe(2); // D20 system: roll 2-5 → -2 stability
+			expect(gameState.tower).toBe(20); // Tower not updated yet
 
 			// Now apply the pending updates
 			applyPendingDiceRoll();
 
-			// Tower should now be reduced
-			expect(gameState.tower).toBe(51); // 54 - 3
+			// Stability should now be reduced
+			expect(gameState.tower).toBe(18); // 20 - 2
 
 			// Log should be updated with dice roll
 			expect(gameState.log[0].diceRoll).toBe(3);
@@ -237,9 +238,8 @@ describe('Card Drawing and Failure Check Flow', () => {
 		test('should transition correctly after failure check', () => {
 			gameState.state = 'failureCheck';
 			gameState.log = [{ card: '5', suit: 'hearts', description: 'Test', round: 1, id: '1.1' }];
-			gameState.tower = 54;
-			gameState.bonus = 0;
-			gameState.cardsToDraw = 2; // More cards to draw
+			gameState.tower = 20; // D20 system: starts at 20 stability
+				gameState.cardsToDraw = 2; // More cards to draw
 
 			// Apply failure check with roll of 2 (stores in pending state)
 			applyFailureCheckResult(2);
@@ -255,9 +255,8 @@ describe('Card Drawing and Failure Check Flow', () => {
 		test('should transition to log after failure check if no cards remain', () => {
 			gameState.state = 'failureCheck';
 			gameState.log = [{ card: '5', suit: 'hearts', description: 'Test', round: 1, id: '1.1' }];
-			gameState.tower = 54;
-			gameState.bonus = 0;
-			gameState.cardsToDraw = 0; // No more cards
+			gameState.tower = 20; // D20 system: starts at 20 stability
+				gameState.cardsToDraw = 0; // No more cards
 
 			// Apply failure check (stores in pending state)
 			applyFailureCheckResult(2);
@@ -357,24 +356,558 @@ describe('Card Drawing and Failure Check Flow', () => {
 			expect(gameState.state).toBe('failureCheck');
 		});
 
-		test('should handle multiple kings triggering game over', async () => {
-			// Setup config to avoid null reference
+	test('should handle multiple kings triggering game over', async () => {
+		// Setup config to avoid null reference
+		gameState.config = {
+			labels: {
+				failureCounterLoss: 'All kings revealed - game over'
+			}
+		};
+
+		gameState.deck = [{ card: 'K', suit: 'hearts', description: 'Fourth King' }];
+		gameState.kingsRevealed = 3; // Already have 3 kings
+		gameState.cardsToDraw = 1;
+
+		await drawCard();
+
+		// Kings are tracked in pending state until confirmCard() is called
+		expect(gameState.pendingUpdates.kingsChange).toBe(1);
+
+		// Confirm the card to apply pending updates
+		confirmCard();
+
+		// Should trigger game over
+		expect(gameState.kingsRevealed).toBe(4);
+		expect(gameState.gameOver).toBe(true);
+		expect(gameState.state).toBe('gameOver');
+	});
+	});
+
+	describe('rollForTasks() - D20 Card Draw System', () => {
+		beforeEach(() => {
+			gameState.isLucid = false;
+			gameState.isSurreal = false;
+			gameState.cardsToDraw = 0;
+			gameState.pendingUpdates.diceRoll = null;
+		});
+
+		test('should roll d20 and convert to card count', async () => {
+			// Mock rollWithModifiers to return a specific value
+			const originalRoll = gameState.rollWithModifiers;
+			gameState.rollWithModifiers = vi.fn(() => ({ roll: 15, wasLucid: false, wasSurreal: false }));
+
+			const result = await rollForTasks();
+
+			// Should return object with roll and modifier flags
+			expect(result.roll).toBe(15);
+			expect(result.wasLucid).toBe(false);
+			expect(result.wasSurreal).toBe(false);
+
+			// Should convert to 4 cards (15 is in range 11-15)
+			expect(gameState.cardsToDraw).toBe(4);
+
+			// Should store roll in pending updates
+			expect(gameState.pendingUpdates.diceRoll).toBe(15);
+
+			// Restore original function
+			gameState.rollWithModifiers = originalRoll;
+		});
+
+		test('should set Lucid state on natural 20', async () => {
+			const originalRoll = gameState.rollWithModifiers;
+			gameState.rollWithModifiers = vi.fn(() => ({ roll: 20, wasLucid: false, wasSurreal: false }));
+
+			await rollForTasks();
+
+			// Should set Lucid state in pending updates (deferred)
+			expect(gameState.pendingUpdates.isLucid).toBe(true);
+
+			// Should set 6 cards (max)
+			expect(gameState.cardsToDraw).toBe(6);
+
+			gameState.rollWithModifiers = originalRoll;
+		});
+
+		test('should set Surreal state on natural 1', async () => {
+			const originalRoll = gameState.rollWithModifiers;
+			gameState.rollWithModifiers = vi.fn(() => ({ roll: 1, wasLucid: false, wasSurreal: false }));
+
+			await rollForTasks();
+
+			// Should set Surreal state in pending updates (deferred)
+			expect(gameState.pendingUpdates.isSurreal).toBe(true);
+
+			// Should set 1 card (min)
+			expect(gameState.cardsToDraw).toBe(1);
+
+			gameState.rollWithModifiers = originalRoll;
+		});
+
+		test('should handle Lucid roll (advantage)', async () => {
+			gameState.isLucid = true;
+
+			// Let it roll naturally with advantage
+			const result = await rollForTasks();
+
+			// Roll should be in valid range
+			expect(result.roll).toBeGreaterThanOrEqual(1);
+			expect(result.roll).toBeLessThanOrEqual(20);
+
+			// Cards should be in valid range
+			expect(gameState.cardsToDraw).toBeGreaterThanOrEqual(1);
+			expect(gameState.cardsToDraw).toBeLessThanOrEqual(6);
+
+			// Lucid state should be cleared (rollWithModifiers clears it)
+			expect(gameState.isLucid).toBe(false);
+		});
+
+		test('should handle Surreal roll (disadvantage)', async () => {
+			gameState.isSurreal = true;
+
+			// Let it roll naturally with disadvantage
+			const result = await rollForTasks();
+
+			// Roll should be in valid range
+			expect(result.roll).toBeGreaterThanOrEqual(1);
+			expect(result.roll).toBeLessThanOrEqual(20);
+
+			// Cards should be in valid range
+			expect(gameState.cardsToDraw).toBeGreaterThanOrEqual(1);
+			expect(gameState.cardsToDraw).toBeLessThanOrEqual(6);
+
+			// Surreal state should be cleared
+			expect(gameState.isSurreal).toBe(false);
+		});
+
+		test('should clear currentCard', async () => {
+			gameState.currentCard = { card: '5', suit: 'hearts' };
+
+			await rollForTasks();
+
+			expect(gameState.currentCard).toBeNull();
+		});
+
+		test('should convert d20 rolls correctly to card counts', async () => {
+			const originalRoll = gameState.rollWithModifiers;
+
+			// Test each range
+			const testCases = [
+				{ roll: 1, expectedCards: 1 },
+				{ roll: 2, expectedCards: 2 },
+				{ roll: 5, expectedCards: 2 },
+				{ roll: 6, expectedCards: 3 },
+				{ roll: 10, expectedCards: 3 },
+				{ roll: 11, expectedCards: 4 },
+				{ roll: 15, expectedCards: 4 },
+				{ roll: 16, expectedCards: 5 },
+				{ roll: 19, expectedCards: 5 },
+				{ roll: 20, expectedCards: 6 }
+			];
+
+			for (const testCase of testCases) {
+				gameState.rollWithModifiers = vi.fn(() => ({
+					roll: testCase.roll,
+					wasLucid: false,
+					wasSurreal: false
+				}));
+
+				await rollForTasks();
+
+				expect(gameState.cardsToDraw).toBe(testCase.expectedCards);
+			}
+
+			gameState.rollWithModifiers = originalRoll;
+		});
+	});
+
+	describe('Salvation System - D20 Ace-Dependent Thresholds', () => {
+		beforeEach(() => {
+			// Setup game config
 			gameState.config = {
 				labels: {
-					failureCounterLoss: 'All kings revealed - game over'
+					successCheckWin: 'Victory! You have escaped!'
 				}
 			};
+			gameState.isLucid = false;
+			gameState.isSurreal = false;
+			gameState.tokens = 10;
+			gameState.acesRevealed = 0;
+			gameState.aceOfHeartsRevealed = true; // Salvation is active
+			gameState.gameOver = false;
+			gameState.win = false;
+			gameState.pendingUpdates.diceRoll = null;
+			gameState.pendingUpdates.tokenChange = null;
+		});
 
-			gameState.deck = [{ card: 'K', suit: 'hearts', description: 'Fourth King' }];
-			gameState.kingsRevealed = 3; // Already have 3 kings
-			gameState.cardsToDraw = 1;
+		describe('Ace Tracking', () => {
+			test('should track Aces using aceChange pending update', async () => {
+				gameState.deck = [{ card: 'A', suit: 'diamonds', description: 'Ace of Diamonds' }];
+				gameState.cardsToDraw = 1;
+				gameState.acesRevealed = 0;
 
-			await drawCard();
+				await drawCard();
 
-			// Should trigger game over
-			expect(gameState.kingsRevealed).toBe(4);
-			expect(gameState.gameOver).toBe(true);
-			expect(gameState.state).toBe('gameOver');
+				// Should set aceChange in pending updates
+				expect(gameState.pendingUpdates.aceChange).toBe(1);
+
+				// acesRevealed should not be updated yet
+				expect(gameState.acesRevealed).toBe(0);
+
+				await confirmCard();
+
+				// Now acesRevealed should be incremented
+				expect(gameState.acesRevealed).toBe(1);
+				expect(gameState.pendingUpdates.aceChange).toBeNull();
+			});
+
+			test('should track Ace of Hearts separately', async () => {
+				gameState.deck = [{ card: 'A', suit: 'hearts', description: 'Ace of Hearts' }];
+				gameState.cardsToDraw = 1;
+				gameState.aceOfHeartsRevealed = false;
+				gameState.acesRevealed = 0;
+
+				await drawCard();
+
+				// Ace of Hearts flag should be set immediately
+				expect(gameState.aceOfHeartsRevealed).toBe(true);
+
+				// aceChange should still be pending
+				expect(gameState.pendingUpdates.aceChange).toBe(1);
+
+				await confirmCard();
+
+				// acesRevealed should be incremented
+				expect(gameState.acesRevealed).toBe(1);
+			});
+
+			test('should increment acesRevealed for each Ace', async () => {
+				gameState.acesRevealed = 2;
+				gameState.deck = [{ card: 'A', suit: 'clubs', description: 'Third Ace' }];
+				gameState.cardsToDraw = 1;
+
+				await drawCard();
+				await confirmCard();
+
+				expect(gameState.acesRevealed).toBe(3);
+			});
+		});
+
+		describe('successCheck() - With 1 Ace Revealed', () => {
+			beforeEach(() => {
+				gameState.acesRevealed = 1; // Threshold = 17
+			});
+
+			test('should remove 2 tokens on natural 20 and set Lucid', () => {
+				const originalRoll = gameState.rollWithModifiers;
+				gameState.rollWithModifiers = vi.fn(() => ({ roll: 20, wasLucid: false, wasSurreal: false }));
+
+				successCheck();
+
+				// Should store pending token change
+				expect(gameState.pendingUpdates.tokenChange).toBe(-2);
+
+				// Should set Lucid state in pending updates (deferred)
+				expect(gameState.pendingUpdates.isLucid).toBe(true);
+
+				gameState.rollWithModifiers = originalRoll;
+			});
+
+			test('should remove 1 token on rolls 17-19', () => {
+				const originalRoll = gameState.rollWithModifiers;
+
+				for (let roll = 17; roll <= 19; roll++) {
+					gameState.rollWithModifiers = vi.fn(() => ({
+						roll,
+						wasLucid: false,
+						wasSurreal: false
+					}));
+
+					successCheck();
+
+					expect(gameState.pendingUpdates.tokenChange).toBe(-1);
+
+					// Clear for next test
+					gameState.pendingUpdates.tokenChange = null;
+					gameState.isLucid = false;
+					gameState.isSurreal = false;
+				}
+
+				gameState.rollWithModifiers = originalRoll;
+			});
+
+			test('should not change tokens on near-miss (6-16)', () => {
+				const originalRoll = gameState.rollWithModifiers;
+
+				for (let roll = 6; roll <= 16; roll++) {
+					gameState.rollWithModifiers = vi.fn(() => ({
+						roll,
+						wasLucid: false,
+						wasSurreal: false
+					}));
+
+					successCheck();
+
+					expect(gameState.pendingUpdates.tokenChange).toBe(0);
+
+					// Clear for next test
+					gameState.pendingUpdates.tokenChange = null;
+				}
+
+				gameState.rollWithModifiers = originalRoll;
+			});
+
+			test('should add 1 token on failure (2-5)', () => {
+				const originalRoll = gameState.rollWithModifiers;
+
+				for (let roll = 2; roll <= 5; roll++) {
+					gameState.rollWithModifiers = vi.fn(() => ({
+						roll,
+						wasLucid: false,
+						wasSurreal: false
+					}));
+
+					successCheck();
+
+					expect(gameState.pendingUpdates.tokenChange).toBe(1);
+
+					// Clear for next test
+					gameState.pendingUpdates.tokenChange = null;
+				}
+
+				gameState.rollWithModifiers = originalRoll;
+			});
+
+			test('should add 2 tokens on natural 1 and set Surreal', () => {
+				const originalRoll = gameState.rollWithModifiers;
+				gameState.rollWithModifiers = vi.fn(() => ({ roll: 1, wasLucid: false, wasSurreal: false }));
+
+				successCheck();
+
+				expect(gameState.pendingUpdates.tokenChange).toBe(2);
+				expect(gameState.pendingUpdates.isSurreal).toBe(true);
+
+				gameState.rollWithModifiers = originalRoll;
+			});
+		});
+
+		describe('successCheck() - With Multiple Aces', () => {
+			test('should use threshold 14 with 2 Aces (35% success)', () => {
+				gameState.acesRevealed = 2;
+				const originalRoll = gameState.rollWithModifiers;
+
+				// Test threshold boundary (14 should succeed)
+				gameState.rollWithModifiers = vi.fn(() => ({ roll: 14, wasLucid: false, wasSurreal: false }));
+				successCheck();
+				expect(gameState.pendingUpdates.tokenChange).toBe(-1);
+
+				// Clear and test just below threshold (13 should be near-miss)
+				gameState.pendingUpdates.tokenChange = null;
+				gameState.rollWithModifiers = vi.fn(() => ({ roll: 13, wasLucid: false, wasSurreal: false }));
+				successCheck();
+				expect(gameState.pendingUpdates.tokenChange).toBe(0);
+
+				gameState.rollWithModifiers = originalRoll;
+			});
+
+			test('should use threshold 11 with 3 Aces (50% success)', () => {
+				gameState.acesRevealed = 3;
+				const originalRoll = gameState.rollWithModifiers;
+
+				// Test threshold boundary (11 should succeed)
+				gameState.rollWithModifiers = vi.fn(() => ({ roll: 11, wasLucid: false, wasSurreal: false }));
+				successCheck();
+				expect(gameState.pendingUpdates.tokenChange).toBe(-1);
+
+				// Clear and test just below threshold (10 should be near-miss)
+				gameState.pendingUpdates.tokenChange = null;
+				gameState.rollWithModifiers = vi.fn(() => ({ roll: 10, wasLucid: false, wasSurreal: false }));
+				successCheck();
+				expect(gameState.pendingUpdates.tokenChange).toBe(0);
+
+				gameState.rollWithModifiers = originalRoll;
+			});
+
+			test('should auto-succeed with 4 Aces (threshold 0)', () => {
+				gameState.acesRevealed = 4;
+				const originalRoll = gameState.rollWithModifiers;
+
+				// Any roll should succeed with 4 Aces
+				const testRolls = [1, 5, 10, 15, 20];
+
+				for (const roll of testRolls) {
+					gameState.rollWithModifiers = vi.fn(() => ({
+						roll,
+						wasLucid: false,
+						wasSurreal: false
+					}));
+
+					successCheck();
+
+					// Should always remove 1 token
+					expect(gameState.pendingUpdates.tokenChange).toBe(-1);
+
+					// Clear for next test
+					gameState.pendingUpdates.tokenChange = null;
+				}
+
+				gameState.rollWithModifiers = originalRoll;
+			});
+		});
+
+		describe('applyPendingSuccessCheck() - Token Application', () => {
+			beforeEach(() => {
+				// Set up config with slug for saveGame
+				gameState.config = {
+					slug: 'test-game',
+					labels: {
+						successCheckWin: 'Victory! You have escaped!'
+					}
+				};
+			});
+
+			test('should apply positive token change (failure adds tokens)', () => {
+				gameState.tokens = 5;
+				gameState.pendingUpdates.diceRoll = 3;
+				gameState.pendingUpdates.tokenChange = 1;
+				gameState.state = 'successCheck';
+
+				applyPendingSuccessCheck();
+
+				// Should add 1 token
+				expect(gameState.tokens).toBe(6);
+
+				// Should clear pending updates
+				expect(gameState.pendingUpdates.diceRoll).toBeNull();
+				expect(gameState.pendingUpdates.tokenChange).toBeNull();
+			});
+
+			test('should apply negative token change (success removes tokens)', () => {
+				gameState.tokens = 5;
+				gameState.pendingUpdates.diceRoll = 18;
+				gameState.pendingUpdates.tokenChange = -1;
+				gameState.state = 'successCheck';
+
+				applyPendingSuccessCheck();
+
+				// Should remove 1 token
+				expect(gameState.tokens).toBe(4);
+			});
+
+			test('should apply -2 token change on natural 20', () => {
+				gameState.tokens = 5;
+				gameState.pendingUpdates.diceRoll = 20;
+				gameState.pendingUpdates.tokenChange = -2;
+				gameState.state = 'successCheck';
+
+				applyPendingSuccessCheck();
+
+				// Should remove 2 tokens
+				expect(gameState.tokens).toBe(3);
+			});
+
+			test('should apply +2 token change on natural 1', () => {
+				gameState.tokens = 5;
+				gameState.pendingUpdates.diceRoll = 1;
+				gameState.pendingUpdates.tokenChange = 2;
+				gameState.state = 'successCheck';
+
+				applyPendingSuccessCheck();
+
+				// Should add 2 tokens
+				expect(gameState.tokens).toBe(7);
+			});
+
+			test('should not allow tokens to go below 0', () => {
+				gameState.tokens = 1;
+				gameState.pendingUpdates.diceRoll = 20;
+				gameState.pendingUpdates.tokenChange = -2;
+
+				applyPendingSuccessCheck();
+
+				// Should stop at 0
+				expect(gameState.tokens).toBe(0);
+			});
+		});
+
+		describe('applyPendingSuccessCheck() - Victory Condition', () => {
+			test('should trigger victory when tokens reach 0', () => {
+				gameState.tokens = 1;
+				gameState.pendingUpdates.diceRoll = 18;
+				gameState.pendingUpdates.tokenChange = -1;
+				gameState.state = 'successCheck';
+
+				applyPendingSuccessCheck();
+
+				// Should set victory flags
+				expect(gameState.tokens).toBe(0);
+				expect(gameState.win).toBe(true);
+				expect(gameState.gameOver).toBe(true);
+				expect(gameState.state).toBe('gameOver');
+			});
+
+			test('should NOT transition to final damage roll (D20 system)', () => {
+				gameState.tokens = 2;
+				gameState.pendingUpdates.diceRoll = 20;
+				gameState.pendingUpdates.tokenChange = -2;
+				gameState.state = 'successCheck';
+
+				applyPendingSuccessCheck();
+
+				// Should go directly to game over (victory)
+				expect(gameState.tokens).toBe(0);
+				expect(gameState.state).toBe('gameOver');
+				expect(gameState.win).toBe(true);
+			});
+
+			test('should continue game if tokens remain', () => {
+				gameState.tokens = 5;
+				gameState.pendingUpdates.diceRoll = 18;
+				gameState.pendingUpdates.tokenChange = -1;
+				gameState.state = 'successCheck';
+				gameState.round = 5;
+
+				applyPendingSuccessCheck();
+
+				// Should NOT be game over
+				expect(gameState.tokens).toBe(4);
+				expect(gameState.gameOver).toBe(false);
+				expect(gameState.win).toBe(false);
+
+				// Should go to log screen (journal entry before next round)
+				expect(gameState.state).toBe('log');
+			});
+		});
+
+		describe('Lucid/Surreal Integration', () => {
+			test('should handle Lucid roll in successCheck', () => {
+				gameState.acesRevealed = 1;
+				gameState.isLucid = true;
+
+				// Let it roll naturally with advantage
+				const result = successCheck();
+
+				// Roll should be in valid range
+				expect(result.roll).toBeGreaterThanOrEqual(1);
+				expect(result.roll).toBeLessThanOrEqual(20);
+
+				// Lucid state should be cleared (rollWithModifiers clears it)
+				expect(gameState.isLucid).toBe(false);
+			});
+
+			test('should handle Surreal roll in successCheck', () => {
+				gameState.acesRevealed = 1;
+				gameState.isSurreal = true;
+
+				// Let it roll naturally with disadvantage
+				const result = successCheck();
+
+				// Roll should be in valid range
+				expect(result.roll).toBeGreaterThanOrEqual(1);
+				expect(result.roll).toBeLessThanOrEqual(20);
+
+				// Surreal state should be cleared
+				expect(gameState.isSurreal).toBe(false);
+			});
 		});
 	});
 });

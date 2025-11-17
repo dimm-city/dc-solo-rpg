@@ -4,11 +4,22 @@ Welcome to the Dimm City Solo RPG project! This project provides a highly intera
 
 ## Overview
 
-The Dimm City Solo RPG is a narrative-driven, solo role-playing game that takes players on a thrilling adventure that changes each time they play. The game is designed to be played alone, with the game system guiding the player through the story, presenting challenges, and shaping the narrative based on the cards that are drawn and the roll of the dice.
+The Dimm City Solo RPG is a narrative-driven, solo role-playing game that takes players on a thrilling adventure that changes each time they play. The game uses a **D20 system** with tactical depth, featuring Stability checks, Lucid/Surreal states (advantage/disadvantage), and a progressive Salvation mechanic for victory. The game is designed to be played alone, with the game system guiding the player through the story, presenting challenges, and shaping the narrative based on the cards that are drawn and the roll of the dice.
 
 Our Svelte based web component encapsulates the entire game, providing a rich, interactive UI that guides the player through the game, handles game logic, and maintains game state. This component can be easily integrated into any website, providing a seamless gaming experience for users.
 
 The web component is also highly configurable, allowing for customization of game rules, narrative content, and visual appearance. This makes it a versatile tool for creating unique RPG experiences for each site, game, and player.
+
+### D20 Mechanics
+
+- **Stability**: 20 points (your life). Failed checks cost Stability equal to the card rank.
+- **Tokens**: Start with 10. Remove all to win through Salvation checks.
+- **Aces Revealed**: Collect Aces to improve Salvation success rate (20% → 35% → 50% → 100%).
+- **Lucid State**: Natural 20 grants advantage on next roll.
+- **Surreal State**: Natural 1 imposes disadvantage on next roll.
+- **Graduated Token Changes**: Critical successes (-2), successes (-1), failures (+1), critical failures (+2).
+
+For complete mechanics documentation, see [D20 Mechanics Guide](./docs/d20-mechanics-guide.md).
 
 ## Key Features
 
