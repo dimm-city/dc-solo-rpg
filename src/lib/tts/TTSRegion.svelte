@@ -129,39 +129,37 @@
 	}
 
 	.tts-controls {
-		position: absolute;
-		top: 0;
-		right: 0;
 		display: flex;
-		gap: 2px;
+		gap: 4px;
 		align-items: center;
-		opacity: 0.15;
+		justify-content: flex-end;
+		opacity: 0.2;
 		transition: opacity 0.2s ease;
-		z-index: 10;
+		margin-bottom: 4px;
 	}
 
 	.tts-controls:hover {
-		opacity: 0.8;
+		opacity: 1;
 	}
 
 	.tts-btn {
-		background: rgba(0, 0, 0, 0.2);
+		background: rgba(0, 0, 0, 0.3);
 		border: none;
-		color: rgba(255, 255, 255, 0.6);
-		padding: 4px;
+		color: rgba(255, 255, 255, 0.5);
+		padding: 6px;
 		cursor: pointer;
 		transition: all 0.2s ease;
-		border-radius: 2px;
+		border-radius: 3px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 18px;
-		height: 18px;
+		width: 24px;
+		height: 24px;
 	}
 
 	.tts-btn:hover:not(:disabled) {
-		background: rgba(0, 255, 255, 0.15);
-		color: rgba(0, 255, 255, 0.9);
+		background: rgba(0, 255, 255, 0.2);
+		color: rgba(0, 255, 255, 1);
 	}
 
 	.tts-btn:disabled {
@@ -170,8 +168,8 @@
 	}
 
 	.tts-btn svg {
-		width: 10px;
-		height: 10px;
+		width: 12px;
+		height: 12px;
 	}
 
 	.mode-menu {
@@ -179,37 +177,39 @@
 		top: 100%;
 		right: 0;
 		margin-top: 2px;
-		background: rgba(10, 10, 20, 0.95);
-		border: 1px solid rgba(0, 255, 255, 0.2);
-		border-radius: 3px;
-		padding: 2px;
+		background: rgba(10, 10, 20, 0.98);
+		border: 1px solid rgba(0, 255, 255, 0.3);
+		border-radius: 4px;
+		padding: 4px;
 		display: flex;
 		flex-direction: column;
-		gap: 1px;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-		min-width: 60px;
+		gap: 2px;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+		min-width: 80px;
+		z-index: 100;
 	}
 
 	.mode-option {
 		background: transparent;
 		border: none;
-		color: rgba(255, 255, 255, 0.6);
-		padding: 4px 8px;
+		color: rgba(255, 255, 255, 0.7);
+		padding: 6px 10px;
 		cursor: pointer;
-		font-size: 0.7rem;
+		font-size: 0.75rem;
 		text-align: left;
 		transition: all 0.15s ease;
-		border-radius: 2px;
+		border-radius: 3px;
 	}
 
 	.mode-option:hover {
-		background: rgba(0, 255, 255, 0.1);
-		color: rgba(0, 255, 255, 0.9);
+		background: rgba(0, 255, 255, 0.15);
+		color: rgba(0, 255, 255, 1);
 	}
 
 	.mode-option.active {
-		background: rgba(0, 255, 255, 0.15);
+		background: rgba(0, 255, 255, 0.2);
 		color: rgba(0, 255, 255, 1);
+		font-weight: 600;
 	}
 
 	.tts-content {
@@ -218,11 +218,56 @@
 
 	/* Accessibility - make controls more visible for keyboard users */
 	.tts-controls:focus-within {
-		opacity: 0.9;
+		opacity: 1;
 	}
 
 	.tts-btn:focus-visible {
-		outline: 1px solid rgba(0, 255, 255, 0.5);
-		outline-offset: 1px;
+		outline: 2px solid rgba(0, 255, 255, 0.6);
+		outline-offset: 2px;
+	}
+
+	/* Mobile optimizations */
+	@media (max-width: 768px) {
+		.tts-controls {
+			opacity: 0.4;
+			gap: 6px;
+		}
+
+		.tts-btn {
+			width: 32px;
+			height: 32px;
+			padding: 8px;
+		}
+
+		.tts-btn svg {
+			width: 14px;
+			height: 14px;
+		}
+
+		.mode-menu {
+			min-width: 100px;
+		}
+
+		.mode-option {
+			padding: 10px 12px;
+			font-size: 0.875rem;
+		}
+	}
+
+	/* Touch device optimization */
+	@media (hover: none) and (pointer: coarse) {
+		.tts-controls {
+			opacity: 0.6;
+		}
+
+		.tts-btn {
+			width: 36px;
+			height: 36px;
+		}
+
+		.tts-btn svg {
+			width: 16px;
+			height: 16px;
+		}
 	}
 </style>
