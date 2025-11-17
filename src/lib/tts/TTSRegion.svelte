@@ -20,7 +20,8 @@
 	let voiceName = $derived(get(prefsStore).voiceName);
 	let showModeMenu = $state(false);
 
-	function changeMode(newMode: TTSMode) {
+	function changeMode(newMode: TTSMode, event?: MouseEvent) {
+		event?.stopPropagation();
 		setRegionMode(regionId, newMode);
 		if (newMode === 'off') {
 			ttsManager.stop(regionId);
@@ -28,7 +29,8 @@
 		showModeMenu = false;
 	}
 
-	function play() {
+	function play(event?: MouseEvent) {
+		event?.stopPropagation();
 		const currentMode = get(prefsStore).mode;
 		const currentVoiceName = get(prefsStore).voiceName;
 		if (!text) return;
@@ -37,11 +39,13 @@
 		ttsManager.speak({ regionId, text, voiceName: currentVoiceName });
 	}
 
-	function stop() {
+	function stop(event?: MouseEvent) {
+		event?.stopPropagation();
 		ttsManager.stop(regionId);
 	}
 
-	function toggleModeMenu() {
+	function toggleModeMenu(event?: MouseEvent) {
+		event?.stopPropagation();
 		showModeMenu = !showModeMenu;
 	}
 
@@ -51,7 +55,7 @@
 </script>
 
 <div class="tts-region">
-	<div class="tts-controls">
+	<div class="tts-controls" onclick={(e) => e.stopPropagation()}>
 		<button
 			type="button"
 			class="tts-btn play-btn"
@@ -91,22 +95,22 @@
 		</button>
 
 		{#if showModeMenu}
-			<div class="mode-menu">
+			<div class="mode-menu" onclick={(e) => e.stopPropagation()}>
 				<button
 					class="mode-option"
 					class:active={mode === 'manual'}
-					onclick={() => changeMode('manual')}
+					onclick={(e) => changeMode('manual', e)}
 				>
 					Manual
 				</button>
 				<button
 					class="mode-option"
 					class:active={mode === 'auto'}
-					onclick={() => changeMode('auto')}
+					onclick={(e) => changeMode('auto', e)}
 				>
 					Auto
 				</button>
-				<button class="mode-option" class:active={mode === 'off'} onclick={() => changeMode('off')}>
+				<button class="mode-option" class:active={mode === 'off'} onclick={(e) => changeMode('off', e)}>
 					Off
 				</button>
 			</div>
