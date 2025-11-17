@@ -83,7 +83,9 @@ let gameState = $state({
 		tokenChange: null, // Pending token change from success check
 		aceChange: null, // Pending ace reveal (replaces bonusChange)
 		kingsChange: null, // Pending king reveal
-		kingsSuit: null // Suit of pending king reveal
+		kingsSuit: null, // Suit of pending king reveal
+		isLucid: null, // Pending Lucid state (advantage for next roll)
+		isSurreal: null // Pending Surreal state (disadvantage for next roll)
 	},
 
 	// King tracking

@@ -251,12 +251,12 @@ export async function rollForTasks() {
 	gameState.pendingUpdates.diceRoll = roll;
 	gameState.currentCard = null;
 
-	// Handle Lucid/Surreal state changes from this roll
+	// Handle Lucid/Surreal state changes from this roll (deferred until after animation)
 	if (roll === 20) {
-		gameState.isLucid = true;
+		gameState.pendingUpdates.isLucid = true;
 		logger.debug(`[rollForTasks] Natural 20! Next roll will be Lucid (advantage)`);
 	} else if (roll === 1) {
-		gameState.isSurreal = true;
+		gameState.pendingUpdates.isSurreal = true;
 		logger.debug(`[rollForTasks] Natural 1! Next roll will be Surreal (disadvantage)`);
 	}
 
@@ -274,6 +274,18 @@ export function applyPendingTaskRoll() {
 		gameState.diceRoll = gameState.pendingUpdates.diceRoll;
 		gameState.pendingUpdates.diceRoll = null;
 		logger.debug('[applyPendingTaskRoll] Applied pending task roll');
+	}
+
+	// Apply pending modifier state changes (after animation)
+	if (gameState.pendingUpdates.isLucid !== null) {
+		gameState.isLucid = gameState.pendingUpdates.isLucid;
+		gameState.pendingUpdates.isLucid = null;
+		logger.debug('[applyPendingTaskRoll] Applied pending Lucid state');
+	}
+	if (gameState.pendingUpdates.isSurreal !== null) {
+		gameState.isSurreal = gameState.pendingUpdates.isSurreal;
+		gameState.pendingUpdates.isSurreal = null;
+		logger.debug('[applyPendingTaskRoll] Applied pending Surreal state');
 	}
 }
 
@@ -464,12 +476,12 @@ export function applyFailureCheckResult(result) {
 
 	gameState.pendingUpdates.towerDamage = loss;
 
-	// Handle Lucid/Surreal state changes from this roll
+	// Handle Lucid/Surreal state changes from this roll (deferred until after animation)
 	if (gainedLucid) {
-		gameState.isLucid = true;
+		gameState.pendingUpdates.isLucid = true;
 		logger.debug(`[applyFailureCheckResult] Natural 20! Next roll will be Lucid`);
 	} else if (gainedSurreal) {
-		gameState.isSurreal = true;
+		gameState.pendingUpdates.isSurreal = true;
 		logger.debug(`[applyFailureCheckResult] Natural 1! Next roll will be Surreal`);
 	}
 
@@ -531,6 +543,18 @@ export function applyPendingDiceRoll() {
 		logger.debug(
 			`[applyPendingDiceRoll] Applied stability loss -${stabilityLoss}, stability now at ${gameState.tower}`
 		);
+	}
+
+	// Apply pending modifier state changes (after animation)
+	if (gameState.pendingUpdates.isLucid !== null) {
+		gameState.isLucid = gameState.pendingUpdates.isLucid;
+		gameState.pendingUpdates.isLucid = null;
+		logger.debug('[applyPendingDiceRoll] Applied pending Lucid state');
+	}
+	if (gameState.pendingUpdates.isSurreal !== null) {
+		gameState.isSurreal = gameState.pendingUpdates.isSurreal;
+		gameState.pendingUpdates.isSurreal = null;
+		logger.debug('[applyPendingDiceRoll] Applied pending Surreal state');
 	}
 
 	// Clear pending updates
@@ -595,11 +619,11 @@ export async function recordRound(journalEntry) {
 	// Check if a journal entry already exists for this round
 	const existingEntry = gameState.journalEntries.find(entry => entry.round === gameState.round);
 	if (existingEntry) {
-		logger.error(`[recordRound] ERROR: Journal entry already exists for round ${gameState.round}. Preventing duplicate.`, {
+		logger.warn(`[recordRound] WARNING: Journal entry already exists for round ${gameState.round}. Preventing duplicate.`, {
 			existingEntry,
 			attemptedEntry: journalEntry
 		});
-		console.error(`[recordRound] ERROR: Cannot save journal entry - an entry already exists for round ${gameState.round}. Each round can only have one journal entry.`);
+		console.warn(`[recordRound] WARNING: Cannot save journal entry - an entry already exists for round ${gameState.round}. Each round can only have one journal entry.`);
 		return; // Prevent duplicate
 	}
 
@@ -649,12 +673,12 @@ export function successCheck() {
 
 	gameState.pendingUpdates.tokenChange = tokenChange;
 
-	// Handle Lucid/Surreal state changes from this roll
+	// Handle Lucid/Surreal state changes from this roll (deferred until after animation)
 	if (gainedLucid) {
-		gameState.isLucid = true;
+		gameState.pendingUpdates.isLucid = true;
 		logger.debug(`[successCheck] Natural 20! Next roll will be Lucid`);
 	} else if (gainedSurreal) {
-		gameState.isSurreal = true;
+		gameState.pendingUpdates.isSurreal = true;
 		logger.debug(`[successCheck] Natural 1! Next roll will be Surreal`);
 	}
 
@@ -687,6 +711,18 @@ export function applyPendingSuccessCheck() {
 
 		// Ensure tokens don't go below 0
 		gameState.tokens = Math.max(gameState.tokens, 0);
+	}
+
+	// Apply pending modifier state changes (after animation)
+	if (gameState.pendingUpdates.isLucid !== null) {
+		gameState.isLucid = gameState.pendingUpdates.isLucid;
+		gameState.pendingUpdates.isLucid = null;
+		logger.debug('[applyPendingSuccessCheck] Applied pending Lucid state');
+	}
+	if (gameState.pendingUpdates.isSurreal !== null) {
+		gameState.isSurreal = gameState.pendingUpdates.isSurreal;
+		gameState.pendingUpdates.isSurreal = null;
+		logger.debug('[applyPendingSuccessCheck] Applied pending Surreal state');
 	}
 
 	// Clear pending updates
@@ -732,12 +768,12 @@ export function performInitialDamageRoll(roll) {
 	gameState.pendingUpdates.diceRoll = roll;
 	gameState.pendingUpdates.towerDamage = loss;
 
-	// Handle Lucid/Surreal state changes from this roll
+	// Handle Lucid/Surreal state changes from this roll (deferred until after animation)
 	if (gainedLucid) {
-		gameState.isLucid = true;
+		gameState.pendingUpdates.isLucid = true;
 		logger.debug(`[performInitialDamageRoll] Natural 20! Next roll will be Lucid`);
 	} else if (gainedSurreal) {
-		gameState.isSurreal = true;
+		gameState.pendingUpdates.isSurreal = true;
 		logger.debug(`[performInitialDamageRoll] Natural 1! Next roll will be Surreal`);
 	}
 
@@ -777,6 +813,18 @@ export function applyPendingInitialDamageRoll() {
 
 	// Apply stability loss
 	gameState.tower = Math.max(gameState.tower - stabilityLoss, 0);
+
+	// Apply pending modifier state changes (after animation)
+	if (gameState.pendingUpdates.isLucid !== null) {
+		gameState.isLucid = gameState.pendingUpdates.isLucid;
+		gameState.pendingUpdates.isLucid = null;
+		logger.debug('[applyPendingInitialDamageRoll] Applied pending Lucid state');
+	}
+	if (gameState.pendingUpdates.isSurreal !== null) {
+		gameState.isSurreal = gameState.pendingUpdates.isSurreal;
+		gameState.pendingUpdates.isSurreal = null;
+		logger.debug('[applyPendingInitialDamageRoll] Applied pending Surreal state');
+	}
 
 	// Clear pending updates
 	gameState.pendingUpdates.diceRoll = null;
