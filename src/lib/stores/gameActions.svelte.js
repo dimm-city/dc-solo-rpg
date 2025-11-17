@@ -531,9 +531,9 @@ export function applyPendingDiceRoll() {
 
 	// Apply stability gain first (if any, from natural 20)
 	if (stabilityGain > 0) {
-		gameState.tower += stabilityGain;
+		gameState.tower = Math.min(gameState.tower + stabilityGain, 20); // Cap at 20 Stability
 		logger.debug(
-			`[applyPendingDiceRoll] Applied stability gain +${stabilityGain}, stability now at ${gameState.tower}`
+			`[applyPendingDiceRoll] Applied stability gain +${stabilityGain}, stability now at ${gameState.tower} (capped at 20)`
 		);
 	}
 
@@ -809,7 +809,7 @@ export function applyPendingInitialDamageRoll() {
 
 	// Apply stability gain first (if any, from natural 20)
 	if (stabilityGain > 0) {
-		gameState.tower += stabilityGain;
+		gameState.tower = Math.min(gameState.tower + stabilityGain, 20); // Cap at 20 Stability
 	}
 
 	// Apply stability loss

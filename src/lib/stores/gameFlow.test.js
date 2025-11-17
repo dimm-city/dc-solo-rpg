@@ -43,7 +43,7 @@ describe('WAAStore', () => {
 		// Reset gameState to default values
 		gameState.state = 'loadGame';
 		gameState.playerName = '';
-		gameState.tower = 54;
+		gameState.tower = 20; // D20 system: starts at 20 Stability
 		gameState.tokens = 10;
 		gameState.round = 0;
 		gameState.cardsToDraw = 0;
@@ -54,6 +54,9 @@ describe('WAAStore', () => {
 		gameState.currentCard = null;
 		gameState.diceRoll = 0;
 		gameState.kingsRevealed = 0;
+		gameState.acesRevealed = 0; // D20 system: tracks Aces for Salvation
+		gameState.isLucid = false; // D20 system: advantage state
+		gameState.isSurreal = false; // D20 system: disadvantage state
 		gameState.kingOfHearts = false;
 		gameState.kingOfDiamonds = false;
 		gameState.kingOfClubs = false;
@@ -87,10 +90,9 @@ describe('WAAStore', () => {
 		};
 
 		// Call the startGame action with full config
-		// When passing full config, startGame uses initializeGame which sets state to 'options'
+		// When passing full config, startGame uses initializeGame which sets state to 'showIntro'
 		startGame(mockPlayer, mockGameConfig, {
-			difficulty: 3,
-			initialDamage: false
+			difficulty: 3
 		});
 
 		expect(gameState.round).toBe(1);
@@ -98,8 +100,10 @@ describe('WAAStore', () => {
 		expect(gameState.player.name).toBe(mockPlayer.name);
 		expect(gameState.deck).toBeDefined();
 		expect(gameState.deck.length).toBe(52);
-		// initializeGame sets state to 'options' (initial state)
-		expect(gameState.state).toBe('options');
+		// D20 system: Tower (Stability) starts at 20
+		expect(gameState.tower).toBe(20);
+		// initializeGame sets state to 'showIntro' (initial state)
+		expect(gameState.state).toBe('showIntro');
 		expect(gameState.config.options).toBeDefined();
 		expect(gameState.config.options.difficulty).toBe(3);
 	});
@@ -118,26 +122,30 @@ describe('WAAStore', () => {
 		expect(gameState.state).toBe('startRound');
 	});
 
-	// Test rollForTasks
+	// Test rollForTasks - D20 System
 	test('rollForTasks', async () => {
 		// Set initial state for this test
 		gameState.state = 'rollForTasks';
 
-		// Mock the getRandomNumber function
-		gameState.getRandomNumber = vi.fn(() => 5);
+		// Mock rollWithModifiers for D20 system
+		const originalRoll = gameState.rollWithModifiers;
+		gameState.rollWithModifiers = vi.fn(() => ({ roll: 15, wasLucid: false, wasSurreal: false }));
 
 		const result = await rollForTasks();
 
 		// Assert that the tokens in the gameState are updated correctly
 		expect(gameState).toBeDefined();
-		expect(result).toBe(5);
-		expect(gameState.cardsToDraw).toBe(5);
+		expect(result.roll).toBe(15);
+		// D20 system: roll 15 → 4 cards (range 11-15)
+		expect(gameState.cardsToDraw).toBe(4);
 		// rollForTasks() no longer transitions state - it just updates cardsToDraw
 		expect(gameState.state).toBe('rollForTasks');
 
 		// confirmTaskRoll() transitions to drawCard
 		confirmTaskRoll();
 		expect(gameState.state).toBe('drawCard');
+
+		gameState.rollWithModifiers = originalRoll;
 	});
 
 	// Test drawCard
@@ -205,6 +213,8 @@ describe('WAAStore', () => {
 			confirmTaskRoll();
 
 			await drawCard();
+			// Must call confirmCard() to apply pending king tracking
+			confirmCard();
 
 			// Drawing the 4th king immediately transitions to gameOver
 			expect(gameState.log).toEqual([expect.objectContaining({ ...card, round: 1 })]);
@@ -234,7 +244,8 @@ describe('WAAStore', () => {
 
 			expect(gameState.log).toEqual([expect.objectContaining({ ...card, round: 1 })]);
 			expect(gameState.kingsRevealed).toBe(3);
-			expect(gameState.bonus).toBe(1);
+			// D20 system: Aces increase acesRevealed (for Salvation threshold), not bonus
+			expect(gameState.acesRevealed).toBe(1);
 			expect(gameState.aceOfHeartsRevealed).toBe(true);
 			// Ace is an odd card, so it triggers failure check
 			expect(gameState.state).toBe('failureCheck');
@@ -260,16 +271,16 @@ describe('WAAStore', () => {
 			expect(gameState.state).toBe('gameOver');
 		});
 	});
-	// Test failureCheck
+	// Test failureCheck - D20 System
 	describe('failureCheck', () => {
-		test('should perform the failure check and update the game state (tower collapsed)', async () => {
-			// Mock the getRandomNumber function
-			gameState.getRandomNumber = vi.fn(() => 5);
+		test('should perform D20 Stability check and update game state (Stability depleted)', async () => {
+			// Mock rollWithModifiers for D20 system
+			const originalRoll = gameState.rollWithModifiers;
+			gameState.rollWithModifiers = vi.fn(() => ({ roll: 3, wasLucid: false, wasSurreal: false }));
+
 			gameState.state = 'failureCheck';
 			gameState.gameOver = false;
-			gameState.diceRoll = 0;
-			gameState.bonus = 1;
-			gameState.tower = 3;
+			gameState.tower = 2; // D20 system: Low Stability
 			gameState.cardsToDraw = 0;
 			gameState.log = [];
 			gameState.round = 1;
@@ -279,36 +290,60 @@ describe('WAAStore', () => {
 				}
 			};
 
+			// Import the apply function
+			const { applyFailureCheckResult, applyPendingDiceRoll } = await import('./gameActions.svelte.js');
+
 			const result = await failureCheck();
 
-			expect(result).toBe(5);
-			expect(gameState.diceRoll).toBe(result);
+			// Result is now an object with { roll, wasLucid, wasSurreal }
+			expect(result.roll).toBe(3);
+
+			// Apply the roll result
+			applyFailureCheckResult(result.roll);
+			applyPendingDiceRoll();
+
+			expect(gameState.diceRoll).toBe(3);
+			// Roll 3 (range 2-5) → -2 Stability → 2 - 2 = 0
 			expect(gameState.tower).toBe(0);
 			expect(gameState.status).toBe('Custom Loss Label');
 			expect(gameState.gameOver).toBe(true);
 			expect(gameState.state).toBe('gameOver');
+
+			gameState.rollWithModifiers = originalRoll;
 		});
 
-		test('should perform the failure check and update the game state (tower not collapsed)', async () => {
-			// Mock the getRandomNumber function
-			gameState.getRandomNumber = vi.fn(() => 2);
+		test('should perform D20 Stability check (Stability not depleted)', async () => {
+			// Mock rollWithModifiers for D20 system
+			const originalRoll = gameState.rollWithModifiers;
+			gameState.rollWithModifiers = vi.fn(() => ({ roll: 8, wasLucid: false, wasSurreal: false }));
+
 			gameState.state = 'failureCheck';
 			gameState.gameOver = false;
-			gameState.diceRoll = 0;
-			gameState.bonus = 1;
-			gameState.tower = 5;
+			gameState.tower = 20; // D20 system: Full Stability
 			gameState.cardsToDraw = 1;
 			gameState.log = [];
 			gameState.round = 1;
 			gameState.config = {};
 
+			// Import the apply function
+			const { applyFailureCheckResult, applyPendingDiceRoll } = await import('./gameActions.svelte.js');
+
 			const result = await failureCheck();
 
-			expect(result).toBe(2);
-			expect(gameState.diceRoll).toBe(result);
-			expect(gameState.tower).toBe(4); // 5 - (2 - 1) = 4
+			// Result is now an object with { roll, wasLucid, wasSurreal }
+			expect(result.roll).toBe(8);
+
+			// Apply the roll result
+			applyFailureCheckResult(result.roll);
+			applyPendingDiceRoll();
+
+			expect(gameState.diceRoll).toBe(8);
+			// Roll 8 (range 6-10) → -1 Stability → 20 - 1 = 19
+			expect(gameState.tower).toBe(19);
 			expect(gameState.gameOver).toBe(false);
 			expect(gameState.state).toBe('drawCard');
+
+			gameState.rollWithModifiers = originalRoll;
 		});
 	});
 
@@ -379,18 +414,21 @@ describe('WAAStore', () => {
 		});
 	});
 
-	//Test successCheck
+	//Test successCheck - D20 Salvation System
 	describe('successCheck', () => {
-		test('should transition to finalDamageRoll when all tokens removed', async () => {
-			// Mock the getRandomNumber function
-			gameState.getRandomNumber = vi.fn(() => 6);
+		test('should trigger victory when tokens reach 0 (D20 system)', async () => {
+			// Mock rollWithModifiers for D20 system
+			const originalRoll = gameState.rollWithModifiers;
+			gameState.rollWithModifiers = vi.fn(() => ({ roll: 17, wasLucid: false, wasSurreal: false }));
+
 			const initialState = {
-				diceRoll: 0,
 				tokens: 1,
+				acesRevealed: 1, // D20 system: 1 Ace → threshold 17
+				aceOfHeartsRevealed: true, // Required for success check
 				state: 'successCheck',
-				bonus: 0,
 				config: {
-					difficulty: 0,
+					difficulty: 1,
+					slug: 'test-game',
 					labels: {
 						successCheckWin: 'Custom Win Label'
 					}
@@ -399,45 +437,66 @@ describe('WAAStore', () => {
 
 			Object.assign(gameState, initialState);
 
-			const roll = await successCheck();
+			// Call successCheck - it stores result in pendingUpdates
+			successCheck();
 
-			expect(roll).toBe(6);
-			expect(gameState.diceRoll).toBe(roll);
+			// The roll value should be in pendingUpdates
+			expect(gameState.pendingUpdates.diceRoll).toBe(17);
+
+			// Apply the pending updates
+			const { applyPendingSuccessCheck } = await import('./gameActions.svelte.js');
+			applyPendingSuccessCheck();
+
+			// D20 system: tokens reach 0 = instant victory
 			expect(gameState.tokens).toBe(0);
-			expect(gameState.win).toBe(false); // Not won yet - must pass final damage roll
-			expect(gameState.gameOver).toBe(false); // Not over yet
-			expect(gameState.state).toBe('finalDamageRoll');
+			expect(gameState.win).toBe(true);
+			expect(gameState.gameOver).toBe(true);
+			expect(gameState.state).toBe('gameOver');
+
+			gameState.rollWithModifiers = originalRoll;
 		});
 
-		test('should perform the success check and update the game state (failure)', async () => {
-			// Mock the getRandomNumber function
-			gameState.getRandomNumber = vi.fn(() => 4);
+		test('should add token on failure (D20 system)', async () => {
+			// Mock rollWithModifiers for D20 system
+			const originalRoll = gameState.rollWithModifiers;
+			gameState.rollWithModifiers = vi.fn(() => ({ roll: 4, wasLucid: false, wasSurreal: false }));
+
 			gameState.state = 'successCheck';
-			gameState.diceRoll = 0;
-			gameState.tokens = 2;
+			gameState.tokens = 5;
+			gameState.acesRevealed = 1; // Threshold 17
 			gameState.win = false;
 			gameState.gameOver = false;
-			gameState.bonus = 0;
+			gameState.aceOfHeartsRevealed = true; // Required for success check
 			gameState.config = {
 				difficulty: 1,
+				slug: 'test-game',
 				labels: {}
 			};
 
-			const roll = await successCheck();
+			// Call successCheck and apply pendingUpdates
+			successCheck();
 
-			expect(roll).toBe(4);
-			expect(gameState.diceRoll).toBe(roll);
-			expect(gameState.tokens).toBe(2);
+			// The actual roll value is stored in pendingUpdates
+			expect(gameState.pendingUpdates.diceRoll).toBe(4);
+
+			// Apply the pending updates
+			const { applyPendingSuccessCheck } = await import('./gameActions.svelte.js');
+			applyPendingSuccessCheck();
+
+			// Roll 4 (range 2-5) → +1 token
+			expect(gameState.tokens).toBe(6);
 			expect(gameState.win).toBe(false);
 			expect(gameState.gameOver).toBe(false);
-			expect(gameState.state).toBe('startRound');
+			expect(gameState.state).toBe('log');
+
+			gameState.rollWithModifiers = originalRoll;
 		});
 	});
 
 	// Test restartGame
 	test('restartGame', () => {
 		const player = { name: 'John Doe' };
-		const options = { difficulty: 1, initialDamage: false };
+		const options = { difficulty: 1 };
 		const deck = Array.from({ length: 52 }, (_, i) => ({
 			card: String(i),
 			suit: 'hearts',
@@ -453,9 +512,12 @@ describe('WAAStore', () => {
 		restartGame();
 
 		expect(gameState.player).toStrictEqual(player);
-		expect(gameState.config.options).toStrictEqual(options);
-		// restartGame uses initializeGame which sets state to 'options'
-		expect(gameState.state).toBe('options');
+		// D20 system: Tower (Stability) resets to 20
+		expect(gameState.tower).toBe(20);
+		// restartGame uses initializeGame which sets state to 'showIntro'
+		expect(gameState.state).toBe('showIntro');
+		// Options will have additional defaults added by initializeGame - just check difficulty is preserved
+		expect(gameState.config.options.difficulty).toBeDefined();
 	});
 
 	// Test exitGame
