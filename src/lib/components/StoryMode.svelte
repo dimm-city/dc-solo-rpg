@@ -35,9 +35,9 @@
 		journalEntries.forEach((j, idx) => {
 			console.log(`[StoryMode] Journal ${idx}:`, {
 				round: j.round,
-				id: j.id,
 				hasText: !!j.text,
 				textLength: j.text?.length || 0,
+				textPreview: j.text?.substring(0, 30) || '(empty)',
 				hasAudio: !!j.audioData,
 				dateRecorded: j.dateRecorded
 			});

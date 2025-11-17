@@ -224,13 +224,14 @@ export async function saveGame(gameState) {
 
 		await db.put(SAVE_STORE, cleanedSaveData, gameSlug);
 
-		// Save audio data separately as Blobs
+		// Save audio data separately as Blobs (keyed by round number)
 		const audioData = {};
 		for (const entry of gameState.journalEntries) {
 			if (entry.audioData) {
 				// Convert base64 to Blob for efficient storage
 				const audioBlob = await base64ToBlob(entry.audioData);
-				audioData[entry.id] = audioBlob;
+				// Use round number as key (more reliable than id)
+				audioData[entry.round] = audioBlob;
 			}
 		}
 
@@ -277,9 +278,9 @@ export async function loadGame(gameSlug) {
 		if (saveData.journalEntries) {
 			saveData.journalEntries = await Promise.all(
 				saveData.journalEntries.map(async (entry) => {
-					if (entry.hasAudio && audioData[entry.id]) {
+					if (entry.hasAudio && audioData[entry.round]) {
 						// Convert Blob back to base64 for compatibility with current component
-						const base64 = await blobToBase64(audioData[entry.id]);
+						const base64 = await blobToBase64(audioData[entry.round]);
 						return { ...entry, audioData: base64 };
 					}
 					return entry;
@@ -361,9 +362,9 @@ export async function loadAllSaves() {
 				// Reattach audio data to journal entries
 				if (audioData && saveData.journalEntries) {
 					for (const entry of saveData.journalEntries) {
-						if (entry.hasAudio && audioData[entry.id]) {
+						if (entry.hasAudio && audioData[entry.round]) {
 							// Convert Blob back to base64 for audio player
-							entry.audioData = await blobToBase64(audioData[entry.id]);
+							entry.audioData = await blobToBase64(audioData[entry.round]);
 						}
 					}
 				}

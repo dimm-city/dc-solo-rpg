@@ -387,10 +387,20 @@ export async function recordRound(journalEntry) {
 		throw new Error('Journal entry object is required');
 	}
 
-	journalEntry.id = gameState.round;
-	journalEntry.round = gameState.round;
-	journalEntry.dateRecorded = journalEntry.dateRecorded || new Date().toISOString();
-	gameState.journalEntries.push(journalEntry);
+	// Create a new object to avoid mutating the passed reference
+	const newEntry = {
+		round: gameState.round,
+		text: journalEntry.text || '',
+		audioData: journalEntry.audioData || null,
+		dateRecorded: journalEntry.dateRecorded || new Date().toISOString()
+	};
+
+	gameState.journalEntries.push(newEntry);
+	logger.debug(`[recordRound] Saved journal for round ${gameState.round}:`, {
+		round: newEntry.round,
+		hasText: !!newEntry.text,
+		hasAudio: !!newEntry.audioData
+	});
 
 	// Auto-save after recording journal entry (await to ensure save completes)
 	await saveGame(gameState);
