@@ -396,10 +396,12 @@ describe('Card Drawing and Failure Check Flow', () => {
 			const originalRoll = gameState.rollWithModifiers;
 			gameState.rollWithModifiers = vi.fn(() => ({ roll: 15, wasLucid: false, wasSurreal: false }));
 
-			const roll = await rollForTasks();
+			const result = await rollForTasks();
 
-			// Should return the d20 roll
-			expect(roll).toBe(15);
+			// Should return object with roll and modifier flags
+			expect(result.roll).toBe(15);
+			expect(result.wasLucid).toBe(false);
+			expect(result.wasSurreal).toBe(false);
 
 			// Should convert to 4 cards (15 is in range 11-15)
 			expect(gameState.cardsToDraw).toBe(4);
@@ -417,8 +419,8 @@ describe('Card Drawing and Failure Check Flow', () => {
 
 			await rollForTasks();
 
-			// Should set Lucid state for next roll
-			expect(gameState.isLucid).toBe(true);
+			// Should set Lucid state in pending updates (deferred)
+			expect(gameState.pendingUpdates.isLucid).toBe(true);
 
 			// Should set 6 cards (max)
 			expect(gameState.cardsToDraw).toBe(6);
@@ -432,8 +434,8 @@ describe('Card Drawing and Failure Check Flow', () => {
 
 			await rollForTasks();
 
-			// Should set Surreal state for next roll
-			expect(gameState.isSurreal).toBe(true);
+			// Should set Surreal state in pending updates (deferred)
+			expect(gameState.pendingUpdates.isSurreal).toBe(true);
 
 			// Should set 1 card (min)
 			expect(gameState.cardsToDraw).toBe(1);
@@ -445,11 +447,11 @@ describe('Card Drawing and Failure Check Flow', () => {
 			gameState.isLucid = true;
 
 			// Let it roll naturally with advantage
-			const roll = await rollForTasks();
+			const result = await rollForTasks();
 
 			// Roll should be in valid range
-			expect(roll).toBeGreaterThanOrEqual(1);
-			expect(roll).toBeLessThanOrEqual(20);
+			expect(result.roll).toBeGreaterThanOrEqual(1);
+			expect(result.roll).toBeLessThanOrEqual(20);
 
 			// Cards should be in valid range
 			expect(gameState.cardsToDraw).toBeGreaterThanOrEqual(1);
@@ -463,11 +465,11 @@ describe('Card Drawing and Failure Check Flow', () => {
 			gameState.isSurreal = true;
 
 			// Let it roll naturally with disadvantage
-			const roll = await rollForTasks();
+			const result = await rollForTasks();
 
 			// Roll should be in valid range
-			expect(roll).toBeGreaterThanOrEqual(1);
-			expect(roll).toBeLessThanOrEqual(20);
+			expect(result.roll).toBeGreaterThanOrEqual(1);
+			expect(result.roll).toBeLessThanOrEqual(20);
 
 			// Cards should be in valid range
 			expect(gameState.cardsToDraw).toBeGreaterThanOrEqual(1);
@@ -604,8 +606,8 @@ describe('Card Drawing and Failure Check Flow', () => {
 				// Should store pending token change
 				expect(gameState.pendingUpdates.tokenChange).toBe(-2);
 
-				// Should set Lucid state for next roll
-				expect(gameState.isLucid).toBe(true);
+				// Should set Lucid state in pending updates (deferred)
+				expect(gameState.pendingUpdates.isLucid).toBe(true);
 
 				gameState.rollWithModifiers = originalRoll;
 			});
@@ -682,7 +684,7 @@ describe('Card Drawing and Failure Check Flow', () => {
 				successCheck();
 
 				expect(gameState.pendingUpdates.tokenChange).toBe(2);
-				expect(gameState.isSurreal).toBe(true);
+				expect(gameState.pendingUpdates.isSurreal).toBe(true);
 
 				gameState.rollWithModifiers = originalRoll;
 			});
@@ -871,9 +873,8 @@ describe('Card Drawing and Failure Check Flow', () => {
 				expect(gameState.gameOver).toBe(false);
 				expect(gameState.win).toBe(false);
 
-				// Should start next round
-				expect(gameState.state).toBe('startRound');
-				expect(gameState.round).toBe(6);
+				// Should go to log screen (journal entry before next round)
+				expect(gameState.state).toBe('log');
 			});
 		});
 
@@ -883,11 +884,11 @@ describe('Card Drawing and Failure Check Flow', () => {
 				gameState.isLucid = true;
 
 				// Let it roll naturally with advantage
-				const roll = successCheck();
+				const result = successCheck();
 
 				// Roll should be in valid range
-				expect(roll).toBeGreaterThanOrEqual(1);
-				expect(roll).toBeLessThanOrEqual(20);
+				expect(result.roll).toBeGreaterThanOrEqual(1);
+				expect(result.roll).toBeLessThanOrEqual(20);
 
 				// Lucid state should be cleared (rollWithModifiers clears it)
 				expect(gameState.isLucid).toBe(false);
@@ -898,11 +899,11 @@ describe('Card Drawing and Failure Check Flow', () => {
 				gameState.isSurreal = true;
 
 				// Let it roll naturally with disadvantage
-				const roll = successCheck();
+				const result = successCheck();
 
 				// Roll should be in valid range
-				expect(roll).toBeGreaterThanOrEqual(1);
-				expect(roll).toBeLessThanOrEqual(20);
+				expect(result.roll).toBeGreaterThanOrEqual(1);
+				expect(result.roll).toBeLessThanOrEqual(20);
 
 				// Surreal state should be cleared
 				expect(gameState.isSurreal).toBe(false);

@@ -6,7 +6,7 @@
 	let { onHelpClick, onExitClick } = $props();
 
 	const tokensRemaining = $derived(gameState.tokens);
-	const bonusPercent = $derived(gameState.bonus + (gameState.pendingUpdates.bonusChange || 0));
+	const bonusPercent = $derived(gameState.acesRevealed + (gameState.pendingUpdates.aceChange || 0));
 	const failurePercent = $derived(
 		gameState.kingsRevealed + (gameState.pendingUpdates.kingsChange || 0)
 	);
