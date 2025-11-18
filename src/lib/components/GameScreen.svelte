@@ -120,12 +120,14 @@
 	let rollTasksRolling = $state(false);
 	let rollTasksConfirming = $state(false);
 
-	// Reset rollForTasks state when screen changes
+	// Reset rollForTasks state when screen changes and trigger auto-play
 	$effect(() => {
 		if (currentScreen === 'rollForTasks') {
 			rollTasksRolled = false;
 			rollTasksRolling = false;
 			rollTasksConfirming = false;
+			// Trigger auto-play for this screen (event-driven)
+			setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
 		}
 	});
 
@@ -147,6 +149,8 @@
 			// Apply pending dice roll after animation completes
 			applyPendingTaskRoll();
 			rollTasksRolled = true;
+			// Trigger auto-play after roll completes (event-driven)
+			setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
 		}
 	}
 
@@ -166,6 +170,8 @@
 		if (currentScreen === 'failureCheck') {
 			failureCheckResult = undefined;
 			failureCheckRolling = false;
+			// Trigger auto-play for this screen (event-driven)
+			setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
 		}
 	});
 
@@ -183,6 +189,8 @@
 			failureCheckRolling = false;
 			// NOW apply the pending updates after dice animation completes
 			applyPendingDiceRoll();
+			// Trigger auto-play after roll completes (event-driven)
+			setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
 			await confirmFailureCheck();
 			onfailurecheckcompleted(gameState.state);
 		} else if (failureCheckResult) {
@@ -200,6 +208,8 @@
 		if (currentScreen === 'successCheck') {
 			successCheckResult = undefined;
 			successCheckRolling = false;
+			// Trigger auto-play for this screen (event-driven)
+			setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
 		}
 	});
 
@@ -215,6 +225,8 @@
 			successCheckRolling = false;
 			// Apply pending success check after animation completes
 			applyPendingSuccessCheck();
+			// Trigger auto-play after roll completes (event-driven)
+			setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
 		} else if (successCheckResult) {
 			await startRound();
 		}
@@ -230,6 +242,8 @@
 		if (currentScreen === 'finalDamageRoll') {
 			finalDamageResult = undefined;
 			finalDamageRolling = false;
+			// Trigger auto-play for this screen (event-driven)
+			setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
 		}
 	});
 
@@ -248,6 +262,8 @@
 			await rollDice(rollResult);
 			// Apply pending final damage roll after animation completes
 			applyPendingFinalDamageRoll();
+			// Trigger auto-play after roll completes (event-driven)
+			setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
 		} finally {
 			finalDamageRolling = false;
 		}
@@ -269,6 +285,8 @@
 		if (currentScreen === 'initialDamageRoll') {
 			initialDamageResult = undefined;
 			initialDamageRolling = false;
+			// Trigger auto-play for this screen (event-driven)
+			setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
 		}
 	});
 
@@ -287,6 +305,8 @@
 			await rollDice(rollResult);
 			// Apply pending initial damage roll after animation completes
 			applyPendingInitialDamageRoll();
+			// Trigger auto-play after roll completes (event-driven)
+			setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
 		} finally {
 			initialDamageRolling = false;
 		}
@@ -317,6 +337,22 @@
 	$effect(() => {
 		if (currentScreen === 'log' || currentScreen === 'finalLog') {
 			journalSaved = false;
+		}
+	});
+
+	// Trigger auto-play when entering showIntro screen
+	$effect(() => {
+		if (currentScreen === 'showIntro') {
+			// Trigger auto-play for this screen (event-driven)
+			setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
+		}
+	});
+
+	// Trigger auto-play when entering startRound screen
+	$effect(() => {
+		if (currentScreen === 'startRound') {
+			// Trigger auto-play for this screen (event-driven)
+			setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
 		}
 	});
 
@@ -523,7 +559,7 @@
 		}
 	});
 
-	// ===== AUTO-PLAY EFFECTS =====
+	// ===== AUTO-PLAY (Event-driven, NOT using $effect to avoid infinite loops) =====
 	let autoPlayCanceller = $state(null);
 
 	// Cancel auto-play when screen changes or user interacts
@@ -534,191 +570,183 @@
 		}
 	}
 
-	// Cancel auto-play when screen changes
+	// Cancel auto-play when screen changes (this is the ONLY $effect for auto-play)
 	$effect(() => {
 		currentScreen; // Track dependency
 		cancelAutoPlay();
 	});
 
-	// Auto-advance for showIntro screen
-	$effect(() => {
-		if (currentScreen === 'showIntro') {
-			const audioSettings = getAudioSettings();
-			const gameplaySettings = getGameplaySettings();
+	/**
+	 * Trigger auto-play for the current screen
+	 * Called directly from event handlers to avoid $effect infinite loops
+	 */
+	function triggerAutoPlayForCurrentScreen() {
+		const audioSettings = getAudioSettings();
+		const gameplaySettings = getGameplaySettings();
 
-			if (gameplaySettings.autoContinueAfterReading) {
-				const introText = gameState.config?.introduction ?? '';
-				const shouldRead = audioSettings.autoReadPrompts;
+		switch (currentScreen) {
+			case 'showIntro':
+				if (gameplaySettings.autoContinueAfterReading) {
+					const introText = gameState.config?.introduction ?? '';
+					const shouldRead = audioSettings.autoReadPrompts;
+					autoPlayCanceller = autoAdvance({
+						text: shouldRead ? introText : null,
+						shouldRead,
+						action: () => transitionTo('initialDamageRoll')
+					});
+				}
+				break;
 
-				autoPlayCanceller = autoAdvance({
-					text: shouldRead ? introText : null,
-					shouldRead,
-					action: () => transitionTo('initialDamageRoll')
-				});
-			}
-		}
-	});
-
-	// Auto-roll for initialDamageRoll screen
-	$effect(() => {
-		if (currentScreen === 'initialDamageRoll') {
-			const audioSettings = getAudioSettings();
-			const gameplaySettings = getGameplaySettings();
-
-			// Auto-read prompt first if enabled
-			if (audioSettings.autoReadPrompts) {
-				const promptText = 'Roll for Initial Damage. Before your journey begins, the situation is already precarious.';
-				speak(promptText);
-			}
-
-			// Auto-roll if enabled
-			if (gameplaySettings.autoRollDice && initialDamageResult === undefined) {
-				autoPlayCanceller = autoRoll(() => handleInitialDamageRoll());
-			}
-			// Auto-continue after result if enabled
-			else if (gameplaySettings.autoContinueAfterReading && initialDamageResult !== undefined) {
-				autoPlayCanceller = autoAdvance({
-					text: null,
-					shouldRead: false,
-					action: () => transitionTo('startRound')
-				});
-			}
-		}
-	});
-
-	// Auto-advance for startRound screen
-	$effect(() => {
-		if (currentScreen === 'startRound') {
-			const audioSettings = getAudioSettings();
-			const gameplaySettings = getGameplaySettings();
-
-			if (gameplaySettings.autoContinueAfterReading) {
-				const roundText = `Round ${gameState.round} begins`;
-				const shouldRead = audioSettings.autoReadPrompts;
-
-				autoPlayCanceller = autoAdvance({
-					text: shouldRead ? roundText : null,
-					shouldRead,
-					action: () => transitionTo('rollForTasks')
-				});
-			}
-		}
-	});
-
-	// Auto-roll for rollForTasks screen
-	$effect(() => {
-		if (currentScreen === 'rollForTasks') {
-			const audioSettings = getAudioSettings();
-			const gameplaySettings = getGameplaySettings();
-
-			// Auto-read prompt first if enabled
-			if (audioSettings.autoReadPrompts && !rollTasksRolled) {
-				const promptText = 'Roll the dice to determine how many challenges you must face this round.';
-				speak(promptText);
-			}
-
-			// Auto-roll if enabled and not yet rolled
-			if (gameplaySettings.autoRollDice && !rollTasksRolled && !rollTasksRolling) {
-				autoPlayCanceller = autoRoll(() => handleRollForTasks());
-			}
-			// Auto-confirm after roll if enabled
-			else if (gameplaySettings.autoContinueAfterReading && rollTasksRolled && !rollTasksConfirming) {
-				// Announce result
-				if (audioSettings.autoAnnounceRolls) {
-					const resultText = `You rolled a ${gameState.diceRoll}. Draw ${gameState.cardsToDraw} card${gameState.cardsToDraw !== 1 ? 's' : ''}.`;
-					speak(resultText);
+			case 'initialDamageRoll':
+				// Auto-read prompt first if enabled
+				if (audioSettings.autoReadPrompts && initialDamageResult === undefined) {
+					const promptText =
+						'Roll for Initial Damage. Before your journey begins, the situation is already precarious.';
+					speak(promptText);
 				}
 
-				autoPlayCanceller = autoAdvance({
-					text: null,
-					shouldRead: false,
-					action: () => handleRollForTasks()
-				});
-			}
+				// Auto-roll if enabled and not yet rolled
+				if (gameplaySettings.autoRollDice && initialDamageResult === undefined) {
+					autoPlayCanceller = autoRoll(() => handleInitialDamageRoll());
+				}
+				// Auto-continue after result if enabled
+				else if (gameplaySettings.autoContinueAfterReading && initialDamageResult !== undefined) {
+					autoPlayCanceller = autoAdvance({
+						text: null,
+						shouldRead: false,
+						action: () => transitionTo('startRound')
+					});
+				}
+				break;
+
+			case 'startRound':
+				if (gameplaySettings.autoContinueAfterReading) {
+					const roundText = `Round ${gameState.round} begins`;
+					const shouldRead = audioSettings.autoReadPrompts;
+					autoPlayCanceller = autoAdvance({
+						text: shouldRead ? roundText : null,
+						shouldRead,
+						action: () => transitionTo('rollForTasks')
+					});
+				}
+				break;
+
+			case 'rollForTasks':
+				// Auto-read prompt first if enabled and not yet rolled
+				if (audioSettings.autoReadPrompts && !rollTasksRolled) {
+					const promptText =
+						'Roll the dice to determine how many challenges you must face this round.';
+					speak(promptText);
+				}
+
+				// Auto-roll if enabled and not yet rolled
+				if (gameplaySettings.autoRollDice && !rollTasksRolled && !rollTasksRolling) {
+					autoPlayCanceller = autoRoll(() => handleRollForTasks());
+				}
+				// Auto-confirm after roll if enabled
+				else if (
+					gameplaySettings.autoContinueAfterReading &&
+					rollTasksRolled &&
+					!rollTasksConfirming
+				) {
+					// Announce result
+					if (audioSettings.autoAnnounceRolls) {
+						const resultText = `You rolled a ${gameState.diceRoll}. Draw ${gameState.cardsToDraw} card${gameState.cardsToDraw !== 1 ? 's' : ''}.`;
+						speak(resultText);
+					}
+
+					autoPlayCanceller = autoAdvance({
+						text: null,
+						shouldRead: false,
+						action: () => handleRollForTasks()
+					});
+				}
+				break;
+
+			case 'failureCheck':
+				// Auto-read prompt first if enabled and not yet rolled
+				if (audioSettings.autoReadPrompts && failureCheckResult === undefined) {
+					const promptText = 'An odd card demands a price. Roll to see how much stability you lose.';
+					speak(promptText);
+				}
+
+				// Auto-roll if enabled and not yet rolled
+				if (
+					gameplaySettings.autoRollDice &&
+					failureCheckResult === undefined &&
+					!failureCheckRolling
+				) {
+					autoPlayCanceller = autoRoll(() => handleFailureCheck());
+				}
+				// Auto-continue after result if enabled
+				else if (
+					gameplaySettings.autoContinueAfterReading &&
+					failureCheckResult !== undefined
+				) {
+					autoPlayCanceller = autoAdvance({
+						text: null,
+						shouldRead: false,
+						action: () => confirmFailureCheck()
+					});
+				}
+				break;
+
+			case 'successCheck':
+				// Auto-read prompt first if enabled and not yet rolled
+				if (audioSettings.autoReadPrompts && successCheckResult === undefined) {
+					const promptText =
+						'The Ace of Hearts has appeared. Roll to remove a token from your countdown.';
+					speak(promptText);
+				}
+
+				// Auto-roll if enabled and not yet rolled
+				if (
+					gameplaySettings.autoRollDice &&
+					successCheckResult === undefined &&
+					!successCheckRolling
+				) {
+					autoPlayCanceller = autoRoll(() => handleSuccessCheck());
+				}
+				// Auto-continue after result if enabled
+				else if (
+					gameplaySettings.autoContinueAfterReading &&
+					successCheckResult !== undefined
+				) {
+					autoPlayCanceller = autoAdvance({
+						text: null,
+						shouldRead: false,
+						action: () => startRound()
+					});
+				}
+				break;
+
+			case 'finalDamageRoll':
+				// Auto-read prompt first if enabled and not yet rolled
+				if (audioSettings.autoReadPrompts && finalDamageResult === undefined) {
+					const promptText =
+						'You have completed the countdown, but salvation comes with one final risk. Roll one last time.';
+					speak(promptText);
+				}
+
+				// Auto-roll if enabled and not yet rolled
+				if (
+					gameplaySettings.autoRollDice &&
+					finalDamageResult === undefined &&
+					!finalDamageRolling
+				) {
+					autoPlayCanceller = autoRoll(() => handleFinalDamageRoll());
+				}
+				// Auto-continue after result if enabled
+				else if (gameplaySettings.autoContinueAfterReading && finalDamageResult !== undefined) {
+					autoPlayCanceller = autoAdvance({
+						text: null,
+						shouldRead: false,
+						action: () => transitionTo('finalLog')
+					});
+				}
+				break;
 		}
-	});
-
-	// Auto-roll for failureCheck screen
-	$effect(() => {
-		if (currentScreen === 'failureCheck') {
-			const audioSettings = getAudioSettings();
-			const gameplaySettings = getGameplaySettings();
-
-			// Auto-read prompt first if enabled
-			if (audioSettings.autoReadPrompts && !failureCheckRolled) {
-				const promptText = 'An odd card demands a price. Roll to see how much stability you lose.';
-				speak(promptText);
-			}
-
-			// Auto-roll if enabled and not yet rolled
-			if (gameplaySettings.autoRollDice && !failureCheckRolled && !failureCheckRolling) {
-				autoPlayCanceller = autoRoll(() => handleFailureCheckRoll());
-			}
-			// Auto-continue after result if enabled
-			else if (gameplaySettings.autoContinueAfterReading && failureCheckRolled && !failureCheckConfirming) {
-				// Announce result (done via separate effect after dice animation)
-				autoPlayCanceller = autoAdvance({
-					text: null,
-					shouldRead: false,
-					action: () => handleFailureCheckContinue()
-				});
-			}
-		}
-	});
-
-	// Auto-roll for successCheck screen
-	$effect(() => {
-		if (currentScreen === 'successCheck') {
-			const audioSettings = getAudioSettings();
-			const gameplaySettings = getGameplaySettings();
-
-			// Auto-read prompt first if enabled
-			if (audioSettings.autoReadPrompts && !successCheckRolled) {
-				const promptText = 'The Ace of Hearts has appeared. Roll to remove a token from your countdown.';
-				speak(promptText);
-			}
-
-			// Auto-roll if enabled and not yet rolled
-			if (gameplaySettings.autoRollDice && !successCheckRolled && !successCheckRolling) {
-				autoPlayCanceller = autoRoll(() => handleSuccessCheckRoll());
-			}
-			// Auto-continue after result if enabled
-			else if (gameplaySettings.autoContinueAfterReading && successCheckRolled && !successCheckConfirming) {
-				autoPlayCanceller = autoAdvance({
-					text: null,
-					shouldRead: false,
-					action: () => handleSuccessCheckContinue()
-				});
-			}
-		}
-	});
-
-	// Auto-roll for finalDamageRoll screen
-	$effect(() => {
-		if (currentScreen === 'finalDamageRoll') {
-			const audioSettings = getAudioSettings();
-			const gameplaySettings = getGameplaySettings();
-
-			// Auto-read prompt first if enabled
-			if (audioSettings.autoReadPrompts && !finalDamageResult) {
-				const promptText = 'You have completed the countdown, but salvation comes with one final risk. Roll one last time.';
-				speak(promptText);
-			}
-
-			// Auto-roll if enabled
-			if (gameplaySettings.autoRollDice && !finalDamageResult && !finalDamageRolling) {
-				autoPlayCanceller = autoRoll(() => handleFinalDamageRoll());
-			}
-			// Auto-continue after result if enabled
-			else if (gameplaySettings.autoContinueAfterReading && finalDamageResult) {
-				autoPlayCanceller = autoAdvance({
-					text: null,
-					shouldRead: false,
-					action: () => transitionTo('finalLog')
-				});
-			}
-		}
-	});
+	}
 </script>
 
 {#if currentScreen == 'loadGame'}
