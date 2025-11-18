@@ -1,5 +1,5 @@
 <script>
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount, onDestroy, untrack } from 'svelte';
 	import { sleep } from '../utils/timing.js';
 	import { logger } from '../utils/logger.js';
 	import ContinueButton from './ContinueButton.svelte';
@@ -84,6 +84,8 @@
 
 	$effect(() => {
 		const gameplaySettings = getGameplaySettings();
+		const currentStage = animationStage;
+		const previousStage = untrack(() => lastAnimationStage);
 
 		// Only auto-draw when:
 		// 1. Auto-continue is enabled
@@ -91,22 +93,26 @@
 		// 3. This prevents infinite loops
 		if (
 			gameplaySettings.autoContinueAfterReading &&
-			animationStage === 'idle' &&
-			lastAnimationStage !== 'idle'
+			currentStage === 'idle' &&
+			previousStage !== 'idle'
 		) {
+			// Update last stage using untrack to prevent infinite loop
+			untrack(() => {
+				lastAnimationStage = currentStage;
+			});
+
 			// Small delay to avoid immediate re-trigger and allow UI to settle
 			const timeout = setTimeout(() => {
 				onProceed();
 			}, 100);
 
-			// Update last stage before returning
-			lastAnimationStage = animationStage;
-
 			return () => clearTimeout(timeout);
 		}
 
-		// Track animation stage changes
-		lastAnimationStage = animationStage;
+		// Track animation stage changes using untrack to prevent infinite loop
+		untrack(() => {
+			lastAnimationStage = currentStage;
+		});
 	});
 
 	/**
