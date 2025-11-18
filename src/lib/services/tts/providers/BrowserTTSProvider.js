@@ -98,8 +98,13 @@ export class BrowserTTSProvider extends BaseTTSProvider {
 
 			utterance.onerror = (event) => {
 				this.currentUtterance = null;
-				// Don't reject on interruption (user stopped it)
-				if (event.error === 'interrupted' || event.error === 'canceled') {
+				// Don't reject on interruption, cancellation, or permission errors
+				// These are expected and shouldn't break auto-play flow
+				if (
+					event.error === 'interrupted' ||
+					event.error === 'canceled' ||
+					event.error === 'not-allowed'
+				) {
 					resolve();
 				} else {
 					reject(new Error(`TTS error: ${event.error}`));

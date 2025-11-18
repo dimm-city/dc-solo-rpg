@@ -80,18 +80,24 @@
 	 * This skips the "PROCEED TO NEXT BYTE" button click
 	 * Only triggers when auto-continue is enabled
 	 */
+	let hasAutoDrawnThisCycle = $state(false);
+
 	$effect(() => {
 		if (animationStage === 'idle') {
 			const gameplaySettings = getGameplaySettings();
 
-			// Only auto-draw if auto-continue is enabled
-			if (gameplaySettings.autoContinueAfterReading) {
+			// Only auto-draw if auto-continue is enabled AND we haven't already auto-drawn
+			if (gameplaySettings.autoContinueAfterReading && !hasAutoDrawnThisCycle) {
+				hasAutoDrawnThisCycle = true;
 				// Small delay to avoid immediate re-trigger and allow UI to settle
 				const timeout = setTimeout(() => {
 					onProceed();
 				}, 100);
 				return () => clearTimeout(timeout);
 			}
+		} else {
+			// Reset flag when leaving idle state
+			hasAutoDrawnThisCycle = false;
 		}
 	});
 
