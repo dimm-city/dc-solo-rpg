@@ -8,9 +8,7 @@
 	} from '../../stores/audioStore.svelte.js';
 	import { onMount } from 'svelte';
 
-	const audioSettings = $derived(getAudioSettings());
-	const gameplaySettings = $derived(getGameplaySettings());
-
+	// Direct access to reactive state - don't use $derived here
 	let availableVoices = $state([]);
 
 	onMount(async () => {
@@ -25,6 +23,14 @@
 	function handleGameplaySettingChange(key, value) {
 		updateGameplaySettings({ [key]: value });
 	}
+
+	// Helper to get current settings
+	function getSettings() {
+		return {
+			audio: getAudioSettings(),
+			gameplay: getGameplaySettings()
+		};
+	}
 </script>
 
 <div class="audio-settings-container">
@@ -37,7 +43,7 @@
 			<label class="setting-label">
 				<input
 					type="checkbox"
-					checked={audioSettings.autoReadCards}
+					checked={getAudioSettings().autoReadCards}
 					onchange={(e) => handleAudioSettingChange('autoReadCards', e.target.checked)}
 				/>
 				<span>Auto-read cards</span>
@@ -49,7 +55,7 @@
 			<label class="setting-label">
 				<input
 					type="checkbox"
-					checked={audioSettings.autoReadPrompts}
+					checked={getAudioSettings().autoReadPrompts}
 					onchange={(e) => handleAudioSettingChange('autoReadPrompts', e.target.checked)}
 				/>
 				<span>Auto-read prompts</span>
@@ -61,7 +67,7 @@
 			<label class="setting-label">
 				<input
 					type="checkbox"
-					checked={audioSettings.autoAnnounceRolls}
+					checked={getAudioSettings().autoAnnounceRolls}
 					onchange={(e) => handleAudioSettingChange('autoAnnounceRolls', e.target.checked)}
 				/>
 				<span>Auto-announce dice rolls</span>
@@ -73,7 +79,7 @@
 			<label for="reading-speed">Reading speed</label>
 			<select
 				id="reading-speed"
-				value={audioSettings.readingSpeed}
+				value={getAudioSettings().readingSpeed}
 				onchange={(e) => handleAudioSettingChange('readingSpeed', e.target.value)}
 			>
 				<option value="slow">Slow</option>
@@ -87,7 +93,7 @@
 				<label for="tts-voice">Voice</label>
 				<select
 					id="tts-voice"
-					value={audioSettings.ttsVoice || ''}
+					value={getAudioSettings().ttsVoice || ''}
 					onchange={(e) => handleAudioSettingChange('ttsVoice', e.target.value || null)}
 				>
 					<option value="">Default</option>
@@ -108,7 +114,7 @@
 			<label class="setting-label">
 				<input
 					type="checkbox"
-					checked={gameplaySettings.autoRollDice}
+					checked={getGameplaySettings().autoRollDice}
 					onchange={(e) => handleGameplaySettingChange('autoRollDice', e.target.checked)}
 				/>
 				<span>Auto-roll dice</span>
@@ -120,7 +126,7 @@
 			<label class="setting-label">
 				<input
 					type="checkbox"
-					checked={gameplaySettings.autoContinueAfterReading}
+					checked={getGameplaySettings().autoContinueAfterReading}
 					onchange={(e) =>
 						handleGameplaySettingChange('autoContinueAfterReading', e.target.checked)}
 				/>
@@ -131,7 +137,7 @@
 
 		<div class="setting-row">
 			<label for="auto-advance-delay">
-				Auto-advance delay: {(gameplaySettings.autoAdvanceDelay / 1000).toFixed(1)}s
+				Auto-advance delay: {(getGameplaySettings().autoAdvanceDelay / 1000).toFixed(1)}s
 			</label>
 			<input
 				type="range"
@@ -139,7 +145,7 @@
 				min="500"
 				max="10000"
 				step="500"
-				value={gameplaySettings.autoAdvanceDelay}
+				value={getGameplaySettings().autoAdvanceDelay}
 				oninput={(e) =>
 					handleGameplaySettingChange('autoAdvanceDelay', parseInt(e.target.value))}
 			/>
@@ -153,7 +159,7 @@
 			<label for="journal-handling">Journaling mode</label>
 			<select
 				id="journal-handling"
-				value={gameplaySettings.autoHandleJournaling}
+				value={getGameplaySettings().autoHandleJournaling}
 				onchange={(e) => handleGameplaySettingChange('autoHandleJournaling', e.target.value)}
 			>
 				<option value="manual">Manual (must click to continue)</option>
@@ -162,10 +168,10 @@
 			</select>
 		</div>
 
-		{#if gameplaySettings.autoHandleJournaling === 'timed'}
+		{#if getGameplaySettings().autoHandleJournaling === 'timed'}
 			<div class="setting-row">
 				<label for="journal-pause-time">
-					Journal pause time: {(gameplaySettings.journalPauseTime / 1000).toFixed(1)}s
+					Journal pause time: {(getGameplaySettings().journalPauseTime / 1000).toFixed(1)}s
 				</label>
 				<input
 					type="range"
@@ -173,7 +179,7 @@
 					min="3000"
 					max="30000"
 					step="1000"
-					value={gameplaySettings.journalPauseTime}
+					value={getGameplaySettings().journalPauseTime}
 					oninput={(e) =>
 						handleGameplaySettingChange('journalPauseTime', parseInt(e.target.value))}
 				/>
