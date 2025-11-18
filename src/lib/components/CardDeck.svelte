@@ -82,11 +82,7 @@
 	 * This prevents infinite loop when confirmCard() transitions to next phase
 	 */
 	$effect(() => {
-		if (
-			animationStage === 'idle' &&
-			gameState.state === 'drawCard' &&
-			gameState.cardsToDraw > 0
-		) {
+		if (animationStage === 'idle' && gameState.state === 'drawCard' && gameState.cardsToDraw > 0) {
 			// Small delay to avoid immediate re-trigger and allow UI to settle
 			const timeout = setTimeout(() => {
 				onProceed();
@@ -224,7 +220,7 @@
 		}}
 	>
 		{#if animationStage !== 'idle' && animationStage !== 'anticipating'}
-			<div class="byte-shell"  data-augmented-ui="tl-clip tr-clip br-clip bl-clip border">
+			<div class="byte-shell" data-augmented-ui="tl-clip tr-clip br-clip bl-clip border">
 				<!-- Bio-pulse rings -->
 				<div class="bio-pulse" aria-hidden="true"></div>
 
@@ -864,7 +860,6 @@
 	}
 
 	@media (max-width: 450px) or (max-height: 667px) {
-		
 		.byte-container {
 			min-height: 250px;
 			/* Limit height to prevent taking entire viewport */
@@ -880,7 +875,6 @@
 		.byte-shell {
 			min-height: 250px;
 			padding: 0;
-			
 		}
 
 		.byte-data {

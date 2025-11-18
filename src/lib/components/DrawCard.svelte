@@ -100,7 +100,7 @@
 	.dc-draw-card-container {
 		display: grid;
 		height: calc(100% - 75px);
-		
+
 		width: 100%;
 		max-width: 100%; /* Prevent horizontal overflow */
 		justify-content: center;

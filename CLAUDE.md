@@ -496,11 +496,13 @@ in:scale={{ duration: ANIMATION_DURATION.SLOW, easing: cubicOut }} // 300ms
 ```
 
 **29 Constants Available:**
+
 - **Durations**: FAST (150ms), NORMAL (200ms), SLOW (300ms), CARD_DISMISS (600ms), etc.
 - **Easing**: MECHANICAL, EASE_OUT, CUBIC_OUT, QUINT_OUT, etc.
 - **Z-Index**: BACKGROUND, CONTENT, STATUS_DISPLAY, FOG_OVERLAY, MODAL, DICE_ROLLING, etc.
 
 **Benefits:**
+
 - No magic numbers
 - Consistent timing across application
 - Easy to adjust globally
@@ -535,6 +537,7 @@ async function onDismiss() {
 **Key Principle:** Complete visual animation → Reset state → Brief pause → Trigger next state
 
 **Applies to:**
+
 - Card dismissal (CardDeck.svelte)
 - Modal transitions
 - State changes requiring smooth hand-off
@@ -561,6 +564,7 @@ async function onDismiss() {
 **Key Principle:** `transition: z-index 0s <duration>` delays z-index change until visual animation completes
 
 **Applies to:**
+
 - Dice fade-out (+layout.svelte)
 - Any layered element that needs to fade while maintaining z-order
 
@@ -572,16 +576,17 @@ Standard 200ms modal with fog overlay, used project-wide:
 
 ```svelte
 <script>
-import OverlayModal from '$lib/components/OverlayModal.svelte';
-let showModal = false;
+	import OverlayModal from '$lib/components/OverlayModal.svelte';
+	let showModal = false;
 </script>
 
-<OverlayModal isOpen={showModal} onClose={() => showModal = false}>
-  <div>Modal content here</div>
+<OverlayModal isOpen={showModal} onClose={() => (showModal = false)}>
+	<div>Modal content here</div>
 </OverlayModal>
 ```
 
 **Features:**
+
 - 200ms entrance/exit (7x faster than original 1400ms)
 - Fog overlay + modal scale simultaneously
 - `inert` + `aria-hidden` coordination
@@ -608,11 +613,11 @@ const [send, receive] = crossfade({
 
 ```svelte
 <div
-  class="round-wrapper"
-  in:receive={{ key: currentRoundIndex }}
-  out:send={{ key: currentRoundIndex }}
+	class="round-wrapper"
+	in:receive={{ key: currentRoundIndex }}
+	out:send={{ key: currentRoundIndex }}
 >
-  <!-- Round content -->
+	<!-- Round content -->
 </div>
 ```
 
@@ -621,16 +626,19 @@ const [send, receive] = crossfade({
 ### Animation Design Principles
 
 **Mechanical/Ethereal Aesthetic:**
+
 - ✅ Use: `cubic-bezier(0.4, 0, 0.6, 1)`, `ease-out`, `cubic-out`
 - ❌ Avoid: Bounce, spring, elastic effects
 - ⏱️ Timing: 150-300ms for most transitions, up to 600ms for card dismissal
 
 **Performance:**
+
 - Use GPU-accelerated properties: `transform`, `opacity`, `filter`
 - Avoid: `width`, `height`, `top`, `left`, `margin`, `padding`
 - Target: 60fps on desktop, ≥30fps on mobile with throttling
 
 **Accessibility:**
+
 - Always include `prefers-reduced-motion` support
 - Coordinate `inert` with `aria-hidden` on modals
 - Ensure keyboard navigation works during/after animations
@@ -640,6 +648,7 @@ const [send, receive] = crossfade({
 **Complete documentation:** `docs/animation-style-guide.md` (1,606 lines)
 
 Covers:
+
 - Duration decision trees
 - 6 production-ready code patterns
 - 50+ point testing checklist
@@ -650,6 +659,7 @@ Covers:
 - Quick reference table
 
 **Use this guide when:**
+
 - Adding new animations
 - Refactoring existing animations
 - Reviewing animation code

@@ -153,7 +153,7 @@
 		border: none;
 		background: transparent;
 
-			width: 100%;
+		width: 100%;
 		max-width: min(90vw, 1200px);
 		height: calc(100vh - 60px - var(--space-lg) * 2);
 
@@ -255,7 +255,6 @@
 
 	@media (max-width: 800px) {
 		.modal-wrapper {
-		
 			max-width: 100vw;
 			min-height: 60dvh;
 			max-height: calc(100dvh - var(--space-md) * 2);
