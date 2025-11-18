@@ -31,6 +31,9 @@
 	/** @type {import('./$types').PageData} */
 	let { data } = $props();
 
+	// App version - hardcoded for now (matches package.json)
+	const APP_VERSION = '0.2.0';
+
 	// Check if splash was already shown in this session
 	let showSplash = $state(typeof window !== 'undefined' && !sessionStorage.getItem('splashShown'));
 	let showInstructionsChoice = $state(false);
@@ -39,6 +42,11 @@
 	let showSettingsModal = $state(false);
 	let showHelpModal = $state(false);
 	let showMobileMenu = $state(false);
+
+	// Computed: true when any modal is open (for accessibility and click blocking)
+	const anyModalOpen = $derived(
+		showAboutModal || showSettingsModal || showHelpModal || showDeleteModal
+	);
 	let customGames = $state([]);
 	let allGames = $state([]);
 	let fileInput = $state(null);
@@ -353,6 +361,22 @@
 		showBrowseGames = true;
 	}
 
+	// Keyboard event handler for modals
+	function handleKeydown(event) {
+		if (event.key === 'Escape') {
+			// Close any open modal when Escape is pressed
+			if (showAboutModal) {
+				showAboutModal = false;
+			} else if (showSettingsModal) {
+				showSettingsModal = false;
+			} else if (showHelpModal) {
+				showHelpModal = false;
+			} else if (showDeleteModal) {
+				cancelDeleteSave();
+			}
+		}
+	}
+
 	// Game descriptions/subtitles for enhanced UI
 	const gameDescriptions = {
 		'artful-detective': 'Solve mysteries in a noir-cyberpunk city',
@@ -363,11 +387,18 @@
 	};
 </script>
 
+<svelte:window on:keydown={handleKeydown} />
+
 <NeuralBackground />
 <Splash visible={showSplash} onComplete={handleSplashComplete} />
 
 {#if showInstructionsChoice}
-	<section class="instructions-choice-container" transition:fade={{ duration: 600 }}>
+	<section
+		class="instructions-choice-container"
+		transition:fade={{ duration: 600 }}
+		inert={anyModalOpen ? true : undefined}
+		aria-hidden={anyModalOpen ? 'true' : undefined}
+	>
 		<div class="choice-content">
 			<h1>How To Play</h1>
 			<p class="subtitle">
@@ -451,7 +482,14 @@
 {:else if showBrowseGames}
 	<BrowseGames onSelectGame={handleSelectStoryGame} onBack={handleExitBrowseGames} />
 {:else if showContent}
-	<section class="form-container" data-testid="home-page" transition:fade={{ duration: 600 }}>
+	<section
+		class="form-container"
+		class:modal-active={anyModalOpen}
+		data-testid="home-page"
+		transition:fade={{ duration: 600 }}
+		inert={anyModalOpen ? true : undefined}
+		aria-hidden={anyModalOpen ? 'true' : undefined}
+	>
 		<!-- Hidden file input -->
 		<input
 			type="file"
@@ -463,8 +501,8 @@
 
 		<div class="page-header">
 			<div class="header-logo">
-				<img src="/d20-150.png" alt="DC Solo RPG Logo" class="logo-dice" />
-				<span class="version-text">DC-S-0.1.0</span>
+				<img src="/d20-150.png" alt="Dream Console Logo" class="logo-dice" />
+				<span class="version-text">Dream Console</span>
 			</div>
 
 			<!-- Desktop header buttons (hidden on mobile) -->
@@ -547,24 +585,6 @@
 						<path d="M12 17h.01"></path>
 					</svg>
 				</button>
-				<button onclick={handleSettingsClick} class="header-button" aria-label="Settings">
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						width="24"
-						height="24"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					>
-						<path d="M14 17H5" />
-						<path d="M19 7h-9" />
-						<circle cx="17" cy="17" r="3" />
-						<circle cx="7" cy="7" r="3" />
-					</svg>
-				</button>
 			</div>
 
 			<!-- Mobile hamburger menu button (visible only on small screens) -->
@@ -602,11 +622,7 @@
 		<!-- Mobile dropdown menu -->
 		{#if showMobileMenu}
 			<div class="mobile-menu" transition:fade={{ duration: 200 }}>
-				<button
-					class="mobile-menu-item"
-					onclick={handleUploadClick}
-					disabled={uploading}
-				>
+				<button class="mobile-menu-item" onclick={handleUploadClick} disabled={uploading}>
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						width="20"
@@ -676,25 +692,6 @@
 						<path d="M12 17h.01"></path>
 					</svg>
 					<span>Help</span>
-				</button>
-				<button class="mobile-menu-item" onclick={handleSettingsClick}>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						width="20"
-						height="20"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					>
-						<path d="M14 17H5" />
-						<path d="M19 7h-9" />
-						<circle cx="17" cy="17" r="3" />
-						<circle cx="7" cy="7" r="3" />
-					</svg>
-					<span>Settings</span>
 				</button>
 			</div>
 		{/if}
@@ -848,16 +845,19 @@
 <!-- About Modal -->
 <OverlayModal isVisible={showAboutModal} zIndex={1000} fixedHeight="70dvh" animateHeight={true}>
 	<div class="info-modal-content">
-		<h2 class="info-modal-title">About DC Solo RPG</h2>
+		<h2 class="info-modal-title">About Dream Console</h2>
 		<div class="info-modal-body">
 			<p>
-				Dimm City Solo RPG is a narrative-driven solo role-playing game built on the Wretched and
-				Alone system. Each playthrough offers a unique adventure through the cyberpunk streets of
-				Dimm City.
+				Dream Console is a narrative-driven solo role-playing game built on the Wretched and Alone
+				system. Each playthrough offers a unique adventure through the cyberpunk streets of Dimm
+				City.
 			</p>
 			<p>
 				The game uses a standard 52-card deck and dice rolls to guide your story, presenting
 				challenges and shaping the narrative as you draw cards and make decisions.
+			</p>
+			<p class="version-info">
+				Version {APP_VERSION}
 			</p>
 			<p class="attribution">
 				This work is based on The Wretched (loottheroom.itch.io/wretched), product of Chris Bissette
@@ -969,6 +969,13 @@
 <style>
 	:global(body) {
 		overflow-y: auto;
+	}
+
+	/* CRITICAL: Disable all pointer events when modal is active */
+	/* This prevents clicking through the modal backdrop to page content */
+	.form-container.modal-active,
+	.instructions-choice-container.modal-active {
+		pointer-events: none;
 	}
 
 	.page-header {
@@ -1903,6 +1910,15 @@
 
 	.info-modal-body p {
 		margin: 0;
+	}
+
+	.version-info {
+		font-size: var(--text-sm);
+		color: rgba(255, 255, 255, 0.5); /* Subtle 50% white - more understated */
+		font-weight: 400; /* Normal weight - lighter than before */
+		text-align: center;
+		margin-top: var(--space-md);
+		text-shadow: 0 0 4px rgba(255, 255, 255, 0.2); /* Very subtle glow for readability */
 	}
 
 	.attribution {

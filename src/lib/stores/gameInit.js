@@ -39,9 +39,7 @@ export function initializeGame(gameConfig, player, options = {}) {
 	const savedSettings = getSettings();
 
 	// Convert saved dice theme key to full theme object
-	const savedDiceTheme = savedSettings.diceTheme
-		? getDiceTheme(savedSettings.diceTheme)
-		: null;
+	const savedDiceTheme = savedSettings.diceTheme ? getDiceTheme(savedSettings.diceTheme) : null;
 
 	// Merge options: config options < saved settings < passed options
 	// Note: Difficulty is controlled by game config, not user settings

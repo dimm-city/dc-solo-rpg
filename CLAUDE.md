@@ -256,6 +256,7 @@ Drawing the Ace of Hearts unlocks Salvation checks. Each subsequent Ace improves
 - **4 Aces**: Automatic success (100% success)
 
 **Graduated Token Changes:**
+
 - Natural 1: +2 tokens (critical failure)
 - Below threshold: +1 token (failure)
 - At/above threshold: -1 token (success)
@@ -477,6 +478,192 @@ describe('My Feature', () => {
 	});
 });
 ```
+
+## Animation Patterns & Best Practices (Phase 2 Learnings)
+
+### Animation Constants System
+
+**Key File:** `src/lib/constants/animations.js`
+
+All animations use centralized constants to ensure consistency:
+
+```javascript
+import { ANIMATION_DURATION, ANIMATION_EASING, Z_INDEX } from '$lib/constants/animations.js';
+
+// In Svelte transitions
+in:fade={{ duration: ANIMATION_DURATION.NORMAL }} // 200ms
+in:scale={{ duration: ANIMATION_DURATION.SLOW, easing: cubicOut }} // 300ms
+```
+
+**29 Constants Available:**
+
+- **Durations**: FAST (150ms), NORMAL (200ms), SLOW (300ms), CARD_DISMISS (600ms), etc.
+- **Easing**: MECHANICAL, EASE_OUT, CUBIC_OUT, QUINT_OUT, etc.
+- **Z-Index**: BACKGROUND, CONTENT, STATUS_DISPLAY, FOG_OVERLAY, MODAL, DICE_ROLLING, etc.
+
+**Benefits:**
+
+- No magic numbers
+- Consistent timing across application
+- Easy to adjust globally
+- Self-documenting code
+
+### Sequential Animation Pattern
+
+**Problem:** Card dismissal causing jarring transitions
+**Solution:** Async/await pattern for smooth sequencing
+
+```javascript
+async function onDismiss() {
+	if (animationStage !== 'revealed') return;
+
+	// 1. Start dismiss animation (600ms)
+	animationStage = 'dismissing';
+	await sleep(ANIMATION_DURATION.CARD_DISMISS);
+
+	// 2. Reset card state FIRST
+	animationStage = 'idle';
+	particles = [];
+	card = null;
+
+	// 3. Small pause for visual clarity (100ms)
+	await sleep(100);
+
+	// 4. NOW notify parent - triggers state transition
+	onconfirmcard();
+}
+```
+
+**Key Principle:** Complete visual animation → Reset state → Brief pause → Trigger next state
+
+**Applies to:**
+
+- Card dismissal (CardDeck.svelte)
+- Modal transitions
+- State changes requiring smooth hand-off
+
+### Z-Index Choreography Pattern
+
+**Problem:** Dice fade-out causing visual "popping"
+**Solution:** Delayed z-index transition
+
+```css
+.dice-container:not(.rolling):not(.hidden) {
+	z-index: 9999; /* Keep high during fade */
+	opacity: 0;
+	transform: scale(0.9);
+	filter: brightness(1) blur(0px);
+	transition:
+		opacity 250ms ease-out,
+		transform 250ms ease-out,
+		filter 250ms ease-out,
+		z-index 0s 250ms; /* Delay z-index drop until after fade */
+}
+```
+
+**Key Principle:** `transition: z-index 0s <duration>` delays z-index change until visual animation completes
+
+**Applies to:**
+
+- Dice fade-out (+layout.svelte)
+- Any layered element that needs to fade while maintaining z-order
+
+### OverlayModal Reusable Pattern
+
+**File:** `src/lib/components/OverlayModal.svelte`
+
+Standard 200ms modal with fog overlay, used project-wide:
+
+```svelte
+<script>
+	import OverlayModal from '$lib/components/OverlayModal.svelte';
+	let showModal = false;
+</script>
+
+<OverlayModal isOpen={showModal} onClose={() => (showModal = false)}>
+	<div>Modal content here</div>
+</OverlayModal>
+```
+
+**Features:**
+
+- 200ms entrance/exit (7x faster than original 1400ms)
+- Fog overlay + modal scale simultaneously
+- `inert` + `aria-hidden` coordination
+- Escape key support
+- Click-outside-to-close
+
+**Performance:** Modal opening went from feeling sluggish to instant (4.83/5 → 5.0/5 rating)
+
+### Crossfade Transition Pattern
+
+**File:** `src/lib/components/StoryMode.svelte`
+
+Smooth navigation between rounds using Svelte's crossfade:
+
+```javascript
+import { crossfade } from 'svelte/transition';
+import { cubicOut } from 'svelte/easing';
+
+const [send, receive] = crossfade({
+	duration: ANIMATION_DURATION.ROUND_TRANSITION, // 300ms
+	easing: cubicOut
+});
+```
+
+```svelte
+<div
+	class="round-wrapper"
+	in:receive={{ key: currentRoundIndex }}
+	out:send={{ key: currentRoundIndex }}
+>
+	<!-- Round content -->
+</div>
+```
+
+**Key Principle:** Use crossfade for navigating between similar content items (rounds, tabs, etc.)
+
+### Animation Design Principles
+
+**Mechanical/Ethereal Aesthetic:**
+
+- ✅ Use: `cubic-bezier(0.4, 0, 0.6, 1)`, `ease-out`, `cubic-out`
+- ❌ Avoid: Bounce, spring, elastic effects
+- ⏱️ Timing: 150-300ms for most transitions, up to 600ms for card dismissal
+
+**Performance:**
+
+- Use GPU-accelerated properties: `transform`, `opacity`, `filter`
+- Avoid: `width`, `height`, `top`, `left`, `margin`, `padding`
+- Target: 60fps on desktop, ≥30fps on mobile with throttling
+
+**Accessibility:**
+
+- Always include `prefers-reduced-motion` support
+- Coordinate `inert` with `aria-hidden` on modals
+- Ensure keyboard navigation works during/after animations
+
+### Animation Style Guide
+
+**Complete documentation:** `docs/animation-style-guide.md` (1,606 lines)
+
+Covers:
+
+- Duration decision trees
+- 6 production-ready code patterns
+- 50+ point testing checklist
+- Anti-patterns with examples
+- Performance guidelines
+- Accessibility patterns
+- Component library reference
+- Quick reference table
+
+**Use this guide when:**
+
+- Adding new animations
+- Refactoring existing animations
+- Reviewing animation code
+- Teaching animation patterns to new developers
 
 ## Notes
 

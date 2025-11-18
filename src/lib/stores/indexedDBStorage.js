@@ -1,5 +1,5 @@
 /**
- * IndexedDB Storage for DC Solo RPG
+ * IndexedDB Storage for Dream Console
  * Handles persisting game state and audio data using IndexedDB
  * Replaces localStorage to support larger audio recordings
  */
@@ -7,9 +7,10 @@ import { openDB } from 'idb';
 import { logger } from '../utils/logger.js';
 
 const DB_NAME = 'dc-solo-rpg';
-const DB_VERSION = 1;
+const DB_VERSION = 2; // Bumped to 2 for AI story support
 const SAVE_STORE = 'saves';
 const AUDIO_STORE = 'audio';
+const SETTINGS_STORE = 'ai-settings'; // AI settings store
 const SAVE_VERSION = '2.0'; // Bumped from 1.0 to indicate IndexedDB migration
 
 /**
@@ -29,6 +30,12 @@ async function initDB() {
 			if (!db.objectStoreNames.contains(AUDIO_STORE)) {
 				db.createObjectStore(AUDIO_STORE);
 				logger.info('[initDB] Created audio object store');
+			}
+
+			// Create AI settings object store if it doesn't exist
+			if (!db.objectStoreNames.contains(SETTINGS_STORE)) {
+				db.createObjectStore(SETTINGS_STORE);
+				logger.info('[initDB] Created ai-settings object store');
 			}
 		}
 	});
@@ -224,7 +231,7 @@ export async function saveGame(gameState) {
 
 		// Determine save key based on game completion status
 		let saveKey;
-		if (gameState.gameOver && (gameState.win !== undefined)) {
+		if (gameState.gameOver && gameState.win !== undefined) {
 			// Game is completed - save as completed with timestamp
 			const timestamp = Date.now();
 			saveKey = `${gameSlug}:completed:${timestamp}`;
@@ -257,7 +264,9 @@ export async function saveGame(gameState) {
 
 		if (Object.keys(audioData).length > 0) {
 			await db.put(AUDIO_STORE, audioData, saveKey);
-			logger.info(`[saveGame] Saved ${Object.keys(audioData).length} audio recordings for ${saveKey}`);
+			logger.info(
+				`[saveGame] Saved ${Object.keys(audioData).length} audio recordings for ${saveKey}`
+			);
 		}
 
 		logger.info(`[saveGame] Game saved successfully as ${saveKey}`);
@@ -401,7 +410,8 @@ export async function loadAllSaves() {
 				// Parse key to extract game slug and timestamp
 				// Format: "gameSlug:completed:timestamp"
 				const keyParts = key.split(':');
-				const timestamp = keyParts.length >= 3 ? parseInt(keyParts[keyParts.length - 1]) : Date.now();
+				const timestamp =
+					keyParts.length >= 3 ? parseInt(keyParts[keyParts.length - 1]) : Date.now();
 
 				completedSaves.push({
 					id: key,
@@ -590,5 +600,132 @@ export async function clearLocalStorageSaves() {
 	} catch (error) {
 		logger.error('[clearLocalStorageSaves] Failed to clear localStorage:', error);
 		return 0;
+	}
+}
+
+/**
+ * Save AI-generated story to a completed game
+ * @param {string} saveKey - Save key (gameSlug:completed:timestamp)
+ * @param {Object} story - Story object with text, metadata
+ * @param {Blob} audioBlob - Optional audio narration blob
+ * @returns {Promise<boolean>} Success status
+ */
+export async function saveAIStory(saveKey, story, audioBlob = null) {
+	try {
+		const db = await initDB();
+
+		// Load existing save
+		const saveData = await db.get(SAVE_STORE, saveKey);
+		if (!saveData) {
+			logger.error('[saveAIStory] Save not found:', saveKey);
+			return false;
+		}
+
+		// Add story to save data
+		saveData.aiStory = {
+			text: story.text,
+			generatedAt: story.generatedAt,
+			provider: story.provider,
+			model: story.model,
+			hasAudio: !!audioBlob
+		};
+
+		// Update save
+		await db.put(SAVE_STORE, saveData, saveKey);
+
+		// Save audio blob if provided
+		if (audioBlob) {
+			const audioKey = `${saveKey}:story-audio`;
+			await db.put(AUDIO_STORE, audioBlob, audioKey);
+			logger.info('[saveAIStory] Saved story audio, size:', audioBlob.size);
+		}
+
+		logger.info('[saveAIStory] AI story saved successfully to', saveKey);
+		return true;
+	} catch (error) {
+		logger.error('[saveAIStory] Failed to save AI story:', error);
+		return false;
+	}
+}
+
+/**
+ * Load AI-generated story from a completed game
+ * @param {string} saveKey - Save key (gameSlug:completed:timestamp)
+ * @returns {Promise<Object|null>} Story object with text and optional audio URL
+ */
+export async function loadAIStory(saveKey) {
+	try {
+		const db = await initDB();
+
+		// Load save data
+		const saveData = await db.get(SAVE_STORE, saveKey);
+		if (!saveData || !saveData.aiStory) {
+			return null;
+		}
+
+		const story = { ...saveData.aiStory };
+
+		// Load audio if it exists
+		if (story.hasAudio) {
+			const audioKey = `${saveKey}:story-audio`;
+			const audioBlob = await db.get(AUDIO_STORE, audioKey);
+			if (audioBlob) {
+				// Convert blob to base64 for compatibility with AudioPlayer component
+				story.audioData = await blobToBase64(audioBlob);
+			}
+		}
+
+		logger.info('[loadAIStory] AI story loaded from', saveKey);
+		return story;
+	} catch (error) {
+		logger.error('[loadAIStory] Failed to load AI story:', error);
+		return null;
+	}
+}
+
+/**
+ * Check if a saved game has an AI-generated story
+ * @param {string} saveKey - Save key (gameSlug:completed:timestamp)
+ * @returns {Promise<boolean>} True if story exists
+ */
+export async function hasAIStory(saveKey) {
+	try {
+		const db = await initDB();
+		const saveData = await db.get(SAVE_STORE, saveKey);
+		return !!(saveData && saveData.aiStory && saveData.aiStory.text);
+	} catch (error) {
+		logger.error('[hasAIStory] Failed to check for AI story:', error);
+		return false;
+	}
+}
+
+/**
+ * Delete AI-generated story from a saved game
+ * @param {string} saveKey - Save key (gameSlug:completed:timestamp)
+ * @returns {Promise<boolean>} Success status
+ */
+export async function deleteAIStory(saveKey) {
+	try {
+		const db = await initDB();
+
+		// Load existing save
+		const saveData = await db.get(SAVE_STORE, saveKey);
+		if (!saveData) {
+			return false;
+		}
+
+		// Remove story from save data
+		delete saveData.aiStory;
+		await db.put(SAVE_STORE, saveData, saveKey);
+
+		// Delete audio if it exists
+		const audioKey = `${saveKey}:story-audio`;
+		await db.delete(AUDIO_STORE, audioKey);
+
+		logger.info('[deleteAIStory] AI story deleted from', saveKey);
+		return true;
+	} catch (error) {
+		logger.error('[deleteAIStory] Failed to delete AI story:', error);
+		return false;
 	}
 }

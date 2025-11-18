@@ -139,7 +139,11 @@
 		</div>
 
 		<!-- Dice Theme Picker Button -->
-		<button class="status-bar-button dice-theme-button" onclick={() => showDiceThemePicker = true} aria-label="Change dice theme">
+		<button
+			class="status-bar-button dice-theme-button"
+			onclick={() => (showDiceThemePicker = true)}
+			aria-label="Change dice theme"
+		>
 			<svg
 				xmlns="http://www.w3.org/2000/svg"
 				width="20"
@@ -216,7 +220,8 @@
 				<div class="stat-bar stability-bar">
 					<div
 						class="stat-fill stability-fill"
-						style="width: {(gameState.tower / 20) * 100}%; background: {stabilityGradient()}; box-shadow: 0 0 10px {stabilityGlow()}"
+						style="width: {(gameState.tower / 20) *
+							100}%; background: {stabilityGradient()}; box-shadow: 0 0 10px {stabilityGlow()}"
 					></div>
 				</div>
 			</div>
@@ -300,12 +305,32 @@
 				{#if modifierState()}
 					<div class="modifier-state" style="color: {modifierColor()}">
 						{#if gameState.isLucid}
-							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							>
 								<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
 								<polyline points="16 7 22 7 22 13"></polyline>
 							</svg>
 						{:else if gameState.isSurreal}
-							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							>
 								<polyline points="22 17 13.5 8.5 8.5 13.5 2 7"></polyline>
 								<polyline points="16 17 22 17 22 11"></polyline>
 							</svg>
@@ -325,7 +350,11 @@
 					</div>
 					<!-- Center row -->
 					<div class="pip-row center-row">
-						<span class="dice-pip center-pip" class:active={dicePips()[2]} style="--pip-delay: 300ms">
+						<span
+							class="dice-pip center-pip"
+							class:active={dicePips()[2]}
+							style="--pip-delay: 300ms"
+						>
 							<span class="pip-dot"></span>
 						</span>
 					</div>
@@ -379,25 +408,79 @@
 				data-augmented-ui={luckAugmentedUI}
 				style="animation-delay: 0.55s; animation-duration: 0.85s"
 			>
-				<div class="stat-label">
-					ABILITIES
-				</div>
+				<div class="stat-label">ABILITIES</div>
 				<div class="ability-icons">
 					<!-- Sparkles - Luck/Fortune -->
-					<svg class="ability-icon" class:active={bonusPercent >= 1} xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-						<path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/>
+					<svg
+						class="ability-icon"
+						class:active={bonusPercent >= 1}
+						xmlns="http://www.w3.org/2000/svg"
+						width="12"
+						height="12"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<path
+							d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"
+						/>
 					</svg>
 					<!-- Shield - Protection/Defense -->
-					<svg class="ability-icon" class:active={bonusPercent >= 2} xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-						<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>
+					<svg
+						class="ability-icon"
+						class:active={bonusPercent >= 2}
+						xmlns="http://www.w3.org/2000/svg"
+						width="12"
+						height="12"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<path
+							d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"
+						/>
 					</svg>
 					<!-- Heart - Health/Resilience -->
-					<svg class="ability-icon" class:active={bonusPercent >= 3} xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-						<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+					<svg
+						class="ability-icon"
+						class:active={bonusPercent >= 3}
+						xmlns="http://www.w3.org/2000/svg"
+						width="12"
+						height="12"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<path
+							d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"
+						/>
 					</svg>
 					<!-- Zap - Energy/Action -->
-					<svg class="ability-icon" class:active={bonusPercent >= 4} xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-						<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>
+					<svg
+						class="ability-icon"
+						class:active={bonusPercent >= 4}
+						xmlns="http://www.w3.org/2000/svg"
+						width="12"
+						height="12"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<path
+							d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"
+						/>
 					</svg>
 				</div>
 				<!-- <div class="stat-value">
@@ -663,7 +746,7 @@
 
 	.info-segment:last-of-type {
 		display: flex;
-		
+
 		& > div {
 			display: flex;
 			flex-direction: column;
@@ -940,7 +1023,12 @@
 		font-weight: bold;
 		font-family: 'Courier New', monospace;
 		color: #fff;
-		text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+		/* Enhanced multi-layer glow for better visibility through fog/overlays */
+		text-shadow:
+			0 0 8px currentColor,
+			/* Inner glow */ 0 0 16px currentColor,
+			/* Middle glow */ 0 0 24px rgba(0, 0, 0, 0.9),
+			/* Dark outline for contrast */ 0 2px 4px rgba(0, 0, 0, 0.8); /* Drop shadow for depth */
 		line-height: 1;
 		display: flex;
 		align-items: baseline;
@@ -1627,8 +1715,6 @@
 			width: 18px;
 			height: 18px;
 		}
-
-	
 
 		/* Reset augmented-ui settings for compact mobile layout */
 		.health-stat,

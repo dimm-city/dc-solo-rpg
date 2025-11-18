@@ -3,6 +3,9 @@
 	import ContinueButton from './ContinueButton.svelte';
 	import ButtonBar from './ButtonBar.svelte';
 	import { onMount } from 'svelte';
+	import { fade, scale } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
+	import { ANIMATION_DURATION } from '$lib/constants/animations.js';
 
 	let {
 		journalText = $bindable(''),
@@ -184,19 +187,28 @@
 	});
 </script>
 
-<div class="dc-journal-container">
-	<div class="journal-header-area">
+<div class="dc-journal-container" in:fade={{ duration: ANIMATION_DURATION.NORMAL }} data-augmented-ui="tl-clip br-clip tr-clip bl-clip border">
+	<div
+		class="journal-header-area"
+		in:fade={{ duration: ANIMATION_DURATION.SLOW, delay: ANIMATION_DURATION.FAST }}
+	>
 		<h6>{gameState.config?.labels?.journalEntryHeader ?? 'Journal Entry'}</h6>
-		<blockquote>
-			{gameState.config?.labels?.journalEntrySubHeader ?? 'Record your progress'}
-		</blockquote>
+		
 
 		{#each currentEvents as event (event.id)}
 			<p>{event.description}</p>
 		{/each}
 	</div>
 
-	<div class="text-entry-area">
+	<div
+		class="text-entry-area"
+		in:scale={{
+			duration: ANIMATION_DURATION.SLOW,
+			delay: ANIMATION_DURATION.NORMAL,
+			easing: cubicOut,
+			start: 0.95
+		}}
+	>
 		<textarea
 			bind:value={journalText}
 			rows="5"
@@ -205,7 +217,16 @@
 		></textarea>
 	</div>
 
-	<div class="audio-entry-area">
+	<div
+		class="audio-entry-area"
+		augmented-ui="tl-clip br-clip border"
+		in:scale={{
+			duration: ANIMATION_DURATION.SLOW,
+			delay: ANIMATION_DURATION.SLOW,
+			easing: cubicOut,
+			start: 0.95
+		}}
+	>
 		<div class="audio-section-header">
 			<svg
 				class="audio-header-icon"
@@ -394,20 +415,22 @@
 	.dc-journal-container {
 		display: grid;
 		height: 100%;
+		width: 80%;
 		padding: var(--space-md);
 		grid-template-columns: 1fr;
 		grid-template-rows: auto 1fr auto auto auto;
 		row-gap: var(--space-md);
 		grid-auto-flow: row;
 		grid-template-areas:
-			'.'
 			'header-area'
+			'.'
 			'text-entry-area'
 			'audio-entry-area'
 			'button-area';
 		box-sizing: border-box;
 		overflow: hidden;
 		align-items: end;
+		background: var(--translucent-dark, black);
 	}
 
 	.button-area {
@@ -415,15 +438,28 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
+		margin-top: var(--space-md);
+		padding: var(--space-xs) 0;
 	}
 
 	.journal-header-area {
 		grid-area: header-area;
 		overflow-y: auto;
-		max-height: calc(100svh - 250px);
-		p {
-			margin: var(--space-xs) 0;
-		}
+		max-height: 25svh;
+		margin-bottom: var(--space-sm);
+	}
+
+	.journal-header-area h6 {
+		text-wrap: balance;
+		text-wrap-mode: wrap;
+		text-wrap-style: pretty;
+		text-align: center;
+
+	}
+
+	.journal-header-area p {
+		margin: var(--space-sm) 0;
+		line-height: var(--line-height-base);
 	}
 
 	.text-entry-area {
@@ -431,6 +467,7 @@
 		display: flex;
 		flex-direction: column;
 		min-height: 0;
+		margin-bottom: var(--space-sm);
 	}
 
 	textarea {
@@ -441,30 +478,40 @@
 		box-sizing: border-box;
 		resize: vertical;
 		font-family: 'Courier New', monospace;
-		font-size: 0.875rem;
-		padding: var(--space-sm);
-		background: rgba(0, 0, 0, 0.4);
-		border: 2px solid rgba(0, 255, 255, 0.3);
-		border-radius: 4px;
+		font-size: var(--text-base);
+		line-height: var(--line-height-base);
+		padding: var(--space-md);
 		color: var(--color-text);
-		transition: all 0.3s ease;
+		margin-bottom: 0;
+		transition:
+			border-color 200ms cubic-bezier(0.4, 0, 0.6, 1),
+			box-shadow 200ms cubic-bezier(0.4, 0, 0.6, 1),
+			background 200ms cubic-bezier(0.4, 0, 0.6, 1);
 	}
 
 	textarea:focus {
 		outline: none;
 		border-color: var(--color-neon-cyan);
+		background: rgba(0, 0, 0, 0.6);
 		box-shadow:
-			0 0 10px rgba(0, 255, 255, 0.3),
-			inset 0 0 10px rgba(0, 255, 255, 0.1);
+			0 0 15px rgba(0, 255, 255, 0.4),
+			inset 0 0 15px rgba(0, 255, 255, 0.15);
 	}
 
 	textarea:disabled {
 		opacity: 0.6;
 		cursor: not-allowed;
+		background: rgba(0, 0, 0, 0.3);
 	}
 
 	textarea::placeholder {
-		color: rgba(255, 255, 255, 0.3);
+		color: rgba(255, 255, 255, 0.4);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		textarea {
+			transition: none;
+		}
 	}
 
 	/* Audio Entry Area */
@@ -473,43 +520,58 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-sm);
-		padding: var(--space-sm);
-		background: rgba(0, 0, 0, 0.3);
-		border: 2px solid rgba(0, 255, 255, 0.3);
+		padding: var(--space-md);
+		background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 20, 30, 0.3));
+		border: 2px solid rgba(0, 255, 255, 0.4);
 		border-radius: 4px;
 		min-height: 0;
+		box-shadow:
+			0 0 20px rgba(0, 255, 255, 0.15),
+			inset 0 0 20px rgba(0, 255, 255, 0.05);
+
+		/* Augmented UI */
+		--aug-border-all: 2px;
+		--aug-border-bg: rgba(0, 255, 255, 0.2);
+		--aug-tl: 12px;
+		--aug-br: 12px;
 	}
 
 	.audio-section-header {
 		display: flex;
 		align-items: center;
-		gap: var(--space-xs);
-		font-size: 0.75rem;
-		color: rgba(0, 255, 255, 0.9);
-		font-weight: 600;
+		gap: var(--space-sm);
+		font-size: var(--text-sm);
+		color: var(--color-neon-cyan);
+		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
+		text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
 	}
 
 	.audio-header-icon {
 		flex-shrink: 0;
-		filter: drop-shadow(0 0 4px rgba(0, 255, 255, 0.6));
+		width: 18px;
+		height: 18px;
+		filter: drop-shadow(0 0 6px rgba(0, 255, 255, 0.8));
 	}
 
 	.audio-error {
 		display: flex;
 		align-items: center;
-		gap: var(--space-xs);
-		padding: var(--space-xs);
-		background: rgba(255, 0, 0, 0.1);
-		border: 1px solid rgba(255, 0, 0, 0.3);
+		gap: var(--space-sm);
+		padding: var(--space-sm);
+		background: rgba(255, 0, 0, 0.15);
+		border: 1px solid rgba(255, 0, 0, 0.4);
 		border-radius: 4px;
-		color: rgba(255, 100, 100, 0.9);
-		font-size: 0.75rem;
+		color: rgba(255, 120, 120, 1);
+		font-size: var(--text-sm);
+		line-height: var(--line-height-base);
 	}
 
 	.error-icon {
 		flex-shrink: 0;
+		width: 18px;
+		height: 18px;
 	}
 
 	/* Audio Buttons */
@@ -517,33 +579,41 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: var(--space-xs);
+		gap: var(--space-sm);
 		padding: var(--space-sm) var(--space-md);
 		background: linear-gradient(135deg, rgba(0, 255, 255, 0.15), rgba(0, 139, 139, 0.25));
-		border: 2px solid rgba(0, 255, 255, 0.4);
+		border: 2px solid rgba(0, 255, 255, 0.5);
 		border-radius: 4px;
-		color: rgba(0, 255, 255, 1);
+		color: var(--color-neon-cyan);
 		font-family: 'Courier New', monospace;
-		font-size: 0.75rem;
-		font-weight: 600;
+		font-size: var(--text-sm);
+		font-weight: 700;
 		cursor: pointer;
-		transition: all 0.3s ease;
+		transition:
+			background 200ms cubic-bezier(0.4, 0, 0.6, 1),
+			border-color 200ms cubic-bezier(0.4, 0, 0.6, 1),
+			box-shadow 200ms cubic-bezier(0.4, 0, 0.6, 1),
+			transform 150ms cubic-bezier(0.4, 0, 0.6, 1);
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
-		min-height: 36px;
+		min-height: 40px;
+		box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
 	}
 
 	.audio-button:hover:not(:disabled) {
 		background: linear-gradient(135deg, rgba(0, 255, 255, 0.25), rgba(0, 139, 139, 0.35));
-		border-color: rgba(0, 255, 255, 0.7);
+		border-color: rgba(0, 255, 255, 0.8);
 		box-shadow:
-			0 0 15px rgba(0, 255, 255, 0.4),
-			inset 0 0 10px rgba(0, 255, 255, 0.1);
+			0 0 20px rgba(0, 255, 255, 0.5),
+			inset 0 0 15px rgba(0, 255, 255, 0.15);
 		transform: translateY(-2px);
 	}
 
 	.audio-button:active:not(:disabled) {
 		transform: translateY(0);
+		box-shadow:
+			0 0 15px rgba(0, 255, 255, 0.4),
+			inset 0 0 10px rgba(0, 255, 255, 0.1);
 	}
 
 	.audio-button:disabled {
@@ -557,6 +627,12 @@
 		flex-shrink: 0;
 	}
 
+	@media (prefers-reduced-motion: reduce) {
+		.audio-button {
+			transition: none;
+		}
+	}
+
 	.record-button {
 		width: 100%;
 	}
@@ -565,28 +641,33 @@
 	.recording-controls {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-sm);
+		gap: var(--space-md);
 		align-items: center;
 	}
 
 	.recording-indicator {
 		display: flex;
 		align-items: center;
-		gap: var(--space-sm);
-		padding: var(--space-sm);
-		background: rgba(220, 20, 60, 0.1);
-		border: 2px solid rgba(220, 20, 60, 0.4);
+		gap: var(--space-md);
+		padding: var(--space-md);
+		background: linear-gradient(135deg, rgba(220, 20, 60, 0.15), rgba(139, 0, 0, 0.1));
+		border: 2px solid rgba(220, 20, 60, 0.5);
 		border-radius: 4px;
 		width: 100%;
 		justify-content: center;
+		box-shadow:
+			0 0 20px rgba(220, 20, 60, 0.3),
+			inset 0 0 15px rgba(220, 20, 60, 0.1);
 	}
 
 	.pulse-dot {
-		width: 12px;
-		height: 12px;
+		width: 14px;
+		height: 14px;
 		border-radius: 50%;
 		background: rgba(220, 20, 60, 1);
-		box-shadow: 0 0 10px rgba(220, 20, 60, 0.8);
+		box-shadow:
+			0 0 15px rgba(220, 20, 60, 1),
+			0 0 30px rgba(220, 20, 60, 0.5);
 		animation: pulse 1.5s ease-in-out infinite;
 	}
 
@@ -597,18 +678,27 @@
 			transform: scale(1);
 		}
 		50% {
-			opacity: 0.5;
-			transform: scale(1.2);
+			opacity: 0.6;
+			transform: scale(1.3);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.pulse-dot {
+			animation: none;
+			opacity: 1;
 		}
 	}
 
 	.recording-time {
-		font-family: 'Courier New', monospace;
-		font-size: 1.25rem;
+		font-family: var(--font-display);
+		font-size: 1.5rem;
 		color: rgba(220, 20, 60, 1);
 		font-weight: 700;
 		letter-spacing: 0.1em;
-		text-shadow: 0 0 10px rgba(220, 20, 60, 0.5);
+		text-shadow:
+			0 0 15px rgba(220, 20, 60, 0.8),
+			0 0 30px rgba(220, 20, 60, 0.4);
 	}
 
 	.recording-buttons {
@@ -641,68 +731,77 @@
 	.playback-controls {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-sm);
+		gap: var(--space-md);
 	}
 
 	.audio-info {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		padding: var(--space-xs) var(--space-sm);
-		background: rgba(0, 255, 255, 0.1);
-		border: 1px solid rgba(0, 255, 255, 0.3);
+		padding: var(--space-sm) var(--space-md);
+		background: linear-gradient(135deg, rgba(0, 255, 255, 0.15), rgba(0, 139, 139, 0.1));
+		border: 2px solid rgba(0, 255, 255, 0.4);
 		border-radius: 4px;
+		box-shadow:
+			0 0 15px rgba(0, 255, 255, 0.2),
+			inset 0 0 10px rgba(0, 255, 255, 0.05);
 	}
 
 	.audio-duration {
-		font-family: 'Courier New', monospace;
-		font-size: 0.875rem;
-		color: rgba(0, 255, 255, 1);
+		font-family: var(--font-display);
+		font-size: 1.25rem;
+		color: var(--color-neon-cyan);
 		font-weight: 700;
 		letter-spacing: 0.1em;
+		text-shadow:
+			0 0 10px rgba(0, 255, 255, 0.8),
+			0 0 20px rgba(0, 255, 255, 0.4);
 	}
 
 	.audio-status {
-		font-size: 0.75rem;
-		color: rgba(0, 255, 255, 0.8);
+		font-size: var(--text-sm);
+		color: rgba(0, 255, 255, 0.9);
 		font-style: italic;
+		font-weight: 600;
 	}
 
 	.playback-buttons {
 		display: flex;
-		gap: var(--space-sm);
+		gap: var(--space-md);
 		width: 100%;
 	}
 
 	.play-button {
 		flex: 1;
 		background: linear-gradient(135deg, rgba(0, 255, 127, 0.2), rgba(0, 139, 69, 0.3));
-		border-color: rgba(0, 255, 127, 0.5);
+		border-color: rgba(0, 255, 127, 0.6);
 		color: rgba(0, 255, 127, 1);
+		box-shadow: 0 0 10px rgba(0, 255, 127, 0.3);
 	}
 
 	.play-button:hover:not(:disabled) {
 		background: linear-gradient(135deg, rgba(0, 255, 127, 0.3), rgba(0, 139, 69, 0.4));
-		border-color: rgba(0, 255, 127, 0.8);
+		border-color: rgba(0, 255, 127, 0.9);
 		box-shadow:
-			0 0 15px rgba(0, 255, 127, 0.4),
-			inset 0 0 10px rgba(0, 255, 127, 0.1);
+			0 0 20px rgba(0, 255, 127, 0.5),
+			inset 0 0 15px rgba(0, 255, 127, 0.15);
 	}
 
 	.delete-button {
 		flex: 0 0 auto;
 		padding: var(--space-md);
 		background: linear-gradient(135deg, rgba(255, 69, 0, 0.2), rgba(178, 34, 34, 0.3));
-		border-color: rgba(255, 69, 0, 0.5);
+		border-color: rgba(255, 69, 0, 0.6);
 		color: rgba(255, 99, 71, 1);
+		box-shadow: 0 0 10px rgba(255, 69, 0, 0.3);
 	}
 
 	.delete-button:hover:not(:disabled) {
 		background: linear-gradient(135deg, rgba(255, 69, 0, 0.3), rgba(178, 34, 34, 0.4));
-		border-color: rgba(255, 99, 71, 0.8);
+		border-color: rgba(255, 99, 71, 0.9);
 		box-shadow:
-			0 0 15px rgba(255, 69, 0, 0.4),
-			inset 0 0 10px rgba(255, 69, 0, 0.1);
+			0 0 20px rgba(255, 69, 0, 0.5),
+			inset 0 0 15px rgba(255, 69, 0, 0.15);
 	}
 
 	/* Responsive Design */
@@ -710,28 +809,45 @@
 		.dc-journal-container {
 			padding: var(--space-sm);
 			row-gap: var(--space-sm);
+			width: 100%;
+		}
+
+		.journal-header-area h6 {
+			margin-bottom: var(--space-sm);
 		}
 
 		.audio-entry-area {
-			padding: var(--space-xs);
+			padding: var(--space-sm);
+			gap: var(--space-xs);
 		}
 
 		.audio-section-header {
-			font-size: 0.7rem;
+			font-size: 0.75rem;
+		}
+
+		.audio-header-icon {
+			width: 16px;
+			height: 16px;
 		}
 
 		.audio-button {
-			padding: var(--space-xs) var(--space-sm);
-			font-size: 0.7rem;
-			min-height: 32px;
+			padding: var(--space-sm);
+			font-size: 0.75rem;
+			min-height: 40px; /* Maintain touch target */
+			gap: var(--space-xs);
 		}
 
 		.recording-time {
-			font-size: 0.875rem;
+			font-size: 1.125rem;
+		}
+
+		.audio-duration {
+			font-size: 1rem;
 		}
 
 		.playback-buttons {
 			flex-direction: column;
+			gap: var(--space-sm);
 		}
 
 		.delete-button {
@@ -742,26 +858,41 @@
 	@media (max-height: 700px) {
 		.dc-journal-container {
 			padding: var(--space-sm);
-			row-gap: var(--space-xs);
+			row-gap: var(--space-sm);
 		}
 
-		.journal-header-area {
-			max-height: 15vh;
+		.journal-header-area h6 {
+			font-size: var(--text-xl);
+			margin-bottom: var(--space-sm);
+		}
+
+		.journal-header-area blockquote {
+			margin-bottom: var(--space-sm);
 		}
 
 		textarea {
 			min-height: 3rem;
 			max-height: 5rem;
+			padding: var(--space-sm);
 		}
 
 		.audio-entry-area {
-			padding: var(--space-xs);
+			padding: var(--space-sm);
 		}
 
 		.audio-button {
-			padding: var(--space-xs);
-			font-size: 0.7rem;
-			min-height: 32px;
+			padding: var(--space-sm);
+			font-size: 0.75rem;
+			min-height: 40px; /* Maintain touch target */
+		}
+
+		.recording-indicator {
+			padding: var(--space-sm);
+		}
+
+		.recording-time,
+		.audio-duration {
+			font-size: 1.125rem;
 		}
 	}
 </style>

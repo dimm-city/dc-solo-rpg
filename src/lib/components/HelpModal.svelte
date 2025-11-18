@@ -4,6 +4,12 @@
 
 	let { isOpen = false, onClose } = $props();
 
+	function handleKeydown(event) {
+		if (event.key === 'Escape') {
+			onClose();
+		}
+	}
+
 	// Define all help content sections
 	const helpSections = [
 		{
@@ -24,7 +30,7 @@
 		{
 			title: 'Failure Counter (Kings)',
 			message:
-				"Kings represent looming doom. Each King revealed brings you closer to failure. Reveal all 4 Kings and the game ends immediately in defeat."
+				'Kings represent looming doom. Each King revealed brings you closer to failure. Reveal all 4 Kings and the game ends immediately in defeat.'
 		},
 		{
 			title: 'Lucid & Surreal States',
@@ -39,7 +45,7 @@
 		{
 			title: 'The Deck',
 			message:
-				"You play with a standard 52-card deck. Each round, roll a d20 to determine how many cards to draw. The deck shrinks as your journey progresses. Watch the progress bar to see how close you are to the end."
+				'You play with a standard 52-card deck. Each round, roll a d20 to determine how many cards to draw. The deck shrinks as your journey progresses. Watch the progress bar to see how close you are to the end.'
 		},
 		{
 			title: 'How to Win',
@@ -53,6 +59,8 @@
 		}
 	];
 </script>
+
+<svelte:window on:keydown={handleKeydown} />
 
 <OverlayModal isVisible={isOpen} zIndex={1000} fixedHeight="70vh" animateHeight={true}>
 	<div class="help-card-content">

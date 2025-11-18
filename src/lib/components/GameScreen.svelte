@@ -52,7 +52,8 @@
 	} = $props();
 
 	const currentScreen = $derived(gameState.state);
-	const TRANSITION_DURATION = 300;
+	// Reduced from 300ms to 200ms for snappier, more mechanical feel
+	const TRANSITION_DURATION = 200;
 
 	// Contextual background text for each screen
 	const contextText = $derived.by(() => {
@@ -1040,8 +1041,7 @@
 		margin: 0 0 0.75rem 0;
 		font-family: 'lixdu', 'Courier New', monospace;
 		opacity: 0.3;
-		text-shadow:
-			0 0 10px var(--yellow);
+		text-shadow: 0 0 10px var(--yellow);
 	}
 
 	.context-description {
@@ -1070,6 +1070,8 @@
 		width: 100%;
 		opacity: 0.9;
 		grid-area: status-area;
+		z-index: 100;
+		position: relative;
 	}
 
 	.dc-start-round-screen {
@@ -1088,6 +1090,7 @@
 			width: 100%;
 			margin: auto;
 			justify-content: stretch;
+			z-index: auto; /* Remove z-index to allow natural stacking */
 		}
 
 		/* Allow overflow on parent containers so toolbar items can appear above */
@@ -1097,9 +1100,11 @@
 			overflow: visible;
 		}
 
-		/* Ensure main-screen-area is below toolbar-area in stacking order */
+		/* Ensure main-screen-area is below status bars in stacking order */
 		.main-screen-area {
 			z-index: 1;
+			align-items: flex-end; /* Align card to bottom on mobile to prevent status bar overlap */
+			justify-content: center;
 		}
 
 		/* Remove z-index from screen container to fix stacking context */

@@ -4,6 +4,7 @@
 	 */
 	import { fade, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
+	import { ANIMATION_DURATION } from '$lib/constants/animations.js';
 
 	let {
 		children,
@@ -15,13 +16,20 @@
 
 	let modalHeight = $derived(fixedHeight ?? (animateHeight ? '70dvh' : null));
 
-	function cloudFogTransition(node, { delay = 0, duration = 800 }) {
+	/**
+	 * Cloud fog transition for modal backdrop
+	 * Speed: 200ms (mechanical/ethereal aesthetic)
+	 * Easing: cubicOut for natural deceleration on entry, cubicIn for acceleration on exit
+	 * Effect: Fades in/out fog with subtle scale (0.95 to 1.0)
+	 */
+	function cloudFogTransition(node, { delay = 0, duration = ANIMATION_DURATION.NORMAL }) {
 		return {
 			delay,
 			duration,
 			tick: (t) => {
+				// Use cubicOut for smoother easing (matches the scale transition)
 				const eased = cubicOut(t);
-				const scale = 0.5 + eased * 0.5; // Scale from 0.5 to 1.0
+				const scale = 0.95 + eased * 0.05; // Subtle scale from 0.95 to 1.0
 
 				const clouds = node.querySelectorAll('.cloud');
 				clouds.forEach((cloud) => {
@@ -93,24 +101,40 @@
 
 {#if isVisible}
 	<!-- Fog overlay with layered clouds -->
+	<!-- Animation: Fades in/out simultaneously with modal at 200ms -->
 	<div
 		class="fog-overlay"
 		style="z-index: {zIndex - 1};"
-		in:cloudFogTransition={{ duration: 800, delay: 0 }}
-		out:cloudFogTransition={{ duration: 800, delay: 600 }}
+		in:cloudFogTransition={{ duration: ANIMATION_DURATION.NORMAL, delay: 0 }}
+		out:cloudFogTransition={{ duration: ANIMATION_DURATION.NORMAL, delay: 0 }}
 	>
 		<div class="cloud back"></div>
 		<div class="cloud mid"></div>
 		<div class="cloud front"></div>
 	</div>
 
+	<!-- Modal content wrapper -->
+	<!-- Animation: Fades in/out with scale (0.95 to 1.0) simultaneously with fog at 200ms -->
+	<!-- Entry: ease-out for deceleration, Exit: ease-in for acceleration (modal pattern) -->
 	<div
 		class="modal-wrapper"
 		style="z-index: {zIndex};"
 		style:height={modalHeight}
 		data-augmented-ui="tl-clip tr-clip br-clip bl-clip"
-		in:fade={{ duration: 600, delay: 800 }}
-		out:fade={{ duration: 600, delay: 0 }}
+		in:scale={{
+			duration: ANIMATION_DURATION.NORMAL,
+			delay: 0,
+			start: 0.95,
+			opacity: 0,
+			easing: cubicOut
+		}}
+		out:scale={{
+			duration: ANIMATION_DURATION.NORMAL,
+			delay: 0,
+			start: 0.95,
+			opacity: 0,
+			easing: cubicOut
+		}}
 	>
 		{@render children()}
 	</div>
@@ -118,18 +142,20 @@
 
 <style>
 	.modal-wrapper {
+		display: flex;
+		justify-content: center;
 		position: fixed;
-		top: 50%;
+		/* top: 50%;
 		left: 50%;
-		transform: translate(-50%, -50%);
+		transform: translate(-50%, -50%); */
 		margin: 0;
 		padding: 0;
 		border: none;
 		background: transparent;
 
-		width: stretch;
-		max-width: min(90vw, 1200px);
-		height: calc(100vh - 60px - var(--space-lg) * 2);
+		width: 100%;
+		/*max-width: min(90vw, 1200px);
+		 height: calc(100vh - var(--dc-toolbar-height) - var(--space-lg) * 2); */
 
 		/* Scrollable content within modal */
 		overflow-y: auto;
@@ -140,10 +166,11 @@
 	}
 
 	/* Fog overlay container */
+	/* CRITICAL: pointer-events: auto to capture all clicks and prevent interaction with content below */
 	.fog-overlay {
 		position: fixed;
 		inset: 0;
-		pointer-events: none;
+		pointer-events: auto; /* CHANGED: Capture clicks to prevent clicking through to game content */
 		overflow: hidden;
 		display: flex;
 		align-items: center;
@@ -152,6 +179,7 @@
 		opacity: 0.75;
 		backdrop-filter: blur(6px) brightness(0.8);
 		-webkit-backdrop-filter: blur(6px) brightness(0.8);
+		cursor: default; /* Show default cursor on backdrop */
 	}
 
 	/* Cloud layers for realistic fog */
@@ -218,31 +246,28 @@
 	}
 
 	/* Improved responsive behavior */
-	@media (max-width: 900px) {
+	/* @media (max-width: 900px) {
 		.modal-wrapper {
 			max-width: 95vw;
 			height: 80dvh;
 		}
-	}
+	} */
 
-	@media (max-width: 600px) {
+	@media (max-width: 800px) {
 		.modal-wrapper {
-			width: 100%;
 			max-width: 100vw;
 			min-height: 60dvh;
-			height: 85dvh;
 			max-height: calc(100dvh - var(--space-md) * 2);
 			/* Shift modal down to avoid covering status display */
-			top: calc(50% + 30px);
+			/* top: calc(50% + 30px); */
 		}
 	}
 
 	@media (max-width: 400px) {
 		.modal-wrapper {
-			height: 90dvh;
-			max-height: calc(100dvh - var(--space-sm) * 2);
-			/* Shift modal down further on very small screens */
-			top: calc(50% + 35px);
+			bottom: 0;
+			position: absolute;
+			/* height: calc(100vh - 300px); */
 		}
 	}
 
