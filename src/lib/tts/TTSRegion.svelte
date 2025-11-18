@@ -2,7 +2,7 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
 	import { ttsManager, type TTSMode } from './tts-manager';
-	import { regionPrefs, setRegionMode } from './tts-preferences';
+	import { globalPrefs, setGlobalMode } from './tts-preferences';
 	import { createTTSAttachment } from './tts-attachment';
 	import { get } from 'svelte/store';
 
@@ -13,16 +13,14 @@
 		children?: any;
 	}>();
 
-	const prefsStore = regionPrefs(regionId);
-
-	// Reactive derivations
-	let mode = $derived(get(prefsStore).mode);
-	let voiceName = $derived(get(prefsStore).voiceName);
+	// Use global preferences
+	let mode = $derived(get(globalPrefs).mode);
+	let voiceName = $derived(get(globalPrefs).voiceName);
 	let showModeMenu = $state(false);
 
 	function changeMode(newMode: TTSMode, event?: MouseEvent) {
 		event?.stopPropagation();
-		setRegionMode(regionId, newMode);
+		setGlobalMode(newMode);
 		if (newMode === 'off') {
 			ttsManager.stop(regionId);
 		}
@@ -31,8 +29,8 @@
 
 	function play(event?: MouseEvent) {
 		event?.stopPropagation();
-		const currentMode = get(prefsStore).mode;
-		const currentVoiceName = get(prefsStore).voiceName;
+		const currentMode = get(globalPrefs).mode;
+		const currentVoiceName = get(globalPrefs).voiceName;
 		if (!text) return;
 		if (currentMode === 'off') return;
 
