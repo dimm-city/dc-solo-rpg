@@ -40,7 +40,13 @@
 <svelte:head>
 	<link rel="stylesheet" href={gameStylesheet} />
 </svelte:head>
-<div class="dc-game-container dc-game-bg" data-testid="game-container">
+<div
+	class="dc-game-container dc-game-bg"
+	class:modal-active={showHelpModal}
+	data-testid="game-container"
+	inert={showHelpModal ? true : undefined}
+	aria-hidden={showHelpModal ? 'true' : undefined}
+>
 	<NeuralBackground />
 	<GameScreen {systemSettings} {onfailurecheckcompleted} {onjournalsaved} bind:showHelpModal />
 </div>
@@ -97,6 +103,12 @@
 		color: var(--dc-default-text-color);
 		overflow: hidden; /* CRITICAL: Prevent all scrolling */
 		position: relative; /* CRITICAL: Position context for neural background */
+	}
+
+	/* CRITICAL: Disable all pointer events when modal is active */
+	/* This prevents clicking through the modal backdrop to game content */
+	.dc-game-container.modal-active {
+		pointer-events: none;
 	}
 	.dc-game-container,
 	:global(.dc-intro-container) {

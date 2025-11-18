@@ -2,6 +2,7 @@ import { onMount } from 'svelte';
 import DiceBox from '@3d-dice/dice-box-threejs';
 import { gameState } from './gameStore.svelte.js';
 import { randomInt } from '../services/random.js';
+import { ANIMATION_DURATION } from '$lib/constants/animations.js';
 
 /**
  * Shared DiceBox instance for the entire application
@@ -236,10 +237,10 @@ export async function rollDice(value = null, options = {}) {
 
 	const result = await diceBoxInstance.roll(rollString);
 
-	// After roll completes, wait 2 seconds before transitioning z-index back down
+	// After roll completes, wait 500ms then trigger fade-out animation
 	setTimeout(() => {
 		diceState.isRolling = false;
-	}, 2000);
+	}, ANIMATION_DURATION.DICE_DELAY);
 
 	// Return detailed result object
 	const rolls = result.rolls?.length ? result.rolls.map((r) => r.value) : [result.total];

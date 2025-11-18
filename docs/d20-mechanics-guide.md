@@ -38,6 +38,7 @@ The D20 Solo RPG System is a **tactical solo journaling RPG** that combines:
 ### 1.2 Key Differences from d6 System
 
 **D20 System Changes:**
+
 - Uses d20 (1-20) instead of d6 (1-6) for all rolls
 - Stability checks instead of tower pulls
 - Graduated token changes (-2 to +2) instead of binary success/failure
@@ -69,6 +70,7 @@ States:
 ```
 
 **Properties:**
+
 - Starting value: 20
 - Lost through failed Stability checks (Challenge cards)
 - Can be gained: Natural 20 on Stability check grants +1 (max 20)
@@ -84,6 +86,7 @@ Unlocked by: Drawing Ace of Hearts (Salvation)
 ```
 
 **Properties:**
+
 - Starting value: 10 (when Salvation unlocked)
 - Changed through Salvation checks (d20 rolls)
 - Graduated changes based on roll:
@@ -102,6 +105,7 @@ Each Ace improves Salvation success rate
 ```
 
 **Properties:**
+
 - Starting value: 0 (1 in easy mode)
 - Incremented when Narrative cards (Aces) are drawn
 - Determines Salvation threshold:
@@ -122,6 +126,7 @@ const roll = rollDie(20);
 ```
 
 **Used for:**
+
 - Round start (determines cards to draw)
 - Stability checks (Challenge cards)
 - Salvation checks (token removal attempts)
@@ -137,6 +142,7 @@ Duration: Next roll only (consumed on use)
 ```
 
 **Example:**
+
 ```javascript
 // Lucid state: Roll 2d20, keep higher
 const roll1 = 8;
@@ -145,6 +151,7 @@ const result = Math.max(roll1, roll2); // 15
 ```
 
 **Strategic Value:**
+
 - Significantly improves next check success rate
 - Can turn a likely failure into a likely success
 - Creates tactical decision: "When should I attempt Salvation?"
@@ -160,6 +167,7 @@ Duration: Next roll only (consumed on use)
 ```
 
 **Example:**
+
 ```javascript
 // Surreal state: Roll 2d20, keep lower
 const roll1 = 8;
@@ -168,6 +176,7 @@ const result = Math.min(roll1, roll2); // 8
 ```
 
 **Strategic Risk:**
+
 - Significantly worsens next check success rate
 - Can turn a likely success into a likely failure
 - Creates tension: "Can I survive until this clears?"
@@ -179,17 +188,18 @@ const result = Math.min(roll1, roll2); // 8
 ```javascript
 // State resolution order
 if (isLucid) {
-  // Roll with advantage, clear Lucid
-  isLucid = false;
-  isSurreal = false;
+	// Roll with advantage, clear Lucid
+	isLucid = false;
+	isSurreal = false;
 } else if (isSurreal) {
-  // Roll with disadvantage, clear Surreal
-  isSurreal = false;
-  isLucid = false;
+	// Roll with disadvantage, clear Surreal
+	isSurreal = false;
+	isLucid = false;
 }
 ```
 
 **Edge Cases:**
+
 - If Lucid and you roll natural 1 → Lose Lucid, gain Surreal
 - If Surreal and you roll natural 20 → Lose Surreal, gain Lucid
 - States do NOT stack (can't have Lucid + Surreal)
@@ -203,6 +213,7 @@ if (isLucid) {
 **Trigger:** Draw Ace of Hearts (Primary Success card)
 
 **Effects:**
+
 ```
 1. Set aceOfHeartsRevealed = true
 2. Set tokens = 10
@@ -222,10 +233,11 @@ Aces | Threshold | Success on | Win Rate | Probability
 ```
 
 **Calculation:**
+
 ```javascript
 function getSalvationThreshold(acesRevealed) {
-  const thresholds = [20, 17, 14, 11, 0];
-  return thresholds[Math.min(acesRevealed, 4)];
+	const thresholds = [20, 17, 14, 11, 0];
+	return thresholds[Math.min(acesRevealed, 4)];
 }
 ```
 
@@ -233,36 +245,37 @@ function getSalvationThreshold(acesRevealed) {
 
 ```javascript
 function resolveSalvationCheck(roll, threshold) {
-  // Natural 1: Critical failure
-  if (roll === 1) {
-    return { change: +2, type: 'critical_failure' };
-  }
+	// Natural 1: Critical failure
+	if (roll === 1) {
+		return { change: +2, type: 'critical_failure' };
+	}
 
-  // Natural 20: Critical success
-  if (roll === 20) {
-    return { change: -2, type: 'critical_success' };
-  }
+	// Natural 20: Critical success
+	if (roll === 20) {
+		return { change: -2, type: 'critical_success' };
+	}
 
-  // Normal success
-  if (roll >= threshold) {
-    return { change: -1, type: 'success' };
-  }
+	// Normal success
+	if (roll >= threshold) {
+		return { change: -1, type: 'success' };
+	}
 
-  // Normal failure
-  return { change: +1, type: 'failure' };
+	// Normal failure
+	return { change: +1, type: 'failure' };
 }
 ```
 
 **Graduated Token Changes:**
 
-| Roll      | Result            | Token Change | Example (10 → ?) |
-|-----------|-------------------|--------------|------------------|
-| Natural 1 | Critical Failure  | +2           | 10 → 12          |
-| < Thresh  | Failure           | +1           | 10 → 11          |
-| ≥ Thresh  | Success           | -1           | 10 → 9           |
-| Natural 20| Critical Success  | -2           | 10 → 8           |
+| Roll       | Result           | Token Change | Example (10 → ?) |
+| ---------- | ---------------- | ------------ | ---------------- |
+| Natural 1  | Critical Failure | +2           | 10 → 12          |
+| < Thresh   | Failure          | +1           | 10 → 11          |
+| ≥ Thresh   | Success          | -1           | 10 → 9           |
+| Natural 20 | Critical Success | -2           | 10 → 8           |
 
 **Strategic Depth:**
+
 - Natural 1s can make the game unwinnable (tokens keep increasing)
 - Natural 20s provide crucial acceleration
 - Creates meaningful tension in every Salvation roll
@@ -290,6 +303,7 @@ Event             | 2,4,6,8,10,J,Q| 28    | 53%
 **Card:** A♥
 
 **Effects:**
+
 1. Unlock Salvation checks
 2. Set tokens to 10
 3. Increment acesRevealed to 1
@@ -302,6 +316,7 @@ Event             | 2,4,6,8,10,J,Q| 28    | 53%
 **Cards:** A♦, A♣, A♠
 
 **Effects:**
+
 1. Increment acesRevealed
 2. Improve Salvation threshold
 3. No Stability check
@@ -310,6 +325,7 @@ Event             | 2,4,6,8,10,J,Q| 28    | 53%
 **Narrative Role:** Moments of respite, reflection, and empowerment.
 
 **Ace Progression:**
+
 ```
 1st Ace (A♥): Hope emerges → Salvation unlocked (17 threshold)
 2nd Ace:      Growing strength → Threshold improves to 14
@@ -322,6 +338,7 @@ Event             | 2,4,6,8,10,J,Q| 28    | 53%
 **Cards:** K♥, K♦, K♣, K♠
 
 **Effects:**
+
 1. Increment kingsRevealed
 2. Mark specific king as revealed (e.g., kingOfHearts = true)
 3. No Stability check (even rank)
@@ -336,6 +353,7 @@ Event             | 2,4,6,8,10,J,Q| 28    | 53%
 **Cards:** 3, 5, 7, 9 (all suits) - 16 total
 
 **Effects:**
+
 1. Trigger Stability check (roll d20)
 2. Compare roll to 10 (default DC)
 3. Failure: Lose Stability equal to card rank
@@ -347,13 +365,14 @@ Event             | 2,4,6,8,10,J,Q| 28    | 53%
 **Stability Loss Table:**
 
 | Card Rank | Stability Lost on Failure |
-|-----------|---------------------------|
+| --------- | ------------------------- |
 | 3         | 3                         |
 | 5         | 5                         |
 | 7         | 7                         |
 | 9         | 9                         |
 
 **Example:**
+
 ```
 Draw 9♠ (Challenge card)
 Roll d20 for Stability check
@@ -367,6 +386,7 @@ Lose 9 Stability
 **Cards:** 2, 4, 6, 8, 10, J, Q (all suits) - 28 total
 
 **Effects:**
+
 1. No Stability check (safe cards)
 2. Display narrative prompt
 3. Optional story-specific mechanics
@@ -455,6 +475,7 @@ flowchart TB
 ```
 
 **Easy Mode:**
+
 - acesRevealed starts at 1
 - Ace of Hearts removed from deck
 - Salvation starts unlocked with 14 threshold
@@ -468,10 +489,10 @@ const cardsToDraw = roll.finalValue; // 1-20 cards
 
 // Natural 20 or Natural 1 on round start roll
 if (roll.finalValue === 20) {
-  isLucid = true; // Advantage on next roll
+	isLucid = true; // Advantage on next roll
 }
 if (roll.finalValue === 1) {
-  isSurreal = true; // Disadvantage on next roll
+	isSurreal = true; // Disadvantage on next roll
 }
 
 // Draw cards
@@ -485,6 +506,7 @@ const cards = deck.splice(0, cardsToDraw);
 ### 7.1 Victory Path
 
 **Requirements:**
+
 1. ✅ Ace of Hearts drawn (Salvation unlocked)
 2. ✅ Collect more Aces (improve threshold)
 3. ✅ Tokens reduced to 0 through Salvation checks
@@ -542,7 +564,7 @@ Success Rate: ~30%
 **Challenge Card Distribution:**
 
 | Rank | Count | Damage on Fail | Expected Loss per Game |
-|------|-------|----------------|------------------------|
+| ---- | ----- | -------------- | ---------------------- |
 | 3    | 4     | 3              | ~5.4                   |
 | 5    | 4     | 5              | ~9.0                   |
 | 7    | 4     | 7              | ~12.6                  |
@@ -551,6 +573,7 @@ Success Rate: ~30%
 **Total Expected Loss:** ~43 Stability over full game
 
 **With Starting Stability of 20:**
+
 - Need to draw ~9-10 Challenge cards on average to deplete
 - Typical game draws 25-35 cards total
 - ~8-11 Challenge cards expected per game
@@ -609,18 +632,18 @@ All randomness goes through centralized service:
 // src/lib/services/random.js
 
 // Standard rolls
-rollDie(20);           // 1-20
-rollAdvantage(20);     // 2d20 keep high
-rollDisadvantage(20);  // 2d20 keep low
+rollDie(20); // 1-20
+rollAdvantage(20); // 2d20 keep high
+rollDisadvantage(20); // 2d20 keep low
 
 // Utility
-randomInt(1, 20);      // 1-20
-shuffleArray(deck);    // Fisher-Yates shuffle
+randomInt(1, 20); // 1-20
+shuffleArray(deck); // Fisher-Yates shuffle
 
 // Testing support
-mockDieRoll(20);       // Next roll will be 20
+mockDieRoll(20); // Next roll will be 20
 mockDieRollSequence([1, 10, 20]); // Mock sequence
-resetRNG();            // Reset to Math.random
+resetRNG(); // Reset to Math.random
 ```
 
 ### 9.2 State Management
@@ -630,25 +653,26 @@ resetRNG();            // Reset to Math.random
 ```javascript
 // gameStore.svelte.js
 let gameState = $state({
-  tower: 20,
-  tokens: 10,
-  acesRevealed: 0,
-  isLucid: false,
-  isSurreal: false,
-  pendingUpdates: {
-    diceRoll: null,
-    towerDamage: null,
-    towerGain: null,
-    tokenChange: null,
-    aceChange: null,
-    kingsChange: null,
-    isLucid: null,
-    isSurreal: null
-  }
+	tower: 20,
+	tokens: 10,
+	acesRevealed: 0,
+	isLucid: false,
+	isSurreal: false,
+	pendingUpdates: {
+		diceRoll: null,
+		towerDamage: null,
+		towerGain: null,
+		tokenChange: null,
+		aceChange: null,
+		kingsChange: null,
+		isLucid: null,
+		isSurreal: null
+	}
 });
 ```
 
 **Pending Updates Pattern:**
+
 - State changes are deferred until animations complete
 - Prevents UI desync
 - Allows for smooth transitions
@@ -667,10 +691,11 @@ let gameState = $state({
 ```
 
 **User Settings:**
+
 ```javascript
 // settingsStore.svelte.js
 {
-  diceTheme: "pinkdreams"  // ONLY user-configurable option
+	diceTheme: 'pinkdreams'; // ONLY user-configurable option
 }
 ```
 
@@ -727,16 +752,19 @@ K♥♦♣♠:    +1 Kings (4 = lose)
 ### Why D20?
 
 **Tactical Depth:**
+
 - 20-sided die provides granular probability (5% increments)
 - Advantage/disadvantage creates meaningful state management
 - Natural 1s and 20s create dramatic moments
 
 **Strategic Choices:**
+
 - When to attempt Salvation with Lucid state?
 - Is it worth risking a Challenge card when Surreal?
 - Collect more Aces or push for early victory?
 
 **Balanced Challenge:**
+
 - 15-20% win rate provides fair difficulty
 - Skilled play and good decisions matter
 - Luck plays a role but isn't everything
@@ -744,11 +772,13 @@ K♥♦♣♠:    +1 Kings (4 = lose)
 ### Graduated Token Changes
 
 **Problem with Binary Systems:**
+
 - Success/failure is too simplistic
 - No reward for critical success
 - No extra punishment for critical failure
 
 **D20 Solution:**
+
 - -2 tokens: Dramatic progress (natural 20)
 - -1 token: Steady progress (success)
 - +1 token: Setback (failure)

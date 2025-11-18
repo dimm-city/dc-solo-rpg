@@ -307,11 +307,7 @@
 	.wave-bar {
 		width: 4px;
 		height: 100%;
-		background: linear-gradient(
-			180deg,
-			var(--color-neon-cyan),
-			var(--color-cyber-magenta)
-		);
+		background: linear-gradient(180deg, var(--color-neon-cyan), var(--color-cyber-magenta));
 		border-radius: 2px;
 		animation: wave-animation 1s ease-in-out infinite;
 	}

@@ -12,7 +12,7 @@
 	--bg-secondary: #190030;
 
 	--light: rgba(255, 255, 255, 0.9);
-	--translucent-dark: rgba(17, 17, 17, 0.5);
+	--translucent-dark: rgba(17, 17, 17, 0.75);
 	--opaque-dark: rgba(17, 17, 17, 0.925);
 	--dark: rgba(0, 0, 0, 0.975);
 	--blue-accent: var(--blue);

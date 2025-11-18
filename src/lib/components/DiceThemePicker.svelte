@@ -119,7 +119,11 @@
 			</div>
 
 			<div class="modal-footer">
-				<AugmentedButton text="Close" onclick={() => (isOpen = false)} class="close-footer-button" />
+				<AugmentedButton
+					text="Close"
+					onclick={() => (isOpen = false)}
+					class="close-footer-button"
+				/>
 			</div>
 		</div>
 	</div>

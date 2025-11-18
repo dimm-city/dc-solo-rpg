@@ -1,8 +1,10 @@
 <script>
-	import { onMount, onDestroy, untrack } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import { sleep } from '../utils/timing.js';
 	import { logger } from '../utils/logger.js';
+	import { ANIMATION_DURATION } from '$lib/constants/animations.js';
 	import ContinueButton from './ContinueButton.svelte';
+	import { gameState } from '../stores/gameStore.svelte.js';
 	import { getAudioSettings, getGameplaySettings, speak } from '../stores/audioStore.svelte.js';
 	import { autoAdvance } from '../utils/autoPlay.js';
 
@@ -60,6 +62,7 @@
 			if (!card) {
 				logger.error('Card was not provided in time');
 				animationStage = 'idle';
+				// Don't trigger auto-draw on error
 				return;
 			}
 
@@ -72,48 +75,33 @@
 		} catch (error) {
 			logger.error('Proceed to byte failed:', error);
 			animationStage = 'idle';
+			// Don't trigger auto-draw on error
 		}
 	}
 
 	/**
 	 * Auto-trigger card draw when entering idle state
-	 * This skips the "PROCEED TO NEXT BYTE" button click
-	 * Only triggers when auto-continue is enabled
+	 * Uses direct function call instead of $effect to avoid infinite loops
+	 * CRITICAL: Only auto-trigger if we're still in drawCard state AND have cards to draw
+	 * This prevents infinite loop when confirmCard() transitions to next phase
 	 */
-	let lastAnimationStage = $state(null);
-
-	$effect(() => {
+	function triggerAutoDrawIfNeeded() {
 		const gameplaySettings = getGameplaySettings();
-		const currentStage = animationStage;
-		const previousStage = untrack(() => lastAnimationStage);
 
 		// Only auto-draw when:
 		// 1. Auto-continue is enabled
-		// 2. We just entered idle state (transition from non-idle to idle)
-		// 3. This prevents infinite loops
+		// 2. Still in drawCard state with cards to draw
 		if (
 			gameplaySettings.autoContinueAfterReading &&
-			currentStage === 'idle' &&
-			previousStage !== 'idle'
+			gameState.state === 'drawCard' &&
+			gameState.cardsToDraw > 0
 		) {
-			// Update last stage using untrack to prevent infinite loop
-			untrack(() => {
-				lastAnimationStage = currentStage;
-			});
-
 			// Small delay to avoid immediate re-trigger and allow UI to settle
-			const timeout = setTimeout(() => {
+			setTimeout(() => {
 				onProceed();
 			}, 100);
-
-			return () => clearTimeout(timeout);
 		}
-
-		// Track animation stage changes using untrack to prevent infinite loop
-		untrack(() => {
-			lastAnimationStage = currentStage;
-		});
-	});
+	}
 
 	/**
 	 * Auto-read card and auto-continue when revealed
@@ -173,7 +161,7 @@
 		}
 
 		animationStage = 'dismissing';
-		await sleep(600);
+		await sleep(ANIMATION_DURATION.CARD_DISMISS);
 
 		// Notify parent that card was confirmed
 		onconfirmcard();
@@ -182,6 +170,9 @@
 		animationStage = 'idle';
 		particles = []; // Clear particles
 		card = null;
+
+		// Trigger auto-draw if conditions are met (event-driven, not $effect)
+		triggerAutoDrawIfNeeded();
 	}
 
 	/**
@@ -242,6 +233,7 @@
 			animationStage = 'idle';
 			particles = [];
 			card = null;
+			// Don't trigger auto-draw on manual reset
 		}
 	};
 
@@ -295,12 +287,12 @@
 		}}
 	>
 		{#if animationStage !== 'idle' && animationStage !== 'anticipating'}
-			<div class="byte-shell">
+			<div class="byte-shell" data-augmented-ui="tl-clip tr-clip br-clip bl-clip border">
 				<!-- Bio-pulse rings -->
 				<div class="bio-pulse" aria-hidden="true"></div>
 
 				<!-- Corruption overlay for glitch effect -->
-				<div class="corruption-overlay" aria-hidden="true"></div>
+				<!-- <div class="corruption-overlay" aria-hidden="true"></div> -->
 
 				<!-- Byte content -->
 				{#if card}
@@ -433,8 +425,11 @@
 		display: flex;
 		width: 100%;
 		height: 100%;
+		max-height: calc(100svh - var(--toolbar-height, 250px)); /* Account for toolbar height */
 		align-items: center;
 		justify-content: center;
+		overflow: hidden;
+		padding: var(--space-md, 1rem);
 	}
 
 	/* ============================================
@@ -446,7 +441,7 @@
 		width: 100%;
 		height: 100%;
 		min-height: 400px;
-		max-width: 80ch;
+		max-width: 80svw;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -458,19 +453,7 @@
 	/* Clickable state when revealed */
 	.byte-container.clickable {
 		cursor: pointer;
-		transition: all var(--transition-fast);
-	}
-
-	.byte-container.clickable:hover {
-		transform: scale(1.02);
-		box-shadow:
-			0 0 40px rgba(0, 255, 255, 0.5),
-			0 0 80px rgba(217, 70, 239, 0.3),
-			inset 0 0 40px rgba(0, 255, 255, 0.15);
-	}
-
-	.byte-container.clickable:active {
-		transform: scale(0.98);
+		transition: none;
 	}
 
 	.byte-container.materializing {
@@ -483,7 +466,7 @@
 	}
 
 	.byte-container.dismissing {
-		animation: byte-dismiss 600ms cubic-bezier(0.4, 0, 1, 1) forwards;
+		animation: byte-dismiss 600ms cubic-bezier(0.4, 0, 0.6, 1) forwards; /* Uses ANIMATION_DURATION.CARD_DISMISS in JS */
 	}
 
 	@keyframes byte-materialize {
@@ -511,8 +494,8 @@
 		}
 		100% {
 			opacity: 0;
-			transform: translateY(-50px) scale(0.9);
-			filter: brightness(2) blur(5px);
+			transform: translateY(-30px) scale(0.95);
+			filter: blur(3px);
 		}
 	}
 
@@ -525,7 +508,8 @@
 		width: 100%;
 		height: 100%;
 		padding: var(--space-xl, 2rem);
-		overflow-y: auto; /* Allow scrolling for long content */
+		margin-bottom: var(--space-lg, 1.5rem);
+		overflow-y: hidden; /* Allow scrolling for long content */
 		overflow-x: hidden;
 		box-sizing: border-box;
 	}
@@ -576,19 +560,19 @@
 		border: 2px solid var(--color-cyber-magenta, #d946ef);
 		border-radius: 50%;
 		transform: translate(-50%, -50%);
-		animation: bio-pulse-ring 2s ease-out infinite;
+		animation: bio-pulse-ring 4s ease-out infinite;
 		opacity: 0;
 	}
 
 	.bio-pulse::after {
-		animation-delay: 1s;
+		animation-delay: 2s;
 	}
 
 	@keyframes bio-pulse-ring {
 		0% {
 			width: 100px;
 			height: 100px;
-			opacity: 0.6;
+			opacity: 0.2;
 		}
 		100% {
 			width: 300px;
@@ -610,13 +594,14 @@
 		background: linear-gradient(
 			45deg,
 			transparent 30%,
-			rgba(0, 255, 255, 0.03) 50%,
+			rgba(0, 255, 255, 0.015) 50%,
 			transparent 70%
 		);
 		background-size: 200% 200%;
-		animation: corruption-scan 3s linear infinite;
+		animation: corruption-scan 8s linear infinite;
 		pointer-events: none;
 		z-index: 1;
+		filter: blur(2px);
 	}
 
 	@keyframes corruption-scan {
@@ -639,6 +624,24 @@
 		flex-direction: column;
 		gap: var(--space-lg, 1.5rem);
 		color: var(--color-text-primary, #fff);
+		background: linear-gradient(180deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.4) 100%);
+		padding: var(--space-lg, 1.5rem);
+		border-radius: 8px;
+		backdrop-filter: blur(4px);
+		-webkit-backdrop-filter: blur(4px);
+
+		overflow-y: auto;
+		height: 100%;
+	}
+
+	.byte-content p {
+		color: #ffffff;
+		text-shadow:
+			0 2px 8px rgba(0, 0, 0, 0.9),
+			0 0 4px rgba(0, 0, 0, 0.8);
+		font-weight: 400;
+		line-height: 1.6;
+		margin: 0;
 	}
 
 	/* Card Type Badge Styles */
@@ -655,7 +658,7 @@
 		letter-spacing: 0.1em;
 		align-self: flex-start;
 		opacity: 0;
-		animation: badge-materialize 600ms ease-out 400ms forwards;
+		animation: badge-materialize 150ms ease-out 400ms forwards; /* Uses ANIMATION_DURATION.FAST */
 		border: 2px solid;
 		backdrop-filter: blur(4px);
 		-webkit-backdrop-filter: blur(4px);
@@ -739,13 +742,13 @@
 	@keyframes badge-materialize {
 		0% {
 			opacity: 0;
-			transform: translateX(-20px);
+			transform: scale(0.95);
 		}
 		100% {
 			opacity: 1;
-			transform: translateX(0);
+			transform: scale(1);
 		}
-	}
+	} /* Duration: 150ms (ANIMATION_DURATION.FAST) */
 
 	.type-icon {
 		flex-shrink: 0;
@@ -759,10 +762,14 @@
 		font-family: var(--font-body, 'Inter', sans-serif);
 		font-size: var(--text-lg, 1.125rem);
 		line-height: var(--line-height-relaxed, 1.75);
-		color: var(--color-text-secondary, rgba(255, 255, 255, 0.85));
+		color: #ffffff;
 		margin: 0;
 		opacity: 0;
 		animation: text-materialize 800ms ease-out 200ms forwards;
+		text-shadow:
+			0 2px 8px rgba(0, 0, 0, 0.9),
+			0 0 4px rgba(0, 0, 0, 0.8);
+		font-weight: 500;
 	}
 
 	.byte-id {
@@ -773,6 +780,11 @@
 		text-transform: uppercase;
 		opacity: 0;
 		animation: text-materialize 600ms ease-out 600ms forwards;
+		text-shadow:
+			0 0 12px rgba(0, 255, 255, 1),
+			0 0 24px rgba(0, 255, 255, 0.7),
+			0 2px 6px rgba(0, 0, 0, 0.9);
+		font-weight: 700;
 	}
 
 	@keyframes text-materialize {
@@ -918,8 +930,9 @@
 	@media (max-width: 450px) or (max-height: 667px) {
 		.byte-container {
 			min-height: 250px;
-			width: 98%;
-			max-width: 98%;
+			/* Limit height to prevent taking entire viewport */
+			width: 100%;
+			max-width: 100%;
 			margin: 0;
 			--aug-tl: 8px;
 			--aug-tr: 8px;
@@ -929,7 +942,7 @@
 
 		.byte-shell {
 			min-height: 250px;
-			padding: var(--space-md, 1rem);
+			padding: 0;
 		}
 
 		.byte-data {
@@ -982,7 +995,7 @@
 		}
 
 		.byte-container.dismissing {
-			animation: byte-dismiss-reduced 200ms ease forwards;
+			animation: byte-dismiss-reduced 200ms ease-in forwards;
 		}
 
 		@keyframes byte-materialize-reduced {
