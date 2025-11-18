@@ -217,7 +217,9 @@
 		class:revealed={animationStage === 'revealed'}
 		class:dismissing={animationStage === 'dismissing'}
 		class:clickable={animationStage === 'revealed'}
-		onclick={() => {
+		onclick={(e) => {
+			// Don't dismiss if clicking on TTS controls
+			if (e.target.closest('.tts-controls')) return;
 			if (animationStage === 'revealed') onDismiss();
 		}}
 		role="button"
