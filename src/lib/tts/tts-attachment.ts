@@ -10,24 +10,46 @@ export interface TTSAttachmentConfig {
 	voiceName?: string;
 }
 
-export function createTTSAttachment(config: TTSAttachmentConfig): (node: HTMLElement) => ActionReturn {
-	return (element: HTMLElement) => {
+export function createTTSAttachment(config: TTSAttachmentConfig): (node: HTMLElement) => ActionReturn<TTSAttachmentConfig> {
+	return (element: HTMLElement, initialConfig: TTSAttachmentConfig) => {
+		let currentConfig = initialConfig;
+
 		// Optional: mark element for a11y tooling
-		element.setAttribute('data-tts-region', config.regionId);
+		element.setAttribute('data-tts-region', currentConfig.regionId);
 
 		// Auto-play behavior: only when mode is 'auto'
-		if (config.mode === 'auto' && config.text) {
-			ttsManager.speak({
-				regionId: config.regionId,
-				text: config.text,
-				voiceName: config.voiceName
-			});
-		}
+		const maybeAutoPlay = (cfg: TTSAttachmentConfig) => {
+			if (cfg.mode === 'auto' && cfg.text) {
+				ttsManager.speak({
+					regionId: cfg.regionId,
+					text: cfg.text,
+					voiceName: cfg.voiceName
+				});
+			}
+		};
+
+		// Initial autoplay
+		maybeAutoPlay(currentConfig);
 
 		// Cleanup: stop speaking when element is detached or attachment re-runs
 		return {
+			update(newConfig: TTSAttachmentConfig) {
+				const modeChanged = currentConfig.mode !== newConfig.mode;
+				const textChanged = currentConfig.text !== newConfig.text;
+
+				currentConfig = newConfig;
+
+				// Auto-play when switching to auto mode, or when text changes in auto mode
+				if (modeChanged || textChanged) {
+					// Stop any existing speech first
+					ttsManager.stop(newConfig.regionId);
+
+					// Then maybe start new autoplay
+					maybeAutoPlay(newConfig);
+				}
+			},
 			destroy() {
-				ttsManager.stop(config.regionId);
+				ttsManager.stop(currentConfig.regionId);
 			}
 		};
 	};
