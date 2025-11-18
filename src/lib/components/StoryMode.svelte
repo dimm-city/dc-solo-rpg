@@ -6,6 +6,7 @@
 
 	import StoryRound from './StoryRound.svelte';
 	import AugmentedButton from './AugmentedButton.svelte';
+	import StoryGenerationPanel from './StoryGenerationPanel.svelte';
 	import { fade, fly } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 
@@ -210,6 +211,11 @@
 					/>
 				</svg>
 			</button>
+		</div>
+
+		<!-- AI Story Generation Panel -->
+		<div class="story-generation-section">
+			<StoryGenerationPanel {savedGame} saveKey={savedGame?.id || ''} />
 		</div>
 
 		<!-- Progress Bar -->
@@ -459,6 +465,11 @@
 		transform: scale(1.05);
 	}
 
+	/* Story Generation Section */
+	.story-generation-section {
+		padding: 0 var(--space-xl);
+	}
+
 	/* Progress Section */
 	.progress-section {
 		padding: 0 var(--space-xl);
@@ -676,6 +687,10 @@
 		.exit-button svg {
 			width: 20px;
 			height: 20px;
+		}
+
+		.story-generation-section {
+			padding: 0 var(--space-md);
 		}
 
 		.progress-section {
