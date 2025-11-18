@@ -154,8 +154,8 @@
 		background: transparent;
 
 		width: 100%;
-		max-width: min(90vw, 1200px);
-		/* height: calc(100vh - 60px - var(--space-lg) * 2); */
+		/*max-width: min(90vw, 1200px);
+		 height: calc(100vh - var(--dc-toolbar-height) - var(--space-lg) * 2); */
 
 		/* Scrollable content within modal */
 		overflow-y: auto;
