@@ -204,6 +204,11 @@ export function validateTransition(fromState, toState) {
  * @param {string} newState - Target state
  */
 export function transitionTo(newState) {
+	// Silently ignore self-transitions (already on target screen)
+	if (gameState.state === newState) {
+		return;
+	}
+
 	validateTransition(gameState.state, newState);
 	gameState.state = newState;
 }

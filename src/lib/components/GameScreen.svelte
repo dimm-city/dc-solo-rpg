@@ -120,17 +120,6 @@
 	let rollTasksRolling = $state(false);
 	let rollTasksConfirming = $state(false);
 
-	// Reset rollForTasks state when screen changes and trigger auto-play
-	$effect(() => {
-		if (currentScreen === 'rollForTasks') {
-			rollTasksRolled = false;
-			rollTasksRolling = false;
-			rollTasksConfirming = false;
-			// Trigger auto-play for this screen (event-driven)
-			setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
-		}
-	});
-
 	async function handleRollForTasks() {
 		if (rollTasksRolling || rollTasksConfirming) return;
 		if (rollTasksRolled) {
@@ -166,15 +155,6 @@
 	let failureCheckRolling = $state(false);
 	let failureCheckResult = $state();
 
-	$effect(() => {
-		if (currentScreen === 'failureCheck') {
-			failureCheckResult = undefined;
-			failureCheckRolling = false;
-			// Trigger auto-play for this screen (event-driven)
-			setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
-		}
-	});
-
 	async function handleFailureCheck() {
 		if (failureCheckRolling) return;
 		if (currentScreen == 'failureCheck' && !failureCheckResult) {
@@ -204,15 +184,6 @@
 	let successCheckRolling = $state(false);
 	let successCheckResult = $state();
 
-	$effect(() => {
-		if (currentScreen === 'successCheck') {
-			successCheckResult = undefined;
-			successCheckRolling = false;
-			// Trigger auto-play for this screen (event-driven)
-			setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
-		}
-	});
-
 	async function handleSuccessCheck() {
 		if (successCheckRolling) return;
 		if (currentScreen == 'successCheck' && !successCheckResult) {
@@ -237,15 +208,6 @@
 	// FinalDamageRoll button state
 	let finalDamageRolling = $state(false);
 	let finalDamageResult = $state();
-
-	$effect(() => {
-		if (currentScreen === 'finalDamageRoll') {
-			finalDamageResult = undefined;
-			finalDamageRolling = false;
-			// Trigger auto-play for this screen (event-driven)
-			setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
-		}
-	});
 
 	async function handleFinalDamageRoll() {
 		if (finalDamageRolling || finalDamageResult !== undefined) return;
@@ -280,15 +242,6 @@
 	// InitialDamageRoll button state
 	let initialDamageRolling = $state(false);
 	let initialDamageResult = $state();
-
-	$effect(() => {
-		if (currentScreen === 'initialDamageRoll') {
-			initialDamageResult = undefined;
-			initialDamageRolling = false;
-			// Trigger auto-play for this screen (event-driven)
-			setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
-		}
-	});
 
 	async function handleInitialDamageRoll() {
 		if (initialDamageRolling || initialDamageResult !== undefined) return;
@@ -333,28 +286,6 @@
 	let journalSaved = $state(false);
 	const journal = $state({ text: '', audioData: null });
 
-	// Reset journal state when screen changes to log/finalLog
-	$effect(() => {
-		if (currentScreen === 'log' || currentScreen === 'finalLog') {
-			journalSaved = false;
-		}
-	});
-
-	// Trigger auto-play when entering showIntro screen
-	$effect(() => {
-		if (currentScreen === 'showIntro') {
-			// Trigger auto-play for this screen (event-driven)
-			setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
-		}
-	});
-
-	// Trigger auto-play when entering startRound screen
-	$effect(() => {
-		if (currentScreen === 'startRound') {
-			// Trigger auto-play for this screen (event-driven)
-			setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
-		}
-	});
 
 	async function handleJournalSave() {
 		// Always save journal entry (text and audio are both optional)
@@ -551,14 +482,6 @@
 		return () => window.removeEventListener('keydown', handleKeyPress);
 	});
 
-	// Watch for game start and show keyboard hint on first round
-	$effect(() => {
-		const isDesktop = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-		if (isDesktop && currentScreen === 'startRound' && gameState.round === 1) {
-			showKeyboardHint = true;
-		}
-	});
-
 	// ===== AUTO-PLAY (Event-driven, NOT using $effect to avoid infinite loops) =====
 	let autoPlayCanceller = $state(null);
 
@@ -570,10 +493,81 @@
 		}
 	}
 
-	// Cancel auto-play when screen changes (this is the ONLY $effect for auto-play)
+	/**
+	 * SINGLE UNIFIED SCREEN CHANGE HANDLER
+	 * Consolidates all screen-entry logic to avoid multiple $effect blocks interfering
+	 * Handles: state resets, keyboard hints, auto-play triggers
+	 */
 	$effect(() => {
-		currentScreen; // Track dependency
+		// Cancel any existing auto-play first
 		cancelAutoPlay();
+
+		// Handle screen-specific entry logic
+		switch (currentScreen) {
+			case 'showIntro':
+				// Trigger auto-play for intro screen
+				setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
+				break;
+
+			case 'initialDamageRoll':
+				// Reset state
+				initialDamageResult = undefined;
+				initialDamageRolling = false;
+				// Trigger auto-play
+				setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
+				break;
+
+			case 'startRound':
+				// Show keyboard hint on first round (desktop only)
+				if (typeof window !== 'undefined') {
+					const isDesktop = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+					if (isDesktop && gameState.round === 1) {
+						showKeyboardHint = true;
+					}
+				}
+				// Trigger auto-play
+				setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
+				break;
+
+			case 'rollForTasks':
+				// Reset state
+				rollTasksRolled = false;
+				rollTasksRolling = false;
+				rollTasksConfirming = false;
+				// Trigger auto-play
+				setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
+				break;
+
+			case 'failureCheck':
+				// Reset state
+				failureCheckResult = undefined;
+				failureCheckRolling = false;
+				// Trigger auto-play
+				setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
+				break;
+
+			case 'successCheck':
+				// Reset state
+				successCheckResult = undefined;
+				successCheckRolling = false;
+				// Trigger auto-play
+				setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
+				break;
+
+			case 'finalDamageRoll':
+				// Reset state
+				finalDamageResult = undefined;
+				finalDamageRolling = false;
+				// Trigger auto-play
+				setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
+				break;
+
+			case 'log':
+			case 'finalLog':
+				// Reset journal state
+				journalSaved = false;
+				break;
+		}
 	});
 
 	/**
