@@ -46,7 +46,13 @@
 
 	function toggleModeMenu(event?: MouseEvent) {
 		event?.stopPropagation();
+		event?.preventDefault();
 		showModeMenu = !showModeMenu;
+	}
+
+	function stopAllEvents(event: Event) {
+		event.stopPropagation();
+		event.preventDefault();
 	}
 
 	onDestroy(() => {
@@ -56,65 +62,84 @@
 
 <div class="tts-region">
 	<div class="tts-controls" onclick={(e) => e.stopPropagation()}>
-		<button
-			type="button"
-			class="tts-btn play-btn"
-			aria-label="Play narration"
-			onclick={play}
-			disabled={mode === 'off'}
-			title="Play"
-		>
-			<svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
-				<path d="M2 1 L2 9 L8 5 Z" />
-			</svg>
-		</button>
+		<div class="controls-wrapper">
+			<button
+				type="button"
+				class="tts-btn play-btn"
+				aria-label="Play narration"
+				onclick={play}
+				disabled={mode === 'off'}
+				title="Play"
+			>
+				<svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
+					<path d="M2 1 L2 9 L8 5 Z" />
+				</svg>
+			</button>
 
-		<button
-			type="button"
-			class="tts-btn stop-btn"
-			aria-label="Stop narration"
-			onclick={stop}
-			title="Stop"
-		>
-			<svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
-				<rect x="2" y="2" width="6" height="6" />
-			</svg>
-		</button>
+			<button
+				type="button"
+				class="tts-btn stop-btn"
+				aria-label="Stop narration"
+				onclick={stop}
+				title="Stop"
+			>
+				<svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
+					<rect x="2" y="2" width="6" height="6" />
+				</svg>
+			</button>
 
-		<button
-			type="button"
-			class="tts-btn mode-btn"
-			aria-label="TTS mode"
-			onclick={toggleModeMenu}
-			title="TTS Mode: {mode}"
-		>
-			<svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
-				<circle cx="5" cy="5" r="1.5" />
-				<circle cx="5" cy="5" r="3" fill="none" stroke="currentColor" stroke-width="0.5" />
-			</svg>
-		</button>
-
-		{#if showModeMenu}
-			<div class="mode-menu" onclick={(e) => e.stopPropagation()}>
+			<div class="mode-btn-container">
 				<button
-					class="mode-option"
-					class:active={mode === 'manual'}
-					onclick={(e) => changeMode('manual', e)}
+					type="button"
+					class="tts-btn mode-btn"
+					aria-label="TTS mode"
+					onclick={toggleModeMenu}
+					title="TTS Mode: {mode}"
 				>
-					Manual
+					<svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
+						<circle cx="5" cy="5" r="1.5" />
+						<circle cx="5" cy="5" r="3" fill="none" stroke="currentColor" stroke-width="0.5" />
+					</svg>
 				</button>
-				<button
-					class="mode-option"
-					class:active={mode === 'auto'}
-					onclick={(e) => changeMode('auto', e)}
-				>
-					Auto
-				</button>
-				<button class="mode-option" class:active={mode === 'off'} onclick={(e) => changeMode('off', e)}>
-					Off
-				</button>
+
+				{#if showModeMenu}
+					<div
+						class="mode-menu"
+						onclick={stopAllEvents}
+						onmousedown={stopAllEvents}
+						onmouseup={stopAllEvents}
+						ontouchstart={stopAllEvents}
+						ontouchend={stopAllEvents}
+						role="menu"
+					>
+						<button
+							class="mode-option"
+							class:active={mode === 'manual'}
+							onclick={(e) => changeMode('manual', e)}
+							role="menuitem"
+						>
+							Manual
+						</button>
+						<button
+							class="mode-option"
+							class:active={mode === 'auto'}
+							onclick={(e) => changeMode('auto', e)}
+							role="menuitem"
+						>
+							Auto
+						</button>
+						<button
+							class="mode-option"
+							class:active={mode === 'off'}
+							onclick={(e) => changeMode('off', e)}
+							role="menuitem"
+						>
+							Off
+						</button>
+					</div>
+				{/if}
 			</div>
-		{/if}
+		</div>
 	</div>
 
 	<!--
@@ -134,7 +159,6 @@
 
 	.tts-controls {
 		display: flex;
-		gap: 4px;
 		align-items: center;
 		justify-content: flex-end;
 		opacity: 0.2;
@@ -144,6 +168,19 @@
 
 	.tts-controls:hover {
 		opacity: 1;
+	}
+
+	.controls-wrapper {
+		display: flex;
+		gap: 4px;
+		align-items: center;
+		position: relative;
+	}
+
+	.mode-btn-container {
+		position: relative;
+		display: flex;
+		align-items: center;
 	}
 
 	.tts-btn {
@@ -178,9 +215,8 @@
 
 	.mode-menu {
 		position: absolute;
-		top: 100%;
+		top: calc(100% + 2px);
 		right: 0;
-		margin-top: 2px;
 		background: rgba(10, 10, 20, 0.98);
 		border: 1px solid rgba(0, 255, 255, 0.3);
 		border-radius: 4px;
@@ -190,7 +226,8 @@
 		gap: 2px;
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 		min-width: 80px;
-		z-index: 100;
+		z-index: 1000;
+		pointer-events: auto;
 	}
 
 	.mode-option {
@@ -234,6 +271,9 @@
 	@media (max-width: 768px) {
 		.tts-controls {
 			opacity: 0.4;
+		}
+
+		.controls-wrapper {
 			gap: 6px;
 		}
 
