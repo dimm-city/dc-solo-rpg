@@ -4,7 +4,7 @@
 	import DeckVisualization from './DeckVisualization.svelte';
 	import DiceThemePicker from './DiceThemePicker.svelte';
 
-	let { onHelpClick, onExitClick, onSettingsClick } = $props();
+	let { onHelpClick, onExitClick, onSettingsClick = () => {} } = $props();
 
 	let showDiceThemePicker = $state(false);
 
