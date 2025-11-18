@@ -42,9 +42,9 @@ export function createCancellableDelay(ms) {
  * @param {boolean} options.shouldRead - Whether this text should be read (prompts vs cards)
  * @param {Function} options.action - Action to trigger after delay
  * @param {number} options.customDelay - Custom delay override
- * @returns {Object} - { cancel: Function }
+ * @returns {Object} - { cancel: Function } returned immediately (synchronously)
  */
-export async function autoAdvance({ text = null, shouldRead = false, action, customDelay = null }) {
+export function autoAdvance({ text = null, shouldRead = false, action, customDelay = null }) {
 	const audioSettings = getAudioSettings();
 	const gameplaySettings = getGameplaySettings();
 
@@ -53,39 +53,40 @@ export async function autoAdvance({ text = null, shouldRead = false, action, cus
 	}
 
 	let cancelled = false;
+	let delayCanceller = null;
+
 	const cancel = () => {
 		cancelled = true;
+		if (delayCanceller) {
+			delayCanceller();
+		}
 	};
 
-	try {
-		// Step 1: Speak if enabled
-		if (text && shouldRead) {
-			await speak(text);
-			if (cancelled) return { cancel };
+	// Run async logic in background
+	(async () => {
+		try {
+			// Step 1: Speak if enabled
+			if (text && shouldRead) {
+				await speak(text);
+				if (cancelled) return;
+			}
+
+			// Step 2: Wait for delay
+			const delay = customDelay ?? gameplaySettings.autoAdvanceDelay;
+			const { promise, cancel: cancelDelay } = createCancellableDelay(delay);
+			delayCanceller = cancelDelay;
+
+			const completed = await promise;
+			if (!completed || cancelled) return;
+
+			// Step 3: Trigger action
+			if (action && !cancelled) {
+				action();
+			}
+		} catch (error) {
+			console.error('[AutoAdvance] Error:', error);
 		}
-
-		// Step 2: Wait for delay
-		const delay = customDelay ?? gameplaySettings.autoAdvanceDelay;
-		const { promise, cancel: cancelDelay } = createCancellableDelay(delay);
-
-		// Store cancel function
-		const originalCancel = cancel;
-		cancel = () => {
-			cancelled = true;
-			cancelDelay();
-			originalCancel();
-		};
-
-		const completed = await promise;
-		if (!completed || cancelled) return { cancel };
-
-		// Step 3: Trigger action
-		if (action && !cancelled) {
-			action();
-		}
-	} catch (error) {
-		console.error('[AutoAdvance] Error:', error);
-	}
+	})();
 
 	return { cancel };
 }
@@ -94,9 +95,9 @@ export async function autoAdvance({ text = null, shouldRead = false, action, cus
  * Auto-roll helper
  * Automatically triggers dice roll after delay
  * @param {Function} rollAction - Function to call to perform roll
- * @returns {Object} - { cancel: Function }
+ * @returns {Object} - { cancel: Function } returned immediately (synchronously)
  */
-export async function autoRoll(rollAction) {
+export function autoRoll(rollAction) {
 	const gameplaySettings = getGameplaySettings();
 
 	if (!gameplaySettings.autoRollDice) {
@@ -106,10 +107,12 @@ export async function autoRoll(rollAction) {
 	const delay = gameplaySettings.autoAdvanceDelay;
 	const { promise, cancel } = createCancellableDelay(delay);
 
-	const completed = await promise;
-	if (completed && rollAction) {
-		rollAction();
-	}
+	// Run async logic in background
+	promise.then((completed) => {
+		if (completed && rollAction) {
+			rollAction();
+		}
+	});
 
 	return { cancel };
 }

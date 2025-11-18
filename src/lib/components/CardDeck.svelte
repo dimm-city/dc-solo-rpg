@@ -78,14 +78,20 @@
 	/**
 	 * Auto-trigger card draw when entering idle state
 	 * This skips the "PROCEED TO NEXT BYTE" button click
+	 * Only triggers when auto-continue is enabled
 	 */
 	$effect(() => {
 		if (animationStage === 'idle') {
-			// Small delay to avoid immediate re-trigger and allow UI to settle
-			const timeout = setTimeout(() => {
-				onProceed();
-			}, 100);
-			return () => clearTimeout(timeout);
+			const gameplaySettings = getGameplaySettings();
+
+			// Only auto-draw if auto-continue is enabled
+			if (gameplaySettings.autoContinueAfterReading) {
+				// Small delay to avoid immediate re-trigger and allow UI to settle
+				const timeout = setTimeout(() => {
+					onProceed();
+				}, 100);
+				return () => clearTimeout(timeout);
+			}
 		}
 	});
 
@@ -107,24 +113,20 @@
 				speak(cardText).then(() => {
 					// After reading, auto-continue if enabled
 					if (gameplaySettings.autoContinueAfterReading) {
-						autoAdvance({
+						autoPlayCanceller = autoAdvance({
 							text: null,
 							shouldRead: false,
 							action: () => onDismiss()
-						}).then((canceller) => {
-							autoPlayCanceller = canceller;
 						});
 					}
 				});
 			}
 			// Just auto-continue without reading if enabled
 			else if (gameplaySettings.autoContinueAfterReading) {
-				autoAdvance({
+				autoPlayCanceller = autoAdvance({
 					text: null,
 					shouldRead: false,
 					action: () => onDismiss()
-				}).then((canceller) => {
-					autoPlayCanceller = canceller;
 				});
 			}
 		}

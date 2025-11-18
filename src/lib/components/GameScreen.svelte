@@ -549,12 +549,10 @@
 				const introText = gameState.config?.introduction ?? '';
 				const shouldRead = audioSettings.autoReadPrompts;
 
-				autoAdvance({
+				autoPlayCanceller = autoAdvance({
 					text: shouldRead ? introText : null,
 					shouldRead,
 					action: () => transitionTo('initialDamageRoll')
-				}).then((canceller) => {
-					autoPlayCanceller = canceller;
 				});
 			}
 		}
@@ -574,18 +572,14 @@
 
 			// Auto-roll if enabled
 			if (gameplaySettings.autoRollDice && initialDamageResult === undefined) {
-				autoRoll(() => handleInitialDamageRoll()).then((canceller) => {
-					autoPlayCanceller = canceller;
-				});
+				autoPlayCanceller = autoRoll(() => handleInitialDamageRoll());
 			}
 			// Auto-continue after result if enabled
 			else if (gameplaySettings.autoContinueAfterReading && initialDamageResult !== undefined) {
-				autoAdvance({
+				autoPlayCanceller = autoAdvance({
 					text: null,
 					shouldRead: false,
 					action: () => transitionTo('startRound')
-				}).then((canceller) => {
-					autoPlayCanceller = canceller;
 				});
 			}
 		}
@@ -601,12 +595,10 @@
 				const roundText = `Round ${gameState.round} begins`;
 				const shouldRead = audioSettings.autoReadPrompts;
 
-				autoAdvance({
+				autoPlayCanceller = autoAdvance({
 					text: shouldRead ? roundText : null,
 					shouldRead,
 					action: () => transitionTo('rollForTasks')
-				}).then((canceller) => {
-					autoPlayCanceller = canceller;
 				});
 			}
 		}
@@ -626,9 +618,7 @@
 
 			// Auto-roll if enabled and not yet rolled
 			if (gameplaySettings.autoRollDice && !rollTasksRolled && !rollTasksRolling) {
-				autoRoll(() => handleRollForTasks()).then((canceller) => {
-					autoPlayCanceller = canceller;
-				});
+				autoPlayCanceller = autoRoll(() => handleRollForTasks());
 			}
 			// Auto-confirm after roll if enabled
 			else if (gameplaySettings.autoContinueAfterReading && rollTasksRolled && !rollTasksConfirming) {
@@ -638,12 +628,10 @@
 					speak(resultText);
 				}
 
-				autoAdvance({
+				autoPlayCanceller = autoAdvance({
 					text: null,
 					shouldRead: false,
 					action: () => handleRollForTasks()
-				}).then((canceller) => {
-					autoPlayCanceller = canceller;
 				});
 			}
 		}
@@ -663,19 +651,15 @@
 
 			// Auto-roll if enabled and not yet rolled
 			if (gameplaySettings.autoRollDice && !failureCheckRolled && !failureCheckRolling) {
-				autoRoll(() => handleFailureCheckRoll()).then((canceller) => {
-					autoPlayCanceller = canceller;
-				});
+				autoPlayCanceller = autoRoll(() => handleFailureCheckRoll());
 			}
 			// Auto-continue after result if enabled
 			else if (gameplaySettings.autoContinueAfterReading && failureCheckRolled && !failureCheckConfirming) {
 				// Announce result (done via separate effect after dice animation)
-				autoAdvance({
+				autoPlayCanceller = autoAdvance({
 					text: null,
 					shouldRead: false,
 					action: () => handleFailureCheckContinue()
-				}).then((canceller) => {
-					autoPlayCanceller = canceller;
 				});
 			}
 		}
@@ -695,18 +679,14 @@
 
 			// Auto-roll if enabled and not yet rolled
 			if (gameplaySettings.autoRollDice && !successCheckRolled && !successCheckRolling) {
-				autoRoll(() => handleSuccessCheckRoll()).then((canceller) => {
-					autoPlayCanceller = canceller;
-				});
+				autoPlayCanceller = autoRoll(() => handleSuccessCheckRoll());
 			}
 			// Auto-continue after result if enabled
 			else if (gameplaySettings.autoContinueAfterReading && successCheckRolled && !successCheckConfirming) {
-				autoAdvance({
+				autoPlayCanceller = autoAdvance({
 					text: null,
 					shouldRead: false,
 					action: () => handleSuccessCheckContinue()
-				}).then((canceller) => {
-					autoPlayCanceller = canceller;
 				});
 			}
 		}
@@ -726,18 +706,14 @@
 
 			// Auto-roll if enabled
 			if (gameplaySettings.autoRollDice && !finalDamageResult && !finalDamageRolling) {
-				autoRoll(() => handleFinalDamageRoll()).then((canceller) => {
-					autoPlayCanceller = canceller;
-				});
+				autoPlayCanceller = autoRoll(() => handleFinalDamageRoll());
 			}
 			// Auto-continue after result if enabled
 			else if (gameplaySettings.autoContinueAfterReading && finalDamageResult) {
-				autoAdvance({
+				autoPlayCanceller = autoAdvance({
 					text: null,
 					shouldRead: false,
 					action: () => transitionTo('finalLog')
-				}).then((canceller) => {
-					autoPlayCanceller = canceller;
 				});
 			}
 		}
