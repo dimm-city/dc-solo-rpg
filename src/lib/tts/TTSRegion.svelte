@@ -4,7 +4,6 @@
 	import { ttsManager, type TTSMode } from './tts-manager';
 	import { globalPrefs, setGlobalMode } from './tts-preferences';
 	import { createTTSAttachment } from './tts-attachment';
-	import { get } from 'svelte/store';
 
 	// Runes-style props
 	let { regionId, text, children } = $props<{
@@ -13,10 +12,18 @@
 		children?: any;
 	}>();
 
-	// Use global preferences
-	let mode = $derived(get(globalPrefs).mode);
-	let voiceName = $derived(get(globalPrefs).voiceName);
+	// Use global preferences with proper reactivity
+	let currentPrefs = $state({ mode: 'manual' as TTSMode, voiceName: undefined as string | undefined });
 	let showModeMenu = $state(false);
+
+	// Subscribe to global preferences
+	globalPrefs.subscribe(prefs => {
+		currentPrefs = prefs;
+	});
+
+	// Derived values from reactive state
+	let mode = $derived(currentPrefs.mode);
+	let voiceName = $derived(currentPrefs.voiceName);
 
 	function changeMode(newMode: TTSMode, event?: MouseEvent) {
 		event?.stopPropagation();
@@ -29,12 +36,10 @@
 
 	function play(event?: MouseEvent) {
 		event?.stopPropagation();
-		const currentMode = get(globalPrefs).mode;
-		const currentVoiceName = get(globalPrefs).voiceName;
 		if (!text) return;
-		if (currentMode === 'off') return;
+		if (currentPrefs.mode === 'off') return;
 
-		ttsManager.speak({ regionId, text, voiceName: currentVoiceName });
+		ttsManager.speak({ regionId, text, voiceName: currentPrefs.voiceName });
 	}
 
 	function stop(event?: MouseEvent) {
