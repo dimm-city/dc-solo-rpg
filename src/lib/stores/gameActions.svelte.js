@@ -847,8 +847,8 @@ export function applyPendingInitialDamageRoll() {
 		id: '0.0'
 	});
 
-	// Transition to first round
-	transitionTo('rollForTasks');
+	// Transition to first round (via startRound screen)
+	transitionTo('startRound');
 }
 
 /**
