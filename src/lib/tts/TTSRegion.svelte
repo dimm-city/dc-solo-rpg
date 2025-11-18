@@ -46,13 +46,11 @@
 
 	function toggleModeMenu(event?: MouseEvent) {
 		event?.stopPropagation();
-		event?.preventDefault();
 		showModeMenu = !showModeMenu;
 	}
 
-	function stopAllEvents(event: Event) {
+	function stopPropagationOnly(event: Event) {
 		event.stopPropagation();
-		event.preventDefault();
 	}
 
 	onDestroy(() => {
@@ -105,11 +103,7 @@
 				{#if showModeMenu}
 					<div
 						class="mode-menu"
-						onclick={stopAllEvents}
-						onmousedown={stopAllEvents}
-						onmouseup={stopAllEvents}
-						ontouchstart={stopAllEvents}
-						ontouchend={stopAllEvents}
+						onclick={stopPropagationOnly}
 						role="menu"
 					>
 						<button
