@@ -145,9 +145,9 @@
 		display: flex;
 		justify-content: center;
 		position: fixed;
-		top: 50%;
+		/* top: 50%;
 		left: 50%;
-		transform: translate(-50%, -50%);
+		transform: translate(-50%, -50%); */
 		margin: 0;
 		padding: 0;
 		border: none;
@@ -155,7 +155,7 @@
 
 		width: 100%;
 		max-width: min(90vw, 1200px);
-		height: calc(100vh - 60px - var(--space-lg) * 2);
+		/* height: calc(100vh - 60px - var(--space-lg) * 2); */
 
 		/* Scrollable content within modal */
 		overflow-y: auto;
@@ -259,7 +259,7 @@
 			min-height: 60dvh;
 			max-height: calc(100dvh - var(--space-md) * 2);
 			/* Shift modal down to avoid covering status display */
-			top: calc(50% + 30px);
+			/* top: calc(50% + 30px); */
 		}
 	}
 
@@ -267,7 +267,7 @@
 		.modal-wrapper {
 			bottom: 0;
 			position: absolute;
-			height: calc(100vh - 300px);
+			/* height: calc(100vh - 300px); */
 		}
 	}
 

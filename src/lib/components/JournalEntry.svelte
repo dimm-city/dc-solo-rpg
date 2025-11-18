@@ -187,15 +187,13 @@
 	});
 </script>
 
-<div class="dc-journal-container" in:fade={{ duration: ANIMATION_DURATION.NORMAL }}>
+<div class="dc-journal-container" in:fade={{ duration: ANIMATION_DURATION.NORMAL }} data-augmented-ui="tl-clip br-clip tr-clip bl-clip border">
 	<div
 		class="journal-header-area"
 		in:fade={{ duration: ANIMATION_DURATION.SLOW, delay: ANIMATION_DURATION.FAST }}
 	>
 		<h6>{gameState.config?.labels?.journalEntryHeader ?? 'Journal Entry'}</h6>
-		<blockquote>
-			{gameState.config?.labels?.journalEntrySubHeader ?? 'Record your progress'}
-		</blockquote>
+		
 
 		{#each currentEvents as event (event.id)}
 			<p>{event.description}</p>
@@ -417,20 +415,22 @@
 	.dc-journal-container {
 		display: grid;
 		height: 100%;
+		width: 80%;
 		padding: var(--space-md);
 		grid-template-columns: 1fr;
 		grid-template-rows: auto 1fr auto auto auto;
 		row-gap: var(--space-md);
 		grid-auto-flow: row;
 		grid-template-areas:
-			'.'
 			'header-area'
+			'.'
 			'text-entry-area'
 			'audio-entry-area'
 			'button-area';
 		box-sizing: border-box;
 		overflow: hidden;
 		align-items: end;
+		background: var(--translucent-dark, black);
 	}
 
 	.button-area {
@@ -445,30 +445,16 @@
 	.journal-header-area {
 		grid-area: header-area;
 		overflow-y: auto;
-		max-height: calc(100svh - 250px);
+		max-height: 25svh;
 		margin-bottom: var(--space-sm);
 	}
 
 	.journal-header-area h6 {
-		font-family: var(--font-display);
-		font-size: var(--text-2xl);
-		color: var(--color-neon-yellow);
-		text-shadow:
-			0 0 20px rgba(255, 255, 0, 0.6),
-			0 0 40px rgba(255, 255, 0, 0.3);
-		margin: 0 0 var(--space-md) 0;
-		font-weight: 700;
-		letter-spacing: 0.05em;
-		text-transform: uppercase;
-	}
+		text-wrap: balance;
+		text-wrap-mode: wrap;
+		text-wrap-style: pretty;
+		text-align: center;
 
-	.journal-header-area blockquote {
-		font-size: var(--text-base);
-		color: var(--color-neon-cyan);
-		margin: 0 0 var(--space-md) 0;
-		padding: var(--space-sm) 0;
-		font-style: italic;
-		opacity: 0.9;
 	}
 
 	.journal-header-area p {
@@ -495,10 +481,8 @@
 		font-size: var(--text-base);
 		line-height: var(--line-height-base);
 		padding: var(--space-md);
-		background: rgba(0, 0, 0, 0.5);
-		border: 2px solid rgba(0, 255, 255, 0.4);
-		border-radius: 4px;
 		color: var(--color-text);
+		margin-bottom: 0;
 		transition:
 			border-color 200ms cubic-bezier(0.4, 0, 0.6, 1),
 			box-shadow 200ms cubic-bezier(0.4, 0, 0.6, 1),
@@ -825,15 +809,10 @@
 		.dc-journal-container {
 			padding: var(--space-sm);
 			row-gap: var(--space-sm);
+			width: 100%;
 		}
 
 		.journal-header-area h6 {
-			font-size: var(--text-xl);
-			margin-bottom: var(--space-sm);
-		}
-
-		.journal-header-area blockquote {
-			font-size: var(--text-sm);
 			margin-bottom: var(--space-sm);
 		}
 
