@@ -142,6 +142,8 @@
 
 <style>
 	.modal-wrapper {
+		display: flex;
+		justify-content: center;
 		position: fixed;
 		top: 50%;
 		left: 50%;
@@ -151,7 +153,7 @@
 		border: none;
 		background: transparent;
 
-		width: stretch;
+			width: 100%;
 		max-width: min(90vw, 1200px);
 		height: calc(100vh - 60px - var(--space-lg) * 2);
 
@@ -244,19 +246,18 @@
 	}
 
 	/* Improved responsive behavior */
-	@media (max-width: 900px) {
+	/* @media (max-width: 900px) {
 		.modal-wrapper {
 			max-width: 95vw;
 			height: 80dvh;
 		}
-	}
+	} */
 
-	@media (max-width: 600px) {
+	@media (max-width: 800px) {
 		.modal-wrapper {
-			width: 100%;
+		
 			max-width: 100vw;
 			min-height: 60dvh;
-			height: 85dvh;
 			max-height: calc(100dvh - var(--space-md) * 2);
 			/* Shift modal down to avoid covering status display */
 			top: calc(50% + 30px);
@@ -267,7 +268,7 @@
 		.modal-wrapper {
 			bottom: 0;
 			position: absolute;
-			height: calc(100vh - 200px);
+			height: calc(100vh - 300px);
 		}
 	}
 

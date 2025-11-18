@@ -745,9 +745,7 @@
 			row-gap: var(--space-xs);
 		}
 
-		.journal-header-area {
-			max-height: 15vh;
-		}
+	
 
 		textarea {
 			min-height: 3rem;
