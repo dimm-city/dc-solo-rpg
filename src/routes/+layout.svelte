@@ -96,18 +96,18 @@
 			z-index 0s 0s; /* Immediate z-index change when becoming active */
 	}
 
-	/* Fade-out state: dice are fading but still need high z-index */
+	/* Fade-out state: dice fade back to background position */
 	.dice-container:not(.rolling):not(.hidden) {
-		/* Keep high z-index during fade-out to prevent visual jump */
-		z-index: 9999;
-		opacity: 0; /* Fade to transparent */
-		transform: scale(0.9); /* Scale down slightly for polish */
-		filter: brightness(1) blur(0px); /* Keep sharp during fade */
+		/* Transition back to background state */
+		z-index: -10; /* Behind everything */
+		opacity: 0.35; /* Return to background opacity (visible but dim) */
+		transform: scale(1); /* Return to normal scale */
+		filter: brightness(0.7) blur(1px); /* Return to background blur/dim */
 		transition:
-			opacity 250ms ease-out,
-			transform 250ms ease-out,
-			filter 250ms ease-out,
-			z-index 0s 250ms; /* Delay z-index drop until after fade completes */
+			opacity 800ms ease-out,
+			transform 800ms ease-out,
+			filter 800ms ease-out,
+			z-index 0s 0s; /* Immediate z-index drop to send dice to background */
 	}
 
 	/* Canvas from DiceBox should fill the container */

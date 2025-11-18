@@ -4,6 +4,7 @@
 	import { logger } from '../utils/logger.js';
 	import { ANIMATION_DURATION } from '$lib/constants/animations.js';
 	import ContinueButton from './ContinueButton.svelte';
+	import { gameState } from '../stores/gameStore.svelte.js';
 
 	let {
 		card = $bindable(null),
@@ -77,9 +78,15 @@
 	/**
 	 * Auto-trigger card draw when entering idle state
 	 * This skips the "PROCEED TO NEXT BYTE" button click
+	 * CRITICAL: Only auto-trigger if we're still in drawCard state AND have cards to draw
+	 * This prevents infinite loop when confirmCard() transitions to next phase
 	 */
 	$effect(() => {
-		if (animationStage === 'idle') {
+		if (
+			animationStage === 'idle' &&
+			gameState.state === 'drawCard' &&
+			gameState.cardsToDraw > 0
+		) {
 			// Small delay to avoid immediate re-trigger and allow UI to settle
 			const timeout = setTimeout(() => {
 				onProceed();
@@ -90,27 +97,20 @@
 
 	/**
 	 * Handle dismiss/continue - upload animation and notify parent
-	 * CRITICAL: Animation must complete BEFORE state transition to prevent jarring jumps
-	 * Total sequence: 600ms dismiss + 100ms pause = 700ms before next screen appears
 	 */
 	async function onDismiss() {
 		if (animationStage !== 'revealed') return;
 
-		// Start dismiss animation (600ms)
 		animationStage = 'dismissing';
 		await sleep(ANIMATION_DURATION.CARD_DISMISS);
 
-		// Reset card state FIRST (before notifying parent)
+		// Notify parent that card was confirmed
+		onconfirmcard();
+
+		// Reset state
 		animationStage = 'idle';
 		particles = []; // Clear particles
 		card = null;
-
-		// Small pause for visual clarity (100ms)
-		await sleep(100);
-
-		// NOW notify parent that card was confirmed
-		// This triggers the state transition to failureCheck/successCheck/etc
-		onconfirmcard();
 	}
 
 	/**
@@ -224,12 +224,12 @@
 		}}
 	>
 		{#if animationStage !== 'idle' && animationStage !== 'anticipating'}
-			<div class="byte-shell">
+			<div class="byte-shell"  data-augmented-ui="tl-clip tr-clip br-clip bl-clip border">
 				<!-- Bio-pulse rings -->
 				<div class="bio-pulse" aria-hidden="true"></div>
 
 				<!-- Corruption overlay for glitch effect -->
-				<div class="corruption-overlay" aria-hidden="true"></div>
+				<!-- <div class="corruption-overlay" aria-hidden="true"></div> -->
 
 				<!-- Byte content -->
 				{#if card}
@@ -364,6 +364,8 @@
 		height: 100%;
 		align-items: center;
 		justify-content: center;
+		overflow: hidden;
+		padding: var(--space-md, 1rem);
 	}
 
 	/* ============================================
@@ -375,7 +377,7 @@
 		width: 100%;
 		height: 100%;
 		min-height: 400px;
-		max-width: 80ch;
+		max-width: 80svw;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -442,7 +444,8 @@
 		width: 100%;
 		height: 100%;
 		padding: var(--space-xl, 2rem);
-		overflow-y: auto; /* Allow scrolling for long content */
+		margin-bottom: var(--space-lg, 1.5rem);
+		overflow-y: hidden; /* Allow scrolling for long content */
 		overflow-x: hidden;
 		box-sizing: border-box;
 	}
@@ -562,6 +565,9 @@
 		border-radius: 8px;
 		backdrop-filter: blur(4px);
 		-webkit-backdrop-filter: blur(4px);
+
+		overflow-y: auto;
+		height: 100%;
 	}
 
 	.byte-content p {
@@ -858,10 +864,12 @@
 	}
 
 	@media (max-width: 450px) or (max-height: 667px) {
+		
 		.byte-container {
 			min-height: 250px;
-			width: 98%;
-			max-width: 98%;
+			/* Limit height to prevent taking entire viewport */
+			width: 100%;
+			max-width: 100%;
 			margin: 0;
 			--aug-tl: 8px;
 			--aug-tr: 8px;
@@ -871,7 +879,8 @@
 
 		.byte-shell {
 			min-height: 250px;
-			padding: var(--space-md, 1rem);
+			padding: 0;
+			
 		}
 
 		.byte-data {

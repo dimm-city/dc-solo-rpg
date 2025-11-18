@@ -265,10 +265,9 @@
 
 	@media (max-width: 400px) {
 		.modal-wrapper {
-			height: 90dvh;
-			max-height: calc(100dvh - var(--space-sm) * 2);
-			/* Shift modal down further on very small screens */
-			top: calc(50% + 35px);
+			bottom: 0;
+			position: absolute;
+			height: calc(100vh - 200px);
 		}
 	}
 

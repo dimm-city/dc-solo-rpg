@@ -1090,6 +1090,7 @@
 			width: 100%;
 			margin: auto;
 			justify-content: stretch;
+			z-index: auto; /* Remove z-index to allow natural stacking */
 		}
 
 		/* Allow overflow on parent containers so toolbar items can appear above */
@@ -1099,9 +1100,11 @@
 			overflow: visible;
 		}
 
-		/* Ensure main-screen-area is below toolbar-area in stacking order */
+		/* Ensure main-screen-area is below status bars in stacking order */
 		.main-screen-area {
 			z-index: 1;
+			align-items: flex-end; /* Align card to bottom on mobile to prevent status bar overlap */
+			justify-content: center;
 		}
 
 		/* Remove z-index from screen container to fix stacking context */
