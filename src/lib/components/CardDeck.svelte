@@ -3,6 +3,8 @@
 	import { sleep } from '../utils/timing.js';
 	import { logger } from '../utils/logger.js';
 	import ContinueButton from './ContinueButton.svelte';
+	import { getAudioSettings, getGameplaySettings, speak } from '../stores/audioStore.svelte.js';
+	import { autoAdvance } from '../utils/autoPlay.js';
 
 	let {
 		card = $bindable(null),
@@ -88,10 +90,65 @@
 	});
 
 	/**
+	 * Auto-read card and auto-continue when revealed
+	 */
+	let autoPlayCanceller = $state(null);
+
+	$effect(() => {
+		if (animationStage === 'revealed' && card) {
+			const audioSettings = getAudioSettings();
+			const gameplaySettings = getGameplaySettings();
+
+			// Build card text for TTS
+			const cardText = `${card.description}. ${card.story || ''}`;
+
+			// Auto-read if enabled
+			if (audioSettings.autoReadCards) {
+				speak(cardText).then(() => {
+					// After reading, auto-continue if enabled
+					if (gameplaySettings.autoContinueAfterReading) {
+						autoAdvance({
+							text: null,
+							shouldRead: false,
+							action: () => onDismiss()
+						}).then((canceller) => {
+							autoPlayCanceller = canceller;
+						});
+					}
+				});
+			}
+			// Just auto-continue without reading if enabled
+			else if (gameplaySettings.autoContinueAfterReading) {
+				autoAdvance({
+					text: null,
+					shouldRead: false,
+					action: () => onDismiss()
+				}).then((canceller) => {
+					autoPlayCanceller = canceller;
+				});
+			}
+		}
+
+		// Cancel auto-play when animation stage changes
+		return () => {
+			if (autoPlayCanceller) {
+				autoPlayCanceller.cancel();
+				autoPlayCanceller = null;
+			}
+		};
+	});
+
+	/**
 	 * Handle dismiss/continue - upload animation and notify parent
 	 */
 	async function onDismiss() {
 		if (animationStage !== 'revealed') return;
+
+		// Cancel auto-play on manual interaction
+		if (autoPlayCanceller) {
+			autoPlayCanceller.cancel();
+			autoPlayCanceller = null;
+		}
 
 		animationStage = 'dismissing';
 		await sleep(600);

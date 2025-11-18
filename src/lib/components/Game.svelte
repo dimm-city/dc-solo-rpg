@@ -1,5 +1,6 @@
 <script>
 	import { gameState } from '../stores/gameStore.svelte.js';
+	import { initializeAudioStore } from '../stores/audioStore.svelte.js';
 	import NeuralBackground from './NeuralBackground.svelte';
 	import GameScreen from './GameScreen.svelte';
 	import HelpModal from './HelpModal.svelte';
@@ -21,6 +22,11 @@
 	function handleHelpClose() {
 		showHelpModal = false;
 	}
+
+	// Initialize audio store on mount
+	$effect(() => {
+		initializeAudioStore();
+	});
 
 	$effect(() => {
 		if (currentScreen == 'gameOver') {

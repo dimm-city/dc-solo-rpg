@@ -3,6 +3,7 @@
 	import ContinueButton from './ContinueButton.svelte';
 	import ButtonBar from './ButtonBar.svelte';
 	import { onMount } from 'svelte';
+	import { getAudioSettings, getGameplaySettings, speak } from '../stores/audioStore.svelte.js';
 
 	let {
 		journalText = $bindable(''),
@@ -28,6 +29,11 @@
 	let audioElement = $state(null);
 	let hasAudioPermission = $state(true);
 	let audioError = $state(null);
+
+	// Auto-journal timer state
+	let autoJournalTimer = $state(null);
+	let autoJournalTimeRemaining = $state(0);
+	let autoJournalInterval = $state(null);
 
 	// Format time as MM:SS
 	function formatTime(seconds) {
@@ -180,6 +186,84 @@
 			if (isRecording) {
 				stopRecording();
 			}
+		}
+	});
+
+	// Auto-journal timer effect
+	$effect(() => {
+		const gameplaySettings = getGameplaySettings();
+		const audioSettings = getAudioSettings();
+
+		// Clear any existing timer
+		if (autoJournalInterval) {
+			clearInterval(autoJournalInterval);
+			autoJournalInterval = null;
+		}
+		if (autoJournalTimer) {
+			clearTimeout(autoJournalTimer);
+			autoJournalTimer = null;
+		}
+
+		// Only run timer if not saved yet
+		if (!journalSaved) {
+			// Speak prompt if enabled
+			if (audioSettings.autoReadPrompts) {
+				speak('Take a moment to reflect on what just happened.');
+			}
+
+			// Skip mode: immediately save
+			if (gameplaySettings.autoHandleJournaling === 'skip') {
+				// Small delay to allow UI to settle
+				autoJournalTimer = setTimeout(() => {
+					onSave();
+				}, 500);
+			}
+			// Timed mode: countdown timer
+			else if (gameplaySettings.autoHandleJournaling === 'timed') {
+				const pauseTime = gameplaySettings.journalPauseTime;
+				autoJournalTimeRemaining = pauseTime;
+
+				// Update countdown every 100ms for smooth UI
+				autoJournalInterval = setInterval(() => {
+					autoJournalTimeRemaining = Math.max(0, autoJournalTimeRemaining - 100);
+
+					if (autoJournalTimeRemaining <= 0) {
+						clearInterval(autoJournalInterval);
+						autoJournalInterval = null;
+						onSave();
+					}
+				}, 100);
+			}
+		}
+
+		// Cleanup on unmount or when saved
+		return () => {
+			if (autoJournalInterval) {
+				clearInterval(autoJournalInterval);
+			}
+			if (autoJournalTimer) {
+				clearTimeout(autoJournalTimer);
+			}
+		};
+	});
+
+	// Cancel timer if user starts interacting
+	function cancelAutoJournalTimer() {
+		if (autoJournalTimer) {
+			clearTimeout(autoJournalTimer);
+			autoJournalTimer = null;
+		}
+		if (autoJournalInterval) {
+			clearInterval(autoJournalInterval);
+			autoJournalInterval = null;
+		}
+		autoJournalTimeRemaining = 0;
+	}
+
+	// Cancel timer on user interaction
+	$effect(() => {
+		if (journalText || audioData || isRecording) {
+			cancelAutoJournalTimer();
 		}
 	});
 </script>
@@ -359,6 +443,21 @@
 	</div>
 
 	<div class="button-area">
+		{#if autoJournalTimeRemaining > 0}
+			<div class="auto-journal-timer">
+				<div class="timer-text">
+					Auto-continuing in {Math.ceil(autoJournalTimeRemaining / 1000)}s
+					<span class="timer-hint">(write or record to cancel)</span>
+				</div>
+				<div class="timer-bar-container">
+					<div
+						class="timer-bar"
+						style="width: {(autoJournalTimeRemaining / getGameplaySettings().journalPauseTime) * 100}%"
+					></div>
+				</div>
+			</div>
+		{/if}
+
 		{#if journalSaved}
 			{#if gameState.gameOver}
 				<ButtonBar bordered={false} gameBackground={false}>
@@ -559,6 +658,42 @@
 
 	.record-button {
 		width: 100%;
+	}
+
+	/* Auto-journal timer */
+	.auto-journal-timer {
+		width: 100%;
+		margin-bottom: var(--space-md);
+		text-align: center;
+	}
+
+	.timer-text {
+		font-size: 0.9rem;
+		color: var(--dc-accent-color);
+		margin-bottom: var(--space-xs);
+		font-weight: 500;
+	}
+
+	.timer-hint {
+		display: block;
+		font-size: 0.75rem;
+		color: rgba(255, 255, 255, 0.6);
+		font-weight: normal;
+		margin-top: var(--space-xs);
+	}
+
+	.timer-bar-container {
+		width: 100%;
+		height: 4px;
+		background: rgba(255, 255, 255, 0.2);
+		border-radius: 2px;
+		overflow: hidden;
+	}
+
+	.timer-bar {
+		height: 100%;
+		background: var(--dc-accent-color);
+		transition: width 0.1s linear;
 	}
 
 	/* Recording Controls */
