@@ -285,10 +285,13 @@ This document tracks the status of the comprehensive refactoring and improvement
   - **Effort:** Small (1 hour)
   - **Priority:** MEDIUM
 
-- [ ] **Issue #7:** Extract D20 mechanics to dedicated module
+- [x] **Issue #7:** Extract D20 mechanics to dedicated module ✅ COMPLETE
   - See: [CODE_QUALITY_REVIEW.md#issue-33](./CODE_QUALITY_REVIEW.md#issue-33)
-  - **Effort:** Small (30 minutes)
+  - **Effort:** Small (30 minutes) → **Actual:** 30 minutes
   - **Priority:** MEDIUM
+  - **Result:** Created `src/lib/services/d20Mechanics.js` (193 lines) with 4 core mechanics functions
+  - **Reduced:** gameActions.svelte.js from 1,050 → 900 lines (150 lines removed)
+  - **Tests:** All 39 D20 mechanics tests pass
 
 ### Medium/Low Priority Issues
 - [ ] **Issue #8:** Remove commented-out code
