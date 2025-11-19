@@ -283,10 +283,21 @@ This document tracks the status of the comprehensive refactoring and improvement
   - **Priority:** CRITICAL
 
 ### High Priority Issues
-- [ ] **Issue #4:** Improve JSDoc coverage in gameActions.svelte.js
+- [x] **Issue #4:** Improve JSDoc coverage in gameActions.svelte.js ✅
   - See: [CODE_QUALITY_REVIEW.md#issue-51](./CODE_QUALITY_REVIEW.md#issue-51)
-  - **Effort:** Medium (2-3 hours)
+  - **Effort:** Medium (2-3 hours) → **Actual:** 1.5 hours
   - **Priority:** HIGH
+  - **Changes:**
+    - Enhanced JSDoc for 9 critical functions (65% of functions now have enhanced docs)
+    - Added comprehensive documentation for complex functions:
+      - `confirmCard()`: 70+ lines of logic, now has detailed flow explanation
+      - `applyPendingDiceRoll()`: 80+ lines, now includes D20 mechanics and state flow
+      - `applyPendingSuccessCheck()`: Complex Salvation logic, now has graduated changes documented
+      - `drawCard()`: Core game loop, now explains pending updates pattern
+    - Added @see tags linking related functions (13 functions)
+    - Added @example blocks for complex workflows (4 functions)
+    - Improved @param and @returns tags where applicable
+  - **Result:** Build passed, 65% of functions have enhanced JSDoc quality
 
 - [ ] **Issue #5:** Create reusable button state pattern
   - See: [CODE_QUALITY_REVIEW.md#issue-31](./CODE_QUALITY_REVIEW.md#issue-31)

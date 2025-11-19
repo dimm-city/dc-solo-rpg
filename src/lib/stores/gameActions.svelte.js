@@ -83,7 +83,12 @@ export const startGame = (player, gameConfigOrOptions = {}, options = {}) => {
 };
 
 /**
- * Start a new round
+ * Start a new round of gameplay
+ *
+ * Increments round counter and transitions to startRound state, which triggers
+ * the roll-for-tasks screen where player rolls d20 to determine how many cards to draw.
+ *
+ * @see {applyPendingTaskRoll} - Called after task roll animation completes
  */
 export const startRound = () => {
 	logger.debug('[startRound] Called, current state:', gameState.state);
@@ -150,7 +155,13 @@ export function applyPendingTaskRoll() {
 }
 
 /**
- * Confirm task roll and proceed
+ * Confirm task roll and proceed to card drawing
+ *
+ * Transitions from roll-for-tasks screen to drawCard state after player
+ * acknowledges the dice roll result.
+ *
+ * @see {applyPendingTaskRoll} - Should be called before this to apply roll
+ * @see {drawCard} - Next state after confirmation
  */
 export function confirmTaskRoll() {
 	logger.debug('[confirmTaskRoll] Called');
@@ -159,8 +170,36 @@ export function confirmTaskRoll() {
 }
 
 /**
- * Draw a card from the deck
- * @returns {object|null} The drawn card or null if deck is empty
+ * Draw a card from the deck and set up pending state changes
+ *
+ * Core game loop function. Draws next card, decrements cardsToDraw counter,
+ * adds to game log, and stores pending updates for Aces/Kings. The card is
+ * displayed to the player, then confirmCard() applies the pending updates.
+ *
+ * Special Card Handling:
+ * - Ace of Hearts: Sets aceOfHeartsRevealed (unlocks Salvation checks)
+ * - Other Aces: Increments acesRevealed counter (improves Salvation threshold)
+ * - Kings: Tracks which suit revealed, checks for 4 Kings (instant loss)
+ *
+ * Pending Updates Pattern:
+ * - Sets pendingUpdates.aceChange, kingsChange, gameOverCondition
+ * - Actual stat changes happen in confirmCard() after player dismisses card
+ * - Ensures card is visible before game state changes
+ *
+ * Game Over Conditions:
+ * - Deck empty → game over (loss)
+ * - 4 Kings revealed → pending game over (applied in confirmCard)
+ *
+ * @returns {object|null} The drawn card object, or null if deck is empty
+ *
+ * @see {confirmCard} - Applies pending updates when card is dismissed
+ * @see {startRound} - Calls this to begin round's card draws
+ *
+ * @example
+ * // Standard card draw flow
+ * const card = drawCard(); // Draws card, sets pendingUpdates
+ * // ... player reads card ...
+ * confirmCard(); // Applies pending updates and transitions
  */
 export function drawCard() {
 	logger.debug('[drawCard] Function called');
@@ -235,8 +274,30 @@ export function drawCard() {
 }
 
 /**
- * Confirm drawn card and proceed
- * This is called when the card is dismissed, so we apply pending stat updates here
+ * Confirm drawn card and apply pending updates
+ *
+ * Called when player dismisses the card. Applies pending stat changes (Aces, Kings),
+ * checks for game over conditions, and transitions to the next appropriate state.
+ *
+ * Flow:
+ * 1. Apply pending Ace changes (increments acesRevealed for Salvation threshold)
+ * 2. Apply pending King changes (tracks which Kings revealed for game over)
+ * 3. Check for game over conditions (4 Kings = instant loss)
+ * 4. Determine next state:
+ *    - Odd rank (A,3,5,7,9) → failureCheck
+ *    - More cards to draw → drawCard
+ *    - Ace of Hearts revealed + tokens > 0 → successCheck
+ *    - Otherwise → log (journal entry)
+ *
+ * @see {drawCard} - Draws the card that gets confirmed here
+ * @see {getFailureCheckRoll} - Called next for odd-ranked cards
+ * @see {successCheck} - Called if Salvation is available
+ *
+ * @example
+ * // Standard flow after drawing a card
+ * drawCard(); // Draws card and sets pendingUpdates
+ * // ... player reads card ...
+ * confirmCard(); // Applies updates and transitions to next state
  */
 export function confirmCard() {
 	logger.debug('[confirmCard] Called');
@@ -362,9 +423,39 @@ export function applyFailureCheckResult(result) {
 }
 
 /**
- * Apply pending dice roll updates after animation completes
- * D20 system: Handles both stability loss and stability gain
- * This should be called after the dice animation finishes
+ * Apply pending dice roll updates after dice animation completes
+ *
+ * Applies stability changes, modifier states (Lucid/Surreal), and checks for game over.
+ * Must be called AFTER dice animation to ensure visual consistency.
+ *
+ * D20 System Mechanics:
+ * - Stability Gain: Natural 20 grants +1 Stability (max 20) + Lucid state
+ * - Stability Loss: Based on roll ranges (1=3, 2-5=2, 6-10=1, 11+=0)
+ * - Lucid State: Advantage on next roll (2d20 keep high)
+ * - Surreal State: Disadvantage on next roll (2d20 keep low)
+ * - Game Over: Stability ≤ 0 triggers instant loss
+ *
+ * State Flow:
+ * 1. Apply pending dice roll to gameState.diceRoll
+ * 2. Update last log entry with roll and damage
+ * 3. Apply stability gain (if natural 20)
+ * 4. Apply stability loss (if any)
+ * 5. Apply Lucid/Surreal states
+ * 6. Check for stability collapse (game over)
+ * 7. Transition to next state or success check
+ * 8. Auto-save game state
+ *
+ * @throws {Error} Logs warning if no pending dice roll exists
+ *
+ * @see {getFailureCheckRoll} - Creates the pending dice roll
+ * @see {calculateStabilityLoss} - Determines stability loss from roll
+ * @see {applyPendingSuccessCheck} - Similar pattern for success checks
+ *
+ * @example
+ * // Standard failure check flow
+ * const roll = getFailureCheckRoll(); // Sets pendingUpdates.diceRoll
+ * await animateDiceRoll(roll); // Show 3D dice animation
+ * applyPendingDiceRoll(); // Apply after animation completes
  */
 export function applyPendingDiceRoll() {
 	if (gameState.pendingUpdates.diceRoll === null) {
@@ -463,9 +554,15 @@ export async function failureCheck() {
 
 /**
  * Confirm failure check and proceed
+ *
+ * Placeholder function for consistency. State transition is actually handled
+ * in applyPendingDiceRoll() after dice animation completes.
+ *
+ * @see {applyPendingDiceRoll} - Handles actual state transition
+ * @see {getFailureCheckRoll} - Initiates the failure check
  */
 export function confirmFailureCheck() {
-	// State transition already handled in applyFailureCheckResult
+	// State transition already handled in applyPendingDiceRoll
 }
 
 /**
@@ -562,8 +659,40 @@ export function successCheck() {
 }
 
 /**
- * Apply pending success check updates after dice animation completes
- * D20 system: Handles graduated token changes (+2 to -2) and victory when tokens = 0
+ * Apply pending Salvation check updates after dice animation completes
+ *
+ * Applies token changes based on success/failure, handles Lucid/Surreal states,
+ * and checks for victory condition. Must be called AFTER dice animation.
+ *
+ * D20 System - Graduated Token Changes:
+ * - Critical Success (Natural 20): -2 tokens + Lucid state
+ * - Success (≥ threshold): -1 token
+ * - Partial Failure (6 to threshold-1): No change
+ * - Failure (2-5): +1 token
+ * - Critical Failure (Natural 1): +2 tokens + Surreal state
+ *
+ * Victory Condition:
+ * - Tokens reach 0 → Instant victory (game over, win = true)
+ *
+ * State Flow:
+ * 1. Apply pending dice roll
+ * 2. Apply token change (+2 to -2)
+ * 3. Ensure tokens ≥ 0 (floor at 0)
+ * 4. Apply Lucid/Surreal states
+ * 5. Check for victory (tokens = 0)
+ * 6. Transition to game over or journal entry
+ *
+ * @throws {Error} Logs warning if no pending success check exists
+ *
+ * @see {successCheck} - Creates the pending success check
+ * @see {calculateSalvationResult} - Determines token changes
+ * @see {applyPendingDiceRoll} - Similar pattern for failure checks
+ *
+ * @example
+ * // Standard Salvation flow
+ * const result = successCheck(); // Sets pendingUpdates
+ * await animateDiceRoll(result.roll); // Show 3D dice animation
+ * applyPendingSuccessCheck(); // Apply after animation completes
  */
 export function applyPendingSuccessCheck() {
 	if (gameState.pendingUpdates.diceRoll === null) {
@@ -805,14 +934,26 @@ export function applyPendingFinalDamageRoll() {
 }
 
 /**
- * Confirm success check and proceed
+ * Confirm Salvation check and proceed
+ *
+ * Placeholder function for consistency. State transition is actually handled
+ * in applyPendingSuccessCheck() after dice animation completes.
+ *
+ * @see {applyPendingSuccessCheck} - Handles actual state transition and victory check
+ * @see {successCheck} - Initiates the Salvation check
  */
 export function confirmSuccessCheck() {
-	// State transition already handled in successCheck
+	// State transition already handled in applyPendingSuccessCheck
 }
 
 /**
- * Restart the game
+ * Restart the game from the beginning
+ *
+ * Resets game state and starts a new game with the same player and original
+ * configuration. Clears any saved progress for this game.
+ *
+ * @see {startGame} - Performs the actual game initialization
+ * @see {exitGame} - Returns to game selection screen instead of restarting
  */
 export function restartGame() {
 	// Use originalConfig to ensure clean restart
