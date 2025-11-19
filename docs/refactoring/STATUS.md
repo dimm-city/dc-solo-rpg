@@ -206,15 +206,18 @@ This document tracks the status of the comprehensive refactoring and improvement
 ---
 
 ### Phase 5: Settings & Polish (Week 5)
-**Status:** ⏳ Not Started
+**Status:** ⏳ In Progress (Phase 5.1 Complete)
 **Estimated Effort:** 2-3 days
 **Priority:** LOW
 
-#### 5.1 Refactor AISettings (487 lines → 250 lines)
-- [ ] Extract `AIProviderSection.svelte` (200 lines)
-- [ ] Extract `TTSSection.svelte` (200 lines)
-- [ ] Update `AISettings.svelte`
-- [ ] **Estimated Effort:** 1 day
+#### 5.1 Refactor AISettings (487 lines → 284 lines) ✅ COMPLETE
+- ✅ Create `settings/` directory
+- ✅ Extract `AIProviderSection.svelte` (170 lines) ⭐ REUSABLE
+- ✅ Extract `TTSSection.svelte` (152 lines) ⭐ REUSABLE
+- ✅ Update `AISettings.svelte` to use new components (284 lines, 42% reduction)
+- ✅ Verify build + type check pass (0 new errors)
+- ✅ **Actual Effort:** < 1 day
+- 📊 **Result:** 42% reduction (284 lines vs 250 target, kept modal structure)
 
 #### 5.2 Refactor StoryGenerationPanel (428 lines → 250 lines)
 - [ ] Create `useStoryGeneration.svelte.js` (150 lines)
@@ -302,10 +305,10 @@ This document tracks the status of the comprehensive refactoring and improvement
 | StoryMode | 826 | 386 | 53% | ✅ Complete |
 | StoryRound | 739 | 583 | 21% | ✅ Complete |
 | BrowseGames | 708 | 350 | 50% | ✅ Complete |
+| AISettings | 487 | 284 | 42% | ✅ Complete |
 | GameScreen | 1,399 | TBD | TBD | ⏳ Pending |
 | StatusDisplay | 2,006 | TBD | TBD | ⏳ Pending |
-| AISettings | 487 | TBD | TBD | ⏳ Pending |
-| **Average (Completed)** | | | **49%** | 5/8 done |
+| **Average (Completed)** | | | **48%** | 6/8 done |
 
 ### New Components Created
 - [ ] **Common Components:** 4/4 (0%)
