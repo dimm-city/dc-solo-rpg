@@ -100,38 +100,50 @@
 
 	/**
 	 * Auto-read card and auto-continue when revealed
+	 * ✅ FIXED: Guard pattern to prevent multiple TTS triggers for same card
 	 */
 	let autoPlayCanceller = $state(null);
+	let lastRevealedCardId = $state('');
 
 	$effect(() => {
 		if (animationStage === 'revealed' && card) {
-			const audioSettings = getAudioSettings();
-			const gameplaySettings = getGameplaySettings();
+			const cardId = `${card.card}-${card.suit}`;
 
-			// Build card text for TTS
-			const cardText = `${card.description}. ${card.story || ''}`;
+			// Only trigger TTS and auto-continue for NEW card revelations
+			if (cardId !== lastRevealedCardId) {
+				lastRevealedCardId = cardId;
 
-			// Auto-read if enabled
-			if (audioSettings.autoReadCards) {
-				speak(cardText).then(() => {
-					// After reading, auto-continue if enabled
-					if (gameplaySettings.autoContinueAfterReading) {
-						autoPlayCanceller = autoAdvance({
-							text: null,
-							shouldRead: false,
-							action: () => handleDismiss()
-						});
-					}
-				});
+				const audioSettings = getAudioSettings();
+				const gameplaySettings = getGameplaySettings();
+
+				// Build card text for TTS
+				const cardText = `${card.description}. ${card.story || ''}`;
+
+				// Auto-read if enabled
+				if (audioSettings.autoReadCards) {
+					speak(cardText).then(() => {
+						// After reading, auto-continue if enabled
+						if (gameplaySettings.autoContinueAfterReading) {
+							autoPlayCanceller = autoAdvance({
+								text: null,
+								shouldRead: false,
+								action: () => handleDismiss()
+							});
+						}
+					});
+				}
+				// Just auto-continue without reading if enabled
+				else if (gameplaySettings.autoContinueAfterReading) {
+					autoPlayCanceller = autoAdvance({
+						text: null,
+						shouldRead: false,
+						action: () => handleDismiss()
+					});
+				}
 			}
-			// Just auto-continue without reading if enabled
-			else if (gameplaySettings.autoContinueAfterReading) {
-				autoPlayCanceller = autoAdvance({
-					text: null,
-					shouldRead: false,
-					action: () => handleDismiss()
-				});
-			}
+		} else if (animationStage !== 'revealed') {
+			// Reset when leaving revealed state (allows same card to be shown again later)
+			lastRevealedCardId = '';
 		}
 
 		// Cancel auto-play when animation stage changes

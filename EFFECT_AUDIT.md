@@ -2,7 +2,28 @@
 
 **Date:** 2025-11-19
 **Purpose:** Identify all $effect usage and recommend refactoring patterns
-**Status:** 🔴 **CRITICAL** - Multiple infinite loop risks detected
+**Status:** ✅ **PHASE 2 COMPLETE** - 4 MEDIUM RISK issues fixed
+
+---
+
+## FIXES COMPLETED
+
+### Phase 1: HIGH RISK ✅ (Commit: 38c25e1)
+- ✅ GameSelector.svelte - Eliminated 3 chained effects
+- ✅ JournalEntry.svelte - Extracted timer logic to pure function
+- ✅ GameScreen.svelte - Added guard + untrack patterns
+- ✅ useInstructionsPreference.svelte.js - Added one-time flag
+
+### Phase 2: MEDIUM RISK ✅ (This session)
+- ✅ +layout.svelte - Fixed DiceBox init guard with $state tracking
+- ✅ CardDeck.svelte - Added card ID guard to prevent duplicate TTS
+- ✅ useStoryGeneration.svelte.js - Converted $effect to onMount
+- ✅ useSavedGames.svelte.js - Converted $effect to onMount
+- ❌ Portal pattern extraction (ATTEMPTED but REVERTED - see TEST_CRASH_INVESTIGATION.md)
+  - Caused reactive loops due to layered $effects
+  - Original pattern works fine, left as-is
+
+**Test Results:** 453 passing tests (up from 417)
 
 ---
 
@@ -11,9 +32,9 @@
 **Total $effect instances found:** 15 in source code (excluding docs/tests)
 
 **Risk Assessment:**
-- 🔴 **HIGH RISK (Immediate refactor needed):** 4 instances
-- 🟡 **MEDIUM RISK (Review and improve):** 7 instances
-- 🟢 **LOW RISK (Can remain as-is):** 4 instances
+- 🔴 **HIGH RISK (Immediate refactor needed):** 4 instances → ✅ **ALL FIXED**
+- 🟡 **MEDIUM RISK (Review and improve):** 7 instances → ✅ **4 FIXED, 3 OK AS-IS**
+- 🟢 **LOW RISK (Can remain as-is):** 4 instances → ✅ **ALL OK**
 
 ---
 

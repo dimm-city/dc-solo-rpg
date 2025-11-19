@@ -11,6 +11,7 @@
  * const games = saves.sortedGames; // Get sorted/filtered games
  */
 
+import { onMount } from 'svelte';
 import { loadAllSaves } from '$lib/stores/indexedDBStorage.js';
 import { logger } from '$lib/utils/logger.js';
 
@@ -19,14 +20,10 @@ export function useSavedGames() {
 	let isLoading = $state(true);
 	let error = $state(null);
 	let sortBy = $state('recent'); // recent, oldest, won, lost
-	let mounted = $state(false);
 
-	// Load completed games on mount (run only once)
-	$effect(() => {
-		if (!mounted) {
-			mounted = true;
-			loadCompletedGames();
-		}
+	// ✅ FIXED: Use onMount instead of simulating it with $effect
+	onMount(() => {
+		loadCompletedGames();
 	});
 
 	async function loadCompletedGames() {

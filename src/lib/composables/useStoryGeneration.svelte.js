@@ -12,6 +12,7 @@
  * await storyGen.generateStory(); // Generate AI story
  */
 
+import { onMount } from 'svelte';
 import { generateStory } from '$lib/services/storyGeneration.js';
 import { logger } from '$lib/utils/logger.js';
 import { generateAudioNarration, isTTSAvailable } from '$lib/services/textToSpeech.js';
@@ -35,26 +36,22 @@ export function useStoryGeneration(savedGame, saveKey) {
 	// Progress messages
 	let progressMessage = $state('');
 
-	// Initialize on mount
-	$effect(() => {
-		async function initialize() {
-			// Check if AI is configured
-			aiConfigured = await isAIConfigured();
+	// ✅ FIXED: Use onMount for one-time initialization instead of $effect
+	onMount(async () => {
+		// Check if AI is configured
+		aiConfigured = await isAIConfigured();
 
-			// Check if TTS is available
-			ttsAvailable = await isTTSAvailable();
+		// Check if TTS is available
+		ttsAvailable = await isTTSAvailable();
 
-			// Load existing story if it exists
-			if (saveKey) {
-				const existingStory = await loadAIStory(saveKey);
-				if (existingStory) {
-					story = existingStory;
-					hasStory = true;
-				}
+		// Load existing story if it exists
+		if (saveKey) {
+			const existingStory = await loadAIStory(saveKey);
+			if (existingStory) {
+				story = existingStory;
+				hasStory = true;
 			}
 		}
-
-		initialize();
 	});
 
 	async function generateStoryFn() {

@@ -17,8 +17,8 @@
 	const showDice = $derived($page.url.pathname.startsWith('/game/'));
 	const diceRolling = $derived(diceState.isRolling);
 
-	// Track if we've attempted initialization to prevent loops
-	let initAttempted = false;
+	// ✅ FIXED: Use $state for initialization tracking to ensure persistence
+	let lastShowDiceValue = $state(false);
 
 	onNavigate((navigation) => {
 		// Only run in browser environment (SSR safety)
@@ -35,21 +35,18 @@
 		});
 	});
 
-	// Initialize DiceBox when the container becomes visible
-	// Use $effect with untrack to prevent infinite loops
+	// ✅ FIXED: Improved DiceBox initialization with proper state tracking
+	// Only react when showDice changes from false -> true
 	$effect(() => {
-		// Read reactive dependencies: showDice and diceContainer
-		// This effect will re-run when these change
-		const shouldInit = showDice && diceContainer;
+		// Only initialize when transitioning from not showing to showing
+		if (showDice && !lastShowDiceValue && diceContainer) {
+			lastShowDiceValue = true;
 
-		if (shouldInit) {
-			// Use untrack to check initialization status without creating reactive dependency
+			// Check initialization WITHOUT reactive dependency using untrack
 			// This prevents the effect from re-running when isInitialized changes
 			const alreadyInitialized = untrack(() => isDiceBoxInitialized());
 
-			if (!alreadyInitialized && !initAttempted) {
-				initAttempted = true;
-
+			if (!alreadyInitialized) {
 				// Initialize DiceBox with error handling
 				initializeDiceBox(diceContainer).catch((error) => {
 					console.warn(
@@ -59,10 +56,10 @@
 					// Game remains functional without 3D dice
 				});
 			}
-		} else {
-			// Reset init attempt flag when leaving game screens
-			// This allows re-initialization if user navigates back to game
-			initAttempted = false;
+		} else if (!showDice) {
+			// Reset tracking when leaving game screens
+			// This allows re-initialization if user navigates back
+			lastShowDiceValue = false;
 		}
 	});
 </script>
