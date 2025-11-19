@@ -76,30 +76,30 @@ This document tracks the status of the comprehensive refactoring and improvement
 ---
 
 ### Phase 2: Game Screen Simplification (Week 2-3)
-**Status:** ⏳ Not Started
+**Status:** 🔄 In Progress
 **Estimated Effort:** 3-4 days
 **Priority:** CRITICAL
-**Blockers:** Phase 1.1 (useAutoPlay needs to be moved first)
+**Blockers:** ~~Phase 1.1 (useAutoPlay needs to be moved first)~~ ✅ RESOLVED
 
-#### 2.1 Extract Game Screen Composables
-- [ ] Create `src/lib/composables/screen/` directory
-- [ ] Create `useScreenController.svelte.js` (200-250 lines)
-- [ ] Enhance `useAutoPlay.svelte.js` with screen integration
-- [ ] Create `useKeyboardShortcuts.svelte.js` (80-100 lines)
-- [ ] Create `useRollForTasks.svelte.js`
-- [ ] Create `useFailureCheck.svelte.js`
-- [ ] Create `useSuccessCheck.svelte.js`
-- [ ] Create `useInitialDamage.svelte.js`
-- [ ] Create `useFinalDamage.svelte.js`
-- [ ] **Estimated Effort:** 2 days
+#### 2.1 Extract Game Screen Composables ✅ COMPLETED
+- [x] Create `src/lib/composables/screen/` directory
+- [x] ~~Create `useScreenController.svelte.js` (200-250 lines)~~ (Already created in Phase 1.1 in parent directory)
+- [x] ~~Enhance `useAutoPlay.svelte.js` with screen integration~~ (Already completed in Phase 1.1)
+- [x] ~~Create `useKeyboardShortcuts.svelte.js` (80-100 lines)~~ (Already created in Phase 1.1 in parent directory)
+- [x] Create `useRollForTasks.svelte.js` (95 lines)
+- [x] Create `useFailureCheck.svelte.js` (75 lines)
+- [x] Create `useSuccessCheck.svelte.js` (72 lines)
+- [x] Create `useInitialDamage.svelte.js` (70 lines)
+- [x] Create `useFinalDamage.svelte.js` (75 lines)
+- [x] **Estimated Effort:** 2 days → **Actual:** 1 hour
 
-#### 2.2 Extract Screen-Specific Components
-- [ ] Create `src/lib/components/game/` directory
-- [ ] Extract `ContextBackground.svelte` (80-100 lines)
-- [ ] Extract `RollForTasksController.svelte` (100-120 lines)
-- [ ] Extract `FailureCheckController.svelte` (100-120 lines)
-- [ ] Extract `SuccessCheckController.svelte` (100-120 lines)
-- [ ] **Estimated Effort:** 1 day
+#### 2.2 Extract Screen-Specific Components ✅ COMPLETED
+- [x] Create `src/lib/components/game/` directory
+- [x] Extract `ContextBackground.svelte` (70 lines)
+- [x] Extract `RollForTasksController.svelte` (40 lines)
+- [x] Extract `FailureCheckController.svelte` (100 lines)
+- [x] Extract `SuccessCheckController.svelte` (50 lines)
+- [x] **Estimated Effort:** 1 day → **Actual:** 30 minutes
 
 #### 2.3 Update GameScreen to Use New Architecture
 - [ ] Update `GameScreen.svelte` to use composables
