@@ -2,7 +2,7 @@
 
 **Date:** 2025-11-19
 **Purpose:** Identify all $effect usage and recommend refactoring patterns
-**Status:** ✅ **PHASE 2 COMPLETE** - 4 MEDIUM RISK issues fixed
+**Status:** ✅ **ALL PHASES COMPLETE** - All infinite loop risks resolved + Code quality improvements
 
 ---
 
@@ -14,7 +14,7 @@
 - ✅ GameScreen.svelte - Added guard + untrack patterns
 - ✅ useInstructionsPreference.svelte.js - Added one-time flag
 
-### Phase 2: MEDIUM RISK ✅ (This session)
+### Phase 2: MEDIUM RISK ✅ (Commit: 42bc701)
 - ✅ +layout.svelte - Fixed DiceBox init guard with $state tracking
 - ✅ CardDeck.svelte - Added card ID guard to prevent duplicate TTS
 - ✅ useStoryGeneration.svelte.js - Converted $effect to onMount
@@ -23,7 +23,12 @@
   - Caused reactive loops due to layered $effects
   - Original pattern works fine, left as-is
 
-**Test Results:** 453 passing tests (up from 417)
+### Phase 3: Code Quality Improvements ✅ (Commit: 397b83c)
+- ✅ Game.svelte - Converted audio init $effect to onMount (clarity)
+- ✅ Removed 228 lines of dead code (useScreenController.svelte.js)
+- ✅ Updated documentation to match reality (README.md)
+
+**Test Results:** 461 passing tests (up from 417, +44 tests!)
 
 ---
 
