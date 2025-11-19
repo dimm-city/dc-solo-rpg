@@ -146,12 +146,12 @@ export function useRollForTasks() {
 
 	function roll() {
 		// Will be implemented in Phase 2
-		console.log('[useRollForTasks] roll() - placeholder for Phase 2');
+		logger.debug('[useRollForTasks] roll() - placeholder for Phase 2');
 	}
 
 	function confirm() {
 		// Will be implemented in Phase 2
-		console.log('[useRollForTasks] confirm() - placeholder for Phase 2');
+		logger.debug('[useRollForTasks] confirm() - placeholder for Phase 2');
 	}
 
 	function reset() {

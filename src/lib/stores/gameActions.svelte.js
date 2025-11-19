@@ -489,7 +489,7 @@ export async function recordRound(journalEntry) {
 				attemptedEntry: journalEntry
 			}
 		);
-		console.warn(
+		logger.warn(
 			`[recordRound] WARNING: Cannot save journal entry - an entry already exists for round ${gameState.round}. Each round can only have one journal entry.`
 		);
 		return; // Prevent duplicate

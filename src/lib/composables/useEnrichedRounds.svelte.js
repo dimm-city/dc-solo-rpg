@@ -10,7 +10,7 @@
  * @example
  * const enrichedRounds = useEnrichedRounds(savedGame);
  * enrichedRounds.forEach(round => {
- *   console.log(round.roundNumber, round.cards, round.journalEntry);
+ *   logger.debug(round.roundNumber, round.cards, round.journalEntry);
  * });
  */
 export function useEnrichedRounds(savedGame) {
@@ -19,7 +19,7 @@ export function useEnrichedRounds(savedGame) {
 	const cardLog = savedGame.cardLog;
 	const journalEntries = savedGame.journalEntries || [];
 
-	console.log('[useEnrichedRounds] Processing saved game:', {
+	logger.debug('[useEnrichedRounds] Processing saved game:', {
 		totalCards: cardLog.length,
 		totalJournals: journalEntries.length,
 		journalRounds: journalEntries.map((j) => j.round),
@@ -28,7 +28,7 @@ export function useEnrichedRounds(savedGame) {
 
 	// Log each journal entry in detail
 	journalEntries.forEach((j, idx) => {
-		console.log(`[useEnrichedRounds] Journal ${idx}:`, {
+		logger.debug(`[useEnrichedRounds] Journal ${idx}:`, {
 			round: j.round,
 			hasText: !!j.text,
 			textLength: j.text?.length || 0,
@@ -65,7 +65,7 @@ export function useEnrichedRounds(savedGame) {
 			// Find journal entry for this round
 			const journalEntry = journalEntries.find((j) => j.round === roundNum);
 
-			console.log(`[useEnrichedRounds] Round ${roundNum}:`, {
+			logger.debug(`[useEnrichedRounds] Round ${roundNum}:`, {
 				cardCount: cards.length,
 				hasJournal: !!journalEntry,
 				journalText: journalEntry?.text?.substring(0, 50)
@@ -108,6 +108,6 @@ export function useEnrichedRounds(savedGame) {
 			};
 		});
 
-	console.log('[useEnrichedRounds] Total enriched rounds:', rounds.length);
+	logger.debug('[useEnrichedRounds] Total enriched rounds:', rounds.length);
 	return rounds;
 }

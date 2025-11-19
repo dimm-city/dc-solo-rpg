@@ -3,6 +3,7 @@
  * This replaces the old gameStore and eliminates the StateMachine class
  */
 import { transitionGraph } from './transitions.js';
+import { logger } from '../utils/logger.js';
 import { rollDie, rollAdvantage, rollDisadvantage } from '../services/random.js';
 
 // Helper for random number generation
@@ -21,7 +22,7 @@ let rollWithModifiers = () => {
 	// Check for Lucid state (advantage)
 	if (gameState.isLucid) {
 		const roll = rollAdvantage(20);
-		console.log(`[rollWithModifiers] Lucid roll (advantage): ${roll}`);
+		logger.debug(`[rollWithModifiers] Lucid roll (advantage): ${roll}`);
 		gameState.isLucid = false; // Clear state after use
 		return { roll, wasLucid: true, wasSurreal: false };
 	}
@@ -29,7 +30,7 @@ let rollWithModifiers = () => {
 	// Check for Surreal state (disadvantage)
 	if (gameState.isSurreal) {
 		const roll = rollDisadvantage(20);
-		console.log(`[rollWithModifiers] Surreal roll (disadvantage): ${roll}`);
+		logger.debug(`[rollWithModifiers] Surreal roll (disadvantage): ${roll}`);
 		gameState.isSurreal = false; // Clear state after use
 		return { roll, wasSurreal: true, wasLucid: false };
 	}

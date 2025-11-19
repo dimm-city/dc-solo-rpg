@@ -13,6 +13,7 @@
  */
 
 import { generateStory } from '$lib/services/storyGeneration.js';
+import { logger } from '$lib/utils/logger.js';
 import { generateAudioNarration, isTTSAvailable } from '$lib/services/textToSpeech.js';
 import { saveAIStory, loadAIStory, deleteAIStory } from '$lib/stores/indexedDBStorage.js';
 import { isAIConfigured } from '$lib/services/aiSettings.js';
@@ -92,7 +93,7 @@ export function useStoryGeneration(savedGame, saveKey) {
 				try {
 					audioBlob = await generateAudioNarration(generatedStory.text);
 				} catch (audioError) {
-					console.error('Audio generation failed:', audioError);
+					logger.error('Audio generation failed:', audioError);
 					errorMessage = `Story generated, but audio failed: ${audioError.message}`;
 				} finally {
 					isGeneratingAudio = false;
@@ -112,7 +113,7 @@ export function useStoryGeneration(savedGame, saveKey) {
 			hasStory = true;
 			progressMessage = '';
 		} catch (error) {
-			console.error('Story generation failed:', error);
+			logger.error('Story generation failed:', error);
 			errorMessage = error.message || 'Failed to generate story';
 			progressMessage = '';
 		} finally {

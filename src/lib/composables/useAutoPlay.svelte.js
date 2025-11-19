@@ -29,6 +29,7 @@
  */
 
 import { getAudioSettings, getGameplaySettings, speak } from '../stores/audioStore.svelte.js';
+import { logger } from '$lib/utils/logger.js';
 
 /**
  * Create a cancellable delay
@@ -124,7 +125,7 @@ export function useAutoPlay() {
 					action();
 				}
 			} catch (error) {
-				console.error('[useAutoPlay] advance error:', error);
+				logger.error('[useAutoPlay] advance error:', error);
 			} finally {
 				// Remove from active cancellers
 				activeCancellers = activeCancellers.filter((c) => c !== cancel);
@@ -288,7 +289,7 @@ export function autoAdvance({ text = null, shouldRead = false, action, customDel
 				action();
 			}
 		} catch (error) {
-			console.error('[AutoAdvance] Error:', error);
+			logger.error('[AutoAdvance] Error:', error);
 		}
 	})();
 

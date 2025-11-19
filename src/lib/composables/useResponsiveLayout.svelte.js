@@ -15,7 +15,7 @@
  *
  * // Access reactive state
  * $: if (layout.isDesktop) {
- *   console.log('Desktop detected');
+ *   logger.debug('Desktop detected');
  * }
  * ```
  *
@@ -24,6 +24,7 @@
  */
 
 import { onMount, onDestroy } from 'svelte';
+import { logger } from '$lib/utils/logger.js';
 
 export function useResponsiveLayout() {
 	// Reactive state using Svelte 5 runes

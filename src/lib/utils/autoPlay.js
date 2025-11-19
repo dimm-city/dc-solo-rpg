@@ -4,6 +4,7 @@
  */
 
 import { getAudioSettings, getGameplaySettings, speak } from '../stores/audioStore.svelte.js';
+import { logger } from './logger.js';
 
 /**
  * Create a cancellable delay
@@ -84,7 +85,7 @@ export function autoAdvance({ text = null, shouldRead = false, action, customDel
 				action();
 			}
 		} catch (error) {
-			console.error('[AutoAdvance] Error:', error);
+			logger.error('[AutoAdvance] Error:', error);
 		}
 	})();
 

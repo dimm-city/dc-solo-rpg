@@ -8,13 +8,14 @@
  * @returns {Object} Navigation state and control functions
  *
  * @example
- * const nav = useStoryNavigation(10, () => console.log('exit'));
+ * const nav = useStoryNavigation(10, () => logger.debug('exit'));
  * nav.nextRound(); // Navigate to next round
  * nav.previousRound(); // Navigate to previous round
  * nav.jumpToRound(5); // Jump to specific round
  */
 
 import { ANIMATION_DURATION } from '$lib/constants/animations.js';
+import { logger } from '$lib/utils/logger.js';
 
 export function useStoryNavigation(totalRounds, onExit) {
 	let currentRoundIndex = $state(0);

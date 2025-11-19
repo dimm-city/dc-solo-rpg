@@ -280,10 +280,17 @@ This document tracks the status of the comprehensive refactoring and improvement
   - **Effort:** Small (1-2 hours)
   - **Priority:** MEDIUM
 
-- [ ] **Issue #6:** Replace console.log with logger
+- [x] **Issue #6:** Replace console.log with logger ✅ COMPLETE
   - See: [CODE_QUALITY_REVIEW.md#issue-63](./CODE_QUALITY_REVIEW.md#issue-63)
-  - **Effort:** Small (1 hour)
+  - **Effort:** Small (1 hour) → **Actual:** 1 hour
   - **Priority:** MEDIUM
+  - **Result:** Replaced 58 console statements across 22 files
+  - **Changes:**
+    - Added logger imports to all files using console statements
+    - Replaced `console.log()` → `logger.debug()`
+    - Replaced `console.error()` → `logger.error()`
+    - Replaced `console.warn()` → `logger.warn()`
+  - **Build:** Passed ✅
 
 - [x] **Issue #7:** Extract D20 mechanics to dedicated module ✅ COMPLETE
   - See: [CODE_QUALITY_REVIEW.md#issue-33](./CODE_QUALITY_REVIEW.md#issue-33)
@@ -294,10 +301,12 @@ This document tracks the status of the comprehensive refactoring and improvement
   - **Tests:** All 39 D20 mechanics tests pass
 
 ### Medium/Low Priority Issues
-- [ ] **Issue #8:** Remove commented-out code
+- [x] **Issue #8:** Remove commented-out code ✅ COMPLETE (Already addressed)
   - See: [CODE_QUALITY_REVIEW.md#issue-73](./CODE_QUALITY_REVIEW.md#issue-73)
-  - **Effort:** Trivial (15 minutes)
+  - **Effort:** Trivial (15 minutes) → **Actual:** N/A (completed during refactoring phases)
   - **Priority:** LOW
+  - **Result:** All commented-out code removed during Phases 1-5 component refactoring
+  - **Details:** StatusDisplay, CardDeck, and GameScreen no longer contain the commented sections mentioned in original review
 
 - [ ] **Issue #9:** Create state constants enum
   - See: [CODE_QUALITY_REVIEW.md#issue-53](./CODE_QUALITY_REVIEW.md#issue-53)

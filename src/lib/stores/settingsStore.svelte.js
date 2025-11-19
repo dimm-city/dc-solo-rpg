@@ -1,4 +1,5 @@
 import { browser } from '$app/environment';
+import { logger } from '../utils/logger.js';
 
 /**
  * Settings store with localStorage persistence
@@ -31,7 +32,7 @@ function loadSettings() {
 			};
 		}
 	} catch (e) {
-		console.error('Failed to load settings from localStorage:', e);
+		logger.error('Failed to load settings from localStorage:', e);
 	}
 
 	return { ...DEFAULT_SETTINGS };
@@ -47,7 +48,7 @@ function saveSettings(settings) {
 	try {
 		localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 	} catch (e) {
-		console.error('Failed to save settings to localStorage:', e);
+		logger.error('Failed to save settings to localStorage:', e);
 	}
 }
 

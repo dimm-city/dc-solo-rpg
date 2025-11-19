@@ -41,7 +41,7 @@
 
 			return result;
 		} catch (error) {
-			console.error('[ThreeJSDiceBoxRoller] Error rolling dice:', error);
+			logger.error('[ThreeJSDiceBoxRoller] Error rolling dice:', error);
 			rolling = false;
 			throw error;
 		}

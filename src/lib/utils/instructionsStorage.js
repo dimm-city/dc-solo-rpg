@@ -19,7 +19,7 @@ export function hasSeenInstructions() {
 		const seen = localStorage.getItem(STORAGE_KEY);
 		return seen === 'true';
 	} catch (error) {
-		console.warn('[instructionsStorage] Failed to read from localStorage:', error);
+		logger.warn('[instructionsStorage] Failed to read from localStorage:', error);
 		return false;
 	}
 }
@@ -35,7 +35,7 @@ export function markInstructionsAsSeen() {
 	try {
 		localStorage.setItem(STORAGE_KEY, 'true');
 	} catch (error) {
-		console.warn('[instructionsStorage] Failed to write to localStorage:', error);
+		logger.warn('[instructionsStorage] Failed to write to localStorage:', error);
 	}
 }
 
@@ -50,7 +50,7 @@ export function clearInstructionsSeen() {
 	try {
 		localStorage.removeItem(STORAGE_KEY);
 	} catch (error) {
-		console.warn('[instructionsStorage] Failed to clear localStorage:', error);
+		logger.warn('[instructionsStorage] Failed to clear localStorage:', error);
 	}
 }
 
@@ -67,7 +67,7 @@ export function hasShownInstructionsInSession() {
 		const shown = sessionStorage.getItem(SESSION_KEY);
 		return shown === 'true';
 	} catch (error) {
-		console.warn('[instructionsStorage] Failed to read from sessionStorage:', error);
+		logger.warn('[instructionsStorage] Failed to read from sessionStorage:', error);
 		return false;
 	}
 }
@@ -83,6 +83,6 @@ export function markInstructionsShownInSession() {
 	try {
 		sessionStorage.setItem(SESSION_KEY, 'true');
 	} catch (error) {
-		console.warn('[instructionsStorage] Failed to write to sessionStorage:', error);
+		logger.warn('[instructionsStorage] Failed to write to sessionStorage:', error);
 	}
 }

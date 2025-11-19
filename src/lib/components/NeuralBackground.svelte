@@ -74,7 +74,7 @@
 
 			animationFrameId = requestAnimationFrame(animateParticles);
 		} catch (err) {
-			console.warn('Animation frame error, stopping animations:', err);
+			logger.warn('Animation frame error, stopping animations:', err);
 			if (animationFrameId) {
 				cancelAnimationFrame(animationFrameId);
 			}
@@ -94,7 +94,7 @@
 			});
 
 			if (!ctx) {
-				console.warn('Failed to get canvas 2D context, skipping animations');
+				logger.warn('Failed to get canvas 2D context, skipping animations');
 				return;
 			}
 
@@ -117,7 +117,7 @@
 				window.removeEventListener('resize', handleResize);
 			};
 		} catch (err) {
-			console.warn('Canvas initialization failed, skipping animations:', err);
+			logger.warn('Canvas initialization failed, skipping animations:', err);
 		}
 	});
 

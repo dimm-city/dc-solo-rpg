@@ -1,4 +1,5 @@
 import { getProvider } from './providers/index.js';
+import { logger } from '../../utils/logger.js';
 
 /**
  * Reading speed mappings
@@ -53,7 +54,7 @@ class TTSService {
 
 			return true;
 		} catch (error) {
-			console.error('[TTS] Failed to set provider:', error);
+			logger.error('[TTS] Failed to set provider:', error);
 			throw error;
 		}
 	}

@@ -7,6 +7,7 @@
 	import { cubicOut } from 'svelte/easing';
 	import { ANIMATION_DURATION } from '$lib/constants/animations.js';
 	import { getAudioSettings, getGameplaySettings, speak } from '../stores/audioStore.svelte.js';
+	import { logger } from '../utils/logger.js';
 	import AudioRecorder from './journal/AudioRecorder.svelte';
 	import AudioPlayback from './journal/AudioPlayback.svelte';
 	import AutoJournalTimer from './journal/AutoJournalTimer.svelte';
@@ -99,7 +100,7 @@
 				}
 			}, 1000);
 		} catch (error) {
-			console.error('Error starting recording:', error);
+			logger.error('[JournalEntry] Error starting recording:', error);
 			hasAudioPermission = false;
 			audioError = 'Microphone access denied. Please enable microphone permissions.';
 		}

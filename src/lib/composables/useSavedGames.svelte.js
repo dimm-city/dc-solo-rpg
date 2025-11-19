@@ -12,6 +12,7 @@
  */
 
 import { loadAllSaves } from '$lib/stores/indexedDBStorage.js';
+import { logger } from '$lib/utils/logger.js';
 
 export function useSavedGames() {
 	let completedGames = $state([]);
@@ -42,7 +43,7 @@ export function useSavedGames() {
 
 			completedGames = completed;
 		} catch (err) {
-			console.error('Failed to load completed games:', err);
+			logger.error('Failed to load completed games:', err);
 			error = 'Failed to load saved games. Please try again.';
 		} finally {
 			isLoading = false;

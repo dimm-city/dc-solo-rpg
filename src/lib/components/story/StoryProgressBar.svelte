@@ -10,7 +10,7 @@
  * <StoryProgressBar
  *   currentRound={2}
  *   totalRounds={10}
- *   onJumpToRound={(index) => console.log('Jump to', index)}
+ *   onJumpToRound={(index) => logger.debug('Jump to', index)}
  * />
  */
 

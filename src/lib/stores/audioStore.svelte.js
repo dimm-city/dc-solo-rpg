@@ -1,4 +1,5 @@
 import { ttsService } from '$lib/services/tts/textToSpeech.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * Audio and gameplay auto-play settings store
@@ -77,7 +78,7 @@ function loadSettings() {
 			});
 		}
 	} catch (error) {
-		console.error('[AudioStore] Failed to load settings:', error);
+		logger.error('[AudioStore] Failed to load settings:', error);
 	}
 }
 
@@ -94,7 +95,7 @@ function saveSettings() {
 		};
 		localStorage.setItem('dc-solo-rpg-audio-settings', JSON.stringify(toSave));
 	} catch (error) {
-		console.error('[AudioStore] Failed to save settings:', error);
+		logger.error('[AudioStore] Failed to save settings:', error);
 	}
 }
 
@@ -158,7 +159,7 @@ export async function speak(text, options = {}) {
 		ttsState.isSpeaking = false;
 		ttsState.currentText = null;
 	} catch (error) {
-		console.error('[AudioStore] TTS error:', error);
+		logger.error('[AudioStore] TTS error:', error);
 		ttsState.isSpeaking = false;
 		ttsState.currentText = null;
 	}
@@ -181,7 +182,7 @@ export async function getAvailableVoices() {
 	try {
 		return await ttsService.getVoices();
 	} catch (error) {
-		console.error('[AudioStore] Failed to get voices:', error);
+		logger.error('[AudioStore] Failed to get voices:', error);
 		return [];
 	}
 }

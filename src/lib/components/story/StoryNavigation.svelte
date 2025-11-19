@@ -11,12 +11,13 @@
  *   totalRounds={10}
  *   canGoPrevious={true}
  *   canGoNext={true}
- *   onPrevious={() => console.log('prev')}
- *   onNext={() => console.log('next')}
+ *   onPrevious={() => logger.debug('prev')}
+ *   onNext={() => logger.debug('next')}
  * />
  */
 
 import AugmentedButton from '../AugmentedButton.svelte';
+import { logger } from '../../utils/logger.js';
 
 let {
 	currentRound = 0,
