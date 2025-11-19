@@ -102,7 +102,7 @@
 	 * Auto-read card and auto-continue when revealed
 	 * ✅ FIXED: Guard pattern to prevent multiple TTS triggers for same card
 	 */
-	let autoPlayCanceller = $state(null);
+	let autoPlayCanceller = null; // Plain variable - no need for $state, just holds reference
 	let lastRevealedCardId = $state('');
 
 	$effect(() => {
