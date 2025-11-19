@@ -23,14 +23,20 @@ export function useInstructionsPreference(transitionTo, exitGame) {
 	// Current view state
 	let currentView = $state('choice'); // 'choice' or 'instructions'
 
-	// Auto-skip logic - check if user has already seen instructions
+	// ✅ FIXED: Use guard pattern to prevent multiple executions
+	// Auto-skip logic - check if user has already seen instructions (one-time check)
+	let hasCheckedPreference = false;
 	$effect(() => {
-		const instructionsSeen = hasSeenInstructions();
-		const instructionsShownInSession = hasShownInstructionsInSession();
+		if (!hasCheckedPreference) {
+			hasCheckedPreference = true;
 
-		if (instructionsSeen || instructionsShownInSession) {
-			// Skip directly to game intro overlay
-			transitionTo('showIntro');
+			const instructionsSeen = hasSeenInstructions();
+			const instructionsShownInSession = hasShownInstructionsInSession();
+
+			if (instructionsSeen || instructionsShownInSession) {
+				// Skip directly to game intro overlay
+				transitionTo('showIntro');
+			}
 		}
 	});
 

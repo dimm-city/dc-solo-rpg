@@ -189,23 +189,31 @@
 		};
 	});
 
-	// Auto-journal timer effect
+	// ✅ FIXED: Extract timer logic to pure function, use proper cleanup pattern
 	$effect(() => {
+		// Only react to settings and journal saved state
 		const gameplaySettings = getGameplaySettings();
 		const audioSettings = getAudioSettings();
+		const isSaved = journalSaved;
 
-		// Clear any existing timer
-		if (autoJournalInterval) {
-			clearInterval(autoJournalInterval);
-			autoJournalInterval = null;
-		}
-		if (autoJournalTimer) {
-			clearTimeout(autoJournalTimer);
-			autoJournalTimer = null;
-		}
+		// Setup timers based on current settings
+		const cleanup = setupAutoJournaling(gameplaySettings, audioSettings, isSaved);
+
+		// Cleanup on effect re-run or unmount
+		return cleanup;
+	});
+
+	/**
+	 * Pure function to setup auto-journaling timers
+	 * Returns cleanup function
+	 */
+	function setupAutoJournaling(gameplaySettings, audioSettings, isSaved) {
+		let interval = null;
+		let timeout = null;
+		let timeRemaining = 0;
 
 		// Only run timer if not saved yet
-		if (!journalSaved) {
+		if (!isSaved) {
 			// Speak prompt if enabled
 			if (audioSettings.autoReadPrompts) {
 				speak('Take a moment to reflect on what just happened.');
@@ -214,38 +222,44 @@
 			// Skip mode: immediately save
 			if (gameplaySettings.autoHandleJournaling === 'skip') {
 				// Small delay to allow UI to settle
-				autoJournalTimer = setTimeout(() => {
+				timeout = setTimeout(() => {
 					handleSave();
 				}, 500);
 			}
 			// Timed mode: countdown timer
 			else if (gameplaySettings.autoHandleJournaling === 'timed') {
 				const pauseTime = gameplaySettings.journalPauseTime;
-				autoJournalTimeRemaining = pauseTime;
+				timeRemaining = pauseTime;
+				autoJournalTimeRemaining = timeRemaining;
 
 				// Update countdown every 100ms for smooth UI
-				autoJournalInterval = setInterval(() => {
-					autoJournalTimeRemaining = Math.max(0, autoJournalTimeRemaining - 100);
+				interval = setInterval(() => {
+					timeRemaining = Math.max(0, timeRemaining - 100);
+					autoJournalTimeRemaining = timeRemaining;
 
-					if (autoJournalTimeRemaining <= 0) {
-						clearInterval(autoJournalInterval);
-						autoJournalInterval = null;
+					if (timeRemaining <= 0) {
+						clearInterval(interval);
+						interval = null;
 						handleSave();
 					}
 				}, 100);
 			}
 		}
 
-		// Cleanup on unmount or when saved
+		// Store references for cancelAutoJournalTimer
+		autoJournalTimer = timeout;
+		autoJournalInterval = interval;
+
+		// Return cleanup function
 		return () => {
-			if (autoJournalInterval) {
-				clearInterval(autoJournalInterval);
+			if (interval) {
+				clearInterval(interval);
 			}
-			if (autoJournalTimer) {
-				clearTimeout(autoJournalTimer);
+			if (timeout) {
+				clearTimeout(timeout);
 			}
 		};
-	});
+	}
 
 	// Cancel timer if user starts interacting
 	function cancelAutoJournalTimer() {

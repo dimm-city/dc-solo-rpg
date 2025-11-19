@@ -21,7 +21,7 @@
 	import ButtonBar from './ButtonBar.svelte';
 	import OverlayModal from './OverlayModal.svelte';
 	import SettingsModal from './settings/SettingsModal.svelte';
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 
 	// Screen-specific components
 	import ContextBackground from './game/ContextBackground.svelte';
@@ -342,25 +342,45 @@
 
 	/**
 	 * SINGLE UNIFIED SCREEN CHANGE HANDLER
+	 * ✅ FIXED: Use guard pattern to prevent re-triggering on same screen
 	 * Consolidates all screen-entry logic to avoid multiple $effect blocks interfering
 	 * Handles: state resets, keyboard hints, auto-play triggers
 	 */
+	let lastScreen = '';
 	$effect(() => {
-		// Cancel any existing auto-play first
-		cancelAutoPlay();
+		// Only run when screen actually changes
+		if (currentScreen !== lastScreen) {
+			const prevScreen = lastScreen;
+			lastScreen = currentScreen;
 
-		// Handle screen-specific entry logic
-		switch (currentScreen) {
+			// Cancel previous screen's auto-play (using untrack to prevent loop)
+			untrack(() => {
+				cancelAutoPlay();
+			});
+
+			// Handle screen-specific entry logic (delay to next tick)
+			setTimeout(() => {
+				handleScreenEntry(currentScreen, prevScreen);
+			}, 0);
+		}
+	});
+
+	/**
+	 * Pure screen entry handler - called once per screen change
+	 * Separated from $effect to prevent reactive loops
+	 */
+	function handleScreenEntry(screen, prevScreen) {
+		switch (screen) {
 			case 'showIntro':
 				// Trigger auto-play for intro screen
-				setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
+				triggerAutoPlayForCurrentScreen();
 				break;
 
 			case 'initialDamageRoll':
 				// Reset state using composable
 				initialDamage.resetState();
 				// Trigger auto-play
-				setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
+				triggerAutoPlayForCurrentScreen();
 				break;
 
 			case 'startRound':
@@ -372,35 +392,35 @@
 					}
 				}
 				// Trigger auto-play
-				setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
+				triggerAutoPlayForCurrentScreen();
 				break;
 
 			case 'rollForTasks':
 				// Reset state using composable
 				rollForTasks.resetState();
 				// Trigger auto-play
-				setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
+				triggerAutoPlayForCurrentScreen();
 				break;
 
 			case 'failureCheck':
 				// Reset state using composable
 				failureCheck.resetState();
 				// Trigger auto-play
-				setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
+				triggerAutoPlayForCurrentScreen();
 				break;
 
 			case 'successCheck':
 				// Reset state using composable
 				successCheck.resetState();
 				// Trigger auto-play
-				setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
+				triggerAutoPlayForCurrentScreen();
 				break;
 
 			case 'finalDamageRoll':
 				// Reset state using composable
 				finalDamage.resetState();
 				// Trigger auto-play
-				setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
+				triggerAutoPlayForCurrentScreen();
 				break;
 
 			case 'log':
@@ -409,7 +429,7 @@
 				journalSaved = false;
 				break;
 		}
-	});
+	}
 
 	/**
 	 * Trigger auto-play for the current screen

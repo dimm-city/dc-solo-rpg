@@ -1,4 +1,5 @@
 <script>
+	import { onMount } from 'svelte';
 	import AugmentedButton from './AugmentedButton.svelte';
 	import { hasSavedGame, getSaveMetadata } from '../stores/indexedDBStorage.js';
 	import { resumeGame, deleteSavedGame } from '../stores/gameActions.svelte.js';
@@ -22,21 +23,22 @@
 	let savedGameExists = $state(false);
 	let saveMetadata = $state(null);
 	let customGames = $state([]);
-	let allGames = $state([]);
 	let fileInput = $state(null);
 	let uploading = $state(false);
 
-	// Load custom games on mount
-	$effect(() => {
+	// ✅ FIXED: Use $derived instead of chained $effect
+	// Merge custom games with server games reactively
+	let allGames = $derived(
+		[...customGames, ...games].sort((a, b) => a.title.localeCompare(b.title))
+	);
+
+	// ✅ FIXED: Use onMount instead of $effect for one-time initialization
+	onMount(() => {
 		customGames = getCustomGames();
 	});
 
-	// Merge custom games with server games
-	$effect(() => {
-		allGames = [...customGames, ...games].sort((a, b) => a.title.localeCompare(b.title));
-	});
-
-	// Check for saved game when game selection changes
+	// ✅ FIXED: Use guard pattern to prevent re-triggering on same game
+	let lastCheckedSlug = '';
 	$effect(() => {
 		if (selectedGame) {
 			const gameSlug =
@@ -44,19 +46,26 @@
 				selectedGame.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') ||
 				'default';
 
-			// Check for saved game (async)
-			hasSavedGame(gameSlug).then((exists) => {
-				savedGameExists = exists;
-				if (exists) {
-					// Load metadata if save exists
-					getSaveMetadata(gameSlug).then((metadata) => {
-						saveMetadata = metadata;
-					});
-				} else {
-					saveMetadata = null;
-				}
-			});
+			// Only check if slug changed (prevent re-trigger on state updates)
+			if (gameSlug !== lastCheckedSlug) {
+				lastCheckedSlug = gameSlug;
+
+				// Check for saved game (async)
+				hasSavedGame(gameSlug).then((exists) => {
+					savedGameExists = exists;
+					if (exists) {
+						// Load metadata if save exists
+						getSaveMetadata(gameSlug).then((metadata) => {
+							saveMetadata = metadata;
+						});
+					} else {
+						saveMetadata = null;
+					}
+				});
+			}
 		} else {
+			// Reset when no game selected
+			lastCheckedSlug = '';
 			savedGameExists = false;
 			saveMetadata = null;
 		}
