@@ -142,38 +142,11 @@ export function calculateSalvationResult(roll, threshold) {
 		};
 	}
 
-	// Natural 20: Remove 2 tokens + Lucid
+	// Natural 20: Remove 2 tokens + Lucid (critical success)
 	if (roll === 20) {
 		return {
 			tokenChange: -2,
 			gainedLucid: true,
-			gainedSurreal: false
-		};
-	}
-
-	// Success (threshold to 19): Remove 1 token
-	if (roll >= threshold && roll <= 19) {
-		return {
-			tokenChange: -1,
-			gainedLucid: false,
-			gainedSurreal: false
-		};
-	}
-
-	// Partial failure (6 to threshold-1): No change
-	if (roll >= 6 && roll < threshold) {
-		return {
-			tokenChange: 0,
-			gainedLucid: false,
-			gainedSurreal: false
-		};
-	}
-
-	// Failure (2-5): Add 1 token
-	if (roll >= 2 && roll <= 5) {
-		return {
-			tokenChange: 1,
-			gainedLucid: false,
 			gainedSurreal: false
 		};
 	}
@@ -184,6 +157,26 @@ export function calculateSalvationResult(roll, threshold) {
 			tokenChange: 2,
 			gainedLucid: false,
 			gainedSurreal: true
+		};
+	}
+
+	// Success (at or above threshold): Remove 1 token
+	if (roll >= threshold && roll <= 19) {
+		return {
+			tokenChange: -1,
+			gainedLucid: false,
+			gainedSurreal: false
+		};
+	}
+
+	// Failure (below threshold): Add 1 token
+	// Per CLAUDE.md: "Below threshold: +1 token (failure)"
+	// This includes ALL rolls below threshold (not just 2-5)
+	if (roll >= 2 && roll < threshold) {
+		return {
+			tokenChange: 1,
+			gainedLucid: false,
+			gainedSurreal: false
 		};
 	}
 

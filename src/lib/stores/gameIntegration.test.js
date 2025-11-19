@@ -521,39 +521,39 @@ describe('Game Integration Tests - Based on Documentation', () => {
 			gameState.state = 'rollForTasks';
 		});
 
-		it('should convert D20 roll to card count', () => {
+		it('should convert D20 roll to card count', async () => {
 			// From CLAUDE.md implies rolling D20 determines cards to draw
 			// Testing the conversion logic
 
 			mockDieRoll(1);
-			let { cardCount } = rollForTasks();
+			let { cardCount } = await rollForTasks();
 			expect(cardCount).toBeGreaterThanOrEqual(1);
 			expect(cardCount).toBeLessThanOrEqual(6);
 
 			mockDieRoll(20);
-			({ cardCount } = rollForTasks());
+			({ cardCount } = await rollForTasks());
 			expect(cardCount).toBeGreaterThanOrEqual(1);
 			expect(cardCount).toBeLessThanOrEqual(6);
 		});
 
-		it('should apply Lucid state to roll for tasks', () => {
+		it('should apply Lucid state to roll for tasks', async () => {
 			// From CLAUDE.md: "Lucid State: Advantage on next roll"
 			gameState.isLucid = true;
 
 			mockDieRollSequence([5, 18]); // Should keep 18
-			const { roll, wasLucid } = rollForTasks();
+			const { roll, wasLucid } = await rollForTasks();
 
 			expect(wasLucid).toBe(true);
 			expect(roll).toBe(18);
 			expect(gameState.isLucid).toBe(false); // Should clear
 		});
 
-		it('should apply Surreal state to roll for tasks', () => {
+		it('should apply Surreal state to roll for tasks', async () => {
 			// From CLAUDE.md: "Surreal State: Disadvantage on next roll"
 			gameState.isSurreal = true;
 
 			mockDieRollSequence([5, 18]); // Should keep 5
-			const { roll, wasSurreal } = rollForTasks();
+			const { roll, wasSurreal } = await rollForTasks();
 
 			expect(wasSurreal).toBe(true);
 			expect(roll).toBe(5);
@@ -582,13 +582,13 @@ describe('Game Integration Tests - Based on Documentation', () => {
 			};
 		});
 
-		it('should complete a full round: roll → draw → challenge → journal', () => {
+		it('should complete a full round: roll → draw → challenge → journal', async () => {
 			// Simulate a complete game round
 
 			// 1. Roll for tasks
 			gameState.state = 'rollForTasks';
 			mockDieRoll(10); // Mid-range roll
-			const { cardCount } = rollForTasks();
+			const { cardCount } = await rollForTasks();
 			expect(cardCount).toBeGreaterThanOrEqual(1);
 			expect(cardCount).toBeLessThanOrEqual(6);
 
@@ -625,14 +625,20 @@ describe('Game Integration Tests - Based on Documentation', () => {
 			applyPendingSuccessCheck();
 			expect(gameState.tokens).toBe(2);
 
+			// Reset to successCheck for next roll
+			gameState.state = 'successCheck';
+
 			// Second successful roll
 			mockDieRoll(12);
 			getSalvationCheckRoll();
 			applyPendingSuccessCheck();
 			expect(gameState.tokens).toBe(1);
 
+			// Reset to successCheck for final roll
+			gameState.state = 'successCheck';
+
 			// Final successful roll
-			mockDieRoll(20); // Critical success
+			mockDieRoll(20); // Critical success (-2 tokens)
 			getSalvationCheckRoll();
 			applyPendingSuccessCheck();
 
@@ -741,10 +747,14 @@ describe('Game Integration Tests - Based on Documentation', () => {
 			};
 
 			mockDieRoll(20);
-			const { stabilityGain } = getFailureCheckRoll();
+			const { roll, stabilityGain, lucidGained } = getFailureCheckRoll();
 
-			gameState.pendingUpdates.diceRoll = 20;
+			// Use the proper API to set pending state
+			gameState.pendingUpdates.diceRoll = roll;
 			gameState.pendingUpdates.towerGain = stabilityGain;
+			if (lucidGained) {
+				gameState.pendingUpdates.isLucid = true;
+			}
 
 			applyPendingDiceRoll();
 

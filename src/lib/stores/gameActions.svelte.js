@@ -104,6 +104,26 @@ export const startRound = () => {
  * D20 system: Roll d20, convert to 1-6 cards, handle Lucid/Surreal states
  * @returns {Promise<{roll: number, wasLucid: boolean, wasSurreal: boolean}>} Roll result and modifier flags
  */
+/**
+ * Roll for tasks - determines number of cards to draw this round
+ *
+ * Rolls D20 with Lucid/Surreal modifiers and converts to card count (1-6).
+ * Also handles granting Lucid/Surreal states for natural 20/1.
+ *
+ * @returns {Object} Roll results and card count
+ * @returns {number} roll - D20 roll result (1-20)
+ * @returns {number} cardCount - Number of cards to draw (1-6)
+ * @returns {boolean} wasLucid - True if Lucid state was active
+ * @returns {boolean} wasSurreal - True if Surreal state was active
+ * @returns {boolean} gainedLucid - True if natural 20 (grants Lucid)
+ * @returns {boolean} gainedSurreal - True if natural 1 (grants Surreal)
+ *
+ * @example
+ * // Test roll for tasks
+ * gameState.isLucid = true;
+ * const { roll, cardCount, wasLucid } = rollForTasks();
+ * expect(wasLucid).toBe(true); // Lucid was consumed
+ */
 export async function rollForTasks() {
 	// Roll d20 with Lucid/Surreal modifiers
 	const { roll, wasLucid, wasSurreal } = gameState.rollWithModifiers();
@@ -116,11 +136,15 @@ export async function rollForTasks() {
 	gameState.pendingUpdates.diceRoll = roll;
 	gameState.currentCard = null;
 
+	// Track if this roll grants Lucid/Surreal for next roll
+	const gainedLucid = roll === 20;
+	const gainedSurreal = roll === 1;
+
 	// Handle Lucid/Surreal state changes from this roll (deferred until after animation)
-	if (roll === 20) {
+	if (gainedLucid) {
 		gameState.pendingUpdates.isLucid = true;
 		logger.debug(`[rollForTasks] Natural 20! Next roll will be Lucid (advantage)`);
-	} else if (roll === 1) {
+	} else if (gainedSurreal) {
 		gameState.pendingUpdates.isSurreal = true;
 		logger.debug(`[rollForTasks] Natural 1! Next roll will be Surreal (disadvantage)`);
 	}
@@ -128,7 +152,15 @@ export async function rollForTasks() {
 	logger.debug(
 		`[rollForTasks] D20 rolled: ${roll} (${wasLucid ? 'LUCID' : wasSurreal ? 'SURREAL' : 'normal'}) → ${cardCount} cards`
 	);
-	return { roll, wasLucid, wasSurreal };
+
+	return {
+		roll,
+		cardCount,
+		wasLucid,
+		wasSurreal,
+		gainedLucid,
+		gainedSurreal
+	};
 }
 
 /**
@@ -371,14 +403,50 @@ export function confirmCard() {
  * D20 system: Uses rollWithModifiers() for Lucid/Surreal advantage/disadvantage
  * @returns {{roll: number, wasLucid: boolean, wasSurreal: boolean}} Roll result and modifier flags
  */
+/**
+ * Get failure check roll and stability calculations (test-friendly version)
+ *
+ * Performs a failure check roll and returns all calculated values including
+ * stability loss/gain and state changes. This function is designed for testing -
+ * it returns detailed results without requiring inspection of pending state.
+ *
+ * Note: Does NOT set pending state or apply changes. Use applyFailureCheckResult()
+ * for that.
+ *
+ * @returns {Object} Roll results and calculations
+ * @returns {number} roll - D20 roll result (1-20)
+ * @returns {boolean} wasLucid - True if Lucid state was active
+ * @returns {boolean} wasSurreal - True if Surreal state was active
+ * @returns {number} stabilityLoss - Stability points to lose
+ * @returns {number} stabilityGain - Stability points to gain (0 or 1)
+ * @returns {boolean} lucidGained - True if natural 20 (grants Lucid)
+ * @returns {boolean} surrealGained - True if natural 1 (grants Surreal)
+ *
+ * @example
+ * // Test failure check mechanics
+ * gameState.currentCard = { rank: 7 };
+ * const { roll, stabilityLoss } = getFailureCheckRoll();
+ */
 export function getFailureCheckRoll() {
 	// Roll d20 with Lucid/Surreal modifiers
 	const { roll, wasLucid, wasSurreal } = gameState.rollWithModifiers();
 
+	// Calculate stability loss/gain using D20 table
+	const { loss, gainedLucid, gainedSurreal, optionalGain } = calculateStabilityLoss(roll);
+
 	logger.debug(
-		`[getFailureCheckRoll] D20 roll: ${roll} (${wasLucid ? 'LUCID' : wasSurreal ? 'SURREAL' : 'normal'})`
+		`[getFailureCheckRoll] D20 roll: ${roll} (${wasLucid ? 'LUCID' : wasSurreal ? 'SURREAL' : 'normal'}), loss: ${loss}, gain: ${optionalGain || 0}`
 	);
-	return { roll, wasLucid, wasSurreal };
+
+	return {
+		roll,
+		wasLucid,
+		wasSurreal,
+		stabilityLoss: loss,
+		stabilityGain: optionalGain || 0,
+		lucidGained: gainedLucid,
+		surrealGained: gainedSurreal
+	};
 }
 
 /**
@@ -624,6 +692,67 @@ export async function recordRound(journalEntry) {
  * D20 system: Uses Ace-dependent thresholds and graduated token changes
  * @returns {{roll: number, wasLucid: boolean, wasSurreal: boolean}} Roll result and modifier flags
  */
+/**
+ * Get Salvation check roll and calculations (test-friendly version)
+ *
+ * Performs a Salvation (success) check roll and returns all calculated values.
+ * This function is designed for testing - it returns detailed results without
+ * requiring inspection of pending state.
+ *
+ * Also sets pending state so applyPendingSuccessCheck() can be called after
+ * dice animation.
+ *
+ * @returns {Object} Roll results and calculations
+ * @returns {number} roll - D20 roll result (1-20)
+ * @returns {number} threshold - Success threshold based on Aces revealed
+ * @returns {number} tokenChange - Token change (+2, +1, -1, or -2)
+ * @returns {boolean} wasLucid - True if Lucid state was active
+ * @returns {boolean} wasSurreal - True if Surreal state was active
+ * @returns {boolean} gainedLucid - True if natural 20 (grants Lucid)
+ * @returns {boolean} gainedSurreal - True if natural 1 (grants Surreal)
+ *
+ * @example
+ * // Test Salvation mechanics
+ * gameState.acesRevealed = 3; // 50% success rate
+ * const { roll, threshold, tokenChange } = getSalvationCheckRoll();
+ * expect(threshold).toBe(11); // 3 Aces = threshold 11
+ */
+export function getSalvationCheckRoll() {
+	// Roll d20 with Lucid/Surreal modifiers
+	const { roll, wasLucid, wasSurreal } = gameState.rollWithModifiers();
+
+	// Get threshold based on Aces revealed
+	const threshold = getSalvationThreshold(gameState.acesRevealed);
+
+	// Calculate token change using salvation table
+	const { tokenChange, gainedLucid, gainedSurreal } = calculateSalvationResult(roll, threshold);
+
+	// Store pending updates (to be applied after dice animation)
+	gameState.pendingUpdates.diceRoll = roll;
+	gameState.pendingUpdates.tokenChange = tokenChange;
+
+	// Handle Lucid/Surreal state changes from this roll (deferred until after animation)
+	if (gainedLucid) {
+		gameState.pendingUpdates.isLucid = true;
+	} else if (gainedSurreal) {
+		gameState.pendingUpdates.isSurreal = true;
+	}
+
+	logger.debug(
+		`[getSalvationCheckRoll] D20 roll: ${roll} (${wasLucid ? 'LUCID' : wasSurreal ? 'SURREAL' : 'normal'}), threshold: ${threshold}, token change: ${tokenChange}`
+	);
+
+	return {
+		roll,
+		threshold,
+		tokenChange,
+		wasLucid,
+		wasSurreal,
+		gainedLucid,
+		gainedSurreal
+	};
+}
+
 export function successCheck() {
 	// Roll d20 with Lucid/Surreal modifiers
 	const { roll, wasLucid, wasSurreal } = gameState.rollWithModifiers();
