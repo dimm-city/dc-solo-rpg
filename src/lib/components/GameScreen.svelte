@@ -732,9 +732,9 @@
 						/>
 					{:else if currentScreen === 'rollForTasks'}
 						<ContinueButton
-							text={rollForTasksButtonText}
+							text={rollForTasks.buttonText}
 							onclick={handleRollForTasks}
-							disabled={rollForTasksButtonDisabled}
+							disabled={rollForTasks.buttonDisabled}
 							testid="roll-tasks-button"
 						/>
 					{:else if currentScreen === 'drawCard'}
@@ -747,23 +747,23 @@
 						/>
 					{:else if currentScreen === 'failureCheck'}
 						<ContinueButton
-							text={failureCheckButtonText}
+							text={failureCheck.buttonText}
 							onclick={handleFailureCheck}
-							disabled={failureCheckRolling}
+							disabled={failureCheck.rolling}
 							testid="failure-check-button"
 						/>
 					{:else if currentScreen === 'successCheck'}
 						<ContinueButton
-							text={successCheckButtonText}
+							text={successCheck.buttonText}
 							onclick={handleSuccessCheck}
-							disabled={successCheckRolling}
+							disabled={successCheck.rolling}
 							testid="success-check-button"
 						/>
 					{:else if currentScreen === 'finalDamageRoll'}
 						<ContinueButton
-							text={finalDamageButtonText}
+							text={finalDamage.buttonText}
 							onclick={handleFinalDamageRoll}
-							disabled={finalDamageRolling}
+							disabled={finalDamage.rolling}
 							testid="final-damage-roll-button"
 						/>
 					{:else if currentScreen === 'log' || currentScreen === 'finalLog'}
