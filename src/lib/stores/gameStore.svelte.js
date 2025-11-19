@@ -2,6 +2,7 @@
  * Core game state using Svelte 5 runes
  * This replaces the old gameStore and eliminates the StateMachine class
  */
+import { GAME_STATES } from '../constants/gameStates.js';
 import { transitionGraph } from './transitions.js';
 import { logger } from '../utils/logger.js';
 import { rollDie, rollAdvantage, rollDisadvantage } from '../services/random.js';
@@ -46,7 +47,7 @@ let rollWithModifiers = () => {
  */
 let gameState = $state({
 	// Screen state
-	state: 'loadGame',
+	state: GAME_STATES.LOAD_GAME,
 
 	// Player state
 	playerName: '',
