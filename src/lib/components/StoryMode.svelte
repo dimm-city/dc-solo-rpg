@@ -5,10 +5,13 @@
 	 */
 
 	import StoryRound from './StoryRound.svelte';
-	import AugmentedButton from './AugmentedButton.svelte';
 	import StoryGenerationPanel from './StoryGenerationPanel.svelte';
-	import { fade, scale, crossfade } from 'svelte/transition';
-	import { quintOut, cubicOut } from 'svelte/easing';
+	import StoryProgressBar from './story/StoryProgressBar.svelte';
+	import StoryNavigation from './story/StoryNavigation.svelte';
+	import { useEnrichedRounds } from '$lib/composables/useEnrichedRounds.svelte.js';
+	import { useStoryNavigation } from '$lib/composables/useStoryNavigation.svelte.js';
+	import { scale, crossfade } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
 	import { ANIMATION_DURATION } from '$lib/constants/animations.js';
 
 	// Create crossfade for smooth round transitions
@@ -22,114 +25,12 @@
 		onExit = () => {} // Callback when user exits story mode
 	} = $props();
 
-	let currentRoundIndex = $state(0);
-	let isNavigating = $state(false);
-
-	// Group cards by round number and merge with journal entries
-	let enrichedRounds = $derived.by(() => {
-		if (!savedGame?.cardLog) return [];
-
-		const cardLog = savedGame.cardLog;
-		const journalEntries = savedGame.journalEntries || [];
-
-		console.log('[StoryMode] Processing saved game:', {
-			totalCards: cardLog.length,
-			totalJournals: journalEntries.length,
-			journalRounds: journalEntries.map((j) => j.round),
-			fullJournalData: journalEntries
-		});
-
-		// Log each journal entry in detail
-		journalEntries.forEach((j, idx) => {
-			console.log(`[StoryMode] Journal ${idx}:`, {
-				round: j.round,
-				hasText: !!j.text,
-				textLength: j.text?.length || 0,
-				textPreview: j.text?.substring(0, 30) || '(empty)',
-				hasAudio: !!j.audioData,
-				dateRecorded: j.dateRecorded
-			});
-		});
-
-		// Filter out non-card entries (like 'initial-damage', 'final-damage')
-		const cardEntries = cardLog.filter(
-			(entry) => entry.type !== 'initial-damage' && entry.type !== 'final-damage'
-		);
-
-		// Group cards by round number
-		const roundsMap = new Map();
-		for (const cardEntry of cardEntries) {
-			const roundNum = cardEntry.round;
-			if (!roundsMap.has(roundNum)) {
-				roundsMap.set(roundNum, []);
-			}
-			roundsMap.get(roundNum).push(cardEntry);
-		}
-
-		// Get win/lose message from game config
-		const winMessage = savedGame.config?.['win-message'] || savedGame.config?.winMessage;
-		const loseMessage = savedGame.config?.['lose-message'] || savedGame.config?.loseMessage;
-		const gameOverMessage = savedGame.isWon ? winMessage : loseMessage;
-
-		// Convert map to array of round objects
-		const rounds = Array.from(roundsMap.entries())
-			.sort((a, b) => a[0] - b[0]) // Sort by round number
-			.map(([roundNum, cards], index, array) => {
-				// Find journal entry for this round
-				const journalEntry = journalEntries.find((j) => j.round === roundNum);
-
-				console.log(`[StoryMode] Round ${roundNum}:`, {
-					cardCount: cards.length,
-					hasJournal: !!journalEntry,
-					journalText: journalEntry?.text?.substring(0, 50)
-				});
-
-				// Get game state from the last card in the round (most recent state)
-				const lastCard = cards[cards.length - 1];
-
-				// Check if this is the final round
-				const isFinalRound = index === array.length - 1;
-
-				return {
-					roundNumber: roundNum,
-					cards: cards.map((cardEntry) => ({
-						card: cardEntry.card,
-						suit: cardEntry.suit,
-						type: cardEntry.type,
-						modifier: cardEntry.modifier,
-						description: cardEntry.description,
-						story: cardEntry.story,
-						damageRoll: cardEntry.damageRoll,
-						damageDealt: cardEntry.damageDealt
-					})),
-					journalEntry: journalEntry
-						? {
-								text: journalEntry.text,
-								audio: journalEntry.audioData
-							}
-						: null,
-					gameState: lastCard.gameState || {
-						tower: 'N/A',
-						tokens: 'N/A',
-						bonus: 0,
-						kingsRevealed: 0,
-						aceOfHeartsRevealed: false
-					},
-					// Add game over message to final round
-					gameOverMessage: isFinalRound ? gameOverMessage : null,
-					isWon: savedGame.isWon
-				};
-			});
-
-		console.log('[StoryMode] Total enriched rounds:', rounds.length);
-		return rounds;
-	});
-
-	// Get total rounds from enriched data
+	// Use composables for enriched rounds and navigation
+	let enrichedRounds = $derived.by(() => useEnrichedRounds(savedGame));
 	let totalRounds = $derived(enrichedRounds.length);
-	let currentRound = $derived(enrichedRounds[currentRoundIndex] || null);
-	let canGoPrevious = $derived(currentRoundIndex > 0);
-	let canGoNext = $derived(currentRoundIndex < totalRounds - 1);
+
+	const nav = useStoryNavigation(totalRounds, onExit);
+	let currentRound = $derived(enrichedRounds[nav.currentRoundIndex] || null);
 
 	// Game metadata
 	let gameTitle = $derived(savedGame?.gameTitle || 'Untitled Game');
@@ -137,52 +38,6 @@
 	let isWon = $derived(savedGame?.isWon || false);
 	let roundsSurvived = $derived(savedGame?.roundsSurvived || 0);
 	let finalTower = $derived(savedGame?.finalTower || 0);
-
-	function previousRound() {
-		if (!canGoPrevious || isNavigating) return;
-		isNavigating = true;
-		setTimeout(() => {
-			currentRoundIndex--;
-			isNavigating = false;
-		}, ANIMATION_DURATION.FAST);
-	}
-
-	function nextRound() {
-		if (!canGoNext || isNavigating) return;
-		isNavigating = true;
-		setTimeout(() => {
-			currentRoundIndex++;
-			isNavigating = false;
-		}, ANIMATION_DURATION.FAST);
-	}
-
-	function jumpToRound(index) {
-		if (index === currentRoundIndex || isNavigating) return;
-		if (index < 0 || index >= totalRounds) return;
-		isNavigating = true;
-		setTimeout(() => {
-			currentRoundIndex = index;
-			isNavigating = false;
-		}, ANIMATION_DURATION.FAST);
-	}
-
-	function handleKeyboard(event) {
-		if (event.key === 'ArrowLeft') {
-			previousRound();
-		} else if (event.key === 'ArrowRight') {
-			nextRound();
-		} else if (event.key === 'Escape') {
-			onExit();
-		}
-	}
-
-	// Keyboard navigation
-	$effect(() => {
-		window.addEventListener('keydown', handleKeyboard);
-		return () => {
-			window.removeEventListener('keydown', handleKeyboard);
-		};
-	});
 </script>
 
 {#if savedGame}
@@ -244,41 +99,23 @@
 		</div>
 
 		<!-- Progress Bar -->
-		<div class="progress-section">
-			<div class="progress-bar-container">
-				<div class="progress-track">
-					<div
-						class="progress-fill"
-						style="width: {((currentRoundIndex + 1) / totalRounds) * 100}%"
-					></div>
-				</div>
-				<div class="progress-markers">
-					{#each Array(totalRounds) as _, i}
-						<button
-							class="progress-marker"
-							class:active={i === currentRoundIndex}
-							class:completed={i < currentRoundIndex}
-							onclick={() => jumpToRound(i)}
-							aria-label="Jump to round {i + 1}"
-						>
-							<span class="marker-number">{i + 1}</span>
-						</button>
-					{/each}
-				</div>
-			</div>
-		</div>
+		<StoryProgressBar
+			currentRound={nav.currentRoundIndex}
+			{totalRounds}
+			onJumpToRound={nav.jumpToRound}
+		/>
 
 		<!-- Current Round Display -->
 		<div class="round-container">
-			{#key currentRoundIndex}
+			{#key nav.currentRoundIndex}
 				<div
 					class="round-wrapper"
-					in:receive={{ key: currentRoundIndex }}
-					out:send={{ key: currentRoundIndex }}
+					in:receive={{ key: nav.currentRoundIndex }}
+					out:send={{ key: nav.currentRoundIndex }}
 				>
 					<StoryRound
 						round={currentRound}
-						roundNumber={currentRound?.roundNumber || currentRoundIndex + 1}
+						roundNumber={currentRound?.roundNumber || nav.currentRoundIndex + 1}
 						{totalRounds}
 						showStats={true}
 					/>
@@ -287,72 +124,14 @@
 		</div>
 
 		<!-- Navigation Controls -->
-		<div class="navigation-controls" data-augmented-ui="tl-clip tr-clip border">
-			<AugmentedButton
-				onclick={previousRound}
-				disabled={!canGoPrevious}
-				label="Previous Round"
-				style="secondary"
-			>
-				<svg
-					width="20"
-					height="20"
-					viewBox="0 0 20 20"
-					fill="none"
-					stroke="currentColor"
-					slot="icon"
-				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M12 16l-6-6 6-6"
-					/>
-				</svg>
-				Previous
-			</AugmentedButton>
-
-			<div class="round-indicator">
-				<span class="current">{currentRoundIndex + 1}</span>
-				<span class="separator">/</span>
-				<span class="total">{totalRounds}</span>
-			</div>
-
-			<AugmentedButton
-				onclick={nextRound}
-				disabled={!canGoNext}
-				label="Next Round"
-				style="secondary"
-			>
-				Next
-				<svg
-					width="20"
-					height="20"
-					viewBox="0 0 20 20"
-					fill="none"
-					stroke="currentColor"
-					slot="icon"
-				>
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4l6 6-6 6" />
-				</svg>
-			</AugmentedButton>
-		</div>
-
-		<!-- Keyboard hints -->
-		<div class="keyboard-hints">
-			<span class="hint">
-				<kbd>←</kbd>
-				Previous
-			</span>
-			<span class="hint">
-				<kbd>→</kbd>
-				Next
-			</span>
-			<span class="hint">
-				<kbd>Esc</kbd>
-				Exit
-			</span>
-		</div>
+		<StoryNavigation
+			currentRound={nav.currentRoundIndex}
+			{totalRounds}
+			canGoPrevious={nav.canGoPrevious}
+			canGoNext={nav.canGoNext}
+			onPrevious={nav.previousRound}
+			onNext={nav.nextRound}
+		/>
 	</div>
 {/if}
 
@@ -494,162 +273,6 @@
 		padding: 0 var(--space-xl);
 	}
 
-	/* Progress Section */
-	.progress-section {
-		padding: 0 var(--space-xl);
-	}
-
-	.progress-bar-container {
-		position: relative;
-		width: 100%;
-	}
-
-	.progress-track {
-		width: 100%;
-		height: 8px;
-		background: rgba(255, 255, 255, 0.1);
-		border-radius: 4px;
-		overflow: hidden;
-		box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
-	}
-
-	.progress-fill {
-		height: 100%;
-		background: linear-gradient(90deg, var(--color-cyber-magenta), var(--color-neon-cyan));
-		border-radius: 4px;
-		transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-		box-shadow: 0 0 15px rgba(217, 70, 239, 0.6);
-	}
-
-	.progress-markers {
-		display: flex;
-		justify-content: space-between;
-		margin-top: var(--space-md);
-		gap: var(--space-xs);
-	}
-
-	.progress-marker {
-		flex: 1;
-		max-width: 48px;
-		height: 32px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background: rgba(255, 255, 255, 0.05);
-		border: 2px solid rgba(255, 255, 255, 0.2);
-		border-radius: 4px;
-		cursor: pointer;
-		transition: all var(--transition-base);
-		position: relative;
-	}
-
-	.progress-marker:hover {
-		background: rgba(255, 255, 255, 0.1);
-		border-color: rgba(255, 255, 255, 0.4);
-		transform: translateY(-2px);
-	}
-
-	.progress-marker.active {
-		background: linear-gradient(135deg, var(--color-cyber-magenta), var(--color-neon-cyan));
-		border-color: var(--color-neon-cyan);
-		box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
-	}
-
-	.progress-marker.completed {
-		background: rgba(0, 255, 255, 0.2);
-		border-color: rgba(0, 255, 255, 0.4);
-	}
-
-	.marker-number {
-		font-family: 'Courier New', monospace;
-		font-size: 0.75rem;
-		font-weight: 700;
-		color: rgba(255, 255, 255, 0.6);
-	}
-
-	.progress-marker.active .marker-number {
-		color: rgba(10, 10, 10, 1);
-	}
-
-	/* Round Container */
-	.round-container {
-		flex: 1;
-		position: relative;
-		overflow: hidden;
-	}
-
-	.round-wrapper {
-		width: 100%;
-	}
-
-	/* Navigation Controls */
-	.navigation-controls {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: var(--space-lg);
-		padding: var(--space-xl);
-		background: linear-gradient(135deg, rgba(0, 0, 0, 0.6), rgba(26, 26, 26, 0.6));
-		border: 2px solid rgba(138, 43, 226, 0.3);
-		backdrop-filter: blur(8px);
-		-webkit-backdrop-filter: blur(8px);
-		--aug-border-bg: linear-gradient(135deg, rgba(138, 43, 226, 0.2), rgba(75, 0, 130, 0.1));
-		--aug-border: 2px;
-		--aug-border-fallback-color: rgba(138, 43, 226, 0.3);
-	}
-
-	.round-indicator {
-		display: flex;
-		align-items: baseline;
-		gap: var(--space-xs);
-		font-family: 'Courier New', monospace;
-	}
-
-	.round-indicator .current {
-		font-size: 2rem;
-		font-weight: 700;
-		color: var(--color-neon-cyan);
-		text-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
-	}
-
-	.round-indicator .separator {
-		font-size: 1.25rem;
-		color: rgba(255, 255, 255, 0.4);
-	}
-
-	.round-indicator .total {
-		font-size: 1.25rem;
-		color: rgba(255, 255, 255, 0.6);
-	}
-
-	/* Keyboard Hints */
-	.keyboard-hints {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: var(--space-xl);
-		padding: var(--space-md);
-		color: rgba(255, 255, 255, 0.5);
-		font-size: 0.875rem;
-	}
-
-	.hint {
-		display: flex;
-		align-items: center;
-		gap: var(--space-sm);
-	}
-
-	kbd {
-		padding: var(--space-xs) var(--space-sm);
-		background: rgba(255, 255, 255, 0.1);
-		border: 1px solid rgba(255, 255, 255, 0.2);
-		border-radius: 4px;
-		font-family: 'Courier New', monospace;
-		font-size: 0.75rem;
-		font-weight: 700;
-		color: rgba(255, 255, 255, 0.8);
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-	}
 
 	/* Mobile optimizations */
 	@media (max-width: 640px) {
@@ -717,54 +340,6 @@
 			padding: 0 var(--space-md);
 		}
 
-		.progress-section {
-			padding: 0 var(--space-md);
-		}
-
-		.progress-track {
-			height: 6px;
-		}
-
-		.progress-markers {
-			display: none; /* Too many markers on mobile */
-		}
-
-		.round-container {
-			overflow-x: hidden;
-		}
-
-		.navigation-controls {
-			flex-direction: row;
-			justify-content: space-between;
-			padding: var(--space-md);
-			gap: var(--space-md);
-		}
-
-		.navigation-controls :global(button) {
-			flex: 1;
-			min-width: 0;
-			font-size: 0.875rem;
-			padding: var(--space-sm) var(--space-md);
-		}
-
-		.round-indicator {
-			position: relative;
-			flex-shrink: 0;
-			gap: var(--space-xs);
-		}
-
-		.round-indicator .current {
-			font-size: 1.5rem;
-		}
-
-		.round-indicator .separator,
-		.round-indicator .total {
-			font-size: 1rem;
-		}
-
-		.keyboard-hints {
-			display: none; /* Hide on mobile */
-		}
 	}
 
 	/* Tablet optimizations */
@@ -773,16 +348,8 @@
 			padding: var(--space-md);
 		}
 
-		.progress-marker {
-			max-width: 36px;
-			height: 28px;
-		}
 
-		.marker-number {
-			font-size: 0.625rem;
-		}
 	}
-
 	/* Extra small screens */
 	@media (max-width: 375px) {
 		.story-mode {
@@ -806,13 +373,6 @@
 			height: 36px;
 		}
 
-		.navigation-controls {
-			padding: var(--space-sm);
-		}
-
-		.round-indicator .current {
-			font-size: 1.25rem;
-		}
 	}
 
 	/* Accessibility - Reduced motion */
