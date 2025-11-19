@@ -51,6 +51,9 @@
 
 	// Start recording
 	async function startRecording() {
+		// Cancel auto-journal timer when user starts interacting
+		cancelAutoJournalTimer();
+
 		try {
 			audioError = null;
 			const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -186,16 +189,6 @@
 		};
 	});
 
-	// Reset audio when journal is saved
-	$effect(() => {
-		if (journalSaved && audioURL) {
-			// Keep the audio for playback but stop recording
-			if (isRecording) {
-				stopRecording();
-			}
-		}
-	});
-
 	// Auto-journal timer effect
 	$effect(() => {
 		const gameplaySettings = getGameplaySettings();
@@ -222,7 +215,7 @@
 			if (gameplaySettings.autoHandleJournaling === 'skip') {
 				// Small delay to allow UI to settle
 				autoJournalTimer = setTimeout(() => {
-					onSave();
+					handleSave();
 				}, 500);
 			}
 			// Timed mode: countdown timer
@@ -237,7 +230,7 @@
 					if (autoJournalTimeRemaining <= 0) {
 						clearInterval(autoJournalInterval);
 						autoJournalInterval = null;
-						onSave();
+						handleSave();
 					}
 				}, 100);
 			}
@@ -267,12 +260,14 @@
 		autoJournalTimeRemaining = 0;
 	}
 
-	// Cancel timer on user interaction
-	$effect(() => {
-		if (journalText || audioData || isRecording) {
-			cancelAutoJournalTimer();
+	// Wrapper for onSave that stops recording if active (event-driven pattern)
+	function handleSave() {
+		// Stop recording if active when saving
+		if (isRecording) {
+			stopRecording();
 		}
-	});
+		onSave();
+	}
 </script>
 
 <div class="dc-journal-container" in:fade={{ duration: ANIMATION_DURATION.NORMAL }} data-augmented-ui="tl-clip br-clip tr-clip bl-clip border">
@@ -302,6 +297,7 @@
 			rows="5"
 			placeholder="Write your journal entry here..."
 			disabled={journalSaved}
+			oninput={() => cancelAutoJournalTimer()}
 		></textarea>
 	</div>
 
@@ -368,7 +364,7 @@
 		{:else}
 			<ContinueButton
 				text={gameState.config?.labels?.journalEntrySaveButtonText ?? 'Record Entry'}
-				onclick={onSave}
+				onclick={handleSave}
 				testid="journal-save-button"
 			/>
 		{/if}

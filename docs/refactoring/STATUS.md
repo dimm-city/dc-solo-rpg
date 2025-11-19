@@ -254,15 +254,28 @@ This document tracks the status of the comprehensive refactoring and improvement
 ## 🔧 Code Quality Issues
 
 ### Critical Issues (Fix Immediately)
-- [ ] **Issue #1:** Replace $effect with event-driven patterns in JournalEntry
+- [x] **Issue #1:** Replace $effect with event-driven patterns in JournalEntry ✅
   - See: [CODE_QUALITY_REVIEW.md#issue-21](./CODE_QUALITY_REVIEW.md#issue-21)
-  - **Effort:** Medium (2-3 hours per component)
+  - **Effort:** Medium (2-3 hours per component) → **Actual:** 1 hour
   - **Priority:** CRITICAL
+  - **Changes:**
+    - Reduced from 3 $effect blocks to 1 (67% reduction)
+    - Removed $effect for stopping recording on save (now in handleSave wrapper)
+    - Removed $effect for canceling timer on user interaction (now in oninput handler + startRecording)
+    - Remaining $effect is legitimate: manages auto-journal timer initialization with proper cleanup
+    - All event-driven replacements use explicit event handlers
+  - **Result:** Build passed, no new type errors, improved code clarity
 
-- [ ] **Issue #2:** Add error handling for audio recording
+- [x] **Issue #2:** Add error handling for audio recording ✅ COMPLETE
   - See: [CODE_QUALITY_REVIEW.md#issue-42](./CODE_QUALITY_REVIEW.md#issue-42)
-  - **Effort:** Small (1 hour)
+  - **Effort:** Small (1 hour) → **Actual:** N/A (already implemented)
   - **Priority:** CRITICAL
+  - **Result:** Error handling already present in JournalEntry.svelte startRecording()
+  - **Details:**
+    - try-catch block wraps getUserMedia() and MediaRecorder setup
+    - logger.error() for debugging
+    - User-friendly error message via audioError state
+    - Proper cleanup (hasAudioPermission = false)
 
 - [ ] **Issue #3:** Add tests for pending state system
   - See: [CODE_QUALITY_REVIEW.md#issue-82](./CODE_QUALITY_REVIEW.md#issue-82)
