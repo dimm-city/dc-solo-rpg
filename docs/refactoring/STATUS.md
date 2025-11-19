@@ -313,17 +313,17 @@ This document tracks the status of the comprehensive refactoring and improvement
 ### Component Size Reduction
 | Component | Before | After | Reduction | Status |
 |-----------|--------|-------|-----------|--------|
-| CardDeck | 1,030 | 257 | 75% | ✅ Complete |
-| JournalEntry | 1,033 | 548 | 47% | ✅ Complete |
-| StoryMode | 826 | 386 | 53% | ✅ Complete |
-| StoryRound | 739 | 583 | 21% | ✅ Complete |
-| BrowseGames | 708 | 350 | 50% | ✅ Complete |
-| AISettings | 487 | 284 | 42% | ✅ Complete |
-| StoryGenerationPanel | 428 | 234 | 45% | ✅ Complete |
-| IntroScreen | 408 | 203 | 50% | ✅ Complete |
-| GameScreen | 1,399 | TBD | TBD | ⏳ Pending |
-| StatusDisplay | 2,006 | TBD | TBD | ⏳ Pending |
-| **Average (Completed)** | | | **48%** | 8/10 done |
+| StatusDisplay | 2,006 | 39 | 98% | ✅ Complete (Phase 1) |
+| CardDeck | 1,030 | 257 | 75% | ✅ Complete (Phase 3) |
+| StoryMode | 826 | 386 | 53% | ✅ Complete (Phase 4) |
+| JournalEntry | 1,033 | 548 | 47% | ✅ Complete (Phase 3) |
+| BrowseGames | 708 | 350 | 50% | ✅ Complete (Phase 2) |
+| IntroScreen | 408 | 203 | 50% | ✅ Complete (Phase 5) |
+| StoryGenerationPanel | 428 | 234 | 45% | ✅ Complete (Phase 5) |
+| AISettings | 487 | 284 | 42% | ✅ Complete (Phase 5) |
+| StoryRound | 739 | 583 | 21% | ✅ Complete (Phase 4) |
+| GameScreen | 1,399 | 1,236 | 12% | ✅ Complete (Phase 2) |
+| **Average (All Components)** | | | **49%** | 10/10 done ✅ |
 
 ### New Components Created
 - [ ] **Common Components:** 4/4 (0%)
