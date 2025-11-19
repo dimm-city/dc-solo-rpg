@@ -347,10 +347,16 @@ This document tracks the status of the comprehensive refactoring and improvement
   - **Effort:** Small (1 hour) → **Actual:** 20 minutes
   - **Priority:** LOW
   - **Changes:**
-    - Created `src/lib/constants/gameStates.js` with all 15 state constants
-    - Updated `transitions.js` to use state constants (prevents typos in transition graph)
-    - Updated `gameStore.svelte.js` initial state to use constant
-    - Added helper functions: `getStateValue()`, `isValidState()`
+- [x] **Issue #10:** Standardize event handler naming ✅
+  - See: [CODE_QUALITY_REVIEW.md#issue-91](./CODE_QUALITY_REVIEW.md#issue-91)
+  - **Effort:** Small (1 hour) → **Actual:** 15 minutes
+  - **Priority:** LOW
+  - **Changes:**
+    - Standardized internal event handlers to use `handle` prefix
+    - CardDeck.svelte: `onProceed()` → `handleProceed()`, `onDismiss()` → `handleDismiss()`
+    - DrawCard.svelte: `onRequestCard()` → `handleRequestCard()`, `onConfirmCardDeck()` → `handleConfirmCardDeck()`
+    - Maintained lowercase naming for props from parent (Svelte convention): `onrequestcard`, `onconfirmcard`
+  - **Result:** Build passed, consistent naming convention across all components
     - Comprehensive JSDoc documentation for all constants
   - **Result:** Build passed, type-safe state management, prevented magic string typos
 - [ ] **Issue #10:** Standardize event handler naming

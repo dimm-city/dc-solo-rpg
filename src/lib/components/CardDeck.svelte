@@ -36,7 +36,7 @@
 	/**
 	 * Handle proceed button click - request card draw and start animation
 	 */
-	async function onProceed() {
+	async function handleProceed() {
 		if (animationStage !== 'idle') return;
 
 		try {
@@ -93,7 +93,7 @@
 		) {
 			// Small delay to avoid immediate re-trigger and allow UI to settle
 			setTimeout(() => {
-				onProceed();
+				handleProceed();
 			}, 100);
 		}
 	}
@@ -119,7 +119,7 @@
 						autoPlayCanceller = autoAdvance({
 							text: null,
 							shouldRead: false,
-							action: () => onDismiss()
+							action: () => handleDismiss()
 						});
 					}
 				});
@@ -129,7 +129,7 @@
 				autoPlayCanceller = autoAdvance({
 					text: null,
 					shouldRead: false,
-					action: () => onDismiss()
+					action: () => handleDismiss()
 				});
 			}
 		}
@@ -146,7 +146,7 @@
 	/**
 	 * Handle dismiss/continue - upload animation and notify parent
 	 */
-	async function onDismiss() {
+	async function handleDismiss() {
 		if (animationStage !== 'revealed') return;
 
 		// Cancel auto-play on manual interaction
@@ -175,9 +175,9 @@
 	 */
 	export async function onButtonClick() {
 		if (animationStage === 'idle') {
-			await onProceed();
+			await handleProceed();
 		} else if (animationStage === 'revealed') {
-			await onDismiss();
+			await handleDismiss();
 		}
 	}
 
@@ -223,7 +223,7 @@
 	 */
 	export const reset = async () => {
 		if (animationStage === 'revealed') {
-			await onDismiss();
+			await handleDismiss();
 		} else {
 			animationStage = 'idle';
 			particles = [];

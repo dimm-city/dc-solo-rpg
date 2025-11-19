@@ -13,7 +13,7 @@
 	 * Handle card request from neural interface
 	 * Triggered when user clicks "PROCEED TO NEXT BYTE"
 	 */
-	async function onRequestCard() {
+	async function handleRequestCard() {
 		// Draw card from game store
 		await drawCard();
 	}
@@ -22,7 +22,7 @@
 	 * Handle card confirmation from neural interface
 	 * Triggered when user clicks "CONTINUE" after seeing the card
 	 */
-	async function onConfirmCardDeck() {
+	async function handleConfirmCardDeck() {
 		// Confirm in the game store and proceed
 		await confirmCard();
 	}
@@ -91,8 +91,8 @@
 		bind:this={cardDeckRef}
 		bind:card={gameState.currentCard}
 		bind:animationStage
-		onrequestcard={onRequestCard}
-		onconfirmcard={onConfirmCardDeck}
+		onrequestcard={handleRequestCard}
+		onconfirmcard={handleConfirmCardDeck}
 	/>
 </div>
 
