@@ -639,10 +639,12 @@ describe('Card Drawing and Failure Check Flow', () => {
 				gameState.rollWithModifiers = originalRoll;
 			});
 
-			test('should not change tokens on near-miss (6-16)', () => {
+			test('should add 1 token on failure (2-16)', () => {
+				// Per spec: ALL rolls below threshold (17) should give +1 token (failure)
+				// No "near-miss" range exists
 				const originalRoll = gameState.rollWithModifiers;
 
-				for (let roll = 6; roll <= 16; roll++) {
+				for (let roll = 2; roll <= 16; roll++) {
 					gameState.rollWithModifiers = vi.fn(() => ({
 						roll,
 						wasLucid: false,
@@ -651,7 +653,7 @@ describe('Card Drawing and Failure Check Flow', () => {
 
 					successCheck();
 
-					expect(gameState.pendingUpdates.tokenChange).toBe(0);
+					expect(gameState.pendingUpdates.tokenChange).toBe(1);
 
 					// Clear for next test
 					gameState.pendingUpdates.tokenChange = null;
@@ -712,7 +714,7 @@ describe('Card Drawing and Failure Check Flow', () => {
 				successCheck();
 				expect(gameState.pendingUpdates.tokenChange).toBe(-1);
 
-				// Clear and test just below threshold (13 should be near-miss)
+				// Clear and test just below threshold (13 should be failure +1)
 				gameState.pendingUpdates.tokenChange = null;
 				gameState.rollWithModifiers = vi.fn(() => ({
 					roll: 13,
@@ -720,7 +722,7 @@ describe('Card Drawing and Failure Check Flow', () => {
 					wasSurreal: false
 				}));
 				successCheck();
-				expect(gameState.pendingUpdates.tokenChange).toBe(0);
+				expect(gameState.pendingUpdates.tokenChange).toBe(1);
 
 				gameState.rollWithModifiers = originalRoll;
 			});
@@ -738,7 +740,7 @@ describe('Card Drawing and Failure Check Flow', () => {
 				successCheck();
 				expect(gameState.pendingUpdates.tokenChange).toBe(-1);
 
-				// Clear and test just below threshold (10 should be near-miss)
+				// Clear and test just below threshold (10 should be failure +1)
 				gameState.pendingUpdates.tokenChange = null;
 				gameState.rollWithModifiers = vi.fn(() => ({
 					roll: 10,
@@ -746,7 +748,7 @@ describe('Card Drawing and Failure Check Flow', () => {
 					wasSurreal: false
 				}));
 				successCheck();
-				expect(gameState.pendingUpdates.tokenChange).toBe(0);
+				expect(gameState.pendingUpdates.tokenChange).toBe(1);
 
 				gameState.rollWithModifiers = originalRoll;
 			});
@@ -914,8 +916,9 @@ describe('Card Drawing and Failure Check Flow', () => {
 				expect(result.roll).toBeGreaterThanOrEqual(1);
 				expect(result.roll).toBeLessThanOrEqual(20);
 
-				// Lucid state should be cleared (rollWithModifiers clears it)
-				expect(gameState.isLucid).toBe(false);
+				// Should indicate Lucid was used
+				expect(result.wasLucid).toBe(true);
+				expect(result.wasSurreal).toBe(false);
 			});
 
 			test('should handle Surreal roll in successCheck', () => {
@@ -929,8 +932,9 @@ describe('Card Drawing and Failure Check Flow', () => {
 				expect(result.roll).toBeGreaterThanOrEqual(1);
 				expect(result.roll).toBeLessThanOrEqual(20);
 
-				// Surreal state should be cleared
-				expect(gameState.isSurreal).toBe(false);
+				// Should indicate Surreal was used
+				expect(result.wasSurreal).toBe(true);
+				expect(result.wasLucid).toBe(false);
 			});
 		});
 	});

@@ -268,18 +268,10 @@ describe('D20 Mechanics', () => {
 				}
 			});
 
-			it('should not change tokens on near-miss (6-16)', () => {
-				for (let roll = 6; roll <= 16; roll++) {
-					const result = calculateSalvationResult(roll, threshold);
-
-					expect(result.tokenChange).toBe(0);
-					expect(result.gainedLucid).toBe(false);
-					expect(result.gainedSurreal).toBe(false);
-				}
-			});
-
-			it('should add 1 token on failure (2-5)', () => {
-				for (let roll = 2; roll <= 5; roll++) {
+			it('should add 1 token on failure (2-16)', () => {
+				// Per spec: ALL rolls below threshold should give +1 token (failure)
+				// No "near-miss" range exists
+				for (let roll = 2; roll <= 16; roll++) {
 					const result = calculateSalvationResult(roll, threshold);
 
 					expect(result.tokenChange).toBe(1);
@@ -308,11 +300,12 @@ describe('D20 Mechanics', () => {
 				}
 			});
 
-			it('should not change tokens on near-miss (6-13)', () => {
-				for (let roll = 6; roll <= 13; roll++) {
+			it('should add 1 token on failure (2-13)', () => {
+				// Per spec: ALL rolls below threshold should give +1 token (failure)
+				for (let roll = 2; roll <= 13; roll++) {
 					const result = calculateSalvationResult(roll, threshold);
 
-					expect(result.tokenChange).toBe(0);
+					expect(result.tokenChange).toBe(1);
 				}
 			});
 		});
@@ -328,11 +321,12 @@ describe('D20 Mechanics', () => {
 				}
 			});
 
-			it('should not change tokens on near-miss (6-10)', () => {
-				for (let roll = 6; roll <= 10; roll++) {
+			it('should add 1 token on failure (2-10)', () => {
+				// Per spec: ALL rolls below threshold should give +1 token (failure)
+				for (let roll = 2; roll <= 10; roll++) {
 					const result = calculateSalvationResult(roll, threshold);
 
-					expect(result.tokenChange).toBe(0);
+					expect(result.tokenChange).toBe(1);
 				}
 			});
 		});
