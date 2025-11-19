@@ -116,25 +116,26 @@ export async function initializeDiceBox(container) {
 		diceBoxInstance = new DiceBox('#dice-roller-container', config);
 		await diceBoxInstance.initialize();
 		logger.debug('[diceStore] DiceBox initialized successfully');
+		isInitialized = true;
+
+		// Call resizeWorld initially
+		diceBoxInstance.resizeWorld();
+
+		// Trigger a window resize event after transition completes (300ms + buffer)
+		// This ensures the DiceBox's resize listener picks up the correct container dimensions
+		setTimeout(() => {
+			window.dispatchEvent(new Event('resize'));
+		}, 500);
+
+		return diceBoxInstance;
 	} catch (error) {
 		logger.error('[diceStore] Failed to initialize DiceBox:', error);
+		logger.warn('[diceStore] Game will continue without 3D dice animations');
 		diceBoxInstance = null;
 		isInitialized = false;
-		throw error;
+		// Don't re-throw - allow game to continue without 3D dice
+		return null;
 	}
-
-	// Call resizeWorld initially
-	diceBoxInstance.resizeWorld();
-
-	// Trigger a window resize event after transition completes (300ms + buffer)
-	// This ensures the DiceBox's resize listener picks up the correct container dimensions
-	setTimeout(() => {
-		window.dispatchEvent(new Event('resize'));
-	}, 500);
-
-	isInitialized = true;
-
-	return diceBoxInstance;
 }
 
 /**

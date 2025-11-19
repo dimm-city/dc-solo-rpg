@@ -36,7 +36,12 @@
 		// Only initialize if showing dice, container exists, and not already initialized
 		// This prevents duplicate initialization during theme changes
 		if (showDice && diceContainer && !isDiceBoxInitialized()) {
-			initializeDiceBox(diceContainer);
+			// Wrap in try/catch to prevent page crash if WebGL initialization fails
+			// (e.g., in headless browsers, old devices, or when GPU is unavailable)
+			initializeDiceBox(diceContainer).catch((error) => {
+				console.warn('[Layout] Failed to initialize DiceBox, dice animations disabled:', error.message);
+				// Game remains functional without 3D dice
+			});
 		}
 	});
 </script>
