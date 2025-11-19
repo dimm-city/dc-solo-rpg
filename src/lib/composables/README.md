@@ -241,80 +241,55 @@ shortcuts.enable();
 
 ---
 
-### useScreenController
+### Screen Composables
 
-Reactive composable for screen state management.
+Screen-specific composables that manage state and logic for each game screen.
 
-**Current Status:** Basic implementation (Phase 1). Will be enhanced in Phase 2 with full screen-specific controllers.
+**Location:** `src/lib/composables/screen/`
 
-**Features (Phase 1):**
-- Generic screen state management
-- Rolling/result/confirming states
-- Error handling
-- Busy state checking
+**Available Composables:**
+- `useRollForTasks()` - Roll for Tasks screen logic
+- `useFailureCheck()` - Failure Check screen logic
+- `useSuccessCheck()` - Success Check (Salvation) screen logic
+- `useInitialDamage()` - Initial Damage Roll screen logic
+- `useFinalDamage()` - Final Damage Roll screen logic
 
-**Usage:**
+**Features:**
+- Screen-specific state management (rolling, confirming, results)
+- Integration with dice rolling and 3D animations
+- Auto-play trigger support
+- Button state management (text, disabled)
+- State reset on screen transitions
+
+**Usage Example (useRollForTasks):**
 ```javascript
-import { useScreenController } from '$lib/composables/useScreenController.svelte.js';
+import { useRollForTasks } from '$lib/composables/screen/useRollForTasks.svelte.js';
 
-const screen = useScreenController();
+const rollTasks = useRollForTasks();
 
-// Set state
-screen.setRolling(true);
-screen.setResult({ value: 15 });
-screen.setConfirming(false);
-
-// Check state
-$: if (screen.isBusy()) {
-  console.log('Screen is busy');
+// Handle roll/confirm action
+async function onButtonClick() {
+  await rollTasks.handleRollForTasks(triggerAutoPlay);
 }
 
-$: if (screen.hasResult()) {
-  console.log('Result available:', screen.result);
-}
+// Access state
+$: buttonText = rollTasks.rollTasksRolled ? 'CONFIRM' : 'ROLL';
+$: isDisabled = rollTasks.rollTasksRolling || rollTasks.rollTasksConfirming;
 
 // Reset on screen change
 $effect(() => {
-  if (currentScreen === 'initialDamageRoll') {
-    screen.reset();
+  if (currentScreen === 'rollForTasks') {
+    rollTasks.resetState();
   }
 });
 ```
 
-**Phase 2 Enhancements (Planned):**
-
-In Phase 2, specialized screen controllers will be extracted:
-- `useRollForTasks()` - Full implementation
-- `useFailureCheck()` - Full implementation
-- `useSuccessCheck()` - Full implementation
-- `useInitialDamage()` - Full implementation
-- `useFinalDamage()` - Full implementation
-
-These are currently placeholders and will be implemented in Phase 2.1.
-
-**API (Phase 1):**
-```typescript
-{
-  // State
-  rolling: boolean,
-  result: any,
-  confirming: boolean,
-  error: string | Error | null,
-
-  // Setters
-  setRolling(value: boolean): void,
-  setResult(value: any): void,
-  setConfirming(value: boolean): void,
-  setError(value: string | Error | null): void,
-
-  // Actions
-  reset(): void,
-
-  // Helpers
-  isBusy(): boolean,
-  hasResult(): boolean
-}
-```
+**Common Pattern:**
+Each screen composable exports:
+- State variables (e.g., `rolled`, `rolling`, `confirming`)
+- Handler function (e.g., `handleRollForTasks()`)
+- Reset function (e.g., `resetState()`)
+- Derived values for UI (button text, disabled state)
 
 ---
 
