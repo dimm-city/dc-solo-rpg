@@ -3,6 +3,7 @@
 	import { onNavigate } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import { page } from '$app/stores';
+	import { untrack } from 'svelte';
 	import {
 		initializeDiceBox,
 		diceState,
@@ -15,6 +16,9 @@
 	// Show dice only when on game screens (not home, not about)
 	const showDice = $derived($page.url.pathname.startsWith('/game/'));
 	const diceRolling = $derived(diceState.isRolling);
+
+	// Track if we've attempted initialization to prevent loops
+	let initAttempted = false;
 
 	onNavigate((navigation) => {
 		// Only run in browser environment (SSR safety)
@@ -32,16 +36,33 @@
 	});
 
 	// Initialize DiceBox when the container becomes visible
+	// Use $effect with untrack to prevent infinite loops
 	$effect(() => {
-		// Only initialize if showing dice, container exists, and not already initialized
-		// This prevents duplicate initialization during theme changes
-		if (showDice && diceContainer && !isDiceBoxInitialized()) {
-			// Wrap in try/catch to prevent page crash if WebGL initialization fails
-			// (e.g., in headless browsers, old devices, or when GPU is unavailable)
-			initializeDiceBox(diceContainer).catch((error) => {
-				console.warn('[Layout] Failed to initialize DiceBox, dice animations disabled:', error.message);
-				// Game remains functional without 3D dice
-			});
+		// Read reactive dependencies: showDice and diceContainer
+		// This effect will re-run when these change
+		const shouldInit = showDice && diceContainer;
+
+		if (shouldInit) {
+			// Use untrack to check initialization status without creating reactive dependency
+			// This prevents the effect from re-running when isInitialized changes
+			const alreadyInitialized = untrack(() => isDiceBoxInitialized());
+
+			if (!alreadyInitialized && !initAttempted) {
+				initAttempted = true;
+
+				// Initialize DiceBox with error handling
+				initializeDiceBox(diceContainer).catch((error) => {
+					console.warn(
+						'[Layout] Failed to initialize DiceBox, dice animations disabled:',
+						error.message
+					);
+					// Game remains functional without 3D dice
+				});
+			}
+		} else {
+			// Reset init attempt flag when leaving game screens
+			// This allows re-initialization if user navigates back to game
+			initAttempted = false;
 		}
 	});
 </script>
