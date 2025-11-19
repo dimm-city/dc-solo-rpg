@@ -228,7 +228,10 @@ describe('gameStore', () => {
 			transitionTo('initialDamageRoll');
 			expect(gameState.state).toBe('initialDamageRoll');
 
-			transitionTo('rollForTasks');
+			transitionTo('startRound');
+		expect(gameState.state).toBe('startRound');
+
+		transitionTo('rollForTasks');
 			expect(gameState.state).toBe('rollForTasks');
 		});
 	});
