@@ -5,6 +5,8 @@
 	 */
 
 	import AudioPlayer from './AudioPlayer.svelte';
+	import GameOverMessage from './story/GameOverMessage.svelte';
+	import RoundStats from './story/RoundStats.svelte';
 	import { fade, fly } from 'svelte/transition';
 
 	let {
@@ -150,53 +152,11 @@
 		{/if}
 
 		<!-- Game Over Message (Victory/Loss) -->
-		{#if round.gameOverMessage}
-			<div
-				class="game-over-section"
-				class:victory={round.isWon}
-				data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
-			>
-				<div class="game-over-header">
-					<h3>{round.isWon ? 'Victory' : 'Defeat'}</h3>
-				</div>
-				<div class="game-over-content">
-					<p class="game-over-message">{round.gameOverMessage}</p>
-				</div>
-			</div>
-		{/if}
+		<GameOverMessage message={round.gameOverMessage} isWon={round.isWon} />
 
 		<!-- Game State Stats -->
-		{#if showStats && round.gameState}
-			<div class="round-stats" data-augmented-ui="tl-clip tr-clip border">
-				<div class="stat-item">
-					<span class="stat-label">Tower</span>
-					<span class="stat-value">{round.gameState.tower ?? 'N/A'}</span>
-				</div>
-				{#if round.gameState.kingsRevealed !== undefined}
-					<div class="stat-item">
-						<span class="stat-label">Failures</span>
-						<span class="stat-value">{round.gameState.kingsRevealed}/4</span>
-					</div>
-				{/if}
-				{#if round.gameState.tokens !== undefined}
-					<div class="stat-item">
-						<span class="stat-label">
-							{round.gameState.aceOfHeartsRevealed ? 'Success' : 'Tokens'}
-						</span>
-						<span class="stat-value">
-							{round.gameState.aceOfHeartsRevealed
-								? `${10 - round.gameState.tokens}/10`
-								: round.gameState.tokens}
-						</span>
-					</div>
-				{/if}
-				{#if round.gameState.acesRevealed !== undefined && round.gameState.acesRevealed > 0}
-					<div class="stat-item">
-						<span class="stat-label">Abilities</span>
-						<span class="stat-value">{round.gameState.acesRevealed}</span>
-					</div>
-				{/if}
-			</div>
+		{#if showStats}
+			<RoundStats gameState={round.gameState} />
 		{/if}
 	</div>
 {/if}
@@ -536,107 +496,6 @@
 	}
 
 	/* Game Over Section (Victory/Loss Message) */
-	.game-over-section {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-lg);
-		padding: var(--space-xl);
-		background: linear-gradient(135deg, rgba(220, 20, 60, 0.15), rgba(139, 0, 0, 0.2));
-		border: 3px solid rgba(220, 20, 60, 0.6);
-		backdrop-filter: blur(8px);
-		-webkit-backdrop-filter: blur(8px);
-		--aug-border-bg: linear-gradient(135deg, rgba(220, 20, 60, 0.3), rgba(139, 0, 0, 0.2));
-		--aug-border: 3px;
-		--aug-border-fallback-color: rgba(220, 20, 60, 0.6);
-		box-shadow: 0 0 25px rgba(220, 20, 60, 0.4);
-	}
-
-	.game-over-section.victory {
-		background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(0, 255, 100, 0.1));
-		border-color: rgba(255, 215, 0, 0.6);
-		--aug-border-bg: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(0, 255, 100, 0.2));
-		--aug-border-fallback-color: rgba(255, 215, 0, 0.6);
-		box-shadow: 0 0 25px rgba(255, 215, 0, 0.4);
-	}
-
-	.game-over-header {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: var(--space-md);
-	}
-
-	.game-over-header h3 {
-		font-family: var(--font-display);
-		font-size: 1.75rem;
-		font-weight: 700;
-		color: rgba(220, 20, 60, 1);
-		text-transform: uppercase;
-		letter-spacing: 0.15em;
-		text-shadow: 0 0 15px rgba(220, 20, 60, 0.8);
-		margin: 0;
-	}
-
-	.game-over-section.victory .game-over-header h3 {
-		color: var(--color-brand-yellow);
-		text-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
-	}
-
-	.game-over-content {
-		padding: var(--space-lg);
-		background: rgba(0, 0, 0, 0.4);
-		border-radius: 8px;
-		border: 1px solid rgba(255, 255, 255, 0.1);
-	}
-
-	.game-over-message {
-		font-size: 1.125rem;
-		line-height: 1.7;
-		color: rgba(255, 255, 255, 0.95);
-		font-family: var(--font-body);
-		margin: 0;
-		text-align: center;
-	}
-
-	/* Round Stats */
-	.round-stats {
-		display: flex;
-		align-items: center;
-		justify-content: space-around;
-		gap: var(--space-md);
-		padding: var(--space-lg);
-		background: linear-gradient(135deg, rgba(0, 0, 0, 0.5), rgba(26, 26, 26, 0.5));
-		border: 2px solid rgba(255, 255, 255, 0.1);
-		backdrop-filter: blur(4px);
-		-webkit-backdrop-filter: blur(4px);
-		--aug-border-bg: rgba(255, 255, 255, 0.05);
-		--aug-border: 2px;
-		--aug-border-fallback-color: rgba(255, 255, 255, 0.1);
-	}
-
-	.stat-item {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: var(--space-xs);
-	}
-
-	.stat-label {
-		font-size: 0.75rem;
-		color: rgba(255, 255, 255, 0.6);
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
-	}
-
-	.stat-value {
-		font-family: 'Courier New', monospace;
-		font-size: 1.25rem;
-		font-weight: 700;
-		color: var(--color-neon-cyan);
-		text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
-	}
-
-	/* Mobile optimizations */
 	@media (max-width: 640px) {
 		.story-round {
 			padding: var(--space-sm);
@@ -700,22 +559,7 @@
 			padding: var(--space-md);
 		}
 
-		.round-stats {
-			flex-wrap: wrap;
-			padding: var(--space-md);
-			gap: var(--space-sm);
-		}
-
-		.stat-item {
-			flex: 1 1 30%;
-			min-width: 80px;
-		}
-
-		.stat-value {
-			font-size: 1rem;
-		}
 	}
-
 	/* Extra small screens */
 	@media (max-width: 375px) {
 		.story-round {
