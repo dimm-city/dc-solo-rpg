@@ -206,7 +206,7 @@ This document tracks the status of the comprehensive refactoring and improvement
 ---
 
 ### Phase 5: Settings & Polish (Week 5)
-**Status:** ⏳ In Progress (Phase 5.1 Complete)
+**Status:** ⏳ In Progress (Phase 5.1 & 5.2 Complete)
 **Estimated Effort:** 2-3 days
 **Priority:** LOW
 
@@ -219,11 +219,13 @@ This document tracks the status of the comprehensive refactoring and improvement
 - ✅ **Actual Effort:** < 1 day
 - 📊 **Result:** 42% reduction (284 lines vs 250 target, kept modal structure)
 
-#### 5.2 Refactor StoryGenerationPanel (428 lines → 250 lines)
-- [ ] Create `useStoryGeneration.svelte.js` (150 lines)
-- [ ] Extract `GeneratedStory.svelte` (120 lines)
-- [ ] Update `StoryGenerationPanel.svelte`
-- [ ] **Estimated Effort:** 1 day
+#### 5.2 Refactor StoryGenerationPanel (428 lines → 234 lines) ✅ COMPLETE
+- ✅ Create `useStoryGeneration.svelte.js` (181 lines) - story generation state composable
+- ✅ Extract `GeneratedStory.svelte` (118 lines) ⭐ REUSABLE - story display component
+- ✅ Update `StoryGenerationPanel.svelte` to use new composable/component (234 lines, 45% reduction)
+- ✅ Verify build + type check pass (0 new errors)
+- ✅ **Actual Effort:** < 1 day
+- 📊 **Result:** 45% reduction (234 lines vs 250 target)
 
 #### 5.3 Refactor IntroScreen (408 lines → 250 lines)
 - [ ] Extract `ChoiceCard.svelte` (100 lines)
@@ -306,9 +308,10 @@ This document tracks the status of the comprehensive refactoring and improvement
 | StoryRound | 739 | 583 | 21% | ✅ Complete |
 | BrowseGames | 708 | 350 | 50% | ✅ Complete |
 | AISettings | 487 | 284 | 42% | ✅ Complete |
+| StoryGenerationPanel | 428 | 234 | 45% | ✅ Complete |
 | GameScreen | 1,399 | TBD | TBD | ⏳ Pending |
 | StatusDisplay | 2,006 | TBD | TBD | ⏳ Pending |
-| **Average (Completed)** | | | **48%** | 6/8 done |
+| **Average (Completed)** | | | **47%** | 7/9 done |
 
 ### New Components Created
 - [ ] **Common Components:** 4/4 (0%)
