@@ -32,7 +32,7 @@ Test content
 
 ---
 
-# Card Deck
+## Card Deck
 
 ${generateCards('Primary Success', 1)}
 
@@ -335,7 +335,7 @@ Test
 
 ---
 
-# Card Deck
+## Card Deck
 
 ### Primary Success
 
@@ -438,7 +438,7 @@ Test
 
 ---
 
-# Card Deck
+## Card Deck
 
 ### Primary Success
 
@@ -522,7 +522,7 @@ Test
 
 ---
 
-# Card Deck
+## Card Deck
 
 ### Primary Success
 
@@ -575,7 +575,7 @@ Test
 
 ---
 
-# Card Deck
+## Card Deck
 
 ### Primary Success
 
@@ -627,7 +627,7 @@ Test
 
 ---
 
-# Card Deck
+## Card Deck
 
 ### Challenge: invalid-format
 
@@ -671,7 +671,7 @@ Test
 
 ---
 
-# Card Deck
+## Card Deck
 
 ### Primary Success
 
@@ -722,7 +722,7 @@ Test
 
 ---
 
-# Card Deck
+## Card Deck
 
 ### Primary Success
 
@@ -779,7 +779,7 @@ Test
 
 ---
 
-# Card Deck
+## Card Deck
 
 ### Primary Success
 
@@ -927,7 +927,7 @@ ${introduction}
 
 ---
 
-# Card Deck
+## Card Deck
 
 ${generateCards('Primary Success', primarySuccess)}
 

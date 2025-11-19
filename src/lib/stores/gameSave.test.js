@@ -31,9 +31,12 @@ const localStorageMock = (() => {
 global.localStorage = localStorageMock;
 
 describe('gameSave', () => {
+	const TEST_GAME_SLUG = 'test-game';
+
 	beforeEach(() => {
 		localStorageMock.clear();
 		vi.clearAllMocks();
+		vi.restoreAllMocks();
 	});
 
 	afterEach(() => {
@@ -73,7 +76,7 @@ describe('gameSave', () => {
 					title: 'Test Game',
 					options: { difficulty: 1, dice: 'default' }
 				},
-				systemConfig: { gameConfigUrl: '/games/test/' },
+				systemConfig: { gameConfigUrl: '/games/test-game/' },
 				stylesheet: '',
 				status: '',
 				player: { name: 'Test Player' }
@@ -102,7 +105,7 @@ describe('gameSave', () => {
 		it('should handle errors gracefully', () => {
 			const mockGameState = {
 				state: 'drawCard',
-				config: {}
+				config: { title: 'Test Game' }
 			};
 
 			// Make setItem throw an error
@@ -128,26 +131,26 @@ describe('gameSave', () => {
 				config: { title: 'Test Game', options: {} }
 			};
 
-			localStorageMock.setItem('dc-solo-rpg-save', JSON.stringify(mockSaveData));
+			localStorageMock.setItem('dc-solo-rpg-save-test-game', JSON.stringify(mockSaveData));
 
-			const result = loadGame();
+			const result = loadGame(TEST_GAME_SLUG);
 
 			expect(result).toEqual(mockSaveData);
 		});
 
 		it('should return null if no save exists', () => {
-			const result = loadGame();
+			const result = loadGame(TEST_GAME_SLUG);
 
 			expect(result).toBeNull();
 		});
 
 		it('should clear corrupted save data', () => {
-			localStorageMock.setItem('dc-solo-rpg-save', 'invalid json');
+			localStorageMock.setItem('dc-solo-rpg-save-test-game', 'invalid json');
 
-			const result = loadGame();
+			const result = loadGame(TEST_GAME_SLUG);
 
 			expect(result).toBeNull();
-			expect(localStorageMock.removeItem).toHaveBeenCalledWith('dc-solo-rpg-save');
+			expect(localStorageMock.removeItem).toHaveBeenCalledWith('dc-solo-rpg-save-test-game');
 		});
 
 		it('should reject old save versions', () => {
@@ -157,26 +160,26 @@ describe('gameSave', () => {
 				state: 'drawCard'
 			};
 
-			localStorageMock.setItem('dc-solo-rpg-save', JSON.stringify(mockSaveData));
+			localStorageMock.setItem('dc-solo-rpg-save-test-game', JSON.stringify(mockSaveData));
 
-			const result = loadGame();
+			const result = loadGame(TEST_GAME_SLUG);
 
 			expect(result).toBeNull();
-			expect(localStorageMock.removeItem).toHaveBeenCalledWith('dc-solo-rpg-save');
+			expect(localStorageMock.removeItem).toHaveBeenCalledWith('dc-solo-rpg-save-test-game');
 		});
 	});
 
 	describe('hasSavedGame', () => {
 		it('should return true if save exists', () => {
-			localStorageMock.setItem('dc-solo-rpg-save', JSON.stringify({ version: '1.0' }));
+			localStorageMock.setItem('dc-solo-rpg-save-test-game', JSON.stringify({ version: '1.0' }));
 
-			const result = hasSavedGame();
+			const result = hasSavedGame(TEST_GAME_SLUG);
 
 			expect(result).toBe(true);
 		});
 
 		it('should return false if no save exists', () => {
-			const result = hasSavedGame();
+			const result = hasSavedGame(TEST_GAME_SLUG);
 
 			expect(result).toBe(false);
 		});
@@ -194,9 +197,9 @@ describe('gameSave', () => {
 				config: { title: 'Test Game' }
 			};
 
-			localStorageMock.setItem('dc-solo-rpg-save', JSON.stringify(mockSaveData));
+			localStorageMock.setItem('dc-solo-rpg-save-test-game', JSON.stringify(mockSaveData));
 
-			const result = getSaveMetadata();
+			const result = getSaveMetadata(TEST_GAME_SLUG);
 
 			expect(result).toEqual({
 				timestamp: '2024-01-01T00:00:00.000Z',
@@ -210,7 +213,7 @@ describe('gameSave', () => {
 		});
 
 		it('should return null if no save exists', () => {
-			const result = getSaveMetadata();
+			const result = getSaveMetadata(TEST_GAME_SLUG);
 
 			expect(result).toBeNull();
 		});
@@ -226,9 +229,9 @@ describe('gameSave', () => {
 				config: {}
 			};
 
-			localStorageMock.setItem('dc-solo-rpg-save', JSON.stringify(mockSaveData));
+			localStorageMock.setItem('dc-solo-rpg-save-test-game', JSON.stringify(mockSaveData));
 
-			const result = getSaveMetadata();
+			const result = getSaveMetadata(TEST_GAME_SLUG);
 
 			expect(result.gameTitle).toBe('Unknown Game');
 		});
@@ -236,12 +239,12 @@ describe('gameSave', () => {
 
 	describe('clearSave', () => {
 		it('should remove save from localStorage', () => {
-			localStorageMock.setItem('dc-solo-rpg-save', JSON.stringify({ version: '1.0' }));
+			localStorageMock.setItem('dc-solo-rpg-save-test-game', JSON.stringify({ version: '1.0' }));
 
-			const result = clearSave();
+			const result = clearSave(TEST_GAME_SLUG);
 
 			expect(result).toBe(true);
-			expect(localStorageMock.removeItem).toHaveBeenCalledWith('dc-solo-rpg-save');
+			expect(localStorageMock.removeItem).toHaveBeenCalledWith('dc-solo-rpg-save-test-game');
 		});
 
 		it('should handle errors gracefully', () => {
@@ -249,7 +252,7 @@ describe('gameSave', () => {
 				throw new Error('Remove failed');
 			});
 
-			const result = clearSave();
+			const result = clearSave(TEST_GAME_SLUG);
 
 			expect(result).toBe(false);
 		});
@@ -350,7 +353,7 @@ describe('gameSave', () => {
 					title: 'Integration Test Game',
 					options: { difficulty: 1, dice: 'neon' }
 				},
-				systemConfig: { gameConfigUrl: '/games/integration/' },
+				systemConfig: { gameConfigUrl: '/games/test-game/' },
 				stylesheet: '',
 				status: '',
 				player: { name: 'Integration Test' }
@@ -361,15 +364,15 @@ describe('gameSave', () => {
 			expect(saveResult).toBe(true);
 
 			// Check if save exists
-			expect(hasSavedGame()).toBe(true);
+			expect(hasSavedGame(TEST_GAME_SLUG)).toBe(true);
 
 			// Get metadata
-			const metadata = getSaveMetadata();
+			const metadata = getSaveMetadata(TEST_GAME_SLUG);
 			expect(metadata.playerName).toBe('Integration Test');
 			expect(metadata.gameTitle).toBe('Integration Test Game');
 
 			// Load game
-			const loadedData = loadGame();
+			const loadedData = loadGame(TEST_GAME_SLUG);
 			expect(loadedData.playerName).toBe('Integration Test');
 			expect(loadedData.tower).toBe(42);
 			expect(loadedData.config.options.difficulty).toBe(1);
@@ -382,9 +385,9 @@ describe('gameSave', () => {
 			expect(newGameState.tower).toBe(42);
 
 			// Clear save
-			const clearResult = clearSave();
+			const clearResult = clearSave(TEST_GAME_SLUG);
 			expect(clearResult).toBe(true);
-			expect(hasSavedGame()).toBe(false);
+			expect(hasSavedGame(TEST_GAME_SLUG)).toBe(false);
 		});
 	});
 });
