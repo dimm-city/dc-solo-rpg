@@ -10,42 +10,34 @@
 	import LoadScreen from './LoadScreen.svelte';
 	import GameOver from './GameOver.svelte';
 	import JournalEntry from './JournalEntry.svelte';
-	import SuccessCheck from './SuccessCheck.svelte';
 	import InitialDamageRoll from './InitialDamageRoll.svelte';
 	import FinalDamageRoll from './FinalDamageRoll.svelte';
-	import RollForTasks from './RollForTasks.svelte';
 	import DrawCard from './DrawCard.svelte';
-	import FailureCheck from './FailureCheck.svelte';
 	import StatusDisplay from './StatusDisplay.svelte';
 	import ContinueButton from './ContinueButton.svelte';
 	import ConfirmModal from './ConfirmModal.svelte';
 	import MiniStatusHUD from './MiniStatusHUD.svelte';
 	import KeyboardHint from './KeyboardHint.svelte';
-	import DeckVisualization from './DeckVisualization.svelte';
 	import ButtonBar from './ButtonBar.svelte';
 	import OverlayModal from './OverlayModal.svelte';
 	import SettingsModal from './settings/SettingsModal.svelte';
 	import { onMount } from 'svelte';
-	import { rollDice } from '../stores/diceStore.svelte.js';
-	import {
-		rollForTasks,
-		confirmTaskRoll,
-		getFailureCheckRoll,
-		applyFailureCheckResult,
-		applyPendingDiceRoll,
-		applyPendingTaskRoll,
-		applyPendingSuccessCheck,
-		performInitialDamageRoll,
-		applyPendingInitialDamageRoll,
-		applyPendingFinalDamageRoll,
-		confirmFailureCheck,
-		successCheck,
-		startRound,
-		performFinalDamageRoll,
-		recordRound,
-		restartGame,
-		exitGame
-	} from '../stores/gameActions.svelte.js';
+
+	// Screen-specific components
+	import ContextBackground from './game/ContextBackground.svelte';
+	import RollForTasksController from './game/RollForTasksController.svelte';
+	import FailureCheckController from './game/FailureCheckController.svelte';
+	import SuccessCheckController from './game/SuccessCheckController.svelte';
+
+	// Screen composables
+	import { useRollForTasks } from '../composables/screen/useRollForTasks.svelte.js';
+	import { useFailureCheck } from '../composables/screen/useFailureCheck.svelte.js';
+	import { useSuccessCheck } from '../composables/screen/useSuccessCheck.svelte.js';
+	import { useInitialDamage } from '../composables/screen/useInitialDamage.svelte.js';
+	import { useFinalDamage } from '../composables/screen/useFinalDamage.svelte.js';
+
+	// Game actions
+	import { recordRound, restartGame, exitGame } from '../stores/gameActions.svelte.js';
 
 	let {
 		systemSettings = {},
@@ -57,6 +49,13 @@
 	const currentScreen = $derived(gameState.state);
 	// Reduced from 300ms to 200ms for snappier, more mechanical feel
 	const TRANSITION_DURATION = 200;
+
+	// Instantiate screen composables
+	const rollForTasks = useRollForTasks();
+	const failureCheck = useFailureCheck(onfailurecheckcompleted);
+	const successCheck = useSuccessCheck();
+	const initialDamage = useInitialDamage();
+	const finalDamage = useFinalDamage();
 
 	// Contextual background text for each screen
 	const contextText = $derived.by(() => {
@@ -70,10 +69,10 @@
 				};
 			case 'rollForTasks':
 				return {
-					title: rollTasksRolled
+					title: rollForTasks.rolled
 						? `Draw ${gameState.cardsToDraw} Card${gameState.cardsToDraw !== 1 ? 's' : ''}`
 						: 'Roll for Tasks',
-					description: rollTasksRolled
+					description: rollForTasks.rolled
 						? 'Your fate has been determined. Proceed to draw your cards.'
 						: 'Roll the dice to determine how many challenges you must face this round.',
 					showStats: true
@@ -115,159 +114,7 @@
 		}
 	});
 
-	// RollForTasks button state
-	let rollTasksRolled = $state(false);
-	let rollTasksRolling = $state(false);
-	let rollTasksConfirming = $state(false);
 
-	async function handleRollForTasks() {
-		if (rollTasksRolling || rollTasksConfirming) return;
-		if (rollTasksRolled) {
-			// Confirm
-			rollTasksConfirming = true;
-			await confirmTaskRoll();
-			rollTasksConfirming = false;
-		} else {
-			// Roll
-			rollTasksRolling = true;
-			const { roll, wasLucid, wasSurreal } = await rollForTasks();
-			// Roll dice and wait for animation to complete
-			// Pass modifier state for visual dice roll (2d20 if was Lucid/Surreal)
-			await rollDice(roll, { isLucid: wasLucid, isSurreal: wasSurreal });
-			rollTasksRolling = false;
-			// Apply pending dice roll after animation completes
-			applyPendingTaskRoll();
-			rollTasksRolled = true;
-			// Trigger auto-play after roll completes (event-driven)
-			setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
-		}
-	}
-
-	const rollForTasksButtonText = $derived(
-		rollTasksRolled
-			? (gameState.config?.labels?.rollForTasksResultHeader ??
-					`Draw ${gameState.cardsToDraw} Card${gameState.cardsToDraw !== 1 ? 's' : ''}`)
-			: (gameState.config?.labels?.rollForTasksHeader ?? 'Roll Dice')
-	);
-	const rollForTasksButtonDisabled = $derived(rollTasksRolling || rollTasksConfirming);
-
-	// FailureCheck button state
-	let failureCheckRolling = $state(false);
-	let failureCheckResult = $state();
-
-	async function handleFailureCheck() {
-		if (failureCheckRolling) return;
-		if (currentScreen == 'failureCheck' && !failureCheckResult) {
-			failureCheckRolling = true;
-			const { roll, wasLucid, wasSurreal } = getFailureCheckRoll();
-			failureCheckResult = roll;
-			// Store pending updates (don't apply yet)
-			applyFailureCheckResult(roll);
-			// Roll dice and wait for animation to complete
-			// Pass modifier state for visual dice roll (2d20 if was Lucid/Surreal)
-			await rollDice(roll, { isLucid: wasLucid, isSurreal: wasSurreal });
-			failureCheckRolling = false;
-			// NOW apply the pending updates after dice animation completes
-			applyPendingDiceRoll();
-			// Trigger auto-play after roll completes (event-driven)
-			setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
-			await confirmFailureCheck();
-			onfailurecheckcompleted(gameState.state);
-		} else if (failureCheckResult) {
-			await confirmFailureCheck();
-		}
-	}
-
-	const failureCheckButtonText = $derived(failureCheckResult ? 'Continue' : 'Roll for Damage');
-
-	// SuccessCheck button state
-	let successCheckRolling = $state(false);
-	let successCheckResult = $state();
-
-	async function handleSuccessCheck() {
-		if (successCheckRolling) return;
-		if (currentScreen == 'successCheck' && !successCheckResult) {
-			successCheckRolling = true;
-			const { roll, wasLucid, wasSurreal } = await successCheck();
-			successCheckResult = roll;
-			// Roll dice and wait for animation to complete
-			// Pass modifier state for visual dice roll (2d20 if was Lucid/Surreal)
-			await rollDice(roll, { isLucid: wasLucid, isSurreal: wasSurreal });
-			successCheckRolling = false;
-			// Apply pending success check after animation completes
-			applyPendingSuccessCheck();
-			// Trigger auto-play after roll completes (event-driven)
-			setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
-		} else if (successCheckResult) {
-			await startRound();
-		}
-	}
-
-	const successCheckButtonText = $derived(successCheckResult ? 'Continue' : 'Roll to Remove Token');
-
-	// FinalDamageRoll button state
-	let finalDamageRolling = $state(false);
-	let finalDamageResult = $state();
-
-	async function handleFinalDamageRoll() {
-		if (finalDamageRolling || finalDamageResult !== undefined) return;
-		if (currentScreen !== 'finalDamageRoll') return;
-
-		finalDamageRolling = true;
-		const rollResult = Math.floor(Math.random() * 6) + 1;
-		finalDamageResult = rollResult;
-
-		try {
-			// Store pending updates
-			performFinalDamageRoll(rollResult);
-			// Roll dice and wait for animation to complete
-			await rollDice(rollResult);
-			// Apply pending final damage roll after animation completes
-			applyPendingFinalDamageRoll();
-			// Trigger auto-play after roll completes (event-driven)
-			setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
-		} finally {
-			finalDamageRolling = false;
-		}
-	}
-
-	const finalDamageButtonText = $derived(
-		finalDamageResult
-			? gameState.win
-				? 'Victory! Continue'
-				: 'Defeat... Continue'
-			: 'Roll Final Damage'
-	);
-
-	// InitialDamageRoll button state
-	let initialDamageRolling = $state(false);
-	let initialDamageResult = $state();
-
-	async function handleInitialDamageRoll() {
-		if (initialDamageRolling || initialDamageResult !== undefined) return;
-		if (currentScreen !== 'initialDamageRoll') return;
-
-		initialDamageRolling = true;
-		const rollResult = Math.floor(Math.random() * 6) + 1;
-		initialDamageResult = rollResult;
-
-		try {
-			// Store pending updates
-			performInitialDamageRoll(rollResult);
-			// Roll dice and wait for animation to complete
-			await rollDice(rollResult);
-			// Apply pending initial damage roll after animation completes
-			applyPendingInitialDamageRoll();
-			// Trigger auto-play after roll completes (event-driven)
-			setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
-		} finally {
-			initialDamageRolling = false;
-		}
-	}
-
-	const initialDamageButtonText = $derived(
-		initialDamageResult ? 'Continue to Round 1' : 'Roll for Initial Damage'
-	);
 
 	// DrawCard button state
 	let drawCardRef = $state();
@@ -430,16 +277,16 @@
 				transitionTo('initialDamageRoll');
 				break;
 			case 'initialDamageRoll':
-				if (!initialDamageRolling && !initialDamageResult) {
-					handleInitialDamageRoll();
+				if (!initialDamage.rolling && !initialDamage.result) {
+					initialDamage.handleInitialDamageRoll(triggerAutoPlayForCurrentScreen);
 				}
 				break;
 			case 'startRound':
 				transitionTo('rollForTasks');
 				break;
 			case 'rollForTasks':
-				if (!rollForTasksButtonDisabled) {
-					handleRollForTasks();
+				if (!rollForTasks.buttonDisabled) {
+					rollForTasks.handleRollForTasks(triggerAutoPlayForCurrentScreen);
 				}
 				break;
 			case 'drawCard':
@@ -448,18 +295,18 @@
 				}
 				break;
 			case 'failureCheck':
-				if (!failureCheckRolling) {
-					handleFailureCheck();
+				if (!failureCheck.rolling) {
+					failureCheck.handleFailureCheck(triggerAutoPlayForCurrentScreen);
 				}
 				break;
 			case 'successCheck':
-				if (!successCheckRolling) {
-					handleSuccessCheck();
+				if (!successCheck.rolling) {
+					successCheck.handleSuccessCheck(triggerAutoPlayForCurrentScreen);
 				}
 				break;
 			case 'finalDamageRoll':
-				if (!finalDamageRolling) {
-					handleFinalDamageRoll();
+				if (!finalDamage.rolling) {
+					finalDamage.handleFinalDamageRoll(triggerAutoPlayForCurrentScreen);
 				}
 				break;
 			case 'log':
@@ -510,9 +357,8 @@
 				break;
 
 			case 'initialDamageRoll':
-				// Reset state
-				initialDamageResult = undefined;
-				initialDamageRolling = false;
+				// Reset state using composable
+				initialDamage.resetState();
 				// Trigger auto-play
 				setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
 				break;
@@ -530,34 +376,29 @@
 				break;
 
 			case 'rollForTasks':
-				// Reset state
-				rollTasksRolled = false;
-				rollTasksRolling = false;
-				rollTasksConfirming = false;
+				// Reset state using composable
+				rollForTasks.resetState();
 				// Trigger auto-play
 				setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
 				break;
 
 			case 'failureCheck':
-				// Reset state
-				failureCheckResult = undefined;
-				failureCheckRolling = false;
+				// Reset state using composable
+				failureCheck.resetState();
 				// Trigger auto-play
 				setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
 				break;
 
 			case 'successCheck':
-				// Reset state
-				successCheckResult = undefined;
-				successCheckRolling = false;
+				// Reset state using composable
+				successCheck.resetState();
 				// Trigger auto-play
 				setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
 				break;
 
 			case 'finalDamageRoll':
-				// Reset state
-				finalDamageResult = undefined;
-				finalDamageRolling = false;
+				// Reset state using composable
+				finalDamage.resetState();
 				// Trigger auto-play
 				setTimeout(() => triggerAutoPlayForCurrentScreen(), 0);
 				break;
@@ -593,18 +434,18 @@
 
 			case 'initialDamageRoll':
 				// Auto-read prompt first if enabled
-				if (audioSettings.autoReadPrompts && initialDamageResult === undefined) {
+				if (audioSettings.autoReadPrompts && initialDamage.result === undefined) {
 					const promptText =
 						'Roll for Initial Damage. Before your journey begins, the situation is already precarious.';
 					speak(promptText);
 				}
 
 				// Auto-roll if enabled and not yet rolled
-				if (gameplaySettings.autoRollDice && initialDamageResult === undefined) {
-					autoPlayCanceller = autoRoll(() => handleInitialDamageRoll());
+				if (gameplaySettings.autoRollDice && initialDamage.result === undefined) {
+					autoPlayCanceller = autoRoll(() => initialDamage.handleInitialDamageRoll(triggerAutoPlayForCurrentScreen));
 				}
 				// Auto-continue after result if enabled
-				else if (gameplaySettings.autoContinueAfterReading && initialDamageResult !== undefined) {
+				else if (gameplaySettings.autoContinueAfterReading && initialDamage.result !== undefined) {
 					autoPlayCanceller = autoAdvance({
 						text: null,
 						shouldRead: false,
@@ -627,21 +468,21 @@
 
 			case 'rollForTasks':
 				// Auto-read prompt first if enabled and not yet rolled
-				if (audioSettings.autoReadPrompts && !rollTasksRolled) {
+				if (audioSettings.autoReadPrompts && !rollForTasks.rolled) {
 					const promptText =
 						'Roll the dice to determine how many challenges you must face this round.';
 					speak(promptText);
 				}
 
 				// Auto-roll if enabled and not yet rolled
-				if (gameplaySettings.autoRollDice && !rollTasksRolled && !rollTasksRolling) {
-					autoPlayCanceller = autoRoll(() => handleRollForTasks());
+				if (gameplaySettings.autoRollDice && !rollForTasks.rolled && !rollForTasks.rolling) {
+					autoPlayCanceller = autoRoll(() => rollForTasks.handleRollForTasks(triggerAutoPlayForCurrentScreen));
 				}
 				// Auto-confirm after roll if enabled
 				else if (
 					gameplaySettings.autoContinueAfterReading &&
-					rollTasksRolled &&
-					!rollTasksConfirming
+					rollForTasks.rolled &&
+					!rollForTasks.confirming
 				) {
 					// Announce result
 					if (audioSettings.autoAnnounceRolls) {
@@ -652,14 +493,14 @@
 					autoPlayCanceller = autoAdvance({
 						text: null,
 						shouldRead: false,
-						action: () => handleRollForTasks()
+						action: () => rollForTasks.handleRollForTasks(triggerAutoPlayForCurrentScreen)
 					});
 				}
 				break;
 
 			case 'failureCheck':
 				// Auto-read prompt first if enabled and not yet rolled
-				if (audioSettings.autoReadPrompts && failureCheckResult === undefined) {
+				if (audioSettings.autoReadPrompts && failureCheck.result === undefined) {
 					const promptText = 'An odd card demands a price. Roll to see how much stability you lose.';
 					speak(promptText);
 				}
@@ -667,27 +508,27 @@
 				// Auto-roll if enabled and not yet rolled
 				if (
 					gameplaySettings.autoRollDice &&
-					failureCheckResult === undefined &&
-					!failureCheckRolling
+					failureCheck.result === undefined &&
+					!failureCheck.rolling
 				) {
-					autoPlayCanceller = autoRoll(() => handleFailureCheck());
+					autoPlayCanceller = autoRoll(() => failureCheck.handleFailureCheck(triggerAutoPlayForCurrentScreen));
 				}
 				// Auto-continue after result if enabled
 				else if (
 					gameplaySettings.autoContinueAfterReading &&
-					failureCheckResult !== undefined
+					failureCheck.result !== undefined
 				) {
 					autoPlayCanceller = autoAdvance({
 						text: null,
 						shouldRead: false,
-						action: () => confirmFailureCheck()
+						action: () => failureCheck.handleFailureCheck(triggerAutoPlayForCurrentScreen)
 					});
 				}
 				break;
 
 			case 'successCheck':
 				// Auto-read prompt first if enabled and not yet rolled
-				if (audioSettings.autoReadPrompts && successCheckResult === undefined) {
+				if (audioSettings.autoReadPrompts && successCheck.result === undefined) {
 					const promptText =
 						'The Ace of Hearts has appeared. Roll to remove a token from your countdown.';
 					speak(promptText);
@@ -696,27 +537,27 @@
 				// Auto-roll if enabled and not yet rolled
 				if (
 					gameplaySettings.autoRollDice &&
-					successCheckResult === undefined &&
-					!successCheckRolling
+					successCheck.result === undefined &&
+					!successCheck.rolling
 				) {
-					autoPlayCanceller = autoRoll(() => handleSuccessCheck());
+					autoPlayCanceller = autoRoll(() => successCheck.handleSuccessCheck(triggerAutoPlayForCurrentScreen));
 				}
 				// Auto-continue after result if enabled
 				else if (
 					gameplaySettings.autoContinueAfterReading &&
-					successCheckResult !== undefined
+					successCheck.result !== undefined
 				) {
 					autoPlayCanceller = autoAdvance({
 						text: null,
 						shouldRead: false,
-						action: () => startRound()
+						action: () => successCheck.handleSuccessCheck(triggerAutoPlayForCurrentScreen)
 					});
 				}
 				break;
 
 			case 'finalDamageRoll':
 				// Auto-read prompt first if enabled and not yet rolled
-				if (audioSettings.autoReadPrompts && finalDamageResult === undefined) {
+				if (audioSettings.autoReadPrompts && finalDamage.result === undefined) {
 					const promptText =
 						'You have completed the countdown, but salvation comes with one final risk. Roll one last time.';
 					speak(promptText);
@@ -725,13 +566,13 @@
 				// Auto-roll if enabled and not yet rolled
 				if (
 					gameplaySettings.autoRollDice &&
-					finalDamageResult === undefined &&
-					!finalDamageRolling
+					finalDamage.result === undefined &&
+					!finalDamage.rolling
 				) {
-					autoPlayCanceller = autoRoll(() => handleFinalDamageRoll());
+					autoPlayCanceller = autoRoll(() => finalDamage.handleFinalDamageRoll(triggerAutoPlayForCurrentScreen));
 				}
 				// Auto-continue after result if enabled
-				else if (gameplaySettings.autoContinueAfterReading && finalDamageResult !== undefined) {
+				else if (gameplaySettings.autoContinueAfterReading && finalDamage.result !== undefined) {
 					autoPlayCanceller = autoAdvance({
 						text: null,
 						shouldRead: false,
@@ -797,14 +638,7 @@
 			</div>
 			<div class="main-screen-area dc-table-bg" onclick={handleScreenClick}>
 				<!-- Background contextual text -->
-				{#if contextText}
-					{#key currentScreen}
-						<div class="context-text-background" transition:fade={{ duration: 400 }}>
-							<h2 class="context-title">{contextText.title}</h2>
-							<p class="context-description">{contextText.description}</p>
-						</div>
-					{/key}
-				{/if}
+				<ContextBackground {contextText} />
 
 				{#key currentScreen}
 					{#if currentScreen == 'initialDamageRoll'}
@@ -829,7 +663,7 @@
 							data-testid="screen-rollForTasks"
 							transition:fade={{ duration: TRANSITION_DURATION }}
 						>
-							<RollForTasks />
+							<RollForTasksController triggerAutoPlay={triggerAutoPlayForCurrentScreen} />
 						</div>
 					{:else if currentScreen == 'drawCard'}
 						<OverlayModal isVisible={true} zIndex={50}>
@@ -841,7 +675,10 @@
 							data-testid="screen-failureCheck"
 							transition:fade={{ duration: TRANSITION_DURATION }}
 						>
-							<FailureCheck {onfailurecheckcompleted} />
+							<FailureCheckController
+								onCompleted={onfailurecheckcompleted}
+								triggerAutoPlay={triggerAutoPlayForCurrentScreen}
+							/>
 						</div>
 					{:else if currentScreen == 'successCheck'}
 						<div
@@ -849,7 +686,7 @@
 							data-testid="screen-successCheck"
 							transition:fade={{ duration: TRANSITION_DURATION }}
 						>
-							<SuccessCheck />
+							<SuccessCheckController triggerAutoPlay={triggerAutoPlayForCurrentScreen} />
 						</div>
 					{:else if currentScreen == 'finalDamageRoll'}
 						<div
