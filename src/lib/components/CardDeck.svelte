@@ -157,6 +157,28 @@
 	});
 
 	/**
+	 * Auto-draw first card when entering drawCard state
+	 * Triggers immediately when component loads in drawCard state with cards to draw
+	 */
+	$effect(() => {
+		// Only trigger on initial entry to drawCard with cards to draw
+		if (
+			gameState.state === 'drawCard' &&
+			gameState.cardsToDraw > 0 &&
+			animationStage === 'idle' &&
+			!card // No card currently being displayed
+		) {
+			// Small delay to allow component to fully render
+			setTimeout(() => {
+				// Double-check conditions before triggering (state could have changed)
+				if (gameState.state === 'drawCard' && animationStage === 'idle' && !card) {
+					handleProceed();
+				}
+			}, 100);
+		}
+	});
+
+	/**
 	 * Handle dismiss/continue - upload animation and notify parent
 	 */
 	async function handleDismiss() {
