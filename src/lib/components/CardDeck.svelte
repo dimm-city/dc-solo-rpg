@@ -101,9 +101,10 @@
 	/**
 	 * Auto-read card and auto-continue when revealed
 	 * ✅ FIXED: Guard pattern to prevent multiple TTS triggers for same card
+	 * ✅ FIXED: Guard variable must be plain variable, not $state (prevents reactive loop)
 	 */
 	let autoPlayCanceller = null; // Plain variable - no need for $state, just holds reference
-	let lastRevealedCardId = $state('');
+	let lastRevealedCardId = ''; // Plain variable - used only for comparison, not rendering
 
 	$effect(() => {
 		if (animationStage === 'revealed' && card) {
