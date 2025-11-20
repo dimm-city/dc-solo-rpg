@@ -90,11 +90,20 @@ describe('DiceStore - Theme Configuration', () => {
 			const gameStoreModule = await import('./gameStore.svelte.js');
 			gameState = gameStoreModule.gameState;
 
+			// Mock DOM container element with all required methods
+			global.mockContainer = {
+				id: 'dice-roller-container',
+				querySelector: vi.fn().mockReturnValue(null), // No canvas initially
+				firstChild: null,
+				removeChild: vi.fn()
+			};
+
 			// Mock DOM element
 			global.document = {
-				querySelector: vi.fn().mockReturnValue({
-					id: 'dice-roller-container'
-				})
+				querySelector: vi.fn().mockReturnValue(global.mockContainer),
+				body: {
+					contains: vi.fn().mockReturnValue(true) // Container is attached to DOM
+				}
 			};
 
 			global.window = {
@@ -104,13 +113,14 @@ describe('DiceStore - Theme Configuration', () => {
 			global.setTimeout = vi.fn((fn) => fn());
 		});
 
-		it('should initialize without theme_colorset when dice config is not provided', async () => {
+		it('should use default theme (pinkdreams) when dice config is not provided', async () => {
 			gameState.config = null;
 
-			await initializeDiceBox({ id: 'test-container' });
+			await initializeDiceBox(global.mockContainer);
 
 			expect(mockDiceBox.lastConfig).toBeDefined();
-			expect(mockDiceBox.lastConfig.theme_colorset).toBeUndefined();
+			// When no config is provided, should fall back to default theme (pinkdreams)
+			expect(mockDiceBox.lastConfig.theme_colorset).toBe('pinkdreams');
 		});
 
 		it('should NOT set theme_colorset when "default" theme is selected', async () => {
@@ -122,7 +132,7 @@ describe('DiceStore - Theme Configuration', () => {
 				}
 			};
 
-			await initializeDiceBox({ id: 'test-container' });
+			await initializeDiceBox(global.mockContainer);
 
 			expect(mockDiceBox.lastConfig).toBeDefined();
 			// CRITICAL: 'default' should NOT be passed to DiceBox as it's not a real theme
@@ -138,7 +148,7 @@ describe('DiceStore - Theme Configuration', () => {
 				}
 			};
 
-			await initializeDiceBox({ id: 'test-container' });
+			await initializeDiceBox(global.mockContainer);
 
 			expect(mockDiceBox.lastConfig).toBeDefined();
 			expect(mockDiceBox.lastConfig.theme_colorset).toBe('pinkdreams');
@@ -164,7 +174,7 @@ describe('DiceStore - Theme Configuration', () => {
 				const diceStoreModule = await import('./diceStore.svelte.js?update=' + Date.now());
 				const initFn = diceStoreModule.initializeDiceBox;
 
-				await initFn({ id: 'test-container' });
+				await initFn(global.mockContainer);
 
 				expect(mockDiceBox.initialize).toHaveBeenCalled();
 
@@ -190,7 +200,7 @@ describe('DiceStore - Theme Configuration', () => {
 				}
 			};
 
-			await initializeDiceBox({ id: 'test-container' });
+			await initializeDiceBox(global.mockContainer);
 
 			expect(mockDiceBox.lastConfig).toBeDefined();
 			expect(mockDiceBox.lastConfig.theme_customColorset).toBe(customDiceConfig);
@@ -199,7 +209,7 @@ describe('DiceStore - Theme Configuration', () => {
 		it('should always include required DiceBox config properties', async () => {
 			gameState.config = null;
 
-			await initializeDiceBox({ id: 'test-container' });
+			await initializeDiceBox(global.mockContainer);
 
 			expect(mockDiceBox.lastConfig).toBeDefined();
 			expect(mockDiceBox.lastConfig.assetPath).toBe('/dice/');

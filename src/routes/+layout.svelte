@@ -3,6 +3,7 @@
 	import { onNavigate } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import { page } from '$app/stores';
+	import { untrack } from 'svelte';
 	import {
 		initializeDiceBox,
 		diceState,
@@ -15,6 +16,9 @@
 	// Show dice only when on game screens (not home, not about)
 	const showDice = $derived($page.url.pathname.startsWith('/game/'));
 	const diceRolling = $derived(diceState.isRolling);
+
+	// ✅ FIXED: Use $state for initialization tracking to ensure persistence
+	let lastShowDiceValue = $state(false);
 
 	onNavigate((navigation) => {
 		// Only run in browser environment (SSR safety)
@@ -31,12 +35,31 @@
 		});
 	});
 
-	// Initialize DiceBox when the container becomes visible
+	// ✅ FIXED: Improved DiceBox initialization with proper state tracking
+	// Only react when showDice changes from false -> true
 	$effect(() => {
-		// Only initialize if showing dice, container exists, and not already initialized
-		// This prevents duplicate initialization during theme changes
-		if (showDice && diceContainer && !isDiceBoxInitialized()) {
-			initializeDiceBox(diceContainer);
+		// Only initialize when transitioning from not showing to showing
+		if (showDice && !lastShowDiceValue && diceContainer) {
+			lastShowDiceValue = true;
+
+			// Check initialization WITHOUT reactive dependency using untrack
+			// This prevents the effect from re-running when isInitialized changes
+			const alreadyInitialized = untrack(() => isDiceBoxInitialized());
+
+			if (!alreadyInitialized) {
+				// Initialize DiceBox with error handling
+				initializeDiceBox(diceContainer).catch((error) => {
+					console.warn(
+						'[Layout] Failed to initialize DiceBox, dice animations disabled:',
+						error.message
+					);
+					// Game remains functional without 3D dice
+				});
+			}
+		} else if (!showDice) {
+			// Reset tracking when leaving game screens
+			// This allows re-initialization if user navigates back
+			lastShowDiceValue = false;
 		}
 	});
 </script>

@@ -4,13 +4,9 @@
 	 * Integrated into StoryMode to generate narrative summaries
 	 */
 	import AugmentedButton from './AugmentedButton.svelte';
-	import AudioPlayer from './AudioPlayer.svelte';
+	import GeneratedStory from './story/GeneratedStory.svelte';
 	import AISettings from './AISettings.svelte';
-	import { generateStory } from '../services/storyGeneration.js';
-	import { generateAudioNarration, isTTSAvailable } from '../services/textToSpeech.js';
-	import { saveAIStory, loadAIStory, deleteAIStory } from '../stores/indexedDBStorage.js';
-	import { isAIConfigured } from '../services/aiSettings.js';
-	import { onMount } from 'svelte';
+	import { useStoryGeneration } from '$lib/composables/useStoryGeneration.svelte.js';
 	import { fade, slide } from 'svelte/transition';
 
 	let {
@@ -18,127 +14,12 @@
 		saveKey = '' // IndexedDB save key (gameSlug:completed:timestamp)
 	} = $props();
 
-	// Story state
-	let story = $state(null);
-	let hasStory = $state(false);
-
-	// UI state
-	let isGenerating = $state(false);
-	let isGeneratingAudio = $state(false);
-	let generateAudio = $state(true);
-	let showSettings = $state(false);
-	let errorMessage = $state('');
-	let aiConfigured = $state(false);
-	let ttsAvailable = $state(false);
-
-	// Progress messages
-	let progressMessage = $state('');
-
-	onMount(async () => {
-		// Check if AI is configured
-		aiConfigured = await isAIConfigured();
-
-		// Check if TTS is available
-		ttsAvailable = await isTTSAvailable();
-
-		// Load existing story if it exists
-		if (saveKey) {
-			const existingStory = await loadAIStory(saveKey);
-			if (existingStory) {
-				story = existingStory;
-				hasStory = true;
-			}
-		}
-	});
-
-	async function handleGenerate() {
-		if (!aiConfigured) {
-			showSettings = true;
-			return;
-		}
-
-		isGenerating = true;
-		errorMessage = '';
-		progressMessage = 'Generating story with AI...';
-
-		try {
-			// Build game data for story generation
-			const gameData = {
-				playerName: savedGame.playerName,
-				gameTitle: savedGame.gameTitle || savedGame.config?.title,
-				introText: savedGame.config?.introduction?.text || '',
-				cardLog: savedGame.cardLog || [],
-				journalEntries: savedGame.journalEntries || [],
-				isWon: savedGame.isWon,
-				finalTower: savedGame.finalTower,
-				roundsSurvived: savedGame.roundsSurvived
-			};
-
-			// Generate story text
-			const generatedStory = await generateStory(gameData);
-			story = generatedStory;
-
-			// Generate audio if requested
-			let audioBlob = null;
-			if (generateAudio && ttsAvailable) {
-				progressMessage = 'Generating audio narration...';
-				isGeneratingAudio = true;
-
-				try {
-					audioBlob = await generateAudioNarration(generatedStory.text);
-				} catch (audioError) {
-					console.error('Audio generation failed:', audioError);
-					errorMessage = `Story generated, but audio failed: ${audioError.message}`;
-				} finally {
-					isGeneratingAudio = false;
-				}
-			}
-
-			// Save to IndexedDB
-			progressMessage = 'Saving story...';
-			await saveAIStory(saveKey, generatedStory, audioBlob);
-
-			// Reload story to get audio data
-			const savedStory = await loadAIStory(saveKey);
-			if (savedStory) {
-				story = savedStory;
-			}
-
-			hasStory = true;
-			progressMessage = '';
-		} catch (error) {
-			console.error('Story generation failed:', error);
-			errorMessage = error.message || 'Failed to generate story';
-			progressMessage = '';
-		} finally {
-			isGenerating = false;
-			isGeneratingAudio = false;
-		}
-	}
-
-	async function handleRegenerate() {
-		// Delete existing story and regenerate
-		await deleteAIStory(saveKey);
-		story = null;
-		hasStory = false;
-		await handleGenerate();
-	}
-
-	function handleOpenSettings() {
-		showSettings = true;
-	}
-
-	function handleCloseSettings() {
-		showSettings = false;
-		// Re-check if AI is configured
-		isAIConfigured().then((configured) => {
-			aiConfigured = configured;
-		});
-	}
+	// Use story generation composable
+	const storyGen = useStoryGeneration(savedGame, saveKey);
 </script>
 
-{#if showSettings}
-	<AISettings onClose={handleCloseSettings} />
+{#if storyGen.showSettings}
+	<AISettings onClose={storyGen.closeSettings} />
 {/if}
 
 <div class="story-generation-panel" transition:slide={{ duration: 300 }}>
@@ -155,7 +36,7 @@
 				</svg>
 				AI Story Summary
 			</h3>
-			<button class="settings-button" onclick={handleOpenSettings} aria-label="AI Settings">
+			<button class="settings-button" onclick={storyGen.openSettings} aria-label="AI Settings">
 				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
 					<circle cx="12" cy="12" r="3" />
 					<path
@@ -173,83 +54,49 @@
 	</div>
 
 	<div class="panel-body">
-		{#if !hasStory}
-			{#if !aiConfigured}
+		{#if !storyGen.hasStory}
+			{#if !storyGen.aiConfigured}
 				<div class="info-card" transition:fade={{ duration: 200 }}>
 					<p>Configure your AI provider to generate story summaries.</p>
-					<AugmentedButton onclick={handleOpenSettings} label="Configure AI">
+					<AugmentedButton onclick={storyGen.openSettings} label="Configure AI">
 						Configure AI Settings
 					</AugmentedButton>
 				</div>
 			{:else}
 				<div class="generation-controls" transition:fade={{ duration: 200 }}>
-					{#if ttsAvailable}
+					{#if storyGen.ttsAvailable}
 						<label class="checkbox-label">
-							<input type="checkbox" bind:checked={generateAudio} disabled={isGenerating} />
+							<input
+								type="checkbox"
+								bind:checked={storyGen.generateAudio}
+								disabled={storyGen.isGenerating}
+							/>
 							<span>Generate audio narration</span>
 						</label>
 					{/if}
 
 					<AugmentedButton
-						onclick={handleGenerate}
-						disabled={isGenerating}
+						onclick={storyGen.generateStory}
+						disabled={storyGen.isGenerating}
 						label="Generate AI Story"
 					>
-						{isGenerating ? progressMessage : 'Generate Story'}
+						{storyGen.isGenerating ? storyGen.progressMessage : 'Generate Story'}
 					</AugmentedButton>
 
-					{#if errorMessage}
+					{#if storyGen.errorMessage}
 						<div class="error-message" transition:fade={{ duration: 200 }}>
-							{errorMessage}
+							{storyGen.errorMessage}
 						</div>
 					{/if}
 				</div>
 			{/if}
 		{:else}
 			<!-- Story Display -->
-			<div class="story-content" transition:fade={{ duration: 300 }}>
-				<div class="story-text">
-					{story.text}
-				</div>
-
-				{#if story.audioData}
-					<div class="story-audio">
-						<AudioPlayer audioData={story.audioData} />
-					</div>
-				{/if}
-
-				<div class="story-metadata">
-					<span>Generated with {story.provider}</span>
-					<span>•</span>
-					<span>{new Date(story.generatedAt).toLocaleDateString()}</span>
-				</div>
-
-				<div class="story-actions">
-					<AugmentedButton
-						onclick={handleRegenerate}
-						disabled={isGenerating}
-						style="secondary"
-						label="Regenerate Story"
-					>
-						<svg
-							width="20"
-							height="20"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							slot="icon"
-						>
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-							/>
-						</svg>
-						Regenerate
-					</AugmentedButton>
-				</div>
-			</div>
+			<GeneratedStory
+				story={storyGen.story}
+				isGenerating={storyGen.isGenerating}
+				onRegenerate={storyGen.regenerateStory}
+			/>
 		{/if}
 	</div>
 </div>
@@ -373,43 +220,6 @@
 		text-align: center;
 	}
 
-	.story-content {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-lg);
-	}
-
-	.story-text {
-		padding: var(--space-xl);
-		background: rgba(0, 0, 0, 0.3);
-		border-left: 4px solid var(--color-cyber-magenta);
-		border-radius: 4px;
-		font-size: 1rem;
-		line-height: 1.8;
-		color: rgba(255, 255, 255, 0.9);
-		white-space: pre-wrap;
-	}
-
-	.story-audio {
-		padding: var(--space-md);
-		background: rgba(0, 0, 0, 0.2);
-		border-radius: 4px;
-	}
-
-	.story-metadata {
-		display: flex;
-		align-items: center;
-		gap: var(--space-sm);
-		font-size: 0.75rem;
-		color: rgba(255, 255, 255, 0.5);
-		justify-content: center;
-	}
-
-	.story-actions {
-		display: flex;
-		justify-content: center;
-		padding-top: var(--space-md);
-	}
 
 	@media (max-width: 640px) {
 		.panel-header {
@@ -420,9 +230,5 @@
 			padding: var(--space-md);
 		}
 
-		.story-text {
-			padding: var(--space-md);
-			font-size: 0.9rem;
-		}
 	}
 </style>

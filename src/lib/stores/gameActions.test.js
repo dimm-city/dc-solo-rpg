@@ -576,14 +576,15 @@ describe('gameActions - Core Game Mechanics', () => {
 			gameState.rollWithModifiers = originalRoll;
 		});
 
-		it('should not change tokens on near-miss (6-16 with threshold 17)', async () => {
+		it('should add 1 token on failure (roll 10 < threshold 17)', async () => {
+			// Per spec: ALL rolls below threshold should give +1 token (failure)
 			const originalRoll = gameState.rollWithModifiers;
 			gameState.rollWithModifiers = vi.fn(() => ({ roll: 10, wasLucid: false, wasSurreal: false }));
 
 			successCheck();
 			applyPendingSuccessCheck();
 
-			expect(gameState.tokens).toBe(10); // No change
+			expect(gameState.tokens).toBe(11); // +1 token (failure)
 
 			gameState.rollWithModifiers = originalRoll;
 		});

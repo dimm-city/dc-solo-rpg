@@ -12,7 +12,7 @@
 		height: 100%;
 		display: grid;
 		text-align: center;
-		align-items: center;
+		align-items: end;
 		justify-content: center;
 	}
 </style>

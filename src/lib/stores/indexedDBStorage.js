@@ -18,6 +18,12 @@ const SAVE_VERSION = '2.0'; // Bumped from 1.0 to indicate IndexedDB migration
  * @returns {Promise<IDBDatabase>} Database instance
  */
 async function initDB() {
+	// Check if IndexedDB is available (not available in some test environments or old browsers)
+	if (typeof indexedDB === 'undefined') {
+		logger.warn('[initDB] IndexedDB not available, storage features disabled');
+		throw new Error('IndexedDB not available');
+	}
+
 	return openDB(DB_NAME, DB_VERSION, {
 		upgrade(db, oldVersion, newVersion, transaction) {
 			// Create saves object store if it doesn't exist

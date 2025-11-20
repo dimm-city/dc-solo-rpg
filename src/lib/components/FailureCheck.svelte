@@ -19,9 +19,8 @@
 		height: 100%;
 		display: grid;
 		text-align: center;
-		grid-template-rows: auto 1fr;
 		gap: 1rem;
-		align-items: center;
+		align-items: end;
 		justify-content: center;
 	}
 

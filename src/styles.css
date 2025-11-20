@@ -3,8 +3,11 @@
    Matching dimm.city website aesthetic EXACTLY
    ============================================ */
 
-/* Import Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;500;600;700&display=swap');
+/* Import Google Fonts - wrapped in @layer to make non-blocking
+   If this fails, fallback fonts will be used from font-family declarations */
+@layer google-fonts {
+	@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;500;600;700&display=swap');
+}
 
 /* Load custom display font */
 @font-face {

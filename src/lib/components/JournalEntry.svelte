@@ -6,6 +6,11 @@
 	import { fade, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import { ANIMATION_DURATION } from '$lib/constants/animations.js';
+	import { getAudioSettings, getGameplaySettings, speak } from '../stores/audioStore.svelte.js';
+	import { logger } from '../utils/logger.js';
+	import AudioRecorder from './journal/AudioRecorder.svelte';
+	import AudioPlayback from './journal/AudioPlayback.svelte';
+	import AutoJournalTimer from './journal/AutoJournalTimer.svelte';
 
 	let {
 		journalText = $bindable(''),
@@ -32,6 +37,11 @@
 	let hasAudioPermission = $state(true);
 	let audioError = $state(null);
 
+	// Auto-journal timer state
+	let autoJournalTimer = $state(null);
+	let autoJournalTimeRemaining = $state(0);
+	let autoJournalInterval = $state(null);
+
 	// Format time as MM:SS
 	function formatTime(seconds) {
 		const mins = Math.floor(seconds / 60);
@@ -41,6 +51,9 @@
 
 	// Start recording
 	async function startRecording() {
+		// Cancel auto-journal timer when user starts interacting
+		cancelAutoJournalTimer();
+
 		try {
 			audioError = null;
 			const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -90,7 +103,7 @@
 				}
 			}, 1000);
 		} catch (error) {
-			console.error('Error starting recording:', error);
+			logger.error('[JournalEntry] Error starting recording:', error);
 			hasAudioPermission = false;
 			audioError = 'Microphone access denied. Please enable microphone permissions.';
 		}
@@ -176,15 +189,99 @@
 		};
 	});
 
-	// Reset audio when journal is saved
+	// ✅ FIXED: Extract timer logic to pure function, use proper cleanup pattern
 	$effect(() => {
-		if (journalSaved && audioURL) {
-			// Keep the audio for playback but stop recording
-			if (isRecording) {
-				stopRecording();
+		// Only react to settings and journal saved state
+		const gameplaySettings = getGameplaySettings();
+		const audioSettings = getAudioSettings();
+		const isSaved = journalSaved;
+
+		// Setup timers based on current settings
+		const cleanup = setupAutoJournaling(gameplaySettings, audioSettings, isSaved);
+
+		// Cleanup on effect re-run or unmount
+		return cleanup;
+	});
+
+	/**
+	 * Pure function to setup auto-journaling timers
+	 * Returns cleanup function
+	 */
+	function setupAutoJournaling(gameplaySettings, audioSettings, isSaved) {
+		let interval = null;
+		let timeout = null;
+		let timeRemaining = 0;
+
+		// Only run timer if not saved yet
+		if (!isSaved) {
+			// Speak prompt if enabled
+			if (audioSettings.autoReadPrompts) {
+				speak('Take a moment to reflect on what just happened.');
+			}
+
+			// Skip mode: immediately save
+			if (gameplaySettings.autoHandleJournaling === 'skip') {
+				// Small delay to allow UI to settle
+				timeout = setTimeout(() => {
+					handleSave();
+				}, 500);
+			}
+			// Timed mode: countdown timer
+			else if (gameplaySettings.autoHandleJournaling === 'timed') {
+				const pauseTime = gameplaySettings.journalPauseTime;
+				timeRemaining = pauseTime;
+				autoJournalTimeRemaining = timeRemaining;
+
+				// Update countdown every 100ms for smooth UI
+				interval = setInterval(() => {
+					timeRemaining = Math.max(0, timeRemaining - 100);
+					autoJournalTimeRemaining = timeRemaining;
+
+					if (timeRemaining <= 0) {
+						clearInterval(interval);
+						interval = null;
+						handleSave();
+					}
+				}, 100);
 			}
 		}
-	});
+
+		// Store references for cancelAutoJournalTimer
+		autoJournalTimer = timeout;
+		autoJournalInterval = interval;
+
+		// Return cleanup function
+		return () => {
+			if (interval) {
+				clearInterval(interval);
+			}
+			if (timeout) {
+				clearTimeout(timeout);
+			}
+		};
+	}
+
+	// Cancel timer if user starts interacting
+	function cancelAutoJournalTimer() {
+		if (autoJournalTimer) {
+			clearTimeout(autoJournalTimer);
+			autoJournalTimer = null;
+		}
+		if (autoJournalInterval) {
+			clearInterval(autoJournalInterval);
+			autoJournalInterval = null;
+		}
+		autoJournalTimeRemaining = 0;
+	}
+
+	// Wrapper for onSave that stops recording if active (event-driven pattern)
+	function handleSave() {
+		// Stop recording if active when saving
+		if (isRecording) {
+			stopRecording();
+		}
+		onSave();
+	}
 </script>
 
 <div class="dc-journal-container" in:fade={{ duration: ANIMATION_DURATION.NORMAL }} data-augmented-ui="tl-clip br-clip tr-clip bl-clip border">
@@ -214,6 +311,7 @@
 			rows="5"
 			placeholder="Write your journal entry here..."
 			disabled={journalSaved}
+			oninput={() => cancelAutoJournalTimer()}
 		></textarea>
 	</div>
 
@@ -227,159 +325,35 @@
 			start: 0.95
 		}}
 	>
-		<div class="audio-section-header">
-			<svg
-				class="audio-header-icon"
-				xmlns="http://www.w3.org/2000/svg"
-				width="16"
-				height="16"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			>
-				<circle cx="12" cy="10" r="3" />
-				<path d="M9 10v2a3 3 0 006 0v-2" />
-				<path d="M12 15v5" />
-				<path d="M9 20h6" />
-			</svg>
-			<span>Audio Recording (Optional)</span>
-		</div>
-
-		{#if audioError}
-			<div class="audio-error">
-				<svg
-					class="error-icon"
-					xmlns="http://www.w3.org/2000/svg"
-					width="16"
-					height="16"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-				>
-					<path
-						d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
-					/>
-					<line x1="12" y1="9" x2="12" y2="13" />
-					<line x1="12" y1="17" x2="12.01" y2="17" />
-				</svg>
+		{#if audioURL}
+			<AudioPlayback
+				{recordingTime}
+				{isPlaying}
+				{journalSaved}
+				onPlay={playAudio}
+				onDelete={deleteAudio}
+			/>
+		{:else}
+			<AudioRecorder
+				{isRecording}
+				{isPaused}
+				{recordingTime}
+				{journalSaved}
 				{audioError}
-			</div>
-		{/if}
-
-		{#if !audioURL && !isRecording}
-			<!-- Initial state: No recording -->
-			<button class="audio-button record-button" onclick={startRecording} disabled={journalSaved}>
-				<svg
-					class="audio-button-icon"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-				>
-					<circle cx="12" cy="10" r="3" />
-					<path d="M9 10v2a3 3 0 006 0v-2" />
-					<path d="M12 15v5" />
-					<path d="M9 20h6" />
-				</svg>
-				<span>Start Recording</span>
-			</button>
-		{:else if isRecording}
-			<!-- Recording in progress -->
-			<div class="recording-controls">
-				<div class="recording-indicator">
-					<span class="pulse-dot"></span>
-					<span class="recording-time">{formatTime(recordingTime)}</span>
-				</div>
-
-				<div class="recording-buttons">
-					<button
-						class="audio-button pause-button"
-						onclick={togglePause}
-						title={isPaused ? 'Resume' : 'Pause'}
-					>
-						{#if isPaused}
-							<svg class="audio-button-icon" viewBox="0 0 24 24" fill="currentColor">
-								<path d="M8 5v14l11-7z" />
-							</svg>
-						{:else}
-							<svg class="audio-button-icon" viewBox="0 0 24 24" fill="currentColor">
-								<rect x="6" y="4" width="4" height="16" />
-								<rect x="14" y="4" width="4" height="16" />
-							</svg>
-						{/if}
-					</button>
-
-					<button class="audio-button stop-button" onclick={stopRecording} title="Stop Recording">
-						<svg class="audio-button-icon" viewBox="0 0 24 24" fill="currentColor">
-							<rect x="6" y="6" width="12" height="12" />
-						</svg>
-					</button>
-				</div>
-			</div>
-		{:else if audioURL}
-			<!-- Recording complete: Playback controls -->
-			<div class="playback-controls">
-				<div class="audio-info">
-					<span class="audio-duration">{formatTime(recordingTime)}</span>
-					<span class="audio-status">
-						{#if isPlaying}
-							Playing...
-						{:else}
-							Ready to play
-						{/if}
-					</span>
-				</div>
-
-				<div class="playback-buttons">
-					<button
-						class="audio-button play-button"
-						onclick={playAudio}
-						title={isPlaying ? 'Stop' : 'Play'}
-					>
-						{#if isPlaying}
-							<svg class="audio-button-icon" viewBox="0 0 24 24" fill="currentColor">
-								<rect x="6" y="4" width="4" height="16" />
-								<rect x="14" y="4" width="4" height="16" />
-							</svg>
-						{:else}
-							<svg class="audio-button-icon" viewBox="0 0 24 24" fill="currentColor">
-								<path d="M8 5v14l11-7z" />
-							</svg>
-						{/if}
-					</button>
-
-					{#if !journalSaved}
-						<button
-							class="audio-button delete-button"
-							onclick={deleteAudio}
-							title="Delete Recording"
-						>
-							<svg
-								class="audio-button-icon"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="2"
-							>
-								<polyline points="3 6 5 6 21 6" />
-								<path
-									d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"
-								/>
-							</svg>
-						</button>
-					{/if}
-				</div>
-			</div>
+				hasAudioURL={!!audioURL}
+				onStart={startRecording}
+				onPause={togglePause}
+				onStop={stopRecording}
+			/>
 		{/if}
 	</div>
 
 	<div class="button-area">
+		<AutoJournalTimer
+			timeRemaining={autoJournalTimeRemaining}
+			totalTime={getGameplaySettings().journalPauseTime}
+		/>
+
 		{#if journalSaved}
 			{#if gameState.gameOver}
 				<ButtonBar bordered={false} gameBackground={false}>
@@ -404,7 +378,7 @@
 		{:else}
 			<ContinueButton
 				text={gameState.config?.labels?.journalEntrySaveButtonText ?? 'Record Entry'}
-				onclick={onSave}
+				onclick={handleSave}
 				testid="journal-save-button"
 			/>
 		{/if}
@@ -536,273 +510,6 @@
 		--aug-br: 12px;
 	}
 
-	.audio-section-header {
-		display: flex;
-		align-items: center;
-		gap: var(--space-sm);
-		font-size: var(--text-sm);
-		color: var(--color-neon-cyan);
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
-	}
-
-	.audio-header-icon {
-		flex-shrink: 0;
-		width: 18px;
-		height: 18px;
-		filter: drop-shadow(0 0 6px rgba(0, 255, 255, 0.8));
-	}
-
-	.audio-error {
-		display: flex;
-		align-items: center;
-		gap: var(--space-sm);
-		padding: var(--space-sm);
-		background: rgba(255, 0, 0, 0.15);
-		border: 1px solid rgba(255, 0, 0, 0.4);
-		border-radius: 4px;
-		color: rgba(255, 120, 120, 1);
-		font-size: var(--text-sm);
-		line-height: var(--line-height-base);
-	}
-
-	.error-icon {
-		flex-shrink: 0;
-		width: 18px;
-		height: 18px;
-	}
-
-	/* Audio Buttons */
-	.audio-button {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: var(--space-sm);
-		padding: var(--space-sm) var(--space-md);
-		background: linear-gradient(135deg, rgba(0, 255, 255, 0.15), rgba(0, 139, 139, 0.25));
-		border: 2px solid rgba(0, 255, 255, 0.5);
-		border-radius: 4px;
-		color: var(--color-neon-cyan);
-		font-family: 'Courier New', monospace;
-		font-size: var(--text-sm);
-		font-weight: 700;
-		cursor: pointer;
-		transition:
-			background 200ms cubic-bezier(0.4, 0, 0.6, 1),
-			border-color 200ms cubic-bezier(0.4, 0, 0.6, 1),
-			box-shadow 200ms cubic-bezier(0.4, 0, 0.6, 1),
-			transform 150ms cubic-bezier(0.4, 0, 0.6, 1);
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		min-height: 40px;
-		box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
-	}
-
-	.audio-button:hover:not(:disabled) {
-		background: linear-gradient(135deg, rgba(0, 255, 255, 0.25), rgba(0, 139, 139, 0.35));
-		border-color: rgba(0, 255, 255, 0.8);
-		box-shadow:
-			0 0 20px rgba(0, 255, 255, 0.5),
-			inset 0 0 15px rgba(0, 255, 255, 0.15);
-		transform: translateY(-2px);
-	}
-
-	.audio-button:active:not(:disabled) {
-		transform: translateY(0);
-		box-shadow:
-			0 0 15px rgba(0, 255, 255, 0.4),
-			inset 0 0 10px rgba(0, 255, 255, 0.1);
-	}
-
-	.audio-button:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
-
-	.audio-button-icon {
-		width: 20px;
-		height: 20px;
-		flex-shrink: 0;
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.audio-button {
-			transition: none;
-		}
-	}
-
-	.record-button {
-		width: 100%;
-	}
-
-	/* Recording Controls */
-	.recording-controls {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-md);
-		align-items: center;
-	}
-
-	.recording-indicator {
-		display: flex;
-		align-items: center;
-		gap: var(--space-md);
-		padding: var(--space-md);
-		background: linear-gradient(135deg, rgba(220, 20, 60, 0.15), rgba(139, 0, 0, 0.1));
-		border: 2px solid rgba(220, 20, 60, 0.5);
-		border-radius: 4px;
-		width: 100%;
-		justify-content: center;
-		box-shadow:
-			0 0 20px rgba(220, 20, 60, 0.3),
-			inset 0 0 15px rgba(220, 20, 60, 0.1);
-	}
-
-	.pulse-dot {
-		width: 14px;
-		height: 14px;
-		border-radius: 50%;
-		background: rgba(220, 20, 60, 1);
-		box-shadow:
-			0 0 15px rgba(220, 20, 60, 1),
-			0 0 30px rgba(220, 20, 60, 0.5);
-		animation: pulse 1.5s ease-in-out infinite;
-	}
-
-	@keyframes pulse {
-		0%,
-		100% {
-			opacity: 1;
-			transform: scale(1);
-		}
-		50% {
-			opacity: 0.6;
-			transform: scale(1.3);
-		}
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.pulse-dot {
-			animation: none;
-			opacity: 1;
-		}
-	}
-
-	.recording-time {
-		font-family: var(--font-display);
-		font-size: 1.5rem;
-		color: rgba(220, 20, 60, 1);
-		font-weight: 700;
-		letter-spacing: 0.1em;
-		text-shadow:
-			0 0 15px rgba(220, 20, 60, 0.8),
-			0 0 30px rgba(220, 20, 60, 0.4);
-	}
-
-	.recording-buttons {
-		display: flex;
-		gap: var(--space-md);
-		width: 100%;
-	}
-
-	.pause-button,
-	.stop-button {
-		flex: 1;
-		min-width: 0;
-	}
-
-	.stop-button {
-		background: linear-gradient(135deg, rgba(220, 20, 60, 0.2), rgba(139, 0, 0, 0.3));
-		border-color: rgba(220, 20, 60, 0.5);
-		color: rgba(255, 69, 96, 1);
-	}
-
-	.stop-button:hover:not(:disabled) {
-		background: linear-gradient(135deg, rgba(220, 20, 60, 0.3), rgba(139, 0, 0, 0.4));
-		border-color: rgba(255, 69, 96, 0.8);
-		box-shadow:
-			0 0 15px rgba(220, 20, 60, 0.4),
-			inset 0 0 10px rgba(220, 20, 60, 0.1);
-	}
-
-	/* Playback Controls */
-	.playback-controls {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-md);
-	}
-
-	.audio-info {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		padding: var(--space-sm) var(--space-md);
-		background: linear-gradient(135deg, rgba(0, 255, 255, 0.15), rgba(0, 139, 139, 0.1));
-		border: 2px solid rgba(0, 255, 255, 0.4);
-		border-radius: 4px;
-		box-shadow:
-			0 0 15px rgba(0, 255, 255, 0.2),
-			inset 0 0 10px rgba(0, 255, 255, 0.05);
-	}
-
-	.audio-duration {
-		font-family: var(--font-display);
-		font-size: 1.25rem;
-		color: var(--color-neon-cyan);
-		font-weight: 700;
-		letter-spacing: 0.1em;
-		text-shadow:
-			0 0 10px rgba(0, 255, 255, 0.8),
-			0 0 20px rgba(0, 255, 255, 0.4);
-	}
-
-	.audio-status {
-		font-size: var(--text-sm);
-		color: rgba(0, 255, 255, 0.9);
-		font-style: italic;
-		font-weight: 600;
-	}
-
-	.playback-buttons {
-		display: flex;
-		gap: var(--space-md);
-		width: 100%;
-	}
-
-	.play-button {
-		flex: 1;
-		background: linear-gradient(135deg, rgba(0, 255, 127, 0.2), rgba(0, 139, 69, 0.3));
-		border-color: rgba(0, 255, 127, 0.6);
-		color: rgba(0, 255, 127, 1);
-		box-shadow: 0 0 10px rgba(0, 255, 127, 0.3);
-	}
-
-	.play-button:hover:not(:disabled) {
-		background: linear-gradient(135deg, rgba(0, 255, 127, 0.3), rgba(0, 139, 69, 0.4));
-		border-color: rgba(0, 255, 127, 0.9);
-		box-shadow:
-			0 0 20px rgba(0, 255, 127, 0.5),
-			inset 0 0 15px rgba(0, 255, 127, 0.15);
-	}
-
-	.delete-button {
-		flex: 0 0 auto;
-		padding: var(--space-md);
-		background: linear-gradient(135deg, rgba(255, 69, 0, 0.2), rgba(178, 34, 34, 0.3));
-		border-color: rgba(255, 69, 0, 0.6);
-		color: rgba(255, 99, 71, 1);
-		box-shadow: 0 0 10px rgba(255, 69, 0, 0.3);
-	}
-
-	.delete-button:hover:not(:disabled) {
-		background: linear-gradient(135deg, rgba(255, 69, 0, 0.3), rgba(178, 34, 34, 0.4));
-		border-color: rgba(255, 99, 71, 0.9);
-		box-shadow:
-			0 0 20px rgba(255, 69, 0, 0.5),
-			inset 0 0 15px rgba(255, 69, 0, 0.15);
-	}
 
 	/* Responsive Design */
 	@media (max-width: 640px) {
@@ -821,38 +528,6 @@
 			gap: var(--space-xs);
 		}
 
-		.audio-section-header {
-			font-size: 0.75rem;
-		}
-
-		.audio-header-icon {
-			width: 16px;
-			height: 16px;
-		}
-
-		.audio-button {
-			padding: var(--space-sm);
-			font-size: 0.75rem;
-			min-height: 40px; /* Maintain touch target */
-			gap: var(--space-xs);
-		}
-
-		.recording-time {
-			font-size: 1.125rem;
-		}
-
-		.audio-duration {
-			font-size: 1rem;
-		}
-
-		.playback-buttons {
-			flex-direction: column;
-			gap: var(--space-sm);
-		}
-
-		.delete-button {
-			flex: 1;
-		}
 	}
 
 	@media (max-height: 700px) {
@@ -880,19 +555,5 @@
 			padding: var(--space-sm);
 		}
 
-		.audio-button {
-			padding: var(--space-sm);
-			font-size: 0.75rem;
-			min-height: 40px; /* Maintain touch target */
-		}
-
-		.recording-indicator {
-			padding: var(--space-sm);
-		}
-
-		.recording-time,
-		.audio-duration {
-			font-size: 1.125rem;
-		}
 	}
 </style>

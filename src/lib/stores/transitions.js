@@ -1,23 +1,25 @@
+import { GAME_STATES as S } from '../constants/gameStates.js';
+
 /**
  * Pure state transition graph for the game
- * Defines all valid state transitions
+ * Defines all valid state transitions using state constants
  */
 export const transitionGraph = {
-	loadGame: ['showIntro'],
-	showIntro: ['initialDamageRoll'],
-	initialDamageRoll: ['rollForTasks'],
-	startRound: ['rollForTasks'],
-	rollForTasks: ['drawCard'],
-	drawCard: ['failureCheck', 'drawCard', 'endTurn', 'log', 'successCheck', 'gameOver'],
-	failureCheck: ['drawCard', 'endTurn', 'log', 'successCheck', 'gameOver'],
-	endTurn: ['log'],
-	log: ['startRound'],
-	successCheck: ['log', 'finalDamageRoll', 'gameOver'],
-	finalDamageRoll: ['gameOver'],
-	gameOver: ['finalLog'],
-	finalLog: ['exitGame'],
-	exitGame: ['loadGame'],
-	errorScreen: ['loadGame']
+	[S.LOAD_GAME]: [S.SHOW_INTRO],
+	[S.SHOW_INTRO]: [S.INITIAL_DAMAGE_ROLL],
+	[S.INITIAL_DAMAGE_ROLL]: [S.START_ROUND],
+	[S.START_ROUND]: [S.ROLL_FOR_TASKS],
+	[S.ROLL_FOR_TASKS]: [S.DRAW_CARD],
+	[S.DRAW_CARD]: [S.FAILURE_CHECK, S.DRAW_CARD, S.END_TURN, S.LOG, S.SUCCESS_CHECK, S.GAME_OVER],
+	[S.FAILURE_CHECK]: [S.DRAW_CARD, S.END_TURN, S.LOG, S.SUCCESS_CHECK, S.GAME_OVER],
+	[S.END_TURN]: [S.LOG],
+	[S.LOG]: [S.START_ROUND],
+	[S.SUCCESS_CHECK]: [S.LOG, S.FINAL_DAMAGE_ROLL, S.GAME_OVER],
+	[S.FINAL_DAMAGE_ROLL]: [S.FINAL_LOG, S.GAME_OVER],
+	[S.GAME_OVER]: [S.FINAL_LOG],
+	[S.FINAL_LOG]: [S.EXIT_GAME],
+	[S.EXIT_GAME]: [S.LOAD_GAME],
+	[S.ERROR_SCREEN]: [S.LOAD_GAME]
 };
 
 /**
@@ -37,5 +39,5 @@ export function getValidNextStates(state) {
  */
 export function isValidTransition(from, to) {
 	const validStates = transitionGraph[from];
-	return validStates?.includes(to) || to === 'exitGame' || to === 'errorScreen';
+	return validStates?.includes(to) || to === S.EXIT_GAME || to === S.ERROR_SCREEN;
 }

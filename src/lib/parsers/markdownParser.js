@@ -265,7 +265,7 @@ function parseCardDeck(cardDeckContent) {
 				throw error;
 			}
 			// Skip sections that don't parse (like extra whitespace)
-			console.warn('Skipping card section:', error.message);
+			logger.warn('Skipping card section:', error.message);
 		}
 	}
 

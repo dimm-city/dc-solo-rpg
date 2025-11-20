@@ -44,7 +44,7 @@ describe('transitions', () => {
 		});
 
 		it('should define valid game flow through main gameplay', () => {
-			expect(transitionGraph.initialDamageRoll).toContain('rollForTasks');
+			expect(transitionGraph.initialDamageRoll).toContain('startRound');
 			expect(transitionGraph.rollForTasks).toContain('drawCard');
 			expect(transitionGraph.drawCard).toContain('failureCheck');
 			expect(transitionGraph.drawCard).toContain('endTurn');
@@ -120,7 +120,7 @@ describe('transitions', () => {
 			});
 
 			it('should validate initialDamageRoll -> rollForTasks', () => {
-				expect(isValidTransition('initialDamageRoll', 'rollForTasks')).toBe(true);
+				expect(isValidTransition('initialDamageRoll', 'startRound')).toBe(true);
 			});
 
 			it('should validate rollForTasks -> drawCard', () => {
@@ -225,7 +225,8 @@ describe('transitions', () => {
 				const flow = [
 					['loadGame', 'showIntro'],
 					['showIntro', 'initialDamageRoll'],
-					['initialDamageRoll', 'rollForTasks'],
+					['initialDamageRoll', 'startRound'],
+					['startRound', 'rollForTasks'],
 					['rollForTasks', 'drawCard'],
 					['drawCard', 'successCheck'],
 					['successCheck', 'log'],
@@ -242,7 +243,8 @@ describe('transitions', () => {
 				const flow = [
 					['loadGame', 'showIntro'],
 					['showIntro', 'initialDamageRoll'],
-					['initialDamageRoll', 'rollForTasks'],
+					['initialDamageRoll', 'startRound'],
+					['startRound', 'rollForTasks'],
 					['rollForTasks', 'drawCard'],
 					['drawCard', 'gameOver'],
 					['gameOver', 'finalLog'],

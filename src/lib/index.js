@@ -11,6 +11,13 @@ export { default as AISettings } from './components/AISettings.svelte';
 export { gameState, getCurrentScreen, getGameStats } from './stores/gameStore.svelte.js';
 export * from './stores/gameActions.svelte.js';
 export {
+	getAudioSettings,
+	getGameplaySettings,
+	updateAudioSettings,
+	updateGameplaySettings,
+	resetSettings as resetAudioSettings
+} from './stores/audioStore.svelte.js';
+export {
 	hasSavedGame,
 	getSaveMetadata,
 	loadAllSaves,

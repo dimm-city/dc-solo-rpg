@@ -108,9 +108,7 @@ lose-message: You lost!
 ## Introduction
 Test intro
 
-# Card Deck
-
----
+## Card Deck
 
 ### Failure Counter
 **King of Hearts**
@@ -196,9 +194,7 @@ lose-message: You lost!
 ## Introduction
 Test intro
 
-# Card Deck
-
----
+## Card Deck
 
 ### Primary Success
 **Ace of Hearts**
@@ -296,9 +292,7 @@ lose-message: You lost!
 ## Introduction
 Test intro
 
-# Card Deck
-
----
+## Card Deck
 
 ### Primary Success
 **Ace of Hearts**
@@ -384,9 +378,7 @@ lose-message: You lost!
 ## Introduction
 Test intro
 
-# Card Deck
-
----
+## Card Deck
 
 ### Primary Success
 **Ace of Hearts**
@@ -478,9 +470,7 @@ lose-message: You lost!
 ## Introduction
 Test intro
 
-# Card Deck
-
----
+## Card Deck
 
 ### Primary Success
 **Ace of Hearts**
@@ -574,9 +564,7 @@ lose-message: You lost!
 ## Introduction
 Test intro
 
-# Card Deck
-
----
+## Card Deck
 
 ### Primary Success
 **Ace of Hearts**
@@ -669,9 +657,7 @@ lose-message: You lost!
 ## Introduction
 Test intro
 
-# Card Deck
-
----
+## Card Deck
 
 ### Primary Success
 **Ace of Hearts**
@@ -765,7 +751,7 @@ lose-message: You lost!
 ## Introduction
 Test intro
 
-# Card Deck
+## Card Deck
 `;
 
 			expect(() => parseGameFile(invalidMarkdown)).toThrow(ValidationError);
@@ -783,7 +769,7 @@ lose-message: You lost!
 ## Introduction
 Test intro
 
-# Card Deck
+## Card Deck
 `;
 
 			expect(() => parseGameFile(invalidMarkdown)).toThrow(ValidationError);
@@ -801,7 +787,7 @@ win-message: You won!
 ## Introduction
 Test intro
 
-# Card Deck
+## Card Deck
 `;
 
 			expect(() => parseGameFile(invalidMarkdown)).toThrow(ValidationError);
@@ -816,7 +802,7 @@ Test intro
 			const invalidMarkdown = `## Introduction
 Test intro
 
-# Card Deck
+## Card Deck
 `;
 
 			expect(() => parseGameFile(invalidMarkdown)).toThrow(ValidationError);
@@ -835,7 +821,7 @@ Test intro
 `;
 
 			expect(() => parseGameFile(invalidMarkdown)).toThrow(ValidationError);
-			expect(() => parseGameFile(invalidMarkdown)).toThrow(/No "# Card Deck" section found/);
+			expect(() => parseGameFile(invalidMarkdown)).toThrow(/No "## Card Deck" section found/);
 		});
 
 		it('should reject card without description', () => {
@@ -848,9 +834,7 @@ lose-message: You lost!
 ## Introduction
 Test intro
 
-# Card Deck
-
----
+## Card Deck
 
 ### Primary Success
 This is not bold
@@ -882,9 +866,7 @@ win-message: You won!
 lose-message: You lost!
 ---
 
-# Card Deck
-
----
+## Card Deck
 
 ### Primary Success
 **Ace of Hearts**
@@ -976,9 +958,7 @@ lose-message: You lost!
 ## Introduction
 Test intro
 
-# Card Deck
-
----
+## Card Deck
 
 ### Primary Success
 **Ace of Hearts**
@@ -1080,9 +1060,7 @@ lose-message: You lost!
 ## Introduction
 Test intro
 
-# Card Deck
-
----
+## Card Deck
 
 ### Primary Success
 **Ace of Hearts**

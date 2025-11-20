@@ -3,6 +3,7 @@ import DiceBox from '@3d-dice/dice-box-threejs';
 import { gameState } from './gameStore.svelte.js';
 import { randomInt } from '../services/random.js';
 import { ANIMATION_DURATION } from '$lib/constants/animations.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * Shared DiceBox instance for the entire application
@@ -33,7 +34,7 @@ export { diceState };
  */
 export async function initializeDiceBox(container) {
 	if (!container) {
-		console.warn('[diceStore] No container provided to initializeDiceBox');
+		logger.warn('[diceStore] No container provided to initializeDiceBox');
 		return null;
 	}
 
@@ -43,7 +44,7 @@ export async function initializeDiceBox(container) {
 
 	if (isInitialized && diceBoxInstance && !containerChanged && hasCanvas) {
 		// Already initialized with same container and canvas exists, just resize
-		console.log('[diceStore] DiceBox already initialized, triggering resize');
+		logger.debug('[diceStore] DiceBox already initialized, triggering resize');
 		setTimeout(() => {
 			window.dispatchEvent(new Event('resize'));
 		}, 500);
@@ -53,7 +54,7 @@ export async function initializeDiceBox(container) {
 	// If there's an old canvas and we're reinitializing, clear it
 	// But only if we're actually reinitializing (not first time)
 	if (isInitialized || hasCanvas) {
-		console.log('[diceStore] Clearing stale canvas elements');
+		logger.debug('[diceStore] Clearing stale canvas elements');
 		while (container.firstChild) {
 			container.removeChild(container.firstChild);
 		}
@@ -87,23 +88,23 @@ export async function initializeDiceBox(container) {
 
 	// Verify the container is properly attached to the DOM
 	if (!document.body.contains(container)) {
-		console.error('[diceStore] Container is not attached to DOM');
+		logger.error('[diceStore] Container is not attached to DOM');
 		return null;
 	}
 
 	// Verify we can query the selector
 	const queriedContainer = document.querySelector('#dice-roller-container');
 	if (!queriedContainer) {
-		console.error('[diceStore] Cannot find #dice-roller-container in DOM');
+		logger.error('[diceStore] Cannot find #dice-roller-container in DOM');
 		return null;
 	}
 
 	if (queriedContainer !== container) {
-		console.warn('[diceStore] Queried container does not match provided container');
+		logger.warn('[diceStore] Queried container does not match provided container');
 	}
 
-	console.log('[diceStore] Initializing DiceBox with container:', container);
-	console.log('[diceStore] Container dimensions:', {
+	logger.debug('[diceStore] Initializing DiceBox with container:', container);
+	logger.debug('[diceStore] Container dimensions:', {
 		width: container.clientWidth,
 		height: container.clientHeight,
 		offsetWidth: container.offsetWidth,
@@ -114,26 +115,27 @@ export async function initializeDiceBox(container) {
 		// DiceBox expects a CSS selector string, not a DOM element
 		diceBoxInstance = new DiceBox('#dice-roller-container', config);
 		await diceBoxInstance.initialize();
-		console.log('[diceStore] DiceBox initialized successfully');
+		logger.debug('[diceStore] DiceBox initialized successfully');
+		isInitialized = true;
+
+		// Call resizeWorld initially
+		diceBoxInstance.resizeWorld();
+
+		// Trigger a window resize event after transition completes (300ms + buffer)
+		// This ensures the DiceBox's resize listener picks up the correct container dimensions
+		setTimeout(() => {
+			window.dispatchEvent(new Event('resize'));
+		}, 500);
+
+		return diceBoxInstance;
 	} catch (error) {
-		console.error('[diceStore] Failed to initialize DiceBox:', error);
+		logger.error('[diceStore] Failed to initialize DiceBox:', error);
+		logger.warn('[diceStore] Game will continue without 3D dice animations');
 		diceBoxInstance = null;
 		isInitialized = false;
-		throw error;
+		// Don't re-throw - allow game to continue without 3D dice
+		return null;
 	}
-
-	// Call resizeWorld initially
-	diceBoxInstance.resizeWorld();
-
-	// Trigger a window resize event after transition completes (300ms + buffer)
-	// This ensures the DiceBox's resize listener picks up the correct container dimensions
-	setTimeout(() => {
-		window.dispatchEvent(new Event('resize'));
-	}, 500);
-
-	isInitialized = true;
-
-	return diceBoxInstance;
 }
 
 /**
@@ -174,7 +176,7 @@ export function resizeDiceBox() {
  * Call this when exiting a game to ensure clean reinitialization
  */
 export function resetDiceBox() {
-	console.log('[diceStore] Resetting DiceBox');
+	logger.debug('[diceStore] Resetting DiceBox');
 
 	// Clear any existing canvas from the container
 	if (containerElement) {
@@ -267,11 +269,11 @@ export async function rollDice(value = null, options = {}) {
  */
 export async function updateDiceTheme(theme) {
 	if (!theme || !theme.key) {
-		console.warn('[diceStore] Invalid theme provided to updateDiceTheme');
+		logger.warn('[diceStore] Invalid theme provided to updateDiceTheme');
 		return;
 	}
 
-	console.log('[diceStore] Updating dice theme to:', theme.key);
+	logger.debug('[diceStore] Updating dice theme to:', theme.key);
 
 	// Update gameState config
 	if (gameState.config) {
@@ -285,7 +287,7 @@ export async function updateDiceTheme(theme) {
 	if (diceBoxInstance && containerElement) {
 		const savedContainer = containerElement;
 
-		console.log('[diceStore] Cleaning up DiceBox for theme change');
+		logger.debug('[diceStore] Cleaning up DiceBox for theme change');
 
 		// Call DiceBox's clear method to properly dispose of resources
 		try {
@@ -293,11 +295,11 @@ export async function updateDiceTheme(theme) {
 				diceBoxInstance.clear();
 			}
 		} catch (error) {
-			console.warn('[diceStore] Error calling diceBox.clear():', error);
+			logger.warn('[diceStore] Error calling diceBox.clear():', error);
 		}
 
 		// Clear the container manually (don't use resetDiceBox to keep state intact)
-		console.log('[diceStore] Clearing container DOM');
+		logger.debug('[diceStore] Clearing container DOM');
 		while (savedContainer.firstChild) {
 			savedContainer.removeChild(savedContainer.firstChild);
 		}
@@ -312,6 +314,6 @@ export async function updateDiceTheme(theme) {
 		// Reinitialize with new theme
 		await initializeDiceBox(savedContainer);
 
-		console.log('[diceStore] Dice theme updated successfully');
+		logger.debug('[diceStore] Dice theme updated successfully');
 	}
 }

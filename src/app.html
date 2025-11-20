@@ -10,14 +10,21 @@
 		<meta name="apple-mobile-web-app-capable" content="yes" />
 		<meta name="mobile-web-app-capable" content="yes" />
 		<title>Dream Console</title>
+		<!-- Load external CSS resources with graceful degradation to prevent page crash if they fail -->
 		<link
 			rel="stylesheet"
 			type="text/css"
 			href="https://unpkg.com/augmented-ui@2/augmented-ui.min.css"
+			media="print"
+			onload="this.media='all'"
+			onerror="this.remove(); console.warn('Failed to load augmented-ui, using fallback styles')"
 		/>
 		<link
 			href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap"
 			rel="stylesheet"
+			media="print"
+			onload="this.media='all'"
+			onerror="this.remove(); console.warn('Failed to load Google Fonts, using fallback fonts')"
 		/>
 		%sveltekit.head%
 	</head>

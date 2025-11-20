@@ -1,5 +1,7 @@
 <script>
+	import { onMount } from 'svelte';
 	import { gameState } from '../stores/gameStore.svelte.js';
+	import { initializeAudioStore } from '../stores/audioStore.svelte.js';
 	import NeuralBackground from './NeuralBackground.svelte';
 	import GameScreen from './GameScreen.svelte';
 	import HelpModal from './HelpModal.svelte';
@@ -22,6 +24,12 @@
 		showHelpModal = false;
 	}
 
+	// ✅ IMPROVED: Use onMount for one-time initialization (clearer intent)
+	onMount(() => {
+		initializeAudioStore();
+	});
+
+	// React to screen changes for callbacks
 	$effect(() => {
 		if (currentScreen == 'gameOver') {
 			ongameover(gameState.state);

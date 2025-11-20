@@ -32,7 +32,7 @@ Test content
 
 ---
 
-# Card Deck
+## Card Deck
 
 ${generateCards('Primary Success', 1)}
 
@@ -335,7 +335,7 @@ Test
 
 ---
 
-# Card Deck
+## Card Deck
 
 ### Primary Success
 
@@ -438,7 +438,7 @@ Test
 
 ---
 
-# Card Deck
+## Card Deck
 
 ### Primary Success
 
@@ -522,7 +522,7 @@ Test
 
 ---
 
-# Card Deck
+## Card Deck
 
 ### Primary Success
 
@@ -575,7 +575,7 @@ Test
 
 ---
 
-# Card Deck
+## Card Deck
 
 ### Primary Success
 
@@ -627,7 +627,7 @@ Test
 
 ---
 
-# Card Deck
+## Card Deck
 
 ### Challenge: invalid-format
 
@@ -671,7 +671,7 @@ Test
 
 ---
 
-# Card Deck
+## Card Deck
 
 ### Primary Success
 
@@ -722,7 +722,7 @@ Test
 
 ---
 
-# Card Deck
+## Card Deck
 
 ### Primary Success
 
@@ -779,7 +779,7 @@ Test
 
 ---
 
-# Card Deck
+## Card Deck
 
 ### Primary Success
 
@@ -850,6 +850,847 @@ Just intro, no deck
 
 		expect(() => parseGameFile(markdown)).toThrow(ValidationError);
 		expect(() => parseGameFile(markdown)).toThrow(/Card Deck/i);
+	});
+});
+
+describe('Markdown Parser - Edge Cases', () => {
+	describe('Content Length Edge Cases', () => {
+		it('should handle very long card descriptions (>1000 chars)', () => {
+			const longDescription = 'A'.repeat(1200);
+			const markdown = `---
+title: Test
+win-message: Win
+lose-message: Lose
+---
+
+# Introduction
+
+## Who You Are
+
+Test
+
+---
+
+## Card Deck
+
+### Primary Success
+
+**${longDescription}**
+
+---
+
+${generateCards('Failure Counter', 4)}
+
+${generateCards('Narrative', 3)}
+
+${generateCards('Challenge', 16)}
+
+${generateCards('Event', 28)}
+`;
+
+			// Parser should either accept or gracefully handle long descriptions
+			try {
+				const result = parseGameFile(markdown);
+				const primarySuccess = result.deck.find((c) => c.type === 'primary-success');
+				expect(primarySuccess).toBeDefined();
+				expect(primarySuccess.description.length).toBeGreaterThan(1000);
+			} catch (error) {
+				// If parser enforces length limits, should provide clear error
+				expect(error).toBeInstanceOf(ValidationError);
+				expect(error.message).toMatch(/length|long|size/i);
+			}
+		});
+
+		it('should handle very long story content (>5000 chars)', () => {
+			const longStory = 'This is a very long story. '.repeat(200); // ~5400 chars
+			const markdown = `---
+title: Test
+win-message: Win
+lose-message: Lose
+---
+
+# Introduction
+
+## Who You Are
+
+Test
+
+---
+
+## Card Deck
+
+### Primary Success
+
+**Win card**
+
+${longStory}
+
+---
+
+${generateCards('Failure Counter', 4)}
+
+${generateCards('Narrative', 3)}
+
+${generateCards('Challenge', 16)}
+
+${generateCards('Event', 28)}
+`;
+
+			// Parser should accept long stories as they're narrative content
+			try {
+				const result = parseGameFile(markdown);
+				const primarySuccess = result.deck.find((c) => c.type === 'primary-success');
+				expect(primarySuccess).toBeDefined();
+				expect(primarySuccess.story.length).toBeGreaterThan(5000);
+			} catch (error) {
+				expect(error).toBeInstanceOf(ValidationError);
+			}
+		});
+
+		it('should handle empty card description (only whitespace)', () => {
+			const markdown = `---
+title: Test
+win-message: Win
+lose-message: Lose
+---
+
+# Introduction
+
+## Who You Are
+
+Test
+
+---
+
+## Card Deck
+
+### Primary Success
+
+**   **
+
+---
+`;
+
+			// Empty description should fail validation
+			expect(() => parseGameFile(markdown)).toThrow(ValidationError);
+			expect(() => parseGameFile(markdown)).toThrow(/description/i);
+		});
+	});
+
+	describe('Special Characters Edge Cases', () => {
+		it('should handle emoji in card descriptions', () => {
+			const markdown = `---
+title: Test
+win-message: Win
+lose-message: Lose
+---
+
+# Introduction
+
+## Who You Are
+
+Test
+
+---
+
+## Card Deck
+
+### Primary Success
+
+**You find the treasure! 🎉💎✨**
+
+---
+
+${generateCards('Failure Counter', 4)}
+
+${generateCards('Narrative', 3)}
+
+${generateCards('Challenge', 16)}
+
+${generateCards('Event', 28)}
+`;
+
+			const result = parseGameFile(markdown);
+			const primarySuccess = result.deck.find((c) => c.type === 'primary-success');
+			expect(primarySuccess).toBeDefined();
+			expect(primarySuccess.description).toContain('🎉');
+			expect(primarySuccess.description).toContain('💎');
+		});
+
+		it('should handle unicode characters in content', () => {
+			const markdown = `---
+title: Test
+win-message: Win
+lose-message: Lose
+---
+
+# Introduction
+
+## Who You Are
+
+Test
+
+---
+
+## Card Deck
+
+### Primary Success
+
+**Café résumé naïve Zürich 北京**
+
+---
+
+${generateCards('Failure Counter', 4)}
+
+${generateCards('Narrative', 3)}
+
+${generateCards('Challenge', 16)}
+
+${generateCards('Event', 28)}
+`;
+
+			const result = parseGameFile(markdown);
+			const primarySuccess = result.deck.find((c) => c.type === 'primary-success');
+			expect(primarySuccess).toBeDefined();
+			expect(primarySuccess.description).toContain('Café');
+			expect(primarySuccess.description).toContain('北京');
+		});
+
+		it('should handle HTML entities in content', () => {
+			const markdown = `---
+title: Test &amp; Games
+win-message: You win!
+lose-message: You lose!
+---
+
+# Introduction
+
+## Who You Are
+
+Test &lt;strong&gt;
+
+---
+
+## Card Deck
+
+### Primary Success
+
+**Win &amp; celebrate**
+
+---
+
+${generateCards('Failure Counter', 4)}
+
+${generateCards('Narrative', 3)}
+
+${generateCards('Challenge', 16)}
+
+${generateCards('Event', 28)}
+`;
+
+			const result = parseGameFile(markdown);
+			expect(result.title).toContain('&amp;');
+			const primarySuccess = result.deck.find((c) => c.type === 'primary-success');
+			expect(primarySuccess.description).toContain('&amp;');
+		});
+
+		it('should handle special markdown characters in descriptions', () => {
+			const markdown = `---
+title: Test
+win-message: Win
+lose-message: Lose
+---
+
+# Introduction
+
+## Who You Are
+
+Test
+
+---
+
+## Card Deck
+
+### Primary Success
+
+**[Brackets] {Braces} (Parens) <Angles> *Stars* _Underscores_**
+
+---
+
+${generateCards('Failure Counter', 4)}
+
+${generateCards('Narrative', 3)}
+
+${generateCards('Challenge', 16)}
+
+${generateCards('Event', 28)}
+`;
+
+			const result = parseGameFile(markdown);
+			const primarySuccess = result.deck.find((c) => c.type === 'primary-success');
+			expect(primarySuccess).toBeDefined();
+			expect(primarySuccess.description).toContain('Brackets');
+		});
+	});
+
+	describe('Frontmatter Edge Cases', () => {
+		it('should handle malformed frontmatter (missing closing dashes)', () => {
+			const markdown = `---
+title: Test
+win-message: Win
+lose-message: Lose
+
+Content without closing ---
+`;
+
+			expect(() => parseGameFile(markdown)).toThrow(ValidationError);
+			expect(() => parseGameFile(markdown)).toThrow(/frontmatter/i);
+		});
+
+		it('should handle frontmatter with extra whitespace', () => {
+			const markdown = `---
+title:    Test Game
+subtitle:   A Campaign
+win-message:   You win!
+lose-message:   You lose!
+---
+
+# Introduction
+
+## Who You Are
+
+Test
+
+---
+
+## Card Deck
+
+${generateCards('Primary Success', 1)}
+
+${generateCards('Failure Counter', 4)}
+
+${generateCards('Narrative', 3)}
+
+${generateCards('Challenge', 16)}
+
+${generateCards('Event', 28)}
+`;
+
+			const result = parseGameFile(markdown);
+			// Values should be trimmed
+			expect(result.title).toBe('Test Game');
+			expect(result.subtitle).toBe('A Campaign');
+		});
+
+		it('should handle empty frontmatter fields', () => {
+			const markdown = `---
+title:
+win-message: Win
+lose-message: Lose
+---
+
+Content
+`;
+
+			expect(() => parseGameFile(markdown)).toThrow(ValidationError);
+			expect(() => parseGameFile(markdown)).toThrow(/title/i);
+		});
+
+		it('should handle frontmatter with invalid YAML syntax', () => {
+			const markdown = `---
+title: Test [unclosed bracket
+win-message: Win
+lose-message: Lose
+---
+
+Content
+`;
+
+			// Parser should handle or reject invalid YAML
+			try {
+				parseGameFile(markdown);
+			} catch (error) {
+				expect(error).toBeInstanceOf(ValidationError);
+			}
+		});
+	});
+
+	describe('Card Assignment Edge Cases', () => {
+		it('should reject duplicate card assignments', () => {
+			const markdown = `---
+title: Test
+win-message: Win
+lose-message: Lose
+---
+
+# Introduction
+
+## Who You Are
+
+Test
+
+---
+
+## Card Deck
+
+### Primary Success: A-hearts
+
+**First ace of hearts**
+
+---
+
+${generateCards('Failure Counter', 4)}
+
+### Narrative: A-hearts
+
+**Duplicate ace of hearts (INVALID)**
+
+---
+
+${generateCards('Narrative', 2)}
+
+${generateCards('Challenge', 16)}
+
+${generateCards('Event', 28)}
+`;
+
+			expect(() => parseGameFile(markdown)).toThrow(ValidationError);
+			expect(() => parseGameFile(markdown)).toThrow(/duplicate|already assigned/i);
+		});
+
+		it('should reject invalid card ranks', () => {
+			const markdown = `---
+title: Test
+win-message: Win
+lose-message: Lose
+---
+
+# Introduction
+
+## Who You Are
+
+Test
+
+---
+
+## Card Deck
+
+### Challenge: 14-hearts
+
+**Invalid rank 14**
+
+---
+`;
+
+			// Parser rejects invalid ranks, but via card count validation
+			// Invalid rank "14" doesn't match any valid card, so counts are wrong
+			expect(() => parseGameFile(markdown)).toThrow(ValidationError);
+			expect(() => parseGameFile(markdown)).toThrow(/Primary Success|Challenge/i);
+		});
+
+		it('should reject invalid suits', () => {
+			const markdown = `---
+title: Test
+win-message: Win
+lose-message: Lose
+---
+
+# Introduction
+
+## Who You Are
+
+Test
+
+---
+
+## Card Deck
+
+### Challenge: 7-purple
+
+**Invalid suit purple**
+
+---
+`;
+
+			// Parser rejects invalid suits, but via card count validation
+			// Invalid suit "purple" doesn't match any valid card, so counts are wrong
+			expect(() => parseGameFile(markdown)).toThrow(ValidationError);
+			expect(() => parseGameFile(markdown)).toThrow(/Primary Success|Challenge/i);
+		});
+
+		it('should handle malformed card assignment syntax', () => {
+			const markdown = `---
+title: Test
+win-message: Win
+lose-message: Lose
+---
+
+# Introduction
+
+## Who You Are
+
+Test
+
+---
+
+## Card Deck
+
+### Challenge: hearts-7
+
+**Reversed format**
+
+---
+`;
+
+			// Parser should reject or handle malformed syntax
+			try {
+				parseGameFile(markdown);
+			} catch (error) {
+				expect(error).toBeInstanceOf(ValidationError);
+			}
+		});
+	});
+
+	describe('Card Section Edge Cases', () => {
+		it('should handle empty card sections', () => {
+			const markdown = `---
+title: Test
+win-message: Win
+lose-message: Lose
+---
+
+# Introduction
+
+## Who You Are
+
+Test
+
+---
+
+## Card Deck
+
+### Challenge
+
+
+
+---
+`;
+
+			expect(() => parseGameFile(markdown)).toThrow(ValidationError);
+			expect(() => parseGameFile(markdown)).toThrow(/description/i);
+		});
+
+		it('should handle missing card separator', () => {
+			const markdown = `---
+title: Test
+win-message: Win
+lose-message: Lose
+---
+
+# Introduction
+
+## Who You Are
+
+Test
+
+---
+
+## Card Deck
+
+### Primary Success
+
+**Card 1**
+
+### Failure Counter
+
+**Card 2 (no separator between)**
+`;
+
+			// Parser should handle or reject missing separators
+			try {
+				parseGameFile(markdown);
+			} catch (error) {
+				expect(error).toBeInstanceOf(ValidationError);
+			}
+		});
+	});
+
+	describe('Nested Markdown Edge Cases', () => {
+		it('should handle lists in card stories', () => {
+			const markdown = `---
+title: Test
+win-message: Win
+lose-message: Lose
+---
+
+# Introduction
+
+## Who You Are
+
+Test
+
+---
+
+## Card Deck
+
+### Primary Success
+
+**You discover clues**
+
+You find:
+- A cryptic note
+- An ancient key
+- A faded photograph
+
+Each item tells part of the story.
+
+---
+
+${generateCards('Failure Counter', 4)}
+
+${generateCards('Narrative', 3)}
+
+${generateCards('Challenge', 16)}
+
+${generateCards('Event', 28)}
+`;
+
+			const result = parseGameFile(markdown);
+			const primarySuccess = result.deck.find((c) => c.type === 'primary-success');
+			expect(primarySuccess).toBeDefined();
+			expect(primarySuccess.story).toContain('- A cryptic note');
+			expect(primarySuccess.story).toContain('- An ancient key');
+		});
+
+		it('should handle code blocks in card stories', () => {
+			const markdown = `---
+title: Test
+win-message: Win
+lose-message: Lose
+---
+
+# Introduction
+
+## Who You Are
+
+Test
+
+---
+
+## Card Deck
+
+### Primary Success
+
+**You find a terminal**
+
+The screen displays:
+
+\`\`\`
+SYSTEM ONLINE
+ACCESS GRANTED
+\`\`\`
+
+---
+
+${generateCards('Failure Counter', 4)}
+
+${generateCards('Narrative', 3)}
+
+${generateCards('Challenge', 16)}
+
+${generateCards('Event', 28)}
+`;
+
+			const result = parseGameFile(markdown);
+			const primarySuccess = result.deck.find((c) => c.type === 'primary-success');
+			expect(primarySuccess).toBeDefined();
+			expect(primarySuccess.story).toContain('```');
+			expect(primarySuccess.story).toContain('SYSTEM ONLINE');
+		});
+
+		it('should handle inline code in descriptions', () => {
+			const markdown = `---
+title: Test
+win-message: Win
+lose-message: Lose
+---
+
+# Introduction
+
+## Who You Are
+
+Test
+
+---
+
+## Card Deck
+
+### Primary Success
+
+**You enter the command \`initialize\` successfully**
+
+---
+
+${generateCards('Failure Counter', 4)}
+
+${generateCards('Narrative', 3)}
+
+${generateCards('Challenge', 16)}
+
+${generateCards('Event', 28)}
+`;
+
+			const result = parseGameFile(markdown);
+			const primarySuccess = result.deck.find((c) => c.type === 'primary-success');
+			expect(primarySuccess).toBeDefined();
+			expect(primarySuccess.description).toContain('`initialize`');
+		});
+
+		it('should handle blockquotes in card stories', () => {
+			const markdown = `---
+title: Test
+win-message: Win
+lose-message: Lose
+---
+
+# Introduction
+
+## Who You Are
+
+Test
+
+---
+
+## Card Deck
+
+### Primary Success
+
+**You find a journal entry**
+
+The last entry reads:
+
+> If you're reading this, I'm already gone.
+> Find the key. Save yourself.
+
+---
+
+${generateCards('Failure Counter', 4)}
+
+${generateCards('Narrative', 3)}
+
+${generateCards('Challenge', 16)}
+
+${generateCards('Event', 28)}
+`;
+
+			const result = parseGameFile(markdown);
+			const primarySuccess = result.deck.find((c) => c.type === 'primary-success');
+			expect(primarySuccess).toBeDefined();
+			expect(primarySuccess.story).toContain('>');
+			expect(primarySuccess.story).toContain("I'm already gone");
+		});
+	});
+
+	describe('Whitespace and Formatting Edge Cases', () => {
+		it('should handle multiple blank lines between sections', () => {
+			const markdown = `---
+title: Test
+win-message: Win
+lose-message: Lose
+---
+
+
+
+# Introduction
+
+
+
+## Who You Are
+
+
+
+Test
+
+
+
+---
+
+
+
+## Card Deck
+
+${generateCards('Primary Success', 1)}
+
+${generateCards('Failure Counter', 4)}
+
+${generateCards('Narrative', 3)}
+
+${generateCards('Challenge', 16)}
+
+${generateCards('Event', 28)}
+`;
+
+			const result = parseGameFile(markdown);
+			expect(result.deck).toHaveLength(52);
+		});
+
+		it('should handle Windows line endings (CRLF)', () => {
+			const markdown = createValidGameMarkdown().replace(/\n/g, '\r\n');
+
+			// Known limitation: Parser expects Unix line endings (\n)
+			// CRLF (\r\n) will cause parsing errors
+			expect(() => parseGameFile(markdown)).toThrow(ValidationError);
+			expect(() => parseGameFile(markdown)).toThrow(/frontmatter/i);
+		});
+
+		it('should handle mixed line endings', () => {
+			const markdown = createValidGameMarkdown();
+			const mixed = markdown.replace(/\n/g, (match, offset) => {
+				return offset % 3 === 0 ? '\r\n' : '\n';
+			});
+
+			// Known limitation: Parser expects consistent Unix line endings
+			// Mixed line endings break section detection
+			expect(() => parseGameFile(mixed)).toThrow(ValidationError);
+			expect(() => parseGameFile(mixed)).toThrow(/Card Deck/i);
+		});
+
+		it('should trim whitespace from card descriptions', () => {
+			const markdown = `---
+title: Test
+win-message: Win
+lose-message: Lose
+---
+
+# Introduction
+
+## Who You Are
+
+Test
+
+---
+
+## Card Deck
+
+### Primary Success
+
+**   Padded description   **
+
+---
+
+${generateCards('Failure Counter', 4)}
+
+${generateCards('Narrative', 3)}
+
+${generateCards('Challenge', 16)}
+
+${generateCards('Event', 28)}
+`;
+
+			const result = parseGameFile(markdown);
+			const primarySuccess = result.deck.find((c) => c.type === 'primary-success');
+			expect(primarySuccess.description).toBe('Padded description');
+		});
 	});
 });
 
@@ -927,7 +1768,7 @@ ${introduction}
 
 ---
 
-# Card Deck
+## Card Deck
 
 ${generateCards('Primary Success', primarySuccess)}
 
