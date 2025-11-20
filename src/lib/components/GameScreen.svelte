@@ -116,18 +116,8 @@
 
 
 
-	// DrawCard button state
+	// DrawCard ref for auto-draw on screen entry
 	let drawCardRef = $state();
-
-	// Reactive derived values for DrawCard button
-	const drawCardButtonText = $derived(drawCardRef?.getButtonText() ?? 'Draw Card');
-	const drawCardButtonDisabled = $derived(drawCardRef?.isButtonDisabled() ?? false);
-
-	async function handleDrawCardClick() {
-		if (drawCardRef) {
-			await drawCardRef.handleButtonClick();
-		}
-	}
 
 	// JournalEntry button state
 	let journalSaved = $state(false);
@@ -290,9 +280,7 @@
 				}
 				break;
 			case 'drawCard':
-				if (!drawCardButtonDisabled) {
-					handleDrawCardClick();
-				}
+				// No keyboard handler - user must click the card directly to dismiss
 				break;
 			case 'failureCheck':
 				if (!failureCheck.rolling) {
@@ -766,14 +754,6 @@
 							onclick={handleRollForTasks}
 							disabled={rollForTasks.buttonDisabled}
 							testid="roll-tasks-button"
-						/>
-					{:else if currentScreen === 'drawCard'}
-						<ContinueButton
-							text={drawCardButtonText}
-							onclick={handleDrawCardClick}
-							disabled={drawCardButtonDisabled}
-							testid="card-deck-button"
-							class="neural-cta-wrapper"
 						/>
 					{:else if currentScreen === 'failureCheck'}
 						<ContinueButton
