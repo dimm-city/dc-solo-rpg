@@ -79,18 +79,16 @@
 	 * Uses direct function call instead of $effect to avoid infinite loops
 	 * CRITICAL: Only auto-trigger if we're still in drawCard state AND have cards to draw
 	 * This prevents infinite loop when confirmCard() transitions to next phase
+	 *
+	 * NOTE: This handles auto-drawing the NEXT card after dismissing the current one.
+	 * The autoContinueAfterReading setting controls whether cards auto-dismiss after reading,
+	 * but doesn't control whether the next card auto-draws.
 	 */
 	function triggerAutoDrawIfNeeded() {
-		const gameplaySettings = getGameplaySettings();
-
-		// Only auto-draw when:
-		// 1. Auto-continue is enabled
-		// 2. Still in drawCard state with cards to draw
-		if (
-			gameplaySettings.autoContinueAfterReading &&
-			gameState.state === 'drawCard' &&
-			gameState.cardsToDraw > 0
-		) {
+		// Auto-draw next card if we're in drawCard state with cards to draw
+		// This applies to both manual and auto modes - dismissing a card should
+		// automatically proceed to draw the next one
+		if (gameState.state === 'drawCard' && gameState.cardsToDraw > 0) {
 			// Small delay to avoid immediate re-trigger and allow UI to settle
 			setTimeout(() => {
 				handleProceed();
