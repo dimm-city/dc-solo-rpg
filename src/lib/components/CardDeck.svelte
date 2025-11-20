@@ -249,7 +249,7 @@
 
 <div class="dc-card-deck" class:active={animationStage !== 'idle'}>
 	<!-- Card Display Component -->
-	<CardDisplay {card} {animationStage} onDismiss={onDismiss} />
+	<CardDisplay {card} {animationStage} onDismiss={handleDismiss} />
 </div>
 
 <style>
