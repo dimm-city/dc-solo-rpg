@@ -191,7 +191,7 @@ let {
 	}
 
 	.byte-container.materializing {
-		animation: byte-materialize 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+		animation: byte-materialize 800ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
 	}
 
 	.byte-container.revealed {
@@ -206,18 +206,13 @@ let {
 	@keyframes byte-materialize {
 		0% {
 			opacity: 0;
-			transform: scale(0.8) rotateX(20deg);
-			filter: blur(10px);
-		}
-		60% {
-			opacity: 0.8;
-			transform: scale(1.05) rotateX(-5deg);
-			filter: blur(2px);
+			transform: scale(0.95) translateY(10px);
+			filter: blur(8px) brightness(0.8);
 		}
 		100% {
 			opacity: 1;
-			transform: scale(1) rotateX(0deg);
-			filter: blur(0px);
+			transform: scale(1) translateY(0);
+			filter: blur(0px) brightness(1);
 		}
 	}
 
