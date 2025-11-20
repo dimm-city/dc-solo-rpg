@@ -40,7 +40,6 @@ async function handleClick() {
 		width: 100%;
 		display: grid;
 		text-align: center;
-		align-items: center;
-		justify-content: center;
+		align-items: end;
 	}
 </style>

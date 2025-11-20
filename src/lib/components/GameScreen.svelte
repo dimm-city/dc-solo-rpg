@@ -1096,6 +1096,7 @@
 		box-sizing: border-box;
 		position: relative; /* CRITICAL: Position context for content */
 		overflow: hidden; /* CRITICAL: Prevent scrolling */
+		align-items: center;
 	}
 
 	.main-screen-area > div.dc-screen-container {
