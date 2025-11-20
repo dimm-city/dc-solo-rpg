@@ -423,6 +423,16 @@
 				triggerAutoPlayForCurrentScreen();
 				break;
 
+			case 'drawCard':
+				// Auto-draw first card when entering drawCard state
+				// Small delay to ensure CardDeck component is fully initialized
+				setTimeout(() => {
+					if (drawCardRef && gameState.cardsToDraw > 0) {
+						drawCardRef.onButtonClick();
+					}
+				}, 100);
+				break;
+
 			case 'log':
 			case 'finalLog':
 				// Reset journal state
