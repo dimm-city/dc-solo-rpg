@@ -1,3 +1,5 @@
+import { logger } from '../utils/logger.js';
+
 /**
  * useEnrichedRounds - Process saved game data into enriched rounds
  *
