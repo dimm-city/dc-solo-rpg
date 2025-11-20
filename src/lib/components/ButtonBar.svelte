@@ -32,13 +32,13 @@
 		container-type: inline-size;
 	}
 
-	.with-border {
+	/* .with-border {
 		border-top: 2px solid var(--color-cyber-magenta);
 	}
 
 	.dc-game-bg {
 		background: var(--color-bg-primary);
-	}
+	} */
 
 	/* Each button wrapper fills half the row */
 	.button-bar > :global(.aug-button-wrapper) {

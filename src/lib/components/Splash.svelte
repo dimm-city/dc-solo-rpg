@@ -67,7 +67,7 @@
 				<div class="title-divider"></div>
 				<span>C</span><span>I</span><span>T</span><span>Y</span>
 			</div>
-			<div class="game-type">S-RPG</div>
+			<div class="game-type">Dream Console</div>
 			<div class="subtitle">{subtitle}</div>
 		</div>
 	</div>
@@ -226,11 +226,11 @@
 	@keyframes fadeIn {
 		from {
 			opacity: 0;
-			transform: translateY(10px);
+			transform: translateY(30px) scale(0.75);
 		}
 		to {
 			opacity: 1;
-			transform: translateY(0);
+			transform: translateY(0) scale(1);
 		}
 	}
 

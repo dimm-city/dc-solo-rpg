@@ -51,11 +51,9 @@ async function handleClick() {
 		width: 100%;
 		height: 100%;
 		display: grid;
-		text-align: center;
-		grid-template-rows: auto 1fr;
+		text-align: center;	
 		gap: 1rem;
-		align-items: center;
-		justify-content: center;
+		align-items: end;
 	}
 
 	.card-info {

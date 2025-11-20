@@ -39,8 +39,7 @@ async function handleClick() {
 		width: 100%;
 		height: 100%;
 		display: grid;
-		align-items: center;
-		justify-content: center;
+		align-items: end;
 		text-align: center;
 	}
 </style>

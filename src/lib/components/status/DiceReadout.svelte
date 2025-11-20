@@ -1,54 +1,54 @@
 <script>
-/**
- * DiceReadout - Dice roll display panel
- *
- * Displays the last dice roll with:
- * - Large numerical value
- * - Binary pips representing the roll
- * - Modifier state (Lucid/Surreal) with icons
- *
- * This component is HIGHLY REUSABLE - can be used in other game screens.
- *
- * @component
- */
+	/**
+	 * DiceReadout - Dice roll display panel
+	 *
+	 * Displays the last dice roll with:
+	 * - Large numerical value
+	 * - Binary pips representing the roll
+	 * - Modifier state (Lucid/Surreal) with icons
+	 *
+	 * This component is HIGHLY REUSABLE - can be used in other game screens.
+	 *
+	 * @component
+	 */
 
-import { gameState } from '../../stores/gameStore.svelte.js';
+	import { gameState } from '../../stores/gameStore.svelte.js';
 
-let {
-	/** Animation delay in seconds */
-	animationDelay = 0.35,
-	/** Animation duration in seconds */
-	animationDuration = 0.75
-} = $props();
+	let {
+		/** Animation delay in seconds */
+		animationDelay = 0.35,
+		/** Animation duration in seconds */
+		animationDuration = 0.75
+	} = $props();
 
-// Dice pips - convert dice roll to 5 pips (dice pattern)
-// Pips are arranged like 5 on a six-sided die: 4 corners + 1 center
-const dicePips = $derived(() => {
-	const roll = gameState.diceRoll || 0;
-	// Create array of 5 boolean values - which pips are active based on the roll value
-	const pips = [false, false, false, false, false];
+	// Dice pips - convert dice roll to 5 pips (dice pattern)
+	// Pips are arranged like 5 on a six-sided die: 4 corners + 1 center
+	const dicePips = $derived(() => {
+		const roll = gameState.diceRoll || 0;
+		// Create array of 5 boolean values - which pips are active based on the roll value
+		const pips = [false, false, false, false, false];
 
-	// Map d20 roll to pip pattern (0-20 range, using 5-bit binary)
-	const binary = roll.toString(2).padStart(5, '0');
-	for (let i = 0; i < 5; i++) {
-		pips[i] = binary[i] === '1';
-	}
+		// Map d20 roll to pip pattern (0-20 range, using 5-bit binary)
+		const binary = roll.toString(2).padStart(5, '0');
+		for (let i = 0; i < 5; i++) {
+			pips[i] = binary[i] === '1';
+		}
 
-	return pips;
-});
+		return pips;
+	});
 
-// Modifier state display
-const modifierState = $derived(() => {
-	if (gameState.isLucid) return 'LUCID';
-	if (gameState.isSurreal) return 'SURREAL';
-	return null;
-});
+	// Modifier state display
+	const modifierState = $derived.by(() => {
+		if (gameState.isLucid) return 'LUCID';
+		if (gameState.isSurreal) return 'SURREAL';
+		return null;
+	});
 
-const modifierColor = $derived(() => {
-	if (gameState.isLucid) return '#00ffaa'; // Green for advantage
-	if (gameState.isSurreal) return '#ff0066'; // Red for disadvantage
-	return null;
-});
+	const modifierColor = $derived.by(() => {
+		if (gameState.isLucid) return '#00ffaa'; // Green for advantage
+		if (gameState.isSurreal) return '#ff0066'; // Red for disadvantage
+		return null;
+	});
 </script>
 
 <div
@@ -56,63 +56,62 @@ const modifierColor = $derived(() => {
 	data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
 	style="animation-delay: {animationDelay}s; animation-duration: {animationDuration}s"
 >
-	<div class="dice-label">
-		<svg
-			class="dice-icon"
-			xmlns="http://www.w3.org/2000/svg"
-			width="14"
-			height="14"
-			viewBox="0 0 24 24"
-			fill="none"
-			stroke="currentColor"
-			stroke-width="2"
-			stroke-linecap="round"
-			stroke-linejoin="round"
-		>
-			<rect width="12" height="12" x="2" y="10" rx="2" ry="2" />
-			<path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6" />
-			<path d="M6 18h.01" />
-			<path d="M10 14h.01" />
-			<path d="M15 6h.01" />
-			<path d="M18 9h.01" />
-		</svg>
+	<div class="dice-label" style="color: {modifierColor}">
+		{#if gameState.isLucid}
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				width="16"
+				height="16"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+			>
+				<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+				<polyline points="16 7 22 7 22 13"></polyline>
+			</svg>
+		{:else if gameState.isSurreal}
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				width="16"
+				height="16"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+			>
+				<polyline points="22 17 13.5 8.5 8.5 13.5 2 7"></polyline>
+				<polyline points="16 17 22 17 22 11"></polyline>
+			</svg>
+		{:else}
+			<svg
+				class="dice-icon"
+				xmlns="http://www.w3.org/2000/svg"
+				width="14"
+				height="14"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+			>
+				<rect width="12" height="12" x="2" y="10" rx="2" ry="2" />
+				<path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6" />
+				<path d="M6 18h.01" />
+				<path d="M10 14h.01" />
+				<path d="M15 6h.01" />
+				<path d="M18 9h.01" />
+			</svg>
+		{/if}
+
 		LAST ROLL
 	</div>
-	{#if modifierState()}
-		<div class="modifier-state" style="color: {modifierColor()}">
-			{#if gameState.isLucid}
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					width="16"
-					height="16"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-				>
-					<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
-					<polyline points="16 7 22 7 22 13"></polyline>
-				</svg>
-			{:else if gameState.isSurreal}
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					width="16"
-					height="16"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-				>
-					<polyline points="22 17 13.5 8.5 8.5 13.5 2 7"></polyline>
-					<polyline points="16 17 22 17 22 11"></polyline>
-				</svg>
-			{/if}
-		</div>
-	{/if}
+
 	<div class="dice-value">{gameState.diceRoll}</div>
 	<div class="dice-pips">
 		<!-- Top row -->
