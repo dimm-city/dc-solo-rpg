@@ -35,14 +35,9 @@
 
 	async function checkSupertonicAvailability() {
 		try {
-			// Check if API endpoint is available
-			const response = await fetch('/server/tts/supertonic', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ text: 'test' })
-			});
-			// API is available if we don't get a 404 (even 400/500 means endpoint exists)
-			providerAvailability.supertonic = response.status !== 404;
+			// Check if ONNX models are available (browser-based implementation)
+			const response = await fetch('/assets/onnx/tts.json');
+			providerAvailability.supertonic = response.ok;
 		} catch (error) {
 			providerAvailability.supertonic = false;
 		}
@@ -156,7 +151,7 @@
 	{:else if getAudioSettings().ttsProvider === 'supertonic'}
 		<div class="info-box">
 			<p>
-				<strong>Note:</strong> Supertonic uses server-side neural TTS processing for high-quality speech synthesis. No API key required.
+				<strong>Note:</strong> Supertonic uses browser-based neural TTS processing (ONNX Runtime Web + WASM/WebGPU) for high-quality speech synthesis. All processing happens on your device - no API key required and no data sent to servers.
 			</p>
 		</div>
 
