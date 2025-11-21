@@ -10,18 +10,65 @@
 
 	// Direct access to reactive state - don't use $derived here
 	let availableVoices = $state([]);
+	let providerError = $state(null);
+	let providerAvailability = $state({
+		browser: true,
+		supertonic: false, // Will check on mount
+		openai: true,
+		elevenlabs: true
+	});
 
 	onMount(async () => {
 		// Load available voices
 		availableVoices = await getAvailableVoices();
+
+		// Check if Supertonic models are available
+		await checkSupertonicAvailability();
 	});
 
-	function handleAudioSettingChange(key, value) {
-		updateAudioSettings({ [key]: value });
+	async function checkSupertonicAvailability() {
+		try {
+			// Try to fetch one of the model files (served from static/assets at runtime)
+			const response = await fetch('/assets/onnx/text_encoder.onnx', { method: 'HEAD' });
+			providerAvailability.supertonic = response.ok;
+		} catch (error) {
+			providerAvailability.supertonic = false;
+		}
+	}
+
+	async function handleAudioSettingChange(key, value) {
+		// Clear previous errors
+		if (key === 'ttsProvider') {
+			providerError = null;
+		}
+
+		try {
+			await updateAudioSettings({ [key]: value });
+
+			// Reload voices when provider changes
+			if (key === 'ttsProvider') {
+				await loadVoices();
+			}
+		} catch (error) {
+			// Show user-friendly error message
+			if (key === 'ttsProvider') {
+				if (value === 'supertonic') {
+					providerError = `Supertonic TTS initialization failed: ${error.message}`;
+				} else if (value === 'openai' || value === 'elevenlabs') {
+					providerError = `Failed to initialize ${value}. Please check your API key.`;
+				} else {
+					providerError = `Failed to switch to ${value} provider: ${error.message}`;
+				}
+			}
+		}
 	}
 
 	function handleGameplaySettingChange(key, value) {
 		updateGameplaySettings({ [key]: value });
+	}
+
+	async function loadVoices() {
+		availableVoices = await getAvailableVoices();
 	}
 
 	// Helper to get current settings
@@ -38,6 +85,60 @@
 
 	<div class="settings-section">
 		<h4>Text-to-Speech</h4>
+
+		<div class="setting-row">
+			<label for="tts-provider">TTS Provider</label>
+			<select
+				id="tts-provider"
+				value={getAudioSettings().ttsProvider}
+				onchange={(e) => handleAudioSettingChange('ttsProvider', e.target.value)}
+			>
+				<option value="browser">Browser (Free, No API Key)</option>
+				<option value="supertonic" disabled={!providerAvailability.supertonic}>
+					Supertonic Neural TTS {providerAvailability.supertonic
+						? '(On-Device)'
+						: '(Models Not Found)'}
+				</option>
+				<option value="openai">OpenAI TTS</option>
+				<option value="elevenlabs">ElevenLabs</option>
+			</select>
+			<p class="setting-description">Choose your text-to-speech provider</p>
+
+			{#if providerError}
+				<div class="error-message">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="16"
+						height="16"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<circle cx="12" cy="12" r="10"></circle>
+						<line x1="12" y1="8" x2="12" y2="12"></line>
+						<line x1="12" y1="16" x2="12.01" y2="16"></line>
+					</svg>
+					<span>{providerError}</span>
+				</div>
+			{/if}
+		</div>
+
+		{#if getAudioSettings().ttsProvider !== 'browser' && getAudioSettings().ttsProvider !== 'supertonic'}
+			<div class="setting-row">
+				<label for="tts-api-key">API Key</label>
+				<input
+					id="tts-api-key"
+					type="password"
+					value={getAudioSettings().ttsApiKey || ''}
+					oninput={(e) => handleAudioSettingChange('ttsApiKey', e.target.value || null)}
+					placeholder="Enter your API key"
+				/>
+				<p class="setting-description">Required for {getAudioSettings().ttsProvider} TTS</p>
+			</div>
+		{/if}
 
 		<div class="setting-row">
 			<label class="setting-label">
@@ -313,7 +414,9 @@
 		font-weight: 500;
 	}
 
-	select {
+	select,
+	input[type='password'],
+	input[type='text'] {
 		width: 100%;
 		padding: var(--space-sm, 0.5rem);
 		background: rgba(255, 255, 255, 0.1);
@@ -321,6 +424,11 @@
 		border-radius: 4px;
 		color: var(--dc-default-text-color, inherit);
 		font-size: 0.9rem;
+	}
+
+	input[type='password']::placeholder,
+	input[type='text']::placeholder {
+		color: rgba(255, 255, 255, 0.4);
 	}
 
 	input[type='range'] {
@@ -366,5 +474,23 @@
 
 	.preset-button:active {
 		transform: translateY(0);
+	}
+
+	.error-message {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm, 0.5rem);
+		padding: var(--space-sm, 0.5rem);
+		margin-top: var(--space-sm, 0.5rem);
+		background: rgba(220, 38, 38, 0.1);
+		border: 1px solid rgba(220, 38, 38, 0.3);
+		border-radius: 4px;
+		color: rgba(220, 38, 38, 1);
+		font-size: 0.85rem;
+		line-height: 1.4;
+	}
+
+	.error-message svg {
+		flex-shrink: 0;
 	}
 </style>

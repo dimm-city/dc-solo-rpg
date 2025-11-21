@@ -2,28 +2,77 @@
  * TTSSection - Text-to-Speech configuration section
  *
  * Provides UI for configuring TTS provider settings
+ * Now uses audioStore as single source of truth
  *
  * @component ⭐ REUSABLE
  * @example
- * <TTSSection
- *   bind:ttsProvider={ttsProvider}
- *   bind:ttsApiKey={ttsApiKey}
- *   bind:ttsVoice={ttsVoice}
- *   bind:ttsRate={ttsRate}
- *   bind:ttsPitch={ttsPitch}
- *   {availableVoices}
- * />
+ * <TTSSection />
  -->
 
 <script>
-	let {
-		ttsProvider = $bindable('browser'),
-		ttsApiKey = $bindable(''),
-		ttsVoice = $bindable(''),
-		ttsRate = $bindable(1.0),
-		ttsPitch = $bindable(1.0),
-		availableVoices = []
-	} = $props();
+	import {
+		getAudioSettings,
+		updateAudioSettings,
+		getAvailableVoices
+	} from '../../stores/audioStore.svelte.js';
+	import { onMount } from 'svelte';
+
+	let availableVoices = $state([]);
+	let providerError = $state(null);
+	let providerAvailability = $state({
+		browser: true,
+		supertonic: false, // Will check on mount
+		openai: true,
+		elevenlabs: true
+	});
+
+	onMount(async () => {
+		availableVoices = await getAvailableVoices();
+
+		// Check if Supertonic models are available
+		await checkSupertonicAvailability();
+	});
+
+	async function checkSupertonicAvailability() {
+		try {
+			// Try to fetch one of the model files (served from static/assets at runtime)
+			const response = await fetch('/assets/onnx/text_encoder.onnx', { method: 'HEAD' });
+			providerAvailability.supertonic = response.ok;
+		} catch (error) {
+			providerAvailability.supertonic = false;
+		}
+	}
+
+	async function handleTTSSettingChange(key, value) {
+		// Clear previous errors
+		if (key === 'ttsProvider') {
+			providerError = null;
+		}
+
+		try {
+			await updateAudioSettings({ [key]: value });
+
+			// Reload voices when provider changes
+			if (key === 'ttsProvider') {
+				await loadVoices();
+			}
+		} catch (error) {
+			// Show user-friendly error message
+			if (key === 'ttsProvider') {
+				if (value === 'supertonic') {
+					providerError = `Supertonic TTS initialization failed: ${error.message}`;
+				} else if (value === 'openai' || value === 'elevenlabs') {
+					providerError = `Failed to initialize ${value}. Please check your API key.`;
+				} else {
+					providerError = `Failed to switch to ${value} provider: ${error.message}`;
+				}
+			}
+		}
+	}
+
+	async function loadVoices() {
+		availableVoices = await getAvailableVoices();
+	}
 </script>
 
 <section class="settings-section">
@@ -35,72 +84,99 @@
 
 	<div class="form-group">
 		<label for="tts-provider">TTS Provider</label>
-		<select id="tts-provider" bind:value={ttsProvider}>
+		<select
+			id="tts-provider"
+			value={getAudioSettings().ttsProvider}
+			onchange={(e) => handleTTSSettingChange('ttsProvider', e.target.value)}
+		>
 			<option value="browser">Browser (Free, No API Key)</option>
-			<option value="supertonic">Supertonic Neural TTS (On-Device, Requires Models)</option>
+			<option value="supertonic" disabled={!providerAvailability.supertonic}>
+				Supertonic Neural TTS {providerAvailability.supertonic
+					? '(On-Device, Requires Models)'
+					: '(Models Not Found)'}
+			</option>
 			<option value="openai">OpenAI TTS</option>
 			<option value="elevenlabs">ElevenLabs</option>
 		</select>
+
+		{#if providerError}
+			<div class="error-message">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="16"
+					height="16"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				>
+					<circle cx="12" cy="12" r="10"></circle>
+					<line x1="12" y1="8" x2="12" y2="12"></line>
+					<line x1="12" y1="16" x2="12.01" y2="16"></line>
+				</svg>
+				<span>{providerError}</span>
+			</div>
+		{/if}
 	</div>
 
-	{#if ttsProvider !== 'browser'}
+	{#if getAudioSettings().ttsProvider !== 'browser' && getAudioSettings().ttsProvider !== 'supertonic'}
 		<div class="form-group">
 			<label for="tts-api-key">TTS API Key</label>
 			<input
 				id="tts-api-key"
 				type="password"
-				bind:value={ttsApiKey}
+				value={getAudioSettings().ttsApiKey || ''}
+				oninput={(e) => handleTTSSettingChange('ttsApiKey', e.target.value || null)}
 				placeholder="Enter your TTS API key"
 			/>
 		</div>
 	{/if}
 
-	{#if ttsProvider === 'browser'}
+	{#if getAudioSettings().ttsProvider === 'browser'}
 		<div class="form-group">
 			<label for="tts-voice">Voice</label>
-			<select id="tts-voice" bind:value={ttsVoice}>
+			<select
+				id="tts-voice"
+				value={getAudioSettings().ttsVoice || ''}
+				onchange={(e) => handleTTSSettingChange('ttsVoice', e.target.value || null)}
+			>
 				<option value="">Default System Voice</option>
 				{#each availableVoices as voice}
-					<option value={voice.name}>{voice.name} ({voice.lang})</option>
+					<option value={voice.id}>{voice.name} ({voice.language})</option>
 				{/each}
 			</select>
 		</div>
-
-		<div class="form-group">
-			<label for="tts-rate">Speed: {ttsRate.toFixed(1)}x</label>
-			<input id="tts-rate" type="range" min="0.5" max="2.0" step="0.1" bind:value={ttsRate} />
-		</div>
-
-		<div class="form-group">
-			<label for="tts-pitch">Pitch: {ttsPitch.toFixed(1)}</label>
-			<input id="tts-pitch" type="range" min="0.5" max="2.0" step="0.1" bind:value={ttsPitch} />
-		</div>
-	{:else if ttsProvider === 'supertonic'}
+	{:else if getAudioSettings().ttsProvider === 'supertonic'}
 		<div class="info-box">
 			<p>
-				<strong>Note:</strong> Supertonic requires ONNX models to be downloaded and placed in
-				<code>static/tts-models/</code>. See documentation for setup instructions.
+				<strong>Note:</strong> Supertonic requires ONNX models to be placed in
+				<code>static/assets/onnx/</code> (served at <code>/assets/onnx/</code>). See documentation for setup instructions.
 			</p>
 		</div>
 
 		<div class="form-group">
 			<label for="tts-voice">Voice Style</label>
-			<select id="tts-voice" bind:value={ttsVoice}>
+			<select
+				id="tts-voice"
+				value={getAudioSettings().ttsVoice || 'F1'}
+				onchange={(e) => handleTTSSettingChange('ttsVoice', e.target.value)}
+			>
 				<option value="F1">Female Voice 1 (F1)</option>
 				<option value="F2">Female Voice 2 (F2)</option>
 				<option value="M1">Male Voice 1 (M1)</option>
 				<option value="M2">Male Voice 2 (M2)</option>
 			</select>
 		</div>
-
-		<div class="form-group">
-			<label for="tts-rate">Speed: {ttsRate.toFixed(1)}x</label>
-			<input id="tts-rate" type="range" min="0.5" max="2.0" step="0.1" bind:value={ttsRate} />
-		</div>
-	{:else if ttsProvider === 'openai'}
+	{:else if getAudioSettings().ttsProvider === 'openai'}
 		<div class="form-group">
 			<label for="tts-voice">Voice</label>
-			<select id="tts-voice" bind:value={ttsVoice}>
+			<select
+				id="tts-voice"
+				value={getAudioSettings().ttsVoice || 'alloy'}
+				onchange={(e) => handleTTSSettingChange('ttsVoice', e.target.value)}
+			>
 				<option value="alloy">Alloy</option>
 				<option value="echo">Echo</option>
 				<option value="fable">Fable</option>
@@ -108,6 +184,18 @@
 				<option value="nova">Nova</option>
 				<option value="shimmer">Shimmer</option>
 			</select>
+		</div>
+	{:else if getAudioSettings().ttsProvider === 'elevenlabs'}
+		<div class="form-group">
+			<label for="tts-voice">Voice ID</label>
+			<input
+				id="tts-voice"
+				type="text"
+				value={getAudioSettings().ttsVoice || ''}
+				oninput={(e) => handleTTSSettingChange('ttsVoice', e.target.value || null)}
+				placeholder="Enter ElevenLabs voice ID"
+			/>
+			<p class="helper-text">Find voice IDs in your ElevenLabs account</p>
 		</div>
 	{/if}
 </section>
@@ -199,5 +287,23 @@
 		font-family: monospace;
 		font-size: 0.9em;
 		color: rgba(255, 255, 255, 0.9);
+	}
+
+	.error-message {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm);
+		padding: var(--space-sm);
+		margin-top: var(--space-sm);
+		background: rgba(220, 38, 38, 0.1);
+		border: 1px solid rgba(220, 38, 38, 0.3);
+		border-radius: 4px;
+		color: rgba(220, 38, 38, 1);
+		font-size: 0.85rem;
+		line-height: 1.4;
+	}
+
+	.error-message svg {
+		flex-shrink: 0;
 	}
 </style>

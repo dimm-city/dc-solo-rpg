@@ -14,7 +14,8 @@ const DEFAULT_SETTINGS = {
 		autoAnnounceRolls: false,
 		readingSpeed: 'normal', // 'slow', 'normal', 'fast'
 		ttsProvider: 'browser',
-		ttsVoice: null
+		ttsVoice: null,
+		ttsApiKey: null // API key for non-browser providers (openai, elevenlabs, etc.)
 	},
 	gameplay: {
 		autoRollDice: false,
@@ -44,14 +45,14 @@ let ttsState = $state({
  * Initialize audio store
  * Loads settings from localStorage if available
  */
-export function initializeAudioStore() {
-	loadSettings();
+export async function initializeAudioStore() {
+	await loadSettings();
 }
 
 /**
  * Load settings from localStorage
  */
-function loadSettings() {
+async function loadSettings() {
 	if (typeof window === 'undefined') return;
 
 	try {
@@ -70,11 +71,23 @@ function loadSettings() {
 				...parsed.gameplay
 			};
 
+			// Set the TTS provider (if not default browser)
+			if (audioSettings.ttsProvider && audioSettings.ttsProvider !== 'browser') {
+				try {
+					await ttsService.setProvider(audioSettings.ttsProvider);
+				} catch (error) {
+					logger.error('[AudioStore] Failed to set TTS provider on load:', error);
+					// Fall back to browser TTS
+					audioSettings.ttsProvider = 'browser';
+				}
+			}
+
 			// Apply TTS settings
 			ttsService.updateSettings({
 				provider: audioSettings.ttsProvider,
 				voice: audioSettings.ttsVoice,
-				readingSpeed: audioSettings.readingSpeed
+				readingSpeed: audioSettings.readingSpeed,
+				apiKey: audioSettings.ttsApiKey
 			});
 		}
 	} catch (error) {
@@ -103,17 +116,37 @@ function saveSettings() {
  * Update audio settings
  * @param {Object} updates - Settings to update
  */
-export function updateAudioSettings(updates) {
+export async function updateAudioSettings(updates) {
+	const previousProvider = audioSettings.ttsProvider;
+
 	audioSettings = {
 		...audioSettings,
 		...updates
 	};
 
-	// Update TTS service
+	// If provider changed, switch to the new provider
+	if (updates.ttsProvider && updates.ttsProvider !== previousProvider) {
+		try {
+			await ttsService.setProvider(audioSettings.ttsProvider);
+			logger.info('[AudioStore] Switched TTS provider to:', audioSettings.ttsProvider);
+
+			// Reset voice selection since voices are provider-specific
+			audioSettings.ttsVoice = null;
+		} catch (error) {
+			logger.error('[AudioStore] Failed to switch TTS provider:', error);
+			// Revert provider change on error
+			audioSettings.ttsProvider = previousProvider;
+			// Re-throw the error so the UI can handle it
+			throw error;
+		}
+	}
+
+	// Update TTS service settings
 	ttsService.updateSettings({
 		provider: audioSettings.ttsProvider,
 		voice: audioSettings.ttsVoice,
-		readingSpeed: audioSettings.readingSpeed
+		readingSpeed: audioSettings.readingSpeed,
+		apiKey: audioSettings.ttsApiKey
 	});
 
 	saveSettings();

@@ -11,35 +11,35 @@ export const SUPERTONIC_VOICES = {
 		id: 'M1',
 		name: 'Male Voice 1',
 		language: 'en-US',
-		stylePath: '/tts-models/voice_styles/M1.json'
+		stylePath: '/assets/voice_styles/M1.json'
 	},
 	M2: {
 		id: 'M2',
 		name: 'Male Voice 2',
 		language: 'en-US',
-		stylePath: '/tts-models/voice_styles/M2.json'
+		stylePath: '/assets/voice_styles/M2.json'
 	},
 	F1: {
 		id: 'F1',
 		name: 'Female Voice 1',
 		language: 'en-US',
-		stylePath: '/tts-models/voice_styles/F1.json'
+		stylePath: '/assets/voice_styles/F1.json'
 	},
 	F2: {
 		id: 'F2',
 		name: 'Female Voice 2',
 		language: 'en-US',
-		stylePath: '/tts-models/voice_styles/F2.json'
+		stylePath: '/assets/voice_styles/F2.json'
 	}
 };
 
 /**
- * Default model paths (relative to public directory)
+ * Default model paths (served from static/assets at runtime)
  */
 const DEFAULT_MODEL_PATHS = {
-	encoder: '/tts-models/onnx/encoder.onnx',
-	decoder: '/tts-models/onnx/decoder.onnx',
-	vocoder: '/tts-models/onnx/vocoder.onnx'
+	encoder: '/assets/onnx/text_encoder.onnx',
+	decoder: '/assets/onnx/duration_predictor.onnx',
+	vocoder: '/assets/onnx/vocoder.onnx'
 };
 
 /**
@@ -121,6 +121,9 @@ export class SupertonicTTSProvider extends BaseTTSProvider {
 	 * @private
 	 */
 	async _configureOnnxRuntime() {
+		// Configure WASM file paths (served from static/assets/onnx at /assets/onnx)
+		ort.env.wasm.wasmPaths = '/assets/onnx/';
+
 		// Try WebGPU first for best performance, fallback to WASM
 		try {
 			if ('gpu' in navigator) {
@@ -211,34 +214,47 @@ export class SupertonicTTSProvider extends BaseTTSProvider {
 		}
 
 		if (!text) {
+			logger.debug('[SupertonicTTS] Empty text, skipping');
 			return Promise.resolve();
 		}
 
 		// Stop any current speech
 		this.stop();
 
+		// Mark as playing for the new speech
+		this.isPlaying = true;
+
 		// Sanitize and chunk text
 		const cleanText = this.sanitizeText(text);
 		if (!cleanText) {
+			logger.debug('[SupertonicTTS] No clean text after sanitization, skipping');
+			this.isPlaying = false;
 			return Promise.resolve();
 		}
 
 		const chunks = this._chunkText(cleanText);
-		logger.debug(`[SupertonicTTS] Processing ${chunks.length} chunks`);
+		logger.debug(`[SupertonicTTS] Processing ${chunks.length} chunks:`, chunks);
 
 		try {
 			// Generate audio for each chunk
 			for (let i = 0; i < chunks.length; i++) {
-				if (!this.isPlaying) break; // Check if stopped
+				logger.debug(`[SupertonicTTS] Processing chunk ${i + 1}/${chunks.length}`);
+				if (!this.isPlaying) {
+					logger.debug('[SupertonicTTS] Playback stopped, breaking');
+					break;
+				}
 
 				const audioData = await this._synthesizeChunk(chunks[i], options);
+				logger.debug('[SupertonicTTS] Chunk synthesized, playing audio...');
 				await this._playAudio(audioData);
+				logger.debug('[SupertonicTTS] Chunk playback complete');
 
 				// Small pause between chunks (100ms)
 				if (i < chunks.length - 1) {
 					await this._sleep(100);
 				}
 			}
+			logger.debug('[SupertonicTTS] All chunks processed');
 		} catch (error) {
 			logger.error('[SupertonicTTS] Synthesis failed:', error);
 			throw error;
@@ -253,11 +269,18 @@ export class SupertonicTTSProvider extends BaseTTSProvider {
 	 */
 	async _synthesizeChunk(text, options = {}) {
 		try {
+			logger.debug(`[SupertonicTTS] Synthesizing chunk: "${text}"`);
+
 			// 1. Encode text to phonemes/features (encoder)
+			logger.debug('[SupertonicTTS] Step 1: Encoding text...');
 			const textTensor = this._prepareTextInput(text);
+			logger.debug('[SupertonicTTS] Text tensor shape:', textTensor.dims);
+
 			const encoderOutput = await this.sessions.encoder.run({ text: textTensor });
+			logger.debug('[SupertonicTTS] Encoder output keys:', Object.keys(encoderOutput));
 
 			// 2. Decode to mel-spectrogram (decoder)
+			logger.debug('[SupertonicTTS] Step 2: Decoding to mel-spectrogram...');
 			const styleEmbedding = this._prepareStyleEmbedding();
 			const decoderInput = {
 				encoded_text: encoderOutput.encoded,
@@ -265,12 +288,16 @@ export class SupertonicTTSProvider extends BaseTTSProvider {
 				steps: new ort.Tensor('float32', [this.config.denoisingSteps], [1])
 			};
 			const decoderOutput = await this.sessions.decoder.run(decoderInput);
+			logger.debug('[SupertonicTTS] Decoder output keys:', Object.keys(decoderOutput));
 
 			// 3. Convert mel-spectrogram to audio (vocoder)
+			logger.debug('[SupertonicTTS] Step 3: Converting to audio...');
 			const vocoderOutput = await this.sessions.vocoder.run({ mel: decoderOutput.mel });
+			logger.debug('[SupertonicTTS] Vocoder output keys:', Object.keys(vocoderOutput));
 
 			// Extract audio data
 			const audioData = vocoderOutput.audio.data;
+			logger.debug('[SupertonicTTS] Audio data length:', audioData.length);
 
 			// Apply speed adjustment if needed
 			const speed = options.speed || this.config.speed;
@@ -280,6 +307,7 @@ export class SupertonicTTSProvider extends BaseTTSProvider {
 
 			return audioData;
 		} catch (error) {
+			logger.error('[SupertonicTTS] Synthesis error:', error);
 			throw new Error(`Synthesis failed: ${error.message}`);
 		}
 	}

@@ -1,9 +1,12 @@
 /**
  * Text-to-Speech Service
  * Generates audio narration from text using various TTS providers
+ *
+ * @deprecated This service is deprecated in favor of the new TTS architecture
+ * in services/tts/textToSpeech.js. Settings are now managed by audioStore.
  */
 import { logger } from '../utils/logger.js';
-import { loadTTSSettings } from './aiSettings.js';
+import { getAudioSettings } from '../stores/audioStore.svelte.js';
 
 /**
  * Generate speech using browser Web Speech API
@@ -145,8 +148,18 @@ export async function generateAudioNarration(text) {
 			throw new Error('No text provided for narration');
 		}
 
-		// Load TTS settings
-		const settings = await loadTTSSettings();
+		// Load TTS settings from audioStore
+		const audioSettings = getAudioSettings();
+		const settings = {
+			provider: audioSettings.ttsProvider || 'browser',
+			apiKey: audioSettings.ttsApiKey,
+			voice: audioSettings.ttsVoice,
+			options: {
+				rate: 1.0, // Reading speed handled by audioSettings.readingSpeed
+				pitch: 1.0,
+				volume: 1.0
+			}
+		};
 
 		logger.info('[textToSpeech] Using provider:', settings.provider);
 
@@ -217,14 +230,15 @@ export async function getAvailableVoices() {
  */
 export async function isTTSAvailable() {
 	try {
-		const settings = await loadTTSSettings();
+		const audioSettings = getAudioSettings();
+		const provider = audioSettings.ttsProvider || 'browser';
 
-		if (settings.provider === 'browser') {
+		if (provider === 'browser') {
 			return 'speechSynthesis' in window;
 		}
 
 		// For API providers, check if API key is configured
-		return !!(settings.apiKey);
+		return !!(audioSettings.ttsApiKey);
 	} catch (error) {
 		logger.error('[textToSpeech] Failed to check TTS availability:', error);
 		return false;
