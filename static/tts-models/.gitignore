@@ -1,0 +1,13 @@
+# Ignore all model files - they're too large for git
+# Users must download them separately
+
+# ONNX models (~200-300 MB total)
+onnx/*.onnx
+
+# Voice style JSON files
+voice_styles/*.json
+
+# Keep directory structure
+!onnx/.gitkeep
+!voice_styles/.gitkeep
+!README.md

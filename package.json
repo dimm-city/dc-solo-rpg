@@ -68,6 +68,8 @@
 	"dependencies": {
 		"@3d-dice/dice-box-threejs": "^0.0.12",
 		"augmented-ui": "^2.0.0",
-		"idb": "^8.0.3"
+		"fft.js": "^4.0.4",
+		"idb": "^8.0.3",
+		"onnxruntime-web": "^1.23.2"
 	}
 }
