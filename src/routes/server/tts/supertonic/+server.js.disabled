@@ -14,11 +14,25 @@ let ttsInstance = null;
 let unicodeProcessor = null;
 let styles = {};
 let ort = null; // Will be loaded dynamically
+let ortAvailable = null; // Track if onnxruntime-node is available
 
-// Dynamically import onnxruntime-node
+// Dynamically import onnxruntime-node (with fallback if not available)
 async function getORT() {
+	if (ortAvailable === false) {
+		throw new Error('onnxruntime-node is not available in this environment');
+	}
+
 	if (!ort) {
-		ort = await import('onnxruntime-node');
+		try {
+			// Try to load onnxruntime-node
+			ort = await import('onnxruntime-node');
+			ortAvailable = true;
+		} catch (err) {
+			ortAvailable = false;
+			throw new Error(
+				'onnxruntime-node is not available in this environment. This TTS provider requires a Node.js runtime with native module support.'
+			);
+		}
 	}
 	return ort;
 }

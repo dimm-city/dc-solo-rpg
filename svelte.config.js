@@ -1,4 +1,5 @@
 import adapter from 'svelte-adapter-azure-swa';
+import { readFileSync } from 'fs';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -7,22 +8,46 @@ const config = {
 			// Configure esbuild to handle native modules
 			esbuild: (defaultOptions) => ({
 				...defaultOptions,
-				// Mark onnxruntime-node as external so it's not bundled
+				// Mark onnxruntime-node as external
 				external: [
 					...(defaultOptions.external || []),
 					'onnxruntime-node'
 				],
-				// Add a plugin to handle .node files
+				// Add a loader for .node files
+				loader: {
+					...(defaultOptions.loader || {}),
+					'.node': 'empty'
+				},
+				// Add plugins to handle onnxruntime-node module resolution
 				plugins: [
 					...(defaultOptions.plugins || []),
 					{
-						name: 'node-loader',
+						name: 'onnx-runtime-external',
 						setup(build) {
-							// Mark .node files as external
-							build.onResolve({ filter: /\.node$/ }, (args) => ({
-								path: args.path,
-								external: true
-							}));
+							// Intercept onnxruntime-node imports and mark as external
+							build.onResolve({ filter: /^onnxruntime-node$/ }, (args) => {
+								return {
+									path: 'onnxruntime-node',
+									external: true
+								};
+							});
+
+							// Intercept all onnxruntime-node internal files and mark as external
+							build.onResolve({ filter: /onnxruntime-node/ }, (args) => {
+								return {
+									path: args.path,
+									external: true,
+									namespace: 'onnx-stub'
+								};
+							});
+
+							// Return empty content for .node files to avoid load errors
+							build.onLoad({ filter: /\.node$/ }, () => {
+								return {
+									contents: '',
+									loader: 'empty'
+								};
+							});
 						}
 					}
 				]
