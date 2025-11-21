@@ -1,17 +1,27 @@
 import { join } from 'path';
 import { readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { json, error } from '@sveltejs/kit';
-import * as ort from 'onnxruntime-node';
 
 /**
- * Supertonic TTS API endpoint - V2 using direct port of official helper.js
+ * Supertonic TTS API endpoint using direct port of official helper.js
  * This implementation directly ports the official Supertonic Node.js code
+ *
+ * Uses dynamic import for onnxruntime-node to avoid Azure SWA build issues
  */
 
 // Model cache
 let ttsInstance = null;
 let unicodeProcessor = null;
 let styles = {};
+let ort = null; // Will be loaded dynamically
+
+// Dynamically import onnxruntime-node
+async function getORT() {
+	if (!ort) {
+		ort = await import('onnxruntime-node');
+	}
+	return ort;
+}
 
 /**
  * Helper functions from official implementation
@@ -35,14 +45,16 @@ function getLatentMask(wavLengths, baseChunkSize, chunkCompressFactor) {
 	return lengthToMask(latentLengths);
 }
 
-function arrayToTensor(array, dims) {
+async function arrayToTensor(array, dims) {
+	const onnx = await getORT();
 	const flat = array.flat(Infinity);
-	return new ort.Tensor('float32', Float32Array.from(flat), dims);
+	return new onnx.Tensor('float32', Float32Array.from(flat), dims);
 }
 
-function intArrayToTensor(array, dims) {
+async function intArrayToTensor(array, dims) {
+	const onnx = await getORT();
 	const flat = array.flat(Infinity);
-	return new ort.Tensor('int64', BigInt64Array.from(flat.map((x) => BigInt(x))), dims);
+	return new onnx.Tensor('int64', BigInt64Array.from(flat.map((x) => BigInt(x))), dims);
 }
 
 /**
@@ -147,10 +159,10 @@ class TextToSpeech {
 		const textIdsShape = [bsz, textIds[0].length];
 		const textMaskShape = [bsz, 1, textMask[0][0].length];
 
-		const textMaskTensor = arrayToTensor(textMask, textMaskShape);
+		const textMaskTensor = await arrayToTensor(textMask, textMaskShape);
 
 		const dpResult = await this.dpOrt.run({
-			text_ids: intArrayToTensor(textIds, textIdsShape),
+			text_ids: await intArrayToTensor(textIds, textIdsShape),
 			style_dp: style.dp,
 			text_mask: textMaskTensor
 		});
@@ -163,7 +175,7 @@ class TextToSpeech {
 		}
 
 		const textEncResult = await this.textEncOrt.run({
-			text_ids: intArrayToTensor(textIds, textIdsShape),
+			text_ids: await intArrayToTensor(textIds, textIdsShape),
 			style_ttl: style.ttl,
 			text_mask: textMaskTensor
 		});
@@ -174,23 +186,23 @@ class TextToSpeech {
 		const latentShape = [bsz, noisyLatent[0].length, noisyLatent[0][0].length];
 		const latentMaskShape = [bsz, 1, latentMask[0][0].length];
 
-		const latentMaskTensor = arrayToTensor(latentMask, latentMaskShape);
+		const latentMaskTensor = await arrayToTensor(latentMask, latentMaskShape);
 
 		const totalStepArray = new Array(bsz).fill(totalStep);
 		const scalarShape = [bsz];
-		const totalStepTensor = arrayToTensor(totalStepArray, scalarShape);
+		const totalStepTensor = await arrayToTensor(totalStepArray, scalarShape);
 
 		for (let step = 0; step < totalStep; step++) {
 			const currentStepArray = new Array(bsz).fill(step);
 
 			const vectorEstResult = await this.vectorEstOrt.run({
-				noisy_latent: arrayToTensor(noisyLatent, latentShape),
+				noisy_latent: await arrayToTensor(noisyLatent, latentShape),
 				text_emb: textEmbTensor,
 				style_ttl: style.ttl,
 				text_mask: textMaskTensor,
 				latent_mask: latentMaskTensor,
 				total_step: totalStepTensor,
-				current_step: arrayToTensor(currentStepArray, scalarShape)
+				current_step: await arrayToTensor(currentStepArray, scalarShape)
 			});
 
 			const denoisedLatent = Array.from(vectorEstResult.denoised_latent.data);
@@ -207,7 +219,7 @@ class TextToSpeech {
 		}
 
 		const vocoderResult = await this.vocoderOrt.run({
-			latent: arrayToTensor(noisyLatent, latentShape)
+			latent: await arrayToTensor(noisyLatent, latentShape)
 		});
 
 		const wav = Array.from(vocoderResult.wav_tts.data);
@@ -240,12 +252,15 @@ async function initializeTTS() {
 	);
 	unicodeProcessor = new UnicodeProcessor(indexer);
 
+	// Load ONNX runtime
+	const onnx = await getORT();
+
 	// Load ONNX models
 	const [dpOrt, textEncOrt, vectorEstOrt, vocoderOrt] = await Promise.all([
-		ort.InferenceSession.create(join(basePath, 'onnx', 'duration_predictor.onnx')),
-		ort.InferenceSession.create(join(basePath, 'onnx', 'text_encoder.onnx')),
-		ort.InferenceSession.create(join(basePath, 'onnx', 'vector_estimator.onnx')),
-		ort.InferenceSession.create(join(basePath, 'onnx', 'vocoder.onnx'))
+		onnx.InferenceSession.create(join(basePath, 'onnx', 'duration_predictor.onnx')),
+		onnx.InferenceSession.create(join(basePath, 'onnx', 'text_encoder.onnx')),
+		onnx.InferenceSession.create(join(basePath, 'onnx', 'vector_estimator.onnx')),
+		onnx.InferenceSession.create(join(basePath, 'onnx', 'vocoder.onnx'))
 	]);
 
 	ttsInstance = new TextToSpeech(config, unicodeProcessor, dpOrt, textEncOrt, vectorEstOrt, vocoderOrt);
@@ -256,12 +271,12 @@ async function initializeTTS() {
 			readFileSync(join(basePath, 'voice_styles', `${voiceId}.json`), 'utf-8')
 		);
 		styles[voiceId] = {
-			ttl: new ort.Tensor('float32', new Float32Array(styleData.style_ttl.data.flat(2)), [
+			ttl: new onnx.Tensor('float32', new Float32Array(styleData.style_ttl.data.flat(2)), [
 				1,
 				50,
 				256
 			]),
-			dp: new ort.Tensor('float32', new Float32Array(styleData.style_dp.data.flat(2)), [1, 8, 16])
+			dp: new onnx.Tensor('float32', new Float32Array(styleData.style_dp.data.flat(2)), [1, 8, 16])
 		};
 	}
 

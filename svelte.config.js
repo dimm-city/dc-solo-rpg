@@ -1,12 +1,33 @@
-import adapter from '@sveltejs/adapter-auto';
+import adapter from 'svelte-adapter-azure-swa';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
-		// adapter-auto only supports some environments, see https://kit.svelte.dev/docs/adapter-auto for a list.
-		// If your environment is not supported or you settled on a specific environment, switch out the adapter.
-		// See https://kit.svelte.dev/docs/adapters for more information about adapters.
-		adapter: adapter(),
+		adapter: adapter({
+			// Configure esbuild to handle native modules
+			esbuild: (defaultOptions) => ({
+				...defaultOptions,
+				// Mark onnxruntime-node as external so it's not bundled
+				external: [
+					...(defaultOptions.external || []),
+					'onnxruntime-node'
+				],
+				// Add a plugin to handle .node files
+				plugins: [
+					...(defaultOptions.plugins || []),
+					{
+						name: 'node-loader',
+						setup(build) {
+							// Mark .node files as external
+							build.onResolve({ filter: /\.node$/ }, (args) => ({
+								path: args.path,
+								external: true
+							}));
+						}
+					}
+				]
+			})
+		}),
 		version: {
 			name: process.env.npm_package_version || 'development'
 		}
