@@ -49,7 +49,7 @@ export class SupertonicTTSProvider extends BaseTTSProvider {
 		this.isPlaying = false;
 		this.isPaused = false;
 		this.config = {
-			speed: 1.05, // Match official default
+			speed: 1.0, // Normal speed by default
 			maxChunkLength: 200, // characters per chunk
 			apiEndpoint: '/server/tts/supertonic'
 		};
@@ -137,6 +137,16 @@ export class SupertonicTTSProvider extends BaseTTSProvider {
 		if (!text) {
 			logger.debug('[SupertonicTTS] Empty text, skipping');
 			return Promise.resolve();
+		}
+
+		// Update voice if provided in options
+		if (options.voice && options.voice !== this.currentVoice) {
+			await this.setVoice(options.voice);
+		}
+
+		// Map rate to speed (ttsService passes rate, we need speed)
+		if (options.rate && !options.speed) {
+			options.speed = options.rate;
 		}
 
 		// Stop any current speech
