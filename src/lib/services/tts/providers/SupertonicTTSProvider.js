@@ -358,6 +358,10 @@ export class SupertonicTTSProvider extends BaseTTSProvider {
 	}
 
 	async _loadModels() {
+		// Configure ONNX Runtime Web to fetch WASM files from CDN
+		logger.debug('[SupertonicTTS] Configuring ONNX Runtime Web...');
+		ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.2/dist/';
+
 		const onnxDir = `${this.config.assetsPath}/onnx`;
 
 		logger.debug('[SupertonicTTS] Loading configuration...');
