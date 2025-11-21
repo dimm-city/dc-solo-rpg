@@ -36,7 +36,7 @@
 	async function checkSupertonicAvailability() {
 		try {
 			// Check if API endpoint is available
-			const response = await fetch('/api/tts/supertonic', {
+			const response = await fetch('/server/tts/supertonic', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ text: 'test' })
@@ -212,19 +212,20 @@
 	}
 
 	.settings-section h3 {
-		font-family: var(--font-display);
+		font-family: var(--font-display, var(--main-font-family));
 		font-size: 1.25rem;
-		color: var(--color-neon-cyan);
+		color: var(--third-accent, #ff15cb);
 		margin: 0;
 		padding-bottom: var(--space-sm);
-		border-bottom: 2px solid rgba(0, 255, 255, 0.3);
+		border-bottom: 2px solid var(--secondary-accent-muted, rgba(199, 67, 255, 0.68));
 	}
 
 	.section-description {
 		font-size: 0.875rem;
-		color: rgba(255, 255, 255, 0.7);
+		color: var(--light, rgba(255, 255, 255, 0.9));
 		line-height: 1.5;
 		margin: 0;
+		opacity: 0.8;
 	}
 
 	.form-group {
@@ -236,27 +237,28 @@
 	.form-group label {
 		font-size: 0.875rem;
 		font-weight: 600;
-		color: rgba(255, 255, 255, 0.9);
+		color: var(--light, rgba(255, 255, 255, 0.9));
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
 	}
 
 	.form-group input,
 	.form-group select {
-		padding: var(--space-md);
-		background: rgba(0, 0, 0, 0.4);
-		border: 2px solid rgba(255, 255, 255, 0.2);
-		border-radius: 4px;
-		color: rgba(255, 255, 255, 0.9);
+		padding: var(--space-md, 1rem);
+		background: var(--translucent-dark, rgba(17, 17, 17, 0.75));
+		border: 1px solid var(--secondary-accent-muted, rgba(199, 67, 255, 0.68));
+		border-radius: var(--dc-default-border-radius, 0.175rem);
+		color: var(--light, rgba(255, 255, 255, 0.9));
 		font-size: 0.9rem;
-		transition: all var(--transition-base);
+		font-family: var(--main-font-family);
+		transition: all 0.2s ease;
 	}
 
 	.form-group input:focus,
 	.form-group select:focus {
 		outline: none;
-		border-color: var(--color-neon-cyan);
-		box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+		border-color: var(--third-accent, #ff15cb);
+		box-shadow: 0 0 10px var(--secondary-accent-muted, rgba(199, 67, 255, 0.3));
 	}
 
 	.form-group input[type='range'] {
@@ -265,49 +267,68 @@
 		cursor: pointer;
 	}
 
+	/* Fix select option visibility */
+	.form-group select option {
+		background: var(--opaque-dark, rgba(17, 17, 17, 0.925));
+		color: var(--light, rgba(255, 255, 255, 0.9));
+		padding: 0.5rem;
+	}
+
+	.form-group select option:disabled {
+		color: var(--disabled-color, rgb(196, 192, 192));
+	}
+
 	.info-box {
-		padding: var(--space-md);
-		background: rgba(0, 255, 255, 0.1);
-		border: 1px solid rgba(0, 255, 255, 0.3);
-		border-radius: 4px;
-		margin: var(--space-sm) 0;
+		padding: var(--space-md, 1rem);
+		background: rgba(255, 21, 203, 0.1);
+		border: 1px solid var(--third-accent, #ff15cb);
+		border-radius: var(--dc-default-border-radius, 0.175rem);
+		margin: var(--space-sm, 0.5rem) 0;
 	}
 
 	.info-box p {
 		margin: 0;
 		font-size: 0.85rem;
-		color: rgba(255, 255, 255, 0.8);
+		color: var(--light, rgba(255, 255, 255, 0.9));
 		line-height: 1.5;
 	}
 
 	.info-box strong {
-		color: var(--color-neon-cyan);
+		color: var(--third-accent, #ff15cb);
 	}
 
 	.info-box code {
-		background: rgba(0, 0, 0, 0.4);
+		background: var(--translucent-dark, rgba(17, 17, 17, 0.75));
 		padding: 2px 6px;
 		border-radius: 3px;
 		font-family: monospace;
 		font-size: 0.9em;
-		color: rgba(255, 255, 255, 0.9);
+		color: var(--light, rgba(255, 255, 255, 0.9));
 	}
 
 	.error-message {
 		display: flex;
 		align-items: center;
-		gap: var(--space-sm);
-		padding: var(--space-sm);
-		margin-top: var(--space-sm);
+		gap: var(--space-sm, 0.5rem);
+		padding: var(--space-sm, 0.5rem);
+		margin-top: var(--space-sm, 0.5rem);
 		background: rgba(220, 38, 38, 0.1);
-		border: 1px solid rgba(220, 38, 38, 0.3);
-		border-radius: 4px;
-		color: rgba(220, 38, 38, 1);
+		border: 1px solid rgba(220, 38, 38, 0.5);
+		border-radius: var(--dc-default-border-radius, 0.175rem);
+		color: #ff6b6b;
 		font-size: 0.85rem;
 		line-height: 1.4;
 	}
 
 	.error-message svg {
 		flex-shrink: 0;
+		color: #ff6b6b;
+	}
+
+	.helper-text {
+		font-size: 0.75rem;
+		color: var(--light, rgba(255, 255, 255, 0.9));
+		opacity: 0.6;
+		margin-top: 0.25rem;
 	}
 </style>

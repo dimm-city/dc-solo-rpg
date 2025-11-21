@@ -29,7 +29,7 @@
 	async function checkSupertonicAvailability() {
 		try {
 			// Check if API endpoint is available
-			const response = await fetch('/api/tts/supertonic', {
+			const response = await fetch('/server/tts/supertonic', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ text: 'test' })
@@ -369,7 +369,10 @@
 	h3 {
 		margin: var(--space-md, 1rem) 0 var(--space-sm, 0.5rem) 0;
 		font-size: 1.2rem;
-		color: var(--dc-default-text-color, inherit);
+		font-family: var(--font-display, var(--main-font-family));
+		color: var(--third-accent, #ff15cb);
+		border-bottom: 2px solid var(--secondary-accent-muted, rgba(199, 67, 255, 0.68));
+		padding-bottom: var(--space-sm, 0.5rem);
 	}
 
 	h3:first-child {
@@ -379,7 +382,7 @@
 	h4 {
 		margin: var(--space-sm, 0.5rem) 0;
 		font-size: 1rem;
-		color: var(--dc-accent-color, #3a9fc7);
+		color: var(--secondary-accent, #c643ff);
 	}
 
 	.settings-section {
@@ -389,8 +392,9 @@
 	.setting-row {
 		margin-bottom: var(--space-md, 1rem);
 		padding: var(--space-sm, 0.5rem);
-		background: rgba(255, 255, 255, 0.05);
-		border-radius: 4px;
+		background: var(--translucent-dark, rgba(17, 17, 17, 0.5));
+		border: 1px solid var(--secondary-accent-muted, rgba(199, 67, 255, 0.3));
+		border-radius: var(--dc-default-border-radius, 0.175rem);
 	}
 
 	.setting-label {
@@ -399,17 +403,20 @@
 		gap: var(--space-sm, 0.5rem);
 		cursor: pointer;
 		font-weight: 500;
+		color: var(--light, rgba(255, 255, 255, 0.9));
 	}
 
 	.setting-label input[type='checkbox'] {
 		width: 18px;
 		height: 18px;
 		cursor: pointer;
+		accent-color: var(--third-accent, #ff15cb);
 	}
 
 	.setting-description {
 		margin: var(--space-xs, 0.25rem) 0 0 26px;
 		font-size: 0.85rem;
+		color: var(--light, rgba(255, 255, 255, 0.9));
 		opacity: 0.7;
 	}
 
@@ -417,6 +424,7 @@
 		display: block;
 		margin-bottom: var(--space-xs, 0.25rem);
 		font-weight: 500;
+		color: var(--light, rgba(255, 255, 255, 0.9));
 	}
 
 	select,
@@ -424,27 +432,50 @@
 	input[type='text'] {
 		width: 100%;
 		padding: var(--space-sm, 0.5rem);
-		background: rgba(255, 255, 255, 0.1);
-		border: 1px solid rgba(255, 255, 255, 0.2);
-		border-radius: 4px;
-		color: var(--dc-default-text-color, inherit);
+		background: var(--translucent-dark, rgba(17, 17, 17, 0.75));
+		border: 1px solid var(--secondary-accent-muted, rgba(199, 67, 255, 0.68));
+		border-radius: var(--dc-default-border-radius, 0.175rem);
+		color: var(--light, rgba(255, 255, 255, 0.9));
 		font-size: 0.9rem;
+		font-family: var(--main-font-family);
+		transition: all 0.2s ease;
+	}
+
+	select:focus,
+	input[type='password']:focus,
+	input[type='text']:focus {
+		outline: none;
+		border-color: var(--third-accent, #ff15cb);
+		box-shadow: 0 0 10px var(--secondary-accent-muted, rgba(199, 67, 255, 0.3));
+	}
+
+	/* Fix select option visibility */
+	select option {
+		background: var(--opaque-dark, rgba(17, 17, 17, 0.925));
+		color: var(--light, rgba(255, 255, 255, 0.9));
+		padding: 0.5rem;
+	}
+
+	select option:disabled {
+		color: var(--disabled-color, rgb(196, 192, 192));
 	}
 
 	input[type='password']::placeholder,
 	input[type='text']::placeholder {
-		color: rgba(255, 255, 255, 0.4);
+		color: var(--disabled-color, rgba(196, 192, 192, 0.6));
 	}
 
 	input[type='range'] {
 		width: 100%;
 		margin-top: var(--space-xs, 0.25rem);
+		accent-color: var(--third-accent, #ff15cb);
 	}
 
 	.range-labels {
 		display: flex;
 		justify-content: space-between;
 		font-size: 0.75rem;
+		color: var(--light, rgba(255, 255, 255, 0.9));
 		opacity: 0.6;
 		margin-top: var(--space-xs, 0.25rem);
 	}
@@ -455,26 +486,29 @@
 		flex-wrap: wrap;
 		margin-top: var(--space-lg, 1.5rem);
 		padding-top: var(--space-md, 1rem);
-		border-top: 1px solid rgba(255, 255, 255, 0.2);
+		border-top: 1px solid var(--secondary-accent-muted, rgba(199, 67, 255, 0.68));
 	}
 
 	.preset-button {
 		flex: 1;
 		min-width: 120px;
 		padding: var(--space-sm, 0.5rem) var(--space-md, 1rem);
-		background: var(--dc-button-bg, #1387b9);
-		color: white;
-		border: none;
-		border-radius: 4px;
+		background: var(--translucent-dark, rgba(17, 17, 17, 0.75));
+		color: var(--light, white);
+		border: 1px solid var(--secondary-accent, #c643ff);
+		border-radius: var(--dc-default-border-radius, 0.175rem);
 		cursor: pointer;
 		font-size: 0.9rem;
 		font-weight: 500;
-		transition: all 0.2s;
+		font-family: var(--main-font-family);
+		transition: all 0.2s ease;
 	}
 
 	.preset-button:hover {
-		opacity: 0.9;
+		background: var(--secondary-accent, #c643ff);
+		border-color: var(--third-accent, #ff15cb);
 		transform: translateY(-1px);
+		box-shadow: 0 4px 8px rgba(199, 67, 255, 0.3);
 	}
 
 	.preset-button:active {
@@ -488,14 +522,15 @@
 		padding: var(--space-sm, 0.5rem);
 		margin-top: var(--space-sm, 0.5rem);
 		background: rgba(220, 38, 38, 0.1);
-		border: 1px solid rgba(220, 38, 38, 0.3);
-		border-radius: 4px;
-		color: rgba(220, 38, 38, 1);
+		border: 1px solid rgba(220, 38, 38, 0.5);
+		border-radius: var(--dc-default-border-radius, 0.175rem);
+		color: #ff6b6b;
 		font-size: 0.85rem;
 		line-height: 1.4;
 	}
 
 	.error-message svg {
 		flex-shrink: 0;
+		color: #ff6b6b;
 	}
 </style>

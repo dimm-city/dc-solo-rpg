@@ -51,7 +51,7 @@ export class SupertonicTTSProvider extends BaseTTSProvider {
 		this.config = {
 			speed: 1.05, // Match official default
 			maxChunkLength: 200, // characters per chunk
-			apiEndpoint: '/api/tts/supertonic'
+			apiEndpoint: '/server/tts/supertonic'
 		};
 	}
 
