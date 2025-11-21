@@ -327,7 +327,7 @@ export class SupertonicTTSProvider extends BaseTTSProvider {
 			maxChunkLength: 300,
 			silenceDuration: 0.3,
 			totalStep: 5,
-			assetsPath: '/assets'
+			assetsPath: 'https://huggingface.co/Supertone/supertonic/resolve/main'
 		};
 		this.ttsInstance = null;
 		this.textProcessor = null;

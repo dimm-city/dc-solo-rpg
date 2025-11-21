@@ -35,8 +35,10 @@
 
 	async function checkSupertonicAvailability() {
 		try {
-			// Check if ONNX models are available (browser-based implementation)
-			const response = await fetch('/assets/onnx/tts.json');
+			// Check if ONNX models are available from Hugging Face CDN
+			const response = await fetch(
+				'https://huggingface.co/Supertone/supertonic/resolve/main/onnx/tts.json'
+			);
 			providerAvailability.supertonic = response.ok;
 		} catch (error) {
 			providerAvailability.supertonic = false;
@@ -92,8 +94,8 @@
 			<option value="browser">Browser (Free, No API Key)</option>
 			<option value="supertonic" disabled={!providerAvailability.supertonic}>
 				Supertonic Neural TTS {providerAvailability.supertonic
-					? '(On-Device, Requires Models)'
-					: '(Models Not Found)'}
+					? '(Free, Downloads from HF)'
+					: '(HF Unavailable)'}
 			</option>
 			<option value="openai">OpenAI TTS</option>
 			<option value="elevenlabs">ElevenLabs</option>
@@ -151,7 +153,7 @@
 	{:else if getAudioSettings().ttsProvider === 'supertonic'}
 		<div class="info-box">
 			<p>
-				<strong>Note:</strong> Supertonic uses browser-based neural TTS processing (ONNX Runtime Web + WASM/WebGPU) for high-quality speech synthesis. All processing happens on your device - no API key required and no data sent to servers.
+				<strong>Note:</strong> Supertonic loads neural TTS models (~265MB) from Hugging Face CDN, then processes speech on your device using ONNX Runtime Web (WASM/WebGPU). First use downloads models; subsequent uses are instant. No API key required and no data sent to servers.
 			</p>
 		</div>
 
