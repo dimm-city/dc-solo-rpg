@@ -16,6 +16,8 @@ jobs:
     name: Build and Deploy Job
     steps:
       - uses: actions/checkout@v3
+        with:
+          lfs: true
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
