@@ -3,15 +3,6 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
 	plugins: [sveltekit()],
-	optimizeDeps: {
-		exclude: ['onnxruntime-web']
-	},
-	server: {
-		fs: {
-			// Allow serving files from onnxruntime-web
-			allow: ['..']
-		}
-	},
 	test: {
 		include: ['src/**/*.{test,spec}.{js,ts}'],
 		environment: 'jsdom',

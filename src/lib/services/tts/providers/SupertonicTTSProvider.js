@@ -1,5 +1,4 @@
 import { BaseTTSProvider } from './BaseTTSProvider.js';
-import * as ort from 'onnxruntime-web';
 import { logger } from '../../../utils/logger.js';
 
 /**
@@ -10,58 +9,39 @@ export const SUPERTONIC_VOICES = {
 	M1: {
 		id: 'M1',
 		name: 'Male Voice 1',
-		language: 'en-US',
-		stylePath: '/assets/voice_styles/M1.json'
+		language: 'en-US'
 	},
 	M2: {
 		id: 'M2',
 		name: 'Male Voice 2',
-		language: 'en-US',
-		stylePath: '/assets/voice_styles/M2.json'
+		language: 'en-US'
 	},
 	F1: {
 		id: 'F1',
 		name: 'Female Voice 1',
-		language: 'en-US',
-		stylePath: '/assets/voice_styles/F1.json'
+		language: 'en-US'
 	},
 	F2: {
 		id: 'F2',
 		name: 'Female Voice 2',
-		language: 'en-US',
-		stylePath: '/assets/voice_styles/F2.json'
+		language: 'en-US'
 	}
 };
 
 /**
- * Default model paths (served from static/assets at runtime)
- */
-const DEFAULT_MODEL_PATHS = {
-	encoder: '/assets/onnx/text_encoder.onnx',
-	decoder: '/assets/onnx/duration_predictor.onnx',
-	vocoder: '/assets/onnx/vocoder.onnx'
-};
-
-/**
- * Supertonic TTS provider using ONNX Runtime Web
- * Provides high-quality neural TTS with WebGPU/WASM acceleration
+ * Supertonic TTS provider using server-side API
+ * Provides high-quality neural TTS with on-device inference (server-side)
  *
  * Features:
- * - On-device inference (no API calls)
- * - WebGPU acceleration with WASM fallback
+ * - Server-side ONNX Runtime inference (no browser WASM issues)
  * - 4 voice style presets (M1, M2, F1, F2)
  * - Text chunking for long inputs
  * - Adjustable speed control
+ * - Efficient caching on server
  */
 export class SupertonicTTSProvider extends BaseTTSProvider {
 	constructor() {
 		super();
-		this.sessions = {
-			encoder: null,
-			decoder: null,
-			vocoder: null
-		};
-		this.voiceStyle = null;
 		this.currentVoice = 'F1';
 		this.audioContext = null;
 		this.currentSource = null;
@@ -69,9 +49,9 @@ export class SupertonicTTSProvider extends BaseTTSProvider {
 		this.isPlaying = false;
 		this.isPaused = false;
 		this.config = {
-			speed: 1.0,
-			denoisingSteps: 1.0,
-			maxChunkLength: 200 // characters per chunk
+			speed: 1.05, // Match official default
+			maxChunkLength: 200, // characters per chunk
+			apiEndpoint: '/api/tts/supertonic-v2' // Use V2 endpoint with working implementation
 		};
 	}
 
@@ -80,33 +60,23 @@ export class SupertonicTTSProvider extends BaseTTSProvider {
 	 * @param {Object} config - Configuration options
 	 * @param {string} config.voice - Voice ID (M1, M2, F1, F2)
 	 * @param {number} config.speed - Speech speed (0.5 - 2.0)
-	 * @param {number} config.denoisingSteps - Quality control (0.9 - 1.5)
-	 * @param {Object} config.modelPaths - Custom model paths
 	 */
 	async initialize(config = {}) {
 		try {
 			logger.debug('[SupertonicTTS] Initializing...');
 
-			// Configure ONNX Runtime
-			await this._configureOnnxRuntime();
-
 			// Set configuration
 			this.currentVoice = config.voice || 'F1';
 			this.config = {
 				...this.config,
-				speed: config.speed || 1.0,
-				denoisingSteps: config.denoisingSteps || 1.0
+				speed: config.speed || 1.0
 			};
-
-			// Load models
-			const modelPaths = config.modelPaths || DEFAULT_MODEL_PATHS;
-			await this._loadModels(modelPaths);
-
-			// Load voice style
-			await this._loadVoiceStyle(this.currentVoice);
 
 			// Initialize Web Audio
 			this._initializeAudioContext();
+
+			// Check if API is available
+			await this._checkAPIAvailability();
 
 			this.isInitialized = true;
 			logger.info('[SupertonicTTS] Initialized successfully');
@@ -117,76 +87,27 @@ export class SupertonicTTSProvider extends BaseTTSProvider {
 	}
 
 	/**
-	 * Configure ONNX Runtime with WebGPU/WASM providers
+	 * Check if API endpoint is available
 	 * @private
 	 */
-	async _configureOnnxRuntime() {
-		// Configure WASM file paths (served from static/assets/onnx at /assets/onnx)
-		ort.env.wasm.wasmPaths = '/assets/onnx/';
-
-		// Try WebGPU first for best performance, fallback to WASM
+	async _checkAPIAvailability() {
 		try {
-			if ('gpu' in navigator) {
-				ort.env.wasm.proxy = true;
-				ort.env.wasm.numThreads = navigator.hardwareConcurrency || 4;
-				logger.debug('[SupertonicTTS] WebGPU support detected');
-			} else {
-				logger.debug('[SupertonicTTS] Using WASM backend');
+			// Just verify the endpoint exists (we'll get a 400 for missing params, which is ok)
+			const response = await fetch(this.config.apiEndpoint, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ text: 'test' })
+			});
+
+			// As long as we don't get a 404, the endpoint exists
+			if (response.status === 404) {
+				throw new Error('API endpoint not found');
 			}
+
+			logger.debug('[SupertonicTTS] API endpoint is available');
 		} catch (error) {
-			logger.warn('[SupertonicTTS] GPU configuration failed, using WASM:', error);
-		}
-	}
-
-	/**
-	 * Load ONNX models
-	 * @private
-	 */
-	async _loadModels(modelPaths) {
-		try {
-			logger.debug('[SupertonicTTS] Loading models...');
-
-			const sessionOptions = {
-				executionProviders: ['webgpu', 'wasm'],
-				graphOptimizationLevel: 'all'
-			};
-
-			// Load models in parallel
-			const [encoder, decoder, vocoder] = await Promise.all([
-				ort.InferenceSession.create(modelPaths.encoder, sessionOptions),
-				ort.InferenceSession.create(modelPaths.decoder, sessionOptions),
-				ort.InferenceSession.create(modelPaths.vocoder, sessionOptions)
-			]);
-
-			this.sessions.encoder = encoder;
-			this.sessions.decoder = decoder;
-			this.sessions.vocoder = vocoder;
-
-			logger.debug('[SupertonicTTS] Models loaded successfully');
-		} catch (error) {
-			throw new Error(`Failed to load ONNX models: ${error.message}`);
-		}
-	}
-
-	/**
-	 * Load voice style JSON
-	 * @private
-	 */
-	async _loadVoiceStyle(voiceId) {
-		const voice = SUPERTONIC_VOICES[voiceId];
-		if (!voice) {
-			throw new Error(`Unknown voice: ${voiceId}`);
-		}
-
-		try {
-			const response = await fetch(voice.stylePath);
-			if (!response.ok) {
-				throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-			}
-			this.voiceStyle = await response.json();
-			logger.debug(`[SupertonicTTS] Loaded voice style: ${voiceId}`);
-		} catch (error) {
-			throw new Error(`Failed to load voice style for ${voiceId}: ${error.message}`);
+			logger.error('[SupertonicTTS] API availability check failed:', error);
+			throw new Error('Supertonic API endpoint is not available');
 		}
 	}
 
@@ -233,21 +154,19 @@ export class SupertonicTTSProvider extends BaseTTSProvider {
 		}
 
 		const chunks = this._chunkText(cleanText);
-		logger.debug(`[SupertonicTTS] Processing ${chunks.length} chunks:`, chunks);
+		logger.debug(`[SupertonicTTS] Processing ${chunks.length} chunks`);
 
 		try {
 			// Generate audio for each chunk
 			for (let i = 0; i < chunks.length; i++) {
-				logger.debug(`[SupertonicTTS] Processing chunk ${i + 1}/${chunks.length}`);
 				if (!this.isPlaying) {
 					logger.debug('[SupertonicTTS] Playback stopped, breaking');
 					break;
 				}
 
-				const audioData = await this._synthesizeChunk(chunks[i], options);
-				logger.debug('[SupertonicTTS] Chunk synthesized, playing audio...');
-				await this._playAudio(audioData);
-				logger.debug('[SupertonicTTS] Chunk playback complete');
+				logger.debug(`[SupertonicTTS] Processing chunk ${i + 1}/${chunks.length}: "${chunks[i]}"`);
+				const { audioData, sampleRate } = await this._synthesizeChunk(chunks[i], options);
+				await this._playAudio(audioData, sampleRate);
 
 				// Small pause between chunks (100ms)
 				if (i < chunks.length - 1) {
@@ -264,48 +183,41 @@ export class SupertonicTTSProvider extends BaseTTSProvider {
 	}
 
 	/**
-	 * Synthesize a single text chunk
+	 * Synthesize a single text chunk via API
 	 * @private
 	 */
 	async _synthesizeChunk(text, options = {}) {
 		try {
-			logger.debug(`[SupertonicTTS] Synthesizing chunk: "${text}"`);
-
-			// 1. Encode text to phonemes/features (encoder)
-			logger.debug('[SupertonicTTS] Step 1: Encoding text...');
-			const textTensor = this._prepareTextInput(text);
-			logger.debug('[SupertonicTTS] Text tensor shape:', textTensor.dims);
-
-			const encoderOutput = await this.sessions.encoder.run({ text: textTensor });
-			logger.debug('[SupertonicTTS] Encoder output keys:', Object.keys(encoderOutput));
-
-			// 2. Decode to mel-spectrogram (decoder)
-			logger.debug('[SupertonicTTS] Step 2: Decoding to mel-spectrogram...');
-			const styleEmbedding = this._prepareStyleEmbedding();
-			const decoderInput = {
-				encoded_text: encoderOutput.encoded,
-				style: styleEmbedding,
-				steps: new ort.Tensor('float32', [this.config.denoisingSteps], [1])
-			};
-			const decoderOutput = await this.sessions.decoder.run(decoderInput);
-			logger.debug('[SupertonicTTS] Decoder output keys:', Object.keys(decoderOutput));
-
-			// 3. Convert mel-spectrogram to audio (vocoder)
-			logger.debug('[SupertonicTTS] Step 3: Converting to audio...');
-			const vocoderOutput = await this.sessions.vocoder.run({ mel: decoderOutput.mel });
-			logger.debug('[SupertonicTTS] Vocoder output keys:', Object.keys(vocoderOutput));
-
-			// Extract audio data
-			const audioData = vocoderOutput.audio.data;
-			logger.debug('[SupertonicTTS] Audio data length:', audioData.length);
-
-			// Apply speed adjustment if needed
 			const speed = options.speed || this.config.speed;
-			if (speed !== 1.0) {
-				return this._adjustSpeed(audioData, speed);
+
+			logger.debug(`[SupertonicTTS] Calling API for text: "${text}"`);
+
+			const response = await fetch(this.config.apiEndpoint, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					text,
+					voice: this.currentVoice,
+					speed
+				})
+			});
+
+			if (!response.ok) {
+				const errorData = await response.json().catch(() => ({ message: response.statusText }));
+				throw new Error(errorData.message || `API request failed: ${response.status}`);
 			}
 
-			return audioData;
+			const data = await response.json();
+
+			logger.debug(`[SupertonicTTS] Received audio data: ${data.audio.length} samples at ${data.sampleRate}Hz`);
+
+			// Convert array back to Float32Array and return with sample rate
+			return {
+				audioData: new Float32Array(data.audio),
+				sampleRate: data.sampleRate
+			};
 		} catch (error) {
 			logger.error('[SupertonicTTS] Synthesis error:', error);
 			throw new Error(`Synthesis failed: ${error.message}`);
@@ -313,69 +225,27 @@ export class SupertonicTTSProvider extends BaseTTSProvider {
 	}
 
 	/**
-	 * Prepare text input tensor
-	 * @private
-	 */
-	_prepareTextInput(text) {
-		// Convert text to character codes or phoneme IDs
-		// This is a simplified version - real implementation would use proper text encoding
-		const charCodes = Array.from(text).map((char) => char.charCodeAt(0));
-		const paddedCodes = new Float32Array(512).fill(0); // Pad to fixed length
-		for (let i = 0; i < Math.min(charCodes.length, 512); i++) {
-			paddedCodes[i] = charCodes[i] / 255.0; // Normalize
-		}
-		return new ort.Tensor('float32', paddedCodes, [1, 512]);
-	}
-
-	/**
-	 * Prepare voice style embedding
-	 * @private
-	 */
-	_prepareStyleEmbedding() {
-		// Use loaded voice style data
-		// This is simplified - real implementation would extract proper embeddings
-		const styleData = new Float32Array(256).fill(0.5);
-		if (this.voiceStyle && this.voiceStyle.embedding) {
-			// Use actual embedding from loaded style
-			for (let i = 0; i < Math.min(this.voiceStyle.embedding.length, 256); i++) {
-				styleData[i] = this.voiceStyle.embedding[i];
-			}
-		}
-		return new ort.Tensor('float32', styleData, [1, 256]);
-	}
-
-	/**
-	 * Adjust audio speed using time-stretching
-	 * @private
-	 */
-	_adjustSpeed(audioData, speed) {
-		// Simple resampling for speed adjustment
-		// For better quality, would use pitch-preserving time-stretching algorithm
-		const originalLength = audioData.length;
-		const newLength = Math.floor(originalLength / speed);
-		const adjusted = new Float32Array(newLength);
-
-		for (let i = 0; i < newLength; i++) {
-			const srcIndex = i * speed;
-			const floor = Math.floor(srcIndex);
-			const ceil = Math.min(floor + 1, originalLength - 1);
-			const t = srcIndex - floor;
-
-			// Linear interpolation
-			adjusted[i] = audioData[floor] * (1 - t) + audioData[ceil] * t;
-		}
-
-		return adjusted;
-	}
-
-	/**
 	 * Play audio data through Web Audio API
 	 * @private
 	 */
-	async _playAudio(audioData) {
+	async _playAudio(audioData, sampleRate) {
+		// Resume AudioContext if suspended (required for browser autoplay policies)
+		if (this.audioContext.state === 'suspended') {
+			logger.debug('[SupertonicTTS] Resuming suspended AudioContext');
+			await this.audioContext.resume();
+		}
+
+		// Diagnostic logging
+		logger.debug(`[SupertonicTTS] AudioContext state: ${this.audioContext.state}, sampleRate: ${this.audioContext.sampleRate}Hz`);
+
+		// Check audio data validity
+		const audioArray = Array.from(audioData.slice(0, 100));
+		const hasNonZero = audioArray.some(v => Math.abs(v) > 0.0001);
+		const maxValue = Math.max(...audioArray.map(Math.abs));
+		logger.debug(`[SupertonicTTS] Audio data check - hasNonZero: ${hasNonZero}, maxValue in first 100 samples: ${maxValue.toFixed(6)}`);
+
 		return new Promise((resolve, reject) => {
 			try {
-				const sampleRate = 22050; // Supertonic output sample rate
 				const audioBuffer = this.audioContext.createBuffer(1, audioData.length, sampleRate);
 
 				// Copy audio data to buffer
@@ -384,20 +254,29 @@ export class SupertonicTTSProvider extends BaseTTSProvider {
 				// Create source and connect
 				const source = this.audioContext.createBufferSource();
 				source.buffer = audioBuffer;
-				source.connect(this.audioContext.destination);
+
+				// Create gain node for volume control and debugging
+				const gainNode = this.audioContext.createGain();
+				gainNode.gain.value = 1.0;
+				source.connect(gainNode);
+				gainNode.connect(this.audioContext.destination);
 
 				// Track playback state
 				this.currentSource = source;
 				this.isPlaying = true;
 
 				source.onended = () => {
+					logger.debug('[SupertonicTTS] Playback ended');
 					this.currentSource = null;
 					resolve();
 				};
 
 				// Start playback
+				logger.debug(`[SupertonicTTS] Starting playback: ${audioData.length} samples at ${sampleRate}Hz (${(audioData.length / sampleRate).toFixed(2)}s)`);
 				source.start(0);
+				logger.debug(`[SupertonicTTS] Playback started successfully, currentTime: ${this.audioContext.currentTime.toFixed(3)}s`);
 			} catch (error) {
+				logger.error('[SupertonicTTS] Playback error:', error);
 				reject(error);
 			}
 		});
@@ -501,12 +380,11 @@ export class SupertonicTTSProvider extends BaseTTSProvider {
 	 * Check if provider is supported
 	 */
 	isSupported() {
-		// Check for required APIs
+		// Only need Web Audio API on client side
 		const hasWebAudio =
 			typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext);
-		const hasWasm = typeof WebAssembly !== 'undefined';
 
-		return hasWebAudio && hasWasm;
+		return hasWebAudio;
 	}
 
 	/**
@@ -519,7 +397,7 @@ export class SupertonicTTSProvider extends BaseTTSProvider {
 		}
 
 		this.currentVoice = voiceId;
-		await this._loadVoiceStyle(voiceId);
+		logger.debug(`[SupertonicTTS] Voice changed to: ${voiceId}`);
 	}
 
 	/**
@@ -540,13 +418,6 @@ export class SupertonicTTSProvider extends BaseTTSProvider {
 			await this.audioContext.close();
 			this.audioContext = null;
 		}
-
-		// Clean up sessions (ONNX Runtime doesn't require explicit cleanup)
-		this.sessions = {
-			encoder: null,
-			decoder: null,
-			vocoder: null
-		};
 
 		this.isInitialized = false;
 	}

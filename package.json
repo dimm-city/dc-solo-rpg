@@ -70,6 +70,6 @@
 		"augmented-ui": "^2.0.0",
 		"fft.js": "^4.0.4",
 		"idb": "^8.0.3",
-		"onnxruntime-web": "^1.23.2"
+		"onnxruntime-node": "^1.23.2"
 	}
 }

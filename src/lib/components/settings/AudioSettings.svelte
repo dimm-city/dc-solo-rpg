@@ -28,9 +28,14 @@
 
 	async function checkSupertonicAvailability() {
 		try {
-			// Try to fetch one of the model files (served from static/assets at runtime)
-			const response = await fetch('/assets/onnx/text_encoder.onnx', { method: 'HEAD' });
-			providerAvailability.supertonic = response.ok;
+			// Check if V2 API endpoint is available
+			const response = await fetch('/api/tts/supertonic-v2', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ text: 'test' })
+			});
+			// API is available if we don't get a 404 (even 400/500 means endpoint exists)
+			providerAvailability.supertonic = response.status !== 404;
 		} catch (error) {
 			providerAvailability.supertonic = false;
 		}
