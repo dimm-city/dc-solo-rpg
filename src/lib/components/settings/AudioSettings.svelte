@@ -28,14 +28,11 @@
 
 	async function checkSupertonicAvailability() {
 		try {
-			// Check if API endpoint is available
-			const response = await fetch('/server/tts/supertonic', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ text: 'test' })
-			});
-			// API is available if we don't get a 404 (even 400/500 means endpoint exists)
-			providerAvailability.supertonic = response.status !== 404;
+			// Check if ONNX models are available from Hugging Face CDN
+			const response = await fetch(
+				'https://huggingface.co/Supertone/supertonic/resolve/main/onnx/tts.json'
+			);
+			providerAvailability.supertonic = response.ok;
 		} catch (error) {
 			providerAvailability.supertonic = false;
 		}
@@ -101,8 +98,8 @@
 				<option value="browser">Browser (Free, No API Key)</option>
 				<option value="supertonic" disabled={!providerAvailability.supertonic}>
 					Supertonic Neural TTS {providerAvailability.supertonic
-						? '(On-Device)'
-						: '(Models Not Found)'}
+						? '(Free, Downloads from HF)'
+						: '(HF Unavailable)'}
 				</option>
 				<option value="openai">OpenAI TTS</option>
 				<option value="elevenlabs">ElevenLabs</option>
