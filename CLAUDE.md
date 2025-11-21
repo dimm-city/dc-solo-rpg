@@ -703,6 +703,7 @@ The project includes **Supertonic Neural TTS** - a high-performance, on-device t
 - `src/lib/services/tts/providers/SupertonicTTSProvider.js` - Client-side provider (browser)
 - `static/assets/onnx/` - ONNX model files (text_encoder, duration_predictor, vector_estimator, vocoder)
 - `static/assets/voice_styles/` - Pre-extracted voice embeddings (F1, F2, M1, M2)
+- `docs/tts-lessons-learned.md` - Implementation lessons and debugging insights
 
 ### Configuration
 
@@ -735,7 +736,7 @@ The project includes **Supertonic Neural TTS** - a high-performance, on-device t
 {
   text: "Hello world",           // Text to synthesize
   voice: "F1",                   // Voice style (F1, F2, M1, M2)
-  speed: 1.0                     // Speed multiplier (0.5 - 2.0)
+  speed: 1.05                    // Speed multiplier (default: 1.05, range: 0.5 - 2.0)
 }
 ```
 
@@ -743,7 +744,7 @@ The project includes **Supertonic Neural TTS** - a high-performance, on-device t
 ```javascript
 {
   audio: [...],                  // Float32Array as regular array
-  sampleRate: 22050              // Audio sample rate
+  sampleRate: 44100              // Audio sample rate
 }
 ```
 

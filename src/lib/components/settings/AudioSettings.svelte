@@ -28,8 +28,8 @@
 
 	async function checkSupertonicAvailability() {
 		try {
-			// Check if V2 API endpoint is available
-			const response = await fetch('/api/tts/supertonic-v2', {
+			// Check if API endpoint is available
+			const response = await fetch('/api/tts/supertonic', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ text: 'test' })
