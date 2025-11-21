@@ -1,11 +1,13 @@
 import { BrowserTTSProvider } from './BrowserTTSProvider.js';
+import { SupertonicTTSProvider } from './SupertonicTTSProvider.js';
 
 /**
  * Registry of available TTS providers
  * Add new providers here as they are implemented
  */
 export const TTS_PROVIDERS = {
-	browser: BrowserTTSProvider
+	browser: BrowserTTSProvider,
+	supertonic: SupertonicTTSProvider
 	// Future providers:
 	// elevenlabs: ElevenLabsProvider,
 	// openai: OpenAIProvider,

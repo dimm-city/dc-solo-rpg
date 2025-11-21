@@ -62,58 +62,32 @@ export async function loadAISettings() {
 }
 
 /**
- * Save TTS provider settings
- * @param {Object} settings - TTS settings object
- * @param {string} settings.provider - 'browser' | 'openai' | 'elevenlabs'
- * @param {string} settings.apiKey - API key (not needed for browser TTS)
- * @param {string} settings.voice - Voice ID or name
- * @param {Object} settings.options - Additional options (speed, pitch, etc.)
- * @returns {Promise<boolean>} Success status
+ * @deprecated TTS settings are now managed by audioStore.svelte.js
+ * This function is kept for backward compatibility during migration
+ * @returns {Promise<boolean>} Always returns true
  */
 export async function saveTTSSettings(settings) {
-	try {
-		const db = await initDB();
-		await db.put(SETTINGS_STORE, settings, 'tts-provider');
-		logger.info('[aiSettings] TTS provider settings saved');
-		return true;
-	} catch (error) {
-		logger.error('[aiSettings] Failed to save TTS settings:', error);
-		return false;
-	}
+	logger.warn('[aiSettings] saveTTSSettings is deprecated. Use audioStore.updateAudioSettings() instead.');
+	return true;
 }
 
 /**
- * Load TTS provider settings
- * @returns {Promise<Object|null>} TTS settings or default browser settings
+ * @deprecated TTS settings are now managed by audioStore.svelte.js
+ * This function is kept for backward compatibility during migration
+ * @returns {Promise<Object>} Default browser TTS settings
  */
 export async function loadTTSSettings() {
-	try {
-		const db = await initDB();
-		const settings = await db.get(SETTINGS_STORE, 'tts-provider');
-
-		// Return browser TTS as default if nothing is configured
-		return settings || {
-			provider: 'browser',
-			voice: null, // Will use default system voice
-			options: {
-				rate: 1.0,
-				pitch: 1.0,
-				volume: 1.0
-			}
-		};
-	} catch (error) {
-		logger.error('[aiSettings] Failed to load TTS settings:', error);
-		// Return default browser TTS on error
-		return {
-			provider: 'browser',
-			voice: null,
-			options: {
-				rate: 1.0,
-				pitch: 1.0,
-				volume: 1.0
-			}
-		};
-	}
+	logger.warn('[aiSettings] loadTTSSettings is deprecated. Use audioStore.getAudioSettings() instead.');
+	// Return default settings for backward compatibility
+	return {
+		provider: 'browser',
+		voice: null,
+		options: {
+			rate: 1.0,
+			pitch: 1.0,
+			volume: 1.0
+		}
+	};
 }
 
 /**
@@ -132,14 +106,15 @@ export async function isAIConfigured() {
 
 /**
  * Clear all AI settings
+ * Note: TTS settings are now in audioStore and must be cleared separately
  * @returns {Promise<boolean>} Success status
  */
 export async function clearAISettings() {
 	try {
 		const db = await initDB();
 		await db.delete(SETTINGS_STORE, 'ai-provider');
-		await db.delete(SETTINGS_STORE, 'tts-provider');
-		logger.info('[aiSettings] All AI settings cleared');
+		// No longer clearing tts-provider as it's managed by audioStore
+		logger.info('[aiSettings] AI settings cleared');
 		return true;
 	} catch (error) {
 		logger.error('[aiSettings] Failed to clear AI settings:', error);

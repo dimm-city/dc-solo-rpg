@@ -25,8 +25,8 @@
 	}
 
 	// ✅ IMPROVED: Use onMount for one-time initialization (clearer intent)
-	onMount(() => {
-		initializeAudioStore();
+	onMount(async () => {
+		await initializeAudioStore();
 	});
 
 	// React to screen changes for callbacks

@@ -1,0 +1,9 @@
+window.json
+filter_bank.json
+style_extractor.onnx
+*.npy
+
+# ONNX Runtime Web WASM files (browser runtime)
+# These are copied from node_modules and don't need to be committed
+onnx/ort-wasm-*.mjs
+onnx/ort-wasm-*.wasm

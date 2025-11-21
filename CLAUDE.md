@@ -665,6 +665,163 @@ Covers:
 - Reviewing animation code
 - Teaching animation patterns to new developers
 
+## Supertonic TTS Integration
+
+The project includes **Supertonic Neural TTS** - a high-performance, on-device text-to-speech system running server-side via ONNX Runtime Node.
+
+### Overview
+
+- **Model**: Supertone/supertonic (66M parameters)
+- **Architecture**: 4-stage diffusion-based TTS pipeline
+- **Performance**: 0.012 RTF on M4 Pro CPU (83x faster than real-time)
+- **License**: OpenRAIL-M (model), MIT (code)
+- **Processing**: Server-side via SvelteKit API endpoint
+
+### Official Resources
+
+**GitHub Implementation:**
+- Node.js Example: https://github.com/supertone-inc/supertonic/blob/main/nodejs/example_onnx.js
+- Helper Functions: https://github.com/supertone-inc/supertonic/blob/main/nodejs/helper.js
+- Documentation: https://github.com/supertone-inc/supertonic/blob/main/nodejs/README.md
+- Package Info: https://github.com/supertone-inc/supertonic/blob/main/nodejs/package.json
+
+**Model Resources:**
+- HuggingFace Hub: https://huggingface.co/Supertone/supertonic
+- Interactive Demo: https://huggingface.co/spaces/Supertone/supertonic
+
+### Architecture
+
+**4-Stage Pipeline:**
+
+1. **Duration Predictor** - Predicts phoneme durations from text
+2. **Text Encoder** - Generates semantic embeddings
+3. **Vector Estimator** - Diffusion model for latent representation (5-step denoising)
+4. **Vocoder** - Converts latent to audio waveform
+
+**Key Files:**
+- `src/routes/api/tts/supertonic/+server.js` - Server-side API endpoint (Node.js)
+- `src/lib/services/tts/providers/SupertonicTTSProvider.js` - Client-side provider (browser)
+- `static/assets/onnx/` - ONNX model files (text_encoder, duration_predictor, vector_estimator, vocoder)
+- `static/assets/voice_styles/` - Pre-extracted voice embeddings (F1, F2, M1, M2)
+- `docs/tts-lessons-learned.md` - Implementation lessons and debugging insights
+
+### Configuration
+
+**Model Config** (`static/assets/onnx/tts.json`):
+```javascript
+{
+  ttl: {
+    latent_dim: 24,              // Base latent dimensionality
+    chunk_compress_factor: 6     // Compression factor
+  },
+  ae: {
+    sample_rate: 44100,          // Output sample rate
+    base_chunk_size: 512,        // Base chunk size for latent
+    chunk_compress_factor: 1     // Chunk compression
+  }
+}
+```
+
+**Calculated Values:**
+- `latentDim = 24 * 6 = 144` (latent dimensionality)
+- `chunkSize = 512 * 1` (audio chunk size)
+- `latentLength = Math.floor((wavLength + chunkSize - 1) / chunkSize)`
+
+### API Usage
+
+**Endpoint:** `POST /api/tts/supertonic`
+
+**Request:**
+```javascript
+{
+  text: "Hello world",           // Text to synthesize
+  voice: "F1",                   // Voice style (F1, F2, M1, M2)
+  speed: 1.05                    // Speed multiplier (default: 1.05, range: 0.5 - 2.0)
+}
+```
+
+**Response:**
+```javascript
+{
+  audio: [...],                  // Float32Array as regular array
+  sampleRate: 44100              // Audio sample rate
+}
+```
+
+### Tensor Shapes
+
+Critical tensor dimensions for ONNX models:
+
+```javascript
+// Duration Predictor inputs
+text_ids: [1, 512]              // int64
+text_mask: [1, 1, 512]          // float32
+style_dp: [1, 8, 16]            // float32
+
+// Text Encoder inputs
+text_ids: [1, 512]              // int64
+text_mask: [1, 1, 512]          // float32
+style_ttl: [1, 50, 256]         // float32
+
+// Vector Estimator inputs
+noisy_latent: [1, 144, L]       // float32 (L = latent length)
+text_emb: [1, 512, 128]         // float32 (from encoder)
+style_ttl: [1, 50, 256]         // float32
+text_mask: [1, 1, 512]          // float32
+latent_mask: [1, 1, L]          // float32
+total_step: [1]                 // float32 (not int!)
+current_step: [1]               // float32 (not int!)
+
+// Vector Estimator output
+denoised_latent: [1, 144, L]    // float32
+
+// Vocoder inputs
+latent: [1, 144, L]             // float32
+
+// Vocoder output
+wav_tts: [1, samples]           // float32
+```
+
+### Implementation Notes
+
+**Diffusion Loop:**
+- Default 5 steps (configurable via `totalStep`)
+- Higher steps = better quality but slower
+- Each step refines the latent representation
+- Use Float32Array for step tensors (not BigInt64Array!)
+
+**Output Keys:**
+- Vector estimator returns `denoised_latent` (not `latent`)
+- Vocoder returns `wav_tts` (not `audio` or `wav`)
+
+**Text Processing:**
+- Uses unicode_indexer.json for character-to-phoneme mapping
+- Max text length: 512 characters
+- Padding: 0-filled to maxLength
+
+**Voice Styles:**
+- Pre-extracted embeddings in JSON format
+- `style_ttl` for encoder (text-to-latent)
+- `style_dp` for duration predictor
+
+### Client Integration
+
+The SupertonicTTSProvider makes API calls and uses Web Audio API for playback:
+
+```javascript
+import { SupertonicTTSProvider } from '$lib/services/tts/providers/SupertonicTTSProvider.js';
+
+const provider = new SupertonicTTSProvider();
+await provider.initialize({ voice: 'F1', speed: 1.0 });
+await provider.speak('Hello world');
+```
+
+**Features:**
+- Text chunking for long inputs (200 chars per chunk)
+- Web Audio API playback
+- Pause/resume support (context suspension)
+- Stop/cleanup methods
+
 ## Notes
 
 - **Node version**: Requires Node.js >= 20.0.0 (use `nvm use` if available)

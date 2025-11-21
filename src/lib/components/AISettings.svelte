@@ -1,17 +1,12 @@
 <script>
 	/**
 	 * AISettings - Configuration for AI story generation and TTS
+	 * TTS settings now managed by audioStore for consistency
 	 */
 	import AugmentedButton from './AugmentedButton.svelte';
 	import AIProviderSection from './settings/AIProviderSection.svelte';
 	import TTSSection from './settings/TTSSection.svelte';
-	import {
-		loadAISettings,
-		saveAISettings,
-		loadTTSSettings,
-		saveTTSSettings
-	} from '../services/aiSettings.js';
-	import { getAvailableVoices } from '../services/textToSpeech.js';
+	import { loadAISettings, saveAISettings } from '../services/aiSettings.js';
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 
@@ -23,22 +18,12 @@
 	let aiModel = $state('claude-3-5-sonnet-20241022');
 	let customEndpoint = $state('');
 
-	// TTS Settings
-	let ttsProvider = $state('browser');
-	let ttsApiKey = $state('');
-	let ttsVoice = $state('');
-	let ttsRate = $state(1.0);
-	let ttsPitch = $state(1.0);
-
-	// Available voices for browser TTS
-	let availableVoices = $state([]);
-
 	// UI state
 	let isSaving = $state(false);
 	let saveMessage = $state('');
 
 	onMount(async () => {
-		// Load existing settings
+		// Load existing AI settings
 		const aiSettings = await loadAISettings();
 		if (aiSettings) {
 			aiProvider = aiSettings.provider || 'anthropic';
@@ -46,18 +31,7 @@
 			aiModel = aiSettings.model || 'claude-3-5-sonnet-20241022';
 			customEndpoint = aiSettings.customEndpoint || '';
 		}
-
-		const ttsSettings = await loadTTSSettings();
-		if (ttsSettings) {
-			ttsProvider = ttsSettings.provider || 'browser';
-			ttsApiKey = ttsSettings.apiKey || '';
-			ttsVoice = ttsSettings.voice || '';
-			ttsRate = ttsSettings.options?.rate || 1.0;
-			ttsPitch = ttsSettings.options?.pitch || 1.0;
-		}
-
-		// Load available voices for browser TTS
-		availableVoices = await getAvailableVoices();
+		// Note: TTS settings are now managed by audioStore and loaded automatically
 	});
 
 	async function handleSave() {
@@ -74,19 +48,7 @@
 			};
 			await saveAISettings(aiSettings);
 
-			// Save TTS settings
-			const ttsSettings = {
-				provider: ttsProvider,
-				apiKey: ttsApiKey,
-				voice: ttsVoice,
-				options: {
-					rate: ttsRate,
-					pitch: ttsPitch,
-					volume: 1.0
-				}
-			};
-			await saveTTSSettings(ttsSettings);
-
+			// Note: TTS settings are auto-saved by audioStore when changed
 			saveMessage = 'Settings saved successfully!';
 			setTimeout(() => {
 				onClose();
@@ -124,15 +86,8 @@
 				bind:customEndpoint
 			/>
 
-			<!-- TTS Section -->
-			<TTSSection
-				bind:ttsProvider
-				bind:ttsApiKey
-				bind:ttsVoice
-				bind:ttsRate
-				bind:ttsPitch
-				{availableVoices}
-			/>
+			<!-- TTS Section - Now uses audioStore directly -->
+			<TTSSection />
 		</div>
 
 		<div class="modal-footer">
