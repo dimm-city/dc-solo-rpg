@@ -71,19 +71,16 @@
 		onkeydown={handleKeydown}
 		role="button"
 		tabindex="0"
-		in:fade={{ duration: 200, easing: cubicOut }}
-		out:fade={{ duration: 150, easing: cubicOut }}
+		transition:fade={{ duration: 200, easing: cubicOut }}
 	>
+		<!-- Augmented UI wrapper with scale animation -->
 		<div
 			class="content-modal-wrapper"
-			in:scale={{ duration: 250, start: 0.92, opacity: 0, easing: cubicOut }}
-			out:scale={{ duration: 200, start: 0.95, opacity: 0, easing: cubicOut }}
+			data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
+			transition:scale={{ duration: 250, start: 0.92, opacity: 0, easing: cubicOut }}
 		>
-			<!-- Augmented UI wrapper (non-scrollable) -->
-			<div
-				class="content-modal-container"
-				data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
-			>
+			<!-- Modal container (non-scrollable structure) -->
+			<div class="content-modal-container">
 				<div class="content-header">
 					<h2>{title}</h2>
 					<button class="close-button" onclick={onClose} aria-label="Close {title}">×</button>
@@ -166,24 +163,12 @@
 		backdrop-filter: blur(2px);
 	}
 
-	/* Wrapper for scale animation */
+	/* Wrapper with augmented UI and scale animation */
 	.content-modal-wrapper {
 		width: 90%;
 		max-width: 600px;
 		max-height: 85vh;
 		display: flex;
-	}
-
-	/* Modal container with augmented UI (non-scrollable) */
-	.content-modal-container {
-		position: relative;
-		width: 100%;
-		background: var(--dc-default-container-bg, rgba(13, 27, 42, 0.95));
-		border: 2px solid var(--dc-accent-color, #3a9fc7);
-		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-		display: flex;
-		flex-direction: column;
-		overflow: hidden;
 
 		/* Augmented UI styling */
 		--aug-border-all: 2px;
@@ -192,6 +177,17 @@
 		--aug-tr: 12px;
 		--aug-br: 12px;
 		--aug-bl: 12px;
+	}
+
+	/* Modal container (structure holder - no border) */
+	.content-modal-container {
+		position: relative;
+		width: 100%;
+		background: var(--dc-default-container-bg, rgba(13, 27, 42, 0.95));
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
 	}
 
 	/* Header */

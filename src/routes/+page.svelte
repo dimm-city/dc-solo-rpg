@@ -552,6 +552,29 @@
 						<path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
 					</svg>
 				</button>
+				<button
+					onclick={handleSettingsClick}
+					class="header-button settings-button"
+					aria-label="Settings"
+					title="Settings"
+				>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="24"
+						height="24"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<circle cx="12" cy="12" r="3"></circle>
+						<path
+							d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"
+						></path>
+					</svg>
+				</button>
 				<button onclick={handleAboutClick} class="header-button" aria-label="About">
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
@@ -657,6 +680,25 @@
 						<path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
 					</svg>
 					<span>Story Library</span>
+				</button>
+				<button class="mobile-menu-item" onclick={handleSettingsClick}>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="20"
+						height="20"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<circle cx="12" cy="12" r="3"></circle>
+						<path
+							d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"
+						></path>
+					</svg>
+					<span>Settings</span>
 				</button>
 				<button class="mobile-menu-item" onclick={handleAboutClick}>
 					<svg
@@ -1186,37 +1228,24 @@
 		transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 
 		/* Staggered fade-in animation */
-		animation:
-			cardFadeIn 0.6s ease-out 0.3s backwards,
-			float 25s ease-in-out infinite;
+		animation: cardFadeIn 0.6s ease-out 0.3s backwards;
 	}
 
-	/* Ethereal floating animation */
-	@keyframes float {
-		0%,
-		100% {
-			transform: translateY(0px);
-		}
-		50% {
-			transform: translateY(-8px);
-		}
-	}
-
-	/* Stagger the fade-in and float animations for each card */
+	/* Stagger the fade-in animations for each card */
 	.game-card-1 {
-		animation-delay: 0.1s, 0s;
+		animation-delay: 0.1s;
 	}
 	.game-card-2 {
-		animation-delay: 0.2s, 1.2s;
+		animation-delay: 0.2s;
 	}
 	.game-card-3 {
-		animation-delay: 0.3s, 2.4s;
+		animation-delay: 0.3s;
 	}
 	.game-card-4 {
-		animation-delay: 0.4s, 3.6s;
+		animation-delay: 0.4s;
 	}
 	.game-card-5 {
-		animation-delay: 0.5s, 4.8s;
+		animation-delay: 0.5s;
 	}
 
 	@keyframes cardFadeIn {
