@@ -114,15 +114,12 @@
 		}
 	});
 
-
-
 	// DrawCard ref for auto-draw on screen entry
 	let drawCardRef = $state();
 
 	// JournalEntry button state
 	let journalSaved = $state(false);
 	const journal = $state({ text: '', audioData: null });
-
 
 	async function handleJournalSave() {
 		// Always save journal entry (text and audio are both optional)
@@ -460,7 +457,9 @@
 
 				// Auto-roll if enabled and not yet rolled
 				if (gameplaySettings.autoRollDice && initialDamage.result === undefined) {
-					autoPlayCanceller = autoRoll(() => initialDamage.handleInitialDamageRoll(triggerAutoPlayForCurrentScreen));
+					autoPlayCanceller = autoRoll(() =>
+						initialDamage.handleInitialDamageRoll(triggerAutoPlayForCurrentScreen)
+					);
 				}
 				// Auto-continue after result if enabled
 				else if (gameplaySettings.autoContinueAfterReading && initialDamage.result !== undefined) {
@@ -494,7 +493,9 @@
 
 				// Auto-roll if enabled and not yet rolled
 				if (gameplaySettings.autoRollDice && !rollForTasks.rolled && !rollForTasks.rolling) {
-					autoPlayCanceller = autoRoll(() => rollForTasks.handleRollForTasks(triggerAutoPlayForCurrentScreen));
+					autoPlayCanceller = autoRoll(() =>
+						rollForTasks.handleRollForTasks(triggerAutoPlayForCurrentScreen)
+					);
 				}
 				// Auto-confirm after roll if enabled
 				else if (
@@ -519,7 +520,8 @@
 			case 'failureCheck':
 				// Auto-read prompt first if enabled and not yet rolled
 				if (audioSettings.autoReadPrompts && failureCheck.result === undefined) {
-					const promptText = 'An odd card demands a price. Roll to see how much stability you lose.';
+					const promptText =
+						'An odd card demands a price. Roll to see how much stability you lose.';
 					speak(promptText);
 				}
 
@@ -529,13 +531,12 @@
 					failureCheck.result === undefined &&
 					!failureCheck.rolling
 				) {
-					autoPlayCanceller = autoRoll(() => failureCheck.handleFailureCheck(triggerAutoPlayForCurrentScreen));
+					autoPlayCanceller = autoRoll(() =>
+						failureCheck.handleFailureCheck(triggerAutoPlayForCurrentScreen)
+					);
 				}
 				// Auto-continue after result if enabled
-				else if (
-					gameplaySettings.autoContinueAfterReading &&
-					failureCheck.result !== undefined
-				) {
+				else if (gameplaySettings.autoContinueAfterReading && failureCheck.result !== undefined) {
 					autoPlayCanceller = autoAdvance({
 						text: null,
 						shouldRead: false,
@@ -558,13 +559,12 @@
 					successCheck.result === undefined &&
 					!successCheck.rolling
 				) {
-					autoPlayCanceller = autoRoll(() => successCheck.handleSuccessCheck(triggerAutoPlayForCurrentScreen));
+					autoPlayCanceller = autoRoll(() =>
+						successCheck.handleSuccessCheck(triggerAutoPlayForCurrentScreen)
+					);
 				}
 				// Auto-continue after result if enabled
-				else if (
-					gameplaySettings.autoContinueAfterReading &&
-					successCheck.result !== undefined
-				) {
+				else if (gameplaySettings.autoContinueAfterReading && successCheck.result !== undefined) {
 					autoPlayCanceller = autoAdvance({
 						text: null,
 						shouldRead: false,
@@ -587,7 +587,9 @@
 					finalDamage.result === undefined &&
 					!finalDamage.rolling
 				) {
-					autoPlayCanceller = autoRoll(() => finalDamage.handleFinalDamageRoll(triggerAutoPlayForCurrentScreen));
+					autoPlayCanceller = autoRoll(() =>
+						finalDamage.handleFinalDamageRoll(triggerAutoPlayForCurrentScreen)
+					);
 				}
 				// Auto-continue after result if enabled
 				else if (gameplaySettings.autoContinueAfterReading && finalDamage.result !== undefined) {

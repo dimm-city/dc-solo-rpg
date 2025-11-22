@@ -40,29 +40,30 @@ Instead of letting users select unavailable providers, we now:
 
 ```javascript
 let providerAvailability = $state({
-    browser: true,
-    supertonic: false, // Will check on mount
-    openai: true,
-    elevenlabs: true
+	browser: true,
+	supertonic: false, // Will check on mount
+	openai: true,
+	elevenlabs: true
 });
 
 async function checkSupertonicAvailability() {
-    try {
-        // Try to fetch one of the model files with HEAD request
-        const response = await fetch('/tts-models/onnx/encoder.onnx', { method: 'HEAD' });
-        providerAvailability.supertonic = response.ok;
-    } catch (error) {
-        providerAvailability.supertonic = false;
-    }
+	try {
+		// Try to fetch one of the model files with HEAD request
+		const response = await fetch('/tts-models/onnx/encoder.onnx', { method: 'HEAD' });
+		providerAvailability.supertonic = response.ok;
+	} catch (error) {
+		providerAvailability.supertonic = false;
+	}
 }
 
 onMount(async () => {
-    await checkSupertonicAvailability();
-    availableVoices = await getAvailableVoices();
+	await checkSupertonicAvailability();
+	availableVoices = await getAvailableVoices();
 });
 ```
 
 **Benefits:**
+
 - Uses HEAD request (no file download, just checks existence)
 - Fast and lightweight
 - Runs before user can interact with dropdown
@@ -71,26 +72,26 @@ onMount(async () => {
 
 ```svelte
 <select id="tts-provider">
-    <option value="browser">Browser (Free, No API Key)</option>
+	<option value="browser">Browser (Free, No API Key)</option>
 
-    <option value="supertonic" disabled={!providerAvailability.supertonic}>
-        Supertonic Neural TTS {providerAvailability.supertonic
-            ? '(On-Device)'
-            : '(Models Not Found)'}
-    </option>
+	<option value="supertonic" disabled={!providerAvailability.supertonic}>
+		Supertonic Neural TTS {providerAvailability.supertonic ? '(On-Device)' : '(Models Not Found)'}
+	</option>
 
-    <option value="openai">OpenAI TTS</option>
-    <option value="elevenlabs">ElevenLabs</option>
+	<option value="openai">OpenAI TTS</option>
+	<option value="elevenlabs">ElevenLabs</option>
 </select>
 ```
 
 **User Experience:**
+
 - ✅ **Before**: User could select Supertonic → Console filled with errors
 - ✅ **After**: Supertonic is grayed out with "(Models Not Found)" label
 
 ## Result: Clean Console
 
 ### Before Fix
+
 ```
 [DEBUG] [SupertonicTTS] Initializing...
 [DEBUG] [SupertonicTTS] Loading models...
@@ -103,6 +104,7 @@ Aborted(CompileError: WebAssembly.instantiate()...)
 ```
 
 ### After Fix
+
 ```
 (No errors - Supertonic can't be selected)
 ```

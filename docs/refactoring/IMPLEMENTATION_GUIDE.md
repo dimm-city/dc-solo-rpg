@@ -93,6 +93,7 @@ npm run check
 For each component refactoring, follow these steps:
 
 #### Step 1: Create Branch
+
 ```bash
 git checkout -b refactor/[component-name]
 ```
@@ -100,6 +101,7 @@ git checkout -b refactor/[component-name]
 #### Step 2: Create Directory Structure
 
 Example for StatusDisplay:
+
 ```bash
 mkdir -p src/lib/components/status
 ```
@@ -119,36 +121,33 @@ touch src/lib/components/status/PlayerInfoBar.svelte
 ```
 
 **Template for new component:**
+
 ```svelte
 <script>
-/**
- * ComponentName - Brief description
- *
- * @component
- * @example
- * <ComponentName prop1="value" prop2={variable} />
- */
+	/**
+	 * ComponentName - Brief description
+	 *
+	 * @component
+	 * @example
+	 * <ComponentName prop1="value" prop2={variable} />
+	 */
 
-/**
- * @typedef {Object} ComponentNameProps
- * @property {string} prop1 - Description
- * @property {number} prop2 - Description
- */
-let {
-    prop1,
-    prop2,
-    onEvent = () => {}
-} = $props();
+	/**
+	 * @typedef {Object} ComponentNameProps
+	 * @property {string} prop1 - Description
+	 * @property {number} prop2 - Description
+	 */
+	let { prop1, prop2, onEvent = () => {} } = $props();
 
-// Component logic
+	// Component logic
 </script>
 
 <div class="component-name">
-    <!-- Template -->
+	<!-- Template -->
 </div>
 
 <style>
-    /* Component styles */
+	/* Component styles */
 </style>
 ```
 
@@ -156,15 +155,15 @@ let {
 
 ```svelte
 <script>
-// Import new components
-import SubComponent from './path/SubComponent.svelte';
+	// Import new components
+	import SubComponent from './path/SubComponent.svelte';
 
-// Remove extracted logic
-// Keep only orchestration logic
+	// Remove extracted logic
+	// Keep only orchestration logic
 </script>
 
 <div class="parent-component">
-    <SubComponent prop1="value" prop2={variable} onEvent={handleEvent} />
+	<SubComponent prop1="value" prop2={variable} onEvent={handleEvent} />
 </div>
 ```
 
@@ -208,63 +207,60 @@ Continue extracting until parent component is at target size.
 ### Example 1: Extracting a Simple Component
 
 **Before (in StatusDisplay.svelte):**
+
 ```svelte
 <div class="player-round-bar">
-    <div class="player-info">
-        <div class="player-name">{gameState.playerName}</div>
-        <div class="game-title">{gameState.config?.title}</div>
-        <div class="round-number">Round {gameState.round}</div>
-    </div>
-    <div class="action-buttons">
-        <button onclick={handleHelp}>❓</button>
-        <button onclick={handleExit}>✕</button>
-    </div>
+	<div class="player-info">
+		<div class="player-name">{gameState.playerName}</div>
+		<div class="game-title">{gameState.config?.title}</div>
+		<div class="round-number">Round {gameState.round}</div>
+	</div>
+	<div class="action-buttons">
+		<button onclick={handleHelp}>❓</button>
+		<button onclick={handleExit}>✕</button>
+	</div>
 </div>
 ```
 
 **After (PlayerInfoBar.svelte):**
+
 ```svelte
 <script>
-/**
- * PlayerInfoBar - Displays player name, game title, round, and action buttons
- */
-let {
-    playerName,
-    gameTitle,
-    round,
-    onHelpClick,
-    onExitClick
-} = $props();
+	/**
+	 * PlayerInfoBar - Displays player name, game title, round, and action buttons
+	 */
+	let { playerName, gameTitle, round, onHelpClick, onExitClick } = $props();
 </script>
 
 <div class="player-round-bar">
-    <div class="player-info">
-        <div class="player-name">{playerName}</div>
-        <div class="game-title">{gameTitle}</div>
-        <div class="round-number">Round {round}</div>
-    </div>
-    <div class="action-buttons">
-        <button onclick={onHelpClick}>❓</button>
-        <button onclick={onExitClick}>✕</button>
-    </div>
+	<div class="player-info">
+		<div class="player-name">{playerName}</div>
+		<div class="game-title">{gameTitle}</div>
+		<div class="round-number">Round {round}</div>
+	</div>
+	<div class="action-buttons">
+		<button onclick={onHelpClick}>❓</button>
+		<button onclick={onExitClick}>✕</button>
+	</div>
 </div>
 ```
 
 **Updated Parent (StatusDisplay.svelte):**
+
 ```svelte
 <script>
-import PlayerInfoBar from './status/PlayerInfoBar.svelte';
-import { gameState } from '$lib/stores/gameStore.svelte.js';
+	import PlayerInfoBar from './status/PlayerInfoBar.svelte';
+	import { gameState } from '$lib/stores/gameStore.svelte.js';
 
-let { onHelpClick, onExitClick } = $props();
+	let { onHelpClick, onExitClick } = $props();
 </script>
 
 <PlayerInfoBar
-    playerName={gameState.playerName}
-    gameTitle={gameState.config?.title}
-    round={gameState.round}
-    {onHelpClick}
-    {onExitClick}
+	playerName={gameState.playerName}
+	gameTitle={gameState.config?.title}
+	round={gameState.round}
+	{onHelpClick}
+	{onExitClick}
 />
 ```
 
@@ -273,37 +269,37 @@ let { onHelpClick, onExitClick } = $props();
 ### Example 2: Extracting a Composable
 
 **Before (in GameScreen.svelte):**
+
 ```svelte
 <script>
-let rollTasksRolled = $state(false);
-let rollTasksRolling = $state(false);
-let rollTasksConfirming = $state(false);
+	let rollTasksRolled = $state(false);
+	let rollTasksRolling = $state(false);
+	let rollTasksConfirming = $state(false);
 
-const rollForTasksButtonText = $derived(
-    rollTasksRolled
-        ? `Draw ${gameState.cardsToDraw} Cards`
-        : 'Roll Dice'
-);
+	const rollForTasksButtonText = $derived(
+		rollTasksRolled ? `Draw ${gameState.cardsToDraw} Cards` : 'Roll Dice'
+	);
 
-async function handleRollForTasks() {
-    if (rollTasksRolling || rollTasksConfirming) return;
+	async function handleRollForTasks() {
+		if (rollTasksRolling || rollTasksConfirming) return;
 
-    if (rollTasksRolled) {
-        rollTasksConfirming = true;
-        await confirmTaskRoll();
-        rollTasksConfirming = false;
-    } else {
-        rollTasksRolling = true;
-        const { roll } = await rollForTasks();
-        await rollDice(roll);
-        rollTasksRolling = false;
-        rollTasksRolled = true;
-    }
-}
+		if (rollTasksRolled) {
+			rollTasksConfirming = true;
+			await confirmTaskRoll();
+			rollTasksConfirming = false;
+		} else {
+			rollTasksRolling = true;
+			const { roll } = await rollForTasks();
+			await rollDice(roll);
+			rollTasksRolling = false;
+			rollTasksRolled = true;
+		}
+	}
 </script>
 ```
 
 **After (useRollForTasks.svelte.js):**
+
 ```javascript
 // src/lib/composables/screen/useRollForTasks.svelte.js
 
@@ -312,72 +308,66 @@ import { rollDice } from '$lib/stores/diceStore.svelte.js';
 import { gameState } from '$lib/stores/gameStore.svelte.js';
 
 export function useRollForTasks() {
-    let rolled = $state(false);
-    let rolling = $state(false);
-    let confirming = $state(false);
+	let rolled = $state(false);
+	let rolling = $state(false);
+	let confirming = $state(false);
 
-    const buttonText = $derived(
-        rolled
-            ? `Draw ${gameState.cardsToDraw} Cards`
-            : 'Roll Dice'
-    );
+	const buttonText = $derived(rolled ? `Draw ${gameState.cardsToDraw} Cards` : 'Roll Dice');
 
-    const buttonDisabled = $derived(rolling || confirming);
+	const buttonDisabled = $derived(rolling || confirming);
 
-    async function handle() {
-        if (rolling || confirming) return;
+	async function handle() {
+		if (rolling || confirming) return;
 
-        if (rolled) {
-            confirming = true;
-            await confirmTaskRoll();
-            confirming = false;
-        } else {
-            rolling = true;
-            const { roll } = await rollForTasks();
-            await rollDice(roll);
-            rolling = false;
-            rolled = true;
-        }
-    }
+		if (rolled) {
+			confirming = true;
+			await confirmTaskRoll();
+			confirming = false;
+		} else {
+			rolling = true;
+			const { roll } = await rollForTasks();
+			await rollDice(roll);
+			rolling = false;
+			rolled = true;
+		}
+	}
 
-    function reset() {
-        rolled = false;
-        rolling = false;
-        confirming = false;
-    }
+	function reset() {
+		rolled = false;
+		rolling = false;
+		confirming = false;
+	}
 
-    return {
-        rolled,
-        rolling,
-        confirming,
-        buttonText,
-        buttonDisabled,
-        handle,
-        reset
-    };
+	return {
+		rolled,
+		rolling,
+		confirming,
+		buttonText,
+		buttonDisabled,
+		handle,
+		reset
+	};
 }
 ```
 
 **Updated GameScreen.svelte:**
+
 ```svelte
 <script>
-import { useRollForTasks } from '$lib/composables/screen/useRollForTasks.svelte.js';
+	import { useRollForTasks } from '$lib/composables/screen/useRollForTasks.svelte.js';
 
-const rollForTasks = useRollForTasks();
+	const rollForTasks = useRollForTasks();
 
-// Reset on screen change
-$effect(() => {
-    if (currentScreen === 'rollForTasks') {
-        rollForTasks.reset();
-    }
-});
+	// Reset on screen change
+	$effect(() => {
+		if (currentScreen === 'rollForTasks') {
+			rollForTasks.reset();
+		}
+	});
 </script>
 
-<button
-    onclick={rollForTasks.handle}
-    disabled={rollForTasks.buttonDisabled}
->
-    {rollForTasks.buttonText}
+<button onclick={rollForTasks.handle} disabled={rollForTasks.buttonDisabled}>
+	{rollForTasks.buttonText}
 </button>
 ```
 
@@ -389,103 +379,98 @@ $effect(() => {
 
 ```svelte
 <script>
-/**
- * DiceReadout - Displays last dice roll with optional binary pips
- *
- * @component
- * @example
- * <DiceReadout
- *   lastRoll={15}
- *   isLucid={true}
- *   showBinaryPips={true}
- * />
- */
+	/**
+	 * DiceReadout - Displays last dice roll with optional binary pips
+	 *
+	 * @component
+	 * @example
+	 * <DiceReadout
+	 *   lastRoll={15}
+	 *   isLucid={true}
+	 *   showBinaryPips={true}
+	 * />
+	 */
 
-const PIP_COUNT = 5;
+	const PIP_COUNT = 5;
 
-let {
-    lastRoll,
-    isLucid = false,
-    isSurreal = false,
-    showBinaryPips = true
-} = $props();
+	let { lastRoll, isLucid = false, isSurreal = false, showBinaryPips = true } = $props();
 
-const dicePips = $derived.by(() => {
-    const roll = lastRoll || 0;
-    const pips = new Array(PIP_COUNT).fill(false);
-    const binary = roll.toString(2).padStart(PIP_COUNT, '0');
-    for (let i = 0; i < PIP_COUNT; i++) {
-        pips[i] = binary[i] === '1';
-    }
-    return pips;
-});
+	const dicePips = $derived.by(() => {
+		const roll = lastRoll || 0;
+		const pips = new Array(PIP_COUNT).fill(false);
+		const binary = roll.toString(2).padStart(PIP_COUNT, '0');
+		for (let i = 0; i < PIP_COUNT; i++) {
+			pips[i] = binary[i] === '1';
+		}
+		return pips;
+	});
 </script>
 
 <div class="dice-readout" data-lucid={isLucid} data-surreal={isSurreal}>
-    <div class="dice-value">{lastRoll}</div>
+	<div class="dice-value">{lastRoll}</div>
 
-    {#if showBinaryPips}
-        <div class="binary-pips">
-            {#each dicePips as pip}
-                <div class="pip" class:active={pip}></div>
-            {/each}
-        </div>
-    {/if}
+	{#if showBinaryPips}
+		<div class="binary-pips">
+			{#each dicePips as pip}
+				<div class="pip" class:active={pip}></div>
+			{/each}
+		</div>
+	{/if}
 
-    {#if isLucid}
-        <div class="modifier lucid">↑ LUCID</div>
-    {/if}
+	{#if isLucid}
+		<div class="modifier lucid">↑ LUCID</div>
+	{/if}
 
-    {#if isSurreal}
-        <div class="modifier surreal">↓ SURREAL</div>
-    {/if}
+	{#if isSurreal}
+		<div class="modifier surreal">↓ SURREAL</div>
+	{/if}
 </div>
 
 <style>
-    .dice-readout {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: var(--space-sm);
-    }
+	.dice-readout {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-sm);
+	}
 
-    .dice-value {
-        font-size: var(--text-3xl);
-        font-weight: bold;
-    }
+	.dice-value {
+		font-size: var(--text-3xl);
+		font-weight: bold;
+	}
 
-    .binary-pips {
-        display: flex;
-        gap: var(--space-xs);
-    }
+	.binary-pips {
+		display: flex;
+		gap: var(--space-xs);
+	}
 
-    .pip {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        background: var(--color-gray-600);
-    }
+	.pip {
+		width: 12px;
+		height: 12px;
+		border-radius: 50%;
+		background: var(--color-gray-600);
+	}
 
-    .pip.active {
-        background: var(--color-neon-cyan);
-        box-shadow: 0 0 8px var(--color-neon-cyan);
-    }
+	.pip.active {
+		background: var(--color-neon-cyan);
+		box-shadow: 0 0 8px var(--color-neon-cyan);
+	}
 
-    .modifier {
-        font-size: var(--text-sm);
-        padding: var(--space-xs) var(--space-sm);
-        border-radius: 4px;
-    }
+	.modifier {
+		font-size: var(--text-sm);
+		padding: var(--space-xs) var(--space-sm);
+		border-radius: 4px;
+	}
 
-    .modifier.lucid {
-        background: var(--color-success);
-        color: white;
-    }
+	.modifier.lucid {
+		background: var(--color-success);
+		color: white;
+	}
 
-    .modifier.surreal {
-        background: var(--color-danger);
-        color: white;
-    }
+	.modifier.surreal {
+		background: var(--color-danger);
+		color: white;
+	}
 </style>
 ```
 
@@ -494,24 +479,21 @@ const dicePips = $derived.by(() => {
 ```svelte
 <!-- In StatusDisplay -->
 <DiceReadout
-    lastRoll={gameState.diceRoll}
-    isLucid={gameState.isLucid}
-    isSurreal={gameState.isSurreal}
+	lastRoll={gameState.diceRoll}
+	isLucid={gameState.isLucid}
+	isSurreal={gameState.isSurreal}
 />
 
 <!-- In GameScreen during roll -->
 <DiceReadout
-    lastRoll={currentRoll}
-    isLucid={wasLucid}
-    isSurreal={wasSurreal}
-    showBinaryPips={false}
+	lastRoll={currentRoll}
+	isLucid={wasLucid}
+	isSurreal={wasSurreal}
+	showBinaryPips={false}
 />
 
 <!-- In StoryMode -->
-<DiceReadout
-    lastRoll={round.diceRoll}
-    showBinaryPips={true}
-/>
+<DiceReadout lastRoll={round.diceRoll} showBinaryPips={true} />
 ```
 
 ---
@@ -530,35 +512,35 @@ import { render, fireEvent } from '@testing-library/svelte';
 import PlayerInfoBar from './PlayerInfoBar.svelte';
 
 describe('PlayerInfoBar', () => {
-    it('renders player info correctly', () => {
-        const { getByText } = render(PlayerInfoBar, {
-            playerName: 'Test Player',
-            gameTitle: 'Test Game',
-            round: 3,
-            onHelpClick: () => {},
-            onExitClick: () => {}
-        });
+	it('renders player info correctly', () => {
+		const { getByText } = render(PlayerInfoBar, {
+			playerName: 'Test Player',
+			gameTitle: 'Test Game',
+			round: 3,
+			onHelpClick: () => {},
+			onExitClick: () => {}
+		});
 
-        expect(getByText('Test Player')).toBeInTheDocument();
-        expect(getByText('Test Game')).toBeInTheDocument();
-        expect(getByText('Round 3')).toBeInTheDocument();
-    });
+		expect(getByText('Test Player')).toBeInTheDocument();
+		expect(getByText('Test Game')).toBeInTheDocument();
+		expect(getByText('Round 3')).toBeInTheDocument();
+	});
 
-    it('calls onHelpClick when help button clicked', async () => {
-        const onHelpClick = vi.fn();
-        const { getByText } = render(PlayerInfoBar, {
-            playerName: 'Test',
-            gameTitle: 'Test',
-            round: 1,
-            onHelpClick,
-            onExitClick: () => {}
-        });
+	it('calls onHelpClick when help button clicked', async () => {
+		const onHelpClick = vi.fn();
+		const { getByText } = render(PlayerInfoBar, {
+			playerName: 'Test',
+			gameTitle: 'Test',
+			round: 1,
+			onHelpClick,
+			onExitClick: () => {}
+		});
 
-        const helpButton = getByText('❓');
-        await fireEvent.click(helpButton);
+		const helpButton = getByText('❓');
+		await fireEvent.click(helpButton);
 
-        expect(onHelpClick).toHaveBeenCalledOnce();
-    });
+		expect(onHelpClick).toHaveBeenCalledOnce();
+	});
 });
 ```
 
@@ -571,32 +553,32 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { useRollForTasks } from './useRollForTasks.svelte.js';
 
 describe('useRollForTasks', () => {
-    let rollForTasks;
+	let rollForTasks;
 
-    beforeEach(() => {
-        rollForTasks = useRollForTasks();
-    });
+	beforeEach(() => {
+		rollForTasks = useRollForTasks();
+	});
 
-    it('starts in unrolled state', () => {
-        expect(rollForTasks.rolled).toBe(false);
-        expect(rollForTasks.rolling).toBe(false);
-        expect(rollForTasks.buttonText).toBe('Roll Dice');
-    });
+	it('starts in unrolled state', () => {
+		expect(rollForTasks.rolled).toBe(false);
+		expect(rollForTasks.rolling).toBe(false);
+		expect(rollForTasks.buttonText).toBe('Roll Dice');
+	});
 
-    it('updates button text after roll', async () => {
-        await rollForTasks.handle();
+	it('updates button text after roll', async () => {
+		await rollForTasks.handle();
 
-        expect(rollForTasks.rolled).toBe(true);
-        expect(rollForTasks.buttonText).toContain('Draw');
-    });
+		expect(rollForTasks.rolled).toBe(true);
+		expect(rollForTasks.buttonText).toContain('Draw');
+	});
 
-    it('resets state correctly', () => {
-        rollForTasks.rolled = true;
-        rollForTasks.reset();
+	it('resets state correctly', () => {
+		rollForTasks.rolled = true;
+		rollForTasks.reset();
 
-        expect(rollForTasks.rolled).toBe(false);
-        expect(rollForTasks.buttonText).toBe('Roll Dice');
-    });
+		expect(rollForTasks.rolled).toBe(false);
+		expect(rollForTasks.buttonText).toBe('Roll Dice');
+	});
 });
 ```
 
@@ -611,36 +593,38 @@ import StatusDisplay from './StatusDisplay.svelte';
 import { gameState } from '$lib/stores/gameStore.svelte.js';
 
 describe('StatusDisplay Integration', () => {
-    it('displays all game stats correctly', () => {
-        gameState.playerName = 'Test Player';
-        gameState.tower = 15;
-        gameState.tokens = 7;
-        gameState.acesRevealed = 2;
+	it('displays all game stats correctly', () => {
+		gameState.playerName = 'Test Player';
+		gameState.tower = 15;
+		gameState.tokens = 7;
+		gameState.acesRevealed = 2;
 
-        const { getByText } = render(StatusDisplay, {
-            onHelpClick: () => {},
-            onExitClick: () => {},
-            onSettingsClick: () => {}
-        });
+		const { getByText } = render(StatusDisplay, {
+			onHelpClick: () => {},
+			onExitClick: () => {},
+			onSettingsClick: () => {}
+		});
 
-        expect(getByText('Test Player')).toBeInTheDocument();
-        expect(getByText(/15/)).toBeInTheDocument(); // Stability
-        expect(getByText(/7/)).toBeInTheDocument();  // Tokens
-    });
+		expect(getByText('Test Player')).toBeInTheDocument();
+		expect(getByText(/15/)).toBeInTheDocument(); // Stability
+		expect(getByText(/7/)).toBeInTheDocument(); // Tokens
+	});
 
-    it('calls exit handler when exit button clicked', async () => {
-        let exitCalled = false;
-        const { getByText } = render(StatusDisplay, {
-            onHelpClick: () => {},
-            onExitClick: () => { exitCalled = true; },
-            onSettingsClick: () => {}
-        });
+	it('calls exit handler when exit button clicked', async () => {
+		let exitCalled = false;
+		const { getByText } = render(StatusDisplay, {
+			onHelpClick: () => {},
+			onExitClick: () => {
+				exitCalled = true;
+			},
+			onSettingsClick: () => {}
+		});
 
-        const exitButton = getByText('✕');
-        await fireEvent.click(exitButton);
+		const exitButton = getByText('✕');
+		await fireEvent.click(exitButton);
 
-        expect(exitCalled).toBe(true);
-    });
+		expect(exitCalled).toBe(true);
+	});
 });
 ```
 
@@ -649,16 +633,20 @@ describe('StatusDisplay Integration', () => {
 **Manual checklist:**
 
 1. Before refactoring:
+
    ```bash
    npm run build && npm run preview
    ```
+
    - Take screenshots of all screens
    - Note any animations
 
 2. After refactoring:
+
    ```bash
    npm run build && npm run preview
    ```
+
    - Take screenshots of same screens
    - Compare side-by-side
    - Verify animations still work
@@ -675,11 +663,12 @@ describe('StatusDisplay Integration', () => {
 ### ❌ Pitfall 1: Breaking Reactive Dependencies
 
 **Bad:**
+
 ```javascript
 // Composable
 export function useComponent() {
-    let value = $state(0);
-    return value; // ❌ Returns value, not reactive reference
+	let value = $state(0);
+	return value; // ❌ Returns value, not reactive reference
 }
 
 // Component
@@ -688,11 +677,12 @@ const value = useComponent();
 ```
 
 **Good:**
+
 ```javascript
 // Composable
 export function useComponent() {
-    let value = $state(0);
-    return { value }; // ✅ Returns object containing reactive value
+	let value = $state(0);
+	return { value }; // ✅ Returns object containing reactive value
 }
 
 // Component
@@ -705,6 +695,7 @@ const component = useComponent();
 ### ❌ Pitfall 2: Forgetting to Pass Event Handlers
 
 **Bad:**
+
 ```svelte
 <!-- Parent -->
 <SubComponent />
@@ -715,12 +706,13 @@ const component = useComponent();
 ```
 
 **Good:**
+
 ```svelte
 <!-- Parent -->
 <SubComponent onEvent={handleEvent} />
 
 <!-- SubComponent -->
-let { onEvent = () => {} } = $props();
+let {(onEvent = () => {})} = $props();
 <button onclick={onEvent}>Click</button>
 ```
 
@@ -729,6 +721,7 @@ let { onEvent = () => {} } = $props();
 ### ❌ Pitfall 3: Not Extracting Styles
 
 **Bad:**
+
 ```svelte
 <!-- PlayerInfoBar.svelte -->
 <div class="player-round-bar">...</div>
@@ -737,14 +730,15 @@ let { onEvent = () => {} } = $props();
 ```
 
 **Good:**
+
 ```svelte
 <!-- PlayerInfoBar.svelte -->
 <div class="player-round-bar">...</div>
 
 <style>
-    .player-round-bar {
-        /* Extracted styles here */
-    }
+	.player-round-bar {
+		/* Extracted styles here */
+	}
 </style>
 ```
 
@@ -753,20 +747,22 @@ let { onEvent = () => {} } = $props();
 ### ❌ Pitfall 4: Over-Abstracting
 
 **Bad:**
+
 ```svelte
 <!-- Creating a component for 3 lines of code -->
 <GenericWrapper>
-    <div class="simple">Text</div>
+	<div class="simple">Text</div>
 </GenericWrapper>
 ```
 
 **Good:**
+
 ```svelte
-<!-- Keep simple things simple -->
-<div class="simple">Text</div>
+<!-- Keep simple things simple --><div class="simple">Text</div>
 ```
 
 **Rule of Thumb:** Only extract if:
+
 - Component is >100 lines
 - Logic is reused in multiple places
 - Component has distinct responsibility
@@ -780,6 +776,7 @@ let { onEvent = () => {} } = $props();
 **Error:** `Cannot find module 'Component'`
 
 **Solution:** Check import paths
+
 ```javascript
 // ❌ Wrong
 import Component from './Component';
@@ -793,14 +790,15 @@ import Component from './Component.svelte';
 **Error:** `$ is not defined`
 
 **Solution:** Svelte 5 runes need proper context
+
 ```javascript
 // ❌ Wrong - Outside component or composable
 const value = $state(0);
 
 // ✅ Correct - Inside component or composable
 export function useComponent() {
-    let value = $state(0);
-    return { value };
+	let value = $state(0);
+	return { value };
 }
 ```
 
@@ -811,15 +809,16 @@ export function useComponent() {
 **Error:** `TypeError: Cannot read property 'subscribe' of undefined`
 
 **Solution:** Mock stores in tests
+
 ```javascript
 import { vi } from 'vitest';
 
 vi.mock('$lib/stores/gameStore.svelte.js', () => ({
-    gameState: {
-        playerName: 'Test',
-        tower: 20,
-        // ... mock state
-    }
+	gameState: {
+		playerName: 'Test',
+		tower: 20
+		// ... mock state
+	}
 }));
 ```
 
@@ -830,6 +829,7 @@ vi.mock('$lib/stores/gameStore.svelte.js', () => ({
 **Issue:** Component looks different after refactoring
 
 **Debug Steps:**
+
 1. Check if styles were copied correctly
 2. Verify CSS class names match
 3. Check if CSS variables are imported

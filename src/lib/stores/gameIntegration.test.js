@@ -300,7 +300,7 @@ describe('Game Integration Tests - Based on Documentation', () => {
 				{ card: '9', suit: 'spades', rank: 9 }
 			];
 
-			oddCards.forEach(card => {
+			oddCards.forEach((card) => {
 				gameState.currentCard = card;
 
 				// Mock a mid-range roll
@@ -323,10 +323,10 @@ describe('Game Integration Tests - Based on Documentation', () => {
 			// Test different rolls and their stability loss
 			const testCases = [
 				{ roll: 1, expectedLoss: 7 }, // Natural 1 = full rank damage
-				{ roll: 5, expectedLoss: 7 },  // 2-5 range
-				{ roll: 8, expectedLoss: 7 },  // 6-10 range
+				{ roll: 5, expectedLoss: 7 }, // 2-5 range
+				{ roll: 8, expectedLoss: 7 }, // 6-10 range
 				{ roll: 15, expectedLoss: 0 }, // 11+ = no damage
-				{ roll: 20, expectedLoss: 0 }  // Natural 20 = no damage + gain
+				{ roll: 20, expectedLoss: 0 } // Natural 20 = no damage + gain
 			];
 
 			testCases.forEach(({ roll, expectedLoss }) => {
@@ -393,7 +393,7 @@ describe('Game Integration Tests - Based on Documentation', () => {
 				{ card: 'Q', suit: 'clubs', type: 'event' }
 			];
 
-			eventCards.forEach(card => {
+			eventCards.forEach((card) => {
 				gameState.currentCard = card;
 				gameState.state = 'drawCard';
 
@@ -459,7 +459,7 @@ describe('Game Integration Tests - Based on Documentation', () => {
 			// These are Ace of Diamonds, Clubs, and Spades
 			const narrativeAces = ['diamonds', 'clubs', 'spades'];
 
-			narrativeAces.forEach(suit => {
+			narrativeAces.forEach((suit) => {
 				const ace = { card: 'A', suit, type: 'narrative' };
 				expect(ace.type).toBe('narrative');
 			});
@@ -567,13 +567,20 @@ describe('Game Integration Tests - Based on Documentation', () => {
 			gameState.config = {
 				title: 'Test Game',
 				slug: 'test-game',
-				deck: Array(52).fill(null).map((_, i) => ({
-					card: i < 4 ? 'A' : ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'][Math.floor(i / 4) % 12],
-					suit: ['hearts', 'diamonds', 'clubs', 'spades'][i % 4],
-					type: 'event',
-					description: 'Test card',
-					story: 'Test story'
-				})),
+				deck: Array(52)
+					.fill(null)
+					.map((_, i) => ({
+						card:
+							i < 4
+								? 'A'
+								: ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'][
+										Math.floor(i / 4) % 12
+									],
+						suit: ['hearts', 'diamonds', 'clubs', 'spades'][i % 4],
+						type: 'event',
+						description: 'Test card',
+						story: 'Test story'
+					})),
 				labels: {
 					failureCheckLoss: 'Stability collapsed',
 					successCheckWin: 'Victory!',

@@ -558,7 +558,6 @@
 			font-size: 0.9rem;
 			padding: var(--space-md);
 		}
-
 	}
 	/* Extra small screens */
 	@media (max-width: 375px) {

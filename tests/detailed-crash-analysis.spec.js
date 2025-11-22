@@ -25,7 +25,7 @@ test('detailed crash analysis with JavaScript error capture', async ({ page, bro
 	});
 
 	// Block external resources to isolate the issue
-	await page.route('https://**', route => {
+	await page.route('https://**', (route) => {
 		console.log(`[BLOCKED] ${route.request().url()}`);
 		route.abort();
 	});
@@ -74,7 +74,6 @@ test('detailed crash analysis with JavaScript error capture', async ({ page, bro
 		} catch (e) {
 			console.log(`✗ Cannot take screenshot: ${e.message}`);
 		}
-
 	} catch (error) {
 		console.log(`\n✗ Test failed: ${error.message}`);
 	}

@@ -1,14 +1,11 @@
 <script>
-	import { fade } from 'svelte/transition';
-	import OverlayModal from './OverlayModal.svelte';
+	/**
+	 * HelpModal - Game guide and mechanics help
+	 * Uses ContentModal as base
+	 */
+	import ContentModal from './ContentModal.svelte';
 
 	let { isOpen = false, onClose } = $props();
-
-	function handleKeydown(event) {
-		if (event.key === 'Escape') {
-			onClose();
-		}
-	}
 
 	// Define all help content sections
 	const helpSections = [
@@ -60,238 +57,69 @@
 	];
 </script>
 
-<svelte:window on:keydown={handleKeydown} />
-
-<OverlayModal isVisible={isOpen} zIndex={1000} fixedHeight="70vh" animateHeight={true}>
-	<div class="help-card-content">
-		<h2 class="help-main-title">Game Guide</h2>
-
+<ContentModal {isOpen} title="Game Guide" {onClose} footerButtonText="Got it">
+	<div class="help-content">
 		{#each helpSections as section}
 			<div class="help-section">
 				<h3 class="help-title">{section.title}</h3>
 				<p class="help-message">{section.message}</p>
 			</div>
 		{/each}
-
-		<button class="dismiss-button" onclick={onClose}>
-			<span>Got it</span>
-			<svg
-				xmlns="http://www.w3.org/2000/svg"
-				width="18"
-				height="18"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-				aria-hidden="true"
-			>
-				<path d="M5 12h14" />
-				<path d="m12 5 7 7-7 7" />
-			</svg>
-		</button>
 	</div>
-</OverlayModal>
+</ContentModal>
 
 <style>
-	.help-card-content {
-		width: 100%;
-		height: 100%;
-		padding: var(--space-xl);
-		position: relative;
-		z-index: 1;
+	.help-content {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-lg);
-	}
-
-	.help-main-title {
-		font-family: var(--font-display, 'Orbitron', monospace);
-		font-size: var(--text-2xl);
-		font-weight: 700;
-		color: var(--color-neon-cyan);
-		text-shadow:
-			0 0 15px rgba(0, 255, 255, 1),
-			0 0 30px rgba(0, 255, 255, 0.5);
-		margin: 0 0 var(--space-md) 0;
-		letter-spacing: 0.08em;
-		text-align: center;
-		text-transform: uppercase;
-		border-bottom: 2px solid rgba(0, 255, 255, 0.3);
-		padding-bottom: var(--space-md);
+		gap: var(--space-lg, 1.5rem);
 	}
 
 	.help-section {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-sm);
-		padding: var(--space-md);
+		gap: var(--space-sm, 0.5rem);
+		padding: var(--space-md, 1rem);
 		background: rgba(0, 0, 0, 0.2);
-		border-left: 3px solid var(--color-neon-cyan);
+		border-left: 3px solid var(--dc-accent-color, #3a9fc7);
 		border-radius: 4px;
 	}
 
 	.help-title {
 		font-family: var(--font-display, 'Orbitron', monospace);
-		font-size: var(--text-lg);
+		font-size: 1.1rem;
 		font-weight: 700;
-		color: var(--color-neon-cyan);
-		text-shadow:
-			0 0 10px rgba(0, 255, 255, 0.8),
-			0 0 20px rgba(0, 255, 255, 0.4);
+		color: var(--dc-accent-color, #3a9fc7);
 		margin: 0;
 		letter-spacing: 0.05em;
 	}
 
 	.help-message {
 		font-family: var(--font-body, 'Inter', sans-serif);
-		font-size: var(--text-base);
+		font-size: 0.95rem;
 		line-height: 1.6;
-		color: rgba(255, 255, 255, 0.9);
+		color: var(--dc-default-text-color, #ffffff);
 		margin: 0;
-	}
-
-	.dismiss-button {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		gap: var(--space-xs);
-		padding: var(--space-sm) var(--space-lg);
-		background: linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta));
-		border: none;
-		border-radius: 4px;
-		color: white;
-		font-family: var(--font-display, 'Orbitron', monospace);
-		font-size: var(--text-sm);
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		align-self: flex-end;
-		box-shadow:
-			0 0 15px rgba(0, 255, 255, 0.3),
-			inset 0 0 10px rgba(255, 255, 255, 0.1);
-	}
-
-	.dismiss-button:hover {
-		transform: translateY(-2px);
-		box-shadow:
-			0 0 25px rgba(0, 255, 255, 0.5),
-			0 0 40px rgba(217, 70, 239, 0.3),
-			inset 0 0 15px rgba(255, 255, 255, 0.15);
-	}
-
-	.dismiss-button:active {
-		transform: translateY(0);
-	}
-
-	/* Tablet responsive */
-	@media (max-width: 900px) {
-		.help-card-content {
-			padding: var(--space-lg);
-			gap: var(--space-md);
-		}
-
-		.help-main-title {
-			font-size: var(--text-xl);
-			margin-bottom: var(--space-sm);
-		}
-
-		.help-section {
-			padding: var(--space-sm) var(--space-md);
-		}
-
-		.help-title {
-			font-size: var(--text-base);
-		}
-
-		.help-message {
-			font-size: var(--text-sm);
-		}
 	}
 
 	/* Mobile responsive */
 	@media (max-width: 600px) {
-		.help-card-content {
-			padding: var(--space-md);
-			gap: var(--space-sm);
-		}
-
-		.help-main-title {
-			font-size: var(--text-lg);
-			padding-bottom: var(--space-sm);
-			margin-bottom: var(--space-sm);
+		.help-content {
+			gap: var(--space-md, 1rem);
 		}
 
 		.help-section {
-			padding: var(--space-sm);
-			gap: var(--space-xs);
+			padding: var(--space-sm, 0.75rem);
+			gap: var(--space-xs, 0.25rem);
 		}
 
 		.help-title {
-			font-size: var(--text-sm);
+			font-size: 1rem;
 		}
 
 		.help-message {
-			font-size: var(--text-xs);
+			font-size: 0.9rem;
 			line-height: 1.5;
-		}
-
-		.dismiss-button {
-			width: 100%;
-			padding: var(--space-md);
-			font-size: var(--text-sm);
-		}
-	}
-
-	/* Extra small mobile */
-	@media (max-width: 400px) {
-		.help-card-content {
-			padding: var(--space-sm);
-		}
-
-		.help-main-title {
-			font-size: var(--text-base);
-		}
-
-		.help-title {
-			font-size: var(--text-xs);
-		}
-
-		.help-message {
-			font-size: 0.75rem;
-		}
-	}
-
-	/* Landscape mobile optimization */
-	@media (max-height: 600px) and (orientation: landscape) {
-		.help-card-content {
-			padding: var(--space-sm) var(--space-md);
-			gap: var(--space-xs);
-		}
-
-		.help-section {
-			padding: var(--space-xs) var(--space-sm);
-		}
-
-		.help-main-title {
-			font-size: var(--text-base);
-			margin-bottom: var(--space-xs);
-			padding-bottom: var(--space-xs);
-		}
-
-		.dismiss-button {
-			padding: var(--space-sm) var(--space-md);
-			font-size: var(--text-xs);
-		}
-	}
-
-	/* Accessibility - Reduced motion */
-	@media (prefers-reduced-motion: reduce) {
-		.dismiss-button:hover {
-			transform: none;
 		}
 	}
 </style>

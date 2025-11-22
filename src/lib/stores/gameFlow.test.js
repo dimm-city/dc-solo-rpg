@@ -291,7 +291,9 @@ describe('WAAStore', () => {
 			};
 
 			// Import the apply function
-			const { applyFailureCheckResult, applyPendingDiceRoll } = await import('./gameActions.svelte.js');
+			const { applyFailureCheckResult, applyPendingDiceRoll } = await import(
+				'./gameActions.svelte.js'
+			);
 
 			const result = await failureCheck();
 
@@ -326,7 +328,9 @@ describe('WAAStore', () => {
 			gameState.config = {};
 
 			// Import the apply function
-			const { applyFailureCheckResult, applyPendingDiceRoll } = await import('./gameActions.svelte.js');
+			const { applyFailureCheckResult, applyPendingDiceRoll } = await import(
+				'./gameActions.svelte.js'
+			);
 
 			const result = await failureCheck();
 

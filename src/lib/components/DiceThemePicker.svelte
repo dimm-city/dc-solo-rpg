@@ -88,42 +88,49 @@
 		role="button"
 		tabindex="0"
 	>
-		<div class="dice-theme-picker-modal" data-augmented-ui="tl-clip tr-clip br-clip bl-clip border">
-			<div class="modal-header">
-				<h2>Select Dice Theme</h2>
-				<button
-					class="close-button"
-					onclick={() => (isOpen = false)}
-					aria-label="Close dice theme picker"
-				>
-					×
-				</button>
-			</div>
-
-			<div class="themes-grid">
-				{#each availableThemes as theme (theme.key)}
+		<!-- Augmented UI wrapper (non-scrollable) -->
+		<div class="dice-theme-picker-wrapper" data-augmented-ui="tl-clip tr-clip br-clip bl-clip border">
+			<!-- Modal container (flex structure) -->
+			<div class="dice-theme-picker-modal">
+				<div class="modal-header">
+					<h2>Select Dice Theme</h2>
 					<button
-						class="theme-card"
-						class:selected={selectedTheme?.key === theme.key}
-						onclick={() => selectTheme(theme)}
-						data-augmented-ui="tl-clip-x br-clip border"
+						class="close-button"
+						onclick={() => (isOpen = false)}
+						aria-label="Close dice theme picker"
 					>
-						<div class="theme-name">{theme.name}</div>
-						<div class="theme-category">{theme.category}</div>
-						<div class="theme-description">{theme.description}</div>
-						{#if selectedTheme?.key === theme.key}
-							<div class="selected-indicator">✓</div>
-						{/if}
+						×
 					</button>
-				{/each}
-			</div>
+				</div>
 
-			<div class="modal-footer">
-				<AugmentedButton
-					text="Close"
-					onclick={() => (isOpen = false)}
-					class="close-footer-button"
-				/>
+				<!-- Scrollable body -->
+				<div class="modal-body-scrollable">
+					<div class="themes-grid">
+						{#each availableThemes as theme (theme.key)}
+							<button
+								class="theme-card"
+								class:selected={selectedTheme?.key === theme.key}
+								onclick={() => selectTheme(theme)}
+								data-augmented-ui="tl-clip-x br-clip border"
+							>
+								<div class="theme-name">{theme.name}</div>
+								<div class="theme-category">{theme.category}</div>
+								<div class="theme-description">{theme.description}</div>
+								{#if selectedTheme?.key === theme.key}
+									<div class="selected-indicator">✓</div>
+								{/if}
+							</button>
+						{/each}
+					</div>
+				</div>
+
+				<div class="modal-footer">
+					<AugmentedButton
+						text="Close"
+						onclick={() => (isOpen = false)}
+						class="close-footer-button"
+					/>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -168,16 +175,12 @@
 		}
 	}
 
-	.dice-theme-picker-modal {
-		background: linear-gradient(135deg, rgba(0, 20, 40, 0.95), rgba(10, 10, 30, 0.98));
+	/* Wrapper with augmented UI (non-scrollable) */
+	.dice-theme-picker-wrapper {
 		max-width: 800px;
 		width: 100%;
 		max-height: 90vh;
-		overflow-y: auto;
 		display: flex;
-		flex-direction: column;
-		gap: var(--space-lg);
-		padding: var(--space-xl);
 		position: relative;
 
 		--aug-border-all: 2px;
@@ -195,6 +198,16 @@
 		animation: slideIn 0.3s ease-out;
 	}
 
+	/* Modal container (flex structure, non-scrollable) */
+	.dice-theme-picker-modal {
+		background: linear-gradient(135deg, rgba(0, 20, 40, 0.95), rgba(10, 10, 30, 0.98));
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+		position: relative;
+		overflow: hidden;
+	}
+
 	@keyframes slideIn {
 		from {
 			transform: translateY(-20px);
@@ -210,8 +223,18 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		padding-bottom: var(--space-lg);
+		padding: var(--space-xl) var(--space-xl) var(--space-lg);
 		border-bottom: 2px solid rgba(0, 255, 255, 0.2);
+		flex-shrink: 0; /* Don't shrink header */
+	}
+
+	/* Scrollable body wrapper */
+	.modal-body-scrollable {
+		flex: 1;
+		overflow-y: auto;
+		overflow-x: hidden;
+		min-height: 0; /* Important for flex scrolling */
+		padding: var(--space-md) var(--space-xl);
 	}
 
 	h2 {
@@ -249,7 +272,6 @@
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
 		gap: var(--space-lg);
-		padding: var(--space-md) 0;
 	}
 
 	.theme-card {
@@ -329,8 +351,9 @@
 	.modal-footer {
 		display: flex;
 		justify-content: center;
-		padding-top: var(--space-lg);
+		padding: var(--space-lg) var(--space-xl) var(--space-xl);
 		border-top: 2px solid rgba(0, 255, 255, 0.2);
+		flex-shrink: 0; /* Don't shrink footer */
 	}
 
 	.modal-footer :global(.aug-button) {
@@ -339,9 +362,15 @@
 
 	/* Responsive */
 	@media (max-width: 768px) {
-		.dice-theme-picker-modal {
-			padding: var(--space-lg);
+		.dice-theme-picker-wrapper {
 			max-height: 95vh;
+		}
+
+		.modal-header,
+		.modal-body-scrollable,
+		.modal-footer {
+			padding-left: var(--space-lg);
+			padding-right: var(--space-lg);
 		}
 
 		.themes-grid {
@@ -358,8 +387,11 @@
 			padding: var(--space-sm);
 		}
 
-		.dice-theme-picker-modal {
-			padding: var(--space-md);
+		.modal-header,
+		.modal-body-scrollable,
+		.modal-footer {
+			padding-left: var(--space-md);
+			padding-right: var(--space-md);
 		}
 
 		.theme-card {

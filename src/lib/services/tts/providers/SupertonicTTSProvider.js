@@ -397,9 +397,7 @@ export class SupertonicTTSProvider extends BaseTTSProvider {
 
 		logger.debug('[SupertonicTTS] Loading voice styles...');
 		for (const voiceId of ['F1', 'F2', 'M1', 'M2']) {
-			const styleResponse = await fetch(
-				`${this.config.assetsPath}/voice_styles/${voiceId}.json`
-			);
+			const styleResponse = await fetch(`${this.config.assetsPath}/voice_styles/${voiceId}.json`);
 			const styleData = await styleResponse.json();
 
 			const ttlData = new Float32Array(styleData.style_ttl.data.flat(2));

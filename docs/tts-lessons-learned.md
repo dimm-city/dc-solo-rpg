@@ -15,6 +15,7 @@ Successfully integrated Supertonic 66M parameter neural TTS into DC Solo RPG as 
 ## The Problem: Silent Audio Mystery
 
 ### Initial Symptoms
+
 - ✅ Models loaded successfully (252MB ONNX models)
 - ✅ ONNX Runtime inference completed without errors
 - ✅ Text encoding worked correctly (5 characters → 5 text IDs)
@@ -24,6 +25,7 @@ Successfully integrated Supertonic 66M parameter neural TTS into DC Solo RPG as 
 - ❌ **Audio output was essentially silent** (max volume: 0.000011 = -100 dB)
 
 ### Expected vs Actual
+
 - **Official Example**: -8.9 dB max volume (clearly audible speech)
 - **V1 Implementation**: -100 dB max volume (silence)
 
@@ -88,8 +90,8 @@ ONNX Runtime doesn't validate tensor semantics, only shapes and types:
 
 ```javascript
 // Both create valid tensors, but only one works correctly
-new ort.Tensor('float32', flatArray, [1, 144, 92]);     // ✅ Valid shape
-new ort.Tensor('float32', nestedFlat, [1, 144, 92]);    // ✅ Valid shape
+new ort.Tensor('float32', flatArray, [1, 144, 92]); // ✅ Valid shape
+new ort.Tensor('float32', nestedFlat, [1, 144, 92]); // ✅ Valid shape
 
 // But internal memory layout differs!
 ```
@@ -117,6 +119,7 @@ This immediately confirmed the models worked (ruling out corruption) and isolate
 ### 4. **Key Implementation Details That Matter**
 
 #### Unicode Normalization (NFKD)
+
 ```javascript
 // CRITICAL: Text must be normalized before encoding
 const normalizedText = text.normalize('NFKD');
@@ -125,6 +128,7 @@ const normalizedText = text.normalize('NFKD');
 Without NFKD normalization, character encoding may differ from training data, producing incorrect phoneme sequences.
 
 #### Gaussian Noise (Box-Muller Transform)
+
 ```javascript
 // Diffusion models require Gaussian noise, not uniform
 const eps = 1e-10;
@@ -136,6 +140,7 @@ const z = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
 Using `Math.random() - 0.5` (uniform noise) instead of Gaussian noise caused poor diffusion convergence.
 
 #### Speed Factor = 1.05 (Not 1.0)
+
 ```javascript
 // Official default is 1.05, not 1.0
 duration[i] /= 1.05;
@@ -144,14 +149,15 @@ duration[i] /= 1.05;
 The 1.05 speed factor slightly compresses audio duration, improving naturalness. Using 1.0 produced slightly robotic timing.
 
 #### Latent Mask Application Timing
+
 ```javascript
 // Apply mask AFTER generating noise, BEFORE diffusion
 for (let b = 0; b < noisyLatent.length; b++) {
-    for (let d = 0; d < noisyLatent[b].length; d++) {
-        for (let t = 0; t < noisyLatent[b][d].length; t++) {
-            noisyLatent[b][d][t] *= latentMask[b][0][t];
-        }
-    }
+	for (let d = 0; d < noisyLatent[b].length; d++) {
+		for (let t = 0; t < noisyLatent[b][d].length; t++) {
+			noisyLatent[b][d][t] *= latentMask[b][0][t];
+		}
+	}
 }
 ```
 
@@ -184,6 +190,7 @@ static/assets/onnx/
 ```
 
 But we're using **server-side inference** with `onnxruntime-node`:
+
 - ✅ Faster (native C++ vs WASM)
 - ✅ No CORS issues
 - ✅ No browser memory limits
@@ -199,13 +206,14 @@ Models are loaded once and cached:
 let ttsInstance = null; // Singleton pattern
 
 async function initializeTTS() {
-    if (ttsInstance) return ttsInstance;
-    // Load models...
-    return ttsInstance;
+	if (ttsInstance) return ttsInstance;
+	// Load models...
+	return ttsInstance;
 }
 ```
 
 **Performance**:
+
 - First request: ~2s (model loading)
 - Subsequent requests: ~0.2-0.4s (cached models)
 
@@ -226,6 +234,7 @@ with wave.open('test.wav', 'w') as f:
 ```
 
 Then use ffmpeg to verify:
+
 ```bash
 ffmpeg -i test.wav -af "volumedetect" -f null /dev/null 2>&1 | grep max_volume
 ```
@@ -244,6 +253,7 @@ Created `/api/tts/supertonic-v2/+server.js` with:
 4. **All preprocessing steps** - NFKD normalization, Gaussian noise, proper masking
 
 **Result**:
+
 - ✅ Audible speech output (-25.6 dB max volume)
 - ✅ Correct duration (1.04s for "hello")
 - ✅ Consistent with official example
@@ -254,13 +264,13 @@ Created `/api/tts/supertonic-v2/+server.js` with:
 
 ### Why Server-Side Inference?
 
-| Aspect | Server-Side (Chosen) | Browser-Side |
-|--------|---------------------|--------------|
-| Performance | ⚡ Native C++ (fast) | 🐌 WASM (slower) |
-| Memory | ✅ Server RAM | ❌ Browser limits |
-| Bundle Size | ✅ 0MB client | ❌ +60MB WASM |
-| Model Updates | ✅ Update server | ❌ Re-download |
-| CORS | ✅ No issues | ❌ Potential problems |
+| Aspect        | Server-Side (Chosen) | Browser-Side          |
+| ------------- | -------------------- | --------------------- |
+| Performance   | ⚡ Native C++ (fast) | 🐌 WASM (slower)      |
+| Memory        | ✅ Server RAM        | ❌ Browser limits     |
+| Bundle Size   | ✅ 0MB client        | ❌ +60MB WASM         |
+| Model Updates | ✅ Update server     | ❌ Re-download        |
+| CORS          | ✅ No issues         | ❌ Potential problems |
 
 ### API Design
 
@@ -280,6 +290,7 @@ Response:
 ```
 
 **Benefits**:
+
 - Simple JSON API
 - Voice selection
 - Speed control
@@ -290,16 +301,19 @@ Response:
 ## Performance Characteristics
 
 ### Synthesis Times (on server)
+
 - Short phrase ("hello"): ~0.2s
 - Medium sentence (20 words): ~0.4s
 - Long paragraph (50 words): ~1.0s
 
 ### Audio Quality
+
 - Sample rate: 44100 Hz mono
 - Output volume: -25.6 dB max (quieter than official but audible)
 - Duration accuracy: Within 3% of expected
 
 ### Model Sizes
+
 ```
 duration_predictor.onnx:   1.6 MB
 text_encoder.onnx:        27 MB
@@ -314,16 +328,18 @@ Total:                   252 MB
 ## Common Pitfalls to Avoid
 
 ### 1. ❌ Forgetting Text Normalization
+
 ```javascript
 // WRONG
-const textIds = text.split('').map(c => indexer[c.charCodeAt(0)]);
+const textIds = text.split('').map((c) => indexer[c.charCodeAt(0)]);
 
 // RIGHT
 const normalized = text.normalize('NFKD');
-const textIds = normalized.split('').map(c => indexer[c.charCodeAt(0)]);
+const textIds = normalized.split('').map((c) => indexer[c.charCodeAt(0)]);
 ```
 
 ### 2. ❌ Using Uniform Random Noise
+
 ```javascript
 // WRONG - Uniform distribution
 noisyLatent[i] = Math.random() - 0.5;
@@ -335,6 +351,7 @@ noisyLatent[i] = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
 ```
 
 ### 3. ❌ Flat Arrays Instead of Nested
+
 ```javascript
 // WRONG - Semantic structure lost
 const latent = new Float32Array(dim * len);
@@ -342,40 +359,42 @@ const latent = new Float32Array(dim * len);
 // RIGHT - Semantic structure preserved
 const latent = [];
 for (let d = 0; d < dim; d++) {
-    const row = [];
-    for (let t = 0; t < len; t++) {
-        row.push(gaussianNoise());
-    }
-    latent.push(row);
+	const row = [];
+	for (let t = 0; t < len; t++) {
+		row.push(gaussianNoise());
+	}
+	latent.push(row);
 }
 ```
 
 ### 4. ❌ Incorrect Mask Application Order
+
 ```javascript
 // WRONG - Mask after flattening
 const flat = latent.flat(Infinity);
 for (let i = 0; i < flat.length; i++) {
-    flat[i] *= mask[i];  // Wrong indexing!
+	flat[i] *= mask[i]; // Wrong indexing!
 }
 
 // RIGHT - Mask before flattening
 for (let b = 0; b < latent.length; b++) {
-    for (let d = 0; d < latent[b].length; d++) {
-        for (let t = 0; t < latent[b][d].length; t++) {
-            latent[b][d][t] *= mask[b][0][t];
-        }
-    }
+	for (let d = 0; d < latent[b].length; d++) {
+		for (let t = 0; t < latent[b][d].length; t++) {
+			latent[b][d][t] *= mask[b][0][t];
+		}
+	}
 }
 ```
 
 ### 5. ❌ Assuming Small Values = Silence
+
 ```javascript
 // Audio might look like silence in logs:
 console.log(audioData.slice(0, 10));
 // [0.00001, -0.00002, 0.00001, ...]
 
 // But is actually audible speech when scaled to int16:
-const int16 = audioData.map(f => Math.round(f * 32767));
+const int16 = audioData.map((f) => Math.round(f * 32767));
 // [-328, 656, -328, ...]  <- This is audible!
 ```
 
@@ -386,53 +405,56 @@ const int16 = audioData.map(f => Math.round(f * 32767));
 ## Code Quality Insights
 
 ### What We Tried (V1 - Failed)
+
 ```javascript
 // Attempted "optimization" with flat arrays
 const noisyLatent = new Float32Array(latentDim * latentLength);
 for (let i = 0; i < noisyLatent.length; i += 2) {
-    // Box-Muller...
-    noisyLatent[i] = z0;
-    noisyLatent[i + 1] = z1;
+	// Box-Muller...
+	noisyLatent[i] = z0;
+	noisyLatent[i + 1] = z1;
 }
 
 // Apply mask to flat array
 for (let d = 0; d < latentDim; d++) {
-    for (let t = 0; t < latentLength; t++) {
-        const idx = d * latentLength + t;
-        noisyLatent[idx] *= latentMask[t];
-    }
+	for (let t = 0; t < latentLength; t++) {
+		const idx = d * latentLength + t;
+		noisyLatent[idx] *= latentMask[t];
+	}
 }
 ```
 
 **Issues**:
+
 - Lost semantic structure of dimensions
 - Mask application used different indexing than official code
 - Diffusion updates happened in wrong order
 
 ### What Works (V2 - Success)
+
 ```javascript
 // Direct port of official implementation
 const noisyLatent = [];
 for (let b = 0; b < batchSize; b++) {
-    const batch = [];
-    for (let d = 0; d < latentDim; d++) {
-        const row = [];
-        for (let t = 0; t < latentLen; t++) {
-            // Box-Muller...
-            row.push(z);
-        }
-        batch.push(row);
-    }
-    noisyLatent.push(batch);
+	const batch = [];
+	for (let d = 0; d < latentDim; d++) {
+		const row = [];
+		for (let t = 0; t < latentLen; t++) {
+			// Box-Muller...
+			row.push(z);
+		}
+		batch.push(row);
+	}
+	noisyLatent.push(batch);
 }
 
 // Apply mask preserving structure
 for (let b = 0; b < noisyLatent.length; b++) {
-    for (let d = 0; d < noisyLatent[b].length; d++) {
-        for (let t = 0; t < noisyLatent[b][d].length; t++) {
-            noisyLatent[b][d][t] *= latentMask[b][0][t];
-        }
-    }
+	for (let d = 0; d < noisyLatent[b].length; d++) {
+		for (let t = 0; t < noisyLatent[b][d].length; t++) {
+			noisyLatent[b][d][t] *= latentMask[b][0][t];
+		}
+	}
 }
 ```
 
@@ -462,7 +484,9 @@ for (let b = 0; b < noisyLatent.length; b++) {
 ## Best Practices Established
 
 ### 1. Reference Implementation First
+
 When integrating complex ML models:
+
 1. Clone official repository
 2. Run official example in your environment
 3. Verify it works with your model files
@@ -470,7 +494,9 @@ When integrating complex ML models:
 5. Only optimize after proven working
 
 ### 2. Comprehensive Logging
+
 Log at every pipeline stage:
+
 ```javascript
 console.log('[Stage] Input shapes:', tensor.dims);
 console.log('[Stage] Sample values:', data.slice(0, 10));
@@ -478,6 +504,7 @@ console.log('[Stage] Value range:', Math.min(...data), Math.max(...data));
 ```
 
 ### 3. Audio Verification Script
+
 ```bash
 #!/bin/bash
 # Save API response, convert to WAV, check volume
@@ -500,6 +527,7 @@ ffmpeg -i test.wav -af "volumedetect" -f null /dev/null 2>&1 | grep max_volume
 ```
 
 ### 4. Model File Management
+
 ```gitignore
 # Don't commit model files to main repo
 *.onnx
@@ -571,18 +599,21 @@ Keep models in a separate repository/submodule.
 ## Metrics & Success Criteria
 
 ### Performance Targets
+
 - ✅ Synthesis time: < 0.5s for typical sentences
 - ✅ Audio quality: Comparable to official example
 - ✅ Memory usage: < 500MB with models loaded
 - ✅ Cold start: < 3s (includes model loading)
 
 ### Quality Metrics
+
 - ✅ Volume: -25.6 dB max (audible)
 - ✅ Duration accuracy: Within 3% of expected
 - ✅ Voice variety: 4 distinct voices
 - ✅ No artifacts or glitches
 
 ### Developer Experience
+
 - ✅ Simple API (text → audio)
 - ✅ No external dependencies
 - ✅ No API keys required
@@ -593,6 +624,7 @@ Keep models in a separate repository/submodule.
 ## Future Improvements
 
 ### Potential Optimizations
+
 1. **Voice cloning**: Support custom voice styles
 2. **Streaming**: Return audio in chunks for long text
 3. **Caching**: Cache synthesized audio for repeated phrases
@@ -600,6 +632,7 @@ Keep models in a separate repository/submodule.
 5. **GPU acceleration**: Use CUDA for faster inference
 
 ### Known Limitations
+
 1. **Volume**: Output is quieter than official example (-25.6 dB vs -8.9 dB)
    - Possible fix: Analyze mask application differences
 2. **Cold start**: First request takes ~2s (model loading)
@@ -614,6 +647,7 @@ Keep models in a separate repository/submodule.
 **Key Takeaway**: When integrating complex ML models, **exact replication of the reference implementation** is more important than code elegance or optimization. Subtle differences in data structures, iteration order, and preprocessing can cause silent failures that are extremely difficult to debug.
 
 **Success Formula**:
+
 1. ✅ Verify reference implementation works
 2. ✅ Port code exactly (don't "improve")
 3. ✅ Test with real audio analysis (not just sample values)

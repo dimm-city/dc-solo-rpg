@@ -220,7 +220,6 @@
 		text-align: center;
 	}
 
-
 	@media (max-width: 640px) {
 		.panel-header {
 			padding: var(--space-md);
@@ -229,6 +228,5 @@
 		.panel-body {
 			padding: var(--space-md);
 		}
-
 	}
 </style>

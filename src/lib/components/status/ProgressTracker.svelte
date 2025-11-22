@@ -1,35 +1,35 @@
 <script>
-/**
- * ProgressTracker - Cards drawn progress tracker
- *
- * Displays a progress bar showing how many cards have been drawn out of 52 total.
- * Only shows when at least one card has been drawn.
- *
- * @component
- */
+	/**
+	 * ProgressTracker - Cards drawn progress tracker
+	 *
+	 * Displays a progress bar showing how many cards have been drawn out of 52 total.
+	 * Only shows when at least one card has been drawn.
+	 *
+	 * @component
+	 */
 
-import { gameState } from '../../stores/gameStore.svelte.js';
-import { innerWidth } from 'svelte/reactivity/window';
+	import { gameState } from '../../stores/gameStore.svelte.js';
+	import { innerWidth } from 'svelte/reactivity/window';
 
-let {
-	/** Animation delay in seconds */
-	animationDelay = 0.75,
-	/** Animation duration in seconds */
-	animationDuration = 0.7
-} = $props();
+	let {
+		/** Animation delay in seconds */
+		animationDelay = 0.75,
+		/** Animation duration in seconds */
+		animationDuration = 0.7
+	} = $props();
 
-// Reactive screen width tracking
-const isMobile = $derived((innerWidth.current ?? 1024) <= 600);
+	// Reactive screen width tracking
+	const isMobile = $derived((innerWidth.current ?? 1024) <= 600);
 
-// Reactive data-augmented-ui attribute
-const augmentedUI = $derived(
-	isMobile ? 'bl-clip br-clip tl-clip-x border' : 'tl-2-clip-x tr-2-clip-x border'
-);
+	// Reactive data-augmented-ui attribute
+	const augmentedUI = $derived(
+		isMobile ? 'bl-clip br-clip tl-clip-x border' : 'tl-2-clip-x tr-2-clip-x border'
+	);
 
-// Cards progress tracking
-const cardsDrawn = $derived(gameState.cardsDrawn || 0);
-const totalCards = 52;
-const progressPercent = $derived((cardsDrawn / totalCards) * 100);
+	// Cards progress tracking
+	const cardsDrawn = $derived(gameState.cardsDrawn || 0);
+	const totalCards = 52;
+	const progressPercent = $derived((cardsDrawn / totalCards) * 100);
 </script>
 
 {#if cardsDrawn > 0}

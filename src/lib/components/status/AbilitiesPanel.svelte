@@ -1,33 +1,33 @@
 <script>
-/**
- * AbilitiesPanel - Abilities/Aces panel
- *
- * Displays 4 ability icons that activate as Aces are revealed.
- * Uses Augmented UI styling with icon reveal animations.
- *
- * @component
- */
+	/**
+	 * AbilitiesPanel - Abilities/Aces panel
+	 *
+	 * Displays 4 ability icons that activate as Aces are revealed.
+	 * Uses Augmented UI styling with icon reveal animations.
+	 *
+	 * @component
+	 */
 
-import { gameState } from '../../stores/gameStore.svelte.js';
-import { innerWidth } from 'svelte/reactivity/window';
+	import { gameState } from '../../stores/gameStore.svelte.js';
+	import { innerWidth } from 'svelte/reactivity/window';
 
-let {
-	/** Animation delay in seconds */
-	animationDelay = 0.55,
-	/** Animation duration in seconds */
-	animationDuration = 0.85
-} = $props();
+	let {
+		/** Animation delay in seconds */
+		animationDelay = 0.55,
+		/** Animation duration in seconds */
+		animationDuration = 0.85
+	} = $props();
 
-// Reactive screen width tracking
-const isMobile = $derived((innerWidth.current ?? 1024) <= 600);
+	// Reactive screen width tracking
+	const isMobile = $derived((innerWidth.current ?? 1024) <= 600);
 
-// Reactive data-augmented-ui attribute for luck stat
-const luckAugmentedUI = $derived(
-	isMobile ? 'tr-clip tl-clip bl-clip-x border' : 'tl-clip-y l-rect-y tr-clip-x br-clip-x border'
-);
+	// Reactive data-augmented-ui attribute for luck stat
+	const luckAugmentedUI = $derived(
+		isMobile ? 'tr-clip tl-clip bl-clip-x border' : 'tl-clip-y l-rect-y tr-clip-x br-clip-x border'
+	);
 
-// Aces revealed count (includes pending changes)
-const bonusPercent = $derived(gameState.acesRevealed + (gameState.pendingUpdates.aceChange || 0));
+	// Aces revealed count (includes pending changes)
+	const bonusPercent = $derived(gameState.acesRevealed + (gameState.pendingUpdates.aceChange || 0));
 </script>
 
 <div
@@ -241,6 +241,39 @@ const bonusPercent = $derived(gameState.acesRevealed + (gameState.pendingUpdates
 		100% {
 			transform: scale(1);
 			opacity: 1;
+		}
+	}
+
+	/* Mobile responsive */
+	@media (max-width: 600px) {
+		.stat-item {
+			width: 100%;
+			max-width: 100%;
+			min-width: 0;
+			padding: 0.25rem 0.5rem;
+			gap: 0.25rem;
+			margin-inline-end: 0;
+			padding-inline-end: 0.5rem;
+		}
+
+		.stat-label {
+			font-size: 0.625rem;
+			min-width: 48px;
+			letter-spacing: 0.08em;
+		}
+
+		.stat-icon {
+			width: 12px;
+			height: 12px;
+		}
+
+		.ability-indicators {
+			gap: 2px;
+		}
+
+		.ability-icon {
+			width: 14px;
+			height: 14px;
 		}
 	}
 

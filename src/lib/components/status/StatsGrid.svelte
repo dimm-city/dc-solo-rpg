@@ -1,26 +1,26 @@
 <script>
-/**
- * StatsGrid - Grid container for status panels
- *
- * Organizes stat panels in a responsive 3-column grid (desktop) that adapts to
- * 2-column (tablet) and 3-column x 2-row (mobile) layouts.
- *
- * @component
- */
+	/**
+	 * StatsGrid - Grid container for status panels
+	 *
+	 * Organizes stat panels in a responsive 3-column grid (desktop) that adapts to
+	 * 2-column (tablet) and 3-column x 2-row (mobile) layouts.
+	 *
+	 * @component
+	 */
 
-import StabilityPanel from './StabilityPanel.svelte';
-import FailureCounterPanel from './FailureCounterPanel.svelte';
-import DiceReadout from './DiceReadout.svelte';
-import AbilitiesPanel from './AbilitiesPanel.svelte';
-import SuccessTokensPanel from './SuccessTokensPanel.svelte';
-import DeckVisualization from '../DeckVisualization.svelte';
-import { innerWidth } from 'svelte/reactivity/window';
+	import StabilityPanel from './StabilityPanel.svelte';
+	import FailureCounterPanel from './FailureCounterPanel.svelte';
+	import DiceReadout from './DiceReadout.svelte';
+	import AbilitiesPanel from './AbilitiesPanel.svelte';
+	import SuccessTokensPanel from './SuccessTokensPanel.svelte';
+	import DeckVisualization from '../DeckVisualization.svelte';
+	import { innerWidth } from 'svelte/reactivity/window';
 
-// Reactive screen width tracking
-const isMobile = $derived((innerWidth.current ?? 1024) <= 600);
+	// Reactive screen width tracking
+	const isMobile = $derived((innerWidth.current ?? 1024) <= 600);
 
-// Reactive data-augmented-ui attribute for deck readout
-const deckAugmentedUI = 'tl-clip tr-clip br-clip bl-clip border';
+	// Reactive data-augmented-ui attribute for deck readout
+	const deckAugmentedUI = 'tl-clip tr-clip br-clip bl-clip border';
 </script>
 
 <div class="stats-grid">
@@ -174,11 +174,35 @@ const deckAugmentedUI = 'tl-clip tr-clip br-clip bl-clip border';
 			grid-template-rows: auto auto;
 			gap: var(--space-xs);
 			width: 100%;
+			max-width: 100vw;
+			overflow: hidden;
 		}
 
 		/* Reset all column positioning to auto-flow */
 		.stats-grid > div {
 			display: contents;
+		}
+
+		/* Ensure stat items fit within grid cells */
+		.stats-grid :global(.stat-item) {
+			width: 100%;
+			max-width: 100%;
+			min-width: 0;
+			box-sizing: border-box;
+		}
+
+		/* Reduce deck readout size on mobile */
+		.deck-readout {
+			min-width: 0;
+			width: 100%;
+			max-width: 100%;
+			min-height: 80px;
+			padding: var(--space-xs);
+		}
+
+		.deck-label {
+			font-size: 0.625rem;
+			letter-spacing: 0.1em;
 		}
 	}
 

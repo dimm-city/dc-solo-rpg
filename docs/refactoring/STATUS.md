@@ -11,6 +11,7 @@
 This document tracks the status of the comprehensive refactoring and improvement plan for DC Solo RPG. The plan addresses code quality issues, component architecture, and maintainability concerns identified in the codebase review.
 
 **Key Metrics:**
+
 - **Total Components to Refactor:** 10 critical/high-priority components
 - **New Components to Create:** 40-45 focused components
 - **Largest Component Reduction:** 2,006 → 200 lines (90% reduction)
@@ -27,6 +28,7 @@ This document tracks the status of the comprehensive refactoring and improvement
 ### What Was Achieved
 
 **All 5 Refactoring Phases Complete:**
+
 - ✅ Phase 1: Critical Infrastructure (StatusDisplay 98% reduction)
 - ✅ Phase 2: Game Screen Simplification (5 screen composables created)
 - ✅ Phase 3: Card & Journal Components (CardDeck 75% reduction)
@@ -34,6 +36,7 @@ This document tracks the status of the comprehensive refactoring and improvement
 - ✅ Phase 5: Settings & Polish (3 components refactored)
 
 **Code Quality Improvements:**
+
 - ✅ 10/10 Issues Fixed (100% complete)
 - ✅ Component size reduced by 49% average
 - ✅ 44 new components/composables created
@@ -44,6 +47,7 @@ This document tracks the status of the comprehensive refactoring and improvement
 - ✅ Pending state system tests complete (46 tests, 100% passing)
 
 **Test Suite Improvements (Post-Refactoring):**
+
 - ✅ 124 test bugs fixed across 4 test files
 - ✅ 417 tests passing (was 354, +63 tests fixed)
 - ✅ 0 critical failures (was 70 failing)
@@ -55,12 +59,12 @@ This document tracks the status of the comprehensive refactoring and improvement
 - ✅ Save/load tests: 17/17 passing
 
 **Architecture Wins:**
+
 - Composable-first design (15 composables created, exceeding 12 target)
 - Event-driven patterns replacing reactive effects
 - Centralized game state constants
 - Better separation of concerns
 - Improved maintainability and testability
-
 
 ## 📋 Quick Links
 
@@ -83,6 +87,7 @@ This document tracks the status of the comprehensive refactoring and improvement
 After completing all 5 refactoring phases, a comprehensive test suite analysis was performed. This revealed 70 failing tests caused by test bugs (not implementation bugs). All issues were systematically identified and fixed.
 
 **Files Fixed:**
+
 1. ✅ **markdownParser.test.js** (21/21 passing)
    - Fixed heading level mismatch and extra separators
    - +12 tests fixed
@@ -103,13 +108,16 @@ After completing all 5 refactoring phases, a comprehensive test suite analysis w
 ### Results
 
 **Before Test Fixes:**
+
 - 354 passing, 70 failing (83.5% pass rate)
 
 **After Test Fixes:**
+
 - 417 passing, 0 critical failing (100% pass rate)
 - All core functionality at 100% test coverage
 
 **Test Categories:**
+
 - Integration tests: 38/38 (100%) ✅
 - Pending state tests: 46/46 (100%) ✅
 - Parser tests: 62/62 (100%) ✅
@@ -119,6 +127,7 @@ After completing all 5 refactoring phases, a comprehensive test suite analysis w
 ### Documentation
 
 Complete analysis available in [TEST_GAP_ANALYSIS.md](../../TEST_GAP_ANALYSIS.md), including:
+
 - Root cause analysis for all 70 failures
 - Step-by-step fix documentation
 - Recommendations for Phase 2 (edge case tests)
@@ -129,11 +138,13 @@ Complete analysis available in [TEST_GAP_ANALYSIS.md](../../TEST_GAP_ANALYSIS.md
 ## 🎯 Phase Progress
 
 ### Phase 1: Critical Infrastructure (Week 1-2)
+
 **Status:** ✅ COMPLETE
 **Estimated Effort:** 3-4 days (COMPLETED)
 **Priority:** CRITICAL
 
 #### 1.1 Create Composables Directory Structure ✅ COMPLETED
+
 - [x] Create `src/lib/composables/` directory
 - [x] Create `useResponsiveLayout.svelte.js`
 - [x] Create `useAutoPlay.svelte.js` (move from utils/)
@@ -143,6 +154,7 @@ Complete analysis available in [TEST_GAP_ANALYSIS.md](../../TEST_GAP_ANALYSIS.md
 - [x] **Estimated Effort:** 2 days
 
 #### 1.2 Create Common Components Library ✅ COMPLETED
+
 - [x] Create `src/lib/components/common/` directory
 - [x] Create `EmptyState.svelte`
 - [x] Create `LoadingSpinner.svelte`
@@ -152,6 +164,7 @@ Complete analysis available in [TEST_GAP_ANALYSIS.md](../../TEST_GAP_ANALYSIS.md
 - [x] **Estimated Effort:** 1 day
 
 #### 1.3 Refactor StatusDisplay (2,006 lines → 39 lines) ✅ COMPLETED
+
 - [x] Create `src/lib/components/status/` directory
 - [x] Extract `PlayerInfoBar.svelte` (171 lines)
 - [x] Extract `StatsGrid.svelte` (200 lines)
@@ -167,6 +180,7 @@ Complete analysis available in [TEST_GAP_ANALYSIS.md](../../TEST_GAP_ANALYSIS.md
 - [x] **Estimated Effort:** 2-3 days (COMPLETED)
 
 **Phase 1 Deliverables:** ✅ ALL COMPLETE
+
 - ✅ Reusable composables infrastructure (4 composables)
 - ✅ Common component library (4 components)
 - ✅ StatusDisplay broken into 8 focused components
@@ -175,12 +189,14 @@ Complete analysis available in [TEST_GAP_ANALYSIS.md](../../TEST_GAP_ANALYSIS.md
 ---
 
 ### Phase 2: Game Screen Simplification (Week 2-3)
+
 **Status:** ✅ COMPLETE
 **Estimated Effort:** 3-4 days → **Actual:** 3 hours
 **Priority:** CRITICAL
 **Blockers:** ~~Phase 1.1 (useAutoPlay needs to be moved first)~~ ✅ RESOLVED
 
 #### 2.1 Extract Game Screen Composables ✅ COMPLETED
+
 - [x] Create `src/lib/composables/screen/` directory
 - [x] ~~Create `useScreenController.svelte.js` (200-250 lines)~~ (Already created in Phase 1.1 in parent directory)
 - [x] ~~Enhance `useAutoPlay.svelte.js` with screen integration~~ (Already completed in Phase 1.1)
@@ -193,6 +209,7 @@ Complete analysis available in [TEST_GAP_ANALYSIS.md](../../TEST_GAP_ANALYSIS.md
 - [x] **Estimated Effort:** 2 days → **Actual:** 1 hour
 
 #### 2.2 Extract Screen-Specific Components ✅ COMPLETED
+
 - [x] Create `src/lib/components/game/` directory
 - [x] Extract `ContextBackground.svelte` (70 lines)
 - [x] Extract `RollForTasksController.svelte` (40 lines)
@@ -201,6 +218,7 @@ Complete analysis available in [TEST_GAP_ANALYSIS.md](../../TEST_GAP_ANALYSIS.md
 - [x] **Estimated Effort:** 1 day → **Actual:** 30 minutes
 
 #### 2.3 Update GameScreen to Use New Architecture ✅ COMPLETED
+
 - [x] Update `GameScreen.svelte` to use composables
 - [x] Replace inline logic with screen controllers
 - [x] Verify auto-play still works correctly
@@ -209,6 +227,7 @@ Complete analysis available in [TEST_GAP_ANALYSIS.md](../../TEST_GAP_ANALYSIS.md
 - [x] **Estimated Effort:** 1 day → **Actual:** 2 hours
 
 **Phase 2 Deliverables:** ✅ ALL COMPLETE
+
 - ✅ GameScreen reduced from 1,399 → 1,236 lines (11.7% reduction, 163 lines removed)
 - ✅ Composable screen logic patterns (5 composables created)
 - ✅ Reusable screen controllers (4 controllers created)
@@ -221,11 +240,13 @@ Complete analysis available in [TEST_GAP_ANALYSIS.md](../../TEST_GAP_ANALYSIS.md
 ---
 
 ### Phase 3: Card & Journal Components (Week 3-4)
+
 **Status:** ✅ COMPLETE (Phase 3.1 & 3.2 Done)
 **Estimated Effort:** 4-6 days → **Actual:** 2 days
 **Priority:** HIGH
 
 #### 3.1 Refactor CardDeck (1,030 lines → 257 lines) ✅ COMPLETE
+
 - ✅ Create `src/lib/components/card/` directory
 - ✅ Create `useCardAnimationState.svelte.js` (232 lines)
 - ✅ Extract `CardDisplay.svelte` (449 lines) ⭐ HIGHLY REUSABLE
@@ -238,6 +259,7 @@ Complete analysis available in [TEST_GAP_ANALYSIS.md](../../TEST_GAP_ANALYSIS.md
 - 📊 **Result:** Exceeded target - 75% reduction vs 61% goal
 
 #### 3.2 Refactor JournalEntry (1,033 lines → 548 lines) ✅ COMPLETE
+
 - ✅ Create `src/lib/components/journal/` directory
 - ✅ Extract `AudioRecorder.svelte` (350 lines) ⭐ HIGHLY REUSABLE
 - ✅ Extract `AudioPlayback.svelte` (262 lines) ⭐ REUSABLE
@@ -249,6 +271,7 @@ Complete analysis available in [TEST_GAP_ANALYSIS.md](../../TEST_GAP_ANALYSIS.md
 - 📊 **Result:** 47% reduction (target was 71%, but kept audio recording logic in parent)
 
 **Phase 3 Deliverables:**
+
 - ✅ CardDeck reduced 75% (1,030 → 257 lines)
 - ✅ JournalEntry reduced 47% (1,033 → 548 lines)
 - ✅ 6 highly reusable components created:
@@ -263,11 +286,13 @@ Complete analysis available in [TEST_GAP_ANALYSIS.md](../../TEST_GAP_ANALYSIS.md
 ---
 
 ### Phase 4: Story Mode Polish (Week 4-5)
+
 **Status:** ✅ COMPLETE (All 3 phases done)
 **Estimated Effort:** 3-4 days → **Actual:** 2 days
 **Priority:** MEDIUM
 
 #### 4.1 Refactor StoryMode (826 lines → 386 lines) ✅ COMPLETE
+
 - ✅ Create `src/lib/components/story/` directory
 - ✅ Create `useStoryNavigation.svelte.js` (97 lines) - navigation state composable
 - ✅ Create `useEnrichedRounds.svelte.js` (120 lines) - enriched rounds composable
@@ -279,6 +304,7 @@ Complete analysis available in [TEST_GAP_ANALYSIS.md](../../TEST_GAP_ANALYSIS.md
 - 📊 **Result:** Exceeded target - 53% reduction vs 51% goal (400 lines)
 
 #### 4.2 Refactor StoryRound (739 lines → 583 lines) ✅ COMPLETE
+
 - ✅ Extract `RoundStats.svelte` (125 lines) ⭐ REUSABLE
 - ✅ Extract `GameOverMessage.svelte` (98 lines) ⭐ REUSABLE
 - ✅ Update `StoryRound.svelte` to use new components (583 lines, 21% reduction)
@@ -288,6 +314,7 @@ Complete analysis available in [TEST_GAP_ANALYSIS.md](../../TEST_GAP_ANALYSIS.md
 - 📊 **Result:** 21% reduction (target was 53%, but kept card display for story context)
 
 #### 4.3 Refactor BrowseGames (708 lines → 350 lines) ✅ COMPLETE
+
 - ✅ Create `src/lib/components/browse/` directory
 - ✅ Create `useSavedGames.svelte.js` (118 lines) - loading and sorting composable
 - ✅ Extract `GameCard.svelte` (283 lines) ⭐ HIGHLY REUSABLE - game card display
@@ -298,6 +325,7 @@ Complete analysis available in [TEST_GAP_ANALYSIS.md](../../TEST_GAP_ANALYSIS.md
 - 📊 **Result:** Exactly met target - 50% reduction (350 lines)
 
 **Phase 4 Deliverables:**
+
 - ✅ Story mode components reduced ~50%
 - ✅ Better separation of concerns
 - ✅ Reusable game card component
@@ -305,11 +333,13 @@ Complete analysis available in [TEST_GAP_ANALYSIS.md](../../TEST_GAP_ANALYSIS.md
 ---
 
 ### Phase 5: Settings & Polish (Week 5)
+
 **Status:** ✅ COMPLETE (All 3 phases done)
 **Estimated Effort:** 2-3 days → **Actual:** 2 days
 **Priority:** LOW
 
 #### 5.1 Refactor AISettings (487 lines → 284 lines) ✅ COMPLETE
+
 - ✅ Create `settings/` directory
 - ✅ Extract `AIProviderSection.svelte` (170 lines) ⭐ REUSABLE
 - ✅ Extract `TTSSection.svelte` (152 lines) ⭐ REUSABLE
@@ -319,6 +349,7 @@ Complete analysis available in [TEST_GAP_ANALYSIS.md](../../TEST_GAP_ANALYSIS.md
 - 📊 **Result:** 42% reduction (284 lines vs 250 target, kept modal structure)
 
 #### 5.2 Refactor StoryGenerationPanel (428 lines → 234 lines) ✅ COMPLETE
+
 - ✅ Create `useStoryGeneration.svelte.js` (181 lines) - story generation state composable
 - ✅ Extract `GeneratedStory.svelte` (118 lines) ⭐ REUSABLE - story display component
 - ✅ Update `StoryGenerationPanel.svelte` to use new composable/component (234 lines, 45% reduction)
@@ -327,6 +358,7 @@ Complete analysis available in [TEST_GAP_ANALYSIS.md](../../TEST_GAP_ANALYSIS.md
 - 📊 **Result:** 45% reduction (234 lines vs 250 target)
 
 #### 5.3 Refactor IntroScreen (408 lines → 203 lines) ✅ COMPLETE
+
 - ✅ Create `intro/` directory
 - ✅ Extract `ChoiceCard.svelte` (204 lines) ⭐ HIGHLY REUSABLE
 - ✅ Create `useInstructionsPreference.svelte.js` (83 lines)
@@ -336,6 +368,7 @@ Complete analysis available in [TEST_GAP_ANALYSIS.md](../../TEST_GAP_ANALYSIS.md
 - 📊 **Result:** Exceeded target - 50% reduction vs 39% goal
 
 **Phase 5 Deliverables:**
+
 - ✅ AISettings reduced 42% (487 → 284 lines)
 - ✅ StoryGenerationPanel reduced 45% (428 → 234 lines)
 - ✅ IntroScreen reduced 50% (408 → 203 lines)
@@ -353,6 +386,7 @@ Complete analysis available in [TEST_GAP_ANALYSIS.md](../../TEST_GAP_ANALYSIS.md
 ## 🔧 Code Quality Issues
 
 ### Critical Issues (Fix Immediately)
+
 - [x] **Issue #1:** Replace $effect with event-driven patterns in JournalEntry ✅
   - See: [CODE_QUALITY_REVIEW.md#issue-21](./CODE_QUALITY_REVIEW.md#issue-21)
   - **Effort:** Medium (2-3 hours per component) → **Actual:** 1 hour
@@ -385,6 +419,7 @@ Complete analysis available in [TEST_GAP_ANALYSIS.md](../../TEST_GAP_ANALYSIS.md
   - **Coverage:** applyPendingTaskRoll, applyPendingDiceRoll, applyPendingSuccessCheck, confirmCard, integration tests
 
 ### High Priority Issues
+
 - [x] **Issue #4:** Improve JSDoc coverage in gameActions.svelte.js ✅
   - See: [CODE_QUALITY_REVIEW.md#issue-51](./CODE_QUALITY_REVIEW.md#issue-51)
   - **Effort:** Medium (2-3 hours) → **Actual:** 1.5 hours
@@ -437,6 +472,7 @@ Complete analysis available in [TEST_GAP_ANALYSIS.md](../../TEST_GAP_ANALYSIS.md
   - **Tests:** All 39 D20 mechanics tests pass
 
 ### Medium/Low Priority Issues
+
 - [x] **Issue #8:** Remove commented-out code ✅ COMPLETE (Already addressed)
   - See: [CODE_QUALITY_REVIEW.md#issue-73](./CODE_QUALITY_REVIEW.md#issue-73)
   - **Effort:** Trivial (15 minutes) → **Actual:** N/A (completed during refactoring phases)
@@ -467,21 +503,23 @@ Complete analysis available in [TEST_GAP_ANALYSIS.md](../../TEST_GAP_ANALYSIS.md
 ## 📈 Progress Metrics
 
 ### Component Size Reduction
-| Component | Before | After | Reduction | Status |
-|-----------|--------|-------|-----------|--------|
-| StatusDisplay | 2,006 | 39 | 98% | ✅ Complete (Phase 1) |
-| CardDeck | 1,030 | 257 | 75% | ✅ Complete (Phase 3) |
-| StoryMode | 826 | 386 | 53% | ✅ Complete (Phase 4) |
-| JournalEntry | 1,033 | 548 | 47% | ✅ Complete (Phase 3) |
-| BrowseGames | 708 | 350 | 50% | ✅ Complete (Phase 2) |
-| IntroScreen | 408 | 203 | 50% | ✅ Complete (Phase 5) |
-| StoryGenerationPanel | 428 | 234 | 45% | ✅ Complete (Phase 5) |
-| AISettings | 487 | 284 | 42% | ✅ Complete (Phase 5) |
-| StoryRound | 739 | 583 | 21% | ✅ Complete (Phase 4) |
-| GameScreen | 1,399 | 1,236 | 12% | ✅ Complete (Phase 2) |
-| **Average (All Components)** | | | **49%** | 10/10 done ✅ |
+
+| Component                    | Before | After | Reduction | Status                |
+| ---------------------------- | ------ | ----- | --------- | --------------------- |
+| StatusDisplay                | 2,006  | 39    | 98%       | ✅ Complete (Phase 1) |
+| CardDeck                     | 1,030  | 257   | 75%       | ✅ Complete (Phase 3) |
+| StoryMode                    | 826    | 386   | 53%       | ✅ Complete (Phase 4) |
+| JournalEntry                 | 1,033  | 548   | 47%       | ✅ Complete (Phase 3) |
+| BrowseGames                  | 708    | 350   | 50%       | ✅ Complete (Phase 2) |
+| IntroScreen                  | 408    | 203   | 50%       | ✅ Complete (Phase 5) |
+| StoryGenerationPanel         | 428    | 234   | 45%       | ✅ Complete (Phase 5) |
+| AISettings                   | 487    | 284   | 42%       | ✅ Complete (Phase 5) |
+| StoryRound                   | 739    | 583   | 21%       | ✅ Complete (Phase 4) |
+| GameScreen                   | 1,399  | 1,236 | 12%       | ✅ Complete (Phase 2) |
+| **Average (All Components)** |        |       | **49%**   | 10/10 done ✅         |
 
 ### New Components Created
+
 - [x] **Common Components:** 4/4 (100%) ✅
   - EmptyState.svelte, ErrorMessage.svelte, LoadingSpinner.svelte, CardTypeInfo.svelte
 - [x] **Status Components:** 8/8 (100%) ✅
@@ -503,12 +541,15 @@ Complete analysis available in [TEST_GAP_ANALYSIS.md](../../TEST_GAP_ANALYSIS.md
   - ChoiceCard
 
 **Total:** 44/49 components created (90%) - Better architecture achieved with composables
+
 ### Test Coverage
+
 - [ ] **Unit Tests Added:** 0 (Target: 25+)
 - [ ] **Integration Tests Added:** 0 (Target: 10+)
 - [ ] **E2E Tests Updated:** 0 (Target: 5+)
 
 ### Code Quality Metrics
+
 - [x] **Components >1000 lines:** 4 → 1 ✅ (GameScreen at 1,236 - complex router component)
 - [x] **Components >500 lines:** 7 → 3 ✅ (GameScreen 1,236, StoryRound 583, JournalEntry 545)
 - [x] **Average component size:** ~400 lines → 238 lines ✅ (Target: <200 lines - close!)
@@ -522,6 +563,7 @@ Complete analysis available in [TEST_GAP_ANALYSIS.md](../../TEST_GAP_ANALYSIS.md
 ## 🎯 Success Criteria
 
 ### Phase 1 Complete When:
+
 - [x] ✅ All composables infrastructure created
 - [x] ✅ Common components library established
 - [x] ✅ StatusDisplay reduced to <300 lines
@@ -529,12 +571,14 @@ Complete analysis available in [TEST_GAP_ANALYSIS.md](../../TEST_GAP_ANALYSIS.md
 - [x] ✅ All extracted components have tests
 
 ### Phase 2 Complete When:
+
 - [x] ✅ GameScreen reduced to <500 lines
 - [x] ✅ Auto-play works correctly with new architecture
 - [x] ✅ Screen controllers are reusable
 - [x] ✅ No visual regressions in game screens
 
 ### Phase 3 Complete When:
+
 - [x] ✅ CardDeck reduced to <450 lines
 - [x] ✅ JournalEntry reduced to <350 lines
 - [x] ✅ Audio recording has proper error handling
@@ -542,16 +586,19 @@ Complete analysis available in [TEST_GAP_ANALYSIS.md](../../TEST_GAP_ANALYSIS.md
 - [x] ✅ Reusable components documented
 
 ### Phase 4 Complete When:
+
 - [x] ✅ All story mode components reduced >50%
 - [x] ✅ Component reuse demonstrated (CardDisplay, etc.)
 - [x] ✅ Story navigation works correctly
 
 ### Phase 5 Complete When:
+
 - [x] ✅ All settings components cleaned up
 - [x] ✅ No components >500 lines
 - [x] ✅ Average component size <200 lines
 
 ### Overall Project Complete When:
+
 - [x] ✅ All 5 phases complete
 - [x] ✅ All critical code quality issues resolved (10/10)
 - [x] ✅ Test suite comprehensive and passing (417 tests, 100% pass rate on core functionality)
@@ -564,18 +611,21 @@ Complete analysis available in [TEST_GAP_ANALYSIS.md](../../TEST_GAP_ANALYSIS.md
 ## 📝 Notes & Decisions
 
 ### 2025-11-19: Planning Complete
+
 - Comprehensive code review completed
 - Component refactoring plan finalized
 - Documentation created
 - Ready to begin Phase 1
 
 ### Architecture Decisions
+
 - **Composables pattern:** Using Svelte 5 runes for reusable state logic
 - **Component structure:** Small, focused components with clear responsibilities
 - **Testing strategy:** Unit test composables, integration test components
 - **Event-driven architecture:** Minimize $effect usage, prefer direct function calls
 
 ### Risks & Mitigation
+
 - **Risk:** Breaking existing functionality during refactoring
   - **Mitigation:** Comprehensive test suite, visual regression testing
 - **Risk:** Team resistance to new patterns
@@ -595,6 +645,7 @@ Complete analysis available in [TEST_GAP_ANALYSIS.md](../../TEST_GAP_ANALYSIS.md
 ---
 
 **Next Steps:**
+
 1. Review and approve this plan with team
 2. Create tracking issues in project management tool
 3. Set up feature branch: `refactor/component-architecture`

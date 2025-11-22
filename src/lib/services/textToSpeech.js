@@ -33,7 +33,7 @@ async function generateWithBrowser(text, options = {}) {
 		// Set voice if specified
 		if (voice) {
 			const voices = speechSynthesis.getVoices();
-			const selectedVoice = voices.find(v => v.name === voice || v.voiceURI === voice);
+			const selectedVoice = voices.find((v) => v.name === voice || v.voiceURI === voice);
 			if (selectedVoice) {
 				utterance.voice = selectedVoice;
 			}
@@ -82,7 +82,7 @@ async function generateWithOpenAI(text, settings) {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
-			'Authorization': `Bearer ${apiKey}`
+			Authorization: `Bearer ${apiKey}`
 		},
 		body: JSON.stringify({
 			model,
@@ -108,24 +108,21 @@ async function generateWithOpenAI(text, settings) {
 async function generateWithElevenLabs(text, settings) {
 	const { apiKey, voice = '21m00Tcm4TlvDq8ikWAM', model = 'eleven_monolingual_v1' } = settings;
 
-	const response = await fetch(
-		`https://api.elevenlabs.io/v1/text-to-speech/${voice}`,
-		{
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'xi-api-key': apiKey
-			},
-			body: JSON.stringify({
-				text,
-				model_id: model,
-				voice_settings: {
-					stability: 0.5,
-					similarity_boost: 0.75
-				}
-			})
-		}
-	);
+	const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice}`, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			'xi-api-key': apiKey
+		},
+		body: JSON.stringify({
+			text,
+			model_id: model,
+			voice_settings: {
+				stability: 0.5,
+				similarity_boost: 0.75
+			}
+		})
+	});
 
 	if (!response.ok) {
 		const error = await response.json();
@@ -238,7 +235,7 @@ export async function isTTSAvailable() {
 		}
 
 		// For API providers, check if API key is configured
-		return !!(audioSettings.ttsApiKey);
+		return !!audioSettings.ttsApiKey;
 	} catch (error) {
 		logger.error('[textToSpeech] Failed to check TTS availability:', error);
 		return false;

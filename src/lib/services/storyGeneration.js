@@ -32,7 +32,7 @@ function buildStoryPrompt(gameData) {
 
 	// Build narrative from card log
 	const cardNarrative = cardLog
-		.filter(entry => entry.type !== 'initial-damage' && entry.type !== 'final-damage')
+		.filter((entry) => entry.type !== 'initial-damage' && entry.type !== 'final-damage')
 		.map((entry, index) => {
 			const round = entry.round || Math.floor(index / 3) + 1;
 			let text = `Round ${round}: `;
@@ -55,8 +55,8 @@ function buildStoryPrompt(gameData) {
 
 	// Build narrative from journal entries
 	const journalNarrative = journalEntries
-		.filter(entry => entry.text && entry.text.trim().length > 0)
-		.map(entry => {
+		.filter((entry) => entry.text && entry.text.trim().length > 0)
+		.map((entry) => {
 			return `Round ${entry.round} - Player reflection: "${entry.text}"`;
 		})
 		.join('\n');
@@ -104,7 +104,7 @@ async function generateWithOpenAI(prompt, settings) {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
-			'Authorization': `Bearer ${apiKey}`
+			Authorization: `Bearer ${apiKey}`
 		},
 		body: JSON.stringify({
 			model,
@@ -183,7 +183,7 @@ async function generateWithCustom(prompt, settings) {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
-			'Authorization': `Bearer ${apiKey}`
+			Authorization: `Bearer ${apiKey}`
 		},
 		body: JSON.stringify({
 			model,

@@ -50,9 +50,7 @@
 				viewBox="0 0 24 24"
 				fill="currentColor"
 			>
-				<path
-					d="M12 2L15 8.5L22 9.5L17 14.5L18 21.5L12 18.5L6 21.5L7 14.5L2 9.5L9 8.5L12 2Z"
-				/>
+				<path d="M12 2L15 8.5L22 9.5L17 14.5L18 21.5L12 18.5L6 21.5L7 14.5L2 9.5L9 8.5L12 2Z" />
 			</svg>
 		{:else}
 			<svg
@@ -97,12 +95,7 @@
 	<div class="view-story-cta">
 		<span>View Story</span>
 		<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor">
-			<path
-				stroke-linecap="round"
-				stroke-linejoin="round"
-				stroke-width="2"
-				d="M8 4l6 6-6 6"
-			/>
+			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4l6 6-6 6" />
 		</svg>
 	</div>
 </button>

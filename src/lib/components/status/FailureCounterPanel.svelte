@@ -1,40 +1,40 @@
 <script>
-/**
- * FailureCounterPanel - Failure counter (Kings) panel
- *
- * Displays the 4 Kings as failure indicators. When all 4 are revealed, game is lost.
- * Uses Augmented UI styling with reveal animations.
- *
- * @component
- */
+	/**
+	 * FailureCounterPanel - Failure counter (Kings) panel
+	 *
+	 * Displays the 4 Kings as failure indicators. When all 4 are revealed, game is lost.
+	 * Uses Augmented UI styling with reveal animations.
+	 *
+	 * @component
+	 */
 
-import { gameState } from '../../stores/gameStore.svelte.js';
-import { innerWidth } from 'svelte/reactivity/window';
+	import { gameState } from '../../stores/gameStore.svelte.js';
+	import { innerWidth } from 'svelte/reactivity/window';
 
-let {
-	/** Animation delay in seconds */
-	animationDelay = 0.25,
-	/** Animation duration in seconds */
-	animationDuration = 0.85
-} = $props();
+	let {
+		/** Animation delay in seconds */
+		animationDelay = 0.25,
+		/** Animation duration in seconds */
+		animationDuration = 0.85
+	} = $props();
 
-// Reactive screen width tracking
-const isMobile = $derived((innerWidth.current ?? 1024) <= 600);
+	// Reactive screen width tracking
+	const isMobile = $derived((innerWidth.current ?? 1024) <= 600);
 
-// Reactive data-augmented-ui attribute for failure stat
-const failureAugmentedUI = $derived(
-	isMobile ? 'bl-clip br-clip tr-clip-x border' : 'l-rect tr-clip br-clip-x border'
-);
+	// Reactive data-augmented-ui attribute for failure stat
+	const failureAugmentedUI = $derived(
+		isMobile ? 'bl-clip br-clip tr-clip-x border' : 'l-rect tr-clip br-clip-x border'
+	);
 
-// Kings revealed count (includes pending changes)
-const failurePercent = $derived(
-	gameState.kingsRevealed + (gameState.pendingUpdates.kingsChange || 0)
-);
+	// Kings revealed count (includes pending changes)
+	const failurePercent = $derived(
+		gameState.kingsRevealed + (gameState.pendingUpdates.kingsChange || 0)
+	);
 
-// Label from config or default
-const failureLabel = $derived(
-	gameState.config?.labels?.failureCounters?.toUpperCase() ?? 'FAILURE'
-);
+	// Label from config or default
+	const failureLabel = $derived(
+		gameState.config?.labels?.failureCounters?.toUpperCase() ?? 'FAILURE'
+	);
 </script>
 
 <div
@@ -76,9 +76,7 @@ const failureLabel = $derived(
 					stroke-linecap="round"
 					stroke-linejoin="round"
 				>
-					<path
-						d="M2 20h20v-4a6 6 0 0 0-12 0v4zm0 0v-4a6 6 0 1 1 12 0v4zM12 2v4m-4-2 4 2 4-2"
-					/>
+					<path d="M2 20h20v-4a6 6 0 0 0-12 0v4zm0 0v-4a6 6 0 1 1 12 0v4zM12 2v4m-4-2 4 2 4-2" />
 				</svg>
 			</div>
 		{/each}
@@ -244,6 +242,39 @@ const failureLabel = $derived(
 		100% {
 			transform: scale(1);
 			opacity: 1;
+		}
+	}
+
+	/* Mobile responsive */
+	@media (max-width: 600px) {
+		.stat-item {
+			width: 100%;
+			max-width: 100%;
+			min-width: 0;
+			padding: 0.25rem 0.5rem;
+			gap: 0.25rem;
+			margin-inline-start: 0;
+			padding-inline-start: 0.5rem;
+		}
+
+		.stat-label {
+			font-size: 0.625rem;
+			min-width: 48px;
+			letter-spacing: 0.08em;
+		}
+
+		.stat-icon {
+			width: 12px;
+			height: 12px;
+		}
+
+		.king-indicators {
+			gap: 2px;
+		}
+
+		.king-icon {
+			width: 14px;
+			height: 14px;
 		}
 	}
 

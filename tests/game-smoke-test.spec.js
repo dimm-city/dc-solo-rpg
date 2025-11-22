@@ -61,7 +61,8 @@ test.describe('DC Solo RPG - Smoke Test', () => {
 		await page.goto('http://localhost:5173/');
 
 		// Check for splash screen
-		const splashVisible = await page.locator('.splash-container, .dc-splash-container')
+		const splashVisible = await page
+			.locator('.splash-container, .dc-splash-container')
 			.isVisible()
 			.catch(() => false);
 
@@ -79,7 +80,8 @@ test.describe('DC Solo RPG - Smoke Test', () => {
 		}
 
 		// Check for instructions choice screen
-		const instructionsVisible = await page.locator('.instructions-choice-container')
+		const instructionsVisible = await page
+			.locator('.instructions-choice-container')
 			.isVisible()
 			.catch(() => false);
 
@@ -119,16 +121,22 @@ test.describe('DC Solo RPG - Smoke Test', () => {
 		await page.waitForTimeout(6000); // Wait for splash + instructions
 
 		// Try to skip instructions if present
-		const skipButton = await page.locator('button:has-text("Skip Once")').isVisible().catch(() => false);
+		const skipButton = await page
+			.locator('button:has-text("Skip Once")')
+			.isVisible()
+			.catch(() => false);
 		if (skipButton) {
 			await page.click('button:has-text("Skip Once")');
 			await page.waitForTimeout(500);
 		}
 
 		// Wait for game selector
-		const gameSelector = await page.waitForSelector('[data-testid="game-selector"], .dc-start-screen-container', {
-			timeout: 10000
-		});
+		const gameSelector = await page.waitForSelector(
+			'[data-testid="game-selector"], .dc-start-screen-container',
+			{
+				timeout: 10000
+			}
+		);
 
 		console.log('✓ Game selection screen loaded');
 
@@ -140,16 +148,31 @@ test.describe('DC Solo RPG - Smoke Test', () => {
 
 		// Check for header elements
 		const headerLogo = await page.locator('.header-logo, .logo-dice').isVisible();
-		const versionText = await page.locator('.version-text').textContent().catch(() => 'Not found');
+		const versionText = await page
+			.locator('.version-text')
+			.textContent()
+			.catch(() => 'Not found');
 
 		console.log(`✓ Header logo visible: ${headerLogo}`);
 		console.log(`✓ Version text: ${versionText}`);
 
 		// Check for header buttons (desktop)
-		const uploadButton = await page.locator('.upload-button').isVisible().catch(() => false);
-		const libraryButton = await page.locator('.library-button').isVisible().catch(() => false);
-		const aboutButton = await page.locator('button[aria-label="About"]').isVisible().catch(() => false);
-		const helpButton = await page.locator('button[aria-label="Help"]').isVisible().catch(() => false);
+		const uploadButton = await page
+			.locator('.upload-button')
+			.isVisible()
+			.catch(() => false);
+		const libraryButton = await page
+			.locator('.library-button')
+			.isVisible()
+			.catch(() => false);
+		const aboutButton = await page
+			.locator('button[aria-label="About"]')
+			.isVisible()
+			.catch(() => false);
+		const helpButton = await page
+			.locator('button[aria-label="Help"]')
+			.isVisible()
+			.catch(() => false);
 
 		console.log('\nHeader Buttons (Desktop):');
 		console.log(`  - Upload Custom Game: ${uploadButton ? '✓' : '✗'}`);
@@ -164,9 +187,18 @@ test.describe('DC Solo RPG - Smoke Test', () => {
 		// Document each game card
 		for (let i = 0; i < gameCards.length; i++) {
 			const card = gameCards[i];
-			const title = await card.locator('.game-card-title').textContent().catch(() => 'Unknown');
-			const subtitle = await card.locator('.game-subtitle').textContent().catch(() => '');
-			const hasCustomBadge = await card.locator('.custom-badge').isVisible().catch(() => false);
+			const title = await card
+				.locator('.game-card-title')
+				.textContent()
+				.catch(() => 'Unknown');
+			const subtitle = await card
+				.locator('.game-subtitle')
+				.textContent()
+				.catch(() => '');
+			const hasCustomBadge = await card
+				.locator('.custom-badge')
+				.isVisible()
+				.catch(() => false);
 
 			console.log(`\nGame Card ${i + 1}:`);
 			console.log(`  - Title: ${title.trim()}`);
@@ -174,9 +206,18 @@ test.describe('DC Solo RPG - Smoke Test', () => {
 			console.log(`  - Custom Game: ${hasCustomBadge ? 'Yes' : 'No'}`);
 
 			// Check for action buttons
-			const startBtn = await card.locator('.start-btn').isVisible().catch(() => false);
-			const resumeBtn = await card.locator('.resume-btn').isVisible().catch(() => false);
-			const deleteBtn = await card.locator('.delete-btn').isVisible().catch(() => false);
+			const startBtn = await card
+				.locator('.start-btn')
+				.isVisible()
+				.catch(() => false);
+			const resumeBtn = await card
+				.locator('.resume-btn')
+				.isVisible()
+				.catch(() => false);
+			const deleteBtn = await card
+				.locator('.delete-btn')
+				.isVisible()
+				.catch(() => false);
 
 			console.log(`  - Start button: ${startBtn ? '✓' : '✗'}`);
 			console.log(`  - Resume button: ${resumeBtn ? '✓' : '✗'}`);
@@ -191,7 +232,10 @@ test.describe('DC Solo RPG - Smoke Test', () => {
 		await page.waitForTimeout(6000);
 
 		// Skip instructions if present
-		const skipButton = await page.locator('button:has-text("Skip Once")').isVisible().catch(() => false);
+		const skipButton = await page
+			.locator('button:has-text("Skip Once")')
+			.isVisible()
+			.catch(() => false);
 		if (skipButton) {
 			await page.click('button:has-text("Skip Once")');
 			await page.waitForTimeout(500);
@@ -215,8 +259,14 @@ test.describe('DC Solo RPG - Smoke Test', () => {
 			});
 
 			// Check modal content
-			const modalTitle = await page.locator('.info-modal-title').textContent().catch(() => 'Not found');
-			const modalBody = await page.locator('.info-modal-body').textContent().catch(() => 'Not found');
+			const modalTitle = await page
+				.locator('.info-modal-title')
+				.textContent()
+				.catch(() => 'Not found');
+			const modalBody = await page
+				.locator('.info-modal-body')
+				.textContent()
+				.catch(() => 'Not found');
 
 			console.log(`✓ Modal title: ${modalTitle.trim()}`);
 			console.log(`✓ Modal has content: ${modalBody.length > 0 ? 'Yes' : 'No'}`);
@@ -240,7 +290,10 @@ test.describe('DC Solo RPG - Smoke Test', () => {
 		await page.waitForTimeout(6000);
 
 		// Skip instructions if present
-		const skipButton = await page.locator('button:has-text("Skip Once")').isVisible().catch(() => false);
+		const skipButton = await page
+			.locator('button:has-text("Skip Once")')
+			.isVisible()
+			.catch(() => false);
 		if (skipButton) {
 			await page.click('button:has-text("Skip Once")');
 			await page.waitForTimeout(500);
@@ -280,7 +333,10 @@ test.describe('DC Solo RPG - Smoke Test', () => {
 		await page.waitForTimeout(6000);
 
 		// Skip instructions if present
-		const skipButton = await page.locator('button:has-text("Skip Once")').isVisible().catch(() => false);
+		const skipButton = await page
+			.locator('button:has-text("Skip Once")')
+			.isVisible()
+			.catch(() => false);
 		if (skipButton) {
 			await page.click('button:has-text("Skip Once")');
 			await page.waitForTimeout(500);
@@ -312,7 +368,8 @@ test.describe('DC Solo RPG - Smoke Test', () => {
 			console.log(`✓ Current URL: ${page.url()}`);
 
 			// Check for game intro screen
-			const introScreen = await page.locator('[data-testid="screen-showIntro"], .dc-intro-screen')
+			const introScreen = await page
+				.locator('[data-testid="screen-showIntro"], .dc-intro-screen')
 				.isVisible()
 				.catch(() => false);
 
@@ -320,18 +377,21 @@ test.describe('DC Solo RPG - Smoke Test', () => {
 				console.log('✓ Game intro screen loaded');
 
 				// Look for start button
-				const gameStartButton = await page.locator('button:has-text("start")').isVisible().catch(() => false);
+				const gameStartButton = await page
+					.locator('button:has-text("start")')
+					.isVisible()
+					.catch(() => false);
 				console.log(`  - Start button visible: ${gameStartButton ? '✓' : '✗'}`);
 			} else {
 				console.log('⚠ Game intro screen not immediately visible');
 			}
 
 			// Check for any visible UI elements
-			const statusDisplay = await page.locator('.dc-status-display, .status-display-area')
+			const statusDisplay = await page
+				.locator('.dc-status-display, .status-display-area')
 				.isVisible()
 				.catch(() => false);
 			console.log(`  - Status display visible: ${statusDisplay ? '✓' : '✗'}`);
-
 		} else {
 			console.log('⚠ No start button found on any game card');
 		}
@@ -344,7 +404,10 @@ test.describe('DC Solo RPG - Smoke Test', () => {
 		await page.waitForTimeout(6000);
 
 		// Skip instructions if present
-		const skipButton = await page.locator('button:has-text("Skip Once")').isVisible().catch(() => false);
+		const skipButton = await page
+			.locator('button:has-text("Skip Once")')
+			.isVisible()
+			.catch(() => false);
 		if (skipButton) {
 			await page.click('button:has-text("Skip Once")');
 			await page.waitForTimeout(500);
@@ -367,7 +430,8 @@ test.describe('DC Solo RPG - Smoke Test', () => {
 			});
 
 			// Check if story browser loaded
-			const storyModeVisible = await page.locator('.browse-games-container, [class*="browse"]')
+			const storyModeVisible = await page
+				.locator('.browse-games-container, [class*="browse"]')
 				.isVisible()
 				.catch(() => false);
 
@@ -384,7 +448,10 @@ test.describe('DC Solo RPG - Smoke Test', () => {
 		await page.goto('http://localhost:5173/');
 		await page.waitForTimeout(6000);
 
-		const skipButton = await page.locator('button:has-text("Skip Once")').isVisible().catch(() => false);
+		const skipButton = await page
+			.locator('button:has-text("Skip Once")')
+			.isVisible()
+			.catch(() => false);
 		if (skipButton) {
 			await page.click('button:has-text("Skip Once")');
 			await page.waitForTimeout(500);

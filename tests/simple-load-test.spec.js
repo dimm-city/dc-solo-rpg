@@ -4,7 +4,7 @@ test('simple page load with full browser logs', async () => {
 	// Launch browser with extra logging
 	const browser = await chromium.launch({
 		args: [
-			'--disable-gpu',  // Disable GPU to avoid WebGL crashes
+			'--disable-gpu', // Disable GPU to avoid WebGL crashes
 			'--no-sandbox',
 			'--disable-setuid-sandbox',
 			'--disable-dev-shm-usage',
@@ -61,7 +61,6 @@ test('simple page load with full browser logs', async () => {
 		// Try to take screenshot
 		await page.screenshot({ path: 'tests/screenshots/success.png' });
 		console.log(`✓ Screenshot saved`);
-
 	} catch (error) {
 		console.log(`\n✗✗✗ FAILED: ${error.message}`);
 	} finally {

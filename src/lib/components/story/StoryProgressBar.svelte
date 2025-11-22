@@ -1,26 +1,22 @@
 <script>
-/**
- * StoryProgressBar - Visual progress indicator for story mode
- *
- * Shows current progress through rounds with clickable markers
- * Displays progress bar fill and individual round markers
- *
- * @component
- * @example
- * <StoryProgressBar
- *   currentRound={2}
- *   totalRounds={10}
- *   onJumpToRound={(index) => logger.debug('Jump to', index)}
- * />
- */
+	/**
+	 * StoryProgressBar - Visual progress indicator for story mode
+	 *
+	 * Shows current progress through rounds with clickable markers
+	 * Displays progress bar fill and individual round markers
+	 *
+	 * @component
+	 * @example
+	 * <StoryProgressBar
+	 *   currentRound={2}
+	 *   totalRounds={10}
+	 *   onJumpToRound={(index) => logger.debug('Jump to', index)}
+	 * />
+	 */
 
-let {
-	currentRound = 0,
-	totalRounds = 1,
-	onJumpToRound = () => {}
-} = $props();
+	let { currentRound = 0, totalRounds = 1, onJumpToRound = () => {} } = $props();
 
-let progressPercentage = $derived(((currentRound + 1) / totalRounds) * 100);
+	let progressPercentage = $derived(((currentRound + 1) / totalRounds) * 100);
 </script>
 
 <div class="progress-section">

@@ -9,9 +9,7 @@
  -->
 
 <script>
-	let {
-		sortBy = $bindable('recent')
-	} = $props();
+	let { sortBy = $bindable('recent') } = $props();
 </script>
 
 <div class="sort-controls">

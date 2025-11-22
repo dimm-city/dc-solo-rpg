@@ -1,26 +1,86 @@
 <script>
-/**
- * PlayerInfoBar - Player and round information bar with action buttons
- *
- * Displays player name, game title, current round, and action buttons (exit, dice theme, settings, help).
- * Uses Augmented UI styling with glassmorphism effects.
- *
- * @component
- */
+	/**
+	 * PlayerInfoBar - Player and round information bar with action buttons
+	 *
+	 * Displays player name, game title, current round, and action buttons (exit, dice theme, automation presets, settings, help).
+	 * Uses Augmented UI styling with glassmorphism effects.
+	 *
+	 * @component
+	 */
 
-import { gameState } from '../../stores/gameStore.svelte.js';
-import DiceThemePicker from '../DiceThemePicker.svelte';
+	import { gameState } from '../../stores/gameStore.svelte.js';
+	import {
+		getAudioSettings,
+		getGameplaySettings,
+		updateAudioSettings,
+		updateGameplaySettings
+	} from '../../stores/audioStore.svelte.js';
+	import DiceThemePicker from '../DiceThemePicker.svelte';
 
-let {
-	/** Handler for exit button click */
-	onExitClick,
-	/** Handler for help button click */
-	onHelpClick,
-	/** Handler for settings button click */
-	onSettingsClick = () => {}
-} = $props();
+	let {
+		/** Handler for exit button click */
+		onExitClick,
+		/** Handler for help button click */
+		onHelpClick,
+		/** Handler for settings button click */
+		onSettingsClick = () => {}
+	} = $props();
 
-let showDiceThemePicker = $state(false);
+	let showDiceThemePicker = $state(false);
+
+	// Reactive state to detect if features are enabled
+	const audioEnabled = $derived(() => {
+		const audio = getAudioSettings();
+		return audio.autoReadCards || audio.autoReadPrompts || audio.autoAnnounceRolls;
+	});
+
+	const autoPlayEnabled = $derived(() => {
+		const gameplay = getGameplaySettings();
+		return (
+			gameplay.autoRollDice ||
+			gameplay.autoContinueAfterReading ||
+			gameplay.autoHandleJournaling === 'timed'
+		);
+	});
+
+	// Toggle functions
+	function toggleAudio() {
+		const audio = getAudioSettings();
+		const isEnabled = audio.autoReadCards || audio.autoReadPrompts || audio.autoAnnounceRolls;
+
+		// Toggle all audio features on or off
+		updateAudioSettings({
+			autoReadCards: !isEnabled,
+			autoReadPrompts: !isEnabled,
+			autoAnnounceRolls: !isEnabled
+		});
+	}
+
+	function toggleAutoPlay() {
+		const gameplay = getGameplaySettings();
+		const isEnabled =
+			gameplay.autoRollDice ||
+			gameplay.autoContinueAfterReading ||
+			gameplay.autoHandleJournaling === 'timed';
+
+		if (!isEnabled) {
+			// Enable automation
+			updateGameplaySettings({
+				autoRollDice: true,
+				autoContinueAfterReading: true,
+				autoAdvanceDelay: 2000,
+				autoHandleJournaling: 'timed',
+				journalPauseTime: 10000
+			});
+		} else {
+			// Disable automation
+			updateGameplaySettings({
+				autoRollDice: false,
+				autoContinueAfterReading: false,
+				autoHandleJournaling: 'manual'
+			});
+		}
+	}
 </script>
 
 <div
@@ -88,8 +148,60 @@ let showDiceThemePicker = $state(false);
 		</svg>
 	</button>
 
+	<!-- Toggle Buttons -->
+	<button
+		class="status-bar-button toggle-button"
+		class:active={autoPlayEnabled()}
+		onclick={toggleAutoPlay}
+		aria-label="Toggle Auto-Play"
+		title="Toggle Auto-Play"
+	>
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			width="20"
+			height="20"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			aria-hidden="true"
+		>
+			<polygon points="5 3 19 12 5 21 5 3" />
+		</svg>
+	</button>
+
+	<button
+		class="status-bar-button toggle-button"
+		class:active={audioEnabled()}
+		onclick={toggleAudio}
+		aria-label="Toggle Audio"
+		title="Toggle Audio"
+	>
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			width="20"
+			height="20"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			aria-hidden="true"
+		>
+			<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+			<path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+		</svg>
+	</button>
+
 	<!-- Settings Button -->
-	<button class="status-bar-button settings-button" onclick={onSettingsClick} aria-label="Game settings">
+	<button
+		class="status-bar-button settings-button"
+		onclick={onSettingsClick}
+		aria-label="Game settings"
+	>
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
 			width="20"
@@ -161,10 +273,10 @@ let showDiceThemePicker = $state(false);
 		--aug-br: 14px;
 		--aug-bl: 14px;
 
-		/* Layout with buttons on both ends + dice theme picker */
+		/* Layout with buttons on both ends + dice theme picker + toggle buttons */
 		display: grid;
 		align-items: center;
-		grid-template-columns: auto 1fr auto 1fr auto auto;
+		grid-template-columns: auto 1fr auto 1fr auto auto auto auto auto;
 		gap: var(--space-sm);
 		padding-inline: var(--space-md);
 		padding-block: var(--space-sm);
@@ -216,6 +328,19 @@ let showDiceThemePicker = $state(false);
 
 	.status-bar-button svg {
 		filter: drop-shadow(0 0 4px currentColor);
+	}
+
+	/* Toggle button active state */
+	.toggle-button.active {
+		color: #ff00ff;
+		background: rgba(255, 0, 255, 0.15);
+		box-shadow: 0 0 15px rgba(255, 0, 255, 0.4);
+	}
+
+	.toggle-button.active:hover {
+		color: #ff00ff;
+		background: rgba(255, 0, 255, 0.2);
+		box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
 	}
 
 	.info-segment {
@@ -272,23 +397,53 @@ let showDiceThemePicker = $state(false);
 		text-align: center;
 	}
 
-	/* Mobile responsive */
+	/* Mobile responsive - Show ALL buttons */
 	@media (max-width: 600px) {
 		.player-round-bar {
-			grid-template-columns: auto 1fr auto auto;
+			/* Hide game title, show all buttons: Exit, Player, Dice, Auto, Audio, Settings, Help */
+			grid-template-columns: auto 1fr auto auto auto auto auto;
 			gap: var(--space-xs);
+			padding-inline: var(--space-sm);
+			padding-block: var(--space-xs);
 		}
 
 		.player-round-bar h5 {
-			font-size: 0.875rem;
+			display: none; /* Hide game title on mobile */
 		}
 
 		.info-segment {
-			font-size: 0.75rem;
+			font-size: 0.7rem;
 		}
 
 		.info-segment:nth-child(4) {
 			display: none; /* Hide round on mobile for space */
+		}
+
+		/* Make buttons smaller on mobile */
+		.status-bar-button {
+			padding: var(--space-xs);
+		}
+
+		.status-bar-button svg {
+			width: 18px;
+			height: 18px;
+		}
+	}
+
+	/* Extra small screens - tighter spacing */
+	@media (max-width: 400px) {
+		.player-round-bar {
+			gap: 2px;
+			padding-inline: var(--space-xs);
+		}
+
+		.info-segment {
+			font-size: 0.65rem;
+		}
+
+		.status-bar-button svg {
+			width: 16px;
+			height: 16px;
 		}
 	}
 

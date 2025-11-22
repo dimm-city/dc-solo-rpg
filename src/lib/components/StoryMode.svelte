@@ -273,7 +273,6 @@
 		padding: 0 var(--space-xl);
 	}
 
-
 	/* Mobile optimizations */
 	@media (max-width: 640px) {
 		.story-mode {
@@ -339,7 +338,6 @@
 		.story-generation-section {
 			padding: 0 var(--space-md);
 		}
-
 	}
 
 	/* Tablet optimizations */
@@ -347,8 +345,6 @@
 		.story-mode {
 			padding: var(--space-md);
 		}
-
-
 	}
 	/* Extra small screens */
 	@media (max-width: 375px) {
@@ -372,7 +368,6 @@
 			width: 36px;
 			height: 36px;
 		}
-
 	}
 
 	/* Accessibility - Reduced motion */

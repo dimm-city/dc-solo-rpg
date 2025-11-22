@@ -4,14 +4,14 @@
 	import { fade } from 'svelte/transition';
 	import { browser } from '$app/environment';
 	import ConfirmModal from '$lib/components/ConfirmModal.svelte';
-	import OverlayModal from '$lib/components/OverlayModal.svelte';
+	import AboutModal from '$lib/components/AboutModal.svelte';
+	import SettingsModal from '$lib/components/settings/SettingsModal.svelte';
 	import HelpModal from '$lib/components/HelpModal.svelte';
+	import DiceThemePicker from '$lib/components/DiceThemePicker.svelte';
 	import Splash from '$lib/components/Splash.svelte';
 	import NeuralBackground from '$lib/components/NeuralBackground.svelte';
 	import BrowseGames from '$lib/components/BrowseGames.svelte';
 	import StoryMode from '$lib/components/StoryMode.svelte';
-	import { Difficulty } from '$lib/configuration/DifficultyLevels.js';
-	import { getAllDiceThemes } from '$lib/configuration/DiceThemes.js';
 	import {
 		hasSeenInstructions,
 		markInstructionsAsSeen,
@@ -41,11 +41,12 @@
 	let showAboutModal = $state(false);
 	let showSettingsModal = $state(false);
 	let showHelpModal = $state(false);
+	let showDiceThemePicker = $state(false);
 	let showMobileMenu = $state(false);
 
 	// Computed: true when any modal is open (for accessibility and click blocking)
 	const anyModalOpen = $derived(
-		showAboutModal || showSettingsModal || showHelpModal || showDeleteModal
+		showAboutModal || showSettingsModal || showHelpModal || showDeleteModal || showDiceThemePicker
 	);
 	let customGames = $state([]);
 	let allGames = $state([]);
@@ -55,18 +56,12 @@
 	let gameSaveData = $state({});
 	let showDeleteModal = $state(false);
 	let gameToDelete = $state(null);
+	let showRemoveGameModal = $state(false);
+	let gameToRemove = $state(null);
 	// Story mode state
 	let showBrowseGames = $state(false);
 	let showStoryMode = $state(false);
 	let selectedStoryGame = $state(null);
-
-	// Settings state
-	let selectedDifficulty = $state(Difficulty.NORMAL);
-	let selectedDiceTheme = $state(null);
-	let saveStatus = $state('');
-
-	// Get actual dice themes from configuration
-	const availableDiceThemes = getAllDiceThemes();
 
 	// On mount, check if we should skip splash and go straight to content
 	onMount(async () => {
@@ -96,25 +91,6 @@
 				showContent = true;
 			} else {
 				showInstructionsChoice = true;
-			}
-		}
-
-		// Load settings from localStorage
-		if (browser) {
-			const savedSettings = localStorage.getItem('gameSettings');
-			if (savedSettings) {
-				try {
-					const settings = JSON.parse(savedSettings);
-					selectedDifficulty = settings.difficulty || Difficulty.NORMAL;
-					selectedDiceTheme =
-						availableDiceThemes.find((t) => t.key === settings.diceTheme) || availableDiceThemes[0];
-				} catch (e) {
-					console.error('Failed to load settings:', e);
-					selectedDiceTheme = availableDiceThemes[0];
-				}
-			} else {
-				// Set defaults if no settings exist
-				selectedDiceTheme = availableDiceThemes[0];
 			}
 		}
 
@@ -245,15 +221,28 @@
 
 	function handleRemoveCustomGame(game, event) {
 		event.stopPropagation(); // Prevent card selection
-		if (confirm(`Are you sure you want to remove "${game.title}"?`)) {
-			if (removeCustomGame(game.slug)) {
-				customGames = getCustomGames();
-				allGames = [...customGames, ...data.games].sort((a, b) => a.title.localeCompare(b.title));
-				updateSaveData();
-				uploadStatus = 'Custom game removed';
-				setTimeout(() => (uploadStatus = ''), 3000);
-			}
+		gameToRemove = game;
+		showRemoveGameModal = true;
+	}
+
+	function confirmRemoveGame() {
+		if (!gameToRemove) return;
+
+		if (removeCustomGame(gameToRemove.slug)) {
+			customGames = getCustomGames();
+			allGames = [...customGames, ...data.games].sort((a, b) => a.title.localeCompare(b.title));
+			updateSaveData();
+			uploadStatus = 'Custom game removed';
+			setTimeout(() => (uploadStatus = ''), 3000);
 		}
+
+		showRemoveGameModal = false;
+		gameToRemove = null;
+	}
+
+	function cancelRemoveGame() {
+		showRemoveGameModal = false;
+		gameToRemove = null;
 	}
 
 	function handleSplashComplete() {
@@ -320,22 +309,14 @@
 		showMobileMenu = false;
 	}
 
-	function toggleMobileMenu() {
-		showMobileMenu = !showMobileMenu;
+	function handleDicePickerClick(e) {
+		e.preventDefault();
+		showDiceThemePicker = true;
+		showMobileMenu = false;
 	}
 
-	function saveSettings() {
-		if (browser) {
-			const settings = {
-				difficulty: selectedDifficulty,
-				diceTheme: selectedDiceTheme?.key || 'default'
-			};
-			localStorage.setItem('gameSettings', JSON.stringify(settings));
-			saveStatus = 'saved';
-			setTimeout(() => {
-				saveStatus = '';
-			}, 2000);
-		}
+	function toggleMobileMenu() {
+		showMobileMenu = !showMobileMenu;
 	}
 
 	// Story mode handlers
@@ -371,6 +352,8 @@
 				showSettingsModal = false;
 			} else if (showHelpModal) {
 				showHelpModal = false;
+			} else if (showDiceThemePicker) {
+				showDiceThemePicker = false;
 			} else if (showDeleteModal) {
 				cancelDeleteSave();
 			}
@@ -551,6 +534,51 @@
 						<path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
 					</svg>
 				</button>
+				<button
+					onclick={handleSettingsClick}
+					class="header-button settings-button"
+					aria-label="Settings"
+					title="Settings"
+				>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="24"
+						height="24"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<circle cx="12" cy="12" r="3"></circle>
+						<path
+							d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"
+						></path>
+					</svg>
+				</button>
+				<button
+					onclick={handleDicePickerClick}
+					class="header-button dice-button"
+					aria-label="Change Dice Theme"
+					title="Change Dice Theme"
+				>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="24"
+						height="24"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<rect x="3" y="3" width="18" height="18" rx="2" />
+						<circle cx="8.5" cy="8.5" r="1.5" />
+						<circle cx="15.5" cy="15.5" r="1.5" />
+					</svg>
+				</button>
 				<button onclick={handleAboutClick} class="header-button" aria-label="About">
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
@@ -656,6 +684,43 @@
 						<path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
 					</svg>
 					<span>Story Library</span>
+				</button>
+				<button class="mobile-menu-item" onclick={handleSettingsClick}>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="20"
+						height="20"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<circle cx="12" cy="12" r="3"></circle>
+						<path
+							d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"
+						></path>
+					</svg>
+					<span>Settings</span>
+				</button>
+				<button class="mobile-menu-item" onclick={handleDicePickerClick}>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="20"
+						height="20"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<rect x="3" y="3" width="18" height="18" rx="2" />
+						<circle cx="8.5" cy="8.5" r="1.5" />
+						<circle cx="15.5" cy="15.5" r="1.5" />
+					</svg>
+					<span>Dice Theme</span>
 				</button>
 				<button class="mobile-menu-item" onclick={handleAboutClick}>
 					<svg
@@ -842,129 +907,34 @@
 	onCancel={cancelDeleteSave}
 />
 
+<!-- Remove Custom Game Confirmation Modal -->
+<ConfirmModal
+	isOpen={showRemoveGameModal}
+	title="Remove Custom Game"
+	message={gameToRemove
+		? `Are you sure you want to remove "${gameToRemove.title}"?\n\nThis will remove the game from your library. This cannot be undone.`
+		: 'Remove custom game?'}
+	confirmText="REMOVE"
+	cancelText="CANCEL"
+	onConfirm={confirmRemoveGame}
+	onCancel={cancelRemoveGame}
+/>
+
 <!-- About Modal -->
-<OverlayModal isVisible={showAboutModal} zIndex={1000} fixedHeight="70dvh" animateHeight={true}>
-	<div class="info-modal-content">
-		<h2 class="info-modal-title">About Dream Console</h2>
-		<div class="info-modal-body">
-			<p>
-				Dream Console is a narrative-driven solo role-playing game built on the Wretched and Alone
-				system. Each playthrough offers a unique adventure through the cyberpunk streets of Dimm
-				City.
-			</p>
-			<p>
-				The game uses a standard 52-card deck and dice rolls to guide your story, presenting
-				challenges and shaping the narrative as you draw cards and make decisions.
-			</p>
-			<p class="version-info">
-				Version {APP_VERSION}
-			</p>
-			<p class="attribution">
-				This work is based on The Wretched (loottheroom.itch.io/wretched), product of Chris Bissette
-				and Loot The Room, and licensed under CC Attribution 3.0 Unported.
-			</p>
-		</div>
-		<button class="info-modal-button" onclick={() => (showAboutModal = false)}>
-			<span>Close</span>
-		</button>
-	</div>
-</OverlayModal>
+<AboutModal
+	isOpen={showAboutModal}
+	onClose={() => (showAboutModal = false)}
+	appVersion={APP_VERSION}
+/>
 
 <!-- Settings Modal -->
-<OverlayModal isVisible={showSettingsModal} zIndex={1000} fixedHeight="70dvh" animateHeight={true}>
-	<div class="settings-modal-content">
-		<h2 class="info-modal-title">Game Settings</h2>
-		<div class="settings-modal-body">
-			<p class="settings-intro">
-				Configure your global game preferences. These settings will apply to all games you play.
-			</p>
-
-			<div class="settings-form">
-				<div class="form-group">
-					<label for="diceSelect">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							width="20"
-							height="20"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-						>
-							<rect x="3" y="3" width="18" height="18" rx="2" />
-							<circle cx="8.5" cy="8.5" r="1.5" />
-							<circle cx="15.5" cy="15.5" r="1.5" />
-						</svg>
-						Dice Theme
-					</label>
-					<p class="field-description">Choose the visual style for your 3D dice.</p>
-					<select id="diceSelect" class="settings-select" bind:value={selectedDiceTheme}>
-						{#each availableDiceThemes as theme (theme.key)}
-							<option value={theme}>{theme.name}</option>
-						{/each}
-					</select>
-				</div>
-
-				<div class="form-group">
-					<label for="difficulty">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							width="20"
-							height="20"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-						>
-							<path
-								d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
-							/>
-							<line x1="12" y1="9" x2="12" y2="13" />
-							<line x1="12" y1="17" x2="12.01" y2="17" />
-						</svg>
-						Difficulty Level
-					</label>
-					<p class="field-description">
-						Adjust the challenge level. Higher difficulty means more tower pulls.
-					</p>
-					<select id="difficulty" class="settings-select" bind:value={selectedDifficulty}>
-						{#each Difficulty.getEntries() as entry (entry.value)}
-							<option value={entry.value}>{entry.key?.replaceAll('_', ' ')}</option>
-						{/each}
-					</select>
-				</div>
-
-				<div class="button-group">
-					<button class="settings-save-button" onclick={saveSettings}>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							width="20"
-							height="20"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-						>
-							<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-							<polyline points="17 21 17 13 7 13 7 21" />
-							<polyline points="7 3 7 8 15 8" />
-						</svg>
-						<span>Save Settings</span>
-					</button>
-					{#if saveStatus === 'saved'}
-						<div class="save-status">Settings saved!</div>
-					{/if}
-				</div>
-			</div>
-		</div>
-		<button class="info-modal-button" onclick={() => (showSettingsModal = false)}>
-			<span>Close</span>
-		</button>
-	</div>
-</OverlayModal>
+<SettingsModal isOpen={showSettingsModal} onClose={() => (showSettingsModal = false)} />
 
 <!-- Help Modal -->
 <HelpModal isOpen={showHelpModal} onClose={() => (showHelpModal = false)} />
+
+<!-- Dice Theme Picker -->
+<DiceThemePicker bind:isOpen={showDiceThemePicker} />
 
 <style>
 	:global(body) {
@@ -1277,37 +1247,24 @@
 		transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 
 		/* Staggered fade-in animation */
-		animation:
-			cardFadeIn 0.6s ease-out 0.3s backwards,
-			float 25s ease-in-out infinite;
+		animation: cardFadeIn 0.6s ease-out 0.3s backwards;
 	}
 
-	/* Ethereal floating animation */
-	@keyframes float {
-		0%,
-		100% {
-			transform: translateY(0px);
-		}
-		50% {
-			transform: translateY(-8px);
-		}
-	}
-
-	/* Stagger the fade-in and float animations for each card */
+	/* Stagger the fade-in animations for each card */
 	.game-card-1 {
-		animation-delay: 0.1s, 0s;
+		animation-delay: 0.1s;
 	}
 	.game-card-2 {
-		animation-delay: 0.2s, 1.2s;
+		animation-delay: 0.2s;
 	}
 	.game-card-3 {
-		animation-delay: 0.3s, 2.4s;
+		animation-delay: 0.3s;
 	}
 	.game-card-4 {
-		animation-delay: 0.4s, 3.6s;
+		animation-delay: 0.4s;
 	}
 	.game-card-5 {
-		animation-delay: 0.5s, 4.8s;
+		animation-delay: 0.5s;
 	}
 
 	@keyframes cardFadeIn {
@@ -1867,497 +1824,6 @@
 	}
 
 	/* ============================================
-	   INFO MODAL STYLING (About & Settings)
-	   ============================================ */
-
-	.info-modal-content {
-		width: 100%;
-		height: 100%;
-		padding: var(--space-xl);
-		position: relative;
-		z-index: 1;
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-lg);
-	}
-
-	.info-modal-title {
-		font-family: var(--font-display, 'Orbitron', monospace);
-		font-size: var(--text-2xl);
-		font-weight: 700;
-		color: var(--color-neon-cyan);
-		text-shadow:
-			0 0 15px rgba(0, 255, 255, 1),
-			0 0 30px rgba(0, 255, 255, 0.5);
-		margin: 0 0 var(--space-md) 0;
-		letter-spacing: 0.08em;
-		text-align: center;
-		text-transform: uppercase;
-		border-bottom: 2px solid rgba(0, 255, 255, 0.3);
-		padding-bottom: var(--space-md);
-	}
-
-	.info-modal-body {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-md);
-		font-family: var(--font-body, 'Inter', sans-serif);
-		font-size: var(--text-base);
-		line-height: 1.6;
-		color: rgba(255, 255, 255, 0.9);
-	}
-
-	.info-modal-body p {
-		margin: 0;
-	}
-
-	.version-info {
-		font-size: var(--text-sm);
-		color: rgba(255, 255, 255, 0.5); /* Subtle 50% white - more understated */
-		font-weight: 400; /* Normal weight - lighter than before */
-		text-align: center;
-		margin-top: var(--space-md);
-		text-shadow: 0 0 4px rgba(255, 255, 255, 0.2); /* Very subtle glow for readability */
-	}
-
-	.attribution {
-		font-size: var(--text-sm);
-		color: rgba(255, 255, 255, 0.7);
-		font-style: italic;
-		padding-top: var(--space-md);
-		border-top: 1px solid rgba(255, 255, 255, 0.1);
-		margin-top: auto;
-	}
-
-	.settings-link-button {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		gap: var(--space-sm);
-		padding: var(--space-md) var(--space-xl);
-		background: linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta));
-		border: none;
-		border-radius: 4px;
-		color: white;
-		font-family: var(--font-display, 'Orbitron', monospace);
-		font-size: var(--text-base);
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		box-shadow:
-			0 0 15px rgba(0, 255, 255, 0.3),
-			inset 0 0 10px rgba(255, 255, 255, 0.1);
-		margin-top: var(--space-md);
-	}
-
-	.settings-link-button:hover {
-		transform: translateY(-2px);
-		box-shadow:
-			0 0 25px rgba(0, 255, 255, 0.5),
-			0 0 40px rgba(217, 70, 239, 0.3),
-			inset 0 0 15px rgba(255, 255, 255, 0.15);
-	}
-
-	.settings-link-button:active {
-		transform: translateY(0);
-	}
-
-	/* ============================================
-	   SETTINGS MODAL STYLING
-	   ============================================ */
-
-	.settings-modal-content {
-		width: 100%;
-		height: 100%;
-		padding: clamp(var(--space-lg), 3vw, var(--space-xl));
-		position: relative;
-		z-index: 1;
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-lg);
-	}
-
-	.settings-modal-body {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-lg);
-		overflow-y: auto;
-	}
-
-	.settings-intro {
-		font-family: var(--font-body, 'Inter', sans-serif);
-		font-size: var(--text-base);
-		line-height: 1.6;
-		color: rgba(255, 255, 255, 0.85);
-		margin: 0;
-		text-align: center;
-		max-width: 90%;
-		margin-inline: auto;
-	}
-
-	.settings-form {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-xl);
-	}
-
-	.form-group {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-sm);
-	}
-
-	.form-group label {
-		font-family: var(--font-display, 'Orbitron', monospace);
-		font-size: var(--text-sm);
-		font-weight: 700;
-		color: var(--color-brand-yellow);
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
-		text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
-		margin: 0;
-		display: flex;
-		align-items: center;
-		gap: var(--space-sm);
-	}
-
-	.form-group label svg {
-		flex-shrink: 0;
-		filter: drop-shadow(0 0 6px var(--color-brand-yellow));
-	}
-
-	.field-description {
-		font-size: var(--text-sm);
-		color: rgba(255, 255, 255, 0.6);
-		margin: 0;
-		line-height: 1.5;
-	}
-
-	.settings-select {
-		width: 100%;
-		padding: var(--space-md) var(--space-lg);
-		padding-right: 48px;
-		font-family: var(--font-body, 'Inter', sans-serif);
-		font-size: var(--text-base);
-		font-weight: 600;
-		color: var(--color-text-primary);
-		background: linear-gradient(135deg, rgba(0, 20, 40, 0.6), rgba(10, 10, 30, 0.8));
-		border: 2px solid var(--color-neon-cyan);
-		border-radius: 4px;
-		cursor: pointer;
-		appearance: none;
-		outline: none;
-		text-transform: capitalize;
-		letter-spacing: 0.05em;
-		transition: all 0.3s ease;
-		background-image:
-			linear-gradient(135deg, rgba(0, 20, 40, 0.6), rgba(10, 10, 30, 0.8)),
-			url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2300FFFF' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
-		background-repeat: no-repeat, no-repeat;
-		background-position:
-			0 0,
-			right var(--space-md) center;
-		box-shadow:
-			0 0 15px rgba(0, 255, 255, 0.25),
-			inset 0 0 10px rgba(0, 255, 255, 0.05);
-	}
-
-	.settings-select:hover {
-		border-color: var(--color-cyber-magenta);
-		box-shadow:
-			0 0 20px rgba(217, 70, 239, 0.3),
-			inset 0 0 15px rgba(217, 70, 239, 0.08);
-	}
-
-	.settings-select:focus {
-		border-color: var(--color-brand-yellow);
-		outline: 2px solid var(--color-brand-yellow);
-		outline-offset: 2px;
-		box-shadow:
-			0 0 25px rgba(255, 215, 0, 0.4),
-			inset 0 0 15px rgba(255, 215, 0, 0.1);
-	}
-
-	.settings-select option {
-		background: var(--color-bg-primary);
-		color: var(--color-text-primary);
-		padding: var(--space-sm);
-	}
-
-	.button-group {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-md);
-		align-items: center;
-		margin-top: var(--space-md);
-	}
-
-	.settings-save-button {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		gap: var(--space-sm);
-		padding: var(--space-md) var(--space-xl);
-		font-family: var(--font-display, 'Orbitron', monospace);
-		font-size: var(--text-base);
-		font-weight: 700;
-		color: var(--color-brand-yellow);
-		background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(0, 255, 255, 0.1));
-		border: 2px solid var(--color-brand-yellow);
-		border-radius: 4px;
-		cursor: pointer;
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
-		transition: all 0.2s ease;
-		box-shadow:
-			0 0 20px rgba(255, 215, 0, 0.3),
-			inset 0 0 10px rgba(255, 215, 0, 0.05);
-	}
-
-	.settings-save-button:hover {
-		color: var(--color-neon-cyan);
-		border-color: var(--color-neon-cyan);
-		background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(255, 215, 0, 0.15));
-		transform: translateY(-2px);
-		box-shadow:
-			0 0 30px rgba(0, 255, 255, 0.5),
-			inset 0 0 15px rgba(0, 255, 255, 0.1);
-	}
-
-	.settings-save-button:active {
-		transform: translateY(0);
-	}
-
-	.settings-save-button svg {
-		filter: drop-shadow(0 0 6px currentColor);
-	}
-
-	.save-status {
-		font-family: var(--font-display, 'Orbitron', monospace);
-		font-size: var(--text-sm);
-		color: var(--color-toxic-green);
-		text-shadow: 0 0 8px rgba(0, 255, 170, 0.8);
-		animation: fadeInOut 2s ease-in-out;
-	}
-
-	@keyframes fadeInOut {
-		0%,
-		100% {
-			opacity: 0;
-		}
-		10%,
-		90% {
-			opacity: 1;
-		}
-	}
-
-	.info-modal-button {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		gap: var(--space-xs);
-		padding: var(--space-sm) var(--space-lg);
-		background: linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta));
-		border: none;
-		border-radius: 4px;
-		color: white;
-		font-family: var(--font-display, 'Orbitron', monospace);
-		font-size: var(--text-sm);
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		align-self: flex-end;
-		box-shadow:
-			0 0 15px rgba(0, 255, 255, 0.3),
-			inset 0 0 10px rgba(255, 255, 255, 0.1);
-	}
-
-	.info-modal-button:hover {
-		transform: translateY(-2px);
-		box-shadow:
-			0 0 25px rgba(0, 255, 255, 0.5),
-			0 0 40px rgba(217, 70, 239, 0.3),
-			inset 0 0 15px rgba(255, 255, 255, 0.15);
-	}
-
-	.info-modal-button:active {
-		transform: translateY(0);
-	}
-
-	/* ============================================
-	   MODAL RESPONSIVE DESIGN
-	   ============================================ */
-
-	/* Tablet breakpoint */
-	@media (max-width: 900px) {
-		.info-modal-content,
-		.settings-modal-content {
-			padding: var(--space-lg);
-		}
-
-		.info-modal-title {
-			font-size: var(--text-xl);
-		}
-
-		.settings-modal-body {
-			gap: var(--space-md);
-		}
-
-		.settings-form {
-			gap: var(--space-lg);
-		}
-	}
-
-	/* Mobile breakpoint */
-	@media (max-width: 600px) {
-		.info-modal-content,
-		.settings-modal-content {
-			padding: var(--space-md);
-			gap: var(--space-md);
-		}
-
-		.info-modal-title {
-			font-size: var(--text-lg);
-			padding-bottom: var(--space-sm);
-			margin-bottom: var(--space-sm);
-		}
-
-		.info-modal-body {
-			font-size: var(--text-sm);
-			gap: var(--space-sm);
-		}
-
-		.attribution {
-			font-size: var(--text-xs);
-		}
-
-		.settings-intro {
-			font-size: var(--text-sm);
-			max-width: 100%;
-		}
-
-		.settings-form {
-			gap: var(--space-md);
-		}
-
-		.form-group label {
-			font-size: var(--text-xs);
-		}
-
-		.field-description {
-			font-size: var(--text-xs);
-		}
-
-		.settings-select {
-			padding: var(--space-sm) var(--space-md);
-			padding-right: 40px;
-			font-size: var(--text-sm);
-		}
-
-		.button-group {
-			width: 100%;
-		}
-
-		.settings-save-button {
-			width: 100%;
-			padding: var(--space-md);
-			font-size: var(--text-sm);
-		}
-
-		.info-modal-button {
-			align-self: stretch;
-			padding: var(--space-md);
-			font-size: var(--text-sm);
-		}
-
-		.settings-link-button {
-			width: 100%;
-			padding: var(--space-md);
-		}
-	}
-
-	/* Extra small mobile */
-	@media (max-width: 400px) {
-		.info-modal-content,
-		.settings-modal-content {
-			padding: var(--space-sm);
-		}
-
-		.info-modal-title {
-			font-size: var(--text-base);
-		}
-
-		.info-modal-body {
-			font-size: var(--text-xs);
-		}
-
-		.form-group label svg {
-			width: 16px;
-			height: 16px;
-		}
-	}
-
-	/* Accessibility - Reduced motion */
-	@media (prefers-reduced-motion: reduce) {
-		.info-modal-button:hover,
-		.settings-link-button:hover,
-		.settings-save-button:hover {
-			transform: none;
-		}
-	}
-
-	/* Mobile responsive for info modals */
-	@media (max-width: 600px) {
-		.info-modal-content,
-		.settings-modal-content {
-			padding: var(--space-md);
-		}
-
-		.info-modal-title {
-			font-size: var(--text-xl);
-		}
-
-		.info-modal-body {
-			font-size: var(--text-sm);
-		}
-
-		.settings-intro {
-			font-size: var(--text-sm);
-		}
-
-		.form-group label {
-			font-size: var(--text-xs);
-		}
-
-		.field-description {
-			font-size: var(--text-xs);
-		}
-
-		.settings-select {
-			font-size: var(--text-sm);
-			padding: var(--space-sm) var(--space-md);
-			padding-right: 40px;
-		}
-
-		.info-modal-button,
-		.settings-link-button,
-		.settings-save-button {
-			width: 100%;
-			padding: var(--space-md);
-		}
-
-		.settings-save-button {
-			font-size: var(--text-sm);
-		}
-	}
-
-	/* ============================================
 	   ACCESSIBILITY - REDUCED MOTION
 	   ============================================ */
 
@@ -2376,17 +1842,9 @@
 			transform: none !important;
 		}
 
-		.info-modal-button:hover,
-		.settings-link-button:hover,
-		.settings-save-button:hover,
-		.settings-save-button:active,
 		.header-button:hover,
 		.header-button:active {
 			transform: none !important;
-		}
-
-		.save-status {
-			animation: none !important;
 		}
 	}
 </style>

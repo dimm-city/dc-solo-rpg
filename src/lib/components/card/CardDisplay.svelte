@@ -1,25 +1,20 @@
 <script>
-/**
- * CardDisplay - Card visual display component
- *
- * Renders the card with:
- * - Augmented UI byte shell
- * - Bio-pulse animation rings
- * - Card type badges with icons
- * - Card content (description, story, ID)
- * - Animation states (materializing, revealed, dismissing)
- *
- * This component is HIGHLY REUSABLE - can be used in Story Mode, Browse Games, etc.
- *
- * @component
- */
+	/**
+	 * CardDisplay - Card visual display component
+	 *
+	 * Renders the card with:
+	 * - Augmented UI byte shell
+	 * - Bio-pulse animation rings
+	 * - Card type badges with icons
+	 * - Card content (description, story, ID)
+	 * - Animation states (materializing, revealed, dismissing)
+	 *
+	 * This component is HIGHLY REUSABLE - can be used in Story Mode, Browse Games, etc.
+	 *
+	 * @component
+	 */
 
-let {
-	card = null,
-	animationStage = 'idle',
-	onDismiss = () => {},
-	clickable = true
-} = $props();
+	let { card = null, animationStage = 'idle', onDismiss = () => {}, clickable = true } = $props();
 </script>
 
 <div

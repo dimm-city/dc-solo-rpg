@@ -1,25 +1,22 @@
 <script>
-/**
- * AutoJournalTimer - Auto-journal countdown timer component
- *
- * Displays countdown timer with progress bar for auto-journal functionality
- * Shows time remaining and hint to cancel
- *
- * @component
- * @example
- * <AutoJournalTimer
- *   timeRemaining={5000}
- *   totalTime={10000}
- * />
- */
+	/**
+	 * AutoJournalTimer - Auto-journal countdown timer component
+	 *
+	 * Displays countdown timer with progress bar for auto-journal functionality
+	 * Shows time remaining and hint to cancel
+	 *
+	 * @component
+	 * @example
+	 * <AutoJournalTimer
+	 *   timeRemaining={5000}
+	 *   totalTime={10000}
+	 * />
+	 */
 
-let {
-	timeRemaining = 0,
-	totalTime = 10000
-} = $props();
+	let { timeRemaining = 0, totalTime = 10000 } = $props();
 
-let progress = $derived((timeRemaining / totalTime) * 100);
-let secondsRemaining = $derived(Math.ceil(timeRemaining / 1000));
+	let progress = $derived((timeRemaining / totalTime) * 100);
+	let secondsRemaining = $derived(Math.ceil(timeRemaining / 1000));
 </script>
 
 {#if timeRemaining > 0}

@@ -249,8 +249,7 @@
 				max="10000"
 				step="500"
 				value={getGameplaySettings().autoAdvanceDelay}
-				oninput={(e) =>
-					handleGameplaySettingChange('autoAdvanceDelay', parseInt(e.target.value))}
+				oninput={(e) => handleGameplaySettingChange('autoAdvanceDelay', parseInt(e.target.value))}
 			/>
 			<div class="range-labels">
 				<span>0.5s</span>
@@ -283,8 +282,7 @@
 					max="30000"
 					step="1000"
 					value={getGameplaySettings().journalPauseTime}
-					oninput={(e) =>
-						handleGameplaySettingChange('journalPauseTime', parseInt(e.target.value))}
+					oninput={(e) => handleGameplaySettingChange('journalPauseTime', parseInt(e.target.value))}
 				/>
 				<div class="range-labels">
 					<span>3s</span>
@@ -354,14 +352,13 @@
 			Disable All
 		</button>
 	</div>
+
+
 </div>
 
+
 <style>
-	.audio-settings-container {
-		padding: var(--space-md, 1rem);
-		max-height: 70vh;
-		overflow-y: auto;
-	}
+
 
 	h3 {
 		margin: var(--space-md, 1rem) 0 var(--space-sm, 0.5rem) 0;
@@ -529,5 +526,37 @@
 	.error-message svg {
 		flex-shrink: 0;
 		color: #ff6b6b;
+	}
+
+	.dice-theme-button {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm, 0.5rem);
+		width: 100%;
+		padding: var(--space-md, 1rem);
+		background: var(--translucent-dark, rgba(17, 17, 17, 0.75));
+		color: var(--light, white);
+		border: 1px solid var(--secondary-accent, #c643ff);
+		border-radius: var(--dc-default-border-radius, 0.175rem);
+		cursor: pointer;
+		font-size: 1rem;
+		font-weight: 500;
+		font-family: var(--main-font-family);
+		transition: all 0.2s ease;
+	}
+
+	.dice-theme-button svg {
+		flex-shrink: 0;
+	}
+
+	.dice-theme-button:hover {
+		background: var(--secondary-accent, #c643ff);
+		border-color: var(--third-accent, #ff15cb);
+		transform: translateY(-1px);
+		box-shadow: 0 4px 8px rgba(199, 67, 255, 0.3);
+	}
+
+	.dice-theme-button:active {
+		transform: translateY(0);
 	}
 </style>

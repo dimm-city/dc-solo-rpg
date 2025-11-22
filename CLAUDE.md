@@ -680,12 +680,14 @@ The project includes **Supertonic Neural TTS** - a high-performance, on-device t
 ### Official Resources
 
 **GitHub Implementation:**
+
 - Node.js Example: https://github.com/supertone-inc/supertonic/blob/main/nodejs/example_onnx.js
 - Helper Functions: https://github.com/supertone-inc/supertonic/blob/main/nodejs/helper.js
 - Documentation: https://github.com/supertone-inc/supertonic/blob/main/nodejs/README.md
 - Package Info: https://github.com/supertone-inc/supertonic/blob/main/nodejs/package.json
 
 **Model Resources:**
+
 - HuggingFace Hub: https://huggingface.co/Supertone/supertonic
 - Interactive Demo: https://huggingface.co/spaces/Supertone/supertonic
 
@@ -699,6 +701,7 @@ The project includes **Supertonic Neural TTS** - a high-performance, on-device t
 4. **Vocoder** - Converts latent to audio waveform
 
 **Key Files:**
+
 - `src/routes/api/tts/supertonic/+server.js` - Server-side API endpoint (Node.js)
 - `src/lib/services/tts/providers/SupertonicTTSProvider.js` - Client-side provider (browser)
 - `static/assets/onnx/` - ONNX model files (text_encoder, duration_predictor, vector_estimator, vocoder)
@@ -708,6 +711,7 @@ The project includes **Supertonic Neural TTS** - a high-performance, on-device t
 ### Configuration
 
 **Model Config** (`static/assets/onnx/tts.json`):
+
 ```javascript
 {
   ttl: {
@@ -723,6 +727,7 @@ The project includes **Supertonic Neural TTS** - a high-performance, on-device t
 ```
 
 **Calculated Values:**
+
 - `latentDim = 24 * 6 = 144` (latent dimensionality)
 - `chunkSize = 512 * 1` (audio chunk size)
 - `latentLength = Math.floor((wavLength + chunkSize - 1) / chunkSize)`
@@ -732,6 +737,7 @@ The project includes **Supertonic Neural TTS** - a high-performance, on-device t
 **Endpoint:** `POST /api/tts/supertonic`
 
 **Request:**
+
 ```javascript
 {
   text: "Hello world",           // Text to synthesize
@@ -741,6 +747,7 @@ The project includes **Supertonic Neural TTS** - a high-performance, on-device t
 ```
 
 **Response:**
+
 ```javascript
 {
   audio: [...],                  // Float32Array as regular array
@@ -754,52 +761,56 @@ Critical tensor dimensions for ONNX models:
 
 ```javascript
 // Duration Predictor inputs
-text_ids: [1, 512]              // int64
-text_mask: [1, 1, 512]          // float32
-style_dp: [1, 8, 16]            // float32
+text_ids: [1, 512]; // int64
+text_mask: [1, 1, 512]; // float32
+style_dp: [1, 8, 16]; // float32
 
 // Text Encoder inputs
-text_ids: [1, 512]              // int64
-text_mask: [1, 1, 512]          // float32
-style_ttl: [1, 50, 256]         // float32
+text_ids: [1, 512]; // int64
+text_mask: [1, 1, 512]; // float32
+style_ttl: [1, 50, 256]; // float32
 
 // Vector Estimator inputs
-noisy_latent: [1, 144, L]       // float32 (L = latent length)
-text_emb: [1, 512, 128]         // float32 (from encoder)
-style_ttl: [1, 50, 256]         // float32
-text_mask: [1, 1, 512]          // float32
-latent_mask: [1, 1, L]          // float32
-total_step: [1]                 // float32 (not int!)
-current_step: [1]               // float32 (not int!)
+noisy_latent: [1, 144, L]; // float32 (L = latent length)
+text_emb: [1, 512, 128]; // float32 (from encoder)
+style_ttl: [1, 50, 256]; // float32
+text_mask: [1, 1, 512]; // float32
+latent_mask: [1, 1, L]; // float32
+total_step: [1]; // float32 (not int!)
+current_step: [1]; // float32 (not int!)
 
 // Vector Estimator output
-denoised_latent: [1, 144, L]    // float32
+denoised_latent: [1, 144, L]; // float32
 
 // Vocoder inputs
-latent: [1, 144, L]             // float32
+latent: [1, 144, L]; // float32
 
 // Vocoder output
-wav_tts: [1, samples]           // float32
+wav_tts: [1, samples]; // float32
 ```
 
 ### Implementation Notes
 
 **Diffusion Loop:**
+
 - Default 5 steps (configurable via `totalStep`)
 - Higher steps = better quality but slower
 - Each step refines the latent representation
 - Use Float32Array for step tensors (not BigInt64Array!)
 
 **Output Keys:**
+
 - Vector estimator returns `denoised_latent` (not `latent`)
 - Vocoder returns `wav_tts` (not `audio` or `wav`)
 
 **Text Processing:**
+
 - Uses unicode_indexer.json for character-to-phoneme mapping
 - Max text length: 512 characters
 - Padding: 0-filled to maxLength
 
 **Voice Styles:**
+
 - Pre-extracted embeddings in JSON format
 - `style_ttl` for encoder (text-to-latent)
 - `style_dp` for duration predictor
@@ -817,6 +828,7 @@ await provider.speak('Hello world');
 ```
 
 **Features:**
+
 - Text chunking for long inputs (200 chars per chunk)
 - Web Audio API playback
 - Pause/resume support (context suspension)

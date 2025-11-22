@@ -1,27 +1,27 @@
 <script>
-/**
- * FailureCheckController - Failure Check screen controller
- *
- * Manages the Failure Check screen using the useFailureCheck composable.
- * Handles button state, damage rolls, and displays current card info.
- *
- * @component
- */
+	/**
+	 * FailureCheckController - Failure Check screen controller
+	 *
+	 * Manages the Failure Check screen using the useFailureCheck composable.
+	 * Handles button state, damage rolls, and displays current card info.
+	 *
+	 * @component
+	 */
 
-import { useFailureCheck } from '../../composables/screen/useFailureCheck.svelte.js';
-import { gameState } from '../../stores/gameStore.svelte.js';
-import ContinueButton from '../ContinueButton.svelte';
-import ButtonBar from '../ButtonBar.svelte';
+	import { useFailureCheck } from '../../composables/screen/useFailureCheck.svelte.js';
+	import { gameState } from '../../stores/gameStore.svelte.js';
+	import ContinueButton from '../ContinueButton.svelte';
+	import ButtonBar from '../ButtonBar.svelte';
 
-let { onCompleted = () => {}, triggerAutoPlay = null } = $props();
+	let { onCompleted = () => {}, triggerAutoPlay = null } = $props();
 
-// Use composable for state management
-const failureCheck = useFailureCheck(onCompleted);
+	// Use composable for state management
+	const failureCheck = useFailureCheck(onCompleted);
 
-// Handle button click
-async function handleClick() {
-	await failureCheck.handleFailureCheck(triggerAutoPlay);
-}
+	// Handle button click
+	async function handleClick() {
+		await failureCheck.handleFailureCheck(triggerAutoPlay);
+	}
 </script>
 
 <div class="failure-check-screen">
@@ -51,7 +51,7 @@ async function handleClick() {
 		width: 100%;
 		height: 100%;
 		display: grid;
-		text-align: center;	
+		text-align: center;
 		gap: 1rem;
 		align-items: end;
 	}

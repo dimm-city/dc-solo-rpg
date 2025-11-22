@@ -124,7 +124,6 @@ test.describe('External Resource Loading Issues', () => {
 			// The test passes if we can document the failures
 			// The page crashing is documented here for fixing
 			expect(failedResources.length).toBeGreaterThan(0);
-
 		} catch (error) {
 			console.log(`\n❌ Navigation or page interaction failed:`);
 			console.log(`   ${error.message}\n`);
@@ -134,7 +133,7 @@ test.describe('External Resource Loading Issues', () => {
 
 	test('should handle missing Google Fonts gracefully', async ({ page }) => {
 		// Block Google Fonts
-		await page.route('https://fonts.googleapis.com/**', route => route.abort());
+		await page.route('https://fonts.googleapis.com/**', (route) => route.abort());
 
 		await page.goto('http://localhost:5173/', {
 			waitUntil: 'domcontentloaded',
@@ -158,7 +157,7 @@ test.describe('External Resource Loading Issues', () => {
 
 	test('should handle missing augmented-ui CSS gracefully', async ({ page }) => {
 		// Block augmented-ui
-		await page.route('https://unpkg.com/**', route => route.abort());
+		await page.route('https://unpkg.com/**', (route) => route.abort());
 
 		await page.goto('http://localhost:5173/', {
 			waitUntil: 'domcontentloaded',
@@ -182,7 +181,7 @@ test.describe('External Resource Loading Issues', () => {
 
 	test('should handle all external resource failures gracefully', async ({ page }) => {
 		// Block ALL external resources
-		await page.route('https://**', route => route.abort());
+		await page.route('https://**', (route) => route.abort());
 
 		await page.goto('http://localhost:5173/', {
 			waitUntil: 'domcontentloaded',

@@ -92,11 +92,12 @@
 			onchange={(e) => handleTTSSettingChange('ttsProvider', e.target.value)}
 		>
 			<option value="browser">Browser (Free, No API Key)</option>
-			<option value="supertonic" disabled={!providerAvailability.supertonic}>
+			<!-- Supertonic Neural TTS temporarily disabled for testing -->
+			<!-- <option value="supertonic" disabled={!providerAvailability.supertonic}>
 				Supertonic Neural TTS {providerAvailability.supertonic
 					? '(Free, Downloads from HF)'
 					: '(HF Unavailable)'}
-			</option>
+			</option> -->
 			<option value="openai">OpenAI TTS</option>
 			<option value="elevenlabs">ElevenLabs</option>
 		</select>
@@ -153,7 +154,9 @@
 	{:else if getAudioSettings().ttsProvider === 'supertonic'}
 		<div class="info-box">
 			<p>
-				<strong>Note:</strong> Supertonic loads neural TTS models (~265MB) from Hugging Face CDN, then processes speech on your device using ONNX Runtime Web (WASM/WebGPU). First use downloads models; subsequent uses are instant. No API key required and no data sent to servers.
+				<strong>Note:</strong> Supertonic loads neural TTS models (~265MB) from Hugging Face CDN, then
+				processes speech on your device using ONNX Runtime Web (WASM/WebGPU). First use downloads models;
+				subsequent uses are instant. No API key required and no data sent to servers.
 			</p>
 		</div>
 

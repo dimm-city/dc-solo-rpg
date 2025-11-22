@@ -176,7 +176,6 @@
 		margin: var(--space-xs) 0 0 0;
 	}
 
-
 	/* Content */
 	.browse-content {
 		flex: 1;
@@ -269,7 +268,6 @@
 		padding: var(--space-lg);
 	}
 
-
 	/* Mobile optimizations */
 	@media (max-width: 640px) {
 		.browse-games {
@@ -310,12 +308,10 @@
 			width: 100%;
 		}
 
-
 		.games-grid {
 			grid-template-columns: 1fr;
 			gap: var(--space-md);
 		}
-
 	}
 
 	/* Extra small screens */
@@ -336,8 +332,6 @@
 			width: 36px;
 			height: 36px;
 		}
-
-
 	}
 
 	/* Accessibility - Reduced motion */
