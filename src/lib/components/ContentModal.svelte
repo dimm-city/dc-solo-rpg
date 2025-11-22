@@ -5,6 +5,8 @@
 	 * Uses portal rendering and consistent styling with CSS variables
 	 */
 	import { onMount, onDestroy } from 'svelte';
+	import { fade, scale } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
 
 	let {
 		children,
@@ -69,54 +71,69 @@
 		onkeydown={handleKeydown}
 		role="button"
 		tabindex="0"
+		in:fade={{ duration: 200, easing: cubicOut }}
+		out:fade={{ duration: 150, easing: cubicOut }}
 	>
-		<div class="content-modal-container" data-augmented-ui="tl-clip tr-clip br-clip bl-clip border">
-			<div class="content-header">
-				<h2>{title}</h2>
-				<button class="close-button" onclick={onClose} aria-label="Close {title}">×</button>
-			</div>
-
-			<div class="content-body">
-				{@render children()}
-			</div>
-
-			{#if showFooter}
-				<div class="content-footer">
-					<button class="done-button" onclick={onClose}>
-						<span>{footerButtonText}</span>
-						{#if footerButtonIcon === 'check'}
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								width="18"
-								height="18"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="2"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-							>
-								<polyline points="20 6 9 17 4 12"></polyline>
-							</svg>
-						{:else if footerButtonIcon === 'close'}
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								width="18"
-								height="18"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="2"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-							>
-								<line x1="18" y1="6" x2="6" y2="18"></line>
-								<line x1="6" y1="6" x2="18" y2="18"></line>
-							</svg>
-						{/if}
-					</button>
+		<div
+			class="content-modal-wrapper"
+			in:scale={{ duration: 250, start: 0.92, opacity: 0, easing: cubicOut }}
+			out:scale={{ duration: 200, start: 0.95, opacity: 0, easing: cubicOut }}
+		>
+			<!-- Augmented UI wrapper (non-scrollable) -->
+			<div
+				class="content-modal-container"
+				data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
+			>
+				<div class="content-header">
+					<h2>{title}</h2>
+					<button class="close-button" onclick={onClose} aria-label="Close {title}">×</button>
 				</div>
-			{/if}
+
+				<!-- Scrollable body wrapper -->
+				<div class="content-body-wrapper">
+					<div class="content-body">
+						{@render children()}
+					</div>
+				</div>
+
+				{#if showFooter}
+					<div class="content-footer">
+						<button class="done-button" onclick={onClose}>
+							<span>{footerButtonText}</span>
+							{#if footerButtonIcon === 'check'}
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									width="18"
+									height="18"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+								>
+									<polyline points="20 6 9 17 4 12"></polyline>
+								</svg>
+							{:else if footerButtonIcon === 'close'}
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									width="18"
+									height="18"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+								>
+									<line x1="18" y1="6" x2="6" y2="18"></line>
+									<line x1="6" y1="6" x2="18" y2="18"></line>
+								</svg>
+							{/if}
+						</button>
+					</div>
+				{/if}
+			</div>
 		</div>
 	</div>
 {/if}
@@ -149,12 +166,18 @@
 		backdrop-filter: blur(2px);
 	}
 
-	/* Modal container */
-	.content-modal-container {
-		position: relative;
+	/* Wrapper for scale animation */
+	.content-modal-wrapper {
 		width: 90%;
 		max-width: 600px;
 		max-height: 85vh;
+		display: flex;
+	}
+
+	/* Modal container with augmented UI (non-scrollable) */
+	.content-modal-container {
+		position: relative;
+		width: 100%;
 		background: var(--dc-default-container-bg, rgba(13, 27, 42, 0.95));
 		border: 2px solid var(--dc-accent-color, #3a9fc7);
 		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
@@ -179,6 +202,7 @@
 		padding: var(--space-md, 1rem);
 		border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 		background: rgba(0, 0, 0, 0.2);
+		flex-shrink: 0; /* Don't shrink header */
 	}
 
 	.content-header h2 {
@@ -210,10 +234,16 @@
 		opacity: 1;
 	}
 
-	/* Body */
-	.content-body {
+	/* Body wrapper - this is the scrollable container */
+	.content-body-wrapper {
 		flex: 1;
 		overflow-y: auto;
+		overflow-x: hidden;
+		min-height: 0; /* Important for flex scrolling */
+	}
+
+	/* Body - content container (not scrollable itself) */
+	.content-body {
 		padding: var(--space-lg, 1.5rem);
 		color: var(--dc-default-text-color, #ffffff);
 	}
@@ -225,6 +255,7 @@
 		display: flex;
 		justify-content: center;
 		background: rgba(0, 0, 0, 0.2);
+		flex-shrink: 0; /* Don't shrink footer */
 	}
 
 	.done-button {
@@ -254,7 +285,7 @@
 
 	/* Responsive adjustments */
 	@media (max-width: 768px) {
-		.content-modal-container {
+		.content-modal-wrapper {
 			width: 95%;
 			max-height: 90vh;
 		}
@@ -269,10 +300,9 @@
 	}
 
 	@media (max-width: 480px) {
-		.content-modal-container {
+		.content-modal-wrapper {
 			width: 100%;
 			max-height: 100vh;
-			border-radius: 0;
 		}
 
 		.content-header h2 {
@@ -281,6 +311,14 @@
 
 		.content-body {
 			padding: var(--space-sm, 0.75rem);
+		}
+	}
+
+	/* Accessibility - Reduced motion */
+	@media (prefers-reduced-motion: reduce) {
+		.content-modal-backdrop,
+		.content-modal-wrapper {
+			transition: none !important;
 		}
 	}
 </style>

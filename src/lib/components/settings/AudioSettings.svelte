@@ -356,9 +356,7 @@
 
 <style>
 	.audio-settings-container {
-		padding: var(--space-md, 1rem);
-		max-height: 70vh;
-		overflow-y: auto;
+		/* Padding and scrolling handled by ContentModal */
 	}
 
 	h3 {
