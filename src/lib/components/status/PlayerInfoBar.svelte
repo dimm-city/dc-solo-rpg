@@ -2,13 +2,19 @@
 	/**
 	 * PlayerInfoBar - Player and round information bar with action buttons
 	 *
-	 * Displays player name, game title, current round, and action buttons (exit, dice theme, settings, help).
+	 * Displays player name, game title, current round, and action buttons (exit, dice theme, automation presets, settings, help).
 	 * Uses Augmented UI styling with glassmorphism effects.
 	 *
 	 * @component
 	 */
 
 	import { gameState } from '../../stores/gameStore.svelte.js';
+	import {
+		getAudioSettings,
+		getGameplaySettings,
+		updateAudioSettings,
+		updateGameplaySettings
+	} from '../../stores/audioStore.svelte.js';
 	import DiceThemePicker from '../DiceThemePicker.svelte';
 
 	let {
@@ -21,6 +27,85 @@
 	} = $props();
 
 	let showDiceThemePicker = $state(false);
+
+	// Compute active preset based on current settings
+	const activePreset = $derived(() => {
+		const audio = getAudioSettings();
+		const gameplay = getGameplaySettings();
+
+		// Full auto: all audio enabled + auto roll + auto continue + timed journaling
+		const isFullAuto =
+			audio.autoReadCards &&
+			audio.autoReadPrompts &&
+			audio.autoAnnounceRolls &&
+			gameplay.autoRollDice &&
+			gameplay.autoContinueAfterReading &&
+			gameplay.autoHandleJournaling === 'timed';
+
+		// Audio only: all audio enabled + no automation
+		const isAudioOnly =
+			audio.autoReadCards &&
+			audio.autoReadPrompts &&
+			audio.autoAnnounceRolls &&
+			!gameplay.autoRollDice &&
+			!gameplay.autoContinueAfterReading &&
+			gameplay.autoHandleJournaling === 'manual';
+
+		// Disabled: all audio + automation off
+		const isDisabled =
+			!audio.autoReadCards &&
+			!audio.autoReadPrompts &&
+			!audio.autoAnnounceRolls &&
+			!gameplay.autoRollDice &&
+			!gameplay.autoContinueAfterReading &&
+			gameplay.autoHandleJournaling === 'manual';
+
+		if (isFullAuto) return 'full-auto';
+		if (isAudioOnly) return 'audio-only';
+		if (isDisabled) return 'disabled';
+		return 'custom';
+	});
+
+	function setFullAuto() {
+		updateAudioSettings({
+			autoReadCards: true,
+			autoReadPrompts: true,
+			autoAnnounceRolls: true
+		});
+		updateGameplaySettings({
+			autoRollDice: true,
+			autoContinueAfterReading: true,
+			autoAdvanceDelay: 2000,
+			autoHandleJournaling: 'timed',
+			journalPauseTime: 10000
+		});
+	}
+
+	function setAudioOnly() {
+		updateAudioSettings({
+			autoReadCards: true,
+			autoReadPrompts: true,
+			autoAnnounceRolls: true
+		});
+		updateGameplaySettings({
+			autoRollDice: false,
+			autoContinueAfterReading: false,
+			autoHandleJournaling: 'manual'
+		});
+	}
+
+	function setDisabled() {
+		updateAudioSettings({
+			autoReadCards: false,
+			autoReadPrompts: false,
+			autoAnnounceRolls: false
+		});
+		updateGameplaySettings({
+			autoRollDice: false,
+			autoContinueAfterReading: false,
+			autoHandleJournaling: 'manual'
+		});
+	}
 </script>
 
 <div
@@ -85,6 +170,78 @@
 			<path d="M10 14h.01" />
 			<path d="M15 6h.01" />
 			<path d="M18 9h.01" />
+		</svg>
+	</button>
+
+	<!-- Automation Preset Buttons -->
+	<button
+		class="status-bar-button preset-button"
+		class:active={activePreset() === 'full-auto'}
+		onclick={setFullAuto}
+		aria-label="Full Auto-Play"
+		title="Full Auto-Play"
+	>
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			width="20"
+			height="20"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			aria-hidden="true"
+		>
+			<polygon points="5 3 19 12 5 21 5 3" />
+		</svg>
+	</button>
+
+	<button
+		class="status-bar-button preset-button"
+		class:active={activePreset() === 'audio-only'}
+		onclick={setAudioOnly}
+		aria-label="Audio Only"
+		title="Audio Only"
+	>
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			width="20"
+			height="20"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			aria-hidden="true"
+		>
+			<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+			<path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+		</svg>
+	</button>
+
+	<button
+		class="status-bar-button preset-button"
+		class:active={activePreset() === 'disabled'}
+		onclick={setDisabled}
+		aria-label="Disable Automation"
+		title="Disable Automation"
+	>
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			width="20"
+			height="20"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			aria-hidden="true"
+		>
+			<circle cx="12" cy="12" r="10" />
+			<path d="m4.9 4.9 14.2 14.2" />
 		</svg>
 	</button>
 
@@ -165,10 +322,10 @@
 		--aug-br: 14px;
 		--aug-bl: 14px;
 
-		/* Layout with buttons on both ends + dice theme picker */
+		/* Layout with buttons on both ends + dice theme picker + automation presets */
 		display: grid;
 		align-items: center;
-		grid-template-columns: auto 1fr auto 1fr auto auto;
+		grid-template-columns: auto 1fr auto 1fr auto auto auto auto auto auto;
 		gap: var(--space-sm);
 		padding-inline: var(--space-md);
 		padding-block: var(--space-sm);
@@ -220,6 +377,19 @@
 
 	.status-bar-button svg {
 		filter: drop-shadow(0 0 4px currentColor);
+	}
+
+	/* Preset button active state */
+	.preset-button.active {
+		color: #ff00ff;
+		background: rgba(255, 0, 255, 0.15);
+		box-shadow: 0 0 15px rgba(255, 0, 255, 0.4);
+	}
+
+	.preset-button.active:hover {
+		color: #ff00ff;
+		background: rgba(255, 0, 255, 0.2);
+		box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
 	}
 
 	.info-segment {
@@ -279,7 +449,7 @@
 	/* Mobile responsive */
 	@media (max-width: 600px) {
 		.player-round-bar {
-			grid-template-columns: auto 1fr auto auto;
+			grid-template-columns: auto 1fr auto auto auto;
 			gap: var(--space-xs);
 		}
 
@@ -293,6 +463,11 @@
 
 		.info-segment:nth-child(4) {
 			display: none; /* Hide round on mobile for space */
+		}
+
+		/* Hide preset buttons on mobile to save space */
+		.preset-button {
+			display: none;
 		}
 	}
 
