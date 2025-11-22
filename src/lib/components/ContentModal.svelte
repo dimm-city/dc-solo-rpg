@@ -5,7 +5,7 @@
 	 * Uses portal rendering and consistent styling with CSS variables
 	 */
 	import { onMount, onDestroy } from 'svelte';
-	import { fade, scale } from 'svelte/transition';
+	import { fade, fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 
 	let {
@@ -73,12 +73,11 @@
 		tabindex="0"
 		transition:fade={{ duration: 200, easing: cubicOut }}
 	>
-		<!-- Augmented UI wrapper with scale animation -->
+		<!-- Augmented UI wrapper with fly animation -->
 		<div
 			class="content-modal-wrapper"
 			data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
-			in:scale={{ duration: 250, start: 0.92, opacity: 0, easing: cubicOut }}
-			out:scale={{ duration: 200, start: 0.92, opacity: 0, easing: cubicOut }}
+			transition:fly={{ y: -50, duration: 300, opacity: 1 }}
 		>
 			<!-- Modal container (non-scrollable structure) -->
 			<div class="content-modal-container">
@@ -164,16 +163,22 @@
 		backdrop-filter: blur(2px);
 	}
 
-	/* Wrapper with augmented UI and scale animation */
+	/* Wrapper with augmented UI and fly animation */
 	.content-modal-wrapper {
 		width: 90%;
 		max-width: 600px;
 		max-height: 85vh;
 		display: flex;
 
+		/* Force consistent colors for modals (home page theme) */
+		--dc-accent-color: #3a9fc7; /* Cyan blue */
+		--dc-default-container-bg: rgba(13, 27, 42, 0.95); /* Dark blue */
+		--dc-default-text-color: #ffffff; /* White */
+		--dc-button-bg: #1387b9; /* Blue */
+
 		/* Augmented UI styling */
 		--aug-border-all: 2px;
-		--aug-border-bg: var(--dc-accent-color, #3a9fc7);
+		--aug-border-bg: var(--dc-accent-color);
 		--aug-tl: 12px;
 		--aug-tr: 12px;
 		--aug-br: 12px;

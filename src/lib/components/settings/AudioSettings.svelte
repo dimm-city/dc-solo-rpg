@@ -7,6 +7,7 @@
 		getAvailableVoices
 	} from '../../stores/audioStore.svelte.js';
 	import { onMount } from 'svelte';
+	import DiceThemePicker from '../DiceThemePicker.svelte';
 
 	// Direct access to reactive state - don't use $derived here
 	let availableVoices = $state([]);
@@ -17,6 +18,7 @@
 		openai: true,
 		elevenlabs: true
 	});
+	let showDiceThemePicker = $state(false);
 
 	onMount(async () => {
 		// Load available voices
@@ -352,7 +354,35 @@
 			Disable All
 		</button>
 	</div>
+
+	<h3>Visual Settings</h3>
+
+	<div class="settings-section">
+		<h4>Dice Theme</h4>
+
+		<div class="setting-row">
+			<button class="dice-theme-button" onclick={() => (showDiceThemePicker = true)}>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="20"
+					height="20"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+				>
+					<rect x="3" y="3" width="18" height="18" rx="2" />
+					<circle cx="8.5" cy="8.5" r="1.5" />
+					<circle cx="15.5" cy="15.5" r="1.5" />
+				</svg>
+				<span>Change Dice Theme</span>
+			</button>
+			<p class="setting-description">Customize the appearance of your 3D dice</p>
+		</div>
+	</div>
 </div>
+
+<DiceThemePicker bind:isOpen={showDiceThemePicker} />
 
 <style>
 	.audio-settings-container {
@@ -525,5 +555,37 @@
 	.error-message svg {
 		flex-shrink: 0;
 		color: #ff6b6b;
+	}
+
+	.dice-theme-button {
+		display: flex;
+		align-items: center;
+		gap: var(--space-sm, 0.5rem);
+		width: 100%;
+		padding: var(--space-md, 1rem);
+		background: var(--translucent-dark, rgba(17, 17, 17, 0.75));
+		color: var(--light, white);
+		border: 1px solid var(--secondary-accent, #c643ff);
+		border-radius: var(--dc-default-border-radius, 0.175rem);
+		cursor: pointer;
+		font-size: 1rem;
+		font-weight: 500;
+		font-family: var(--main-font-family);
+		transition: all 0.2s ease;
+	}
+
+	.dice-theme-button svg {
+		flex-shrink: 0;
+	}
+
+	.dice-theme-button:hover {
+		background: var(--secondary-accent, #c643ff);
+		border-color: var(--third-accent, #ff15cb);
+		transform: translateY(-1px);
+		box-shadow: 0 4px 8px rgba(199, 67, 255, 0.3);
+	}
+
+	.dice-theme-button:active {
+		transform: translateY(0);
 	}
 </style>
