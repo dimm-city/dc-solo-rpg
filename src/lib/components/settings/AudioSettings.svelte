@@ -7,7 +7,6 @@
 		getAvailableVoices
 	} from '../../stores/audioStore.svelte.js';
 	import { onMount } from 'svelte';
-	import DiceThemePicker from '../DiceThemePicker.svelte';
 
 	// Direct access to reactive state - don't use $derived here
 	let availableVoices = $state([]);
@@ -18,7 +17,6 @@
 		openai: true,
 		elevenlabs: true
 	});
-	let showDiceThemePicker = $state(false);
 
 	onMount(async () => {
 		// Load available voices
@@ -355,39 +353,12 @@
 		</button>
 	</div>
 
-	<h3>Visual Settings</h3>
 
-	<div class="settings-section">
-		<h4>Dice Theme</h4>
-
-		<div class="setting-row">
-			<button class="dice-theme-button" onclick={() => (showDiceThemePicker = true)}>
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					width="20"
-					height="20"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-				>
-					<rect x="3" y="3" width="18" height="18" rx="2" />
-					<circle cx="8.5" cy="8.5" r="1.5" />
-					<circle cx="15.5" cy="15.5" r="1.5" />
-				</svg>
-				<span>Change Dice Theme</span>
-			</button>
-			<p class="setting-description">Customize the appearance of your 3D dice</p>
-		</div>
-	</div>
 </div>
 
-<DiceThemePicker bind:isOpen={showDiceThemePicker} />
 
 <style>
-	.audio-settings-container {
-		/* Padding and scrolling handled by ContentModal */
-	}
+
 
 	h3 {
 		margin: var(--space-md, 1rem) 0 var(--space-sm, 0.5rem) 0;
