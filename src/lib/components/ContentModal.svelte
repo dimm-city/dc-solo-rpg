@@ -77,7 +77,8 @@
 		<div
 			class="content-modal-wrapper"
 			data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
-			transition:scale={{ duration: 250, start: 0.92, opacity: 0, easing: cubicOut }}
+			in:scale={{ duration: 250, start: 0.92, opacity: 0, easing: cubicOut }}
+			out:scale={{ duration: 200, start: 0.92, opacity: 0, easing: cubicOut }}
 		>
 			<!-- Modal container (non-scrollable structure) -->
 			<div class="content-modal-container">

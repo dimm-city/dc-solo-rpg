@@ -5,14 +5,12 @@
 	import { browser } from '$app/environment';
 	import ConfirmModal from '$lib/components/ConfirmModal.svelte';
 	import AboutModal from '$lib/components/AboutModal.svelte';
-	import HomeSettingsModal from '$lib/components/HomeSettingsModal.svelte';
+	import SettingsModal from '$lib/components/settings/SettingsModal.svelte';
 	import HelpModal from '$lib/components/HelpModal.svelte';
 	import Splash from '$lib/components/Splash.svelte';
 	import NeuralBackground from '$lib/components/NeuralBackground.svelte';
 	import BrowseGames from '$lib/components/BrowseGames.svelte';
 	import StoryMode from '$lib/components/StoryMode.svelte';
-	import { Difficulty } from '$lib/configuration/DifficultyLevels.js';
-	import { getAllDiceThemes } from '$lib/configuration/DiceThemes.js';
 	import {
 		hasSeenInstructions,
 		markInstructionsAsSeen,
@@ -63,13 +61,6 @@
 	let showStoryMode = $state(false);
 	let selectedStoryGame = $state(null);
 
-	// Settings state
-	let selectedDifficulty = $state(Difficulty.NORMAL);
-	let selectedDiceTheme = $state(null);
-
-	// Get actual dice themes from configuration
-	const availableDiceThemes = getAllDiceThemes();
-
 	// On mount, check if we should skip splash and go straight to content
 	onMount(async () => {
 		// Migrate localStorage saves to IndexedDB (one-time migration)
@@ -98,25 +89,6 @@
 				showContent = true;
 			} else {
 				showInstructionsChoice = true;
-			}
-		}
-
-		// Load settings from localStorage
-		if (browser) {
-			const savedSettings = localStorage.getItem('gameSettings');
-			if (savedSettings) {
-				try {
-					const settings = JSON.parse(savedSettings);
-					selectedDifficulty = settings.difficulty || Difficulty.NORMAL;
-					selectedDiceTheme =
-						availableDiceThemes.find((t) => t.key === settings.diceTheme) || availableDiceThemes[0];
-				} catch (e) {
-					console.error('Failed to load settings:', e);
-					selectedDiceTheme = availableDiceThemes[0];
-				}
-			} else {
-				// Set defaults if no settings exist
-				selectedDiceTheme = availableDiceThemes[0];
 			}
 		}
 
@@ -906,13 +878,7 @@
 />
 
 <!-- Settings Modal -->
-<HomeSettingsModal
-	isOpen={showSettingsModal}
-	onClose={() => (showSettingsModal = false)}
-	bind:selectedDifficulty
-	bind:selectedDiceTheme
-	{availableDiceThemes}
-/>
+<SettingsModal isOpen={showSettingsModal} onClose={() => (showSettingsModal = false)} />
 
 <!-- Help Modal -->
 <HelpModal isOpen={showHelpModal} onClose={() => (showHelpModal = false)} />
