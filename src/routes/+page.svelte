@@ -7,6 +7,7 @@
 	import AboutModal from '$lib/components/AboutModal.svelte';
 	import SettingsModal from '$lib/components/settings/SettingsModal.svelte';
 	import HelpModal from '$lib/components/HelpModal.svelte';
+	import DiceThemePicker from '$lib/components/DiceThemePicker.svelte';
 	import Splash from '$lib/components/Splash.svelte';
 	import NeuralBackground from '$lib/components/NeuralBackground.svelte';
 	import BrowseGames from '$lib/components/BrowseGames.svelte';
@@ -40,11 +41,12 @@
 	let showAboutModal = $state(false);
 	let showSettingsModal = $state(false);
 	let showHelpModal = $state(false);
+	let showDiceThemePicker = $state(false);
 	let showMobileMenu = $state(false);
 
 	// Computed: true when any modal is open (for accessibility and click blocking)
 	const anyModalOpen = $derived(
-		showAboutModal || showSettingsModal || showHelpModal || showDeleteModal
+		showAboutModal || showSettingsModal || showHelpModal || showDeleteModal || showDiceThemePicker
 	);
 	let customGames = $state([]);
 	let allGames = $state([]);
@@ -307,6 +309,12 @@
 		showMobileMenu = false;
 	}
 
+	function handleDicePickerClick(e) {
+		e.preventDefault();
+		showDiceThemePicker = true;
+		showMobileMenu = false;
+	}
+
 	function toggleMobileMenu() {
 		showMobileMenu = !showMobileMenu;
 	}
@@ -344,6 +352,8 @@
 				showSettingsModal = false;
 			} else if (showHelpModal) {
 				showHelpModal = false;
+			} else if (showDiceThemePicker) {
+				showDiceThemePicker = false;
 			} else if (showDeleteModal) {
 				cancelDeleteSave();
 			}
@@ -547,6 +557,28 @@
 						></path>
 					</svg>
 				</button>
+				<button
+					onclick={handleDicePickerClick}
+					class="header-button dice-button"
+					aria-label="Change Dice Theme"
+					title="Change Dice Theme"
+				>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="24"
+						height="24"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<rect x="3" y="3" width="18" height="18" rx="2" />
+						<circle cx="8.5" cy="8.5" r="1.5" />
+						<circle cx="15.5" cy="15.5" r="1.5" />
+					</svg>
+				</button>
 				<button onclick={handleAboutClick} class="header-button" aria-label="About">
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
@@ -671,6 +703,24 @@
 						></path>
 					</svg>
 					<span>Settings</span>
+				</button>
+				<button class="mobile-menu-item" onclick={handleDicePickerClick}>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="20"
+						height="20"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<rect x="3" y="3" width="18" height="18" rx="2" />
+						<circle cx="8.5" cy="8.5" r="1.5" />
+						<circle cx="15.5" cy="15.5" r="1.5" />
+					</svg>
+					<span>Dice Theme</span>
 				</button>
 				<button class="mobile-menu-item" onclick={handleAboutClick}>
 					<svg
@@ -882,6 +932,9 @@
 
 <!-- Help Modal -->
 <HelpModal isOpen={showHelpModal} onClose={() => (showHelpModal = false)} />
+
+<!-- Dice Theme Picker -->
+<DiceThemePicker bind:isOpen={showDiceThemePicker} />
 
 <style>
 	:global(body) {

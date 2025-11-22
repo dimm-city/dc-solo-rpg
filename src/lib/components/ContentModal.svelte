@@ -41,13 +41,7 @@
 			// Move the modal to the portal
 			portalTarget.appendChild(modalElement);
 		}
-
-		// Cleanup function
-		return () => {
-			if (modalElement && portalTarget && portalTarget.contains(modalElement)) {
-				portalTarget.removeChild(modalElement);
-			}
-		};
+		// Don't remove on cleanup - let Svelte transitions handle it
 	});
 
 	function handleBackdropClick(event) {
