@@ -79,12 +79,7 @@
 
 		<div class="modal-content">
 			<!-- AI Provider Section -->
-			<AIProviderSection
-				bind:aiProvider
-				bind:aiApiKey
-				bind:aiModel
-				bind:customEndpoint
-			/>
+			<AIProviderSection bind:aiProvider bind:aiApiKey bind:aiModel bind:customEndpoint />
 
 			<!-- TTS Section - Now uses audioStore directly -->
 			<TTSSection />
@@ -102,9 +97,7 @@
 			{/if}
 
 			<div class="button-group">
-				<AugmentedButton onclick={onClose} style="secondary" label="Cancel">
-					Cancel
-				</AugmentedButton>
+				<AugmentedButton onclick={onClose} style="secondary" label="Cancel">Cancel</AugmentedButton>
 
 				<AugmentedButton
 					onclick={handleSave}

@@ -29,12 +29,14 @@ This document provides detailed, component-by-component refactoring instructions
 **Estimated Effort:** 2-3 days
 
 ### Before Structure
+
 ```
 StatusDisplay.svelte (2,006 lines)
 └── Everything in one file
 ```
 
 ### After Structure
+
 ```
 status/
 ├── StatusDisplay.svelte          (~200 lines) - Orchestrator
@@ -57,67 +59,70 @@ status/
 **New file:** `src/lib/components/status/PlayerInfoBar.svelte`
 
 **Props:**
+
 ```typescript
 interface PlayerInfoBarProps {
-    playerName: string;
-    gameTitle: string;
-    round: number;
-    onExitClick: () => void;
-    onHelpClick: () => void;
-    onSettingsClick: () => void;
-    onDiceThemeClick: () => void;
+	playerName: string;
+	gameTitle: string;
+	round: number;
+	onExitClick: () => void;
+	onHelpClick: () => void;
+	onSettingsClick: () => void;
+	onDiceThemeClick: () => void;
 }
 ```
 
 **Template:**
+
 ```svelte
 <script>
-    let {
-        playerName,
-        gameTitle,
-        round,
-        onExitClick,
-        onHelpClick,
-        onSettingsClick,
-        onDiceThemeClick
-    } = $props();
+	let {
+		playerName,
+		gameTitle,
+		round,
+		onExitClick,
+		onHelpClick,
+		onSettingsClick,
+		onDiceThemeClick
+	} = $props();
 </script>
 
 <div class="player-round-bar">
-    <div class="player-info">
-        <div class="player-name">{playerName}</div>
-        <div class="game-title">{gameTitle}</div>
-        <div class="round-number">Round {round}</div>
-    </div>
+	<div class="player-info">
+		<div class="player-name">{playerName}</div>
+		<div class="game-title">{gameTitle}</div>
+		<div class="round-number">Round {round}</div>
+	</div>
 
-    <div class="action-buttons">
-        <button onclick={onDiceThemeClick}>🎲</button>
-        <button onclick={onSettingsClick}>⚙️</button>
-        <button onclick={onHelpClick}>❓</button>
-        <button onclick={onExitClick}>✕</button>
-    </div>
+	<div class="action-buttons">
+		<button onclick={onDiceThemeClick}>🎲</button>
+		<button onclick={onSettingsClick}>⚙️</button>
+		<button onclick={onHelpClick}>❓</button>
+		<button onclick={onExitClick}>✕</button>
+	</div>
 </div>
 
 <style>
-    /* Copy styles from StatusDisplay lines 620-780 */
+	/* Copy styles from StatusDisplay lines 620-780 */
 </style>
 ```
 
 **Testing:**
+
 ```javascript
 // PlayerInfoBar.test.js
 import { render } from '@testing-library/svelte';
 import PlayerInfoBar from './PlayerInfoBar.svelte';
 
 test('displays player info correctly', () => {
-    const { getByText } = render(PlayerInfoBar, {
-        playerName: 'Test Player',
-        gameTitle: 'Test Game',
-        round: 3
-    });
+	const { getByText } = render(PlayerInfoBar, {
+		playerName: 'Test Player',
+		gameTitle: 'Test Game',
+		round: 3
+	});
 
-    expect(getByText('Test Player')).toBeInTheDocument();
-    expect(getByText('Round 3')).toBeInTheDocument();
+	expect(getByText('Test Player')).toBeInTheDocument();
+	expect(getByText('Round 3')).toBeInTheDocument();
 });
 ```
 
@@ -130,68 +135,66 @@ test('displays player info correctly', () => {
 **New file:** `src/lib/components/status/DiceReadout.svelte`
 
 **Props:**
+
 ```typescript
 interface DiceReadoutProps {
-    lastRoll: number;
-    isLucid: boolean;
-    isSurreal: boolean;
-    showBinaryPips?: boolean; // default: true
+	lastRoll: number;
+	isLucid: boolean;
+	isSurreal: boolean;
+	showBinaryPips?: boolean; // default: true
 }
 ```
 
 **Implementation:**
+
 ```svelte
 <script>
-    const PIP_COUNT = 5; // D20 rolls mapped to 5-bit binary display
+	const PIP_COUNT = 5; // D20 rolls mapped to 5-bit binary display
 
-    let {
-        lastRoll,
-        isLucid,
-        isSurreal,
-        showBinaryPips = true
-    } = $props();
+	let { lastRoll, isLucid, isSurreal, showBinaryPips = true } = $props();
 
-    const dicePips = $derived.by(() => {
-        const roll = lastRoll || 0;
-        const pips = new Array(PIP_COUNT).fill(false);
-        const binary = roll.toString(2).padStart(PIP_COUNT, '0');
-        for (let i = 0; i < PIP_COUNT; i++) {
-            pips[i] = binary[i] === '1';
-        }
-        return pips;
-    });
+	const dicePips = $derived.by(() => {
+		const roll = lastRoll || 0;
+		const pips = new Array(PIP_COUNT).fill(false);
+		const binary = roll.toString(2).padStart(PIP_COUNT, '0');
+		for (let i = 0; i < PIP_COUNT; i++) {
+			pips[i] = binary[i] === '1';
+		}
+		return pips;
+	});
 
-    const modifierState = $derived(() => {
-        if (isLucid) return 'lucid';
-        if (isSurreal) return 'surreal';
-        return null;
-    });
+	const modifierState = $derived(() => {
+		if (isLucid) return 'lucid';
+		if (isSurreal) return 'surreal';
+		return null;
+	});
 </script>
 
 <div class="dice-readout-panel" data-modifier={modifierState}>
-    <div class="dice-value">{lastRoll}</div>
+	<div class="dice-value">{lastRoll}</div>
 
-    {#if showBinaryPips}
-        <div class="binary-pips">
-            {#each dicePips as pip}
-                <div class="pip" class:active={pip}></div>
-            {/each}
-        </div>
-    {/if}
+	{#if showBinaryPips}
+		<div class="binary-pips">
+			{#each dicePips as pip}
+				<div class="pip" class:active={pip}></div>
+			{/each}
+		</div>
+	{/if}
 
-    {#if modifierState}
-        <div class="modifier-badge" class:lucid={isLucid} class:surreal={isSurreal}>
-            {isLucid ? 'LUCID' : 'SURREAL'}
-        </div>
-    {/if}
+	{#if modifierState}
+		<div class="modifier-badge" class:lucid={isLucid} class:surreal={isSurreal}>
+			{isLucid ? 'LUCID' : 'SURREAL'}
+		</div>
+	{/if}
 </div>
 
 <style>
-    /* Copy styles from StatusDisplay lines 559-632 */
+	/* Copy styles from StatusDisplay lines 559-632 */
 </style>
 ```
 
 **Reusability:** Can be used in:
+
 - StatusDisplay (current)
 - GameScreen during roll screens
 - StoryMode to show roll results
@@ -205,45 +208,46 @@ interface DiceReadoutProps {
 **Purpose:** Container for the 4 stat panels with responsive layout
 
 **Template:**
+
 ```svelte
 <script>
-    import StabilityPanel from './StabilityPanel.svelte';
-    import FailureCounterPanel from './FailureCounterPanel.svelte';
-    import AbilitiesPanel from './AbilitiesPanel.svelte';
-    import SuccessTokensPanel from './SuccessTokensPanel.svelte';
+	import StabilityPanel from './StabilityPanel.svelte';
+	import FailureCounterPanel from './FailureCounterPanel.svelte';
+	import AbilitiesPanel from './AbilitiesPanel.svelte';
+	import SuccessTokensPanel from './SuccessTokensPanel.svelte';
 
-    let {
-        stability,
-        maxStability,
-        isLucid,
-        isSurreal,
-        kingsRevealed,
-        acesRevealed,
-        maxAces,
-        tokens,
-        maxTokens
-    } = $props();
+	let {
+		stability,
+		maxStability,
+		isLucid,
+		isSurreal,
+		kingsRevealed,
+		acesRevealed,
+		maxAces,
+		tokens,
+		maxTokens
+	} = $props();
 </script>
 
 <div class="stats-grid">
-    <StabilityPanel {stability} {maxStability} {isLucid} {isSurreal} />
-    <FailureCounterPanel {kingsRevealed} />
-    <AbilitiesPanel {acesRevealed} {maxAces} />
-    <SuccessTokensPanel {tokens} {maxTokens} />
+	<StabilityPanel {stability} {maxStability} {isLucid} {isSurreal} />
+	<FailureCounterPanel {kingsRevealed} />
+	<AbilitiesPanel {acesRevealed} {maxAces} />
+	<SuccessTokensPanel {tokens} {maxTokens} />
 </div>
 
 <style>
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: var(--space-sm);
-    }
+	.stats-grid {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		gap: var(--space-sm);
+	}
 
-    @media (max-width: 768px) {
-        .stats-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
+	@media (max-width: 768px) {
+		.stats-grid {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
 </style>
 ```
 
@@ -252,61 +256,63 @@ interface DiceReadoutProps {
 #### Step 4: Create Individual Stat Panels
 
 **StabilityPanel.svelte:**
+
 ```svelte
 <script>
-    let { stability, maxStability, isLucid, isSurreal } = $props();
+	let { stability, maxStability, isLucid, isSurreal } = $props();
 
-    const fillPercentage = $derived((stability / maxStability) * 100);
-    const barClass = $derived(() => {
-        if (stability <= 5) return 'critical';
-        if (stability <= 10) return 'warning';
-        return 'healthy';
-    });
+	const fillPercentage = $derived((stability / maxStability) * 100);
+	const barClass = $derived(() => {
+		if (stability <= 5) return 'critical';
+		if (stability <= 10) return 'warning';
+		return 'healthy';
+	});
 </script>
 
 <div class="stat-panel stability-panel">
-    <div class="stat-header">
-        <span class="stat-label">Stability</span>
-        <span class="stat-value">{stability}/{maxStability}</span>
-    </div>
+	<div class="stat-header">
+		<span class="stat-label">Stability</span>
+		<span class="stat-value">{stability}/{maxStability}</span>
+	</div>
 
-    <div class="stability-bar" class:{barClass}>
-        <div class="fill" style="width: {fillPercentage}%"></div>
-    </div>
+	<div class="stability-bar" class:{barClass}>
+		<div class="fill" style="width: {fillPercentage}%"></div>
+	</div>
 
-    {#if isLucid || isSurreal}
-        <div class="modifier-badge" class:lucid={isLucid} class:surreal={isSurreal}>
-            {isLucid ? '↑ LUCID' : '↓ SURREAL'}
-        </div>
-    {/if}
+	{#if isLucid || isSurreal}
+		<div class="modifier-badge" class:lucid={isLucid} class:surreal={isSurreal}>
+			{isLucid ? '↑ LUCID' : '↓ SURREAL'}
+		</div>
+	{/if}
 </div>
 ```
 
 **FailureCounterPanel.svelte:**
+
 ```svelte
 <script>
-    let { kingsRevealed } = $props();
+	let { kingsRevealed } = $props();
 
-    const kings = [
-        { suit: 'hearts', revealed: kingsRevealed.hearts },
-        { suit: 'diamonds', revealed: kingsRevealed.diamonds },
-        { suit: 'clubs', revealed: kingsRevealed.clubs },
-        { suit: 'spades', revealed: kingsRevealed.spades }
-    ];
+	const kings = [
+		{ suit: 'hearts', revealed: kingsRevealed.hearts },
+		{ suit: 'diamonds', revealed: kingsRevealed.diamonds },
+		{ suit: 'clubs', revealed: kingsRevealed.clubs },
+		{ suit: 'spades', revealed: kingsRevealed.spades }
+	];
 </script>
 
 <div class="stat-panel failure-panel">
-    <div class="stat-header">
-        <span class="stat-label">Failure</span>
-    </div>
+	<div class="stat-header">
+		<span class="stat-label">Failure</span>
+	</div>
 
-    <div class="kings-grid">
-        {#each kings as king}
-            <div class="king-indicator" class:revealed={king.revealed} data-suit={king.suit}>
-                <span class="suit-symbol">♥♦♣♠</span>
-            </div>
-        {/each}
-    </div>
+	<div class="kings-grid">
+		{#each kings as king}
+			<div class="king-indicator" class:revealed={king.revealed} data-suit={king.suit}>
+				<span class="suit-symbol">♥♦♣♠</span>
+			</div>
+		{/each}
+	</div>
 </div>
 ```
 
@@ -320,62 +326,61 @@ interface DiceReadoutProps {
 
 ```svelte
 <script>
-    import { gameState } from '$lib/stores/gameStore.svelte.js';
-    import PlayerInfoBar from './status/PlayerInfoBar.svelte';
-    import StatsGrid from './status/StatsGrid.svelte';
-    import DiceReadout from './status/DiceReadout.svelte';
-    import ProgressTracker from './status/ProgressTracker.svelte';
+	import { gameState } from '$lib/stores/gameStore.svelte.js';
+	import PlayerInfoBar from './status/PlayerInfoBar.svelte';
+	import StatsGrid from './status/StatsGrid.svelte';
+	import DiceReadout from './status/DiceReadout.svelte';
+	import ProgressTracker from './status/ProgressTracker.svelte';
 
-    let { onHelpClick, onExitClick, onSettingsClick } = $props();
+	let { onHelpClick, onExitClick, onSettingsClick } = $props();
 </script>
 
 <div class="status-display-container">
-    <PlayerInfoBar
-        playerName={gameState.playerName}
-        gameTitle={gameState.config?.title}
-        round={gameState.round}
-        {onExitClick}
-        {onHelpClick}
-        {onSettingsClick}
-        onDiceThemeClick={() => {/* ... */}}
-    />
+	<PlayerInfoBar
+		playerName={gameState.playerName}
+		gameTitle={gameState.config?.title}
+		round={gameState.round}
+		{onExitClick}
+		{onHelpClick}
+		{onSettingsClick}
+		onDiceThemeClick={() => {
+			/* ... */
+		}}
+	/>
 
-    <StatsGrid
-        stability={gameState.tower}
-        maxStability={20}
-        isLucid={gameState.isLucid}
-        isSurreal={gameState.isSurreal}
-        kingsRevealed={{
-            hearts: gameState.kingOfHearts,
-            diamonds: gameState.kingOfDiamonds,
-            clubs: gameState.kingOfClubs,
-            spades: gameState.kingOfSpades
-        }}
-        acesRevealed={gameState.acesRevealed}
-        maxAces={4}
-        tokens={gameState.tokens}
-        maxTokens={10}
-    />
+	<StatsGrid
+		stability={gameState.tower}
+		maxStability={20}
+		isLucid={gameState.isLucid}
+		isSurreal={gameState.isSurreal}
+		kingsRevealed={{
+			hearts: gameState.kingOfHearts,
+			diamonds: gameState.kingOfDiamonds,
+			clubs: gameState.kingOfClubs,
+			spades: gameState.kingOfSpades
+		}}
+		acesRevealed={gameState.acesRevealed}
+		maxAces={4}
+		tokens={gameState.tokens}
+		maxTokens={10}
+	/>
 
-    <DiceReadout
-        lastRoll={gameState.diceRoll}
-        isLucid={gameState.isLucid}
-        isSurreal={gameState.isSurreal}
-    />
+	<DiceReadout
+		lastRoll={gameState.diceRoll}
+		isLucid={gameState.isLucid}
+		isSurreal={gameState.isSurreal}
+	/>
 
-    <ProgressTracker
-        cardsDrawn={gameState.cardsDrawn}
-        totalCards={gameState.cardsToDraw}
-    />
+	<ProgressTracker cardsDrawn={gameState.cardsDrawn} totalCards={gameState.cardsToDraw} />
 </div>
 
 <style>
-    .status-display-container {
-        display: flex;
-        flex-direction: column;
-        gap: var(--space-md);
-        width: 100%;
-    }
+	.status-display-container {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-md);
+		width: 100%;
+	}
 </style>
 ```
 
@@ -396,85 +401,88 @@ interface DiceReadoutProps {
 // src/lib/composables/useScreenController.svelte.js
 
 export function useScreenController() {
-    // Roll for tasks state
-    let rollTasksRolled = $state(false);
-    let rollTasksRolling = $state(false);
-    let rollTasksConfirming = $state(false);
+	// Roll for tasks state
+	let rollTasksRolled = $state(false);
+	let rollTasksRolling = $state(false);
+	let rollTasksConfirming = $state(false);
 
-    // Failure check state
-    let failureCheckRolling = $state(false);
-    let failureCheckResult = $state(undefined);
+	// Failure check state
+	let failureCheckRolling = $state(false);
+	let failureCheckResult = $state(undefined);
 
-    // Success check state
-    let successCheckRolling = $state(false);
-    let successCheckResult = $state(undefined);
+	// Success check state
+	let successCheckRolling = $state(false);
+	let successCheckResult = $state(undefined);
 
-    // Button text derivations
-    const rollForTasksButtonText = $derived(
-        rollTasksRolled ? `Draw ${gameState.cardsToDraw} Cards` : 'Roll Dice'
-    );
+	// Button text derivations
+	const rollForTasksButtonText = $derived(
+		rollTasksRolled ? `Draw ${gameState.cardsToDraw} Cards` : 'Roll Dice'
+	);
 
-    const failureCheckButtonText = $derived(
-        failureCheckResult ? 'Continue' : 'Roll for Damage'
-    );
+	const failureCheckButtonText = $derived(failureCheckResult ? 'Continue' : 'Roll for Damage');
 
-    const successCheckButtonText = $derived(
-        successCheckResult ? 'Continue' : 'Roll to Remove Token'
-    );
+	const successCheckButtonText = $derived(successCheckResult ? 'Continue' : 'Roll to Remove Token');
 
-    // Action handlers
-    async function handleRollForTasks() {
-        if (rollTasksRolling || rollTasksConfirming) return;
+	// Action handlers
+	async function handleRollForTasks() {
+		if (rollTasksRolling || rollTasksConfirming) return;
 
-        if (rollTasksRolled) {
-            rollTasksConfirming = true;
-            await confirmTaskRoll();
-            rollTasksConfirming = false;
-        } else {
-            rollTasksRolling = true;
-            const { roll, wasLucid, wasSurreal } = await rollForTasks();
-            await rollDice(roll, { isLucid: wasLucid, isSurreal: wasSurreal });
-            rollTasksRolling = false;
-            applyPendingTaskRoll();
-            rollTasksRolled = true;
-        }
-    }
+		if (rollTasksRolled) {
+			rollTasksConfirming = true;
+			await confirmTaskRoll();
+			rollTasksConfirming = false;
+		} else {
+			rollTasksRolling = true;
+			const { roll, wasLucid, wasSurreal } = await rollForTasks();
+			await rollDice(roll, { isLucid: wasLucid, isSurreal: wasSurreal });
+			rollTasksRolling = false;
+			applyPendingTaskRoll();
+			rollTasksRolled = true;
+		}
+	}
 
-    // Reset functions
-    function resetRollForTasks() {
-        rollTasksRolled = false;
-        rollTasksRolling = false;
-        rollTasksConfirming = false;
-    }
+	// Reset functions
+	function resetRollForTasks() {
+		rollTasksRolled = false;
+		rollTasksRolling = false;
+		rollTasksConfirming = false;
+	}
 
-    return {
-        // State
-        rollForTasks: {
-            rolled: rollTasksRolled,
-            rolling: rollTasksRolling,
-            confirming: rollTasksConfirming,
-            buttonText: rollForTasksButtonText,
-            buttonDisabled: $derived(rollTasksRolling || rollTasksConfirming),
-            handle: handleRollForTasks,
-            reset: resetRollForTasks
-        },
-        failureCheck: { /* similar */ },
-        successCheck: { /* similar */ }
-    };
+	return {
+		// State
+		rollForTasks: {
+			rolled: rollTasksRolled,
+			rolling: rollTasksRolling,
+			confirming: rollTasksConfirming,
+			buttonText: rollForTasksButtonText,
+			buttonDisabled: $derived(rollTasksRolling || rollTasksConfirming),
+			handle: handleRollForTasks,
+			reset: resetRollForTasks
+		},
+		failureCheck: {
+			/* similar */
+		},
+		successCheck: {
+			/* similar */
+		}
+	};
 }
 ```
 
 **Usage in GameScreen:**
+
 ```javascript
 const screenController = useScreenController();
 
 // Access state
-{screenController.rollForTasks.buttonText}
+{
+	screenController.rollForTasks.buttonText;
+}
 
 // Call action
 <button onclick={screenController.rollForTasks.handle}>
-    {screenController.rollForTasks.buttonText}
-</button>
+	{screenController.rollForTasks.buttonText}
+</button>;
 ```
 
 ---
@@ -492,52 +500,52 @@ const screenController = useScreenController();
 // src/lib/composables/useCardAnimationState.svelte.js
 
 export function useCardAnimationState() {
-    let stage = $state('idle');
-    let particles = $state([]);
+	let stage = $state('idle');
+	let particles = $state([]);
 
-    const STAGES = {
-        IDLE: 'idle',
-        ANTICIPATING: 'anticipating',
-        MATERIALIZING: 'materializing',
-        REVEALED: 'revealed',
-        DISMISSING: 'dismissing'
-    };
+	const STAGES = {
+		IDLE: 'idle',
+		ANTICIPATING: 'anticipating',
+		MATERIALIZING: 'materializing',
+		REVEALED: 'revealed',
+		DISMISSING: 'dismissing'
+	};
 
-    async function proceed() {
-        if (stage !== STAGES.IDLE) return;
+	async function proceed() {
+		if (stage !== STAGES.IDLE) return;
 
-        stage = STAGES.ANTICIPATING;
-        await sleep(200);
+		stage = STAGES.ANTICIPATING;
+		await sleep(200);
 
-        stage = STAGES.MATERIALIZING;
-        await sleep(300);
+		stage = STAGES.MATERIALIZING;
+		await sleep(300);
 
-        stage = STAGES.REVEALED;
-    }
+		stage = STAGES.REVEALED;
+	}
 
-    async function dismiss() {
-        if (stage !== STAGES.REVEALED) return;
+	async function dismiss() {
+		if (stage !== STAGES.REVEALED) return;
 
-        stage = STAGES.DISMISSING;
-        await sleep(600);
+		stage = STAGES.DISMISSING;
+		await sleep(600);
 
-        reset();
-    }
+		reset();
+	}
 
-    function reset() {
-        stage = STAGES.IDLE;
-        particles = [];
-    }
+	function reset() {
+		stage = STAGES.IDLE;
+		particles = [];
+	}
 
-    return {
-        stage,
-        particles,
-        canProceed: $derived(stage === STAGES.IDLE),
-        canDismiss: $derived(stage === STAGES.REVEALED),
-        proceed,
-        dismiss,
-        reset
-    };
+	return {
+		stage,
+		particles,
+		canProceed: $derived(stage === STAGES.IDLE),
+		canDismiss: $derived(stage === STAGES.REVEALED),
+		proceed,
+		dismiss,
+		reset
+	};
 }
 ```
 
@@ -554,51 +562,49 @@ export function useCardAnimationState() {
 
 ```svelte
 <script>
-    import { useAudioRecording } from '$lib/composables/useAudioRecording.svelte.js';
+	import { useAudioRecording } from '$lib/composables/useAudioRecording.svelte.js';
 
-    let {
-        audioData = $bindable(null),
-        maxDuration = 300, // 5 minutes
-        onError = (error) => console.error(error)
-    } = $props();
+	let {
+		audioData = $bindable(null),
+		maxDuration = 300, // 5 minutes
+		onError = (error) => console.error(error)
+	} = $props();
 
-    const recorder = useAudioRecording();
+	const recorder = useAudioRecording();
 
-    async function handleStartRecording() {
-        try {
-            await recorder.start();
-        } catch (error) {
-            onError(error);
-        }
-    }
+	async function handleStartRecording() {
+		try {
+			await recorder.start();
+		} catch (error) {
+			onError(error);
+		}
+	}
 
-    // Bind audioData
-    $effect(() => {
-        audioData = recorder.audioData;
-    });
+	// Bind audioData
+	$effect(() => {
+		audioData = recorder.audioData;
+	});
 </script>
 
 <div class="audio-recorder">
-    {#if !recorder.isRecording && !recorder.audioData}
-        <button onclick={handleStartRecording}>
-            🎤 Start Recording
-        </button>
-    {/if}
+	{#if !recorder.isRecording && !recorder.audioData}
+		<button onclick={handleStartRecording}> 🎤 Start Recording </button>
+	{/if}
 
-    {#if recorder.isRecording}
-        <div class="recording-controls">
-            <span class="recording-time">{recorder.duration}s</span>
-            <button onclick={() => recorder.pause()}>⏸</button>
-            <button onclick={() => recorder.stop()}>⏹</button>
-        </div>
-    {/if}
+	{#if recorder.isRecording}
+		<div class="recording-controls">
+			<span class="recording-time">{recorder.duration}s</span>
+			<button onclick={() => recorder.pause()}>⏸</button>
+			<button onclick={() => recorder.stop()}>⏹</button>
+		</div>
+	{/if}
 
-    {#if recorder.audioData}
-        <div class="playback-controls">
-            <AudioPlayer data={recorder.audioData} />
-            <button onclick={() => recorder.clear()}>🗑️</button>
-        </div>
-    {/if}
+	{#if recorder.audioData}
+		<div class="playback-controls">
+			<AudioPlayer data={recorder.audioData} />
+			<button onclick={() => recorder.clear()}>🗑️</button>
+		</div>
+	{/if}
 </div>
 ```
 
@@ -651,6 +657,7 @@ BrowseGames (Phase 4)
 ```
 
 **Legend:**
+
 - ⭐ = Highly reusable component
 - → = Dependency relationship
 
@@ -712,9 +719,11 @@ For each component refactored:
 ## Migration Strategy
 
 ### Option A: Big Bang (Not Recommended)
+
 Refactor all components in one PR. **Risk:** High chance of breaking changes.
 
 ### Option B: Incremental (Recommended)
+
 Refactor one component at a time with these phases:
 
 1. **Phase 1: Infrastructure** (Week 1)

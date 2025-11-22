@@ -9,10 +9,7 @@ const config = {
 			esbuild: (defaultOptions) => ({
 				...defaultOptions,
 				// Mark onnxruntime-node as external
-				external: [
-					...(defaultOptions.external || []),
-					'onnxruntime-node'
-				],
+				external: [...(defaultOptions.external || []), 'onnxruntime-node'],
 				// Add a loader for .node files
 				loader: {
 					...(defaultOptions.loader || {}),

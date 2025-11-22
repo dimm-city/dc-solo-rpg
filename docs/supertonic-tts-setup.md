@@ -102,11 +102,12 @@ For developers, additional options can be configured in the provider initializat
 import { ttsService } from '$lib/services/tts/textToSpeech.js';
 
 await ttsService.setProvider('supertonic', {
-	voice: 'F1',                    // Voice preset
-	speed: 1.0,                     // Speech speed multiplier
-	denoisingSteps: 1.0,            // Quality control (0.9-1.5)
-	maxChunkLength: 200,            // Characters per chunk
-	modelPaths: {                   // Custom model paths (optional)
+	voice: 'F1', // Voice preset
+	speed: 1.0, // Speech speed multiplier
+	denoisingSteps: 1.0, // Quality control (0.9-1.5)
+	maxChunkLength: 200, // Characters per chunk
+	modelPaths: {
+		// Custom model paths (optional)
 		encoder: '/path/to/encoder.onnx',
 		decoder: '/path/to/decoder.onnx',
 		vocoder: '/path/to/vocoder.onnx'
@@ -126,6 +127,7 @@ The provider automatically detects and uses the best available backend.
 ### Text Chunking
 
 Long texts are automatically split into chunks for:
+
 - Better memory management
 - Smoother playback
 - Natural pauses between sentences
@@ -139,6 +141,7 @@ Default chunk size is 200 characters. Adjust via `maxChunkLength` config option.
 **Symptom**: "Failed to load ONNX models" error
 
 **Solutions**:
+
 1. Verify model files are in `static/tts-models/onnx/`
 2. Check browser console for 404 errors
 3. Ensure file permissions allow reading
@@ -149,6 +152,7 @@ Default chunk size is 200 characters. Adjust via `maxChunkLength` config option.
 **Symptom**: "Failed to load voice style" error
 
 **Solutions**:
+
 1. Verify voice style JSON files are in `static/tts-models/voice_styles/`
 2. Check that files are named correctly: `F1.json`, `F2.json`, `M1.json`, `M2.json`
 3. Verify JSON files are valid (not corrupted)
@@ -158,6 +162,7 @@ Default chunk size is 200 characters. Adjust via `maxChunkLength` config option.
 **Symptom**: Slow synthesis, choppy audio
 
 **Solutions**:
+
 1. Use a WebGPU-compatible browser (Chrome/Edge 113+)
 2. Close other browser tabs to free memory
 3. Reduce text length or chunk size
@@ -168,6 +173,7 @@ Default chunk size is 200 characters. Adjust via `maxChunkLength` config option.
 **Symptom**: Synthesis succeeds but no audio output
 
 **Solutions**:
+
 1. Check browser audio permissions
 2. Ensure browser is not muted
 3. Try a different browser
@@ -178,6 +184,7 @@ Default chunk size is 200 characters. Adjust via `maxChunkLength` config option.
 **Symptom**: Browser crashes or becomes unresponsive
 
 **Solutions**:
+
 1. Process shorter text segments
 2. Close other browser tabs
 3. Increase browser memory limit (if available)
@@ -202,12 +209,12 @@ Supertonic uses a three-stage neural TTS pipeline:
 
 ### Browser Compatibility
 
-| Browser | WebGPU | WASM | Status |
-|---------|--------|------|--------|
-| Chrome 113+ | ✅ | ✅ | Full support |
-| Edge 113+ | ✅ | ✅ | Full support |
-| Firefox | ❌ | ✅ | WASM only |
-| Safari | ❌ | ✅ | WASM only |
+| Browser     | WebGPU | WASM | Status       |
+| ----------- | ------ | ---- | ------------ |
+| Chrome 113+ | ✅     | ✅   | Full support |
+| Edge 113+   | ✅     | ✅   | Full support |
+| Firefox     | ❌     | ✅   | WASM only    |
+| Safari      | ❌     | ✅   | WASM only    |
 
 ## API Reference
 

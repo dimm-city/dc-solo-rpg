@@ -227,10 +227,10 @@ describe('gameActions - Core Game Mechanics', () => {
 			const originalRoll = gameState.rollWithModifiers;
 			const testCases = [
 				{ roll: 1, expectedCards: 1 },
-				{ roll: 3, expectedCards: 2 },   // 2-5 → 2 cards
-				{ roll: 8, expectedCards: 3 },   // 6-10 → 3 cards
-				{ roll: 13, expectedCards: 4 },  // 11-15 → 4 cards
-				{ roll: 17, expectedCards: 5 },  // 16-19 → 5 cards
+				{ roll: 3, expectedCards: 2 }, // 2-5 → 2 cards
+				{ roll: 8, expectedCards: 3 }, // 6-10 → 3 cards
+				{ roll: 13, expectedCards: 4 }, // 11-15 → 4 cards
+				{ roll: 17, expectedCards: 5 }, // 16-19 → 5 cards
 				{ roll: 20, expectedCards: 6 }
 			];
 
@@ -364,7 +364,9 @@ describe('gameActions - Core Game Mechanics', () => {
 		});
 
 		it('should increment acesRevealed for all Aces (D20 system)', async () => {
-			gameState.deck = [{ card: 'A', suit: 'diamonds', description: 'Narrative ace', type: 'narrative' }];
+			gameState.deck = [
+				{ card: 'A', suit: 'diamonds', description: 'Narrative ace', type: 'narrative' }
+			];
 			gameState.acesRevealed = 0;
 
 			drawCard();

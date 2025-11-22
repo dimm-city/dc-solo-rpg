@@ -1,25 +1,26 @@
 <script>
-/**
- * GameOverMessage - Display victory or defeat message
- *
- * Shows the game over message with appropriate styling
- *
- * @component
- * @example
- * <GameOverMessage
- *   message="You have escaped the void!"
- *   isWon={true}
- * />
- */
+	/**
+	 * GameOverMessage - Display victory or defeat message
+	 *
+	 * Shows the game over message with appropriate styling
+	 *
+	 * @component
+	 * @example
+	 * <GameOverMessage
+	 *   message="You have escaped the void!"
+	 *   isWon={true}
+	 * />
+	 */
 
-let {
-	message = '',
-	isWon = false
-} = $props();
+	let { message = '', isWon = false } = $props();
 </script>
 
 {#if message}
-	<div class="game-over-section" class:victory={isWon} data-augmented-ui="tl-clip tr-clip br-clip bl-clip border">
+	<div
+		class="game-over-section"
+		class:victory={isWon}
+		data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
+	>
 		<div class="game-over-header">
 			<h3>{isWon ? 'Victory' : 'Defeat'}</h3>
 		</div>

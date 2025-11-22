@@ -153,7 +153,9 @@
 	{:else if getAudioSettings().ttsProvider === 'supertonic'}
 		<div class="info-box">
 			<p>
-				<strong>Note:</strong> Supertonic loads neural TTS models (~265MB) from Hugging Face CDN, then processes speech on your device using ONNX Runtime Web (WASM/WebGPU). First use downloads models; subsequent uses are instant. No API key required and no data sent to servers.
+				<strong>Note:</strong> Supertonic loads neural TTS models (~265MB) from Hugging Face CDN, then
+				processes speech on your device using ONNX Runtime Web (WASM/WebGPU). First use downloads models;
+				subsequent uses are instant. No API key required and no data sent to servers.
 			</p>
 		</div>
 

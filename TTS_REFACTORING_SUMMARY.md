@@ -7,6 +7,7 @@ Successfully unified the Text-to-Speech (TTS) management system to use a single 
 ## Changes Made
 
 ### 1. **audioStore.svelte.js** - Enhanced with API Key Support
+
 - Added `ttsApiKey` field to store API keys for non-browser TTS providers
 - Updated `updateAudioSettings()` to pass API key to TTS service
 - Updated `loadSettings()` to restore API key from localStorage
@@ -14,6 +15,7 @@ Successfully unified the Text-to-Speech (TTS) management system to use a single 
 **Location:** `src/lib/stores/audioStore.svelte.js`
 
 ### 2. **AudioSettings.svelte** - Added Provider Selector
+
 - Added TTS provider dropdown (Browser, Supertonic, OpenAI, ElevenLabs)
 - Added conditional API key input field for non-browser providers
 - Added styling for password inputs
@@ -22,6 +24,7 @@ Successfully unified the Text-to-Speech (TTS) management system to use a single 
 **Location:** `src/lib/components/settings/AudioSettings.svelte`
 
 ### 3. **TTSSection.svelte** - Refactored to Use audioStore
+
 - Removed all `$bindable` props (ttsProvider, ttsApiKey, ttsVoice, etc.)
 - Now imports directly from audioStore
 - Uses `getAudioSettings()` and `updateAudioSettings()` for all state management
@@ -31,6 +34,7 @@ Successfully unified the Text-to-Speech (TTS) management system to use a single 
 **Location:** `src/lib/components/settings/TTSSection.svelte`
 
 ### 4. **AISettings.svelte** - Simplified TTS Integration
+
 - Removed all TTS-related state variables
 - Removed TTS settings loading from IndexedDB
 - Removed TTS settings from save operation
@@ -40,6 +44,7 @@ Successfully unified the Text-to-Speech (TTS) management system to use a single 
 **Location:** `src/lib/components/AISettings.svelte`
 
 ### 5. **aiSettings.js** - Deprecated TTS Functions
+
 - Marked `saveTTSSettings()` as deprecated
 - Marked `loadTTSSettings()` as deprecated
 - Both functions now return defaults and log warnings
@@ -49,6 +54,7 @@ Successfully unified the Text-to-Speech (TTS) management system to use a single 
 **Location:** `src/lib/services/aiSettings.js`
 
 ### 6. **textToSpeech.js** - Updated to Use audioStore
+
 - Changed from using `loadTTSSettings()` to `getAudioSettings()`
 - Now reads TTS provider and API key from audioStore
 - Updated `isTTSAvailable()` to check audioStore

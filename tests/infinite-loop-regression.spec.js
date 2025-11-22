@@ -159,9 +159,8 @@ test.describe('Infinite Loop Regression Tests', () => {
 
 		// If we have a huge number of warnings/logs, it might indicate a loop
 		// Normal page load should have < 50 console messages
-		const totalMessages = consoleMessages.error.length +
-		                      consoleMessages.warning.length +
-		                      consoleMessages.log.length;
+		const totalMessages =
+			consoleMessages.error.length + consoleMessages.warning.length + consoleMessages.log.length;
 
 		console.log(`\nTotal console messages: ${totalMessages}`);
 
@@ -169,9 +168,9 @@ test.describe('Infinite Loop Regression Tests', () => {
 			console.log('⚠ Excessive console output detected (possible loop)');
 			console.log('\nFirst 10 messages:');
 			const allMessages = [
-				...consoleMessages.error.map(m => `[ERROR] ${m}`),
-				...consoleMessages.warning.map(m => `[WARN] ${m}`),
-				...consoleMessages.log.map(m => `[LOG] ${m}`)
+				...consoleMessages.error.map((m) => `[ERROR] ${m}`),
+				...consoleMessages.warning.map((m) => `[WARN] ${m}`),
+				...consoleMessages.log.map((m) => `[LOG] ${m}`)
 			];
 			allMessages.slice(0, 10).forEach((msg, i) => {
 				console.log(`  ${i + 1}. ${msg}`);

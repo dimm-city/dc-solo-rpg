@@ -13,12 +13,14 @@ Composables are functions that encapsulate stateful logic using Svelte 5 runes (
 Reactive composable for responsive layout detection.
 
 **Features:**
+
 - Desktop/mobile detection via media queries
 - Window dimensions tracking
 - Breakpoint matching (mobile: <768px, tablet: 768-1024px, desktop: ≥1024px)
 - Accessibility: `prefers-reduced-motion` detection
 
 **Usage:**
+
 ```javascript
 import { useResponsiveLayout } from '$lib/composables/useResponsiveLayout.svelte.js';
 
@@ -26,11 +28,11 @@ const layout = useResponsiveLayout();
 
 // Access reactive state
 $: if (layout.isDesktop) {
-  console.log('Desktop detected');
+	console.log('Desktop detected');
 }
 
 $: if (layout.matchesBreakpoint('mobile')) {
-  console.log('Mobile breakpoint');
+	console.log('Mobile breakpoint');
 }
 
 // Current breakpoint: 'mobile' | 'tablet' | 'desktop'
@@ -38,6 +40,7 @@ $: currentBreakpoint = layout.getCurrentBreakpoint();
 ```
 
 **API:**
+
 ```typescript
 {
   // Reactive state
@@ -63,12 +66,14 @@ $: currentBreakpoint = layout.getCurrentBreakpoint();
 Reactive composable for auto-play functionality with cancellable delays and TTS integration.
 
 **Features:**
+
 - Auto-advance after TTS and delay
 - Auto-roll dice after delay
 - Cancellable operations
 - Active state tracking
 
 **Usage:**
+
 ```javascript
 import { useAutoPlay } from '$lib/composables/useAutoPlay.svelte.js';
 
@@ -76,10 +81,10 @@ const autoPlay = useAutoPlay();
 
 // Auto-advance after speaking and delay
 const { cancel } = autoPlay.advance({
-  text: 'Draw a card',
-  shouldRead: true,
-  action: () => drawCard(),
-  customDelay: 2000  // Optional override
+	text: 'Draw a card',
+	shouldRead: true,
+	action: () => drawCard(),
+	customDelay: 2000 // Optional override
 });
 
 // Auto-roll dice
@@ -93,11 +98,12 @@ autoPlay.cancelAll();
 
 // Check if auto-play is active
 $: if (autoPlay.isActive) {
-  console.log(`${autoPlay.activeCount} auto-play actions running`);
+	console.log(`${autoPlay.activeCount} auto-play actions running`);
 }
 ```
 
 **API:**
+
 ```typescript
 {
   // Actions
@@ -163,33 +169,35 @@ autoPlay.cancelAll();
 Reactive composable for keyboard shortcut handling.
 
 **Features:**
+
 - Common shortcuts: Space, Enter, Escape, Arrow keys
 - Automatic input/textarea detection (ignores shortcuts when typing)
 - Configurable preventDefault
 - Specialized helpers for game screens and modals
 
 **Usage:**
+
 ```javascript
 import { useKeyboardShortcuts } from '$lib/composables/useKeyboardShortcuts.svelte.js';
 
 const keyboard = useKeyboardShortcuts({
-  onSpace: () => drawCard(),
-  onEnter: () => drawCard(),
-  onEscape: () => closeModal(),
-  onArrowLeft: () => previousRound(),
-  onArrowRight: () => nextRound(),
-  disabled: () => isModalOpen,  // Function that returns true when disabled
-  preventDefault: true  // Default: true
+	onSpace: () => drawCard(),
+	onEnter: () => drawCard(),
+	onEscape: () => closeModal(),
+	onArrowLeft: () => previousRound(),
+	onArrowRight: () => nextRound(),
+	disabled: () => isModalOpen, // Function that returns true when disabled
+	preventDefault: true // Default: true
 });
 
 onMount(() => {
-  keyboard.enable();
-  return () => keyboard.disable();
+	keyboard.enable();
+	return () => keyboard.disable();
 });
 
 // Check state
 $: if (keyboard.isEnabled) {
-  console.log(`Last key pressed: ${keyboard.lastKey}`);
+	console.log(`Last key pressed: ${keyboard.lastKey}`);
 }
 ```
 
@@ -200,12 +208,12 @@ $: if (keyboard.isEnabled) {
 import { useGameScreenShortcuts } from '$lib/composables/useKeyboardShortcuts.svelte.js';
 
 const shortcuts = useGameScreenShortcuts({
-  onPrimaryAction: () => {
-    // Find and click primary button
-    const btn = document.querySelector('[data-primary]');
-    btn?.click();
-  },
-  disabled: () => showModal
+	onPrimaryAction: () => {
+		// Find and click primary button
+		const btn = document.querySelector('[data-primary]');
+		btn?.click();
+	},
+	disabled: () => showModal
 });
 
 shortcuts.enable();
@@ -216,15 +224,16 @@ shortcuts.enable();
 import { useModalShortcuts } from '$lib/composables/useKeyboardShortcuts.svelte.js';
 
 const shortcuts = useModalShortcuts({
-  onClose: () => {
-    isOpen = false;
-  }
+	onClose: () => {
+		isOpen = false;
+	}
 });
 
 shortcuts.enable();
 ```
 
 **API:**
+
 ```typescript
 {
   // Actions
@@ -248,6 +257,7 @@ Screen-specific composables that manage state and logic for each game screen.
 **Location:** `src/lib/composables/screen/`
 
 **Available Composables:**
+
 - `useRollForTasks()` - Roll for Tasks screen logic
 - `useFailureCheck()` - Failure Check screen logic
 - `useSuccessCheck()` - Success Check (Salvation) screen logic
@@ -255,6 +265,7 @@ Screen-specific composables that manage state and logic for each game screen.
 - `useFinalDamage()` - Final Damage Roll screen logic
 
 **Features:**
+
 - Screen-specific state management (rolling, confirming, results)
 - Integration with dice rolling and 3D animations
 - Auto-play trigger support
@@ -262,6 +273,7 @@ Screen-specific composables that manage state and logic for each game screen.
 - State reset on screen transitions
 
 **Usage Example (useRollForTasks):**
+
 ```javascript
 import { useRollForTasks } from '$lib/composables/screen/useRollForTasks.svelte.js';
 
@@ -269,7 +281,7 @@ const rollTasks = useRollForTasks();
 
 // Handle roll/confirm action
 async function onButtonClick() {
-  await rollTasks.handleRollForTasks(triggerAutoPlay);
+	await rollTasks.handleRollForTasks(triggerAutoPlay);
 }
 
 // Access state
@@ -278,14 +290,15 @@ $: isDisabled = rollTasks.rollTasksRolling || rollTasks.rollTasksConfirming;
 
 // Reset on screen change
 $effect(() => {
-  if (currentScreen === 'rollForTasks') {
-    rollTasks.resetState();
-  }
+	if (currentScreen === 'rollForTasks') {
+		rollTasks.resetState();
+	}
 });
 ```
 
 **Common Pattern:**
 Each screen composable exports:
+
 - State variables (e.g., `rolled`, `rolling`, `confirming`)
 - Handler function (e.g., `handleRollForTasks()`)
 - Reset function (e.g., `resetState()`)
@@ -320,8 +333,8 @@ Use `onMount` and return a cleanup function:
 
 ```javascript
 onMount(() => {
-  keyboard.enable();
-  return () => keyboard.disable();
+	keyboard.enable();
+	return () => keyboard.disable();
 });
 ```
 
@@ -331,9 +344,9 @@ When state changes trigger cleanup needs:
 
 ```javascript
 $effect(() => {
-  if (currentScreen === 'newScreen') {
-    autoPlay.cancelAll();  // Cancel when screen changes
-  }
+	if (currentScreen === 'newScreen') {
+		autoPlay.cancelAll(); // Cancel when screen changes
+	}
 });
 ```
 
@@ -360,7 +373,7 @@ Use JSDoc to document the return type:
  * @returns {boolean} returns.isMobile - True if mobile
  */
 export function useResponsiveLayout() {
-  // ...
+	// ...
 }
 ```
 
@@ -388,19 +401,19 @@ const TestWrapper = `
 `;
 
 describe('useMyComposable', () => {
-  it('should initialize with default state', () => {
-    let capturedComposable;
+	it('should initialize with default state', () => {
+		let capturedComposable;
 
-    mount(TestWrapper, {
-      props: {
-        onMount: (composable) => {
-          capturedComposable = composable;
-        }
-      }
-    });
+		mount(TestWrapper, {
+			props: {
+				onMount: (composable) => {
+					capturedComposable = composable;
+				}
+			}
+		});
 
-    expect(capturedComposable.someState).toBe(expectedValue);
-  });
+		expect(capturedComposable.someState).toBe(expectedValue);
+	});
 });
 ```
 

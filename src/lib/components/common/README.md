@@ -13,17 +13,18 @@ The common components library provides fundamental building blocks that are used
 Displays a centered message when there's no data to show.
 
 **Usage:**
+
 ```svelte
 <script>
-  import EmptyState from '$lib/components/common/EmptyState.svelte';
+	import EmptyState from '$lib/components/common/EmptyState.svelte';
 </script>
 
 <EmptyState
-  icon="📭"
-  title="No games found"
-  description="Start a new game to begin your journey"
-  actionText="Start Game"
-  onAction={() => startGame()}
+	icon="📭"
+	title="No games found"
+	description="Start a new game to begin your journey"
+	actionText="Start Game"
+	onAction={() => startGame()}
 />
 ```
 
@@ -38,6 +39,7 @@ Displays a centered message when there's no data to show.
 | `class` | `string` | `''` | Optional CSS class for container |
 
 **Features:**
+
 - Fades in with 200ms NORMAL animation
 - Centered layout with flexible content
 - Optional action button with hover effects
@@ -50,9 +52,10 @@ Displays a centered message when there's no data to show.
 Displays a spinning loader with optional text.
 
 **Usage:**
+
 ```svelte
 <script>
-  import LoadingSpinner from '$lib/components/common/LoadingSpinner.svelte';
+	import LoadingSpinner from '$lib/components/common/LoadingSpinner.svelte';
 </script>
 
 <!-- Large spinner with text -->
@@ -70,11 +73,13 @@ Displays a spinning loader with optional text.
 | `class` | `string` | `''` | Optional CSS class for container |
 
 **Size Mappings:**
+
 - `small`: 24px
 - `medium`: 48px
 - `large`: 72px
 
 **Features:**
+
 - Smooth mechanical rotation using cubic-bezier easing
 - SVG-based spinner for crisp rendering at any size
 - Track + head design for visual depth
@@ -88,32 +93,33 @@ Displays a spinning loader with optional text.
 Displays error messages with consistent styling and optional retry action.
 
 **Usage:**
+
 ```svelte
 <script>
-  import ErrorMessage from '$lib/components/common/ErrorMessage.svelte';
+	import ErrorMessage from '$lib/components/common/ErrorMessage.svelte';
 </script>
 
 <!-- Error with retry -->
 <ErrorMessage
-  title="Failed to load game"
-  message="The game file could not be found"
-  severity="error"
-  onRetry={() => loadGame()}
+	title="Failed to load game"
+	message="The game file could not be found"
+	severity="error"
+	onRetry={() => loadGame()}
 />
 
 <!-- Warning -->
 <ErrorMessage
-  title="Unstable connection"
-  message="Your connection may be interrupted"
-  severity="warning"
+	title="Unstable connection"
+	message="Your connection may be interrupted"
+	severity="warning"
 />
 
 <!-- Info with dismiss -->
 <ErrorMessage
-  title="New feature available"
-  message="Story mode now supports AI-enhanced narratives"
-  severity="info"
-  onDismiss={() => hideMessage()}
+	title="New feature available"
+	message="Story mode now supports AI-enhanced narratives"
+	severity="info"
+	onDismiss={() => hideMessage()}
 />
 ```
 
@@ -129,11 +135,13 @@ Displays error messages with consistent styling and optional retry action.
 | `class` | `string` | `''` | Optional CSS class for container |
 
 **Severity Colors:**
+
 - `error`: Red tones (⚠️)
 - `warning`: Yellow tones (⚠️)
 - `info`: Blue tones (ℹ️)
 
 **Features:**
+
 - Scales in with 200ms NORMAL animation
 - Icon + title + message layout
 - Optional retry button
@@ -148,17 +156,14 @@ Displays error messages with consistent styling and optional retry action.
 Displays information about card types in the Wretched and Alone system.
 
 **Usage:**
+
 ```svelte
 <script>
-  import CardTypeInfo from '$lib/components/common/CardTypeInfo.svelte';
+	import CardTypeInfo from '$lib/components/common/CardTypeInfo.svelte';
 </script>
 
 <!-- Full variant with description -->
-<CardTypeInfo
-  type="primary-success"
-  variant="full"
-  showDescription={true}
-/>
+<CardTypeInfo type="primary-success" variant="full" showDescription={true} />
 
 <!-- Compact variant -->
 <CardTypeInfo type="challenge" variant="compact" />
@@ -185,11 +190,13 @@ Displays information about card types in the Wretched and Alone system.
 | `event` | Event | 🌟 | Green | Even cards - Usually safe from checks |
 
 **Variant Behaviors:**
+
 - `full`: Icon + full name + optional description
 - `compact`: Smaller icon + short name
 - `badge`: Inline badge with icon + short name, colored background
 
 **Features:**
+
 - Fades in with animation
 - Color-coded by card type
 - Consistent iconography
@@ -204,15 +211,11 @@ Displays information about card types in the Wretched and Alone system.
 Components use CSS custom properties for consistent theming:
 
 ```css
---text-primary: #e0e0e0        /* Primary text */
---text-secondary: #a0a0a0      /* Secondary text */
---primary-color: #4a9eff       /* Primary action color */
---primary-color-hover: #3a8eef /* Primary hover */
---text-on-primary: #ffffff     /* Text on primary bg */
---error-bg: rgba(220, 53, 69, 0.1)
---error-border: rgba(220, 53, 69, 0.3)
---error-color: #dc3545
-/* ... etc */
+--text-primary: #e0e0e0 /* Primary text */ --text-secondary: #a0a0a0 /* Secondary text */
+	--primary-color: #4a9eff /* Primary action color */ --primary-color-hover: #3a8eef
+	/* Primary hover */ --text-on-primary: #ffffff /* Text on primary bg */
+	--error-bg: rgba(220, 53, 69, 0.1) --error-border: rgba(220, 53, 69, 0.3) --error-color: #dc3545
+	/* ... etc */;
 ```
 
 ### Spacing Scale
@@ -220,11 +223,8 @@ Components use CSS custom properties for consistent theming:
 Components use the standard spacing scale:
 
 ```css
---space-xs: 0.25rem   /* 4px */
---space-sm: 0.5rem    /* 8px */
---space-md: 1rem      /* 16px */
---space-lg: 1.5rem    /* 24px */
---space-xl: 2rem      /* 32px */
+--space-xs: 0.25rem /* 4px */ --space-sm: 0.5rem /* 8px */ --space-md: 1rem /* 16px */
+	--space-lg: 1.5rem /* 24px */ --space-xl: 2rem /* 32px */;
 ```
 
 ### Animation Constants
@@ -235,14 +235,14 @@ All components use centralized animation constants:
 import { ANIMATION_DURATION, ANIMATION_EASING } from '$lib/constants/animations.js';
 
 // Durations
-ANIMATION_DURATION.FAST      // 150ms
-ANIMATION_DURATION.NORMAL    // 200ms
-ANIMATION_DURATION.SLOW      // 300ms
+ANIMATION_DURATION.FAST; // 150ms
+ANIMATION_DURATION.NORMAL; // 200ms
+ANIMATION_DURATION.SLOW; // 300ms
 
 // Easing
-ANIMATION_EASING.MECHANICAL  // cubic-bezier(0.4, 0, 0.6, 1)
-ANIMATION_EASING.EASE_OUT    // ease-out
-ANIMATION_EASING.CUBIC_OUT   // cubicOut (Svelte)
+ANIMATION_EASING.MECHANICAL; // cubic-bezier(0.4, 0, 0.6, 1)
+ANIMATION_EASING.EASE_OUT; // ease-out
+ANIMATION_EASING.CUBIC_OUT; // cubicOut (Svelte)
 ```
 
 ---
@@ -252,17 +252,20 @@ ANIMATION_EASING.CUBIC_OUT   // cubicOut (Svelte)
 All common components follow accessibility best practices:
 
 ### EmptyState
+
 - Semantic heading structure (`<h2>` for title)
 - Clear visual hierarchy
 - Keyboard-accessible action button
 
 ### LoadingSpinner
+
 - `role="status"` for screen reader announcements
 - `aria-label="Loading"` for context
 - Optional text for additional context
 - Reduced motion support
 
 ### ErrorMessage
+
 - `role="alert"` for immediate announcement
 - `aria-live="assertive"` for critical errors
 - Semantic heading structure
@@ -270,6 +273,7 @@ All common components follow accessibility best practices:
 - Keyboard-accessible actions
 
 ### CardTypeInfo
+
 - `title` attribute on badge variant for tooltips
 - Clear color contrast
 - Icon + text for redundant information
@@ -288,34 +292,34 @@ import { render, screen } from '@testing-library/svelte';
 import EmptyState from './EmptyState.svelte';
 
 describe('EmptyState', () => {
-  it('should render title and description', () => {
-    render(EmptyState, {
-      props: {
-        title: 'No games',
-        description: 'Start a new game'
-      }
-    });
+	it('should render title and description', () => {
+		render(EmptyState, {
+			props: {
+				title: 'No games',
+				description: 'Start a new game'
+			}
+		});
 
-    expect(screen.getByText('No games')).toBeInTheDocument();
-    expect(screen.getByText('Start a new game')).toBeInTheDocument();
-  });
+		expect(screen.getByText('No games')).toBeInTheDocument();
+		expect(screen.getByText('Start a new game')).toBeInTheDocument();
+	});
 
-  it('should call onAction when button clicked', async () => {
-    const handleAction = vi.fn();
+	it('should call onAction when button clicked', async () => {
+		const handleAction = vi.fn();
 
-    render(EmptyState, {
-      props: {
-        title: 'Empty',
-        actionText: 'Do something',
-        onAction: handleAction
-      }
-    });
+		render(EmptyState, {
+			props: {
+				title: 'Empty',
+				actionText: 'Do something',
+				onAction: handleAction
+			}
+		});
 
-    const button = screen.getByText('Do something');
-    await button.click();
+		const button = screen.getByText('Do something');
+		await button.click();
 
-    expect(handleAction).toHaveBeenCalledOnce();
-  });
+		expect(handleAction).toHaveBeenCalledOnce();
+	});
 });
 ```
 
@@ -326,8 +330,8 @@ Common components should be tested for visual regressions:
 ```javascript
 // Playwright visual regression test
 test('EmptyState renders correctly', async ({ page }) => {
-  await page.goto('/test/empty-state');
-  await expect(page).toHaveScreenshot('empty-state.png');
+	await page.goto('/test/empty-state');
+	await expect(page).toHaveScreenshot('empty-state.png');
 });
 ```
 
@@ -341,11 +345,7 @@ Follow the Svelte 5 runes pattern:
 
 ```svelte
 <script>
-let {
-  prop1,
-  prop2 = 'default',
-  class: className = ''
-} = $props();
+	let { prop1, prop2 = 'default', class: className = '' } = $props();
 </script>
 ```
 
@@ -355,7 +355,7 @@ Always accept a `class` prop for additional styling:
 
 ```svelte
 <div class="component-name {className}">
-  <!-- content -->
+	<!-- content -->
 </div>
 ```
 
@@ -373,10 +373,10 @@ Always include reduced motion support:
 
 ```css
 @media (prefers-reduced-motion: reduce) {
-  .animated-element {
-    animation: none;
-    transition: none;
-  }
+	.animated-element {
+		animation: none;
+		transition: none;
+	}
 }
 ```
 

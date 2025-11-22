@@ -17,11 +17,7 @@
 	import AugmentedButton from '../AugmentedButton.svelte';
 	import AudioPlayer from '../AudioPlayer.svelte';
 
-	let {
-		story = null,
-		isGenerating = false,
-		onRegenerate = () => {}
-	} = $props();
+	let { story = null, isGenerating = false, onRegenerate = () => {} } = $props();
 </script>
 
 {#if story}

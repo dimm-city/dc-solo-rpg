@@ -67,7 +67,9 @@ export async function loadAISettings() {
  * @returns {Promise<boolean>} Always returns true
  */
 export async function saveTTSSettings(settings) {
-	logger.warn('[aiSettings] saveTTSSettings is deprecated. Use audioStore.updateAudioSettings() instead.');
+	logger.warn(
+		'[aiSettings] saveTTSSettings is deprecated. Use audioStore.updateAudioSettings() instead.'
+	);
 	return true;
 }
 
@@ -77,7 +79,9 @@ export async function saveTTSSettings(settings) {
  * @returns {Promise<Object>} Default browser TTS settings
  */
 export async function loadTTSSettings() {
-	logger.warn('[aiSettings] loadTTSSettings is deprecated. Use audioStore.getAudioSettings() instead.');
+	logger.warn(
+		'[aiSettings] loadTTSSettings is deprecated. Use audioStore.getAudioSettings() instead.'
+	);
 	// Return default settings for backward compatibility
 	return {
 		provider: 'browser',

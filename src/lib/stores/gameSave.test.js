@@ -455,7 +455,10 @@ describe('gameSave', () => {
 						}))
 				};
 
-				const saveResult = saveGame({ ...largeSave, systemConfig: { gameConfigUrl: '/games/test-game/' } });
+				const saveResult = saveGame({
+					...largeSave,
+					systemConfig: { gameConfigUrl: '/games/test-game/' }
+				});
 
 				// Should handle large saves (within localStorage limits)
 				if (saveResult) {
@@ -634,7 +637,10 @@ describe('gameSave', () => {
 					config: { title: '' }
 				};
 
-				localStorageMock.setItem('dc-solo-rpg-save-test-game', JSON.stringify(saveWithEmptyStrings));
+				localStorageMock.setItem(
+					'dc-solo-rpg-save-test-game',
+					JSON.stringify(saveWithEmptyStrings)
+				);
 
 				const result = loadGame(TEST_GAME_SLUG);
 
@@ -656,7 +662,10 @@ describe('gameSave', () => {
 					}
 				};
 
-				localStorageMock.setItem('dc-solo-rpg-save-test-game', JSON.stringify(saveWithSpecialChars));
+				localStorageMock.setItem(
+					'dc-solo-rpg-save-test-game',
+					JSON.stringify(saveWithSpecialChars)
+				);
 
 				const result = loadGame(TEST_GAME_SLUG);
 

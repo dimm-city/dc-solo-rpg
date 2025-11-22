@@ -31,6 +31,7 @@
 
 **Problem:**
 The StatusDisplay component is massive and handles too many responsibilities:
+
 - Player info bar
 - Stats grid (4 stat items)
 - Dice readout
@@ -40,6 +41,7 @@ The StatusDisplay component is massive and handles too many responsibilities:
 - All animations
 
 **Impact:**
+
 - Hard to maintain
 - Difficult to test
 - Poor code reusability
@@ -47,6 +49,7 @@ The StatusDisplay component is massive and handles too many responsibilities:
 
 **Recommended Solution:**
 Extract into smaller components:
+
 - `PlayerInfoBar.svelte` (lines 103-206)
 - `StatsGrid.svelte` (lines 212-556)
 - `DiceReadout.svelte` (lines 297-390)
@@ -54,6 +57,7 @@ Extract into smaller components:
 - `ProgressTracker.svelte` (lines 559-575)
 
 **Benefits:**
+
 - 90% size reduction (2,006 → 200 lines)
 - Clear separation of concerns
 - Easier testing
@@ -72,6 +76,7 @@ Extract into smaller components:
 
 **Problem:**
 GameScreen handles:
+
 - All screen state management
 - Button state for 7 different screens
 - Auto-play logic
@@ -80,18 +85,21 @@ GameScreen handles:
 - Modal management
 
 **Impact:**
+
 - Complex logic hard to follow
 - Testing requires full game setup
 - Changes risk breaking multiple screens
 
 **Recommended Solution:**
 Extract screen-specific logic into composables:
+
 - `useRollForTasks.js` (lines 118-152)
 - `useFailureCheck.js` (lines 154-182)
 - `useSuccessCheck.js` (lines 183-206)
 - `useJournalEntry.js` (lines 286-315)
 
 **Benefits:**
+
 - 71% size reduction (1,399 → 400 lines)
 - Composable screen logic (reusable)
 - Easier to add new screens
@@ -112,6 +120,7 @@ Extract screen-specific logic into composables:
 Mixes animation logic, auto-play, card display, and button management.
 
 **Recommended Solution:**
+
 - Extract `useCardAnimation.js` composable for animation state machine
 - Separate `CardDisplay.svelte` for presentation
 - Keep CardDeck as container only
@@ -129,34 +138,38 @@ Mixes animation logic, auto-play, card display, and button management.
 **Severity:** 🔴 Critical
 
 **Locations:**
+
 - `GameScreen.svelte` (lines 501-571) - Single unified effect ✅ GOOD
 - `CardDeck.svelte` (lines 111-149) - Auto-play effect
 - `JournalEntry.svelte` (lines 186-251, 267-271) - Multiple effects
 - `StoryMode.svelte` (line 180) - Keyboard listener
 
 **Problems:**
+
 1. JournalEntry has 3 separate `$effect` blocks that could conflict
 2. CardDeck auto-play uses $effect when event-driven pattern would be better
 3. Several components use $effect for side effects that should be in event handlers
 
 **Example from JournalEntry.svelte:**
+
 ```javascript
 // ❌ BAD - Reactive effect for side effect
 $effect(() => {
-    if (showAutoJournalTimer) {
-        startAutoJournalTimer();
-    }
+	if (showAutoJournalTimer) {
+		startAutoJournalTimer();
+	}
 });
 
 // ✅ GOOD - Event-driven
 function onRecordingStart() {
-    if (gameplaySettings.autoSaveJournal) {
-        startAutoJournalTimer();
-    }
+	if (gameplaySettings.autoSaveJournal) {
+		startAutoJournalTimer();
+	}
 }
 ```
 
 **Recommended Solution:**
+
 - Replace $effect with event-driven pattern where possible
 - Example from CardDeck (lines 111-149): Move auto-play trigger to `onProceed()` completion instead of $effect watching state
 - Consolidate JournalEntry effects into one unified effect (like GameScreen did)
@@ -174,10 +187,13 @@ function onRecordingStart() {
 
 **Problem:**
 Button state management duplicated across multiple screens:
+
 ```javascript
 // CardDeck
 let animationStage = $state('idle');
-let buttonText = $derived.by(() => { /* logic */ });
+let buttonText = $derived.by(() => {
+	/* logic */
+});
 
 // GameScreen - Similar patterns for 7 different screens
 let rollTasksRolled = $state(false);
@@ -192,18 +208,19 @@ const failureCheckButtonText = $derived(/* ... */);
 
 **Recommended Solution:**
 Create `useButtonState()` composable pattern:
+
 ```javascript
 function useButtonState(labels) {
-    let result = $state(undefined);
-    let processing = $state(false);
-    const text = $derived(result ? labels.after : labels.before);
-    return { result, processing, text };
+	let result = $state(undefined);
+	let processing = $state(false);
+	const text = $derived(result ? labels.after : labels.before);
+	return { result, processing, text };
 }
 
 // Usage
 const rollTasks = useButtonState({
-    before: 'Roll Dice',
-    after: 'Draw Cards'
+	before: 'Roll Dice',
+	after: 'Draw Cards'
 });
 ```
 
@@ -220,6 +237,7 @@ const rollTasks = useButtonState({
 
 **Problem:**
 The `pendingUpdates` pattern is well-designed but lacks documentation:
+
 ```javascript
 pendingUpdates: {
     diceRoll: null,
@@ -235,11 +253,13 @@ pendingUpdates: {
 ```
 
 **Recommended Solution:**
+
 - Add JSDoc documentation explaining the pattern
 - Create helper functions: `setPending()`, `applyPending()`, `clearPending()`
 - Ensure all state mutations use this pattern consistently
 
 **Example:**
+
 ```javascript
 /**
  * Pending state updates
@@ -255,7 +275,9 @@ pendingUpdates: {
  * await rollDiceAnimation();
  * applyPendingDiceRoll();
  */
-pendingUpdates: { /* ... */ }
+pendingUpdates: {
+	/* ... */
+}
 ```
 
 **Estimated Effort:** Small (1-2 hours)
@@ -273,17 +295,15 @@ pendingUpdates: { /* ... */ }
 
 **Problem:**
 Each screen has duplicate pattern:
+
 ```javascript
-const rollForTasksButtonText = $derived(
-    rollTasksRolled ? 'Draw N Cards' : 'Roll Dice'
-);
-const failureCheckButtonText = $derived(
-    failureCheckResult ? 'Continue' : 'Roll for Damage'
-);
+const rollForTasksButtonText = $derived(rollTasksRolled ? 'Draw N Cards' : 'Roll Dice');
+const failureCheckButtonText = $derived(failureCheckResult ? 'Continue' : 'Roll for Damage');
 ```
 
 **Recommended Solution:**
 Create `getButtonText(state, result)` utility:
+
 ```javascript
 const buttonText = getButtonText(screenState, { rolled, result });
 ```
@@ -301,10 +321,12 @@ const buttonText = getButtonText(screenState, { rolled, result });
 **Problem:**
 Good: ANIMATION_DURATION constants exist in `constants/animations.js`
 Bad: Some components still use magic numbers:
+
 - CardDeck line 469: `600ms` (should use `CARD_DISMISS`)
 - GameScreen line 59: `200` (should use `TRANSITION_DURATION`)
 
 **Recommended Solution:**
+
 - Audit all animation durations
 - Replace magic numbers with named constants
 
@@ -324,14 +346,22 @@ Well-organized helper functions (GOOD), but could be extracted to dedicated modu
 
 **Recommended Solution:**
 Move to `src/lib/services/d20Mechanics.js`:
+
 ```javascript
 // src/lib/services/d20Mechanics.js
-export function calculateSalvationThreshold(acesRevealed) { /* ... */ }
-export function getSalvationResult(roll, acesRevealed) { /* ... */ }
-export function applySuccessCheckOutcome(roll, acesRevealed) { /* ... */ }
+export function calculateSalvationThreshold(acesRevealed) {
+	/* ... */
+}
+export function getSalvationResult(roll, acesRevealed) {
+	/* ... */
+}
+export function applySuccessCheckOutcome(roll, acesRevealed) {
+	/* ... */
+}
 ```
 
 **Benefits:**
+
 - Easier testing
 - Better organization
 - Reusable across features
@@ -350,6 +380,7 @@ export function applySuccessCheckOutcome(roll, acesRevealed) { /* ... */ }
 **Lines:** 75-79
 
 **Problem:**
+
 ```javascript
 } catch (error) {
     logger.error('Proceed to byte failed:', error);
@@ -361,6 +392,7 @@ export function applySuccessCheckOutcome(roll, acesRevealed) { /* ... */ }
 Errors are logged but not surfaced to user. Game could appear frozen.
 
 **Recommended Solution:**
+
 ```javascript
 let errorMessage = $state(null);
 
@@ -392,26 +424,28 @@ let errorMessage = $state(null);
 
 **Problem:**
 Audio recording functions lack error boundaries:
+
 ```javascript
 async function startRecording() {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    // If this fails after permission granted, no recovery
+	const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+	// If this fails after permission granted, no recovery
 }
 ```
 
 **Recommended Solution:**
+
 ```javascript
 async function startRecording() {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(stream);
-        // ... recording logic
-    } catch (error) {
-        logger.error('[Audio] Recording failed:', error);
-        recordingError = 'Microphone access failed. Please check permissions.';
-        isRecording = false;
-        // Show user-friendly error message
-    }
+	try {
+		const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+		mediaRecorder = new MediaRecorder(stream);
+		// ... recording logic
+	} catch (error) {
+		logger.error('[Audio] Recording failed:', error);
+		recordingError = 'Microphone access failed. Please check permissions.';
+		isRecording = false;
+		// Show user-friendly error message
+	}
 }
 ```
 
@@ -428,23 +462,27 @@ async function startRecording() {
 
 **Problem:**
 ValidationError class is good, but error messages could be more helpful:
+
 ```javascript
 throw new ValidationError(`Missing required frontmatter fields: ${missingFields.join(', ')}`);
 ```
 
 **Recommended Solution:**
+
 ```javascript
-const suggestions = missingFields.map(field => {
-    const examples = {
-        title: 'title: My Amazing Game',
-        subtitle: 'subtitle: A Journey Through Time'
-    };
-    return `  - ${field}: ${examples[field] || '(value)'}`;
-}).join('\n');
+const suggestions = missingFields
+	.map((field) => {
+		const examples = {
+			title: 'title: My Amazing Game',
+			subtitle: 'subtitle: A Journey Through Time'
+		};
+		return `  - ${field}: ${examples[field] || '(value)'}`;
+	})
+	.join('\n');
 
 throw new ValidationError(
-    `Missing required frontmatter fields:\n${suggestions}\n\n` +
-    `See documentation: docs/game-config.md`
+	`Missing required frontmatter fields:\n${suggestions}\n\n` +
+		`See documentation: docs/game-config.md`
 );
 ```
 
@@ -463,14 +501,16 @@ throw new ValidationError(
 
 **Problem:**
 Many functions lack JSDoc, especially complex ones:
+
 ```javascript
 export function applyPendingDiceRoll() {
-    // 50+ lines of complex logic
-    // No JSDoc explaining when/why to call this
+	// 50+ lines of complex logic
+	// No JSDoc explaining when/why to call this
 }
 ```
 
 **Recommended Solution:**
+
 ```javascript
 /**
  * Apply pending dice roll state to game state
@@ -489,7 +529,7 @@ export function applyPendingDiceRoll() {
  * applyPendingDiceRoll(); // Apply after animation
  */
 export function applyPendingDiceRoll() {
-    // ... implementation
+	// ... implementation
 }
 ```
 
@@ -505,18 +545,20 @@ export function applyPendingDiceRoll() {
 
 **Problem:**
 Example from CardDeck.svelte line 11:
+
 ```javascript
 let {
-    card = $bindable(null),
-    animationStage = $bindable('idle'),
-    onrequestcard = () => {},
-    onconfirmcard = () => {}
+	card = $bindable(null),
+	animationStage = $bindable('idle'),
+	onrequestcard = () => {},
+	onconfirmcard = () => {}
 } = $props();
 ```
 
 No JSDoc explaining prop contracts.
 
 **Recommended Solution:**
+
 ```javascript
 /**
  * CardDeck Component
@@ -542,10 +584,10 @@ No JSDoc explaining prop contracts.
  * @property {() => void} onconfirmcard - Called when card is confirmed/dismissed
  */
 let {
-    card = $bindable(null),
-    animationStage = $bindable('idle'),
-    onrequestcard = () => {},
-    onconfirmcard = () => {}
+	card = $bindable(null),
+	animationStage = $bindable('idle'),
+	onrequestcard = () => {},
+	onconfirmcard = () => {}
 } = $props();
 ```
 
@@ -562,11 +604,13 @@ let {
 
 **Problem:**
 State names are strings, prone to typos:
+
 ```javascript
 state: 'loadGame',  // Could be 'laodGame' by mistake
 ```
 
 **Recommended Solution:**
+
 ```javascript
 // src/lib/constants/gameStates.js
 export const GAME_STATES = {
@@ -604,15 +648,16 @@ gameState.state = GAME_STATES.LOAD_GAME;
 **Lines:** 73-85
 
 **Problem:**
+
 ```javascript
 const dicePips = $derived(() => {
-    const roll = gameState.diceRoll || 0;
-    const pips = [false, false, false, false, false];
-    const binary = roll.toString(2).padStart(5, '0');
-    for (let i = 0; i < 5; i++) {
-        pips[i] = binary[i] === '1';
-    }
-    return pips;
+	const roll = gameState.diceRoll || 0;
+	const pips = [false, false, false, false, false];
+	const binary = roll.toString(2).padStart(5, '0');
+	for (let i = 0; i < 5; i++) {
+		pips[i] = binary[i] === '1';
+	}
+	return pips;
 });
 ```
 
@@ -630,27 +675,29 @@ const dicePips = $derived(() => {
 
 **Problem:**
 Large derived object recreated on every screen change:
+
 ```javascript
 const contextText = $derived.by(() => {
-    switch (currentScreen) {
-        case 'initialDamageRoll':
-            return { title: '...', description: '...', showStats: true };
-        // ... many cases
-    }
+	switch (currentScreen) {
+		case 'initialDamageRoll':
+			return { title: '...', description: '...', showStats: true };
+		// ... many cases
+	}
 });
 ```
 
 **Recommended Solution:**
 Move to static config object:
+
 ```javascript
 // src/lib/config/screenContexts.js
 export const SCREEN_CONTEXTS = {
-    initialDamageRoll: {
-        title: 'Initial Instability',
-        description: 'Before your journey begins...',
-        showStats: true
-    },
-    // ... all screens
+	initialDamageRoll: {
+		title: 'Initial Instability',
+		description: 'Before your journey begins...',
+		showStats: true
+	}
+	// ... all screens
 };
 
 // Usage
@@ -671,10 +718,12 @@ const contextText = $derived(SCREEN_CONTEXTS[currentScreen] || null);
 50 console statements found (grep results). Many should use logger instead.
 
 **Examples:**
+
 - StoryMode.svelte lines 35-84: 4 console.log calls
 - CardDeck.svelte: console.log for debugging
 
 **Recommended Solution:**
+
 ```javascript
 // ❌ BAD
 console.log('[StoryMode] Current round:', currentRoundIndex);
@@ -700,6 +749,7 @@ Logger already filters based on NODE_ENV in production.
 **Lines:** 75-85
 
 **Problem:**
+
 ```javascript
 const pips = [false, false, false, false, false];
 const binary = roll.toString(2).padStart(5, '0');
@@ -708,6 +758,7 @@ const binary = roll.toString(2).padStart(5, '0');
 Why 5? Not immediately clear.
 
 **Recommended Solution:**
+
 ```javascript
 const PIP_COUNT = 5; // D20 rolls mapped to 5-bit binary display
 const pips = new Array(PIP_COUNT).fill(false);
@@ -727,32 +778,34 @@ const binary = roll.toString(2).padStart(PIP_COUNT, '0');
 
 **Problem:**
 Auto-play logic has 4-5 levels of nesting:
+
 ```javascript
 switch (currentScreen) {
-    case 'rollForTasks':
-        if (gameplaySettings.autoRollDice) {
-            if (!rollTasksRolled && !rollTasksRolling) {
-                // Deep nesting
-            }
-        }
+	case 'rollForTasks':
+		if (gameplaySettings.autoRollDice) {
+			if (!rollTasksRolled && !rollTasksRolling) {
+				// Deep nesting
+			}
+		}
 }
 ```
 
 **Recommended Solution:**
 Extract each case to named function:
+
 ```javascript
 function triggerRollForTasksAutoPlay() {
-    // Early returns reduce nesting
-    if (!gameplaySettings.autoRollDice) return;
-    if (rollTasksRolled || rollTasksRolling) return;
+	// Early returns reduce nesting
+	if (!gameplaySettings.autoRollDice) return;
+	if (rollTasksRolled || rollTasksRolling) return;
 
-    autoPlayCanceller = autoRoll(() => handleRollForTasks());
+	autoPlayCanceller = autoRoll(() => handleRollForTasks());
 }
 
 switch (currentScreen) {
-    case 'rollForTasks':
-        triggerRollForTasksAutoPlay();
-        break;
+	case 'rollForTasks':
+		triggerRollForTasksAutoPlay();
+		break;
 }
 ```
 
@@ -767,6 +820,7 @@ switch (currentScreen) {
 **Severity:** 🟢 Low
 
 **Examples:**
+
 - StatusDisplay lines 415-421: Old deck visualization
 - CardDeck lines 253-254: Old animation logic
 - GameScreen lines 881-966: Entire toolbar section (commented)
@@ -791,23 +845,24 @@ Auto-play logic tightly coupled to components, hard to test in isolation.
 
 **Recommended Solution:**
 Extract to testable composables:
+
 ```javascript
 // useAutoPlay.svelte.js
 export function useAutoPlay(settings) {
-    // Testable logic
+	// Testable logic
 }
 
 // In test
 import { useAutoPlay } from './useAutoPlay.svelte.js';
 
 test('auto-play triggers after delay', async () => {
-    const autoPlay = useAutoPlay({ autoRollDice: true });
-    const action = vi.fn();
+	const autoPlay = useAutoPlay({ autoRollDice: true });
+	const action = vi.fn();
 
-    autoPlay.trigger(action, 100);
-    await sleep(150);
+	autoPlay.trigger(action, 100);
+	await sleep(150);
 
-    expect(action).toHaveBeenCalled();
+	expect(action).toHaveBeenCalled();
 });
 ```
 
@@ -821,29 +876,31 @@ test('auto-play triggers after delay', async () => {
 **Severity:** 🔴 Critical
 
 **Missing Tests:**
+
 - No tests for pending state application
 - No tests for animation state machine in CardDeck
 - No tests for auto-play cancellation
 
 **Recommended Solution:**
+
 ```javascript
 // gameStore.test.js
 describe('Pending State System', () => {
-    it('should apply dice roll after animation', () => {
-        gameState.pendingUpdates.diceRoll = 15;
-        gameState.pendingUpdates.towerDamage = 5;
+	it('should apply dice roll after animation', () => {
+		gameState.pendingUpdates.diceRoll = 15;
+		gameState.pendingUpdates.towerDamage = 5;
 
-        applyPendingDiceRoll();
+		applyPendingDiceRoll();
 
-        expect(gameState.tower).toBe(15); // 20 - 5
-        expect(gameState.pendingUpdates.diceRoll).toBe(null);
-    });
+		expect(gameState.tower).toBe(15); // 20 - 5
+		expect(gameState.pendingUpdates.diceRoll).toBe(null);
+	});
 
-    it('should not apply if no pending state', () => {
-        const tower = gameState.tower;
-        applyPendingDiceRoll();
-        expect(gameState.tower).toBe(tower); // Unchanged
-    });
+	it('should not apply if no pending state', () => {
+		const tower = gameState.tower;
+		applyPendingDiceRoll();
+		expect(gameState.tower).toBe(tower); // Unchanged
+	});
 });
 ```
 
@@ -859,34 +916,36 @@ describe('Pending State System', () => {
 
 **Problem:**
 TTS service lacks injection pattern, hard to mock:
+
 ```javascript
 // Components directly import speak()
 import { speak } from '../stores/audioStore.svelte.js';
 ```
 
 **Recommended Solution:**
+
 ```javascript
 // audioStore.svelte.js
 let mockMode = false;
 let mockImplementation = null;
 
 export function setMockMode(enabled, impl = null) {
-    mockMode = enabled;
-    mockImplementation = impl;
+	mockMode = enabled;
+	mockImplementation = impl;
 }
 
 export async function speak(text) {
-    if (mockMode && mockImplementation) {
-        return mockImplementation(text);
-    }
-    // ... real implementation
+	if (mockMode && mockImplementation) {
+		return mockImplementation(text);
+	}
+	// ... real implementation
 }
 
 // In tests
 import { speak, setMockMode } from '$lib/stores/audioStore.svelte.js';
 
 beforeEach(() => {
-    setMockMode(true, vi.fn());
+	setMockMode(true, vi.fn());
 });
 ```
 
@@ -904,22 +963,28 @@ beforeEach(() => {
 
 **Problem:**
 Mix of patterns:
+
 - `onclick` (Svelte props, lowercase)
 - `onProceed` (functions, camelCase)
 - `handleButtonClick` (functions, handle prefix)
 
 **Recommended Solution:**
 Standardize convention:
+
 ```javascript
 // Props from parent: lowercase (Svelte convention)
 let { onclick, onconfirmcard, onrequestcard } = $props();
 
 // Internal handlers: handle prefix
-function handleDismiss() { /* ... */ }
-function handleProceed() { /* ... */ }
+function handleDismiss() {
+	/* ... */
+}
+function handleProceed() {
+	/* ... */
+}
 
 // Usage
-<button onclick={handleDismiss}>Dismiss</button>
+<button onclick={handleDismiss}>Dismiss</button>;
 ```
 
 **Estimated Effort:** Small (1 hour)
@@ -934,6 +999,7 @@ function handleProceed() { /* ... */ }
 **Lines:** 108-110
 
 **Problem:**
+
 ```javascript
 let autoPlayCanceller = $state(null);
 ```
@@ -941,6 +1007,7 @@ let autoPlayCanceller = $state(null);
 What is this? A function? An object? (It's an object with `cancel()` method)
 
 **Recommended Solution:**
+
 ```javascript
 /** @type {{cancel: () => void} | null} */
 let autoPlayCanceller = $state(null);
@@ -964,6 +1031,7 @@ let autoPlayHandle = $state(null);
 
 **Problem:**
 Contains:
+
 - `logger.js` (logging utility) ✅
 - `timing.js` (sleep helper) ✅
 - `autoPlay.js` (game feature logic) ❌
@@ -987,16 +1055,19 @@ Keep utils for pure helpers only.
 
 **Problem:**
 Overlap:
+
 - `stores/audioStore.svelte.js` contains service-like functions (`speak()`)
 - `services/random.js` could arguably be in utils
 
 **Recommended Solution:**
 Clarify convention:
+
 - **Stores:** Reactive state (uses $state, $derived)
 - **Services:** Stateless logic, pure functions
 - **Utils:** Generic helpers, not domain-specific
 
 Consider:
+
 - Renaming audioStore → audioService
 - Or splitting into audioState.svelte.js + audioService.js
 
@@ -1011,21 +1082,25 @@ Consider:
 **Severity:** 🟢 Low
 
 **Problem:**
+
 - DiceThemes.js exports object ✅
 - GameSettings.js exports class ❌
 - DifficultyLevels.js exports object ✅
 
 **Recommended Solution:**
 Standardize all as objects (no classes for config):
+
 ```javascript
 // ❌ Current GameSettings.js
-export class GameSettings { /* ... */ }
+export class GameSettings {
+	/* ... */
+}
 
 // ✅ Better
 export const DEFAULT_GAME_SETTINGS = {
-    startingStability: 20,
-    startingTokens: 10,
-    // ...
+	startingStability: 20,
+	startingTokens: 10
+	// ...
 };
 ```
 
@@ -1039,6 +1114,7 @@ Or document why GameSettings is a class (if there's a good reason).
 ## Summary Statistics
 
 ### Issues by Severity
+
 - 🔴 **Critical:** 5 issues
 - 🟠 **High:** 3 issues
 - 🟡 **Medium:** 10 issues
@@ -1047,6 +1123,7 @@ Or document why GameSettings is a class (if there's a good reason).
 **Total:** 33 issues identified
 
 ### Issues by Category
+
 - Component Architecture: 3 issues
 - State Management: 3 issues
 - Code Duplication: 3 issues
@@ -1059,6 +1136,7 @@ Or document why GameSettings is a class (if there's a good reason).
 - File Organization: 3 issues
 
 ### Estimated Effort by Priority
+
 - Critical: 15-20 hours
 - High: 8-10 hours
 - Medium: 10-12 hours

@@ -10,7 +10,11 @@
  * @returns {Object} Roll for tasks state and actions
  */
 
-import { rollForTasks, confirmTaskRoll, applyPendingTaskRoll } from '../../stores/gameActions.svelte.js';
+import {
+	rollForTasks,
+	confirmTaskRoll,
+	applyPendingTaskRoll
+} from '../../stores/gameActions.svelte.js';
 import { rollDice } from '../../stores/diceStore.svelte.js';
 import { gameState } from '../../stores/gameStore.svelte.js';
 

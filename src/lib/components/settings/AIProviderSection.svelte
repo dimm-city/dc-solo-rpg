@@ -25,8 +25,7 @@
 <section class="settings-section">
 	<h3>AI Provider</h3>
 	<p class="section-description">
-		Choose your AI provider for story generation. You'll need an API key from the selected
-		provider.
+		Choose your AI provider for story generation. You'll need an API key from the selected provider.
 	</p>
 
 	<div class="form-group">
@@ -40,12 +39,7 @@
 
 	<div class="form-group">
 		<label for="ai-api-key">API Key</label>
-		<input
-			id="ai-api-key"
-			type="password"
-			bind:value={aiApiKey}
-			placeholder="Enter your API key"
-		/>
+		<input id="ai-api-key" type="password" bind:value={aiApiKey} placeholder="Enter your API key" />
 		<small class="help-text">
 			{#if aiProvider === 'anthropic'}
 				Get your API key from <a

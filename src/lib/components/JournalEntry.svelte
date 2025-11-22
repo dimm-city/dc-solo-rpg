@@ -284,13 +284,16 @@
 	}
 </script>
 
-<div class="dc-journal-container" in:fade={{ duration: ANIMATION_DURATION.NORMAL }} data-augmented-ui="tl-clip br-clip tr-clip bl-clip border">
+<div
+	class="dc-journal-container"
+	in:fade={{ duration: ANIMATION_DURATION.NORMAL }}
+	data-augmented-ui="tl-clip br-clip tr-clip bl-clip border"
+>
 	<div
 		class="journal-header-area"
 		in:fade={{ duration: ANIMATION_DURATION.SLOW, delay: ANIMATION_DURATION.FAST }}
 	>
 		<h6>{gameState.config?.labels?.journalEntryHeader ?? 'Journal Entry'}</h6>
-		
 
 		{#each currentEvents as event (event.id)}
 			<p>{event.description}</p>
@@ -428,7 +431,6 @@
 		text-wrap-mode: wrap;
 		text-wrap-style: pretty;
 		text-align: center;
-
 	}
 
 	.journal-header-area p {
@@ -510,7 +512,6 @@
 		--aug-br: 12px;
 	}
 
-
 	/* Responsive Design */
 	@media (max-width: 640px) {
 		.dc-journal-container {
@@ -527,7 +528,6 @@
 			padding: var(--space-sm);
 			gap: var(--space-xs);
 		}
-
 	}
 
 	@media (max-height: 700px) {
@@ -554,6 +554,5 @@
 		.audio-entry-area {
 			padding: var(--space-sm);
 		}
-
 	}
 </style>

@@ -1,23 +1,21 @@
 <script>
-/**
- * RoundStats - Display game state statistics for a round
- *
- * Shows tower, failures (kings), tokens/success, and abilities (aces)
- *
- * @component
- * @example
- * <RoundStats gameState={{
- *   tower: 15,
- *   kingsRevealed: 2,
- *   tokens: 5,
- *   aceOfHeartsRevealed: true,
- *   acesRevealed: 3
- * }} />
- */
+	/**
+	 * RoundStats - Display game state statistics for a round
+	 *
+	 * Shows tower, failures (kings), tokens/success, and abilities (aces)
+	 *
+	 * @component
+	 * @example
+	 * <RoundStats gameState={{
+	 *   tower: 15,
+	 *   kingsRevealed: 2,
+	 *   tokens: 5,
+	 *   aceOfHeartsRevealed: true,
+	 *   acesRevealed: 3
+	 * }} />
+	 */
 
-let {
-	gameState = null
-} = $props();
+	let { gameState = null } = $props();
 </script>
 
 {#if gameState}
@@ -38,9 +36,7 @@ let {
 					{gameState.aceOfHeartsRevealed ? 'Success' : 'Tokens'}
 				</span>
 				<span class="stat-value">
-					{gameState.aceOfHeartsRevealed
-						? `${10 - gameState.tokens}/10`
-						: gameState.tokens}
+					{gameState.aceOfHeartsRevealed ? `${10 - gameState.tokens}/10` : gameState.tokens}
 				</span>
 			</div>
 		{/if}

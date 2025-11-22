@@ -1,49 +1,49 @@
 <script>
-/**
- * StabilityPanel - Stability stat panel with gradient bar
- *
- * Displays current stability with a visual bar that changes color based on value.
- * Uses Augmented UI styling with dynamic gradients and glows.
- *
- * @component
- */
+	/**
+	 * StabilityPanel - Stability stat panel with gradient bar
+	 *
+	 * Displays current stability with a visual bar that changes color based on value.
+	 * Uses Augmented UI styling with dynamic gradients and glows.
+	 *
+	 * @component
+	 */
 
-import { gameState } from '../../stores/gameStore.svelte.js';
-import { innerWidth } from 'svelte/reactivity/window';
+	import { gameState } from '../../stores/gameStore.svelte.js';
+	import { innerWidth } from 'svelte/reactivity/window';
 
-let {
-	/** Animation delay in seconds */
-	animationDelay = 0.15,
-	/** Animation duration in seconds */
-	animationDuration = 0.7
-} = $props();
+	let {
+		/** Animation delay in seconds */
+		animationDelay = 0.15,
+		/** Animation duration in seconds */
+		animationDuration = 0.7
+	} = $props();
 
-// Reactive screen width tracking
-const isMobile = $derived((innerWidth.current ?? 1024) <= 600);
+	// Reactive screen width tracking
+	const isMobile = $derived((innerWidth.current ?? 1024) <= 600);
 
-// Reactive data-augmented-ui attribute for health stat
-const healthAugmentedUI = $derived(
-	isMobile ? 'tl-clip tr-clip br-clip-x border' : 'tl-clip tr-clip-x br-clip-x border'
-);
+	// Reactive data-augmented-ui attribute for health stat
+	const healthAugmentedUI = $derived(
+		isMobile ? 'tl-clip tr-clip br-clip-x border' : 'tl-clip tr-clip-x br-clip-x border'
+	);
 
-// Stability gradient - changes based on value (low = red, high = green)
-const stabilityGradient = $derived(() => {
-	const stability = gameState.tower;
-	if (stability >= 10) {
-		// High stability - positive colors (green)
-		return 'linear-gradient(90deg, #00ff88, #00cc66)';
-	} else {
-		// Low stability - warning/danger colors (red/magenta)
-		return 'linear-gradient(90deg, #ff0055, #d946ef)';
-	}
-});
+	// Stability gradient - changes based on value (low = red, high = green)
+	const stabilityGradient = $derived(() => {
+		const stability = gameState.tower;
+		if (stability >= 10) {
+			// High stability - positive colors (green)
+			return 'linear-gradient(90deg, #00ff88, #00cc66)';
+		} else {
+			// Low stability - warning/danger colors (red/magenta)
+			return 'linear-gradient(90deg, #ff0055, #d946ef)';
+		}
+	});
 
-const stabilityGlow = $derived(() => {
-	const stability = gameState.tower;
-	return stability >= 10 ? '#00ff88' : '#ff0055';
-});
+	const stabilityGlow = $derived(() => {
+		const stability = gameState.tower;
+		return stability >= 10 ? '#00ff88' : '#ff0055';
+	});
 
-const stabilityPercent = $derived((gameState.tower / 20) * 100);
+	const stabilityPercent = $derived((gameState.tower / 20) * 100);
 </script>
 
 <div

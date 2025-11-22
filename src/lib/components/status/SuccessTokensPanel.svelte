@@ -1,43 +1,43 @@
 <script>
-/**
- * SuccessTokensPanel - Success tokens panel
- *
- * Displays 10 tokens in a grid. Start with 10 active, remove to win.
- * Uses Augmented UI styling with pentagon-shaped tokens and glow animations.
- *
- * @component
- */
+	/**
+	 * SuccessTokensPanel - Success tokens panel
+	 *
+	 * Displays 10 tokens in a grid. Start with 10 active, remove to win.
+	 * Uses Augmented UI styling with pentagon-shaped tokens and glow animations.
+	 *
+	 * @component
+	 */
 
-import { gameState } from '../../stores/gameStore.svelte.js';
-import { innerWidth } from 'svelte/reactivity/window';
+	import { gameState } from '../../stores/gameStore.svelte.js';
+	import { innerWidth } from 'svelte/reactivity/window';
 
-let {
-	/** Animation delay in seconds */
-	animationDelay = 0.65,
-	/** Animation duration in seconds */
-	animationDuration = 0.75
-} = $props();
+	let {
+		/** Animation delay in seconds */
+		animationDelay = 0.65,
+		/** Animation duration in seconds */
+		animationDuration = 0.75
+	} = $props();
 
-// Reactive screen width tracking
-const isMobile = $derived((innerWidth.current ?? 1024) <= 600);
+	// Reactive screen width tracking
+	const isMobile = $derived((innerWidth.current ?? 1024) <= 600);
 
-// Reactive data-augmented-ui attribute for success stat
-const successAugmentedUI = $derived(
-	isMobile ? 'bl-clip br-clip tl-clip-x border' : 'tl-2-clip-x tr-2-clip-x border'
-);
+	// Reactive data-augmented-ui attribute for success stat
+	const successAugmentedUI = $derived(
+		isMobile ? 'bl-clip br-clip tl-clip-x border' : 'tl-2-clip-x tr-2-clip-x border'
+	);
 
-// Token visualization - create array of token states (count down from 10 to 0)
-const tokenStates = $derived(
-	Array.from({ length: 10 }, (_, i) => ({
-		index: i,
-		active: i < gameState.tokens
-	}))
-);
+	// Token visualization - create array of token states (count down from 10 to 0)
+	const tokenStates = $derived(
+		Array.from({ length: 10 }, (_, i) => ({
+			index: i,
+			active: i < gameState.tokens
+		}))
+	);
 
-// Success label from config or default
-const successLabel = $derived(
-	gameState.config?.labels?.successCounters?.toUpperCase() ?? 'SUCCESS'
-);
+	// Success label from config or default
+	const successLabel = $derived(
+		gameState.config?.labels?.successCounters?.toUpperCase() ?? 'SUCCESS'
+	);
 </script>
 
 <div

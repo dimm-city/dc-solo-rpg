@@ -24,24 +24,24 @@ Add configurable auto-play functionality that allows users to customize how much
 
 ### Audio Settings
 
-| Setting | Type | Default | Description |
-|---------|------|---------|-------------|
-| `autoReadCards` | boolean | `false` | Auto-read card content when drawn |
-| `autoReadPrompts` | boolean | `false` | Auto-read screen prompts and instructions |
-| `autoAnnounceRolls` | boolean | `false` | TTS announces dice results |
-| `readingSpeed` | enum | `'normal'` | TTS reading speed: `'slow'`, `'normal'`, `'fast'` |
-| `ttsProvider` | enum | `'browser'` | TTS provider: `'browser'`, `'elevenlabs'`, `'openai'`, etc. |
-| `ttsVoice` | string | `null` | Selected voice (provider-specific) |
+| Setting             | Type    | Default     | Description                                                 |
+| ------------------- | ------- | ----------- | ----------------------------------------------------------- |
+| `autoReadCards`     | boolean | `false`     | Auto-read card content when drawn                           |
+| `autoReadPrompts`   | boolean | `false`     | Auto-read screen prompts and instructions                   |
+| `autoAnnounceRolls` | boolean | `false`     | TTS announces dice results                                  |
+| `readingSpeed`      | enum    | `'normal'`  | TTS reading speed: `'slow'`, `'normal'`, `'fast'`           |
+| `ttsProvider`       | enum    | `'browser'` | TTS provider: `'browser'`, `'elevenlabs'`, `'openai'`, etc. |
+| `ttsVoice`          | string  | `null`      | Selected voice (provider-specific)                          |
 
 ### Gameplay Settings
 
-| Setting | Type | Default | Description |
-|---------|------|---------|-------------|
-| `autoRollDice` | boolean | `false` | Auto-trigger all dice rolls |
-| `autoContinueAfterReading` | boolean | `false` | Auto-click "Continue" after TTS finishes |
-| `autoAdvanceDelay` | number | `2000` | Delay in milliseconds before auto-advancing (500-10000ms) |
-| `autoHandleJournaling` | enum | `'manual'` | Journal handling: `'manual'`, `'skip'`, `'timed'` |
-| `journalPauseTime` | number | `10000` | Time to wait before auto-continuing on journal screen (ms) |
+| Setting                    | Type    | Default    | Description                                                |
+| -------------------------- | ------- | ---------- | ---------------------------------------------------------- |
+| `autoRollDice`             | boolean | `false`    | Auto-trigger all dice rolls                                |
+| `autoContinueAfterReading` | boolean | `false`    | Auto-click "Continue" after TTS finishes                   |
+| `autoAdvanceDelay`         | number  | `2000`     | Delay in milliseconds before auto-advancing (500-10000ms)  |
+| `autoHandleJournaling`     | enum    | `'manual'` | Journal handling: `'manual'`, `'skip'`, `'timed'`          |
+| `journalPauseTime`         | number  | `10000`    | Time to wait before auto-continuing on journal screen (ms) |
 
 ---
 
@@ -113,12 +113,14 @@ interface TTSProvider {
 Uses Web Speech API (`window.speechSynthesis`).
 
 **Features:**
+
 - Free, no API key required
 - Works offline
 - Voice quality varies by OS/browser
 - Available voices depend on system
 
 **Configuration:**
+
 ```javascript
 {
   provider: 'browser',
@@ -131,6 +133,7 @@ Uses Web Speech API (`window.speechSynthesis`).
 #### 2. Placeholder for Future Providers
 
 **ElevenLabs Provider:**
+
 ```javascript
 {
   provider: 'elevenlabs',
@@ -141,6 +144,7 @@ Uses Web Speech API (`window.speechSynthesis`).
 ```
 
 **OpenAI TTS Provider:**
+
 ```javascript
 {
   provider: 'openai',
@@ -155,10 +159,10 @@ Uses Web Speech API (`window.speechSynthesis`).
 ```javascript
 // src/lib/services/tts/providers/index.js
 const TTS_PROVIDERS = {
-  browser: BrowserTTSProvider,
-  // Future:
-  // elevenlabs: ElevenLabsProvider,
-  // openai: OpenAIProvider,
+	browser: BrowserTTSProvider
+	// Future:
+	// elevenlabs: ElevenLabsProvider,
+	// openai: OpenAIProvider,
 };
 ```
 
@@ -169,6 +173,7 @@ const TTS_PROVIDERS = {
 ### Phase 1: Core Infrastructure
 
 #### Step 1: TTS Service Layer
+
 **File:** `src/lib/services/tts/textToSpeech.js`
 
 - Export main TTS service class
@@ -189,6 +194,7 @@ const TTS_PROVIDERS = {
 - Voice management
 
 #### Step 2: Audio Store
+
 **File:** `src/lib/stores/audioStore.svelte.js`
 
 - Audio/gameplay settings state (Svelte 5 runes)
@@ -197,6 +203,7 @@ const TTS_PROVIDERS = {
 - Getter functions for settings
 
 #### Step 3: Settings Persistence
+
 **Modify:** `src/lib/stores/gameStore.svelte.js`
 
 - Add audio/gameplay settings to game state
@@ -206,6 +213,7 @@ const TTS_PROVIDERS = {
 ### Phase 2: Auto-Play Logic
 
 #### Step 4: Auto-Roll Dice
+
 **Modify:** `src/lib/components/GameScreen.svelte`
 
 - Watch for dice screens: `initialDamageRoll`, `rollForTasks`, `failureCheck`, `successCheck`
@@ -214,6 +222,7 @@ const TTS_PROVIDERS = {
 - Cancel if user clicks manually
 
 #### Step 5: Auto-Continue After Reading
+
 **Modify:** `src/lib/components/GameScreen.svelte`
 
 - After TTS completes, wait `autoAdvanceDelay` ms
@@ -222,6 +231,7 @@ const TTS_PROVIDERS = {
 - Cancel if user clicks manually
 
 #### Step 6: Auto-Announce Dice Results
+
 **Modify:** `src/lib/components/GameScreen.svelte`
 
 - After dice animation completes, check `autoAnnounceRolls`
@@ -230,6 +240,7 @@ const TTS_PROVIDERS = {
 - Chain with auto-continue if enabled
 
 #### Step 7: Auto-Read Cards
+
 **Modify:** `src/lib/components/CardDeck.svelte`
 
 - After card reveal animation (`animationStage === 'revealed'`)
@@ -237,6 +248,7 @@ const TTS_PROVIDERS = {
 - Chain with auto-continue if enabled
 
 #### Step 8: Auto-Read Prompts
+
 **Modify:** `src/lib/components/GameScreen.svelte`
 
 - For screens: `showIntro`, `startRound`, prompts
@@ -244,6 +256,7 @@ const TTS_PROVIDERS = {
 - Chain with auto-continue if enabled
 
 #### Step 9: Journal Auto-Handling
+
 **Modify:** `src/lib/components/JournalEntry.svelte`
 
 - If `autoHandleJournaling === 'skip'`, immediately save and continue
@@ -256,6 +269,7 @@ const TTS_PROVIDERS = {
 ### Phase 3: User Interface
 
 #### Step 10: Settings Panel UI
+
 **New File:** `src/lib/components/settings/AudioSettings.svelte`
 
 - Audio settings section:
@@ -285,6 +299,7 @@ const TTS_PROVIDERS = {
 - Settings preview/test
 
 #### Step 11: Settings Access
+
 **Modify:** `src/lib/components/GameScreen.svelte` or main UI
 
 - Add settings gear icon/button
@@ -294,26 +309,32 @@ const TTS_PROVIDERS = {
 ### Phase 4: Testing & Polish
 
 #### Step 12: Unit Tests
+
 **New Files:**
+
 - `src/lib/services/tts/BrowserTTSProvider.test.js`
 - `src/lib/stores/audioStore.test.js`
 
 Test coverage:
+
 - TTS provider interface compliance
 - Promise resolution on speak completion
 - Settings persistence
 - Auto-advance timing logic
 
 #### Step 13: Integration Testing
+
 **New File:** `src/lib/components/AutoPlay.integration.test.js`
 
 Test scenarios:
+
 - Full auto-play (all settings enabled)
 - Partial auto-play combinations
 - Manual override (user clicks during auto-advance)
 - Settings changes mid-game
 
 #### Step 14: Polish & UX
+
 - Visual indicators for auto-advancing (countdown timers, progress bars)
 - Accessibility labels (ARIA attributes)
 - Keyboard shortcuts (e.g., Space to toggle auto-play)
@@ -328,26 +349,26 @@ Test scenarios:
 ```javascript
 // Reusable auto-advance helper
 async function autoAdvanceIfEnabled(ttsText = null, buttonRef = null) {
-  const settings = getAudioSettings();
+	const settings = getAudioSettings();
 
-  // Step 1: TTS if text provided and enabled
-  if (ttsText && (settings.autoReadCards || settings.autoReadPrompts)) {
-    await ttsService.speak(ttsText);
-  }
+	// Step 1: TTS if text provided and enabled
+	if (ttsText && (settings.autoReadCards || settings.autoReadPrompts)) {
+		await ttsService.speak(ttsText);
+	}
 
-  // Step 2: Auto-continue if enabled
-  if (settings.autoContinueAfterReading && buttonRef) {
-    const delay = settings.autoAdvanceDelay;
+	// Step 2: Auto-continue if enabled
+	if (settings.autoContinueAfterReading && buttonRef) {
+		const delay = settings.autoAdvanceDelay;
 
-    // Show countdown indicator
-    showCountdown(delay);
+		// Show countdown indicator
+		showCountdown(delay);
 
-    // Wait for delay (cancellable)
-    await cancellableDelay(delay);
+		// Wait for delay (cancellable)
+		await cancellableDelay(delay);
 
-    // Click button programmatically
-    buttonRef.click();
-  }
+		// Click button programmatically
+		buttonRef.click();
+	}
 }
 ```
 
@@ -357,16 +378,16 @@ async function autoAdvanceIfEnabled(ttsText = null, buttonRef = null) {
 let autoAdvanceTimer = null;
 
 function cancellableDelay(ms) {
-  return new Promise((resolve) => {
-    autoAdvanceTimer = setTimeout(resolve, ms);
-  });
+	return new Promise((resolve) => {
+		autoAdvanceTimer = setTimeout(resolve, ms);
+	});
 }
 
 function cancelAutoAdvance() {
-  if (autoAdvanceTimer) {
-    clearTimeout(autoAdvanceTimer);
-    autoAdvanceTimer = null;
-  }
+	if (autoAdvanceTimer) {
+		clearTimeout(autoAdvanceTimer);
+		autoAdvanceTimer = null;
+	}
 }
 
 // Cancel on user interaction
@@ -377,18 +398,18 @@ button.addEventListener('click', cancelAutoAdvance);
 
 ```javascript
 function speak(text, options = {}) {
-  return new Promise((resolve, reject) => {
-    const utterance = new SpeechSynthesisUtterance(text);
+	return new Promise((resolve, reject) => {
+		const utterance = new SpeechSynthesisUtterance(text);
 
-    utterance.rate = options.rate || 1.0;
-    utterance.pitch = options.pitch || 1.0;
-    if (options.voice) utterance.voice = options.voice;
+		utterance.rate = options.rate || 1.0;
+		utterance.pitch = options.pitch || 1.0;
+		if (options.voice) utterance.voice = options.voice;
 
-    utterance.onend = () => resolve();
-    utterance.onerror = (error) => reject(error);
+		utterance.onend = () => resolve();
+		utterance.onerror = (error) => reject(error);
 
-    window.speechSynthesis.speak(utterance);
-  });
+		window.speechSynthesis.speak(utterance);
+	});
 }
 ```
 
@@ -396,9 +417,9 @@ function speak(text, options = {}) {
 
 ```javascript
 const READING_SPEEDS = {
-  slow: 0.75,
-  normal: 1.0,
-  fast: 1.5
+	slow: 0.75,
+	normal: 1.0,
+	fast: 1.5
 };
 ```
 
@@ -406,12 +427,12 @@ const READING_SPEEDS = {
 
 ```javascript
 const DELAY_PRESETS = {
-  instant: 500,    // 0.5s
-  quick: 1000,     // 1s
-  normal: 2000,    // 2s (default)
-  relaxed: 4000,   // 4s
-  slow: 6000,      // 6s
-  custom: null     // User-defined
+	instant: 500, // 0.5s
+	quick: 1000, // 1s
+	normal: 2000, // 2s (default)
+	relaxed: 4000, // 4s
+	slow: 6000, // 6s
+	custom: null // User-defined
 };
 ```
 
@@ -423,25 +444,25 @@ const DELAY_PRESETS = {
 
 ```javascript
 let gameState = $state({
-  // ... existing state ...
+	// ... existing state ...
 
-  settings: {
-    audio: {
-      autoReadCards: false,
-      autoReadPrompts: false,
-      autoAnnounceRolls: false,
-      readingSpeed: 'normal',
-      ttsProvider: 'browser',
-      ttsVoice: null,
-    },
-    gameplay: {
-      autoRollDice: false,
-      autoContinueAfterReading: false,
-      autoAdvanceDelay: 2000,
-      autoHandleJournaling: 'manual',
-      journalPauseTime: 10000,
-    }
-  }
+	settings: {
+		audio: {
+			autoReadCards: false,
+			autoReadPrompts: false,
+			autoAnnounceRolls: false,
+			readingSpeed: 'normal',
+			ttsProvider: 'browser',
+			ttsVoice: null
+		},
+		gameplay: {
+			autoRollDice: false,
+			autoContinueAfterReading: false,
+			autoAdvanceDelay: 2000,
+			autoHandleJournaling: 'manual',
+			journalPauseTime: 10000
+		}
+	}
 });
 ```
 
@@ -585,6 +606,7 @@ User manually clicks "Continue"
 ## Implementation Checklist
 
 ### Core Infrastructure
+
 - [ ] Create TTS provider base class
 - [ ] Implement Browser TTS provider
 - [ ] Create TTS service with provider registry
@@ -593,6 +615,7 @@ User manually clicks "Continue"
 - [ ] Implement settings persistence
 
 ### Auto-Play Logic
+
 - [ ] Auto-roll dice implementation
 - [ ] Auto-continue after reading implementation
 - [ ] Auto-announce dice results
@@ -601,6 +624,7 @@ User manually clicks "Continue"
 - [ ] Journal auto-handling (skip/timed)
 
 ### User Interface
+
 - [ ] Audio settings panel
 - [ ] Gameplay settings panel
 - [ ] Settings modal container
@@ -608,6 +632,7 @@ User manually clicks "Continue"
 - [ ] Settings access button in game UI
 
 ### Testing & Polish
+
 - [ ] Unit tests for TTS providers
 - [ ] Unit tests for audioStore
 - [ ] Integration tests for auto-play flows
@@ -616,6 +641,7 @@ User manually clicks "Continue"
 - [ ] Mobile testing
 
 ### Documentation
+
 - [ ] Update README with auto-play features
 - [ ] Add auto-play usage guide
 - [ ] Update game-config.md if needed

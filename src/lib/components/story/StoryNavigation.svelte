@@ -1,32 +1,32 @@
 <script>
-/**
- * StoryNavigation - Navigation controls for story mode
- *
- * Provides previous/next buttons, round indicator, and keyboard hints
- *
- * @component
- * @example
- * <StoryNavigation
- *   currentRound={2}
- *   totalRounds={10}
- *   canGoPrevious={true}
- *   canGoNext={true}
- *   onPrevious={() => logger.debug('prev')}
- *   onNext={() => logger.debug('next')}
- * />
- */
+	/**
+	 * StoryNavigation - Navigation controls for story mode
+	 *
+	 * Provides previous/next buttons, round indicator, and keyboard hints
+	 *
+	 * @component
+	 * @example
+	 * <StoryNavigation
+	 *   currentRound={2}
+	 *   totalRounds={10}
+	 *   canGoPrevious={true}
+	 *   canGoNext={true}
+	 *   onPrevious={() => logger.debug('prev')}
+	 *   onNext={() => logger.debug('next')}
+	 * />
+	 */
 
-import AugmentedButton from '../AugmentedButton.svelte';
-import { logger } from '../../utils/logger.js';
+	import AugmentedButton from '../AugmentedButton.svelte';
+	import { logger } from '../../utils/logger.js';
 
-let {
-	currentRound = 0,
-	totalRounds = 1,
-	canGoPrevious = false,
-	canGoNext = false,
-	onPrevious = () => {},
-	onNext = () => {}
-} = $props();
+	let {
+		currentRound = 0,
+		totalRounds = 1,
+		canGoPrevious = false,
+		canGoNext = false,
+		onPrevious = () => {},
+		onNext = () => {}
+	} = $props();
 </script>
 
 <!-- Navigation Controls -->
@@ -37,14 +37,7 @@ let {
 		label="Previous Round"
 		style="secondary"
 	>
-		<svg
-			width="20"
-			height="20"
-			viewBox="0 0 20 20"
-			fill="none"
-			stroke="currentColor"
-			slot="icon"
-		>
+		<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" slot="icon">
 			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 16l-6-6 6-6" />
 		</svg>
 		Previous
@@ -58,14 +51,7 @@ let {
 
 	<AugmentedButton onclick={onNext} disabled={!canGoNext} label="Next Round" style="secondary">
 		Next
-		<svg
-			width="20"
-			height="20"
-			viewBox="0 0 20 20"
-			fill="none"
-			stroke="currentColor"
-			slot="icon"
-		>
+		<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" slot="icon">
 			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4l6 6-6 6" />
 		</svg>
 	</AugmentedButton>

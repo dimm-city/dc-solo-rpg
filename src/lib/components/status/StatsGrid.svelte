@@ -1,26 +1,26 @@
 <script>
-/**
- * StatsGrid - Grid container for status panels
- *
- * Organizes stat panels in a responsive 3-column grid (desktop) that adapts to
- * 2-column (tablet) and 3-column x 2-row (mobile) layouts.
- *
- * @component
- */
+	/**
+	 * StatsGrid - Grid container for status panels
+	 *
+	 * Organizes stat panels in a responsive 3-column grid (desktop) that adapts to
+	 * 2-column (tablet) and 3-column x 2-row (mobile) layouts.
+	 *
+	 * @component
+	 */
 
-import StabilityPanel from './StabilityPanel.svelte';
-import FailureCounterPanel from './FailureCounterPanel.svelte';
-import DiceReadout from './DiceReadout.svelte';
-import AbilitiesPanel from './AbilitiesPanel.svelte';
-import SuccessTokensPanel from './SuccessTokensPanel.svelte';
-import DeckVisualization from '../DeckVisualization.svelte';
-import { innerWidth } from 'svelte/reactivity/window';
+	import StabilityPanel from './StabilityPanel.svelte';
+	import FailureCounterPanel from './FailureCounterPanel.svelte';
+	import DiceReadout from './DiceReadout.svelte';
+	import AbilitiesPanel from './AbilitiesPanel.svelte';
+	import SuccessTokensPanel from './SuccessTokensPanel.svelte';
+	import DeckVisualization from '../DeckVisualization.svelte';
+	import { innerWidth } from 'svelte/reactivity/window';
 
-// Reactive screen width tracking
-const isMobile = $derived((innerWidth.current ?? 1024) <= 600);
+	// Reactive screen width tracking
+	const isMobile = $derived((innerWidth.current ?? 1024) <= 600);
 
-// Reactive data-augmented-ui attribute for deck readout
-const deckAugmentedUI = 'tl-clip tr-clip br-clip bl-clip border';
+	// Reactive data-augmented-ui attribute for deck readout
+	const deckAugmentedUI = 'tl-clip tr-clip br-clip bl-clip border';
 </script>
 
 <div class="stats-grid">

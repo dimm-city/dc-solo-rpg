@@ -1,26 +1,26 @@
 <script>
-/**
- * PlayerInfoBar - Player and round information bar with action buttons
- *
- * Displays player name, game title, current round, and action buttons (exit, dice theme, settings, help).
- * Uses Augmented UI styling with glassmorphism effects.
- *
- * @component
- */
+	/**
+	 * PlayerInfoBar - Player and round information bar with action buttons
+	 *
+	 * Displays player name, game title, current round, and action buttons (exit, dice theme, settings, help).
+	 * Uses Augmented UI styling with glassmorphism effects.
+	 *
+	 * @component
+	 */
 
-import { gameState } from '../../stores/gameStore.svelte.js';
-import DiceThemePicker from '../DiceThemePicker.svelte';
+	import { gameState } from '../../stores/gameStore.svelte.js';
+	import DiceThemePicker from '../DiceThemePicker.svelte';
 
-let {
-	/** Handler for exit button click */
-	onExitClick,
-	/** Handler for help button click */
-	onHelpClick,
-	/** Handler for settings button click */
-	onSettingsClick = () => {}
-} = $props();
+	let {
+		/** Handler for exit button click */
+		onExitClick,
+		/** Handler for help button click */
+		onHelpClick,
+		/** Handler for settings button click */
+		onSettingsClick = () => {}
+	} = $props();
 
-let showDiceThemePicker = $state(false);
+	let showDiceThemePicker = $state(false);
 </script>
 
 <div
@@ -89,7 +89,11 @@ let showDiceThemePicker = $state(false);
 	</button>
 
 	<!-- Settings Button -->
-	<button class="status-bar-button settings-button" onclick={onSettingsClick} aria-label="Game settings">
+	<button
+		class="status-bar-button settings-button"
+		onclick={onSettingsClick}
+		aria-label="Game settings"
+	>
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
 			width="20"

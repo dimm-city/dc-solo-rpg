@@ -61,14 +61,14 @@ test('debug page crash', async ({ page, browser }) => {
 		console.log('\n✓ Waited 2 seconds for async operations');
 
 		// Try to get page content
-		const title = await page.title().catch(e => `Error: ${e.message}`);
+		const title = await page.title().catch((e) => `Error: ${e.message}`);
 		console.log(`\n✓ Page title: ${title}`);
 
 		const url = page.url();
 		console.log(`✓ Current URL: ${url}`);
 
 		// Try to get HTML
-		const html = await page.content().catch(e => `Error getting HTML: ${e.message}`);
+		const html = await page.content().catch((e) => `Error getting HTML: ${e.message}`);
 		if (html.startsWith('Error')) {
 			console.log(`\n✗ ${html}`);
 		} else {
@@ -94,7 +94,6 @@ test('debug page crash', async ({ page, browser }) => {
 		} catch (e) {
 			console.log(`\n✗ Could not take screenshot: ${e.message}`);
 		}
-
 	} catch (error) {
 		console.log(`\n✗ Navigation failed: ${error.message}`);
 		console.log(`\nError details:`);

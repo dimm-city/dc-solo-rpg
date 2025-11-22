@@ -249,8 +249,7 @@
 				max="10000"
 				step="500"
 				value={getGameplaySettings().autoAdvanceDelay}
-				oninput={(e) =>
-					handleGameplaySettingChange('autoAdvanceDelay', parseInt(e.target.value))}
+				oninput={(e) => handleGameplaySettingChange('autoAdvanceDelay', parseInt(e.target.value))}
 			/>
 			<div class="range-labels">
 				<span>0.5s</span>
@@ -283,8 +282,7 @@
 					max="30000"
 					step="1000"
 					value={getGameplaySettings().journalPauseTime}
-					oninput={(e) =>
-						handleGameplaySettingChange('journalPauseTime', parseInt(e.target.value))}
+					oninput={(e) => handleGameplaySettingChange('journalPauseTime', parseInt(e.target.value))}
 				/>
 				<div class="range-labels">
 					<span>3s</span>

@@ -54,7 +54,7 @@ tts-models/
 
 ⚠️ **Models are not included in the repository** due to their large size. You must download them separately following the instructions above.
 
-⚠️ **Git Ignore**: Model files (*.onnx and *.json) are gitignored to keep the repository size manageable.
+⚠️ **Git Ignore**: Model files (_.onnx and _.json) are gitignored to keep the repository size manageable.
 
 ⚠️ **Internet Required**: Initial download requires internet connection. After setup, TTS works completely offline.
 
@@ -117,4 +117,5 @@ See: https://github.com/supertone-inc/supertonic
 ## More Information
 
 For complete setup instructions and troubleshooting, see:
+
 - `docs/supertonic-tts-setup.md` in the project root

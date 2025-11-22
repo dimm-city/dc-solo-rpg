@@ -1,35 +1,35 @@
 <script>
-/**
- * AudioPlayback - Audio playback controls component
- *
- * Displays playback controls: play/pause button, delete button
- * Shows audio duration and playback status
- *
- * @component
- * @example
- * <AudioPlayback
- *   {recordingTime}
- *   {isPlaying}
- *   {journalSaved}
- *   onPlay={playAudio}
- *   onDelete={deleteAudio}
- * />
- */
+	/**
+	 * AudioPlayback - Audio playback controls component
+	 *
+	 * Displays playback controls: play/pause button, delete button
+	 * Shows audio duration and playback status
+	 *
+	 * @component
+	 * @example
+	 * <AudioPlayback
+	 *   {recordingTime}
+	 *   {isPlaying}
+	 *   {journalSaved}
+	 *   onPlay={playAudio}
+	 *   onDelete={deleteAudio}
+	 * />
+	 */
 
-let {
-	recordingTime = 0,
-	isPlaying = false,
-	journalSaved = false,
-	onPlay = () => {},
-	onDelete = () => {}
-} = $props();
+	let {
+		recordingTime = 0,
+		isPlaying = false,
+		journalSaved = false,
+		onPlay = () => {},
+		onDelete = () => {}
+	} = $props();
 
-// Format time as MM:SS
-function formatTime(seconds) {
-	const mins = Math.floor(seconds / 60);
-	const secs = seconds % 60;
-	return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-}
+	// Format time as MM:SS
+	function formatTime(seconds) {
+		const mins = Math.floor(seconds / 60);
+		const secs = seconds % 60;
+		return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+	}
 </script>
 
 <div class="audio-playback">

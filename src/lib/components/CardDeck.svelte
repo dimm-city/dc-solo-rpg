@@ -242,7 +242,6 @@
 			// Don't trigger auto-draw on manual reset
 		}
 	};
-
 </script>
 
 <div class="dc-card-deck" class:active={animationStage !== 'idle'}>

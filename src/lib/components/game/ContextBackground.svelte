@@ -1,16 +1,16 @@
 <script>
-/**
- * ContextBackground - Contextual background text overlay
- *
- * Displays screen-specific title and description text in the background
- * of game screens. Uses fade transitions when switching between screens.
- *
- * @component
- */
+	/**
+	 * ContextBackground - Contextual background text overlay
+	 *
+	 * Displays screen-specific title and description text in the background
+	 * of game screens. Uses fade transitions when switching between screens.
+	 *
+	 * @component
+	 */
 
-import { fade } from 'svelte/transition';
+	import { fade } from 'svelte/transition';
 
-let { contextText = null } = $props();
+	let { contextText = null } = $props();
 </script>
 
 {#if contextText}

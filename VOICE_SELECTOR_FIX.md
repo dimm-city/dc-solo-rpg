@@ -13,6 +13,7 @@ When changing the TTS provider in the settings modal, the voice selector dropdow
 ### 1. **audioStore.svelte.js** - Made Provider Switching Active
 
 Changed `updateAudioSettings()` to:
+
 - Detect when provider changes
 - Call `ttsService.setProvider()` to actually switch the provider instance
 - Reset voice selection (since voices are provider-specific)
@@ -20,6 +21,7 @@ Changed `updateAudioSettings()` to:
 - Made function `async` to properly await provider switching
 
 **Before:**
+
 ```javascript
 export function updateAudioSettings(updates) {
     audioSettings = { ...audioSettings, ...updates };
@@ -29,6 +31,7 @@ export function updateAudioSettings(updates) {
 ```
 
 **After:**
+
 ```javascript
 export async function updateAudioSettings(updates) {
     const previousProvider = audioSettings.ttsProvider;
@@ -48,6 +51,7 @@ export async function updateAudioSettings(updates) {
 ### 2. **audioStore.svelte.js** - Initialize Provider on Load
 
 Updated `loadSettings()` to:
+
 - Set the TTS provider when loading from localStorage
 - Made function `async`
 - Falls back to browser TTS on error
@@ -55,6 +59,7 @@ Updated `loadSettings()` to:
 ### 3. **AudioSettings.svelte** - Handle Async Provider Change
 
 Made `handleAudioSettingChange()` async:
+
 - Awaits `updateAudioSettings()` to complete provider switch
 - Awaits `loadVoices()` to fetch new provider's voices
 - Ensures voice list updates before UI re-renders
@@ -62,12 +67,14 @@ Made `handleAudioSettingChange()` async:
 ### 4. **TTSSection.svelte** - Handle Async Provider Change
 
 Made `handleTTSSettingChange()` async:
+
 - Same pattern as AudioSettings
 - Ensures synchronous voice list update
 
 ### 5. **Game.svelte** - Await Initialization
 
 Updated `onMount()` to await `initializeAudioStore()`:
+
 - Ensures provider is properly initialized before game starts
 - Catches any initialization errors
 

@@ -1,44 +1,44 @@
 <script>
-/**
- * AudioRecorder - Audio recording interface component
- *
- * Displays recording controls: start button, pause/resume, stop button
- * Shows recording indicator with timer
- * Handles error states and disabled states
- *
- * @component
- * @example
- * <AudioRecorder
- *   {isRecording}
- *   {isPaused}
- *   {recordingTime}
- *   {journalSaved}
- *   {audioError}
- *   {hasAudio URL}
- *   onStart={startRecording}
- *   onPause={togglePause}
- *   onStop={stopRecording}
- * />
- */
+	/**
+	 * AudioRecorder - Audio recording interface component
+	 *
+	 * Displays recording controls: start button, pause/resume, stop button
+	 * Shows recording indicator with timer
+	 * Handles error states and disabled states
+	 *
+	 * @component
+	 * @example
+	 * <AudioRecorder
+	 *   {isRecording}
+	 *   {isPaused}
+	 *   {recordingTime}
+	 *   {journalSaved}
+	 *   {audioError}
+	 *   {hasAudio URL}
+	 *   onStart={startRecording}
+	 *   onPause={togglePause}
+	 *   onStop={stopRecording}
+	 * />
+	 */
 
-let {
-	isRecording = false,
-	isPaused = false,
-	recordingTime = 0,
-	journalSaved = false,
-	audioError = null,
-	hasAudioURL = false,
-	onStart = () => {},
-	onPause = () => {},
-	onStop = () => {}
-} = $props();
+	let {
+		isRecording = false,
+		isPaused = false,
+		recordingTime = 0,
+		journalSaved = false,
+		audioError = null,
+		hasAudioURL = false,
+		onStart = () => {},
+		onPause = () => {},
+		onStop = () => {}
+	} = $props();
 
-// Format time as MM:SS
-function formatTime(seconds) {
-	const mins = Math.floor(seconds / 60);
-	const secs = seconds % 60;
-	return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-}
+	// Format time as MM:SS
+	function formatTime(seconds) {
+		const mins = Math.floor(seconds / 60);
+		const secs = seconds % 60;
+		return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+	}
 </script>
 
 <div class="audio-recorder">
