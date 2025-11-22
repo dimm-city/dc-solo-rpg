@@ -1,15 +1,15 @@
 <script>
 	/**
 	 * HomeSettingsModal - Global game settings for home page
-	 * Standardized home page modal
-	 * NOTE: This is separate from the in-game SettingsModal in src/lib/components/settings/
+	 * Uses ContentModal as base
+	 * NOTE: This is separate from the in-game SettingsModal
 	 */
 	import { browser } from '$app/environment';
-	import InfoModal from './InfoModal.svelte';
+	import ContentModal from './ContentModal.svelte';
 	import { Difficulty } from '$lib/configuration/DifficultyLevels.js';
 
 	let {
-		isVisible = false,
+		isOpen = false,
 		onClose,
 		selectedDifficulty = $bindable(),
 		selectedDiceTheme = $bindable(),
@@ -33,156 +33,157 @@
 	}
 </script>
 
-<InfoModal {isVisible} title="Game Settings" {onClose} showCloseButton={false}>
-	<p class="settings-intro">
-		Configure your global game preferences. These settings will apply to all games you play.
-	</p>
+<ContentModal {isOpen} title="Game Settings" {onClose} showFooter={false}>
+	<div class="settings-content">
+		<p class="settings-intro">
+			Configure your global game preferences. These settings will apply to all games you play.
+		</p>
 
-	<div class="settings-form">
-		<div class="form-group">
-			<label for="diceSelect">
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					width="20"
-					height="20"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-				>
-					<rect x="3" y="3" width="18" height="18" rx="2" />
-					<circle cx="8.5" cy="8.5" r="1.5" />
-					<circle cx="15.5" cy="15.5" r="1.5" />
-				</svg>
-				Dice Theme
-			</label>
-			<p class="field-description">Choose the visual style for your 3D dice.</p>
-			<select id="diceSelect" class="settings-select" bind:value={selectedDiceTheme}>
-				{#each availableDiceThemes as theme (theme.key)}
-					<option value={theme}>{theme.name}</option>
-				{/each}
-			</select>
-		</div>
+		<div class="settings-form">
+			<div class="form-group">
+				<label for="diceSelect">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="20"
+						height="20"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+					>
+						<rect x="3" y="3" width="18" height="18" rx="2" />
+						<circle cx="8.5" cy="8.5" r="1.5" />
+						<circle cx="15.5" cy="15.5" r="1.5" />
+					</svg>
+					Dice Theme
+				</label>
+				<p class="field-description">Choose the visual style for your 3D dice.</p>
+				<select id="diceSelect" class="settings-select" bind:value={selectedDiceTheme}>
+					{#each availableDiceThemes as theme (theme.key)}
+						<option value={theme}>{theme.name}</option>
+					{/each}
+				</select>
+			</div>
 
-		<div class="form-group">
-			<label for="difficulty">
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					width="20"
-					height="20"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-				>
-					<path
-						d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
-					/>
-					<line x1="12" y1="9" x2="12" y2="13" />
-					<line x1="12" y1="17" x2="12.01" y2="17" />
-				</svg>
-				Difficulty Level
-			</label>
-			<p class="field-description">
-				Adjust the challenge level. Higher difficulty means more tower pulls.
-			</p>
-			<select id="difficulty" class="settings-select" bind:value={selectedDifficulty}>
-				{#each Difficulty.getEntries() as entry (entry.value)}
-					<option value={entry.value}>{entry.key?.replaceAll('_', ' ')}</option>
-				{/each}
-			</select>
-		</div>
+			<div class="form-group">
+				<label for="difficulty">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="20"
+						height="20"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+					>
+						<path
+							d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+						/>
+						<line x1="12" y1="9" x2="12" y2="13" />
+						<line x1="12" y1="17" x2="12.01" y2="17" />
+					</svg>
+					Difficulty Level
+				</label>
+				<p class="field-description">
+					Adjust the challenge level. Higher difficulty means more tower pulls.
+				</p>
+				<select id="difficulty" class="settings-select" bind:value={selectedDifficulty}>
+					{#each Difficulty.getEntries() as entry (entry.value)}
+						<option value={entry.value}>{entry.key?.replaceAll('_', ' ')}</option>
+					{/each}
+				</select>
+			</div>
 
-		<div class="button-group">
-			<button class="settings-save-button" onclick={saveSettings}>
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					width="20"
-					height="20"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-				>
-					<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-					<polyline points="17 21 17 13 7 13 7 21" />
-					<polyline points="7 3 7 8 15 8" />
-				</svg>
-				<span>Save Settings</span>
+			<div class="button-group">
+				<button class="save-button" onclick={saveSettings}>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="20"
+						height="20"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+					>
+						<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+						<polyline points="17 21 17 13 7 13 7 21" />
+						<polyline points="7 3 7 8 15 8" />
+					</svg>
+					<span>Save Settings</span>
+				</button>
+				{#if saveStatus === 'saved'}
+					<div class="save-status">Settings saved!</div>
+				{/if}
+			</div>
+
+			<button class="close-footer-button" onclick={onClose}>
+				<span>Close</span>
 			</button>
-			{#if saveStatus === 'saved'}
-				<div class="save-status">Settings saved!</div>
-			{/if}
 		</div>
 	</div>
-
-	<button class="close-button" onclick={onClose}>
-		<span>Close</span>
-	</button>
-</InfoModal>
+</ContentModal>
 
 <style>
-	p {
-		margin: 0;
+	.settings-content {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-lg, 1.5rem);
 	}
 
 	.settings-intro {
-		font-family: var(--font-body, 'Inter', sans-serif);
-		font-size: var(--text-base);
+		font-size: 0.95rem;
 		line-height: 1.6;
 		color: rgba(255, 255, 255, 0.85);
+		margin: 0;
 		text-align: center;
-		max-width: 90%;
-		margin-inline: auto;
 	}
 
 	.settings-form {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-xl);
+		gap: var(--space-xl, 2rem);
 	}
 
 	.form-group {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-sm);
+		gap: var(--space-sm, 0.5rem);
 	}
 
 	.form-group label {
 		font-family: var(--font-display, 'Orbitron', monospace);
-		font-size: var(--text-sm);
+		font-size: 0.9rem;
 		font-weight: 700;
-		color: var(--color-brand-yellow);
+		color: var(--dc-accent-color, #3a9fc7);
 		text-transform: uppercase;
 		letter-spacing: 0.1em;
-		text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
 		margin: 0;
 		display: flex;
 		align-items: center;
-		gap: var(--space-sm);
+		gap: var(--space-sm, 0.5rem);
 	}
 
 	.form-group label svg {
 		flex-shrink: 0;
-		filter: drop-shadow(0 0 6px var(--color-brand-yellow));
 	}
 
 	.field-description {
-		font-size: var(--text-sm);
+		font-size: 0.85rem;
 		color: rgba(255, 255, 255, 0.6);
+		margin: 0;
 		line-height: 1.5;
 	}
 
 	.settings-select {
 		width: 100%;
-		padding: var(--space-md) var(--space-lg);
+		padding: var(--space-sm, 0.75rem) var(--space-md, 1rem);
 		padding-right: 48px;
 		font-family: var(--font-body, 'Inter', sans-serif);
-		font-size: var(--text-base);
+		font-size: 0.95rem;
 		font-weight: 600;
-		color: var(--color-text-primary);
-		background: linear-gradient(135deg, rgba(0, 20, 40, 0.6), rgba(10, 10, 30, 0.8));
-		border: 2px solid var(--color-neon-cyan);
+		color: var(--dc-default-text-color, #ffffff);
+		background: rgba(0, 0, 0, 0.3);
+		border: 2px solid var(--dc-accent-color, #3a9fc7);
 		border-radius: 4px;
 		cursor: pointer;
 		appearance: none;
@@ -190,93 +191,68 @@
 		text-transform: capitalize;
 		letter-spacing: 0.05em;
 		transition: all 0.3s ease;
-		background-image:
-			linear-gradient(135deg, rgba(0, 20, 40, 0.6), rgba(10, 10, 30, 0.8)),
-			url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2300FFFF' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
-		background-repeat: no-repeat, no-repeat;
-		background-position:
-			0 0,
-			right var(--space-md) center;
-		box-shadow:
-			0 0 15px rgba(0, 255, 255, 0.25),
-			inset 0 0 10px rgba(0, 255, 255, 0.05);
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%233a9fc7' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+		background-repeat: no-repeat;
+		background-position: right var(--space-sm, 0.75rem) center;
 	}
 
 	.settings-select:hover {
-		border-color: var(--color-cyber-magenta);
-		box-shadow:
-			0 0 20px rgba(217, 70, 239, 0.3),
-			inset 0 0 15px rgba(217, 70, 239, 0.08);
+		border-color: var(--dc-button-bg, #1387b9);
+		background-color: rgba(0, 0, 0, 0.4);
 	}
 
 	.settings-select:focus {
-		border-color: var(--color-brand-yellow);
-		outline: 2px solid var(--color-brand-yellow);
+		border-color: var(--dc-button-bg, #1387b9);
+		outline: 2px solid var(--dc-button-bg, #1387b9);
 		outline-offset: 2px;
-		box-shadow:
-			0 0 25px rgba(255, 215, 0, 0.4),
-			inset 0 0 15px rgba(255, 215, 0, 0.1);
 	}
 
 	.settings-select option {
-		background: var(--color-bg-primary);
-		color: var(--color-text-primary);
-		padding: var(--space-sm);
+		background: var(--dc-default-container-bg, rgba(13, 27, 42, 0.95));
+		color: var(--dc-default-text-color, #ffffff);
+		padding: var(--space-sm, 0.75rem);
 	}
 
 	.button-group {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-md);
+		gap: var(--space-md, 1rem);
 		align-items: center;
-		margin-top: var(--space-md);
+		margin-top: var(--space-md, 1rem);
 	}
 
-	.settings-save-button {
-		display: inline-flex;
+	.save-button {
+		display: flex;
 		align-items: center;
-		justify-content: center;
-		gap: var(--space-sm);
-		padding: var(--space-md) var(--space-xl);
+		gap: var(--space-sm, 0.5rem);
+		padding: var(--space-sm, 0.75rem) var(--space-lg, 1.5rem);
 		font-family: var(--font-display, 'Orbitron', monospace);
-		font-size: var(--text-base);
+		font-size: 1rem;
 		font-weight: 700;
-		color: var(--color-brand-yellow);
-		background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(0, 255, 255, 0.1));
-		border: 2px solid var(--color-brand-yellow);
+		color: white;
+		background: var(--dc-button-bg, #1387b9);
+		border: none;
 		border-radius: 4px;
 		cursor: pointer;
 		text-transform: uppercase;
 		letter-spacing: 0.1em;
-		transition: all 0.2s ease;
-		box-shadow:
-			0 0 20px rgba(255, 215, 0, 0.3),
-			inset 0 0 10px rgba(255, 215, 0, 0.05);
+		transition: all 0.2s;
 	}
 
-	.settings-save-button:hover {
-		color: var(--color-neon-cyan);
-		border-color: var(--color-neon-cyan);
-		background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(255, 215, 0, 0.15));
-		transform: translateY(-2px);
-		box-shadow:
-			0 0 30px rgba(0, 255, 255, 0.5),
-			inset 0 0 15px rgba(0, 255, 255, 0.1);
+	.save-button:hover {
+		opacity: 0.9;
+		transform: translateY(-1px);
 	}
 
-	.settings-save-button:active {
+	.save-button:active {
 		transform: translateY(0);
-	}
-
-	.settings-save-button svg {
-		filter: drop-shadow(0 0 6px currentColor);
 	}
 
 	.save-status {
 		font-family: var(--font-display, 'Orbitron', monospace);
-		font-size: var(--text-sm);
-		color: var(--color-toxic-green);
-		text-shadow: 0 0 8px rgba(0, 255, 170, 0.8);
+		font-size: 0.9rem;
+		color: #00ff9f;
+		text-shadow: 0 0 8px rgba(0, 255, 159, 0.8);
 		animation: fadeInOut 2s ease-in-out;
 	}
 
@@ -291,107 +267,67 @@
 		}
 	}
 
-	.close-button {
-		display: inline-flex;
+	.close-footer-button {
+		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: var(--space-xs);
-		padding: var(--space-sm) var(--space-lg);
-		background: linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta));
+		gap: var(--space-sm, 0.5rem);
+		padding: var(--space-sm, 0.75rem) var(--space-lg, 1.5rem);
+		background: var(--dc-button-bg, #1387b9);
+		color: white;
 		border: none;
 		border-radius: 4px;
-		color: white;
-		font-family: var(--font-display, 'Orbitron', monospace);
-		font-size: var(--text-sm);
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
+		font-size: 1rem;
+		font-weight: 500;
 		cursor: pointer;
-		transition: all 0.2s ease;
-		align-self: flex-end;
-		box-shadow:
-			0 0 15px rgba(0, 255, 255, 0.3),
-			inset 0 0 10px rgba(255, 255, 255, 0.1);
+		transition: all 0.2s;
+		font-family: var(--font-display, 'Orbitron', monospace);
+		margin-top: var(--space-md, 1rem);
 	}
 
-	.close-button:hover {
-		transform: translateY(-2px);
-		box-shadow:
-			0 0 25px rgba(0, 255, 255, 0.5),
-			0 0 40px rgba(217, 70, 239, 0.3),
-			inset 0 0 15px rgba(255, 255, 255, 0.15);
+	.close-footer-button:hover {
+		opacity: 0.9;
+		transform: translateY(-1px);
 	}
 
-	.close-button:active {
+	.close-footer-button:active {
 		transform: translateY(0);
 	}
 
-	/* Tablet breakpoint */
-	@media (max-width: 900px) {
-		.settings-form {
-			gap: var(--space-lg);
-		}
-	}
-
-	/* Mobile breakpoint */
+	/* Mobile responsive */
 	@media (max-width: 600px) {
 		.settings-intro {
-			font-size: var(--text-sm);
-			max-width: 100%;
-		}
-
-		.settings-form {
-			gap: var(--space-md);
+			font-size: 0.9rem;
 		}
 
 		.form-group label {
-			font-size: var(--text-xs);
-		}
-
-		.form-group label svg {
-			width: 16px;
-			height: 16px;
+			font-size: 0.85rem;
 		}
 
 		.field-description {
-			font-size: var(--text-xs);
+			font-size: 0.8rem;
 		}
 
 		.settings-select {
-			padding: var(--space-sm) var(--space-md);
+			padding: var(--space-sm, 0.75rem);
 			padding-right: 40px;
-			font-size: var(--text-sm);
+			font-size: 0.9rem;
 		}
 
 		.button-group {
 			width: 100%;
 		}
 
-		.settings-save-button {
+		.save-button,
+		.close-footer-button {
 			width: 100%;
-			padding: var(--space-md);
-			font-size: var(--text-sm);
-		}
-
-		.close-button {
-			align-self: stretch;
-			padding: var(--space-md);
-			font-size: var(--text-sm);
-		}
-	}
-
-	/* Extra small mobile */
-	@media (max-width: 400px) {
-		.form-group label svg {
-			width: 14px;
-			height: 14px;
 		}
 	}
 
 	/* Accessibility - Reduced motion */
 	@media (prefers-reduced-motion: reduce) {
-		.settings-save-button:hover,
-		.close-button:hover {
+		.save-button:hover,
+		.close-footer-button:hover {
 			transform: none;
 		}
 

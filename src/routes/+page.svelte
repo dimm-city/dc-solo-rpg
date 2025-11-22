@@ -56,6 +56,8 @@
 	let gameSaveData = $state({});
 	let showDeleteModal = $state(false);
 	let gameToDelete = $state(null);
+	let showRemoveGameModal = $state(false);
+	let gameToRemove = $state(null);
 	// Story mode state
 	let showBrowseGames = $state(false);
 	let showStoryMode = $state(false);
@@ -245,15 +247,28 @@
 
 	function handleRemoveCustomGame(game, event) {
 		event.stopPropagation(); // Prevent card selection
-		if (confirm(`Are you sure you want to remove "${game.title}"?`)) {
-			if (removeCustomGame(game.slug)) {
-				customGames = getCustomGames();
-				allGames = [...customGames, ...data.games].sort((a, b) => a.title.localeCompare(b.title));
-				updateSaveData();
-				uploadStatus = 'Custom game removed';
-				setTimeout(() => (uploadStatus = ''), 3000);
-			}
+		gameToRemove = game;
+		showRemoveGameModal = true;
+	}
+
+	function confirmRemoveGame() {
+		if (!gameToRemove) return;
+
+		if (removeCustomGame(gameToRemove.slug)) {
+			customGames = getCustomGames();
+			allGames = [...customGames, ...data.games].sort((a, b) => a.title.localeCompare(b.title));
+			updateSaveData();
+			uploadStatus = 'Custom game removed';
+			setTimeout(() => (uploadStatus = ''), 3000);
 		}
+
+		showRemoveGameModal = false;
+		gameToRemove = null;
+	}
+
+	function cancelRemoveGame() {
+		showRemoveGameModal = false;
+		gameToRemove = null;
 	}
 
 	function handleSplashComplete() {
@@ -828,16 +843,29 @@
 	onCancel={cancelDeleteSave}
 />
 
+<!-- Remove Custom Game Confirmation Modal -->
+<ConfirmModal
+	isOpen={showRemoveGameModal}
+	title="Remove Custom Game"
+	message={gameToRemove
+		? `Are you sure you want to remove "${gameToRemove.title}"?\n\nThis will remove the game from your library. This cannot be undone.`
+		: 'Remove custom game?'}
+	confirmText="REMOVE"
+	cancelText="CANCEL"
+	onConfirm={confirmRemoveGame}
+	onCancel={cancelRemoveGame}
+/>
+
 <!-- About Modal -->
 <AboutModal
-	isVisible={showAboutModal}
+	isOpen={showAboutModal}
 	onClose={() => (showAboutModal = false)}
 	appVersion={APP_VERSION}
 />
 
 <!-- Settings Modal -->
 <HomeSettingsModal
-	isVisible={showSettingsModal}
+	isOpen={showSettingsModal}
 	onClose={() => (showSettingsModal = false)}
 	bind:selectedDifficulty
 	bind:selectedDiceTheme
