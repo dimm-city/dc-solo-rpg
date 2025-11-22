@@ -297,8 +297,9 @@
 
 	@media (max-width: 480px) {
 		.content-modal-wrapper {
-			width: 100%;
-			max-height: 100vh;
+			width: 98%;
+			max-height: 95vh;
+			margin: auto;
 		}
 
 		.content-header h2 {
@@ -307,6 +308,11 @@
 
 		.content-body {
 			padding: var(--space-sm, 0.75rem);
+		}
+
+		/* Ensure backdrop doesn't block UI on very small screens */
+		.content-modal-backdrop {
+			padding: var(--space-xs, 0.25rem);
 		}
 	}
 

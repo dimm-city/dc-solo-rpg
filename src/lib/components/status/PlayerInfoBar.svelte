@@ -400,7 +400,7 @@
 	/* Mobile responsive */
 	@media (max-width: 600px) {
 		.player-round-bar {
-			grid-template-columns: auto 1fr auto auto auto;
+			grid-template-columns: auto 1fr auto auto auto auto;
 			gap: var(--space-xs);
 		}
 
@@ -419,6 +419,21 @@
 		/* Hide toggle buttons on mobile to save space */
 		.toggle-button {
 			display: none;
+		}
+	}
+
+	/* Extra small screens - hide game title too */
+	@media (max-width: 400px) {
+		.player-round-bar {
+			grid-template-columns: auto 1fr auto auto auto;
+		}
+
+		.player-round-bar h5 {
+			display: none;
+		}
+
+		.info-segment {
+			font-size: 0.7rem;
 		}
 	}
 
