@@ -244,6 +244,39 @@
 		}
 	}
 
+	/* Mobile responsive */
+	@media (max-width: 600px) {
+		.stat-item {
+			width: 100%;
+			max-width: 100%;
+			min-width: 0;
+			padding: 0.25rem 0.5rem;
+			gap: 0.25rem;
+			margin-inline-end: 0;
+			padding-inline-end: 0.5rem;
+		}
+
+		.stat-label {
+			font-size: 0.625rem;
+			min-width: 48px;
+			letter-spacing: 0.08em;
+		}
+
+		.stat-icon {
+			width: 12px;
+			height: 12px;
+		}
+
+		.ability-indicators {
+			gap: 2px;
+		}
+
+		.ability-icon {
+			width: 14px;
+			height: 14px;
+		}
+	}
+
 	@media (prefers-reduced-motion: reduce) {
 		.slide-down-and-right {
 			animation: none;

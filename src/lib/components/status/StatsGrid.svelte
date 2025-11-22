@@ -174,11 +174,35 @@
 			grid-template-rows: auto auto;
 			gap: var(--space-xs);
 			width: 100%;
+			max-width: 100vw;
+			overflow: hidden;
 		}
 
 		/* Reset all column positioning to auto-flow */
 		.stats-grid > div {
 			display: contents;
+		}
+
+		/* Ensure stat items fit within grid cells */
+		.stats-grid :global(.stat-item) {
+			width: 100%;
+			max-width: 100%;
+			min-width: 0;
+			box-sizing: border-box;
+		}
+
+		/* Reduce deck readout size on mobile */
+		.deck-readout {
+			min-width: 0;
+			width: 100%;
+			max-width: 100%;
+			min-height: 80px;
+			padding: var(--space-xs);
+		}
+
+		.deck-label {
+			font-size: 0.625rem;
+			letter-spacing: 0.1em;
 		}
 	}
 

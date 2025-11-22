@@ -312,6 +312,42 @@
 		}
 	}
 
+	/* Mobile responsive */
+	@media (max-width: 600px) {
+		.stat-item {
+			width: 100%;
+			max-width: 100%;
+			min-width: 0;
+			padding: 0.25rem 0.5rem;
+			gap: 0.25rem;
+		}
+
+		.stat-label {
+			font-size: 0.625rem;
+			min-width: 48px;
+			letter-spacing: 0.08em;
+		}
+
+		.stat-icon {
+			width: 12px;
+			height: 12px;
+		}
+
+		.dice-grid {
+			gap: 2px;
+		}
+
+		.dice-pip {
+			width: 13px;
+			height: 13px;
+		}
+
+		.pip-dot {
+			width: 4px;
+			height: 4px;
+		}
+	}
+
 	@media (prefers-reduced-motion: reduce) {
 		.slide-down {
 			animation: none;

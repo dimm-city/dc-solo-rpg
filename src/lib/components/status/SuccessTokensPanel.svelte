@@ -240,6 +240,42 @@
 		}
 	}
 
+	/* Mobile responsive */
+	@media (max-width: 600px) {
+		.stat-item {
+			width: 100%;
+			max-width: 100%;
+			min-width: 0;
+			padding: 0.25rem 0.5rem;
+			gap: 0.25rem;
+		}
+
+		.stat-label {
+			font-size: 0.625rem;
+			min-width: 48px;
+			letter-spacing: 0.08em;
+		}
+
+		.stat-icon {
+			width: 12px;
+			height: 12px;
+		}
+
+		.token-indicators {
+			gap: 2px;
+		}
+
+		.token-shape {
+			width: 14px;
+			height: 14px;
+		}
+
+		.token-inner {
+			width: 10px;
+			height: 10px;
+		}
+	}
+
 	@media (prefers-reduced-motion: reduce) {
 		.slide-down {
 			animation: none;
