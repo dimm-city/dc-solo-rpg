@@ -397,43 +397,53 @@
 		text-align: center;
 	}
 
-	/* Mobile responsive */
+	/* Mobile responsive - Show ALL buttons */
 	@media (max-width: 600px) {
 		.player-round-bar {
-			grid-template-columns: auto 1fr auto auto auto auto;
+			/* Hide game title, show all buttons: Exit, Player, Dice, Auto, Audio, Settings, Help */
+			grid-template-columns: auto 1fr auto auto auto auto auto;
 			gap: var(--space-xs);
+			padding-inline: var(--space-sm);
+			padding-block: var(--space-xs);
 		}
 
 		.player-round-bar h5 {
-			font-size: 0.875rem;
+			display: none; /* Hide game title on mobile */
 		}
 
 		.info-segment {
-			font-size: 0.75rem;
+			font-size: 0.7rem;
 		}
 
 		.info-segment:nth-child(4) {
 			display: none; /* Hide round on mobile for space */
 		}
 
-		/* Hide toggle buttons on mobile to save space */
-		.toggle-button {
-			display: none;
+		/* Make buttons smaller on mobile */
+		.status-bar-button {
+			padding: var(--space-xs);
+		}
+
+		.status-bar-button svg {
+			width: 18px;
+			height: 18px;
 		}
 	}
 
-	/* Extra small screens - hide game title too */
+	/* Extra small screens - tighter spacing */
 	@media (max-width: 400px) {
 		.player-round-bar {
-			grid-template-columns: auto 1fr auto auto auto;
-		}
-
-		.player-round-bar h5 {
-			display: none;
+			gap: 2px;
+			padding-inline: var(--space-xs);
 		}
 
 		.info-segment {
-			font-size: 0.7rem;
+			font-size: 0.65rem;
+		}
+
+		.status-bar-button svg {
+			width: 16px;
+			height: 16px;
 		}
 	}
 

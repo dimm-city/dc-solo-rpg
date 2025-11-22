@@ -92,11 +92,12 @@
 			onchange={(e) => handleTTSSettingChange('ttsProvider', e.target.value)}
 		>
 			<option value="browser">Browser (Free, No API Key)</option>
-			<option value="supertonic" disabled={!providerAvailability.supertonic}>
+			<!-- Supertonic Neural TTS temporarily disabled for testing -->
+			<!-- <option value="supertonic" disabled={!providerAvailability.supertonic}>
 				Supertonic Neural TTS {providerAvailability.supertonic
 					? '(Free, Downloads from HF)'
 					: '(HF Unavailable)'}
-			</option>
+			</option> -->
 			<option value="openai">OpenAI TTS</option>
 			<option value="elevenlabs">ElevenLabs</option>
 		</select>
