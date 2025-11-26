@@ -22,7 +22,9 @@
 	let providerAvailability = $state({
 		browser: true,
 		supertonic: false, // Will check on mount
-		dimmcityai: true
+		dimmcityai: true,
+		openai: true,
+		elevenlabs: true
 	});
 
 	onMount(async () => {
@@ -62,8 +64,8 @@
 			if (key === 'ttsProvider') {
 				if (value === 'supertonic') {
 					providerError = `Supertonic TTS initialization failed: ${error.message}`;
-				} else if (value === 'dimmcityai') {
-					providerError = `Failed to initialize DimmCityAI TTS. Please check your API key.`;
+				} else if (value === 'dimmcityai' || value === 'openai' || value === 'elevenlabs') {
+					providerError = `Failed to initialize ${value} TTS. Please check your API key and settings.`;
 				} else {
 					providerError = `Failed to switch to ${value} provider: ${error.message}`;
 				}
@@ -79,8 +81,8 @@
 <section class="settings-section">
 	<h3>Text-to-Speech (Optional)</h3>
 	<p class="section-description">
-		Generate audio narration of your story. Choose Browser TTS (free, quality varies by system) or
-		DimmCityAI TTS (requires API key, high-quality neural voices).
+		Generate audio narration of your story. Choose Browser TTS (free, quality varies) or premium
+		neural TTS providers (require API keys).
 	</p>
 
 	<div class="form-group">
@@ -91,7 +93,9 @@
 			onchange={(e) => handleTTSSettingChange('ttsProvider', e.target.value)}
 		>
 			<option value="browser">Browser (Free, No API Key)</option>
-			<option value="dimmcityai">DimmCityAI TTS (Requires API Key)</option>
+			<option value="dimmcityai">DimmCityAI TTS</option>
+			<option value="openai">OpenAI TTS</option>
+			<option value="elevenlabs">ElevenLabs</option>
 			<!-- Supertonic Neural TTS temporarily disabled for testing -->
 			<!-- <option value="supertonic" disabled={!providerAvailability.supertonic}>
 				Supertonic Neural TTS {providerAvailability.supertonic
@@ -122,17 +126,43 @@
 		{/if}
 	</div>
 
-	{#if getAudioSettings().ttsProvider === 'dimmcityai'}
+	{#if getAudioSettings().ttsProvider === 'dimmcityai' || getAudioSettings().ttsProvider === 'openai' || getAudioSettings().ttsProvider === 'elevenlabs'}
 		<div class="form-group">
-			<label for="tts-api-key">DimmCityAI API Key</label>
+			<label for="tts-api-key">
+				{#if getAudioSettings().ttsProvider === 'dimmcityai'}
+					DimmCityAI API Key
+				{:else if getAudioSettings().ttsProvider === 'openai'}
+					OpenAI API Key
+				{:else if getAudioSettings().ttsProvider === 'elevenlabs'}
+					ElevenLabs API Key
+				{/if}
+			</label>
 			<input
 				id="tts-api-key"
 				type="password"
 				value={getAudioSettings().ttsApiKey || ''}
 				oninput={(e) => handleTTSSettingChange('ttsApiKey', e.target.value || null)}
-				placeholder="Enter your DimmCityAI API key"
+				placeholder={`Enter your ${getAudioSettings().ttsProvider === 'dimmcityai' ? 'DimmCityAI' : getAudioSettings().ttsProvider === 'openai' ? 'OpenAI' : 'ElevenLabs'} API key`}
 			/>
 		</div>
+
+		{#if getAudioSettings().ttsProvider === 'openai'}
+			<div class="form-group">
+				<label for="tts-api-endpoint">
+					API Endpoint (Optional)
+					<span class="helper-text" style="font-weight: normal; text-transform: none;">
+						Leave blank to use default OpenAI endpoint
+					</span>
+				</label>
+				<input
+					id="tts-api-endpoint"
+					type="url"
+					value={getAudioSettings().ttsApiEndpoint || ''}
+					oninput={(e) => handleTTSSettingChange('ttsApiEndpoint', e.target.value || null)}
+					placeholder="https://api.openai.com/v1/audio/speech"
+				/>
+			</div>
+		{/if}
 	{/if}
 
 	{#if getAudioSettings().ttsProvider === 'browser'}
@@ -185,6 +215,77 @@
 				<option value="onyx">Onyx (Deep)</option>
 				<option value="nova">Nova (Bright)</option>
 				<option value="shimmer">Shimmer (Smooth)</option>
+			</select>
+		</div>
+	{:else if getAudioSettings().ttsProvider === 'openai'}
+		<div class="form-group">
+			<label for="tts-voice">Voice</label>
+			<select
+				id="tts-voice"
+				value={getAudioSettings().ttsVoice || 'alloy'}
+				onchange={(e) => handleTTSSettingChange('ttsVoice', e.target.value)}
+			>
+				<option value="alloy">Alloy</option>
+				<option value="echo">Echo</option>
+				<option value="fable">Fable</option>
+				<option value="onyx">Onyx</option>
+				<option value="nova">Nova</option>
+				<option value="shimmer">Shimmer</option>
+			</select>
+		</div>
+	{:else if getAudioSettings().ttsProvider === 'elevenlabs'}
+		<div class="form-group">
+			<label for="tts-voice">Voice</label>
+			<select
+				id="tts-voice"
+				value={getAudioSettings().ttsVoice || '21m00Tcm4TlvDq8ikWAM'}
+				onchange={(e) => handleTTSSettingChange('ttsVoice', e.target.value)}
+			>
+				<option value="21m00Tcm4TlvDq8ikWAM">Rachel (Female)</option>
+				<option value="29vD33N1CtxCmqQRPOHJ">Drew (Male)</option>
+				<option value="2EiwWnXFnvU5JabPnv8n">Clyde (Male)</option>
+				<option value="5Q0t7uMcjvnagumLfvZi">Paul (Male)</option>
+				<option value="AZnzlk1XvdvUeBnXmlld">Domi (Female)</option>
+				<option value="CYw3kZ02Hs0563khs1Fj">Dave (Male)</option>
+				<option value="D38z5RcWu1voky8WS1ja">Fin (Male)</option>
+				<option value="EXAVITQu4vr4xnSDxMaL">Sarah (Female)</option>
+				<option value="ErXwobaYiN019PkySvjV">Antoni (Male)</option>
+				<option value="GBv7mTt0atIp3Br8iCZE">Thomas (Male)</option>
+				<option value="IKne3meq5aSn9XLyUdCD">Charlie (Female)</option>
+				<option value="JBFqnCBsd6RMkjVDRZzb">George (Male)</option>
+				<option value="LcfcDJNUP1GQjkzn1xUU">Emily (Female)</option>
+				<option value="MF3mGyEYCl7XYWbV9V6O">Elli (Female)</option>
+				<option value="N2lVS1w4EtoT3dr4eOWO">Callum (Male)</option>
+				<option value="ODq5zmih8GrVes37Dizd">Patrick (Male)</option>
+				<option value="SOYHLrjzK2X1ezoPC6cr">Harry (Male)</option>
+				<option value="TX3LPaxmHKxFdv7VOQHJ">Liam (Male)</option>
+				<option value="ThT5KcBeYPX3keUQqHPh">Dorothy (Female)</option>
+				<option value="TxGEqnHWrfWFTfGW9XjX">Josh (Male)</option>
+				<option value="VR6AewLTigWG4xSOukaG">Arnold (Male)</option>
+				<option value="XB0fDUnXU5powFXDhCwa">Charlotte (Female)</option>
+				<option value="Xb7hH8MSUJpSbSDYk0k2">Alice (Female)</option>
+				<option value="XrExE9yKIg1WjnnlVkGX">Matilda (Female)</option>
+				<option value="ZQe5CZNOzWyzPSCn5a3c">James (Male)</option>
+				<option value="Zlb1dXrM653N07WRdFW3">Joseph (Male)</option>
+				<option value="bVMeCyTHy58xNoL34h3p">Jeremy (Male)</option>
+				<option value="flq6f7yk4E4fJM5XTYuZ">Michael (Male)</option>
+				<option value="g5CIjZEefAph4nQFvHAz">Ethan (Male)</option>
+				<option value="iP95p4xoKVk53GoZ742B">Chris (Male)</option>
+				<option value="jBpfuIE2acCO8z3wKNLl">Gigi (Female)</option>
+				<option value="jsCqWAovK2LkecY7zXl4">Freya (Female)</option>
+				<option value="nPczCjzI2devNBz1zQrb">Brian (Male)</option>
+				<option value="oWAxZDx7w5VEj9dCyTzz">Grace (Female)</option>
+				<option value="onwK4e9ZLuTAKqWW03F9">Daniel (Male)</option>
+				<option value="pFZP5JQG7iQjIQuC4Bku">Lily (Female)</option>
+				<option value="pMsXgVXv3BLzUgSXRplE">Serena (Female)</option>
+				<option value="pNInz6obpgDQGcFmaJgB">Adam (Male)</option>
+				<option value="piTKgcLEGmPE4e6mEKli">Nicole (Female)</option>
+				<option value="pqHfZKP75CvOlQylNhV4">Bill (Male)</option>
+				<option value="t0jbNlBVZ17f02VDIeMI">Jessie (Female)</option>
+				<option value="yoZ06aMxZJJ28mfd3POQ">Sam (Neutral)</option>
+				<option value="z9fAnlkpzviPz146aGWa">Glinda (Female)</option>
+				<option value="zcAOhNBS3c14rBihAFp1">Giovanni (Male)</option>
+				<option value="zrHiDhphv9ZnVXBqCLjz">Mimi (Female)</option>
 			</select>
 		</div>
 	{/if}
