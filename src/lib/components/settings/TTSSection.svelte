@@ -22,9 +22,7 @@
 	let providerAvailability = $state({
 		browser: true,
 		supertonic: false, // Will check on mount
-		dimmcityai: true,
-		openai: true,
-		elevenlabs: true
+		dimmcityai: true
 	});
 
 	onMount(async () => {
@@ -64,8 +62,8 @@
 			if (key === 'ttsProvider') {
 				if (value === 'supertonic') {
 					providerError = `Supertonic TTS initialization failed: ${error.message}`;
-				} else if (value === 'dimmcityai' || value === 'openai' || value === 'elevenlabs') {
-					providerError = `Failed to initialize ${value}. Please check your API key.`;
+				} else if (value === 'dimmcityai') {
+					providerError = `Failed to initialize DimmCityAI TTS. Please check your API key.`;
 				} else {
 					providerError = `Failed to switch to ${value} provider: ${error.message}`;
 				}
@@ -81,8 +79,8 @@
 <section class="settings-section">
 	<h3>Text-to-Speech (Optional)</h3>
 	<p class="section-description">
-		Generate audio narration of your story. Browser TTS is free but quality varies. API providers
-		offer higher quality voices.
+		Generate audio narration of your story. Choose Browser TTS (free, quality varies by system) or
+		DimmCityAI TTS (requires API key, high-quality neural voices).
 	</p>
 
 	<div class="form-group">
@@ -93,15 +91,13 @@
 			onchange={(e) => handleTTSSettingChange('ttsProvider', e.target.value)}
 		>
 			<option value="browser">Browser (Free, No API Key)</option>
+			<option value="dimmcityai">DimmCityAI TTS (Requires API Key)</option>
 			<!-- Supertonic Neural TTS temporarily disabled for testing -->
 			<!-- <option value="supertonic" disabled={!providerAvailability.supertonic}>
 				Supertonic Neural TTS {providerAvailability.supertonic
 					? '(Free, Downloads from HF)'
 					: '(HF Unavailable)'}
 			</option> -->
-			<option value="dimmcityai">DimmCityAI TTS</option>
-			<option value="openai">OpenAI TTS</option>
-			<option value="elevenlabs">ElevenLabs</option>
 		</select>
 
 		{#if providerError}
@@ -126,25 +122,15 @@
 		{/if}
 	</div>
 
-	{#if getAudioSettings().ttsProvider !== 'browser' && getAudioSettings().ttsProvider !== 'supertonic'}
+	{#if getAudioSettings().ttsProvider === 'dimmcityai'}
 		<div class="form-group">
-			<label for="tts-api-key">
-				{#if getAudioSettings().ttsProvider === 'dimmcityai'}
-					DimmCityAI API Key
-				{:else if getAudioSettings().ttsProvider === 'openai'}
-					OpenAI API Key
-				{:else if getAudioSettings().ttsProvider === 'elevenlabs'}
-					ElevenLabs API Key
-				{:else}
-					TTS API Key
-				{/if}
-			</label>
+			<label for="tts-api-key">DimmCityAI API Key</label>
 			<input
 				id="tts-api-key"
 				type="password"
 				value={getAudioSettings().ttsApiKey || ''}
 				oninput={(e) => handleTTSSettingChange('ttsApiKey', e.target.value || null)}
-				placeholder="Enter your TTS API key"
+				placeholder="Enter your DimmCityAI API key"
 			/>
 		</div>
 	{/if}
@@ -200,34 +186,6 @@
 				<option value="nova">Nova (Bright)</option>
 				<option value="shimmer">Shimmer (Smooth)</option>
 			</select>
-		</div>
-	{:else if getAudioSettings().ttsProvider === 'openai'}
-		<div class="form-group">
-			<label for="tts-voice">Voice</label>
-			<select
-				id="tts-voice"
-				value={getAudioSettings().ttsVoice || 'alloy'}
-				onchange={(e) => handleTTSSettingChange('ttsVoice', e.target.value)}
-			>
-				<option value="alloy">Alloy</option>
-				<option value="echo">Echo</option>
-				<option value="fable">Fable</option>
-				<option value="onyx">Onyx</option>
-				<option value="nova">Nova</option>
-				<option value="shimmer">Shimmer</option>
-			</select>
-		</div>
-	{:else if getAudioSettings().ttsProvider === 'elevenlabs'}
-		<div class="form-group">
-			<label for="tts-voice">Voice ID</label>
-			<input
-				id="tts-voice"
-				type="text"
-				value={getAudioSettings().ttsVoice || ''}
-				oninput={(e) => handleTTSSettingChange('ttsVoice', e.target.value || null)}
-				placeholder="Enter ElevenLabs voice ID"
-			/>
-			<p class="helper-text">Find voice IDs in your ElevenLabs account</p>
 		</div>
 	{/if}
 </section>
