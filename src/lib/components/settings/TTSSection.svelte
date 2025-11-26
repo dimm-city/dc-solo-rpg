@@ -22,6 +22,7 @@
 	let providerAvailability = $state({
 		browser: true,
 		supertonic: false, // Will check on mount
+		dimmcityai: true,
 		openai: true,
 		elevenlabs: true
 	});
@@ -63,7 +64,7 @@
 			if (key === 'ttsProvider') {
 				if (value === 'supertonic') {
 					providerError = `Supertonic TTS initialization failed: ${error.message}`;
-				} else if (value === 'openai' || value === 'elevenlabs') {
+				} else if (value === 'dimmcityai' || value === 'openai' || value === 'elevenlabs') {
 					providerError = `Failed to initialize ${value}. Please check your API key.`;
 				} else {
 					providerError = `Failed to switch to ${value} provider: ${error.message}`;
@@ -98,6 +99,7 @@
 					? '(Free, Downloads from HF)'
 					: '(HF Unavailable)'}
 			</option> -->
+			<option value="dimmcityai">DimmCityAI TTS</option>
 			<option value="openai">OpenAI TTS</option>
 			<option value="elevenlabs">ElevenLabs</option>
 		</select>
@@ -126,7 +128,17 @@
 
 	{#if getAudioSettings().ttsProvider !== 'browser' && getAudioSettings().ttsProvider !== 'supertonic'}
 		<div class="form-group">
-			<label for="tts-api-key">TTS API Key</label>
+			<label for="tts-api-key">
+				{#if getAudioSettings().ttsProvider === 'dimmcityai'}
+					DimmCityAI API Key
+				{:else if getAudioSettings().ttsProvider === 'openai'}
+					OpenAI API Key
+				{:else if getAudioSettings().ttsProvider === 'elevenlabs'}
+					ElevenLabs API Key
+				{:else}
+					TTS API Key
+				{/if}
+			</label>
 			<input
 				id="tts-api-key"
 				type="password"
@@ -171,6 +183,22 @@
 				<option value="F2">Female Voice 2 (F2)</option>
 				<option value="M1">Male Voice 1 (M1)</option>
 				<option value="M2">Male Voice 2 (M2)</option>
+			</select>
+		</div>
+	{:else if getAudioSettings().ttsProvider === 'dimmcityai'}
+		<div class="form-group">
+			<label for="tts-voice">Voice</label>
+			<select
+				id="tts-voice"
+				value={getAudioSettings().ttsVoice || 'alloy'}
+				onchange={(e) => handleTTSSettingChange('ttsVoice', e.target.value)}
+			>
+				<option value="alloy">Alloy (Neutral)</option>
+				<option value="echo">Echo (Clear)</option>
+				<option value="fable">Fable (Warm)</option>
+				<option value="onyx">Onyx (Deep)</option>
+				<option value="nova">Nova (Bright)</option>
+				<option value="shimmer">Shimmer (Smooth)</option>
 			</select>
 		</div>
 	{:else if getAudioSettings().ttsProvider === 'openai'}

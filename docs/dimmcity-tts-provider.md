@@ -1,10 +1,13 @@
 # DimmCityAI TTS Provider
 
-The DimmCityAI TTS provider wraps calls to a pre-configured OpenAI-compatible speech API endpoint.
+The DimmCityAI TTS provider wraps calls to a pre-configured OpenAI-compatible speech API endpoint at `https://api.dimmcity.ai/v1/audio/speech`.
+
+**Important:** The API endpoint is hardcoded and cannot be changed by consumers. This provider is specifically for use with the DimmCityAI TTS service.
 
 ## Features
 
-- **OpenAI-compatible API**: Uses the standard `/v1/audio/speech` endpoint
+- **Pre-configured endpoint**: Hardcoded to `https://api.dimmcity.ai/v1/audio/speech`
+- **OpenAI-compatible API**: Uses the standard OpenAI speech API format
 - **Voice selection**: Support for 6 voices (alloy, echo, fable, onyx, nova, shimmer)
 - **Speed control**: Adjustable speech speed from 0.25x to 4.0x
 - **High-quality audio**: Support for multiple formats (mp3, opus, aac, flac, wav, pcm)
@@ -21,7 +24,6 @@ import { ttsService } from '@dimm-city/dc-solo-rpg';
 // Initialize the DimmCityAI provider
 await ttsService.setProvider('dimmcityai', {
 	apiKey: 'your-api-key-here',
-	apiEndpoint: 'https://api.dimmcity.ai/v1/audio/speech', // Default endpoint
 	voice: 'alloy', // Default voice
 	model: 'tts-1', // or 'tts-1-hd' for higher quality
 	speed: 1.0 // Speech speed (0.25 to 4.0)
@@ -33,14 +35,15 @@ await ttsService.speak('Hello, welcome to the game!');
 
 ### Configuration Options
 
-| Option           | Type   | Default                                   | Description                                   |
-| ---------------- | ------ | ----------------------------------------- | --------------------------------------------- |
-| `apiKey`         | string | _required_                                | API key for authentication                    |
-| `apiEndpoint`    | string | `https://api.dimmcity.ai/v1/audio/speech` | OpenAI-compatible API endpoint                |
-| `voice`          | string | `'alloy'`                                 | Voice ID (see available voices below)         |
-| `model`          | string | `'tts-1'`                                 | Model to use (`tts-1` or `tts-1-hd`)          |
-| `speed`          | number | `1.0`                                     | Speech speed (0.25 to 4.0)                    |
-| `responseFormat` | string | `'mp3'`                                   | Audio format (mp3, opus, aac, flac, wav, pcm) |
+| Option           | Type   | Default    | Description                                   |
+| ---------------- | ------ | ---------- | --------------------------------------------- |
+| `apiKey`         | string | _required_ | DimmCityAI API key for authentication         |
+| `voice`          | string | `'alloy'`  | Voice ID (see available voices below)         |
+| `model`          | string | `'tts-1'`  | Model to use (`tts-1` or `tts-1-hd`)          |
+| `speed`          | number | `1.0`      | Speech speed (0.25 to 4.0)                    |
+| `responseFormat` | string | `'mp3'`    | Audio format (mp3, opus, aac, flac, wav, pcm) |
+
+**Note:** The API endpoint (`https://api.dimmcity.ai/v1/audio/speech`) is hardcoded and cannot be configured.
 
 ### Available Voices
 
@@ -54,6 +57,16 @@ The provider supports 6 OpenAI-compatible voices:
 - **shimmer** - Smooth, professional voice
 
 ## Usage Examples
+
+### Using via Settings UI
+
+The easiest way to use DimmCityAI TTS is through the game's settings interface:
+
+1. Open **Settings** → **Audio**
+2. Select **DimmCityAI TTS** from the TTS Provider dropdown
+3. Enter your DimmCityAI API key
+4. Select your preferred voice (Alloy, Echo, Fable, Onyx, Nova, or Shimmer)
+5. The provider is now ready to use for narration
 
 ### Using in a Game Component
 

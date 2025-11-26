@@ -74,7 +74,11 @@ async function loadSettings() {
 			// Set the TTS provider (if not default browser)
 			if (audioSettings.ttsProvider && audioSettings.ttsProvider !== 'browser') {
 				try {
-					await ttsService.setProvider(audioSettings.ttsProvider);
+					await ttsService.setProvider(audioSettings.ttsProvider, {
+						apiKey: audioSettings.ttsApiKey,
+						voice: audioSettings.ttsVoice,
+						speed: audioSettings.readingSpeed
+					});
 				} catch (error) {
 					logger.error('[AudioStore] Failed to set TTS provider on load:', error);
 					// Fall back to browser TTS
@@ -127,7 +131,11 @@ export async function updateAudioSettings(updates) {
 	// If provider changed, switch to the new provider
 	if (updates.ttsProvider && updates.ttsProvider !== previousProvider) {
 		try {
-			await ttsService.setProvider(audioSettings.ttsProvider);
+			await ttsService.setProvider(audioSettings.ttsProvider, {
+				apiKey: audioSettings.ttsApiKey,
+				voice: audioSettings.ttsVoice,
+				speed: audioSettings.readingSpeed
+			});
 			logger.info('[AudioStore] Switched TTS provider to:', audioSettings.ttsProvider);
 
 			// Reset voice selection since voices are provider-specific

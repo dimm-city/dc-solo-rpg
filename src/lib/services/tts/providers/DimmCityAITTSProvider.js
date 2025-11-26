@@ -15,9 +15,14 @@ export const DIMMCITY_VOICES = {
 
 /**
  * DimmCityAI TTS provider using OpenAI-compatible speech API
- * Makes API calls to a pre-configured OpenAI-compatible endpoint
+ * Makes API calls to a pre-configured DimmCityAI endpoint
+ *
+ * The API endpoint is hardcoded and cannot be changed by consumers.
  */
 export class DimmCityAITTSProvider extends BaseTTSProvider {
+	// Hardcoded API endpoint - cannot be changed by consumers
+	static API_ENDPOINT = 'https://api.dimmcity.ai/v1/audio/speech';
+
 	constructor() {
 		super();
 		this.currentVoice = 'alloy';
@@ -27,9 +32,7 @@ export class DimmCityAITTSProvider extends BaseTTSProvider {
 		this.isPlaying = false;
 		this.isPaused = false;
 		this.config = {
-			// Default to DimmCityAI endpoint (can be overridden)
-			apiEndpoint: 'https://api.dimmcity.ai/v1/audio/speech',
-			apiKey: null, // Set via config or environment
+			apiKey: null, // Set via config
 			model: 'tts-1', // or 'tts-1-hd' for higher quality
 			speed: 1.0, // 0.25 to 4.0
 			responseFormat: 'mp3' // mp3, opus, aac, flac, wav, pcm
@@ -135,11 +138,11 @@ export class DimmCityAITTSProvider extends BaseTTSProvider {
 		};
 
 		logger.debug('[DimmCityAI] API Request:', {
-			endpoint: this.config.apiEndpoint,
+			endpoint: DimmCityAITTSProvider.API_ENDPOINT,
 			body: { ...requestBody, input: `${text.substring(0, 50)}...` }
 		});
 
-		const response = await fetch(this.config.apiEndpoint, {
+		const response = await fetch(DimmCityAITTSProvider.API_ENDPOINT, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
