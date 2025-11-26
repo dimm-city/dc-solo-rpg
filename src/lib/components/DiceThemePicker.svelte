@@ -89,7 +89,10 @@
 		tabindex="0"
 	>
 		<!-- Augmented UI wrapper (non-scrollable) -->
-		<div class="dice-theme-picker-wrapper" data-augmented-ui="tl-clip tr-clip br-clip bl-clip border">
+		<div
+			class="dice-theme-picker-wrapper"
+			data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
+		>
 			<!-- Modal container (flex structure) -->
 			<div class="dice-theme-picker-modal">
 				<div class="modal-header">

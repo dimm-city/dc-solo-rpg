@@ -352,14 +352,9 @@
 			Disable All
 		</button>
 	</div>
-
-
 </div>
 
-
 <style>
-
-
 	h3 {
 		margin: var(--space-md, 1rem) 0 var(--space-sm, 0.5rem) 0;
 		font-size: 1.2rem;
