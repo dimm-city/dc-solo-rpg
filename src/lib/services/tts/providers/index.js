@@ -1,5 +1,8 @@
 import { BrowserTTSProvider } from './BrowserTTSProvider.js';
 import { SupertonicTTSProvider } from './SupertonicTTSProvider.js';
+import { DimmCityAITTSProvider } from './DimmCityAITTSProvider.js';
+import { OpenAITTSProvider } from './OpenAITTSProvider.js';
+import { ElevenLabsTTSProvider } from './ElevenLabsTTSProvider.js';
 
 /**
  * Registry of available TTS providers
@@ -7,10 +10,10 @@ import { SupertonicTTSProvider } from './SupertonicTTSProvider.js';
  */
 export const TTS_PROVIDERS = {
 	browser: BrowserTTSProvider,
-	supertonic: SupertonicTTSProvider
-	// Future providers:
-	// elevenlabs: ElevenLabsProvider,
-	// openai: OpenAIProvider,
+	supertonic: SupertonicTTSProvider,
+	dimmcityai: DimmCityAITTSProvider,
+	openai: OpenAITTSProvider,
+	elevenlabs: ElevenLabsTTSProvider
 };
 
 /**
@@ -42,3 +45,12 @@ export function getAvailableProviders() {
 export function isProviderAvailable(providerName) {
 	return providerName in TTS_PROVIDERS;
 }
+
+// Export individual providers
+export {
+	BrowserTTSProvider,
+	SupertonicTTSProvider,
+	DimmCityAITTSProvider,
+	OpenAITTSProvider,
+	ElevenLabsTTSProvider
+};

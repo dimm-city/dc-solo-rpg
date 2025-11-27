@@ -15,7 +15,8 @@ const DEFAULT_SETTINGS = {
 		readingSpeed: 'normal', // 'slow', 'normal', 'fast'
 		ttsProvider: 'browser',
 		ttsVoice: null,
-		ttsApiKey: null // API key for non-browser providers (openai, elevenlabs, etc.)
+		ttsApiKey: null, // API key for non-browser providers (openai, elevenlabs, etc.)
+		ttsApiEndpoint: null // Optional API endpoint URL (for OpenAI-compatible services)
 	},
 	gameplay: {
 		autoRollDice: false,
@@ -74,7 +75,18 @@ async function loadSettings() {
 			// Set the TTS provider (if not default browser)
 			if (audioSettings.ttsProvider && audioSettings.ttsProvider !== 'browser') {
 				try {
-					await ttsService.setProvider(audioSettings.ttsProvider);
+					const config = {
+						apiKey: audioSettings.ttsApiKey,
+						voice: audioSettings.ttsVoice,
+						speed: audioSettings.readingSpeed
+					};
+
+					// Add endpoint if configured (for OpenAI-compatible providers)
+					if (audioSettings.ttsApiEndpoint) {
+						config.apiEndpoint = audioSettings.ttsApiEndpoint;
+					}
+
+					await ttsService.setProvider(audioSettings.ttsProvider, config);
 				} catch (error) {
 					logger.error('[AudioStore] Failed to set TTS provider on load:', error);
 					// Fall back to browser TTS
@@ -87,7 +99,8 @@ async function loadSettings() {
 				provider: audioSettings.ttsProvider,
 				voice: audioSettings.ttsVoice,
 				readingSpeed: audioSettings.readingSpeed,
-				apiKey: audioSettings.ttsApiKey
+				apiKey: audioSettings.ttsApiKey,
+				apiEndpoint: audioSettings.ttsApiEndpoint
 			});
 		}
 	} catch (error) {
@@ -127,7 +140,18 @@ export async function updateAudioSettings(updates) {
 	// If provider changed, switch to the new provider
 	if (updates.ttsProvider && updates.ttsProvider !== previousProvider) {
 		try {
-			await ttsService.setProvider(audioSettings.ttsProvider);
+			const config = {
+				apiKey: audioSettings.ttsApiKey,
+				voice: audioSettings.ttsVoice,
+				speed: audioSettings.readingSpeed
+			};
+
+			// Add endpoint if configured (for OpenAI-compatible providers)
+			if (audioSettings.ttsApiEndpoint) {
+				config.apiEndpoint = audioSettings.ttsApiEndpoint;
+			}
+
+			await ttsService.setProvider(audioSettings.ttsProvider, config);
 			logger.info('[AudioStore] Switched TTS provider to:', audioSettings.ttsProvider);
 
 			// Reset voice selection since voices are provider-specific
@@ -146,7 +170,8 @@ export async function updateAudioSettings(updates) {
 		provider: audioSettings.ttsProvider,
 		voice: audioSettings.ttsVoice,
 		readingSpeed: audioSettings.readingSpeed,
-		apiKey: audioSettings.ttsApiKey
+		apiKey: audioSettings.ttsApiKey,
+		apiEndpoint: audioSettings.ttsApiEndpoint
 	});
 
 	saveSettings();
