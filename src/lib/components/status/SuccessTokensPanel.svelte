@@ -75,7 +75,20 @@
 				class:disabled={!token.active}
 				style="--token-index: {token.index}"
 			>
-				<div class="token-inner"></div>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="24"
+					height="24"
+					viewBox="0 0 24 24"
+					stroke-width="2"
+					style="fill: var(--success-color); stroke: var(--success-color);"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					class="lucide lucide-star-icon lucide-star token-inner"
+					><path
+						d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"
+					/></svg
+				>
 			</div>
 		{/each}
 	</div>
@@ -200,35 +213,40 @@
 	}
 
 	.token-shape {
-		width: 16px;
-		height: 16px;
+		width: 24px;
+		height: 24px;
 		position: relative;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		transition: all 0.2s linear;
-		animation: tokenPopIn 0.15s linear forwards;
-		animation-delay: calc(0.7s + var(--token-index) * 0.03s);
-		opacity: 0;
 	}
 
 	.token-inner {
 		width: 100%;
 		height: 100%;
-		clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+
 		transition: all 0.3s ease;
+		overflow: hidden;
+		transition: all 0.2s linear;
+		animation: tokenPopIn 0.15s linear forwards;
+		animation-delay: calc(0.7s + var(--token-index) * 0.03s);
+		opacity: 1;
+	}
+	.token-shape.active {
+		--success-color: rgba(100, 100, 100, 0.2);
 	}
 
-	.token-shape.active .token-inner {
-		background: linear-gradient(135deg, var(--color-brand-yellow), var(--color-neon-cyan));
-		box-shadow:
-			0 0 10px rgba(255, 238, 0, 0.8),
-			0 0 20px rgba(0, 255, 255, 0.4);
-		animation: token-glow 2s ease-in-out infinite;
+	.token-shape.active > * {
+		color: linear-gradient(135deg, var(--color-brand-yellow), var(--color-neon-cyan));
+		/* background-color:
+			0 0 10px rgba(255, 238, 0, 0.8), 
+			0 0 20px rgba(0, 255, 255, 0.4);*/
+		animation: token-glow 5s ease-in-out infinite;
 	}
-
-	.token-shape.disabled .token-inner {
-		background: rgba(100, 100, 100, 0.2);
+	.token-shape.disabled {
+		--success-color: var(--color-toxic-green);
+	}
+	.token-shape.disabled > * {
 		border: 1px solid rgba(255, 255, 255, 0.1);
 	}
 
@@ -263,7 +281,7 @@
 			width: 12px;
 			height: 12px;
 		}
-
+		/* 
 		.token-indicators {
 			gap: 2px;
 		}
@@ -276,7 +294,7 @@
 		.token-inner {
 			width: 10px;
 			height: 10px;
-		}
+		} */
 	}
 
 	@media (prefers-reduced-motion: reduce) {
@@ -286,12 +304,11 @@
 		}
 
 		.token-shape {
-			animation: tokenPopIn 0s linear forwards;
-			opacity: 1;
 		}
 
 		.token-shape.active .token-inner {
 			animation: none;
+			opacity: 1;
 		}
 	}
 </style>
