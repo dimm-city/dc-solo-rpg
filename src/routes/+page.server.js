@@ -1,5 +1,6 @@
 import { readdir, readFile } from 'fs/promises';
 import { join } from 'path';
+import { redirect } from '@sveltejs/kit';
 import { logger } from '$lib/utils/logger.js';
 
 // Get the project root directory reliably
@@ -35,7 +36,15 @@ function extractFrontmatter(content) {
 }
 
 /** @type {import('./$types').PageServerLoad} */
-export async function load() {
+export async function load(event) {
+	// Check authentication
+	const session = await event.locals.auth();
+
+	// Redirect to sign-in if not authenticated
+	if (!session?.user) {
+		throw redirect(303, '/signin');
+	}
+
 	// Read the games directory from static folder
 	const gamesDir = join(projectRoot, 'static', 'games');
 

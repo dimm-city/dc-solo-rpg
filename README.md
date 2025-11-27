@@ -75,6 +75,61 @@ You can preview the production build with `npm run preview`.
 
 > To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
 
+## Authentication Setup
+
+This application requires Google OAuth authentication for users to access games. Follow these steps to set up authentication:
+
+### 1. Create Google OAuth Credentials
+
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+2. Create a new project or select an existing one
+3. Enable the Google+ API (or Google People API)
+4. Go to "Credentials" and click "Create Credentials" → "OAuth 2.0 Client ID"
+5. Configure the OAuth consent screen if you haven't already
+6. Choose "Web application" as the application type
+7. Add authorized redirect URIs:
+   - For development: `http://localhost:5173/auth/callback/google`
+   - For production: `https://your-production-domain.com/auth/callback/google`
+8. Click "Create" and copy the Client ID and Client Secret
+
+### 2. Configure Environment Variables
+
+1. Copy `.env.example` to `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Edit `.env` and add your credentials:
+   ```env
+   GOOGLE_CLIENT_ID=your_google_client_id_here
+   GOOGLE_CLIENT_SECRET=your_google_client_secret_here
+   AUTH_SECRET=generate_random_secret_here
+   ```
+
+3. Generate a secure random secret for `AUTH_SECRET`:
+   ```bash
+   openssl rand -base64 32
+   ```
+
+### 3. Restart the Development Server
+
+After setting up your `.env` file, restart the development server:
+
+```bash
+npm run dev
+```
+
+Now when you visit the app, you'll be prompted to sign in with Google before accessing any games.
+
+### Production Deployment
+
+When deploying to production:
+
+1. Set the environment variables in your hosting platform's configuration
+2. Update the authorized redirect URIs in Google Cloud Console to include your production domain
+3. Ensure `AUTH_SECRET` is different from your development secret
+4. Set `trustHost: true` is configured in `src/auth.js` (already done)
+
 ## Contributing
 
 We will happily except feedback and pull requests are always welcome as well!

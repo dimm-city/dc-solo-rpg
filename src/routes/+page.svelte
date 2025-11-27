@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { browser } from '$app/environment';
+	import { signOut } from '@auth/sveltekit/client';
 	import ConfirmModal from '$lib/components/ConfirmModal.svelte';
 	import AboutModal from '$lib/components/AboutModal.svelte';
 	import SettingsModal from '$lib/components/settings/SettingsModal.svelte';
@@ -319,6 +320,12 @@
 		showMobileMenu = !showMobileMenu;
 	}
 
+	async function handleSignOut(e) {
+		e.preventDefault();
+		await signOut({ callbackUrl: '/signin' });
+		showMobileMenu = false;
+	}
+
 	// Story mode handlers
 	function handleBrowseStories() {
 		showBrowseGames = true;
@@ -613,6 +620,23 @@
 						<path d="M12 17h.01"></path>
 					</svg>
 				</button>
+				<button onclick={handleSignOut} class="header-button signout-button" aria-label="Sign Out">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="24"
+						height="24"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+						<polyline points="16 17 21 12 16 7"></polyline>
+						<line x1="21" y1="12" x2="9" y2="12"></line>
+					</svg>
+				</button>
 			</div>
 
 			<!-- Mobile hamburger menu button (visible only on small screens) -->
@@ -757,6 +781,24 @@
 						<path d="M12 17h.01"></path>
 					</svg>
 					<span>Help</span>
+				</button>
+				<button class="mobile-menu-item signout-menu-item" onclick={handleSignOut}>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="20"
+						height="20"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+						<polyline points="16 17 21 12 16 7"></polyline>
+						<line x1="21" y1="12" x2="9" y2="12"></line>
+					</svg>
+					<span>Sign Out</span>
 				</button>
 			</div>
 		{/if}
@@ -1144,6 +1186,33 @@
 	.header-button:disabled:hover {
 		color: var(--color-brand-yellow);
 		transform: none;
+	}
+
+	.signout-button {
+		color: #ff9f6b;
+	}
+
+	.signout-button svg {
+		filter: drop-shadow(0 0 4px #ff9f6b);
+	}
+
+	.signout-button:hover {
+		color: #ff6b6b;
+	}
+
+	.signout-button:hover svg {
+		filter: drop-shadow(0 0 8px #ff6b6b);
+	}
+
+	.signout-menu-item {
+		color: #ff9f6b !important;
+		border-top: 1px solid rgba(255, 159, 107, 0.2);
+		margin-top: var(--space-xs);
+		padding-top: var(--space-lg) !important;
+	}
+
+	.signout-menu-item:hover:not(:disabled) {
+		color: #ff6b6b !important;
 	}
 
 	.upload-button:hover:not(:disabled) {
