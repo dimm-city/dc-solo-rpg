@@ -177,6 +177,8 @@
 			display: grid;
 			grid-template-columns: repeat(3, 1fr);
 			grid-template-rows: auto auto;
+			grid-template-areas: 'stability dice abilities'
+				'failure deck success';
 			gap: var(--space-xs);
 			width: 100%;
 			max-width: 100vw;
@@ -201,13 +203,16 @@
 			min-width: 0;
 			width: 100%;
 			max-width: 100%;
-			min-height: 80px;
+			min-height: unset;
 			padding: var(--space-xs);
+			align-items: center;
+			justify-content: center;
 		}
 
 		.deck-label {
 			font-size: 0.625rem;
 			letter-spacing: 0.1em;
+			display: none;
 		}
 	}
 

@@ -142,7 +142,6 @@
 		/* Augmented UI Base Configuration */
 		--aug-border-all: 2px;
 
-		
 		/* Truly Compact Layout */
 		display: flex;
 		flex-direction: column;
@@ -164,6 +163,7 @@
 	}
 
 	.bonus-stat {
+		grid-area: abilities;
 		/* Augmented UI Configuration - Power source with rightward tab */
 		--aug-border-bg: linear-gradient(135deg, var(--color-brand-yellow), var(--color-neon-cyan));
 		--aug-tl: 10px;
@@ -171,7 +171,7 @@
 		--aug-l: 0px;
 		--aug-tr: 12px; /* Strong tab → connects to Success */
 		--aug-br: 8px; /* Gentle terminus */
-	
+
 		/* TERTIARY importance - Subtle Glow */
 		box-shadow:
 			0 0 8px rgba(255, 215, 0, 0.3),
@@ -211,15 +211,17 @@
 	/* Ability Icons */
 	.ability-icons {
 		display: flex;
+		flex-wrap: wrap;
 		gap: 4px;
 		align-items: center;
 		justify-content: center;
 		flex: 0 0 auto;
+		max-width: 75px;
 	}
 
 	.ability-icon {
-		width: 14px;
-		height: 14px;
+		width: 24px;
+		height: 24px;
 		opacity: 0.2;
 		stroke: #00eeff;
 		filter: drop-shadow(0 0 2px rgba(0, 238, 255, 0.3));
@@ -253,6 +255,17 @@
 			gap: 0.25rem;
 			margin-inline-end: 0;
 			padding-inline-end: 0.5rem;
+
+			justify-content: flex-start;
+		}
+
+		.bonus-stat {
+			--aug-tl: 8px;
+			/* Slot ← receives Health's tab (mobile) */
+			--aug-l: 0px;
+			--aug-tr: 12px; /* Strong tab → connects to Success */
+			--aug-br: 8px; /* Gentle terminus */
+			--aug-bl: 7px;
 		}
 
 		.stat-label {

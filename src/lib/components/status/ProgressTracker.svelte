@@ -74,7 +74,7 @@
 		--aug-border-bg: linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta));
 		--aug-tl: 12px;
 		--aug-tr: 12px;
-
+		grid-area: progress;
 		width: 100%;
 		padding: var(--space-sm);
 		display: flex;

@@ -168,6 +168,7 @@
 		--aug-br: 6px;
 		--aug-bl: 6px;
 
+		grid-area: dice;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -175,7 +176,6 @@
 		gap: var(--space-xs);
 		padding: var(--space-sm);
 		min-width: 90px;
-		min-height: 100px;
 
 		background: linear-gradient(135deg, rgba(10, 10, 20, 0.9), rgba(15, 15, 25, 0.8));
 		backdrop-filter: blur(10px) saturate(150%);
@@ -321,20 +321,10 @@
 			padding: 0.25rem 0.5rem;
 			gap: 0.25rem;
 		}
-
-		.stat-label {
-			font-size: 0.625rem;
-			min-width: 48px;
-			letter-spacing: 0.08em;
-		}
-
-		.stat-icon {
-			width: 12px;
-			height: 12px;
-		}
-
-		.dice-grid {
-			gap: 2px;
+		
+		.dice-value, .dice-label {
+			display: none;
+			height: 0
 		}
 
 		.dice-pip {

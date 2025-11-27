@@ -101,17 +101,17 @@
 		/* Augmented UI Base Configuration */
 		--aug-border-all: 2px;
 
-		width: min-content;
+		width: stretch;
+		max-width: 150px;
 		/* Truly Compact Layout */
 		display: flex;
-		flex-direction: row;
+		flex-direction: column;
 		align-items: center;
 		justify-content: space-between;
 		gap: 0.375rem;
 		padding: 0.375rem 0.625rem;
 		position: relative;
 		overflow: visible;
-		min-height: 36px;
 
 		/* Darker Glassmorphism Background */
 		background: linear-gradient(135deg, rgba(10, 10, 20, 0.7), rgba(15, 15, 25, 0.6));
@@ -132,7 +132,7 @@
 		/* Right side rectangle extension - creates puzzle tab */
 		--aug-r-extend1: 30px;
 		--aug-r-inset1: 12px;
-
+		grid-area: stability;
 		/* PRIMARY importance - Enhanced Glow */
 		box-shadow:
 			0 0 20px rgba(0, 255, 255, 0.5),
@@ -166,6 +166,7 @@
 		height: 14px;
 		flex-shrink: 0;
 		display: inline-block;
+		display: none;
 		vertical-align: middle;
 		filter: drop-shadow(0 0 3px currentColor);
 	}
@@ -216,6 +217,7 @@
 		height: 12px;
 		flex: 1 1 auto;
 		min-width: 80px;
+		width: stretch;
 	}
 
 	/* Stability fill - gradient and glow set via inline styles (reactive) */
@@ -226,13 +228,22 @@
 	/* Mobile responsive */
 	@media (max-width: 600px) {
 		.stat-item {
-			width: 100%;
-			max-width: 100%;
+			width: stretch;
 			min-width: 0;
 			padding: 0.25rem 0.5rem;
 			gap: 0.25rem;
+			flex-direction: column;
 		}
 
+		.health-stat {
+			--aug-tl: 8px; /* Gentle entry */
+			--aug-tr: 8px; /* Strong tab → connects to Failure */
+			--aug-br: 8px; /* Strong tab → connects to Bonus (mobile) */
+
+			/* Right side rectangle extension - creates puzzle tab */
+			--aug-r-extend1: 30px;
+			--aug-r-inset1: 12px;
+		}
 		.stat-label {
 			font-size: 0.625rem;
 			min-width: 48px;
@@ -244,13 +255,12 @@
 			height: 12px;
 		}
 
-		.stat-bar {
-			min-width: 30px;
-		}
-
 		.stability-bar {
 			height: 10px;
 			min-width: 60px;
+			width: 100%;
+			transform: scaleX(1.1);
+
 		}
 	}
 

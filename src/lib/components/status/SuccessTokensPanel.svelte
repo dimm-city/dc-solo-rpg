@@ -106,7 +106,7 @@
 		width: min-content;
 		/* Truly Compact Layout */
 		display: flex;
-		flex-direction: row;
+		flex-direction: column;
 		align-items: center;
 		justify-content: space-between;
 		gap: 0.375rem;
@@ -132,6 +132,7 @@
 		--aug-br: 4px; /* Gentle terminus */
 		--aug-bl: 4px; /* Visual anchor */
 
+		grid-area: success;
 		padding: 0.5rem;
 		/* SECONDARY importance - Reduced Glow */
 		box-shadow:
@@ -166,6 +167,7 @@
 		height: 14px;
 		flex-shrink: 0;
 		display: inline-block;
+		display: none;
 		vertical-align: middle;
 		filter: drop-shadow(0 0 3px currentColor);
 	}
@@ -248,6 +250,7 @@
 			min-width: 0;
 			padding: 0.25rem 0.5rem;
 			gap: 0.25rem;
+			flex-direction: column-reverse;
 		}
 
 		.stat-label {

@@ -240,7 +240,7 @@
 		width: 100%;
 		height: 100%;
 		padding: var(--space-xl, 2rem);
-		margin-bottom: var(--space-lg, 1.5rem);
+		/* margin-bottom: var(--space-lg, 1.5rem); */
 		overflow-y: hidden;
 		overflow-x: hidden;
 		box-sizing: border-box;
@@ -518,6 +518,20 @@
 		}
 	}
 
+	@media screen and (max-width: 600px) {
+		.byte-shell {
+			padding: var(--space-sm, 0.5rem);
+		}
+
+		.byte-content {
+			padding: var(--space-md, 1rem);
+			gap: var(--space-md, 1rem);
+		}
+
+		.byte-data {
+			font-size: var(--text-base, 1rem);
+		}
+	}
 	@media (prefers-reduced-motion: reduce) {
 		.byte-container.materializing,
 		.byte-container.dismissing,

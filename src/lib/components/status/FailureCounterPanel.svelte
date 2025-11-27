@@ -43,7 +43,7 @@
 	style="animation-delay: {animationDelay}s; animation-duration: {animationDuration}s"
 >
 	<div class="stat-label">
-		<svg
+		<!-- <svg
 			class="stat-icon"
 			xmlns="http://www.w3.org/2000/svg"
 			width="16"
@@ -61,13 +61,32 @@
 			/>
 			<circle cx="15" cy="12" r="1" />
 			<circle cx="9" cy="12" r="1" />
-		</svg>
+		</svg> -->
 		{failureLabel}
 	</div>
 	<div class="king-indicators">
 		{#each Array(4) as _, i (i)}
 			<div class="king-icon" class:revealed={i < failurePercent}>
 				<svg
+					class="stat-icon"
+					xmlns="http://www.w3.org/2000/svg"
+					width="16"
+					height="16"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				>
+					<path d="m12.5 17-.5-1-.5 1h1z" />
+					<path
+						d="M15 22a1 1 0 0 0 1-1v-1a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20v1a1 1 0 0 0 1 1z"
+					/>
+					<circle cx="15" cy="12" r="1" />
+					<circle cx="9" cy="12" r="1" />
+				</svg>
+				<!-- <svg
 					xmlns="http://www.w3.org/2000/svg"
 					viewBox="0 0 24 24"
 					fill="none"
@@ -77,7 +96,7 @@
 					stroke-linejoin="round"
 				>
 					<path d="M2 20h20v-4a6 6 0 0 0-12 0v4zm0 0v-4a6 6 0 1 1 12 0v4zM12 2v4m-4-2 4 2 4-2" />
-				</svg>
+				</svg> -->
 			</div>
 		{/each}
 	</div>
@@ -117,8 +136,8 @@
 		/* Truly Compact Layout */
 		display: flex;
 		flex-direction: row;
-		align-items: center;
-		justify-content: space-between;
+		align-items: start;
+		justify-content: start;
 		gap: 0.375rem;
 		padding: 0.375rem 0.625rem;
 		position: relative;
@@ -145,10 +164,10 @@
 		/* Match health's right extension for perfect fit */
 		--aug-l-extend1: 40px;
 		--aug-l-inset1: 10px;
-
+		grid-area: failure;
 		display: flex;
 		flex-direction: column;
-		justify-content: center;
+		justify-content: start;
 		margin-inline-start: -30px;
 		padding-inline-start: 2rem;
 		/* SECONDARY importance - Reduced Glow */
@@ -199,16 +218,16 @@
 	/* King Indicators for Failure Stat */
 	.king-indicators {
 		display: flex;
-		gap: 3px;
+		gap: 5px;
 		align-items: center;
 		justify-content: center;
-		flex: 0 0 auto;
 		padding: 2px;
+		flex-wrap: wrap;
 	}
 
 	.king-icon {
-		width: 16px;
-		height: 16px;
+		width: 24px;
+		height: 24px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -252,9 +271,10 @@
 			max-width: 100%;
 			min-width: 0;
 			padding: 0.25rem 0.5rem;
-			gap: 0.25rem;
 			margin-inline-start: 0;
 			padding-inline-start: 0.5rem;
+			flex-direction: column-reverse;
+			justify-content: flex-start;
 		}
 
 		.stat-label {
