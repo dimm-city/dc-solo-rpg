@@ -6,8 +6,8 @@ import { logger } from '../../../utils/logger.js';
  * Requires API key and voice ID from ElevenLabs account
  */
 export class ElevenLabsTTSProvider extends BaseTTSProvider {
-	static DEFAULT_ENDPOINT = 'https://api.elevenlabs.io/v1';
-	static DEFAULT_MODEL = 'eleven_monolingual_v1';
+	static DEFAULT_ENDPOINT = 'https://api.elevenlabs.io/v2';
+	static DEFAULT_MODEL = 'eleven_flash_v2_5';
 
 	// Popular pre-made voices (users can override with their own voice IDs)
 	static POPULAR_VOICES = {
@@ -72,9 +72,11 @@ export class ElevenLabsTTSProvider extends BaseTTSProvider {
 			model: ElevenLabsTTSProvider.DEFAULT_MODEL,
 			voiceSettings: {
 				stability: 0.5,
-				similarity_boost: 0.75,
-				style: 0.0,
-				use_speaker_boost: true
+				similarity_boost: 0.45,
+				style: 0.1,
+				use_speaker_boost: false,
+				speed: 1.2,
+				seed: 2294967295
 			}
 		};
 	}
@@ -98,10 +100,7 @@ export class ElevenLabsTTSProvider extends BaseTTSProvider {
 				this.config.apiEndpoint = ElevenLabsTTSProvider.DEFAULT_ENDPOINT;
 			}
 
-			// Validate API key
-			if (!this.config.apiKey) {
-				throw new Error('API key is required. Set apiKey in config.');
-			}
+			// Note: API key validation moved to speak() to allow provider selection before key entry
 
 			// Set voice
 			if (config.voice) {
@@ -130,6 +129,11 @@ export class ElevenLabsTTSProvider extends BaseTTSProvider {
 	async speak(text, options = {}) {
 		if (!this.isInitialized) {
 			throw new Error('Provider not initialized. Call initialize() first.');
+		}
+
+		// Validate API key before attempting synthesis
+		if (!this.config.apiKey) {
+			throw new Error('API key is required. Please set your ElevenLabs API key in settings.');
 		}
 
 		if (!text) {
@@ -177,7 +181,9 @@ export class ElevenLabsTTSProvider extends BaseTTSProvider {
 	 * @private
 	 */
 	async _synthesizeSpeech(text) {
-		const url = `${this.config.apiEndpoint}/text-to-speech/${this.currentVoice}`;
+		// TTS endpoint is still at v1, not v2
+		const baseUrl = this.config.apiEndpoint.replace('/v2', '/v1');
+		const url = `${baseUrl}/text-to-speech/${this.currentVoice}`;
 
 		const requestBody = {
 			text: text,
@@ -300,6 +306,81 @@ export class ElevenLabsTTSProvider extends BaseTTSProvider {
 	}
 
 	async getVoices() {
+		// Try to fetch voices from API if we have an API key
+		if (this.config.apiKey) {
+			try {
+				// Use v2 API endpoint with pagination support
+				const url = `${this.config.apiEndpoint}/voices?page_size=100`;
+				logger.debug('[ElevenLabs] Fetching voices from API:', url);
+
+				const response = await fetch(url, {
+					method: 'GET',
+					headers: {
+						'xi-api-key': this.config.apiKey
+					}
+				});
+
+				if (response.ok) {
+					const data = await response.json();
+					logger.debug(`[ElevenLabs] Fetched ${data.voices?.length || 0} voices from API`);
+
+					// Map API response to our voice format
+					if (data.voices && Array.isArray(data.voices)) {
+						// Group voices by category
+						const voicesByCategory = data.voices.reduce((acc, voice) => {
+							const category = voice.category || 'other';
+							if (!acc[category]) {
+								acc[category] = [];
+							}
+							acc[category].push({
+								id: voice.voice_id,
+								name: voice.name,
+								language: voice.labels?.language || voice.labels?.accent || 'en-US',
+								category: voice.category
+							});
+							return acc;
+						}, {});
+
+						// Define category order and labels
+						const categoryOrder = [
+							{ key: 'premade', label: 'Premade Voices' },
+							{ key: 'professional', label: 'Professional Clones' },
+							{ key: 'cloned', label: 'Cloned Voices' },
+							{ key: 'generated', label: 'Generated Voices' },
+							{ key: 'other', label: 'Other Voices' }
+						];
+
+						// Build grouped voice list with separators
+						const groupedVoices = [];
+						for (const { key, label } of categoryOrder) {
+							const voices = voicesByCategory[key];
+							if (voices && voices.length > 0) {
+								// Add category separator
+								groupedVoices.push({
+									id: `separator-${key}`,
+									name: `── ${label} ──`,
+									language: '',
+									isDisabled: true,
+									isSeparator: true
+								});
+								// Add voices in this category
+								groupedVoices.push(...voices);
+							}
+						}
+
+						return groupedVoices;
+					}
+				} else {
+					const errorText = await response.text();
+					logger.warn('[ElevenLabs] Failed to fetch voices from API:', response.status, errorText);
+				}
+			} catch (error) {
+				logger.warn('[ElevenLabs] Error fetching voices from API, using fallback:', error);
+			}
+		}
+
+		// Fallback to hardcoded popular voices
+		logger.debug('[ElevenLabs] Using fallback voice list');
 		return Object.values(ElevenLabsTTSProvider.POPULAR_VOICES).map((voice) => ({
 			id: voice.id,
 			name: voice.name,

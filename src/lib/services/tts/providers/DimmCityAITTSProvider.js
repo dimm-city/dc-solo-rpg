@@ -49,10 +49,7 @@ export class DimmCityAITTSProvider extends BaseTTSProvider {
 				...config
 			};
 
-			// // Validate API key
-			// if (!this.config.apiKey) {
-			// 	throw new Error('API key is required. Set apiKey in config.');
-			// }
+			// Note: API key validation moved to speak() to allow provider selection before key entry
 
 			// Set voice
 			this.currentVoice = config.voice || 'alloy';
@@ -79,6 +76,11 @@ export class DimmCityAITTSProvider extends BaseTTSProvider {
 	async speak(text, options = {}) {
 		if (!this.isInitialized) {
 			throw new Error('Provider not initialized. Call initialize() first.');
+		}
+
+		// Validate API key before attempting synthesis
+		if (!this.config.apiKey) {
+			throw new Error('API key is required. Please set your DimmCityAI API key in settings.');
 		}
 
 		if (!text) {

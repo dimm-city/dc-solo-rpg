@@ -16,7 +16,8 @@ const DEFAULT_SETTINGS = {
 		ttsProvider: 'browser',
 		ttsVoice: null,
 		ttsApiKey: null, // API key for non-browser providers (openai, elevenlabs, etc.)
-		ttsApiEndpoint: null // Optional API endpoint URL (for OpenAI-compatible services)
+		ttsApiEndpoint: null, // Optional API endpoint URL (for OpenAI-compatible services)
+		ttsModel: null // Optional model override (for OpenAI, ElevenLabs)
 	},
 	gameplay: {
 		autoRollDice: false,
@@ -86,6 +87,11 @@ async function loadSettings() {
 						config.apiEndpoint = audioSettings.ttsApiEndpoint;
 					}
 
+					// Add model if configured (for OpenAI, ElevenLabs)
+					if (audioSettings.ttsModel) {
+						config.model = audioSettings.ttsModel;
+					}
+
 					await ttsService.setProvider(audioSettings.ttsProvider, config);
 				} catch (error) {
 					logger.error('[AudioStore] Failed to set TTS provider on load:', error);
@@ -131,14 +137,22 @@ function saveSettings() {
  */
 export async function updateAudioSettings(updates) {
 	const previousProvider = audioSettings.ttsProvider;
+	const previousApiKey = audioSettings.ttsApiKey;
+	const previousApiEndpoint = audioSettings.ttsApiEndpoint;
 
 	audioSettings = {
 		...audioSettings,
 		...updates
 	};
 
-	// If provider changed, switch to the new provider
-	if (updates.ttsProvider && updates.ttsProvider !== previousProvider) {
+	// Check if we need to re-initialize the provider
+	const needsReinitialization =
+		(updates.ttsProvider && updates.ttsProvider !== previousProvider) || // Provider changed
+		(updates.ttsApiKey && updates.ttsApiKey !== previousApiKey) || // API key changed
+		(updates.ttsApiEndpoint && updates.ttsApiEndpoint !== previousApiEndpoint) || // Endpoint changed
+		(updates.ttsModel); // Model changed
+
+	if (needsReinitialization) {
 		try {
 			const config = {
 				apiKey: audioSettings.ttsApiKey,
@@ -151,15 +165,30 @@ export async function updateAudioSettings(updates) {
 				config.apiEndpoint = audioSettings.ttsApiEndpoint;
 			}
 
-			await ttsService.setProvider(audioSettings.ttsProvider, config);
-			logger.info('[AudioStore] Switched TTS provider to:', audioSettings.ttsProvider);
+			// Add model if configured (for OpenAI, ElevenLabs)
+			if (audioSettings.ttsModel) {
+				config.model = audioSettings.ttsModel;
+			}
 
-			// Reset voice selection since voices are provider-specific
-			audioSettings.ttsVoice = null;
+			await ttsService.setProvider(audioSettings.ttsProvider, config);
+			logger.info('[AudioStore] Re-initialized TTS provider:', audioSettings.ttsProvider);
+
+			// Reset voice selection when provider changes (but not when just API key changes)
+			if (updates.ttsProvider && updates.ttsProvider !== previousProvider) {
+				audioSettings.ttsVoice = null;
+			}
 		} catch (error) {
-			logger.error('[AudioStore] Failed to switch TTS provider:', error);
-			// Revert provider change on error
-			audioSettings.ttsProvider = previousProvider;
+			logger.error('[AudioStore] Failed to initialize TTS provider:', error);
+			// Revert changes on error
+			if (updates.ttsProvider && updates.ttsProvider !== previousProvider) {
+				audioSettings.ttsProvider = previousProvider;
+			}
+			if (updates.ttsApiKey && updates.ttsApiKey !== previousApiKey) {
+				audioSettings.ttsApiKey = previousApiKey;
+			}
+			if (updates.ttsApiEndpoint && updates.ttsApiEndpoint !== previousApiEndpoint) {
+				audioSettings.ttsApiEndpoint = previousApiEndpoint;
+			}
 			// Re-throw the error so the UI can handle it
 			throw error;
 		}

@@ -158,6 +158,11 @@
 		.stats-grid {
 			grid-template-columns: repeat(2, 1fr);
 			gap: var(--space-sm);
+			justify-content: space-between;
+			& > div:last-of-type {
+				direction: rtl;
+				
+			}
 		}
 
 		.deck-readout {

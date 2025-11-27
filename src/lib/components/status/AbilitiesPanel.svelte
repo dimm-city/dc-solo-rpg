@@ -142,14 +142,14 @@
 		/* Augmented UI Base Configuration */
 		--aug-border-all: 2px;
 
-		width: min-content;
+		
 		/* Truly Compact Layout */
 		display: flex;
-		flex-direction: row;
+		flex-direction: column;
 		align-items: center;
 		justify-content: space-between;
 		gap: 0.375rem;
-		padding: 0.375rem 0.625rem;
+		padding: 1rem 1.625rem;
 		position: relative;
 		overflow: visible;
 		min-height: 36px;
@@ -171,8 +171,7 @@
 		--aug-l: 0px;
 		--aug-tr: 12px; /* Strong tab → connects to Success */
 		--aug-br: 8px; /* Gentle terminus */
-		padding: 0.375rem;
-		padding-left: 0.75rem;
+	
 		/* TERTIARY importance - Subtle Glow */
 		box-shadow:
 			0 0 8px rgba(255, 215, 0, 0.3),

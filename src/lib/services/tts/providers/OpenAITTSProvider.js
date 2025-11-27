@@ -14,6 +14,27 @@ export const OPENAI_VOICES = {
 };
 
 /**
+ * Kokoro TTS voices (for LocalAI/Kokoro backend)
+ * Based on https://github.com/thewh1teagle/kokoro-onnx
+ */
+export const KOKORO_VOICES = {
+	af: { id: 'af', name: 'Female Voice (AF)', language: 'en-US' },
+	af_bella: { id: 'af_bella', name: 'Bella (Female)', language: 'en-US' },
+	af_nicole: { id: 'af_nicole', name: 'Nicole (Female)', language: 'en-US' },
+	af_sarah: { id: 'af_sarah', name: 'Sarah (Female)', language: 'en-US' },
+	af_sky: { id: 'af_sky', name: 'Sky (Female)', language: 'en-US' },
+	am: { id: 'am', name: 'Male Voice (AM)', language: 'en-US' },
+	am_adam: { id: 'am_adam', name: 'Adam (Male)', language: 'en-US' },
+	am_michael: { id: 'am_michael', name: 'Michael (Male)', language: 'en-US' },
+	bf: { id: 'bf', name: 'British Female (BF)', language: 'en-GB' },
+	bf_emma: { id: 'bf_emma', name: 'Emma (British Female)', language: 'en-GB' },
+	bf_isabella: { id: 'bf_isabella', name: 'Isabella (British Female)', language: 'en-GB' },
+	bm: { id: 'bm', name: 'British Male (BM)', language: 'en-GB' },
+	bm_george: { id: 'bm_george', name: 'George (British Male)', language: 'en-GB' },
+	bm_lewis: { id: 'bm_lewis', name: 'Lewis (British Male)', language: 'en-GB' }
+};
+
+/**
  * OpenAI TTS provider using OpenAI speech API
  * Allows configurable endpoint URL for compatibility with OpenAI-compatible services
  */
@@ -40,7 +61,7 @@ export class OpenAITTSProvider extends BaseTTSProvider {
 
 	async initialize(config = {}) {
 		try {
-			logger.info('[OpenAI] Initializing TTS provider...');
+			logger.info('[OpenAI] Initializing TTS provider with config:', config);
 
 			// Merge configuration
 			this.config = {
@@ -53,10 +74,9 @@ export class OpenAITTSProvider extends BaseTTSProvider {
 				this.config.apiEndpoint = OpenAITTSProvider.DEFAULT_ENDPOINT;
 			}
 
-			// Validate API key
-			if (!this.config.apiKey) {
-				throw new Error('API key is required. Set apiKey in config.');
-			}
+			logger.info(`[OpenAI] Provider initialized with endpoint: ${this.config.apiEndpoint}`);
+
+			// Note: API key validation moved to speak() to allow provider selection before key entry
 
 			// Set voice
 			this.currentVoice = config.voice || 'alloy';
@@ -84,6 +104,8 @@ export class OpenAITTSProvider extends BaseTTSProvider {
 		if (!this.isInitialized) {
 			throw new Error('Provider not initialized. Call initialize() first.');
 		}
+
+		// Note: API key validation removed to support OpenAI-compatible servers that don't require auth
 
 		if (!text) {
 			logger.debug('[OpenAI] Empty text, skipping');
@@ -146,13 +168,24 @@ export class OpenAITTSProvider extends BaseTTSProvider {
 			body: { ...requestBody, input: `${text.substring(0, 50)}...` }
 		});
 
+		logger.info(`[OpenAI] Calling TTS endpoint: ${this.config.apiEndpoint}`);
+
+		// Build headers - only include Authorization if API key is provided
+		const headers = {
+			'Content-Type': 'application/json'
+		};
+
+		if (this.config.apiKey) {
+			headers.Authorization = `Bearer ${this.config.apiKey}`;
+		}
+
 		const response = await fetch(this.config.apiEndpoint, {
 			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				Authorization: `Bearer ${this.config.apiKey}`
-			},
+			headers: headers,
 			body: JSON.stringify(requestBody)
+		}).catch((error) => {
+			logger.error(`[OpenAI] Network error calling ${this.config.apiEndpoint}:`, error);
+			throw new Error(`Network error: ${error.message}. Check that the server is running at ${this.config.apiEndpoint}`);
 		});
 
 		if (!response.ok) {
@@ -256,6 +289,23 @@ export class OpenAITTSProvider extends BaseTTSProvider {
 	}
 
 	async getVoices() {
+		// Detect if using LocalAI/Kokoro or standard OpenAI
+		const isCustomEndpoint = this.config.apiEndpoint !== OpenAITTSProvider.DEFAULT_ENDPOINT;
+
+		logger.info(`[OpenAI] getVoices called - Endpoint: ${this.config.apiEndpoint}, isCustom: ${isCustomEndpoint}`);
+
+		if (isCustomEndpoint) {
+			// For custom endpoints (like LocalAI), return Kokoro voices
+			logger.info('[OpenAI] Using Kokoro voice list for custom endpoint');
+			return Object.values(KOKORO_VOICES).map((voice) => ({
+				id: voice.id,
+				name: voice.name,
+				language: voice.language
+			}));
+		}
+
+		// Standard OpenAI voices
+		logger.info('[OpenAI] Using OpenAI voice list');
 		return Object.values(OPENAI_VOICES).map((voice) => ({
 			id: voice.id,
 			name: voice.name,
@@ -274,11 +324,7 @@ export class OpenAITTSProvider extends BaseTTSProvider {
 	}
 
 	async setVoice(voiceId) {
-		if (!OPENAI_VOICES[voiceId]) {
-			throw new Error(
-				`Unknown voice: ${voiceId}. Available: ${Object.keys(OPENAI_VOICES).join(', ')}`
-			);
-		}
+		// Allow any voice ID (users can specify custom voices)
 		this.currentVoice = voiceId;
 		logger.debug(`[OpenAI] Voice changed to: ${voiceId}`);
 	}
