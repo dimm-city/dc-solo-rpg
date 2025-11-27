@@ -49,10 +49,10 @@ export class DimmCityAITTSProvider extends BaseTTSProvider {
 				...config
 			};
 
-			// Validate API key
-			if (!this.config.apiKey) {
-				throw new Error('API key is required. Set apiKey in config.');
-			}
+			// // Validate API key
+			// if (!this.config.apiKey) {
+			// 	throw new Error('API key is required. Set apiKey in config.');
+			// }
 
 			// Set voice
 			this.currentVoice = config.voice || 'alloy';
