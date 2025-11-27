@@ -14,27 +14,6 @@ export const OPENAI_VOICES = {
 };
 
 /**
- * Kokoro TTS voices (for LocalAI/Kokoro backend)
- * Based on https://github.com/thewh1teagle/kokoro-onnx
- */
-export const KOKORO_VOICES = {
-	af: { id: 'af', name: 'Female Voice (AF)', language: 'en-US' },
-	af_bella: { id: 'af_bella', name: 'Bella (Female)', language: 'en-US' },
-	af_nicole: { id: 'af_nicole', name: 'Nicole (Female)', language: 'en-US' },
-	af_sarah: { id: 'af_sarah', name: 'Sarah (Female)', language: 'en-US' },
-	af_sky: { id: 'af_sky', name: 'Sky (Female)', language: 'en-US' },
-	am: { id: 'am', name: 'Male Voice (AM)', language: 'en-US' },
-	am_adam: { id: 'am_adam', name: 'Adam (Male)', language: 'en-US' },
-	am_michael: { id: 'am_michael', name: 'Michael (Male)', language: 'en-US' },
-	bf: { id: 'bf', name: 'British Female (BF)', language: 'en-GB' },
-	bf_emma: { id: 'bf_emma', name: 'Emma (British Female)', language: 'en-GB' },
-	bf_isabella: { id: 'bf_isabella', name: 'Isabella (British Female)', language: 'en-GB' },
-	bm: { id: 'bm', name: 'British Male (BM)', language: 'en-GB' },
-	bm_george: { id: 'bm_george', name: 'George (British Male)', language: 'en-GB' },
-	bm_lewis: { id: 'bm_lewis', name: 'Lewis (British Male)', language: 'en-GB' }
-};
-
-/**
  * OpenAI TTS provider using OpenAI speech API
  * Allows configurable endpoint URL for compatibility with OpenAI-compatible services
  */
@@ -289,23 +268,8 @@ export class OpenAITTSProvider extends BaseTTSProvider {
 	}
 
 	async getVoices() {
-		// Detect if using LocalAI/Kokoro or standard OpenAI
-		const isCustomEndpoint = this.config.apiEndpoint !== OpenAITTSProvider.DEFAULT_ENDPOINT;
-
-		logger.info(`[OpenAI] getVoices called - Endpoint: ${this.config.apiEndpoint}, isCustom: ${isCustomEndpoint}`);
-
-		if (isCustomEndpoint) {
-			// For custom endpoints (like LocalAI), return Kokoro voices
-			logger.info('[OpenAI] Using Kokoro voice list for custom endpoint');
-			return Object.values(KOKORO_VOICES).map((voice) => ({
-				id: voice.id,
-				name: voice.name,
-				language: voice.language
-			}));
-		}
-
-		// Standard OpenAI voices
-		logger.info('[OpenAI] Using OpenAI voice list');
+		// Return standard OpenAI voices
+		// Users can enter custom voice IDs directly in the UI datalist
 		return Object.values(OPENAI_VOICES).map((voice) => ({
 			id: voice.id,
 			name: voice.name,

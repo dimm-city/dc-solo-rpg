@@ -14,10 +14,30 @@ const DEFAULT_SETTINGS = {
 		autoAnnounceRolls: false,
 		readingSpeed: 'normal', // 'slow', 'normal', 'fast'
 		ttsProvider: 'browser',
-		ttsVoice: null,
-		ttsApiKey: null, // API key for non-browser providers (openai, elevenlabs, etc.)
-		ttsApiEndpoint: null, // Optional API endpoint URL (for OpenAI-compatible services)
-		ttsModel: null // Optional model override (for OpenAI, ElevenLabs)
+		// Per-provider settings (preserved when switching providers)
+		providerSettings: {
+			browser: {
+				voice: null
+			},
+			openai: {
+				apiKey: null,
+				apiEndpoint: null,
+				model: null,
+				voice: null
+			},
+			elevenlabs: {
+				apiKey: null,
+				model: null,
+				voice: null
+			},
+			dimmcityai: {
+				apiKey: null,
+				voice: null
+			},
+			supertonic: {
+				voice: 'F1'
+			}
+		}
 	},
 	gameplay: {
 		autoRollDice: false,
@@ -30,7 +50,14 @@ const DEFAULT_SETTINGS = {
 
 // Audio and gameplay settings state
 let audioSettings = $state({
-	...DEFAULT_SETTINGS.audio
+	...DEFAULT_SETTINGS.audio,
+	providerSettings: {
+		browser: { ...DEFAULT_SETTINGS.audio.providerSettings.browser },
+		openai: { ...DEFAULT_SETTINGS.audio.providerSettings.openai },
+		elevenlabs: { ...DEFAULT_SETTINGS.audio.providerSettings.elevenlabs },
+		dimmcityai: { ...DEFAULT_SETTINGS.audio.providerSettings.dimmcityai },
+		supertonic: { ...DEFAULT_SETTINGS.audio.providerSettings.supertonic }
+	}
 });
 
 let gameplaySettings = $state({
@@ -42,6 +69,30 @@ let ttsState = $state({
 	isSpeaking: false,
 	currentText: null
 });
+
+/**
+ * Get settings for the current provider
+ * @returns {Object} Current provider's settings
+ */
+function getCurrentProviderSettings() {
+	const provider = audioSettings.ttsProvider;
+	return audioSettings.providerSettings[provider] || {};
+}
+
+/**
+ * Update settings for a specific provider
+ * @param {string} provider - Provider name
+ * @param {Object} settings - Settings to update
+ */
+function updateProviderSettings(provider, settings) {
+	if (!audioSettings.providerSettings[provider]) {
+		audioSettings.providerSettings[provider] = {};
+	}
+	audioSettings.providerSettings[provider] = {
+		...audioSettings.providerSettings[provider],
+		...settings
+	};
+}
 
 /**
  * Initialize audio store
@@ -62,10 +113,61 @@ async function loadSettings() {
 		if (saved) {
 			const parsed = JSON.parse(saved);
 
-			// Merge with defaults to handle new settings
+			// Track if migration occurred
+			let didMigrate = false;
+
+			// Migrate old format to new per-provider format
+			if (parsed.audio && !parsed.audio.providerSettings) {
+				didMigrate = true;
+				logger.info('[AudioStore] Migrating settings to per-provider format');
+				const oldProvider = parsed.audio.ttsProvider || 'browser';
+				parsed.audio.providerSettings = {
+					...DEFAULT_SETTINGS.audio.providerSettings
+				};
+
+				// Migrate old settings to the current provider
+				if (oldProvider === 'openai') {
+					parsed.audio.providerSettings.openai = {
+						apiKey: parsed.audio.ttsApiKey,
+						apiEndpoint: parsed.audio.ttsApiEndpoint,
+						model: parsed.audio.ttsModel,
+						voice: parsed.audio.ttsVoice
+					};
+				} else if (oldProvider === 'elevenlabs') {
+					parsed.audio.providerSettings.elevenlabs = {
+						apiKey: parsed.audio.ttsApiKey,
+						model: parsed.audio.ttsModel,
+						voice: parsed.audio.ttsVoice
+					};
+				} else if (oldProvider === 'dimmcityai') {
+					parsed.audio.providerSettings.dimmcityai = {
+						apiKey: parsed.audio.ttsApiKey,
+						voice: parsed.audio.ttsVoice
+					};
+				} else if (oldProvider === 'browser') {
+					parsed.audio.providerSettings.browser = {
+						voice: parsed.audio.ttsVoice
+					};
+				} else if (oldProvider === 'supertonic') {
+					parsed.audio.providerSettings.supertonic = {
+						voice: parsed.audio.ttsVoice || 'F1'
+					};
+				}
+			}
+
+			// Merge with defaults to handle new settings (deep clone provider settings)
+			const mergedProviderSettings = {};
+			for (const provider of Object.keys(DEFAULT_SETTINGS.audio.providerSettings)) {
+				mergedProviderSettings[provider] = {
+					...DEFAULT_SETTINGS.audio.providerSettings[provider],
+					...(parsed.audio.providerSettings?.[provider] || {})
+				};
+			}
+
 			audioSettings = {
 				...DEFAULT_SETTINGS.audio,
-				...parsed.audio
+				...parsed.audio,
+				providerSettings: mergedProviderSettings
 			};
 
 			gameplaySettings = {
@@ -73,26 +175,30 @@ async function loadSettings() {
 				...parsed.gameplay
 			};
 
+			// Load the current provider's settings
+			const currentProvider = audioSettings.ttsProvider;
+			const providerConfig = getCurrentProviderSettings();
+
 			// Set the TTS provider (if not default browser)
-			if (audioSettings.ttsProvider && audioSettings.ttsProvider !== 'browser') {
+			if (currentProvider && currentProvider !== 'browser') {
 				try {
 					const config = {
-						apiKey: audioSettings.ttsApiKey,
-						voice: audioSettings.ttsVoice,
+						apiKey: providerConfig.apiKey,
+						voice: providerConfig.voice,
 						speed: audioSettings.readingSpeed
 					};
 
 					// Add endpoint if configured (for OpenAI-compatible providers)
-					if (audioSettings.ttsApiEndpoint) {
-						config.apiEndpoint = audioSettings.ttsApiEndpoint;
+					if (providerConfig.apiEndpoint) {
+						config.apiEndpoint = providerConfig.apiEndpoint;
 					}
 
 					// Add model if configured (for OpenAI, ElevenLabs)
-					if (audioSettings.ttsModel) {
-						config.model = audioSettings.ttsModel;
+					if (providerConfig.model) {
+						config.model = providerConfig.model;
 					}
 
-					await ttsService.setProvider(audioSettings.ttsProvider, config);
+					await ttsService.setProvider(currentProvider, config);
 				} catch (error) {
 					logger.error('[AudioStore] Failed to set TTS provider on load:', error);
 					// Fall back to browser TTS
@@ -103,11 +209,17 @@ async function loadSettings() {
 			// Apply TTS settings
 			ttsService.updateSettings({
 				provider: audioSettings.ttsProvider,
-				voice: audioSettings.ttsVoice,
+				voice: providerConfig.voice,
 				readingSpeed: audioSettings.readingSpeed,
-				apiKey: audioSettings.ttsApiKey,
-				apiEndpoint: audioSettings.ttsApiEndpoint
+				apiKey: providerConfig.apiKey,
+				apiEndpoint: providerConfig.apiEndpoint
 			});
+
+			// Save settings back if migration occurred
+			if (didMigrate) {
+				logger.info('[AudioStore] Saving migrated settings');
+				saveSettings();
+			}
 		}
 	} catch (error) {
 		logger.error('[AudioStore] Failed to load settings:', error);
@@ -137,57 +249,79 @@ function saveSettings() {
  */
 export async function updateAudioSettings(updates) {
 	const previousProvider = audioSettings.ttsProvider;
-	const previousApiKey = audioSettings.ttsApiKey;
-	const previousApiEndpoint = audioSettings.ttsApiEndpoint;
+	const currentProvider = updates.ttsProvider || previousProvider;
+
+	// Update provider-specific settings if provided
+	const providerSpecificKeys = ['ttsApiKey', 'ttsVoice', 'ttsApiEndpoint', 'ttsModel'];
+	const hasProviderSpecificUpdates = Object.keys(updates).some(key =>
+		providerSpecificKeys.includes(key)
+	);
+
+	if (hasProviderSpecificUpdates) {
+		// Map update keys to provider settings
+		const providerUpdates = {};
+		if (updates.ttsApiKey !== undefined) providerUpdates.apiKey = updates.ttsApiKey;
+		if (updates.ttsVoice !== undefined) providerUpdates.voice = updates.ttsVoice;
+		if (updates.ttsApiEndpoint !== undefined) providerUpdates.apiEndpoint = updates.ttsApiEndpoint;
+		if (updates.ttsModel !== undefined) providerUpdates.model = updates.ttsModel;
+
+		// Update the provider's settings
+		updateProviderSettings(currentProvider, providerUpdates);
+	}
+
+	// Update global audio settings (non-provider-specific)
+	const globalUpdates = { ...updates };
+	delete globalUpdates.ttsApiKey;
+	delete globalUpdates.ttsVoice;
+	delete globalUpdates.ttsApiEndpoint;
+	delete globalUpdates.ttsModel;
 
 	audioSettings = {
 		...audioSettings,
-		...updates
+		...globalUpdates
 	};
+
+	// Check if provider changed
+	const providerChanged = updates.ttsProvider && updates.ttsProvider !== previousProvider;
+
+	if (providerChanged) {
+		// Load settings for the new provider
+		const newProviderConfig = getCurrentProviderSettings();
+		logger.info(`[AudioStore] Switching to provider: ${currentProvider}`, newProviderConfig);
+	}
+
+	// Get current provider config (either newly set or existing)
+	const providerConfig = getCurrentProviderSettings();
 
 	// Check if we need to re-initialize the provider
 	const needsReinitialization =
-		(updates.ttsProvider && updates.ttsProvider !== previousProvider) || // Provider changed
-		(updates.ttsApiKey && updates.ttsApiKey !== previousApiKey) || // API key changed
-		(updates.ttsApiEndpoint && updates.ttsApiEndpoint !== previousApiEndpoint) || // Endpoint changed
-		(updates.ttsModel); // Model changed
+		providerChanged || hasProviderSpecificUpdates;
 
 	if (needsReinitialization) {
 		try {
 			const config = {
-				apiKey: audioSettings.ttsApiKey,
-				voice: audioSettings.ttsVoice,
+				apiKey: providerConfig.apiKey,
+				voice: providerConfig.voice,
 				speed: audioSettings.readingSpeed
 			};
 
 			// Add endpoint if configured (for OpenAI-compatible providers)
-			if (audioSettings.ttsApiEndpoint) {
-				config.apiEndpoint = audioSettings.ttsApiEndpoint;
+			if (providerConfig.apiEndpoint) {
+				config.apiEndpoint = providerConfig.apiEndpoint;
 			}
 
 			// Add model if configured (for OpenAI, ElevenLabs)
-			if (audioSettings.ttsModel) {
-				config.model = audioSettings.ttsModel;
+			if (providerConfig.model) {
+				config.model = providerConfig.model;
 			}
 
-			await ttsService.setProvider(audioSettings.ttsProvider, config);
-			logger.info('[AudioStore] Re-initialized TTS provider:', audioSettings.ttsProvider);
-
-			// Reset voice selection when provider changes (but not when just API key changes)
-			if (updates.ttsProvider && updates.ttsProvider !== previousProvider) {
-				audioSettings.ttsVoice = null;
-			}
+			await ttsService.setProvider(currentProvider, config);
+			logger.info('[AudioStore] Re-initialized TTS provider:', currentProvider);
 		} catch (error) {
 			logger.error('[AudioStore] Failed to initialize TTS provider:', error);
-			// Revert changes on error
-			if (updates.ttsProvider && updates.ttsProvider !== previousProvider) {
+			// Revert provider change on error
+			if (providerChanged) {
 				audioSettings.ttsProvider = previousProvider;
-			}
-			if (updates.ttsApiKey && updates.ttsApiKey !== previousApiKey) {
-				audioSettings.ttsApiKey = previousApiKey;
-			}
-			if (updates.ttsApiEndpoint && updates.ttsApiEndpoint !== previousApiEndpoint) {
-				audioSettings.ttsApiEndpoint = previousApiEndpoint;
 			}
 			// Re-throw the error so the UI can handle it
 			throw error;
@@ -197,10 +331,10 @@ export async function updateAudioSettings(updates) {
 	// Update TTS service settings
 	ttsService.updateSettings({
 		provider: audioSettings.ttsProvider,
-		voice: audioSettings.ttsVoice,
+		voice: providerConfig.voice,
 		readingSpeed: audioSettings.readingSpeed,
-		apiKey: audioSettings.ttsApiKey,
-		apiEndpoint: audioSettings.ttsApiEndpoint
+		apiKey: providerConfig.apiKey,
+		apiEndpoint: providerConfig.apiEndpoint
 	});
 
 	saveSettings();
@@ -276,7 +410,15 @@ export async function getAvailableVoices() {
 
 // Getter functions for reactive access
 export function getAudioSettings() {
-	return audioSettings;
+	// Return flattened settings with current provider's settings merged in
+	const providerConfig = getCurrentProviderSettings();
+	return {
+		...audioSettings,
+		ttsApiKey: providerConfig.apiKey || null,
+		ttsVoice: providerConfig.voice || null,
+		ttsApiEndpoint: providerConfig.apiEndpoint || null,
+		ttsModel: providerConfig.model || null
+	};
 }
 
 export function getGameplaySettings() {
