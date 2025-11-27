@@ -106,7 +106,49 @@
 			<path d="m6 6 12 12" />
 		</svg>
 	</button>
-
+	<!-- Help Button on far right -->
+	<button class="status-bar-button help-button" onclick={onHelpClick} aria-label="Game help">
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			width="20"
+			height="20"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			aria-hidden="true"
+		>
+			<circle cx="12" cy="12" r="10" />
+			<path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+			<path d="M12 17h.01" />
+		</svg>
+	</button>
+	<!-- Settings Button -->
+	<button
+		class="status-bar-button settings-button"
+		onclick={onSettingsClick}
+		aria-label="Game settings"
+	>
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			width="20"
+			height="20"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			aria-hidden="true"
+		>
+			<path
+				d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"
+			/>
+			<circle cx="12" cy="12" r="3" />
+		</svg>
+	</button>
 	<div class="info-segment">
 		<span class="label">PLAYER</span>
 		<span class="value">{gameState.player.name.toUpperCase()}</span>
@@ -179,7 +221,7 @@
 		aria-label="Toggle Audio"
 		title="Toggle Audio"
 	>
-		<svg
+		<!-- <svg
 			xmlns="http://www.w3.org/2000/svg"
 			width="20"
 			height="20"
@@ -193,52 +235,22 @@
 		>
 			<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
 			<path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-		</svg>
-	</button>
-
-	<!-- Settings Button -->
-	<button
-		class="status-bar-button settings-button"
-		onclick={onSettingsClick}
-		aria-label="Game settings"
-	>
+		</svg> -->
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
-			width="20"
-			height="20"
+			width="24"
+			height="24"
 			viewBox="0 0 24 24"
 			fill="none"
 			stroke="currentColor"
 			stroke-width="2"
 			stroke-linecap="round"
 			stroke-linejoin="round"
-			aria-hidden="true"
+			class="lucide lucide-audio-lines-icon lucide-audio-lines"
+			><path d="M2 10v3" /><path d="M6 6v11" /><path d="M10 3v18" /><path d="M14 8v7" /><path
+				d="M18 5v13"
+			/><path d="M22 10v3" /></svg
 		>
-			<path
-				d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"
-			/>
-			<circle cx="12" cy="12" r="3" />
-		</svg>
-	</button>
-
-	<!-- Help Button on far right -->
-	<button class="status-bar-button help-button" onclick={onHelpClick} aria-label="Game help">
-		<svg
-			xmlns="http://www.w3.org/2000/svg"
-			width="20"
-			height="20"
-			viewBox="0 0 24 24"
-			fill="none"
-			stroke="currentColor"
-			stroke-width="2"
-			stroke-linecap="round"
-			stroke-linejoin="round"
-			aria-hidden="true"
-		>
-			<circle cx="12" cy="12" r="10" />
-			<path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-			<path d="M12 17h.01" />
-		</svg>
 	</button>
 </div>
 
@@ -276,7 +288,7 @@
 		/* Layout with buttons on both ends + dice theme picker + toggle buttons */
 		display: grid;
 		align-items: center;
-		grid-template-columns: auto 1fr auto 1fr auto auto auto auto auto;
+		grid-template-columns: auto auto auto 0.5fr 1fr 0.5fr auto auto auto;
 		gap: var(--space-sm);
 		padding-inline: var(--space-md);
 		padding-block: var(--space-sm);
@@ -319,11 +331,10 @@
 	.status-bar-button:hover {
 		color: #fff;
 		background: rgba(0, 238, 255, 0.1);
-		box-shadow: 0 0 10px rgba(0, 238, 255, 0.3);
 	}
 
 	.status-bar-button:active {
-		transform: scale(0.95);
+		transform: scale(1);
 	}
 
 	.status-bar-button svg {
@@ -401,10 +412,12 @@
 	@media (max-width: 600px) {
 		.player-round-bar {
 			/* Hide game title, show all buttons: Exit, Player, Dice, Auto, Audio, Settings, Help */
-			grid-template-columns: auto 1fr auto auto auto auto auto;
-			gap: var(--space-xs);
+			grid-template-columns: auto auto auto auto 1fr auto auto auto;
+			gap: var(--space-sm);
 			padding-inline: var(--space-sm);
 			padding-block: var(--space-xs);
+			height: 3.5rem;
+			align-items: flex-end;
 		}
 
 		.player-round-bar h5 {
@@ -415,6 +428,7 @@
 			font-size: 0.7rem;
 		}
 
+		.info-segment:first-of-type,
 		.info-segment:nth-child(4) {
 			display: none; /* Hide round on mobile for space */
 		}
@@ -425,8 +439,8 @@
 		}
 
 		.status-bar-button svg {
-			width: 18px;
-			height: 18px;
+			width: 24px;
+			height: 24px;
 		}
 	}
 

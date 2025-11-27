@@ -177,8 +177,8 @@
 			display: grid;
 			grid-template-columns: repeat(3, 1fr);
 			grid-template-rows: auto auto;
-			grid-template-areas: 'stability dice abilities'
-				'failure deck success';
+			grid-template-areas: 'stability deck abilities'
+				'failure dice success';
 			gap: var(--space-xs);
 			width: 100%;
 			max-width: 100vw;

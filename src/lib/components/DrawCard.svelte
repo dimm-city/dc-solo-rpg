@@ -98,22 +98,22 @@
 
 <style>
 	.dc-draw-card-container {
-		display: grid;
+		/* display: grid; */
 		height: calc(100% - 75px);
 
 		width: 100%;
 		max-width: 100%; /* Prevent horizontal overflow */
-		justify-content: center;
+		/* justify-content: center;
 		align-content: center;
-		text-align: center;
-		overflow: hidden; /* Allow neural interface glows to extend beyond bounds */
+		text-align: center; */
+		overflow: hidden;
 		box-sizing: border-box;
 	}
 
 	@media (max-width: 450px) or (max-height: 600px) {
 		.dc-draw-card-container {
-			align-content: start;
-			height: calc(100% - 50px);
+			/* align-content: start;
+			height: calc(100% - 50px); */
 		}
 	}
 </style>

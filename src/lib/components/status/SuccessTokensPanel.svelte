@@ -262,6 +262,10 @@
 
 	/* Mobile responsive */
 	@media (max-width: 600px) {
+		.token-shape {
+			width: 18px;
+			height: 18px;
+		}
 		.stat-item {
 			width: 100%;
 			max-width: 100%;
@@ -269,6 +273,7 @@
 			padding: 0.25rem 0.5rem;
 			gap: 0.25rem;
 			flex-direction: column-reverse;
+			justify-content: end;
 		}
 
 		.stat-label {

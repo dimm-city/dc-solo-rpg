@@ -284,8 +284,8 @@
 		}
 
 		.ability-icon {
-			width: 14px;
-			height: 14px;
+			width: 24px;
+			height: 24px;
 		}
 	}
 

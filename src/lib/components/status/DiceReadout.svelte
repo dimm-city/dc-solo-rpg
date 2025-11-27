@@ -314,12 +314,8 @@
 
 	/* Mobile responsive */
 	@media (max-width: 600px) {
-		.stat-item {
-			width: 100%;
-			max-width: 100%;
-			min-width: 0;
-			padding: 0.25rem 0.5rem;
-			gap: 0.25rem;
+		.dice-readout {
+			justify-content: center;
 		}
 		
 		.dice-value, .dice-label {

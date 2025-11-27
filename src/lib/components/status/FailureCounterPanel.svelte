@@ -223,6 +223,7 @@
 		justify-content: center;
 		padding: 2px;
 		flex-wrap: wrap;
+		max-width: 75px;
 	}
 
 	.king-icon {
@@ -275,6 +276,7 @@
 			padding-inline-start: 0.5rem;
 			flex-direction: column-reverse;
 			justify-content: flex-start;
+			align-items: center;
 		}
 
 		.stat-label {
@@ -293,8 +295,8 @@
 		}
 
 		.king-icon {
-			width: 14px;
-			height: 14px;
+			width: 24px;
+			height: 24px;
 		}
 	}
 
