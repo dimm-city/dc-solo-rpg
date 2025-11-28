@@ -43,7 +43,8 @@ export async function load({ event, parent }) {
 	console.log("Games Page Server Load - Session:", session);
 	// Redirect to sign-in if not authenticated
 	if (!session?.user) {
-		throw redirect(303, '/signin');
+		console.log("User not authenticated, redirecting to /signin");
+		//throw redirect(303, '/signin');
 	}
 
 	// Read the games directory from static folder

@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { browser } from '$app/environment';
+	import { page } from '$app/state';
 	import { signOut } from '@auth/sveltekit/client';
 	import ConfirmModal from '$lib/components/ConfirmModal.svelte';
 	import AboutModal from '$lib/components/AboutModal.svelte';
@@ -45,10 +46,7 @@
 	let showDiceThemePicker = $state(false);
 	let showMobileMenu = $state(false);
 
-	// Computed: true when any modal is open (for accessibility and click blocking)
-	const anyModalOpen = $derived(
-		showAboutModal || showSettingsModal || showHelpModal || showDeleteModal || showDiceThemePicker
-	);
+
 	let customGames = $state([]);
 	let allGames = $state([]);
 	let fileInput = $state(null);
@@ -63,7 +61,10 @@
 	let showBrowseGames = $state(false);
 	let showStoryMode = $state(false);
 	let selectedStoryGame = $state(null);
-
+	// Computed: true when any modal is open (for accessibility and click blocking)
+	const anyModalOpen = $derived(
+		showAboutModal || showSettingsModal || showHelpModal || showDeleteModal || showDiceThemePicker
+	);
 	// On mount, check if we should skip splash and go straight to content
 	onMount(async () => {
 		// Migrate localStorage saves to IndexedDB (one-time migration)
@@ -467,7 +468,17 @@
 {/if}
 
 <!-- Story Mode Views -->
-{#if showStoryMode && selectedStoryGame}
+ {#if !page.data.session?.user}
+ <div>
+	<section class="form-container guest-warning" transition:fade={{ duration: 600 }}>
+		<p>
+			You are currently playing as a guest. Your progress will not be saved. Please
+			<a href="/signin">sign in</a>
+			to save your games and access additional features.
+		</p>
+	</section>
+ </div>
+{:else if showStoryMode && selectedStoryGame}
 	<StoryMode savedGame={selectedStoryGame} onExit={handleExitStoryMode} />
 {:else if showBrowseGames}
 	<BrowseGames onSelectGame={handleSelectStoryGame} onBack={handleExitBrowseGames} />
