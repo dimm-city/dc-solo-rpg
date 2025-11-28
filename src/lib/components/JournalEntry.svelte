@@ -392,11 +392,9 @@
 	.dc-journal-container {
 		display: grid;
 		height: 100%;
-		width: 80%;
-		padding: var(--space-md);
 		grid-template-columns: 1fr;
 		grid-template-rows: auto 1fr auto auto auto;
-		row-gap: var(--space-md);
+
 		grid-auto-flow: row;
 		grid-template-areas:
 			'header-area'
@@ -407,7 +405,7 @@
 		box-sizing: border-box;
 		overflow: hidden;
 		align-items: end;
-		background: var(--translucent-dark, black);
+		max-width: 90svw;
 	}
 
 	.button-area {

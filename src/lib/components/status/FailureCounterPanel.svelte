@@ -67,7 +67,8 @@
 	<div class="king-indicators">
 		{#each Array(4) as _, i (i)}
 			<div class="king-icon" class:revealed={i < failurePercent}>
-				<svg
+				<img src="/skull-color-64.png" alt="">
+				<!-- <svg
 					class="stat-icon"
 					xmlns="http://www.w3.org/2000/svg"
 					width="16"
@@ -85,7 +86,7 @@
 					/>
 					<circle cx="15" cy="12" r="1" />
 					<circle cx="9" cy="12" r="1" />
-				</svg>
+				</svg> -->
 				<!-- <svg
 					xmlns="http://www.w3.org/2000/svg"
 					viewBox="0 0 24 24"
@@ -223,12 +224,12 @@
 		justify-content: center;
 		padding: 2px;
 		flex-wrap: wrap;
-		max-width: 75px;
+		width: 96px;
 	}
 
 	.king-icon {
-		width: 24px;
-		height: 24px;
+		width: 32px;
+		height: 32px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -236,7 +237,7 @@
 		opacity: 0.2;
 	}
 
-	.king-icon svg {
+	.king-icon img {
 		width: 100%;
 		height: 100%;
 		stroke: #ff0066;
@@ -249,7 +250,7 @@
 		animation: kingReveal 0.2s linear forwards;
 	}
 
-	.king-icon.revealed svg {
+	.king-icon.revealed img {
 		stroke: #ff0066;
 		filter: drop-shadow(0 0 6px rgba(255, 0, 102, 0.9));
 	}

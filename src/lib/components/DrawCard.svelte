@@ -98,14 +98,14 @@
 
 <style>
 	.dc-draw-card-container {
-		/* display: grid; */
+		display: grid;
 		height: calc(100% - 75px);
 
 		width: 100%;
 		max-width: 100%; /* Prevent horizontal overflow */
-		/* justify-content: center;
+		justify-content: center;
 		align-content: center;
-		text-align: center; */
+		/* text-align: center; */
 		overflow: hidden;
 		box-sizing: border-box;
 	}
