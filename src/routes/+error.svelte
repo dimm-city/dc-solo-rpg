@@ -16,7 +16,8 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		min-height: 100vh;
+		height: 100vh;
+		width: stretch;
 		padding: 2rem;
 		text-align: center;
 		background: var(--dc-bg-color, #0a0a0a);

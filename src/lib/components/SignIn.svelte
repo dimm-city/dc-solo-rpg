@@ -11,8 +11,6 @@
 	}
 </script>
 
-<NeuralBackground />
-
 <div class="signin-container" transition:fade={{ duration: 600 }}>
 	<div class="signin-content">
 		<div class="logo-section">
@@ -60,6 +58,7 @@
 		</div>
 	</div>
 </div>
+
 
 <style>
 	:global(body) {
@@ -247,3 +246,4 @@
 		}
 	}
 </style>
+

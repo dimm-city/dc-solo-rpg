@@ -29,6 +29,7 @@
 	} from '$lib/stores/indexedDBStorage.js';
 	import { resumeGame, deleteSavedGame } from '$lib/stores/gameActions.svelte.js';
 	import { gameState } from '$lib/stores/gameStore.svelte.js';
+	import SignIn from '$lib/components/SignIn.svelte';
 
 	/** @type {import('./$types').PageData} */
 	let { data } = $props();
@@ -45,7 +46,6 @@
 	let showHelpModal = $state(false);
 	let showDiceThemePicker = $state(false);
 	let showMobileMenu = $state(false);
-
 
 	let customGames = $state([]);
 	let allGames = $state([]);
@@ -468,16 +468,8 @@
 {/if}
 
 <!-- Story Mode Views -->
- {#if !page.data.session?.user}
- <div>
-	<section class="form-container guest-warning" transition:fade={{ duration: 600 }}>
-		<p>
-			You are currently playing as a guest. Your progress will not be saved. Please
-			<a href="/signin">sign in</a>
-			to save your games and access additional features.
-		</p>
-	</section>
- </div>
+{#if !page.data.session?.user}
+	<SignIn />
 {:else if showStoryMode && selectedStoryGame}
 	<StoryMode savedGame={selectedStoryGame} onExit={handleExitStoryMode} />
 {:else if showBrowseGames}
@@ -507,7 +499,7 @@
 			</div>
 
 			<!-- Desktop header buttons (hidden on mobile) -->
-			<div class="header-buttons desktop-only">
+			<div class="header-buttons desktop-only" style="display: none;">
 				<button
 					class="header-button upload-button"
 					onclick={handleUploadClick}

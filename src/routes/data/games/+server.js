@@ -1,6 +1,6 @@
 import { readdir, readFile } from 'fs/promises';
 import { join } from 'path';
-import { redirect } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
 import { logger } from '$lib/utils/logger.js';
 
 // Get the project root directory reliably
@@ -35,18 +35,8 @@ function extractFrontmatter(content) {
 	return frontmatter;
 }
 
-/** @type {import('./$types').PageServerLoad} */
-export async function load({ event, parent }) {
-	// Check authentication
-	const { session } = await parent();
-	//const session = await event.locals.auth();
-	console.log("Games Page Server Load - Session:", session);
-	// Redirect to sign-in if not authenticated
-	if (!session?.user) {
-		console.log("User not authenticated");
-		//throw redirect(303, '/signin');
-	}
-
+/** @type {import('./$types.js').RequestHandler} */
+export async function GET() {
 	// Read the games directory from static folder
 	const gamesDir = join(projectRoot, 'static', 'games');
 
@@ -95,17 +85,13 @@ export async function load({ event, parent }) {
 		games.sort((a, b) => a.title.localeCompare(b.title));
 
 		logger.info(
-			`Found ${games.length} V2 games:`,
+			`API /games - Found ${games.length} V2 games:`,
 			games.map((g) => `${g.title} (${g.slug})`)
 		);
 
-		return {
-			games
-		};
+		return json(games);
 	} catch (err) {
-		logger.error('Error loading games:', err);
-		return {
-			games: []
-		};
+		logger.error('API /games - Error loading games:', err);
+		return json({ games: [], error: 'Failed to load games' }, { status: 500 });
 	}
 }
