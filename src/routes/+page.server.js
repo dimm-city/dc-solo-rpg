@@ -36,10 +36,11 @@ function extractFrontmatter(content) {
 }
 
 /** @type {import('./$types').PageServerLoad} */
-export async function load(event) {
+export async function load({ event, parent }) {
 	// Check authentication
-	const session = await event.locals.auth();
-
+	const { session } = await parent();
+	//const session = await event.locals.auth();
+	console.log("Games Page Server Load - Session:", session);
 	// Redirect to sign-in if not authenticated
 	if (!session?.user) {
 		throw redirect(303, '/signin');

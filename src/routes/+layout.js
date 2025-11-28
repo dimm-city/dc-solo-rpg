@@ -1,5 +1,8 @@
 /** @type {import('./$types').LayoutLoad} */
-export async function load() {
+export async function load({event}) {
+	const session = await event.locals.auth();
+	console.log("Layout Client Load - Session:", session);
+
 	const games = [
 		{ title: 'Artful Detective', url: '/games/artful-detective' },
 		{ title: 'Gnome Alone', url: '/games/gnome-alone' },
