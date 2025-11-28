@@ -1,10 +1,12 @@
-import { readdir, readFile } from 'fs/promises';
-import { join } from 'path';
-import { json } from '@sveltejs/kit';
-import { logger } from '$lib/utils/logger.js';
+import { readdir, readFile, writeFile } from 'fs/promises';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
-// Get the project root directory reliably
-const projectRoot = process.env.GAMES_BASE_DIR || process.cwd();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Get the project root directory (one level up from scripts/)
+const projectRoot = join(__dirname, '..');
 
 /**
  * Extract frontmatter from a markdown file
@@ -35,16 +37,22 @@ function extractFrontmatter(content) {
 	return frontmatter;
 }
 
-/** @type {import('./$types.js').RequestHandler} */
-export async function GET() {
-	// Read the games directory from static folder
+/**
+ * Generate the games index JSON file
+ */
+async function generateGamesIndex() {
+	console.log('[generate-games-index] Starting...');
+
 	const gamesDir = join(projectRoot, 'static', 'games');
+	const outputPath = join(gamesDir, 'index.json');
 
 	try {
 		const entries = await readdir(gamesDir, { withFileTypes: true });
 
 		// Find V2 format games (.game.md files)
 		const gameFiles = entries.filter((entry) => entry.isFile() && entry.name.endsWith('.game.md'));
+
+		console.log(`[generate-games-index] Found ${gameFiles.length} .game.md files`);
 
 		// Read each game file and extract frontmatter
 		const games = await Promise.all(
@@ -56,7 +64,7 @@ export async function GET() {
 					const content = await readFile(filePath, 'utf-8');
 					const frontmatter = extractFrontmatter(content);
 
-					return {
+					const game = {
 						slug,
 						title:
 							frontmatter.title ||
@@ -66,8 +74,11 @@ export async function GET() {
 								.join(' '),
 						subtitle: frontmatter.subtitle || ''
 					};
+
+					console.log(`[generate-games-index]   - ${game.title} (${slug})`);
+					return game;
 				} catch (err) {
-					logger.error(`Error reading game file ${entry.name}:`, err);
+					console.error(`[generate-games-index] Error reading game file ${entry.name}:`, err);
 					// Fallback to slug-based title if file read fails
 					return {
 						slug,
@@ -84,14 +95,22 @@ export async function GET() {
 		// Sort by title
 		games.sort((a, b) => a.title.localeCompare(b.title));
 
-		logger.info(
-			`API /games - Found ${games.length} V2 games:`,
-			games.map((g) => `${g.title} (${g.slug})`)
-		);
+		// Write the index JSON file
+		const indexData = {
+			games,
+			generatedAt: new Date().toISOString()
+		};
 
-		return json(games);
+		await writeFile(outputPath, JSON.stringify(indexData, null, 2), 'utf-8');
+
+		console.log(
+			`[generate-games-index] Successfully generated ${outputPath} with ${games.length} games`
+		);
 	} catch (err) {
-		logger.error('API /games - Error loading games:', err);
-		return json({ games: [], error: 'Failed to load games' }, { status: 500 });
+		console.error('[generate-games-index] Error generating games index:', err);
+		process.exit(1);
 	}
 }
+
+// Run the script
+generateGamesIndex();

@@ -10,10 +10,11 @@
 	},
 	"scripts": {
 		"dev": "vite dev",
-		"build": "vite build && npm run package",
+		"build": "npm run generate:games-index && vite build && npm run package",
 		"preview": "vite preview",
 		"package": "svelte-kit sync && svelte-package && publint",
 		"prepublishOnly": "npm run package",
+		"generate:games-index": "node scripts/generate-games-index.js",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch",
 		"test": "playwright test",

@@ -1,9 +1,9 @@
 /** @type {import('./$types').PageLoad} */
 export async function load({ fetch }) {
-    const games = await fetch('/data/games').then(res => res.json());
-    if (games) {
+    const data = await fetch('/games/index.json').then(res => res.json());
+    if (data) {
         return {
-            games: games
+            games: data.games || []
         };
     } else {
         console.error("Failed to load games data");
