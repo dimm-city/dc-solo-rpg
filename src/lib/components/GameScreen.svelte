@@ -656,6 +656,8 @@
 					onSettingsClick={handleSettingsClick}
 				/>
 			</div>
+			<!-- svelte-ignore a11y_click_events_have_key_events -->
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
 			<div class="main-screen-area dc-table-bg" onclick={handleScreenClick}>
 				<!-- Background contextual text -->
 				<ContextBackground {contextText} />
@@ -667,7 +669,7 @@
 							data-testid="screen-initialDamageRoll"
 							transition:fade={{ duration: TRANSITION_DURATION }}
 						>
-							<InitialDamageRoll />
+							<!-- <InitialDamageRoll /> -->
 						</div>
 					{:else if currentScreen == 'startRound'}
 						<div

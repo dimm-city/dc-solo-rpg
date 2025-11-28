@@ -1,5 +1,8 @@
 /** @type {import('./$types').LayoutLoad} */
-export async function load() {
+export async function load({data}) {
+	
+	console.log("Layout Client Load - Data:", data);
+
 	const games = [
 		{ title: 'Artful Detective', url: '/games/artful-detective' },
 		{ title: 'Gnome Alone', url: '/games/gnome-alone' },
@@ -11,5 +14,5 @@ export async function load() {
 			name: 'Guest'
 		}
 	];
-	return {};
+	return data;
 }

@@ -1,4 +1,4 @@
-import { error } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 import { logger } from '$lib/utils/logger.js';
 import { parseGameFile, ValidationError } from '$lib/parsers/markdownParser.js';
 
@@ -12,8 +12,16 @@ function formatIntroduction(sections) {
 }
 
 /** @type {import('./$types').PageServerLoad} */
-export async function load({ params, fetch }) {
+export async function load({ params, fetch, locals }) {
 	const { slug } = params;
+
+	// Check authentication
+	const session = await locals.auth();
+
+	// Redirect to sign-in if not authenticated
+	if (!session?.user) {
+		throw redirect(303, '/signin');
+	}
 
 	try {
 		const gameUrl = `/games/${slug}.game.md`;
@@ -49,7 +57,7 @@ export async function load({ params, fetch }) {
 			slug,
 			gameConfig,
 			player: {
-				name: 'Guest'
+				name: session.user.name || session.user.email || 'Guest'
 			}
 		};
 	} catch (err) {
