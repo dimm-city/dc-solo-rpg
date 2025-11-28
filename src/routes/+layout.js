@@ -1,7 +1,7 @@
 /** @type {import('./$types').LayoutLoad} */
-export async function load({event}) {
-	const session = await event.locals.auth();
-	console.log("Layout Client Load - Session:", session);
+export async function load({data}) {
+	
+	console.log("Layout Client Load - Session:", data);
 
 	const games = [
 		{ title: 'Artful Detective', url: '/games/artful-detective' },
