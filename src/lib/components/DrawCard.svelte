@@ -97,23 +97,13 @@
 </div>
 
 <style>
+	/* The overlay stage centres the card; the card sizes itself (see CardDisplay) */
 	.dc-draw-card-container {
 		display: grid;
-		height: calc(100% - 75px);
-
+		place-items: center;
 		width: 100%;
-		max-width: 100%; /* Prevent horizontal overflow */
-		justify-content: center;
-		align-content: center;
-		/* text-align: center; */
+		height: 100%;
 		overflow: visible; /* card glow extends past the card edge */
 		box-sizing: border-box;
-	}
-
-	@media (max-width: 450px) or (max-height: 600px) {
-		.dc-draw-card-container {
-			/* align-content: start;
-			height: calc(100% - 50px); */
-		}
 	}
 </style>

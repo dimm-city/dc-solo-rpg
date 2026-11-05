@@ -736,7 +736,7 @@
 							/>
 						</div>
 					{:else if currentScreen == 'drawCard'}
-						<OverlayModal isVisible={true} zIndex={50}>
+						<OverlayModal isVisible={true} label="Card drawn">
 							<DrawCard bind:this={drawCardRef} />
 						</OverlayModal>
 					{:else if currentScreen == 'failureCheck'}
@@ -770,7 +770,11 @@
 							<FinalDamageRoll />
 						</div>
 					{:else if currentScreen == 'finalLog' || currentScreen == 'log'}
-						<OverlayModal isVisible={true} zIndex={50}>
+						<OverlayModal
+							isVisible={true}
+							label={gameState.gameOver ? 'Final log' : 'Journal entry'}
+							tone={gameState.gameOver ? (gameState.win ? 'victory' : 'loss') : 'default'}
+						>
 							<JournalEntry
 								bind:journalText={journal.text}
 								bind:audioData={journal.audioData}

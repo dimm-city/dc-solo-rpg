@@ -21,9 +21,80 @@
 	// Corner index text, e.g. "K♠" or "10♥"
 	let cornerIndex = $derived(card ? `${card.card}${SUIT_GLYPHS[card.suit] ?? ''}` : '');
 	let canDismiss = $derived(clickable && animationStage === 'revealed');
+
+	// Keyboard focus lands on the card once it can be dismissed (Enter/Space continue)
+	let cardEl = $state();
+	$effect(() => {
+		if (canDismiss) cardEl?.focus({ preventScroll: true });
+	});
+
+	// A scroll or drag is not a tap: only a short, still press on the card dismisses it
+	const TAP_SLOP_PX = 10;
+	const SCROLL_GRACE_MS = 250;
+	let pressStart = null;
+	let lastScrollAt = 0;
+
+	// Story scroll cue: fade the text edge that has more beyond it
+	let moreBelow = $state(false);
+	let scrolled = $state(false);
+
+	function onPointerDown(event) {
+		pressStart = { x: event.clientX, y: event.clientY };
+	}
+
+	function onCardClick(event) {
+		if (!canDismiss) return;
+		if (
+			pressStart &&
+			Math.hypot(event.clientX - pressStart.x, event.clientY - pressStart.y) > TAP_SLOP_PX
+		) {
+			return;
+		}
+		if (performance.now() - lastScrollAt < SCROLL_GRACE_MS) return;
+		// A click on the story's scrollbar (right of its content box) is not a tap either
+		const scroller = event.target.closest?.('.story-scroll');
+		if (scroller && event.clientX > scroller.getBoundingClientRect().left + scroller.clientWidth) {
+			return;
+		}
+		onDismiss();
+	}
+
+	function onCardKeydown(event) {
+		if (!canDismiss) return;
+		// Space on the focused story scrolls it; Enter (or Space on the card) continues
+		if (event.target !== event.currentTarget && event.key === ' ') return;
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+			onDismiss();
+		}
+	}
+
+	/** Svelte action: track whether the story overflows and which edges have more */
+	function scrollCue(node) {
+		const update = () => {
+			scrolled = node.scrollTop > 2;
+			moreBelow = node.scrollTop + node.clientHeight < node.scrollHeight - 2;
+		};
+		const onScroll = () => {
+			lastScrollAt = performance.now();
+			update();
+		};
+		node.addEventListener('scroll', onScroll, { passive: true });
+		const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update);
+		observer?.observe(node);
+		if (node.firstElementChild) observer?.observe(node.firstElementChild);
+		update();
+		return {
+			destroy() {
+				node.removeEventListener('scroll', onScroll);
+				observer?.disconnect();
+			}
+		};
+	}
 </script>
 
 <div
+	bind:this={cardEl}
 	class="byte-container"
 	data-type={card?.type}
 	class:anticipating={animationStage === 'anticipating'}
@@ -31,17 +102,12 @@
 	class:revealed={animationStage === 'revealed'}
 	class:dismissing={animationStage === 'dismissing'}
 	class:clickable={canDismiss}
-	onclick={() => {
-		if (canDismiss) onDismiss();
-	}}
+	onpointerdown={onPointerDown}
+	onclick={onCardClick}
 	role={canDismiss ? 'button' : 'presentation'}
 	tabindex={canDismiss ? '0' : '-1'}
-	onkeydown={(e) => {
-		if (canDismiss && (e.key === 'Enter' || e.key === ' ')) {
-			e.preventDefault();
-			onDismiss();
-		}
-	}}
+	aria-label={canDismiss ? 'Continue' : undefined}
+	onkeydown={onCardKeydown}
 >
 	{#if animationStage !== 'idle'}
 		<div class="byte-shell" data-augmented-ui="tl-clip tr-clip br-clip bl-clip border">
@@ -162,8 +228,41 @@
 						{/if}
 					</div>
 
-					<p class="byte-data reveal">{card.description || ''}</p>
-					<p class="byte-story reveal">{card.story}</p>
+					{#if card.description}
+						<p class="byte-data reveal">{card.description}</p>
+					{/if}
+					<!-- Only the story scrolls; frame, header, headline and footer stay put -->
+					<div class="story-wrap reveal">
+						<!-- Focusable so keyboard users can scroll a long story -->
+						<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+						<div
+							class="story-scroll"
+							class:more={moreBelow}
+							class:scrolled
+							style:--fade-top={scrolled ? '28px' : '0px'}
+							style:--fade-bottom={moreBelow ? '40px' : '0px'}
+							tabindex="0"
+							role="region"
+							aria-label="Card story"
+							use:scrollCue
+						>
+							<p class="byte-story">{card.story}</p>
+						</div>
+						<span class="more-cue" class:visible={moreBelow} aria-hidden="true">
+							<svg
+								width="16"
+								height="16"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2.5"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							>
+								<path d="m6 9 6 6 6-6" />
+							</svg>
+						</span>
+					</div>
 
 					<div class="card-foot reveal">
 						{#if clickable}
@@ -196,11 +295,14 @@
 		--card-border: var(--frame-border, linear-gradient(135deg, #00ffff, #d946ef));
 		--card-glow: rgba(0, 255, 255, 0.35);
 
+		/* Phones: nearly the whole viewport. Desktop (below): a tall portrait card. */
+		--card-h: 86dvh;
+
 		position: relative;
-		width: 100%;
-		height: 100%;
-		max-height: calc(100% - 24px);
-		max-width: min(560px, 92vw);
+		width: 92vw;
+		height: var(--card-h);
+		max-width: 100%;
+		max-height: 100%;
 		margin: auto;
 		display: flex;
 		align-items: center;
@@ -249,8 +351,11 @@
 
 	@media (min-width: 601px) {
 		.byte-container {
-			width: auto;
-			aspect-ratio: 5 / 7;
+			--card-h: min(85dvh, 920px);
+
+			height: var(--card-h);
+			/* Portrait playing-card proportion, capped on narrow windows */
+			width: min(92vw, calc(var(--card-h) * 5 / 7));
 		}
 	}
 
@@ -321,7 +426,7 @@
 		position: relative;
 		width: 100%;
 		height: 100%;
-		padding: var(--space-md, 1rem);
+		padding: var(--space-lg, 1.5rem);
 		overflow: hidden;
 		box-sizing: border-box;
 
@@ -456,9 +561,10 @@
 		flex-direction: column;
 		gap: var(--space-md, 1rem);
 		color: var(--color-text-primary, #fff);
-		padding: var(--space-sm, 0.5rem) var(--space-md, 1rem);
-		overflow-y: auto;
+		/* Fixed frame: head, headline and foot never scroll; .story-wrap takes the rest */
 		height: 100%;
+		min-height: 0;
+		overflow: hidden;
 	}
 
 	/* Staggered reveal: header, then headline, then body, then footer.
@@ -478,7 +584,7 @@
 	.byte-container.materializing .byte-data {
 		animation-delay: 300ms;
 	}
-	.byte-container.materializing .byte-story {
+	.byte-container.materializing .story-wrap {
 		animation-delay: 450ms;
 	}
 	.byte-container.materializing .card-foot {
@@ -503,21 +609,90 @@
 	}
 
 	.byte-data {
+		flex: none;
 		font-family: var(--font-body, 'Inter', sans-serif);
-		font-size: var(--text-xl, 1.25rem);
-		line-height: var(--line-height-base, 1.5);
+		font-size: 1.375rem;
+		line-height: 1.3;
 		color: #ffffff;
 		margin: 0;
 		font-weight: 600;
+		text-wrap: balance;
+	}
+
+	/* The story: the only part of the card that scrolls */
+	.story-wrap {
+		position: relative;
+		flex: 1 1 auto;
+		min-height: 0;
+		display: flex;
+	}
+
+	.story-scroll {
+		flex: 1;
+		min-height: 0;
+		overflow-y: auto;
+		overscroll-behavior: contain;
+		touch-action: pan-y;
+		-webkit-overflow-scrolling: touch;
+		scrollbar-width: thin;
+		scrollbar-color: var(--card-accent) transparent;
+		padding-right: var(--space-sm, 0.5rem);
+		/* Fade the edge that has more text beyond it; stops are 0 when nothing is hidden */
+		--fade-top: 0px;
+		--fade-bottom: 0px;
+		-webkit-mask-image: linear-gradient(
+			to bottom,
+			transparent 0,
+			#000 var(--fade-top),
+			#000 calc(100% - var(--fade-bottom)),
+			transparent 100%
+		);
+		mask-image: linear-gradient(
+			to bottom,
+			transparent 0,
+			#000 var(--fade-top),
+			#000 calc(100% - var(--fade-bottom)),
+			transparent 100%
+		);
+	}
+
+	.story-scroll:focus {
+		outline: none;
+	}
+
+	.story-scroll:focus-visible {
+		outline: 2px solid var(--card-accent);
+		outline-offset: 4px;
 	}
 
 	.byte-story {
+		max-width: 65ch;
 		font-family: var(--font-body, 'Inter', sans-serif);
-		font-size: var(--text-base, 1rem);
+		font-size: 1.125rem;
 		line-height: 1.6;
 		color: var(--color-text-secondary, rgba(255, 255, 255, 0.85));
 		margin: 0;
 		font-weight: 400;
+		white-space: pre-line;
+	}
+
+	/* Chevron that says "more below"; opacity only */
+	.more-cue {
+		position: absolute;
+		right: 0;
+		bottom: 0;
+		display: grid;
+		place-items: center;
+		width: 24px;
+		height: 24px;
+		color: var(--card-accent);
+		opacity: 0;
+		transition: opacity 200ms ease-out;
+		pointer-events: none;
+	}
+
+	.more-cue.visible {
+		opacity: 1;
 	}
 
 	/* Header: corner index + type badge */
@@ -539,10 +714,10 @@
 
 	/* Footer: muted ID, tap hint and mirrored corner index */
 	.card-foot {
+		flex: none;
 		display: flex;
 		align-items: center;
 		gap: var(--space-md, 1rem);
-		margin-top: auto;
 		padding-top: var(--space-sm, 0.5rem);
 	}
 
@@ -672,16 +847,19 @@
 		}
 
 		.byte-shell {
-			padding: var(--space-sm, 0.5rem);
+			padding: var(--space-md, 1rem);
 		}
 
 		.byte-content {
-			padding: var(--space-sm, 0.5rem);
-			gap: var(--space-md, 1rem);
+			gap: var(--space-sm, 0.75rem);
 		}
 
 		.byte-data {
-			font-size: var(--text-lg, 1.125rem);
+			font-size: 1.25rem;
+		}
+
+		.byte-story {
+			font-size: 1.0625rem;
 		}
 	}
 
@@ -714,7 +892,8 @@
 		}
 
 		.reveal,
-		.tap-hint {
+		.tap-hint,
+		.more-cue {
 			transition: none;
 		}
 

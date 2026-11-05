@@ -235,21 +235,12 @@
 </div>
 
 <style>
-	/* ============================================
-	   CARD DECK CONTAINER
-	   ============================================ */
-
 	.dc-card-deck {
-		display: flex;
+		display: grid;
+		place-items: center;
 		width: 100%;
 		height: 100%;
-		max-height: calc(100svh - var(--toolbar-height, 250px)); /* Account for toolbar height */
-		align-items: center;
-		justify-content: center;
-
 		/* Visible so the card glow is not cut off at the deck edge */
 		overflow: visible;
-
-		/* padding: var(--space-md, 1rem); */
 	}
 </style>
