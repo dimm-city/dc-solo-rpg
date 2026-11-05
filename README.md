@@ -76,7 +76,10 @@ You can preview the production build with `npm run preview`.
 
 ## Authentication Setup
 
-This application requires Google OAuth authentication for users to access games. Follow these steps to set up authentication:
+> **Sign-in is currently turned off** (`REQUIRE_SIGN_IN = false` in `src/hooks.server.js`), so anyone can play without an account and no OAuth settings are needed.
+> To require Google sign-in, complete the steps below and set it to `true`.
+
+This application can require Google OAuth authentication for users to access games. Follow these steps to set up authentication:
 
 ### 1. Create Google OAuth Credentials
 

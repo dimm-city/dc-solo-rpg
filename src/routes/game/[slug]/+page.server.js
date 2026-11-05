@@ -15,7 +15,7 @@ function formatIntroduction(sections) {
 export async function load({ params, fetch, locals }) {
 	const { slug } = params;
 
-	const session = await locals.auth();
+	const session = await locals.auth?.();
 
 	try {
 		const gameUrl = `/games/${slug}.game.md`;
@@ -51,7 +51,7 @@ export async function load({ params, fetch, locals }) {
 			slug,
 			gameConfig,
 			player: {
-				name: session.user.name || session.user.email || 'Guest'
+				name: session?.user?.name || session?.user?.email || 'Guest'
 			}
 		};
 	} catch (err) {
