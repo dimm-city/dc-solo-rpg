@@ -1,195 +1,94 @@
 /**
  * Unit tests for HelpModal component
- * Tests the contextual help modal system
+ * Tests the game guide modal (a ContentModal that lists every help section)
  *
- * NOTE: Skipped due to Svelte 5 + @testing-library/svelte compatibility issues
- * Component is validated through build and Playwright integration tests
+ * ContentModal renders into a portal appended to document.body, so queries
+ * go through `screen` / `document.body` rather than the render container.
  */
-import { describe, it, expect, vi } from 'vitest';
-import { render } from '@testing-library/svelte';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, screen } from '@testing-library/svelte';
+import { tick } from 'svelte';
 import HelpModal from './HelpModal.svelte';
 
-describe.skip('HelpModal', () => {
-	it('should render ConfirmModal with correct props', () => {
-		const onClose = vi.fn();
-		const { container } = render(HelpModal, {
-			props: {
-				isOpen: true,
-				helpKey: 'tower',
-				onClose
-			}
-		});
+const SECTION_TITLES = [
+	'Stability (Your Life)',
+	'Tokens (Path to Victory)',
+	'Abilities (Aces)',
+	'Failure Counter (Kings)',
+	'Lucid & Surreal States',
+	'Card Types',
+	'The Deck',
+	'How to Win',
+	'How to Lose'
+];
 
-		// Should render the modal backdrop
-		expect(container.querySelector('.modal-backdrop')).toBeTruthy();
+async function renderModal(props = {}) {
+	const result = render(HelpModal, { props: { isOpen: true, onClose: vi.fn(), ...props } });
+	// ContentModal moves its element into a body-level portal inside an effect
+	await tick();
+	return result;
+}
+
+describe('HelpModal', () => {
+	// Outro transitions can leave portal nodes behind after unmount; clear them between tests
+	afterEach(() => {
+		document.body.querySelectorAll('.content-modal-portal').forEach((node) => node.remove());
 	});
 
-	it('should display tower help content', () => {
-		const onClose = vi.fn();
-		const { container } = render(HelpModal, {
-			props: {
-				isOpen: true,
-				helpKey: 'tower',
-				onClose
-			}
-		});
+	it('should render the modal with the "Game Guide" title', async () => {
+		await renderModal();
 
-		expect(container.textContent).toContain('Tower (Health)');
-		expect(container.textContent).toContain('represents your health');
+		expect(
+			document.body.querySelector('.content-modal-portal .content-modal-backdrop')
+		).toBeTruthy();
+		expect(screen.getByRole('heading', { name: 'Game Guide' })).toBeInTheDocument();
 	});
 
-	it('should display kings help content', () => {
-		const onClose = vi.fn();
-		const { container } = render(HelpModal, {
-			props: {
-				isOpen: true,
-				helpKey: 'kings',
-				onClose
-			}
-		});
+	it('should display every help section', async () => {
+		await renderModal();
 
-		expect(container.textContent).toContain('Kings (Failure Counter)');
-		expect(container.textContent).toContain('doom');
+		for (const title of SECTION_TITLES) {
+			expect(screen.getByRole('heading', { name: title })).toBeInTheDocument();
+		}
+		expect(document.body.querySelectorAll('.help-section').length).toBe(SECTION_TITLES.length);
 	});
 
-	it('should display tokens help content', () => {
-		const onClose = vi.fn();
-		const { container } = render(HelpModal, {
-			props: {
-				isOpen: true,
-				helpKey: 'tokens',
-				onClose
-			}
-		});
+	it('should display help message text', async () => {
+		await renderModal();
 
-		expect(container.textContent).toContain('Tokens (Win Condition)');
-		expect(container.textContent).toContain('path to victory');
+		expect(document.body.textContent).toContain('You start with 20 Stability');
+		expect(document.body.textContent).toContain('Challenge cards');
+		expect(document.body.textContent).toContain('Reveal all 4 Kings');
 	});
 
-	it('should display bonus help content', () => {
-		const onClose = vi.fn();
-		const { container } = render(HelpModal, {
-			props: {
-				isOpen: true,
-				helpKey: 'bonus',
-				onClose
-			}
-		});
+	it('should have "Got it" as confirm button text', async () => {
+		await renderModal();
 
-		expect(container.textContent).toContain('Luck (Bonus)');
-		expect(container.textContent).toContain('reduce damage');
+		expect(screen.getByRole('button', { name: 'Got it' })).toBeInTheDocument();
 	});
 
-	it('should display cardTypes help content', () => {
-		const onClose = vi.fn();
-		const { container } = render(HelpModal, {
-			props: {
-				isOpen: true,
-				helpKey: 'cardTypes',
-				onClose
-			}
-		});
+	it('should not render when isOpen is false', async () => {
+		await renderModal({ isOpen: false });
 
-		expect(container.textContent).toContain('Card Types');
-		expect(container.textContent).toContain('Challenge cards');
+		expect(document.body.querySelector('.content-modal-backdrop')).toBeNull();
+		expect(document.body.textContent).not.toContain('Game Guide');
 	});
 
-	it('should display progress help content', () => {
+	it('should call onClose when the footer button is clicked', async () => {
 		const onClose = vi.fn();
-		const { container } = render(HelpModal, {
-			props: {
-				isOpen: true,
-				helpKey: 'progress',
-				onClose
-			}
-		});
+		await renderModal({ onClose });
 
-		expect(container.textContent).toContain('Cards Progress');
-		expect(container.textContent).toContain('progress bar');
+		screen.getByRole('button', { name: 'Got it' }).click();
+
+		expect(onClose).toHaveBeenCalled();
 	});
 
-	it('should display deck help content', () => {
+	it('should call onClose when the close button is clicked', async () => {
 		const onClose = vi.fn();
-		const { container } = render(HelpModal, {
-			props: {
-				isOpen: true,
-				helpKey: 'deck',
-				onClose
-			}
-		});
+		await renderModal({ onClose });
 
-		expect(container.textContent).toContain('Deck Visualization');
-		expect(container.textContent).toContain('deck stack');
-	});
+		screen.getByRole('button', { name: 'Close Game Guide' }).click();
 
-	it('should display fallback content for unknown helpKey', () => {
-		const onClose = vi.fn();
-		const { container } = render(HelpModal, {
-			props: {
-				isOpen: true,
-				helpKey: 'unknownKey',
-				onClose
-			}
-		});
-
-		expect(container.textContent).toContain('Help');
-		expect(container.textContent).toContain('No help available');
-	});
-
-	it('should have "Got it" as confirm button text', () => {
-		const onClose = vi.fn();
-		const { container } = render(HelpModal, {
-			props: {
-				isOpen: true,
-				helpKey: 'tower',
-				onClose
-			}
-		});
-
-		expect(container.textContent).toContain('Got it');
-	});
-
-	it('should not render when isOpen is false', () => {
-		const onClose = vi.fn();
-		const { container } = render(HelpModal, {
-			props: {
-				isOpen: false,
-				helpKey: 'tower',
-				onClose
-			}
-		});
-
-		// Modal should not be visible
-		const backdrop = container.querySelector('.modal-backdrop');
-		expect(backdrop).toBeNull();
-	});
-
-	it('should handle missing helpKey gracefully', () => {
-		const onClose = vi.fn();
-		const { container } = render(HelpModal, {
-			props: {
-				isOpen: true,
-				helpKey: null,
-				onClose
-			}
-		});
-
-		// Should render without crashing
-		expect(container.textContent).toContain('Help');
-	});
-
-	it('should pass onClose to both confirm and cancel handlers', () => {
-		const onClose = vi.fn();
-		const { container } = render(HelpModal, {
-			props: {
-				isOpen: true,
-				helpKey: 'tower',
-				onClose
-			}
-		});
-
-		// ConfirmModal should be rendered with onConfirm and onCancel both pointing to onClose
-		// We verify this by checking the modal is rendered properly
-		expect(container.querySelector('.modal-backdrop')).toBeTruthy();
+		expect(onClose).toHaveBeenCalled();
 	});
 });
