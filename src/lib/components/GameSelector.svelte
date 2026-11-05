@@ -192,7 +192,7 @@
 		<label for="player">Player:</label>
 		<select id="player" bind:value={selectedPlayer}>
 			<option value={null}>Please select a player</option>
-			{#each players as player}
+			{#each players as player, i (i)}
 				<option value={player}>{player.name}</option>
 			{/each}
 		</select>
@@ -202,7 +202,7 @@
 		<label for="gameSelect">Select a Game:</label>
 		<select id="gameSelect" bind:value={selectedGame}>
 			<option value={null}>Please select a game</option>
-			{#each allGames as game}
+			{#each allGames as game, i (i)}
 				<option value={game}>
 					{game.title}{game.isCustom ? ' (Custom)' : ''}
 				</option>

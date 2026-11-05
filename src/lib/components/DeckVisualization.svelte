@@ -9,7 +9,7 @@
 {#if cardsRemaining > 0}
 	<div class="deck-container" title="{cardsRemaining} cards remaining">
 		<div class="deck-stack" style="height: {deckHeight}px">
-			{#each Array(visibleLayers) as _, i}
+			{#each Array(visibleLayers) as _, i (i)}
 				<div
 					class="card-layer"
 					style="top: {i * 3}px; opacity: {1 - i * 0.08}; z-index: {visibleLayers - i}"

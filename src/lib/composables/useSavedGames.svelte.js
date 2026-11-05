@@ -54,13 +54,17 @@ export function useSavedGames() {
 		switch (sortBy) {
 			case 'recent':
 				return games.sort((a, b) => {
+					// eslint-disable-next-line svelte/prefer-svelte-reactivity -- temporary value for comparison/formatting only
 					const dateA = new Date(a.lastPlayed || a.savedAt || 0);
+					// eslint-disable-next-line svelte/prefer-svelte-reactivity -- temporary value for comparison/formatting only
 					const dateB = new Date(b.lastPlayed || b.savedAt || 0);
 					return dateB - dateA;
 				});
 			case 'oldest':
 				return games.sort((a, b) => {
+					// eslint-disable-next-line svelte/prefer-svelte-reactivity -- temporary value for comparison/formatting only
 					const dateA = new Date(a.lastPlayed || a.savedAt || 0);
+					// eslint-disable-next-line svelte/prefer-svelte-reactivity -- temporary value for comparison/formatting only
 					const dateB = new Date(b.lastPlayed || b.savedAt || 0);
 					return dateA - dateB;
 				});
@@ -75,6 +79,7 @@ export function useSavedGames() {
 
 	function formatDate(dateString) {
 		if (!dateString) return 'Unknown';
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- temporary value for comparison/formatting only
 		const date = new Date(dateString);
 		return date.toLocaleDateString('en-US', {
 			month: 'short',

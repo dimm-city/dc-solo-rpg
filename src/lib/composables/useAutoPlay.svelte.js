@@ -77,7 +77,6 @@ export function useAutoPlay() {
 	 * @returns {Object} - { cancel: Function }
 	 */
 	function advance({ text = null, shouldRead = false, action, customDelay = null }) {
-		const audioSettings = getAudioSettings();
 		const gameplaySettings = getGameplaySettings();
 
 		if (!gameplaySettings.autoContinueAfterReading) {
@@ -247,7 +246,6 @@ export function useAutoPlay() {
  * @deprecated Use useAutoPlay().advance() instead
  */
 export function autoAdvance({ text = null, shouldRead = false, action, customDelay = null }) {
-	const audioSettings = getAudioSettings();
 	const gameplaySettings = getGameplaySettings();
 
 	if (!gameplaySettings.autoContinueAfterReading) {

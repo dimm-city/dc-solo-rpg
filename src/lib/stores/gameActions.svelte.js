@@ -698,6 +698,7 @@ export async function recordRound(journalEntry) {
 		round: gameState.round,
 		text: journalEntry.text || '',
 		audioData: journalEntry.audioData || null,
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- timestamp string only, not reactive state
 		dateRecorded: journalEntry.dateRecorded || new Date().toISOString()
 	};
 

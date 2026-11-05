@@ -48,7 +48,8 @@
 <!-- Wrapper provides outer glow layer that follows clipped shape -->
 <div class="aug-button-wrapper {variant} {className}">
 	{#if href}
-		<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+		<!-- href is a caller-supplied URL (internal or external), so it cannot be passed through resolve() -->
+		<!-- eslint-disable svelte/no-navigation-without-resolve -->
 		<a
 			{href}
 			class="aug-button {variant}"
@@ -65,6 +66,7 @@
 				{text}
 			{/if}
 		</a>
+		<!-- eslint-enable svelte/no-navigation-without-resolve -->
 	{:else}
 		<button
 			class="aug-button {variant}"

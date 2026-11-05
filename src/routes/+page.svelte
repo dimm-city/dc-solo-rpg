@@ -1,5 +1,6 @@
 <script>
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { browser } from '$app/environment';
@@ -116,9 +117,9 @@
 	function handleStartGame(game) {
 		// Navigate to game without confirmation
 		if (game.isCustom) {
-			goto(`/game/custom/${game.slug}`);
+			goto(resolve('/game/custom/[slug]', { slug: game.slug }));
 		} else {
-			goto(`/game/${game.slug}`);
+			goto(resolve('/game/[slug]', { slug: game.slug }));
 		}
 	}
 
@@ -175,9 +176,9 @@
 		if (await resumeGame(slug)) {
 			// Game resumed successfully - navigate directly without confirmation
 			if (game.isCustom) {
-				goto(`/game/custom/${slug}`);
+				goto(resolve('/game/custom/[slug]', { slug }));
 			} else {
-				goto(`/game/${slug}`);
+				goto(resolve('/game/[slug]', { slug }));
 			}
 		} else {
 			uploadStatus = 'Failed to resume game';
@@ -269,7 +270,7 @@
 	function handleLearnToPlay() {
 		// Mark as shown for this session
 		markInstructionsShownInSession();
-		goto('/how-to');
+		goto(resolve('/how-to'));
 	}
 
 	function handleSkipOnce() {
@@ -810,7 +811,7 @@
 		<div class="welcome-container">
 			<div class="dc-start-screen-container" data-testid="game-selector">
 				<div class="game-cards-grid">
-					{#each allGames as game, index}
+					{#each allGames as game, index (index)}
 						{@const gameSlug =
 							game.slug || game.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'unknown'}
 						{@const saveData = gameSaveData[gameSlug]}

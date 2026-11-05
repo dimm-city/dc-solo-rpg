@@ -2,6 +2,7 @@
 	import { gameState, transitionTo } from '../stores/gameStore.svelte.js';
 	import { fade } from 'svelte/transition';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { marked } from 'marked';
 	import { sanitizeHtml } from '../utils/sanitizeHtml.js';
 	import '../../game.css';
@@ -143,7 +144,7 @@
 		if (typeof window !== 'undefined') {
 			window.location.href = '/';
 		} else {
-			goto('/');
+			goto(resolve('/'));
 		}
 	}
 
@@ -181,8 +182,7 @@
 		showExitModal = false;
 		// Navigate to home page to reset game state
 		// DiceBox persists in the layout so no reinitialization needed
-		// eslint-disable-next-line svelte/no-navigation-without-resolve
-		goto('/');
+		goto(resolve('/'));
 	}
 
 	function handleExitCancel() {

@@ -11,7 +11,7 @@
 <div class="game-over-overlay" class:victory={isVictory}>
 	<div class="game-over-content">
 		<div class="game-over-title" class:victory={isVictory}>
-			{#each titleLetters as letter, index}
+			{#each titleLetters as letter, index (index)}
 				<span style="animation-delay: {0.1 + index * 0.15}s">{letter}</span>
 			{/each}
 		</div>

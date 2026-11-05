@@ -59,7 +59,7 @@
 
 <ContentModal {isOpen} title="Game Guide" {onClose} footerButtonText="Got it">
 	<div class="help-content">
-		{#each helpSections as section}
+		{#each helpSections as section (section.title)}
 			<div class="help-section">
 				<h3 class="help-title">{section.title}</h3>
 				<p class="help-message">{section.message}</p>
