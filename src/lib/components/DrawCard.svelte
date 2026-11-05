@@ -106,7 +106,7 @@
 		justify-content: center;
 		align-content: center;
 		/* text-align: center; */
-		overflow: hidden;
+		overflow: visible; /* card glow extends past the card edge */
 		box-sizing: border-box;
 	}
 

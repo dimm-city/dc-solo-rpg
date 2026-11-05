@@ -148,10 +148,15 @@
 		/* top: 50%;
 		left: 50%;
 		transform: translate(-50%, -50%); */
-		margin: 0;
+		/* Centred reading column on desktop; full width on phones */
+		left: 0;
+		right: 0;
+		margin: 0 auto;
+		max-width: var(--content-max, 720px);
 		padding: 0;
 		border: none;
-		background: transparent;
+		/* Opaque panel so HUD elements never show through the modal content */
+		background: rgba(10, 10, 20, 0.95);
 
 		width: 100%;
 		/*max-width: min(90vw, 1200px);
@@ -163,6 +168,11 @@
 
 		/* Better scrolling on mobile */
 		-webkit-overflow-scrolling: touch;
+	}
+
+	/* The card draw screen supplies its own card shell, so it needs no panel */
+	.modal-wrapper:has(:global(.dc-draw-card-container)) {
+		background: transparent;
 	}
 
 	/* Fog overlay container */
@@ -242,6 +252,32 @@
 		.fog-overlay .cloud.front {
 			width: 160vw;
 			height: 140vh;
+		}
+	}
+
+	/* Phones and reduced motion: the three feTurbulence fog layers are expensive to
+	   rasterize, so use a static gradient instead */
+	@media (max-width: 600px) {
+		.fog-overlay {
+			backdrop-filter: none;
+			-webkit-backdrop-filter: none;
+			background: radial-gradient(ellipse at 50% 40%, rgba(0, 40, 60, 0.7), rgba(5, 8, 18, 0.92));
+		}
+
+		.fog-overlay .cloud {
+			display: none;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.fog-overlay {
+			backdrop-filter: none;
+			-webkit-backdrop-filter: none;
+			background: radial-gradient(ellipse at 50% 40%, rgba(0, 40, 60, 0.7), rgba(5, 8, 18, 0.92));
+		}
+
+		.fog-overlay .cloud {
+			display: none;
 		}
 	}
 

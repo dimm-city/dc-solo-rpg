@@ -3,11 +3,10 @@
    Matching dimm.city website aesthetic EXACTLY
    ============================================ */
 
-/* Import Google Fonts - wrapped in @layer to make non-blocking
-   If this fails, fallback fonts will be used from font-family declarations */
-@layer google-fonts {
-	@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;500;600;700&display=swap');
-}
+/* augmented-ui is bundled through Vite (no external CDN dependency).
+   Google Fonts (Orbitron, Inter, Share Tech Mono) load from a <link> in app.html;
+   an @import nested in @layer is ignored by browsers, so it must not live here. */
+@import 'augmented-ui/augmented-ui.min.css';
 
 /* Load custom display font */
 @font-face {
@@ -41,8 +40,20 @@
 	--color-text-muted: rgba(255, 255, 255, 0.6);
 
 	/* === TYPOGRAPHY === */
+	/* Font roles:
+	   --font-display (lixdu): titles at 24px and above ONLY. Never for numbers or small
+	     labels, it misreads at small sizes ("TASKS" -> "TASHS", a 4 reads as "Ч").
+	   --font-mono (Share Tech Mono): HUD numbers, labels and IDs (use tabular-nums).
+	   --font-body (Inter): reading text. */
 	--font-display: 'lixdu', 'Orbitron', 'Tomorrow', sans-serif;
 	--font-body: 'Inter', 'Tomorrow', sans-serif;
+	--font-mono: 'Share Tech Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+	/* === SHARED UI TOKENS === */
+	--color-danger: #ff4d6d; /* danger only: Kings, Stability loss, critical states */
+	--frame-border: linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta));
+	--content-max: 720px; /* desktop reading column */
+	--cta-max: 480px; /* primary button max width on desktop */
 
 	/* Font Sizes - 8px baseline grid */
 	--text-xs: 0.75rem;
@@ -268,6 +279,14 @@ h3 {
 	margin-bottom: var(--space-md);
 }
 
+/* h4-h6 render below 24px, so they use the body face (see font roles in :root) */
+h4,
+h5,
+h6 {
+	font-family: var(--font-body);
+	font-weight: 700;
+}
+
 h4 {
 	font-size: var(--text-xl);
 	color: var(--color-text-primary);
@@ -338,7 +357,7 @@ main {
 }
 
 .hero p {
-	font-family: var(--font-display);
+	font-family: var(--font-mono);
 	font-size: var(--text-base);
 	font-weight: 700;
 	color: var(--color-neon-cyan);
@@ -445,7 +464,7 @@ textarea::placeholder {
 
 label {
 	display: block;
-	font-family: var(--font-display);
+	font-family: var(--font-body);
 	font-size: var(--text-sm);
 	font-weight: 700;
 	color: #ffffff;

@@ -222,8 +222,12 @@
 <style>
 	h3 {
 		margin: var(--space-md, 1rem) 0 var(--space-sm, 0.5rem) 0;
-		font-size: 1.2rem;
-		font-family: var(--font-display, var(--main-font-family));
+		font-size: 1.1rem;
+		font-weight: 700;
+		letter-spacing: var(--letter-spacing-wide, 0.05em);
+		text-transform: uppercase;
+		/* Display font is for 24px+ titles only */
+		font-family: var(--font-body, var(--main-font-family));
 		color: var(--third-accent, #ff15cb);
 		border-bottom: 2px solid var(--secondary-accent-muted, rgba(199, 67, 255, 0.68));
 		padding-bottom: var(--space-sm, 0.5rem);

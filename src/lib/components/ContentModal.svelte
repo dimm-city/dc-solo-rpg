@@ -168,7 +168,6 @@
 		--dc-accent-color: #3a9fc7; /* Cyan blue */
 		--dc-default-container-bg: rgba(13, 27, 42, 0.95); /* Dark blue */
 		--dc-default-text-color: #ffffff; /* White */
-		--dc-button-bg: #1387b9; /* Blue */
 
 		/* Augmented UI styling */
 		--aug-border-all: 2px;
@@ -259,20 +258,28 @@
 		align-items: center;
 		gap: var(--space-sm, 0.5rem);
 		padding: var(--space-sm, 0.5rem) var(--space-lg, 1.5rem);
-		background: var(--dc-button-bg, #1387b9);
-		color: white;
-		border: none;
+		/* Themed: deep magenta to violet with yellow text (5.4:1 contrast) */
+		background: linear-gradient(135deg, #831d98, #6d22c7);
+		color: var(--color-brand-yellow, #ffd700);
+		border: 1px solid var(--color-cyber-magenta, #d946ef);
 		border-radius: 4px;
 		font-size: 1rem;
-		font-weight: 500;
+		font-weight: 700;
+		letter-spacing: var(--letter-spacing-wider, 0.1em);
+		text-transform: uppercase;
 		cursor: pointer;
 		transition: all 0.2s;
-		font-family: var(--font-display, 'Orbitron', monospace);
+		font-family: var(--font-body, 'Inter', sans-serif);
 	}
 
 	.done-button:hover {
 		opacity: 0.9;
 		transform: translateY(-1px);
+	}
+
+	.done-button:focus-visible {
+		outline: 3px solid var(--color-neon-cyan, #00ffff);
+		outline-offset: 3px;
 	}
 
 	.done-button:active {
@@ -286,8 +293,13 @@
 			max-height: 90vh;
 		}
 
+		/* Below 24px the display font misreads; switch to the body face */
 		.content-header h2 {
 			font-size: 1.25rem;
+			font-family: var(--font-body, 'Inter', sans-serif);
+			font-weight: 700;
+			text-transform: uppercase;
+			letter-spacing: var(--letter-spacing-wide, 0.05em);
 		}
 
 		.content-body {

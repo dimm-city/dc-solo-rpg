@@ -14,6 +14,11 @@
 		onconfirmcard = () => {}
 	} = $props();
 
+	// Brief anticipation beat while the card back is already on screen
+	const ANTICIPATION_MS = 250;
+	// Staggered face reveal: header 150ms, headline 300ms, body 450ms, footer 600ms (+300ms each)
+	const MATERIALIZE_MS = 900;
+
 	// animationStage is now bindable so changes propagate to parent
 	/**
 	 * Handle proceed button click - request card draw and start animation
@@ -25,9 +30,9 @@
 			// Request a new card from the parent
 			onrequestcard();
 
-			// Anticipation phase - grid accelerates
+			// Anticipation phase - card back appears immediately
 			animationStage = 'anticipating';
-			await sleep(400);
+			await sleep(ANTICIPATION_MS);
 
 			// Wait for card to be set by parent
 			let attempts = 0;
@@ -45,7 +50,7 @@
 
 			// Materialization phase - byte appears with glitch
 			animationStage = 'materializing';
-			await sleep(1000);
+			await sleep(MATERIALIZE_MS);
 
 			// Revealed phase - stable display
 			animationStage = 'revealed';
@@ -206,7 +211,7 @@
 		}
 		// Otherwise start from beginning
 		animationStage = 'materializing';
-		await sleep(1000);
+		await sleep(MATERIALIZE_MS);
 		animationStage = 'revealed';
 	};
 
@@ -239,8 +244,11 @@
 		width: 100%;
 		height: 100%;
 		max-height: calc(100svh - var(--toolbar-height, 250px)); /* Account for toolbar height */
+		align-items: center;
+		justify-content: center;
 
-		overflow: hidden;
+		/* Visible so the card glow is not cut off at the deck edge */
+		overflow: visible;
 
 		/* padding: var(--space-md, 1rem); */
 	}

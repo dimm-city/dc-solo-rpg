@@ -21,11 +21,11 @@
 
 <ContentModal {isOpen} title="Game Settings" {onClose}>
 	<div class="settings-section">
-		<h3>Difficulty</h3>
+		<h3 id="difficulty-heading">Difficulty</h3>
 		<div class="setting-row">
-			<label for="difficulty">Difficulty</label>
 			<select
 				id="difficulty"
+				aria-labelledby="difficulty-heading"
 				value={difficultyValue}
 				onchange={(e) => updateSettings({ difficulty: DIFFICULTY_VALUES[e.target.value] })}
 			>
@@ -44,8 +44,12 @@
 <style>
 	h3 {
 		margin: 0 0 var(--space-sm, 0.5rem) 0;
-		font-size: 1.2rem;
-		font-family: var(--font-display, var(--main-font-family));
+		/* Display font is for 24px+ titles only; section headings use the body face */
+		font-size: 1.1rem;
+		font-weight: 700;
+		letter-spacing: var(--letter-spacing-wide, 0.05em);
+		text-transform: uppercase;
+		font-family: var(--font-body, var(--main-font-family));
 		color: var(--third-accent, #ff15cb);
 		border-bottom: 2px solid var(--secondary-accent-muted, rgba(199, 67, 255, 0.68));
 		padding-bottom: var(--space-sm, 0.5rem);
@@ -61,13 +65,6 @@
 		background: var(--translucent-dark, rgba(17, 17, 17, 0.5));
 		border: 1px solid var(--secondary-accent-muted, rgba(199, 67, 255, 0.3));
 		border-radius: var(--dc-default-border-radius, 0.175rem);
-	}
-
-	label {
-		display: block;
-		margin-bottom: var(--space-xs, 0.25rem);
-		font-weight: 500;
-		color: var(--light, rgba(255, 255, 255, 0.9));
 	}
 
 	.setting-description {

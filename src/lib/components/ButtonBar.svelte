@@ -25,6 +25,10 @@
 		width: 100%;
 		display: flex;
 		flex-direction: row;
+		justify-content: center;
+		/* Centre the bar on desktop: two capped CTAs plus the gap */
+		max-width: calc(var(--cta-max, 480px) * 2 + var(--space-lg));
+		margin-inline: auto;
 		gap: var(--space-lg);
 		padding: var(--space-md);
 		position: relative;
