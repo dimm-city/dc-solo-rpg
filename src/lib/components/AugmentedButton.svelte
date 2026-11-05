@@ -329,17 +329,6 @@
 		}
 	}
 
-	/* Add safe spacing for stacked buttons */
-	.aug-button-wrapper + .aug-button-wrapper {
-		margin-top: var(--space-xl);
-	}
-
-	@media (max-width: 768px) {
-		.aug-button-wrapper + .aug-button-wrapper {
-			margin-top: var(--space-lg);
-		}
-	}
-
 	/* Reduced motion accessibility */
 	@media (prefers-reduced-motion: reduce) {
 		.aug-button-wrapper,

@@ -1609,10 +1609,6 @@
 		.welcome-container {
 			padding-inline: var(--space-lg);
 		}
-
-		.page-header h2 {
-			font-size: var(--text-2xl);
-		}
 	}
 
 	/* Medium screens - show hamburger menu to prevent crowding */
@@ -1656,10 +1652,6 @@
 
 		.page-header {
 			padding: var(--space-sm) var(--space-md);
-		}
-
-		.page-header h2 {
-			font-size: var(--text-xl);
 		}
 
 		.header-buttons {

@@ -217,22 +217,6 @@
 		color: rgba(255, 255, 255, 0.5);
 	}
 
-	.card-type-badge {
-		display: inline-flex;
-		align-items: center;
-		gap: var(--space-sm);
-		padding: var(--space-sm) var(--space-lg);
-		background: linear-gradient(
-			135deg,
-			color-mix(in srgb, var(--badge-color) 20%, transparent),
-			color-mix(in srgb, var(--badge-color) 10%, transparent)
-		);
-		border: 2px solid color-mix(in srgb, var(--badge-color) 50%, transparent);
-		border-radius: 6px;
-		backdrop-filter: blur(4px);
-		-webkit-backdrop-filter: blur(4px);
-	}
-
 	.type-label {
 		font-family: var(--font-display);
 		font-weight: 600;
@@ -299,20 +283,6 @@
 		flex-direction: column;
 		align-items: flex-start;
 		gap: var(--space-sm);
-	}
-
-	.card-identifier {
-		display: flex;
-		align-items: center;
-		gap: var(--space-sm);
-	}
-
-	.card-name {
-		font-family: var(--font-display);
-		font-size: 1.5rem;
-		font-weight: 700;
-		color: var(--color-neon-cyan);
-		text-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
 	}
 
 	.card-modifier {
@@ -520,12 +490,6 @@
 			font-size: 1.5rem;
 		}
 
-		.card-type-badge {
-			width: 100%;
-			justify-content: center;
-			padding: var(--space-xs) var(--space-md);
-		}
-
 		.card-display,
 		.journal-section {
 			padding: var(--space-md);
@@ -536,11 +500,6 @@
 			flex-direction: column;
 			align-items: flex-start;
 			gap: var(--space-sm);
-		}
-
-		.card-name {
-			font-size: 1.125rem;
-			word-break: break-word;
 		}
 
 		.card-modifier {
@@ -567,18 +526,10 @@
 			padding: var(--space-xs);
 		}
 
-		.card-name {
-			font-size: 1rem;
-		}
-
 		.description-text,
 		.story-content,
 		.journal-text {
 			font-size: 0.875rem;
-		}
-
-		.stat-item {
-			flex: 1 1 45%;
 		}
 	}
 </style>

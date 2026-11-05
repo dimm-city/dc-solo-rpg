@@ -208,10 +208,6 @@
 		border-color: rgba(255, 215, 0, 0.5);
 	}
 
-	.outcome-icon {
-		font-size: 1.25rem;
-	}
-
 	.outcome-text {
 		font-family: var(--font-display);
 		font-weight: 700;
