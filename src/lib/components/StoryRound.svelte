@@ -7,7 +7,7 @@
 	import AudioPlayer from './AudioPlayer.svelte';
 	import GameOverMessage from './story/GameOverMessage.svelte';
 	import RoundStats from './story/RoundStats.svelte';
-	import { fade, fly } from 'svelte/transition';
+	import { fade } from 'svelte/transition';
 
 	let {
 		round = null, // Round data with cards array

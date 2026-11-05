@@ -34,20 +34,12 @@
 	let audioURL = $state(null);
 	let isPlaying = $state(false);
 	let audioElement = $state(null);
-	let hasAudioPermission = $state(true);
 	let audioError = $state(null);
 
 	// Auto-journal timer state
 	let autoJournalTimer = $state(null);
 	let autoJournalTimeRemaining = $state(0);
 	let autoJournalInterval = $state(null);
-
-	// Format time as MM:SS
-	function formatTime(seconds) {
-		const mins = Math.floor(seconds / 60);
-		const secs = seconds % 60;
-		return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-	}
 
 	// Start recording
 	async function startRecording() {
@@ -104,7 +96,6 @@
 			}, 1000);
 		} catch (error) {
 			logger.error('[JournalEntry] Error starting recording:', error);
-			hasAudioPermission = false;
 			audioError = 'Microphone access denied. Please enable microphone permissions.';
 		}
 	}

@@ -10,7 +10,6 @@
 	import LoadScreen from './LoadScreen.svelte';
 	import GameOver from './GameOver.svelte';
 	import JournalEntry from './JournalEntry.svelte';
-	import InitialDamageRoll from './InitialDamageRoll.svelte';
 	import FinalDamageRoll from './FinalDamageRoll.svelte';
 	import DrawCard from './DrawCard.svelte';
 	import StatusDisplay from './StatusDisplay.svelte';
@@ -40,7 +39,6 @@
 	import { recordRound, restartGame, exitGame } from '../stores/gameActions.svelte.js';
 
 	let {
-		systemSettings = {},
 		onfailurecheckcompleted = () => {},
 		onjournalsaved = () => {},
 		showHelpModal = $bindable(false)
@@ -168,10 +166,6 @@
 
 	function handleHelpClick() {
 		showHelpModal = true;
-	}
-
-	function handleHelpClose() {
-		showHelpModal = false;
 	}
 
 	function handleSettingsClick() {
@@ -335,7 +329,6 @@
 	$effect(() => {
 		// Only run when screen actually changes
 		if (currentScreen !== lastScreen) {
-			const prevScreen = lastScreen;
 			lastScreen = currentScreen;
 
 			// Cancel previous screen's auto-play (using untrack to prevent loop)
@@ -345,7 +338,7 @@
 
 			// Handle screen-specific entry logic (delay to next tick)
 			setTimeout(() => {
-				handleScreenEntry(currentScreen, prevScreen);
+				handleScreenEntry(currentScreen);
 			}, 0);
 		}
 	});
@@ -354,7 +347,7 @@
 	 * Pure screen entry handler - called once per screen change
 	 * Separated from $effect to prevent reactive loops
 	 */
-	function handleScreenEntry(screen, prevScreen) {
+	function handleScreenEntry(screen) {
 		switch (screen) {
 			case 'showIntro':
 				// Trigger auto-play for intro screen

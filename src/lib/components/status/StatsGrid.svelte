@@ -14,10 +14,6 @@
 	import AbilitiesPanel from './AbilitiesPanel.svelte';
 	import SuccessTokensPanel from './SuccessTokensPanel.svelte';
 	import DeckVisualization from '../DeckVisualization.svelte';
-	import { innerWidth } from 'svelte/reactivity/window';
-
-	// Reactive screen width tracking
-	const isMobile = $derived((innerWidth.current ?? 1024) <= 600);
 
 	// Reactive data-augmented-ui attribute for deck readout
 	const deckAugmentedUI = 'tl-clip tr-clip br-clip bl-clip border';

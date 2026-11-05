@@ -15,24 +15,31 @@ export default [
 				...globals.node,
 				...globals.es2017
 			},
-			ecmaVersion: 2020,
+			ecmaVersion: 2022,
 			sourceType: 'module'
+		},
+		rules: {
+			'no-unused-vars': [
+				'error',
+				{ argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }
+			]
 		}
 	},
 	{
 		ignores: [
 			'.DS_Store',
-			'node_modules',
-			'/build',
-			'/.svelte-kit',
-			'/package',
+			'**/node_modules/',
+			'build/',
+			'.svelte-kit/',
+			'package/',
+			'.claude/',
 			'.env',
 			'.env.*',
 			'!.env.example',
 			'pnpm-lock.yaml',
 			'package-lock.json',
 			'yarn.lock',
-			'/dist'
+			'dist/'
 		]
 	}
 ];

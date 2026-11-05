@@ -15,7 +15,7 @@ const SETTINGS_STORE = 'ai-settings';
  */
 async function initDB() {
 	return openDB(DB_NAME, DB_VERSION, {
-		upgrade(db, oldVersion, newVersion, transaction) {
+		upgrade(db) {
 			// Create settings object store if it doesn't exist
 			if (!db.objectStoreNames.contains(SETTINGS_STORE)) {
 				db.createObjectStore(SETTINGS_STORE);
@@ -66,7 +66,7 @@ export async function loadAISettings() {
  * This function is kept for backward compatibility during migration
  * @returns {Promise<boolean>} Always returns true
  */
-export async function saveTTSSettings(settings) {
+export async function saveTTSSettings(_settings) {
 	logger.warn(
 		'[aiSettings] saveTTSSettings is deprecated. Use audioStore.updateAudioSettings() instead.'
 	);

@@ -1,5 +1,4 @@
 import adapter from 'svelte-adapter-azure-swa';
-import { readFileSync } from 'fs';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -22,7 +21,7 @@ const config = {
 						name: 'onnx-runtime-external',
 						setup(build) {
 							// Intercept onnxruntime-node imports and mark as external
-							build.onResolve({ filter: /^onnxruntime-node$/ }, (args) => {
+							build.onResolve({ filter: /^onnxruntime-node$/ }, () => {
 								return {
 									path: 'onnxruntime-node',
 									external: true

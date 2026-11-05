@@ -1,10 +1,3 @@
-<script>
-	import { onMount } from 'svelte';
-	import { gameState, transitionTo } from '../stores/gameStore.svelte.js';
-	import { exitGame } from '../stores/gameActions.svelte.js';
-	import { hasSeenInstructions, markInstructionsAsSeen } from '../utils/instructionsStorage.js';
-</script>
-
 <div class="content instructions dc-fade-in">
 	<h1>How To Play</h1>
 

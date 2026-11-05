@@ -106,7 +106,6 @@ function parseIntroduction(introduction) {
 	const sections = [];
 	const headingRegex = /^##\s+(.+)$/gm;
 
-	let lastIndex = 0;
 	let match;
 	const matches = [];
 

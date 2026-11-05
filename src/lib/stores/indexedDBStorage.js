@@ -25,7 +25,7 @@ async function initDB() {
 	}
 
 	return openDB(DB_NAME, DB_VERSION, {
-		upgrade(db, oldVersion, newVersion, transaction) {
+		upgrade(db) {
 			// Create saves object store if it doesn't exist
 			if (!db.objectStoreNames.contains(SAVE_STORE)) {
 				db.createObjectStore(SAVE_STORE);

@@ -46,7 +46,6 @@ export function createCancellableDelay(ms) {
  * @returns {Object} - { cancel: Function } returned immediately (synchronously)
  */
 export function autoAdvance({ text = null, shouldRead = false, action, customDelay = null }) {
-	const audioSettings = getAudioSettings();
 	const gameplaySettings = getGameplaySettings();
 
 	if (!gameplaySettings.autoContinueAfterReading) {

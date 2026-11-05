@@ -8,7 +8,7 @@ export class BaseTTSProvider {
 	 * @param {Object} config - Provider-specific configuration
 	 * @returns {Promise<void>}
 	 */
-	async initialize(config) {
+	async initialize(_config) {
 		throw new Error('initialize() must be implemented by subclass');
 	}
 
@@ -18,7 +18,7 @@ export class BaseTTSProvider {
 	 * @param {Object} options - Speaking options (rate, pitch, voice, etc.)
 	 * @returns {Promise<void>} - Resolves when speaking completes
 	 */
-	async speak(text, options = {}) {
+	async speak(text, _options = {}) {
 		throw new Error('speak() must be implemented by subclass');
 	}
 

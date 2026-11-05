@@ -1,4 +1,3 @@
-import { onMount } from 'svelte';
 import DiceBox from '@3d-dice/dice-box-threejs';
 import { gameState } from './gameStore.svelte.js';
 import { randomInt } from '../services/random.js';

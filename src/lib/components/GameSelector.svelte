@@ -6,8 +6,7 @@
 	import {
 		getCustomGames,
 		addCustomGame,
-		removeCustomGame,
-		getCustomGame
+		removeCustomGame
 	} from '../stores/customGames.js';
 
 	let {

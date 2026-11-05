@@ -6,7 +6,7 @@
  * Component is validated through build and Playwright integration tests
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/svelte';
+import { render } from '@testing-library/svelte';
 import MiniStatusHUD from './MiniStatusHUD.svelte';
 import { gameState } from '$lib/stores/gameStore.svelte.js';
 

@@ -15,24 +15,6 @@
 	} = $props();
 
 	// animationStage is now bindable so changes propagate to parent
-	let particles = $state([]);
-
-	// Derived state for button text
-	let buttonText = $derived.by(() => {
-		if (animationStage === 'idle') return 'PROCEED TO NEXT BYTE';
-		if (animationStage === 'anticipating' || animationStage === 'materializing')
-			return 'LOADING...';
-		if (animationStage === 'revealed') return 'CONTINUE';
-		return 'UPLOADING...';
-	});
-
-	// Derived state for button disabled condition
-	let isButtonDisabled = $derived(
-		animationStage === 'anticipating' ||
-			animationStage === 'materializing' ||
-			animationStage === 'dismissing'
-	);
-
 	/**
 	 * Handle proceed button click - request card draw and start animation
 	 */
@@ -174,7 +156,6 @@
 
 		// Reset state
 		animationStage = 'idle';
-		particles = []; // Clear particles
 		card = null;
 
 		// Trigger auto-draw if conditions are met (event-driven, not $effect)
@@ -237,7 +218,6 @@
 			await handleDismiss();
 		} else {
 			animationStage = 'idle';
-			particles = [];
 			card = null;
 			// Don't trigger auto-draw on manual reset
 		}

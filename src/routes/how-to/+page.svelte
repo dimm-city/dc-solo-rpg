@@ -3,8 +3,6 @@
 	import NeuralBackground from '$lib/components/NeuralBackground.svelte';
 
 	/** @type {{ data: import('./$types').PageData }} */
-	let { data } = $props();
-
 	function goHome() {
 		goto('/');
 	}

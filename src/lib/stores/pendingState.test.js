@@ -5,14 +5,12 @@
  *
  * CRITICAL ISSUE #3: Add tests for pending state system
  */
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { gameState, transitionTo } from './gameStore.svelte.js';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { gameState } from './gameStore.svelte.js';
 import {
 	applyPendingTaskRoll,
 	applyPendingDiceRoll,
 	applyPendingSuccessCheck,
-	applyPendingInitialDamageRoll,
-	applyPendingFinalDamageRoll,
 	confirmCard
 } from './gameActions.svelte.js';
 

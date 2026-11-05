@@ -1,6 +1,6 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 
-test('detailed crash analysis with JavaScript error capture', async ({ page, browser }) => {
+test('detailed crash analysis with JavaScript error capture', async ({ page }) => {
 	const errors = [];
 	const crashes = [];
 	const jsErrors = [];

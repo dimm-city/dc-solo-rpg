@@ -7,7 +7,7 @@
  * - Salvation threshold system
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { gameState } from './gameStore.svelte.js';
 import {
 	convertD20ToCardCount,

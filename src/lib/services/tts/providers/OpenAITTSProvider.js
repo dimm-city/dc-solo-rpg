@@ -240,7 +240,7 @@ export class OpenAITTSProvider extends BaseTTSProvider {
 			try {
 				this.currentSource.stop();
 				this.currentSource.disconnect();
-			} catch (error) {
+			} catch {
 				// Ignore errors from already stopped sources
 			}
 			this.currentSource = null;

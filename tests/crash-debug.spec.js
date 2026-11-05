@@ -1,6 +1,6 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 
-test('debug page crash', async ({ page, browser }) => {
+test('debug page crash', async ({ page }) => {
 	const errors = [];
 	const consoleMessages = [];
 

@@ -63,7 +63,7 @@ test.describe('Full Game Validation', () => {
 					tokens: tokens ? parseInt(tokens) : null,
 					round: round ? parseInt(round) : null
 				};
-			} catch (e) {
+			} catch {
 				return { tower: null, tokens: null, round: null };
 			}
 		};
@@ -214,7 +214,7 @@ test.describe('Full Game Validation', () => {
 				}
 
 				// Take snapshot before drawing
-				const beforeDrawStats = await getUIStats();
+				await getUIStats();
 
 				// Draw card (click PROCEED TO NEXT BYTE button)
 				await page.click('.dc-card-deck');
@@ -461,7 +461,7 @@ test.describe('Full Game Validation', () => {
 
 		// Round-by-round details
 		console.log(`\n📋 ROUND DETAILS:`);
-		tracker.rounds.forEach((round, i) => {
+		tracker.rounds.forEach((round) => {
 			console.log(`\n  Round ${round.roundNumber}:`);
 			console.log(`    Dice roll: ${round.diceRoll}`);
 			console.log(`    Cards drawn: ${round.cardsDrawn} (expected: ${round.expectedCards})`);

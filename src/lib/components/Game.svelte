@@ -8,7 +8,6 @@
 
 	let {
 		systemSettings = $bindable({}),
-		ongameloaded = () => {},
 		ongameover = () => {},
 		onexitgame = () => {},
 		onfailurecheckcompleted = () => {},

@@ -41,7 +41,7 @@
 				'https://huggingface.co/Supertone/supertonic/resolve/main/onnx/tts.json'
 			);
 			providerAvailability.supertonic = response.ok;
-		} catch (error) {
+		} catch {
 			providerAvailability.supertonic = false;
 		}
 	}

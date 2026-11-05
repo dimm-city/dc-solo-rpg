@@ -1,5 +1,4 @@
 import { test, describe, expect, vi, beforeEach } from 'vitest';
-import { readFileSync } from 'fs';
 import { gameState } from './gameStore.svelte.js';
 import {
 	startGame,
@@ -13,29 +12,10 @@ import {
 	successCheck,
 	restartGame,
 	exitGame,
-	confirmTaskRoll,
-	services
+	confirmTaskRoll
 } from './gameActions.svelte.js';
 
 global.fetch = vi.fn();
-
-function createFetchResponse(url, data) {
-	return {
-		json: () => new Promise((resolve) => resolve(data)),
-		text: () =>
-			new Promise((resolve) => {
-				// // Return a mock game configuration
-				// const config = new GameSettings();
-				// config.stylesheet = 'game.css';
-				// return config;
-				const buffer = readFileSync(url);
-				const output = buffer.toString();
-
-				console.log('MOCKED', url); //, output);
-				return resolve(output);
-			})
-	};
-}
 
 describe('WAAStore', () => {
 	beforeEach(() => {
