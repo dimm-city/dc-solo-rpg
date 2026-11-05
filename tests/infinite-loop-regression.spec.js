@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { openHomePage, playToFirstRound } from './helpers';
 
 /**
  * Test for infinite loop regression in $effect
@@ -6,126 +7,63 @@ import { test, expect } from '@playwright/test';
  * ISSUE: $effect in +layout.svelte was causing infinite reactive loops
  * ERROR: "effect_update_depth_exceeded"
  *
- * This test navigates to the game page and checks for the specific error.
+ * These tests walk the home page and the first steps of a game and check for the specific error.
  */
+
+/** Collect console and page errors, and the subset that are runaway-effect errors */
+function trackErrors(page) {
+	const tracker = { consoleErrors: [], effectErrors: [] };
+
+	page.on('console', (msg) => {
+		if (msg.type() === 'error') {
+			const text = msg.text();
+			tracker.consoleErrors.push(text);
+
+			// Check for the specific effect_update_depth_exceeded error
+			if (text.includes('effect_update_depth_exceeded')) {
+				tracker.effectErrors.push(text);
+			}
+		}
+	});
+
+	page.on('pageerror', (error) => {
+		const message = error.message;
+		tracker.consoleErrors.push(message);
+
+		if (message.includes('effect_update_depth_exceeded')) {
+			tracker.effectErrors.push(message);
+		}
+	});
+
+	return tracker;
+}
 
 test.describe('Infinite Loop Regression Tests', () => {
 	test('should not have infinite $effect loops when navigating to home page', async ({ page }) => {
-		const consoleErrors = [];
-		const effectErrors = [];
+		const tracker = trackErrors(page);
 
-		// Capture console errors
-		page.on('console', (msg) => {
-			if (msg.type() === 'error') {
-				const text = msg.text();
-				consoleErrors.push(text);
+		await page.goto('/', { waitUntil: 'domcontentloaded' });
 
-				// Check for the specific effect_update_depth_exceeded error
-				if (text.includes('effect_update_depth_exceeded')) {
-					effectErrors.push(text);
-				}
-			}
-		});
+		// Let the splash finish and the next screen mount, where reactive state is busiest
+		await expect(page.locator('.instructions-choice-container')).toBeVisible();
 
-		// Capture page errors
-		page.on('pageerror', (error) => {
-			const message = error.message;
-			consoleErrors.push(message);
-
-			if (message.includes('effect_update_depth_exceeded')) {
-				effectErrors.push(message);
-			}
-		});
-
-		console.log('\n=== Testing home page for infinite loops ===\n');
-
-		// Navigate to home page
-		await page.goto('http://localhost:5173/', {
-			waitUntil: 'domcontentloaded',
-			timeout: 10000
-		});
-
-		// Wait to see if any loops occur
-		await page.waitForTimeout(2000);
-
-		console.log(`Console errors captured: ${consoleErrors.length}`);
-		console.log(`Effect depth errors: ${effectErrors.length}`);
-
-		if (effectErrors.length > 0) {
-			console.log('\n❌ INFINITE LOOP DETECTED:');
-			effectErrors.forEach((err, i) => {
-				console.log(`  ${i + 1}. ${err}`);
-			});
-		} else {
-			console.log('\n✓ No infinite loop errors detected');
-		}
-
-		// Fail if we detected effect depth exceeded errors
-		expect(effectErrors.length).toBe(0);
+		expect(tracker.effectErrors).toEqual([]);
 	});
 
 	test('should not have infinite $effect loops when navigating to game page', async ({ page }) => {
-		const consoleErrors = [];
-		const effectErrors = [];
+		const tracker = trackErrors(page);
 
-		page.on('console', (msg) => {
-			if (msg.type() === 'error') {
-				const text = msg.text();
-				consoleErrors.push(text);
-
-				if (text.includes('effect_update_depth_exceeded')) {
-					effectErrors.push(text);
-				}
-			}
-		});
-
-		page.on('pageerror', (error) => {
-			const message = error.message;
-			consoleErrors.push(message);
-
-			if (message.includes('effect_update_depth_exceeded')) {
-				effectErrors.push(message);
-			}
-		});
-
-		console.log('\n=== Testing game navigation for infinite loops ===\n');
-
-		// Navigate to home
-		await page.goto('http://localhost:5173/', {
-			waitUntil: 'domcontentloaded',
-			timeout: 10000
-		});
-
-		await page.waitForTimeout(2000);
-
-		// Try to navigate to a game page (if games exist)
+		await openHomePage(page);
 		const startButton = page.locator('.start-btn').first();
-		const hasStartButton = await startButton.isVisible().catch(() => false);
+		await expect(startButton).toBeVisible();
+		await startButton.click();
 
-		if (hasStartButton) {
-			console.log('✓ Found start button, clicking to navigate to game...');
+		// Navigate to the game and walk through the intro, the opening roll and the first round start
+		await expect(page).toHaveURL(/\/game\/[a-z0-9-]+$/);
+		await expect(page.getByTestId('screen-showIntro')).toBeVisible();
+		await playToFirstRound(page);
 
-			await startButton.click();
-
-			// Wait for navigation and potential loop issues
-			await page.waitForTimeout(3000);
-		} else {
-			console.log('⚠ No start button found, skipping game navigation test');
-		}
-
-		console.log(`Console errors captured: ${consoleErrors.length}`);
-		console.log(`Effect depth errors: ${effectErrors.length}`);
-
-		if (effectErrors.length > 0) {
-			console.log('\n❌ INFINITE LOOP DETECTED:');
-			effectErrors.forEach((err, i) => {
-				console.log(`  ${i + 1}. ${err}`);
-			});
-		} else {
-			console.log('\n✓ No infinite loop errors detected');
-		}
-
-		expect(effectErrors.length).toBe(0);
+		expect(tracker.effectErrors).toEqual([]);
 	});
 
 	test('should not have excessive console warnings during navigation', async ({ page }) => {
@@ -144,39 +82,21 @@ test.describe('Infinite Loop Regression Tests', () => {
 			}
 		});
 
-		console.log('\n=== Checking for excessive console output ===\n');
-
-		await page.goto('http://localhost:5173/', {
-			waitUntil: 'domcontentloaded',
-			timeout: 10000
-		});
-
-		await page.waitForTimeout(2000);
-
-		console.log(`Errors: ${consoleMessages.error.length}`);
-		console.log(`Warnings: ${consoleMessages.warning.length}`);
-		console.log(`Logs: ${consoleMessages.log.length}`);
+		await page.goto('/', { waitUntil: 'domcontentloaded' });
+		await expect(page.locator('.instructions-choice-container')).toBeVisible();
 
 		// If we have a huge number of warnings/logs, it might indicate a loop
 		// Normal page load should have < 50 console messages
 		const totalMessages =
 			consoleMessages.error.length + consoleMessages.warning.length + consoleMessages.log.length;
 
-		console.log(`\nTotal console messages: ${totalMessages}`);
-
-		if (totalMessages > 100) {
-			console.log('⚠ Excessive console output detected (possible loop)');
-			console.log('\nFirst 10 messages:');
+		if (totalMessages >= 100) {
 			const allMessages = [
 				...consoleMessages.error.map((m) => `[ERROR] ${m}`),
 				...consoleMessages.warning.map((m) => `[WARN] ${m}`),
 				...consoleMessages.log.map((m) => `[LOG] ${m}`)
 			];
-			allMessages.slice(0, 10).forEach((msg, i) => {
-				console.log(`  ${i + 1}. ${msg}`);
-			});
-		} else {
-			console.log('✓ Console output within normal range');
+			console.log('First 10 messages:\n' + allMessages.slice(0, 10).join('\n'));
 		}
 
 		// Allow up to 100 messages (generous limit)

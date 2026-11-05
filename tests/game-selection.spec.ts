@@ -2,17 +2,11 @@
 // seed: tests/seed.spec.ts
 
 import { test, expect } from '@playwright/test';
+import { openHomePage } from './helpers';
 
 test.describe('Game Selection Screen', () => {
 	test.beforeEach(async ({ page }) => {
-		// Skip splash and instructions
-		await page.goto('/');
-		await page.evaluate(() => {
-			sessionStorage.setItem('splashShown', 'true');
-			localStorage.setItem('instructionsSeen', 'true');
-		});
-		await page.goto('/');
-		await page.waitForSelector('[data-testid="home-page"]', { timeout: 10000 });
+		await openHomePage(page);
 	});
 
 	test('should display game selection screen with all elements', async ({ page }) => {
@@ -32,9 +26,8 @@ test.describe('Game Selection Screen', () => {
 		await expect(grid).toBeVisible();
 
 		// Verify grid has games
-		const gameCards = page.locator('.game-card');
-		const count = await gameCards.count();
-		expect(count).toBeGreaterThan(0);
+		await expect(page.locator('.game-card').first()).toBeVisible();
+		expect(await page.locator('.game-card').count()).toBeGreaterThan(0);
 	});
 
 	test('should display game cards with correct information', async ({ page }) => {
@@ -43,16 +36,26 @@ test.describe('Game Selection Screen', () => {
 
 		// Verify title exists
 		await expect(firstCard.locator('.game-card-title')).toBeVisible();
+		await expect(firstCard.locator('.game-card-title')).not.toBeEmpty();
 
 		// Verify subtitle exists
 		await expect(firstCard.locator('.game-subtitle')).toBeVisible();
+		await expect(firstCard.locator('.game-subtitle')).not.toBeEmpty();
 	});
 
 	test('should display each game with data-testid', async ({ page }) => {
-		// Verify at least one game card has correct testid format
+		// Every card carries game-card-{slug}
 		const gameCards = page.locator('[data-testid^="game-card-"]');
 		const count = await gameCards.count();
 		expect(count).toBeGreaterThan(0);
+		expect(count).toBe(await page.locator('.game-card').count());
+
+		for (let i = 0; i < count; i++) {
+			const testId = await gameCards.nth(i).getAttribute('data-testid');
+			expect(testId).toMatch(/^game-card-[a-z0-9-]+$/);
+		}
+
+		await expect(page.getByTestId('game-card-future-lost')).toBeVisible();
 	});
 
 	test('should have augmented-ui styling on game cards', async ({ page }) => {
@@ -64,39 +67,39 @@ test.describe('Game Selection Screen', () => {
 		expect(augmentedAttr).toContain('border');
 	});
 
-	test('should show hover effect on game cards', async ({ page }) => {
-		const firstCard = page.locator('.game-card').first();
+	test('should show hover effect on the start button', async ({ page }) => {
+		// The card itself is no longer interactive; the Start button is the control that reacts
+		const startButton = page.locator('.game-card').first().getByRole('button', {
+			name: 'Start new game'
+		});
 
-		// Get initial transform
-		const initialTransform = await firstCard.evaluate(
+		const initialTransform = await startButton.evaluate(
 			(el) => window.getComputedStyle(el).transform
 		);
 
-		// Hover over card
-		await firstCard.hover();
+		await startButton.hover();
 
-		// Small delay for transition
-		await page.waitForTimeout(400);
-
-		// Get transform after hover
-		const hoverTransform = await firstCard.evaluate((el) => window.getComputedStyle(el).transform);
-
-		// Transform should have changed (card should lift)
-		expect(hoverTransform).not.toBe(initialTransform);
+		// The button lifts and scales on hover
+		await expect
+			.poll(() => startButton.evaluate((el) => window.getComputedStyle(el).transform))
+			.not.toBe(initialTransform);
 	});
 
-	test('should apply selected state when game card is clicked', async ({ page }) => {
+	test('should not select a card or open a confirmation when a card is clicked', async ({
+		page
+	}) => {
 		const firstCard = page.locator('.game-card').first();
 
-		// Click card
-		await firstCard.click();
+		// Click the card body (away from the action buttons)
+		await firstCard.locator('.game-card-title').click();
 
-		// Verify selected class is applied
-		await expect(firstCard).toHaveClass(/selected/);
+		await expect(firstCard).not.toHaveClass(/selected/);
+		await expect(page.getByRole('dialog')).toHaveCount(0);
+		await expect(page).toHaveURL(/\/$/);
 	});
 
 	test('should display game cards in 3 columns on desktop', async ({ page }) => {
-		// Get grid
+		await page.setViewportSize({ width: 1280, height: 720 });
 		const grid = page.locator('.game-cards-grid');
 
 		// Get computed grid-template-columns
@@ -122,36 +125,32 @@ test.describe('Game Selection Screen', () => {
 		expect(backdropFilter).toContain('blur');
 	});
 
-	test('should have different border colors for each game card', async ({ page }) => {
+	test('should have a different card variant for each game card', async ({ page }) => {
 		const cards = page.locator('.game-card');
 		const count = await cards.count();
+		expect(count).toBeGreaterThan(1);
 
-		if (count >= 3) {
-			// Check that different cards have different classes
-			const class1 = await cards.nth(0).getAttribute('class');
-			const class2 = await cards.nth(1).getAttribute('class');
-			const class3 = await cards.nth(2).getAttribute('class');
-
-			// Each should have unique card variant class
-			expect(class1).toContain('game-card-1');
-			expect(class2).toContain('game-card-2');
-			expect(class3).toContain('game-card-3');
+		// Cards cycle through variants game-card-1..5 in order
+		const variants: string[] = [];
+		for (let i = 0; i < Math.min(count, 5); i++) {
+			const cls = (await cards.nth(i).getAttribute('class')) ?? '';
+			expect(cls).toContain(`game-card-${i + 1}`);
+			variants.push(cls.match(/game-card-\d/)![0]);
 		}
+		expect(new Set(variants).size).toBe(variants.length);
 	});
 
 	test('should be keyboard navigable', async ({ page }) => {
-		// Find and focus first game card directly
-		const firstCard = page.locator('.game-card').first();
-		await firstCard.focus();
+		// The Start button is the card's focusable control. Tab from the menu button reaches it.
+		await page.getByRole('button', { name: 'Toggle menu' }).focus();
+		await page.keyboard.press('Tab');
 
-		// Focus should be on a game card
-		const focusedElement = page.locator(':focus');
-		await expect(focusedElement).toHaveClass(/game-card/);
+		const focused = page.locator(':focus');
+		await expect(focused).toHaveClass(/start-btn/);
 
-		// Press Enter to select
+		// Enter starts the game
 		await page.keyboard.press('Enter');
-
-		// Confirm modal should open
-		await expect(page.locator('.modal-backdrop')).toBeVisible();
+		await expect(page).toHaveURL(/\/game\/[a-z0-9-]+$/);
+		await expect(page.getByTestId('game-page')).toBeVisible();
 	});
 });

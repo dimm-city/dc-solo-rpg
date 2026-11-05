@@ -2,57 +2,36 @@
 // seed: tests/seed.spec.ts
 
 import { test, expect } from '@playwright/test';
+import { openHomePage, openContentModal, openHeaderMenu } from './helpers';
+
+const columnCount = async (page) =>
+	(
+		await page
+			.locator('.game-cards-grid')
+			.evaluate((el) => window.getComputedStyle(el).gridTemplateColumns)
+	).split(' ').length;
 
 test.describe('Responsive Design', () => {
 	test.beforeEach(async ({ page }) => {
-		// Skip splash and instructions
-		await page.goto('/');
-		await page.evaluate(() => {
-			sessionStorage.setItem('splashShown', 'true');
-			localStorage.setItem('instructionsSeen', 'true');
-		});
-		await page.goto('/');
-		await page.waitForSelector('[data-testid="home-page"]', { timeout: 10000 });
+		await openHomePage(page);
 	});
 
 	test('should display 3 columns on desktop (1280px)', async ({ page }) => {
-		// Already at desktop size from beforeEach
-		const grid = page.locator('.game-cards-grid');
+		await page.setViewportSize({ width: 1280, height: 720 });
 
-		const gridColumns = await grid.evaluate(
-			(el) => window.getComputedStyle(el).gridTemplateColumns
-		);
-
-		const columnCount = gridColumns.split(' ').length;
-		expect(columnCount).toBe(3);
+		await expect.poll(() => columnCount(page)).toBe(3);
 	});
 
 	test('should display 2 columns on tablet (768px)', async ({ page }) => {
-		// Resize to tablet
 		await page.setViewportSize({ width: 768, height: 1024 });
 
-		const grid = page.locator('.game-cards-grid');
-
-		const gridColumns = await grid.evaluate(
-			(el) => window.getComputedStyle(el).gridTemplateColumns
-		);
-
-		const columnCount = gridColumns.split(' ').length;
-		expect(columnCount).toBe(2);
+		await expect.poll(() => columnCount(page)).toBe(2);
 	});
 
 	test('should display 1 column on mobile (375px)', async ({ page }) => {
-		// Resize to mobile
 		await page.setViewportSize({ width: 375, height: 667 });
 
-		const grid = page.locator('.game-cards-grid');
-
-		const gridColumns = await grid.evaluate(
-			(el) => window.getComputedStyle(el).gridTemplateColumns
-		);
-
-		const columnCount = gridColumns.split(' ').length;
-		expect(columnCount).toBe(1);
+		await expect.poll(() => columnCount(page)).toBe(1);
 	});
 
 	test('should adjust header on mobile', async ({ page }) => {
@@ -61,29 +40,32 @@ test.describe('Responsive Design', () => {
 
 		const header = page.locator('.page-header');
 
-		// Header should still be visible
+		// Header should still be visible, fit the screen, and not cause sideways scrolling
 		await expect(header).toBeVisible();
+		const headerBox = await header.boundingBox();
+		expect(headerBox!.width).toBeLessThanOrEqual(375);
+		const overflowsHorizontally = await page.evaluate(
+			() => document.documentElement.scrollWidth > document.documentElement.clientWidth
+		);
+		expect(overflowsHorizontally).toBe(false);
 
-		// Icons should be smaller
-		const svg = header.locator('svg').first();
-		const width = await svg.evaluate((el) => {
-			const bbox = el.getBoundingClientRect();
-			return bbox.width;
-		});
-
-		expect(width).toBeLessThan(30); // Should be 24px or less on mobile
+		// The visible header icon (the menu button) should be 28px or smaller
+		const svg = header.locator('svg:visible').first();
+		const width = await svg.evaluate((el) => el.getBoundingClientRect().width);
+		expect(width).toBeGreaterThan(0);
+		expect(width).toBeLessThan(30);
 	});
 
 	test('should maintain game card functionality on mobile', async ({ page }) => {
 		// Resize to mobile
 		await page.setViewportSize({ width: 375, height: 667 });
 
-		// Click game card
+		// Starting a game works from the card's Start button
 		const firstCard = page.locator('.game-card').first();
-		await firstCard.click();
+		await firstCard.getByRole('button', { name: 'Start new game' }).click();
 
-		// Modal should open
-		await expect(page.locator('.modal-backdrop')).toBeVisible();
+		await expect(page).toHaveURL(/\/game\/[a-z0-9-]+$/);
+		await expect(page.getByTestId('screen-showIntro')).toBeVisible();
 	});
 
 	test('should maintain modal functionality on mobile', async ({ page }) => {
@@ -91,15 +73,18 @@ test.describe('Responsive Design', () => {
 		await page.setViewportSize({ width: 375, height: 667 });
 
 		// Open About modal
-		await page.click('button[aria-label="About"]');
+		const dialog = await openContentModal(page, 'About');
 
-		// Modal should be visible
-		await expect(page.locator('.overlay-modal-container')).toBeVisible();
+		// It is a full-screen sheet with a readable title, body and a Done button
+		const wrapper = await page.locator('.content-modal-wrapper').boundingBox();
+		expect(wrapper!.width).toBeCloseTo(375, 0);
+		expect(wrapper!.height).toBeCloseTo(667, 0);
+		await expect(dialog.getByRole('heading', { level: 2, name: 'About' })).toBeVisible();
+		await expect(dialog.locator('.about-lead')).toBeVisible();
+		await expect(dialog.getByRole('button', { name: 'Done' })).toBeVisible();
 
-		// Modal content should be readable
-		await expect(page.locator('.info-modal-title')).toBeVisible();
-		await expect(page.locator('.info-modal-body')).toBeVisible();
-		await expect(page.locator('.info-modal-button:has-text("Close")')).toBeVisible();
+		await dialog.getByRole('button', { name: 'Done' }).click();
+		await expect(page.getByRole('dialog')).toHaveCount(0);
 	});
 
 	test('should have appropriate touch targets on mobile', async ({ page }) => {
@@ -108,13 +93,28 @@ test.describe('Responsive Design', () => {
 
 		// Check game card size
 		const firstCard = page.locator('.game-card').first();
-		const height = await firstCard.evaluate((el) => {
-			const bbox = el.getBoundingClientRect();
-			return bbox.height;
-		});
+		const height = await firstCard.evaluate((el) => el.getBoundingClientRect().height);
 
 		// Should be at least 44px (accessibility guideline for touch targets)
 		expect(height).toBeGreaterThan(44);
+
+		// The controls themselves must also be at least 44x44
+		const controls = [
+			page.getByRole('button', { name: 'Toggle menu' }),
+			firstCard.getByRole('button', { name: 'Start new game' })
+		];
+		for (const control of controls) {
+			const box = await control.boundingBox();
+			expect(box!.width).toBeGreaterThanOrEqual(44);
+			expect(box!.height).toBeGreaterThanOrEqual(44);
+		}
+
+		await openHeaderMenu(page);
+		const items = page.locator('.mobile-menu button');
+		for (let i = 0; i < (await items.count()); i++) {
+			const box = await items.nth(i).boundingBox();
+			expect(box!.height).toBeGreaterThanOrEqual(44);
+		}
 	});
 
 	test('should maintain layout integrity on small tablet (700px)', async ({ page }) => {
@@ -123,16 +123,21 @@ test.describe('Responsive Design', () => {
 
 		// Game grid should still be visible
 		await expect(page.locator('.game-cards-grid')).toBeVisible();
+		await expect.poll(() => columnCount(page)).toBe(2);
 
-		// Cards should be visible
+		// Cards should be visible and inside the viewport
 		const cards = page.locator('.game-card');
 		expect(await cards.count()).toBeGreaterThan(0);
+		for (let i = 0; i < (await cards.count()); i++) {
+			const box = await cards.nth(i).boundingBox();
+			expect(box!.x).toBeGreaterThanOrEqual(0);
+			expect(box!.x + box!.width).toBeLessThanOrEqual(700);
+		}
 	});
 
 	test('should adjust instruction cards on mobile', async ({ page, context }) => {
 		// Clear storage and resize
 		await context.clearCookies();
-		await page.goto('/');
 		await page.evaluate(() => {
 			sessionStorage.clear();
 			localStorage.clear();
@@ -140,19 +145,15 @@ test.describe('Responsive Design', () => {
 
 		await page.setViewportSize({ width: 375, height: 667 });
 		await page.goto('/');
-		await page.waitForTimeout(4000); // Wait for splash
 
-		// Instruction cards should be visible and properly sized
+		// Instruction cards appear after the splash
 		const cards = page.locator('.choice-card');
-		const count = await cards.count();
-		expect(count).toBe(3);
+		await expect(cards.first()).toBeVisible();
+		expect(await cards.count()).toBe(3);
 
 		// Each card should be full width on mobile
 		const firstCard = cards.first();
-		const width = await firstCard.evaluate((el) => {
-			const bbox = el.getBoundingClientRect();
-			return bbox.width;
-		});
+		const width = await firstCard.evaluate((el) => el.getBoundingClientRect().width);
 
 		// Should take most of the viewport width
 		expect(width).toBeGreaterThan(300);

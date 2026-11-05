@@ -1,135 +1,153 @@
 // spec: tests/home-page-test-plan.md
 // seed: tests/seed.spec.ts
 
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+import { openHomePage } from './helpers';
 
-test.describe('Game Confirmation Modal', () => {
-	test.beforeEach(async ({ page }) => {
-		// Skip splash and instructions
-		await page.goto('/');
-		await page.evaluate(() => {
-			sessionStorage.setItem('splashShown', 'true');
-			localStorage.setItem('instructionsSeen', 'true');
-		});
-		await page.goto('/');
-		await page.waitForSelector('[data-testid="home-page"]', { timeout: 10000 });
+const SLUG = 'future-lost';
+const GAME_TITLE = 'Future Lost';
+
+/**
+ * Leave Future Lost in progress and return to the home page, where its card now offers
+ * Resume and Delete instead of Start.
+ *
+ * A real save only happens after a full round of cards, so the save is written through the
+ * app's own storage module (the same code path and record format) rather than by playing
+ * a round.
+ */
+async function leaveGameInProgress(page: Page) {
+	await openHomePage(page);
+	await page.evaluate(
+		async ({ slug, title }) => {
+			const storageModule = '/src/lib/stores/indexedDBStorage.js';
+			const { saveGame } = await import(/* @vite-ignore */ storageModule);
+			await saveGame({
+				state: 'startRound',
+				config: { slug, title },
+				journalEntries: [],
+				round: 1,
+				tower: 20,
+				tokens: 10,
+				playerName: 'Test Player',
+				deck: [],
+				discard: []
+			});
+		},
+		{ slug: SLUG, title: GAME_TITLE }
+	);
+
+	await page.goto('/');
+	await expect(page.getByTestId('home-page')).toBeVisible();
+}
+
+/** Open the "Delete Saved Game" confirmation for the in-progress game */
+async function openDeleteConfirmation(page: Page) {
+	await leaveGameInProgress(page);
+	await page
+		.getByTestId(`game-card-${SLUG}`)
+		.getByRole('button', { name: 'Delete saved game' })
+		.click();
+	const modal = page.locator('.modal-backdrop');
+	await expect(modal).toBeVisible();
+	return modal;
+}
+
+test.describe('Game start and confirmation modal', () => {
+	test('should start a game straight from the Start button, with no confirmation', async ({
+		page
+	}) => {
+		await openHomePage(page);
+
+		await page
+			.getByTestId(`game-card-${SLUG}`)
+			.getByRole('button', { name: 'Start new game' })
+			.click();
+
+		// Goes directly to the game; the old "Load Game / START GAME / CANCEL" step is gone
+		await expect(page).toHaveURL(`/game/${SLUG}`);
+		await expect(page.getByTestId('screen-showIntro')).toBeVisible();
+		await expect(page.locator('.modal-backdrop')).toHaveCount(0);
+		await expect(page.getByRole('button', { name: 'START GAME' })).toHaveCount(0);
 	});
 
-	test('should open game confirmation modal when clicking a game card', async ({ page }) => {
-		// Wait for game cards to load
-		await page.waitForSelector('.game-card', { timeout: 5000 });
+	test('should offer Resume and Delete instead of Start once a game is in progress', async ({
+		page
+	}) => {
+		await leaveGameInProgress(page);
 
-		// Click first game card
-		await page.click('.game-card');
-
-		// Verify modal appears
-		const modal = page.locator('.modal-backdrop');
-		await expect(modal).toBeVisible();
-
-		// Verify modal has title
-		await expect(page.locator('#modal-title')).toContainText('Load Game');
+		const card = page.getByTestId(`game-card-${SLUG}`);
+		await expect(card.getByRole('button', { name: 'Resume saved game' })).toBeVisible();
+		await expect(card.getByRole('button', { name: 'Delete saved game' })).toBeVisible();
+		await expect(card.getByRole('button', { name: 'Start new game' })).toHaveCount(0);
 	});
 
-	test('should display correct game title in confirmation message', async ({ page }) => {
-		// Click specific game card if it exists
-		const futureGameCard = page.locator('[data-testid="game-card-future-lost"]');
-		const gameCardCount = await futureGameCard.count();
+	test('should open a delete confirmation naming the game', async ({ page }) => {
+		const modal = await openDeleteConfirmation(page);
 
-		if (gameCardCount > 0) {
-			await futureGameCard.click();
+		// Proper dialog semantics
+		await expect(modal).toHaveAttribute('role', 'dialog');
+		await expect(modal).toHaveAttribute('aria-modal', 'true');
+		await expect(modal).toHaveAttribute('aria-labelledby', 'modal-title');
 
-			// Verify game title in message
-			const modalBody = page.locator('.modal-body p');
-			await expect(modalBody).toContainText('Future Lost');
-			await expect(modalBody).toContainText('Start');
-		} else {
-			// If future-lost doesn't exist, use first game card
-			const firstCard = page.locator('.game-card').first();
-			await firstCard.click();
-
-			// Verify modal opens with Start message
-			const modalBody = page.locator('.modal-body p');
-			await expect(modalBody).toContainText('Start');
-		}
+		await expect(page.locator('#modal-title')).toHaveText('Delete Saved Game');
+		const body = modal.locator('.modal-body p');
+		await expect(body).toContainText(GAME_TITLE);
+		await expect(body).toContainText('cannot be undone');
 	});
 
-	test('should have START GAME and CANCEL buttons', async ({ page }) => {
-		// Click a game card
-		await page.click('.game-card');
+	test('should have DELETE and CANCEL buttons', async ({ page }) => {
+		const modal = await openDeleteConfirmation(page);
 
-		// Verify buttons exist
-		await expect(page.locator('button:has-text("START GAME")')).toBeVisible();
-		await expect(page.locator('button:has-text("CANCEL")')).toBeVisible();
+		await expect(modal.getByRole('button', { name: 'DELETE' })).toBeVisible();
+		await expect(modal.getByRole('button', { name: 'CANCEL' })).toBeVisible();
 	});
 
-	test('should navigate to game page when clicking START GAME', async ({ page }) => {
-		// Click first game card
-		await page.click('.game-card');
+	test('should keep the save when clicking CANCEL', async ({ page }) => {
+		const modal = await openDeleteConfirmation(page);
 
-		// Wait for modal to appear
-		await expect(page.locator('.modal-backdrop')).toBeVisible();
+		await modal.getByRole('button', { name: 'CANCEL' }).click();
 
-		// Click START GAME button
-		await page.click('button:has-text("START GAME")');
-
-		// Verify navigation (should go to /game/{slug})
-		await expect(page).toHaveURL(/\/game\/.+/);
-	});
-
-	test('should close modal when clicking CANCEL button', async ({ page }) => {
-		// Click a game card
-		await page.click('.game-card');
-		await expect(page.locator('.modal-backdrop')).toBeVisible();
-
-		// Click CANCEL button
-		await page.click('button:has-text("CANCEL")');
-
-		// Verify modal closes
-		await expect(page.locator('.modal-backdrop')).not.toBeVisible();
+		await expect(page.locator('.modal-backdrop')).toHaveCount(0);
+		await expect(
+			page.getByTestId(`game-card-${SLUG}`).getByRole('button', { name: 'Resume saved game' })
+		).toBeVisible();
 	});
 
 	test('should close modal when clicking backdrop', async ({ page }) => {
-		// Click a game card
-		await page.click('.game-card');
-		await expect(page.locator('.modal-backdrop')).toBeVisible();
+		const modal = await openDeleteConfirmation(page);
 
 		// Click backdrop (not the modal content)
-		await page.locator('.modal-backdrop').click({ position: { x: 10, y: 10 } });
+		await modal.click({ position: { x: 5, y: 5 } });
 
-		// Verify modal closes
-		await expect(page.locator('.modal-backdrop')).not.toBeVisible();
+		await expect(page.locator('.modal-backdrop')).toHaveCount(0);
+		await expect(
+			page.getByTestId(`game-card-${SLUG}`).getByRole('button', { name: 'Resume saved game' })
+		).toBeVisible();
 	});
 
 	test('should close modal when pressing Escape key', async ({ page }) => {
-		// Click a game card
-		await page.click('.game-card');
-		await expect(page.locator('.modal-backdrop')).toBeVisible();
+		await openDeleteConfirmation(page);
 
-		// Press Escape key
 		await page.keyboard.press('Escape');
 
-		// Verify modal closes
-		await expect(page.locator('.modal-backdrop')).not.toBeVisible();
+		await expect(page.locator('.modal-backdrop')).toHaveCount(0);
+		await expect(
+			page.getByTestId(`game-card-${SLUG}`).getByRole('button', { name: 'Resume saved game' })
+		).toBeVisible();
 	});
 
 	test('should have highest z-index', async ({ page }) => {
-		// Click a game card
-		await page.click('.game-card');
+		const modal = await openDeleteConfirmation(page);
 
-		// Verify z-index
-		const modal = page.locator('.modal-backdrop');
 		const zIndex = await modal.evaluate((el) => window.getComputedStyle(el).zIndex);
 
 		expect(parseInt(zIndex)).toBeGreaterThan(100000);
 	});
 
 	test('should have backdrop blur effect', async ({ page }) => {
-		// Click a game card
-		await page.click('.game-card');
+		const modal = await openDeleteConfirmation(page);
 
-		// Verify backdrop blur
-		const backdrop = page.locator('.modal-backdrop');
-		const backdropFilter = await backdrop.evaluate(
+		const backdropFilter = await modal.evaluate(
 			(el) =>
 				window.getComputedStyle(el).backdropFilter ||
 				window.getComputedStyle(el).getPropertyValue('-webkit-backdrop-filter')
@@ -138,21 +156,15 @@ test.describe('Game Confirmation Modal', () => {
 		expect(backdropFilter).toContain('blur');
 	});
 
-	test('should clear selection when modal is cancelled', async ({ page }) => {
-		// Click a game card
-		const gameCard = page.locator('.game-card').first();
-		await gameCard.click();
+	test('should delete the save and offer Start again when confirming', async ({ page }) => {
+		const modal = await openDeleteConfirmation(page);
 
-		// Wait for modal to appear
-		await expect(page.locator('.modal-backdrop')).toBeVisible();
+		await modal.getByRole('button', { name: 'DELETE' }).click();
 
-		// Cancel modal
-		await page.click('button:has-text("CANCEL")');
-
-		// Wait for modal to close
-		await expect(page.locator('.modal-backdrop')).not.toBeVisible();
-
-		// Verify card no longer has selected class
-		await expect(gameCard).not.toHaveClass(/selected/);
+		await expect(page.locator('.modal-backdrop')).toHaveCount(0);
+		await expect(page.locator('.upload-status')).toHaveText('Saved game deleted');
+		const card = page.getByTestId(`game-card-${SLUG}`);
+		await expect(card.getByRole('button', { name: 'Start new game' })).toBeVisible();
+		await expect(card.getByRole('button', { name: 'Resume saved game' })).toHaveCount(0);
 	});
 });
