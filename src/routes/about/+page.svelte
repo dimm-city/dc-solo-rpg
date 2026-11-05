@@ -1,12 +1,11 @@
 <script>
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import NeuralBackground from '$lib/components/NeuralBackground.svelte';
 
 	/** @type {import('./$types').PageData} */
-	let { data } = $props();
-
 	function goHome() {
-		goto('/');
+		goto(resolve('/'));
 	}
 </script>
 

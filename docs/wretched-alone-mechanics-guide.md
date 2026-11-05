@@ -448,7 +448,7 @@ Aces represent moments of genuine help without immediate cost. While the game is
 
 Narrative cards (Aces) can optionally have special one-time effects through modifiers:
 
-- **Example 1**: Ace with skip-damage modifier allows skipping next damage check
+- **Example 1**: Ace with skip-damage modifier skips its own damage check
 - **Example 2**: Ace with return-king modifier allows shuffling a King back into deck
 
 These modifiers are optional enhancements, not core mechanics.

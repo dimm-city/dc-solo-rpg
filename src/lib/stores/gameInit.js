@@ -42,12 +42,13 @@ export function initializeGame(gameConfig, player, options = {}) {
 	const savedDiceTheme = savedSettings.diceTheme ? getDiceTheme(savedSettings.diceTheme) : null;
 
 	// Merge options: config options < saved settings < passed options
-	// Note: Difficulty is controlled by game config, not user settings
+	// Difficulty: game config (author default) < player setting < passed options
 	const finalConfig = {
 		...gameConfig,
 		options: {
 			...gameConfig.options,
 			...(savedDiceTheme && { dice: savedDiceTheme }),
+			...(savedSettings.difficulty != null && { difficulty: savedSettings.difficulty }),
 			...options
 		}
 	};
@@ -64,11 +65,17 @@ export function initializeGame(gameConfig, player, options = {}) {
 		deck = deck.filter((c) => !(c.card === 'A' && c.suit === 'hearts'));
 	}
 
+	// Deep copy for restart. Keep the player's difficulty setting out of it so a restart re-reads it
+	const restartConfig = JSON.parse(JSON.stringify(finalConfig));
+	const restartDifficulty = options.difficulty ?? gameConfig.options?.difficulty;
+	if (restartDifficulty === undefined) delete restartConfig.options.difficulty;
+	else restartConfig.options.difficulty = restartDifficulty;
+
 	// Initialize all game state in one operation
 	// Note: Initial damage roll is now interactive, applied after intro screen
 	Object.assign(gameState, {
 		config: finalConfig,
-		originalConfig: JSON.parse(JSON.stringify(finalConfig)), // Deep copy for restart
+		originalConfig: restartConfig,
 		stylesheet: finalConfig.stylesheet || gameConfig.stylesheet || '',
 		systemConfig: { gameConfigUrl: `/games/${gameConfig.slug || 'default'}/` },
 		state: 'showIntro',

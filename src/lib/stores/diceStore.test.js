@@ -5,7 +5,7 @@
  * don't cause initialization failures
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
 import { DICE_THEMES, getDefaultDiceTheme } from '../configuration/DiceThemes.js';
 
 // Mock the DiceBox class
@@ -69,7 +69,14 @@ describe('DiceStore - Theme Configuration', () => {
 
 	describe('DiceBox Initialization - Theme Handling', () => {
 		let initializeDiceBox;
+		let resetDiceBox;
 		let gameState;
+
+		beforeAll(async () => {
+			// Warm the transform cache so the one-off cold compile of the Svelte store
+			// (~2s) is paid in a hook (10s limit) rather than inside the first test.
+			await import('./diceStore.svelte.js');
+		});
 
 		beforeEach(async () => {
 			// Reset modules to get fresh imports
@@ -85,6 +92,7 @@ describe('DiceStore - Theme Configuration', () => {
 			// Import after mocking
 			const diceStoreModule = await import('./diceStore.svelte.js');
 			initializeDiceBox = diceStoreModule.initializeDiceBox;
+			resetDiceBox = diceStoreModule.resetDiceBox;
 
 			// Get reference to mocked gameState
 			const gameStoreModule = await import('./gameStore.svelte.js');
@@ -169,12 +177,12 @@ describe('DiceStore - Theme Configuration', () => {
 					}
 				};
 
-				// Reset the initialized flag by re-importing
-				vi.resetModules();
-				const diceStoreModule = await import('./diceStore.svelte.js?update=' + Date.now());
-				const initFn = diceStoreModule.initializeDiceBox;
+				// Reset the initialized flag via the store's own reset. (Re-importing the module
+				// per theme with a cache-busting query forced a fresh transform of the Svelte
+				// module each time, which made this test take ~4s.)
+				resetDiceBox();
 
-				await initFn(global.mockContainer);
+				await initializeDiceBox(global.mockContainer);
 
 				expect(mockDiceBox.initialize).toHaveBeenCalled();
 

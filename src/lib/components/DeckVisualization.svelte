@@ -2,7 +2,6 @@
 	import { gameState } from '$lib/stores/gameStore.svelte.js';
 
 	const cardsRemaining = $derived(gameState.deck?.length || 0);
-	const cardsDrawn = $derived(52 - cardsRemaining);
 	const deckHeight = $derived(Math.min((cardsRemaining / 52) * 52, 52)); // Max height 200px
 	const visibleLayers = $derived(Math.min(Math.ceil(cardsRemaining / 5), 10)); // Show up to 10 layers
 </script>
@@ -10,7 +9,7 @@
 {#if cardsRemaining > 0}
 	<div class="deck-container" title="{cardsRemaining} cards remaining">
 		<div class="deck-stack" style="height: {deckHeight}px">
-			{#each Array(visibleLayers) as _, i}
+			{#each Array(visibleLayers) as _, i (i)}
 				<div
 					class="card-layer"
 					style="top: {i * 3}px; opacity: {1 - i * 0.08}; z-index: {visibleLayers - i}"

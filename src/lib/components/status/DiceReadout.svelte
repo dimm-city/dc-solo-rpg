@@ -37,13 +37,6 @@
 		return pips;
 	});
 
-	// Modifier state display
-	const modifierState = $derived.by(() => {
-		if (gameState.isLucid) return 'LUCID';
-		if (gameState.isSurreal) return 'SURREAL';
-		return null;
-	});
-
 	const modifierColor = $derived.by(() => {
 		if (gameState.isLucid) return '#00ffaa'; // Green for advantage
 		if (gameState.isSurreal) return '#ff0066'; // Red for disadvantage
@@ -317,10 +310,11 @@
 		.dice-readout {
 			justify-content: center;
 		}
-		
-		.dice-value, .dice-label {
+
+		.dice-value,
+		.dice-label {
 			display: none;
-			height: 0
+			height: 0;
 		}
 
 		.dice-pip {

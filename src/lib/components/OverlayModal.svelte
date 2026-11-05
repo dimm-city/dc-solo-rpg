@@ -2,7 +2,7 @@
 	/**
 	 * OverlayModal - Dialog with layered fog effect
 	 */
-	import { fade, scale } from 'svelte/transition';
+	import { scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import { ANIMATION_DURATION } from '$lib/constants/animations.js';
 

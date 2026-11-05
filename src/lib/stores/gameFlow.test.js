@@ -1,5 +1,4 @@
 import { test, describe, expect, vi, beforeEach } from 'vitest';
-import { readFileSync } from 'fs';
 import { gameState } from './gameStore.svelte.js';
 import {
 	startGame,
@@ -13,29 +12,10 @@ import {
 	successCheck,
 	restartGame,
 	exitGame,
-	confirmTaskRoll,
-	services
+	confirmTaskRoll
 } from './gameActions.svelte.js';
 
 global.fetch = vi.fn();
-
-function createFetchResponse(url, data) {
-	return {
-		json: () => new Promise((resolve) => resolve(data)),
-		text: () =>
-			new Promise((resolve) => {
-				// // Return a mock game configuration
-				// const config = new GameSettings();
-				// config.stylesheet = 'game.css';
-				// return config;
-				const buffer = readFileSync(url);
-				const output = buffer.toString();
-
-				console.log('MOCKED', url); //, output);
-				return resolve(output);
-			})
-	};
-}
 
 describe('WAAStore', () => {
 	beforeEach(() => {
@@ -346,6 +326,24 @@ describe('WAAStore', () => {
 			expect(gameState.tower).toBe(19);
 			expect(gameState.gameOver).toBe(false);
 			expect(gameState.state).toBe('drawCard');
+
+			gameState.rollWithModifiers = originalRoll;
+		});
+
+		test('should store a numeric diceRoll in pendingUpdates (deprecated failureCheck)', async () => {
+			const originalRoll = gameState.rollWithModifiers;
+			gameState.rollWithModifiers = vi.fn(() => ({ roll: 8, wasLucid: false, wasSurreal: false }));
+
+			gameState.state = 'failureCheck';
+			gameState.gameOver = false;
+			gameState.tower = 20;
+			gameState.config = {};
+
+			const result = await failureCheck();
+
+			expect(result.roll).toBe(8);
+			expect(typeof gameState.pendingUpdates.diceRoll).toBe('number');
+			expect(gameState.pendingUpdates.diceRoll).toBe(8);
 
 			gameState.rollWithModifiers = originalRoll;
 		});

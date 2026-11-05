@@ -15,7 +15,6 @@
  */
 
 import { ANIMATION_DURATION } from '$lib/constants/animations.js';
-import { logger } from '$lib/utils/logger.js';
 
 export function useStoryNavigation(totalRounds, onExit) {
 	let currentRoundIndex = $state(0);

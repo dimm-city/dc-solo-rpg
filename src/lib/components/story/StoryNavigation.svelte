@@ -17,7 +17,6 @@
 	 */
 
 	import AugmentedButton from '../AugmentedButton.svelte';
-	import { logger } from '../../utils/logger.js';
 
 	let {
 		currentRound = 0,

@@ -132,7 +132,7 @@ test.describe('Game Confirmation Modal', () => {
 		const backdropFilter = await backdrop.evaluate(
 			(el) =>
 				window.getComputedStyle(el).backdropFilter ||
-				window.getComputedStyle(el).webkitBackdropFilter
+				window.getComputedStyle(el).getPropertyValue('-webkit-backdrop-filter')
 		);
 
 		expect(backdropFilter).toContain('blur');

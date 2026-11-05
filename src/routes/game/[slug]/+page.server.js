@@ -1,4 +1,4 @@
-import { error, redirect } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import { logger } from '$lib/utils/logger.js';
 import { parseGameFile, ValidationError } from '$lib/parsers/markdownParser.js';
 
@@ -15,13 +15,7 @@ function formatIntroduction(sections) {
 export async function load({ params, fetch, locals }) {
 	const { slug } = params;
 
-	// Check authentication
-	const session = await locals.auth();
-
-	// Redirect to sign-in if not authenticated
-	if (!session?.user) {
-		throw redirect(303, '/signin');
-	}
+	const session = await locals.auth?.();
 
 	try {
 		const gameUrl = `/games/${slug}.game.md`;
@@ -44,6 +38,7 @@ export async function load({ params, fetch, locals }) {
 				failureCheckLoss: parsed['lose-message'],
 				failureCounterLoss: parsed['lose-message']
 			},
+			options: parsed.options,
 			deck: parsed.deck,
 			introduction: formatIntroduction(parsed.introduction),
 			loaded: true,
@@ -57,7 +52,7 @@ export async function load({ params, fetch, locals }) {
 			slug,
 			gameConfig,
 			player: {
-				name: session.user.name || session.user.email || 'Guest'
+				name: session?.user?.name || session?.user?.email || 'Guest'
 			}
 		};
 	} catch (err) {

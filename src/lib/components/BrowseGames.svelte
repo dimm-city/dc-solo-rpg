@@ -12,7 +12,7 @@
 	import { ANIMATION_DURATION } from '$lib/constants/animations.js';
 
 	let {
-		onSelectGame = (game) => {}, // Callback when game is selected
+		onSelectGame = () => {}, // Callback when game is selected
 		onBack = () => {} // Callback to return to main menu
 	} = $props();
 

@@ -164,7 +164,9 @@ export class OpenAITTSProvider extends BaseTTSProvider {
 			body: JSON.stringify(requestBody)
 		}).catch((error) => {
 			logger.error(`[OpenAI] Network error calling ${this.config.apiEndpoint}:`, error);
-			throw new Error(`Network error: ${error.message}. Check that the server is running at ${this.config.apiEndpoint}`);
+			throw new Error(
+				`Network error: ${error.message}. Check that the server is running at ${this.config.apiEndpoint}`
+			);
 		});
 
 		if (!response.ok) {
@@ -240,7 +242,7 @@ export class OpenAITTSProvider extends BaseTTSProvider {
 			try {
 				this.currentSource.stop();
 				this.currentSource.disconnect();
-			} catch (error) {
+			} catch {
 				// Ignore errors from already stopped sources
 			}
 			this.currentSource = null;

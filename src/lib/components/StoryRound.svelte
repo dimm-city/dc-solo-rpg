@@ -7,7 +7,8 @@
 	import AudioPlayer from './AudioPlayer.svelte';
 	import GameOverMessage from './story/GameOverMessage.svelte';
 	import RoundStats from './story/RoundStats.svelte';
-	import { fade, fly } from 'svelte/transition';
+	import { fade } from 'svelte/transition';
+	import { sanitizeHtml } from '../utils/sanitizeHtml.js';
 
 	let {
 		round = null, // Round data with cards array
@@ -85,7 +86,8 @@
 				{#if card.story}
 					<div class="card-story">
 						<div class="story-content">
-							{@html card.story.replace(/\n/g, '<br>')}
+							<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized via sanitizeHtml -->
+							{@html sanitizeHtml(card.story.replace(/\n/g, '<br>'))}
 						</div>
 					</div>
 				{/if}

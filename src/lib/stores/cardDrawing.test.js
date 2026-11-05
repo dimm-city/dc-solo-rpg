@@ -3,10 +3,8 @@ import { gameState } from './gameStore.svelte.js';
 import {
 	drawCard,
 	confirmCard,
-	getFailureCheckRoll,
 	applyFailureCheckResult,
 	applyPendingDiceRoll,
-	confirmFailureCheck,
 	rollForTasks,
 	successCheck,
 	applyPendingSuccessCheck

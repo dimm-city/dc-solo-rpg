@@ -307,7 +307,7 @@ Event             | 2,4,6,8,10,J,Q| 28    | 53%
 1. Unlock Salvation checks
 2. Set tokens to 10
 3. Increment acesRevealed to 1
-4. No Stability check (it's a Narrative card)
+4. Triggers a Stability check (Aces are odd ranks)
 
 **Narrative Role:** The moment hope emerges. The path to escape becomes visible.
 
@@ -319,8 +319,8 @@ Event             | 2,4,6,8,10,J,Q| 28    | 53%
 
 1. Increment acesRevealed
 2. Improve Salvation threshold
-3. No Stability check
-4. Optional modifiers: skip-damage, return-king
+3. Triggers a Stability check (Aces are odd ranks), unless the card has `skip-damage`
+4. Optional modifiers: skip-damage (this card skips its own Stability check), return-king (if any King is revealed, one is shuffled back into the deck; otherwise no effect)
 
 **Narrative Role:** Moments of respite, reflection, and empowerment.
 
@@ -352,33 +352,37 @@ Event             | 2,4,6,8,10,J,Q| 28    | 53%
 
 **Cards:** 3, 5, 7, 9 (all suits) - 16 total
 
+Challenge cards are not the only cards that trigger a Stability check: every odd rank does, so the four Aces (Primary Success and Narrative) trigger one too.
+
 **Effects:**
 
 1. Trigger Stability check (roll d20)
-2. Compare roll to 10 (default DC)
-3. Failure: Lose Stability equal to card rank
-4. Natural 20: +1 Stability (max 20) + Lucid state
-5. Natural 1: Surreal state
+2. Stability lost is determined by the roll (see table below), not by the card's rank
+3. Natural 20: no loss, +1 Stability (max 20) + Lucid state
+4. Natural 1: lose 3 Stability + Surreal state
 
 **Narrative Role:** Tests, obstacles, dangers that threaten your Stability.
 
 **Stability Loss Table:**
 
-| Card Rank | Stability Lost on Failure |
-| --------- | ------------------------- |
-| 3         | 3                         |
-| 5         | 5                         |
-| 7         | 7                         |
-| 9         | 9                         |
+| d20 Roll | Stability Change    | State Change |
+| -------- | ------------------- | ------------ |
+| 1        | -3                  | Surreal      |
+| 2-5      | -2                  |              |
+| 6-10     | -1                  |              |
+| 11-19    | 0                   |              |
+| 20       | 0, then +1 (max 20) | Lucid        |
+
+Every odd-ranked card (A, 3, 5, 7, 9) triggers this check; the card's rank does not affect the loss.
 
 **Example:**
 
 ```
 Draw 9♠ (Challenge card)
 Roll d20 for Stability check
-Roll = 7 (< 10, failure)
-Lose 9 Stability
-20 → 11 Stability
+Roll = 4 (2-5 range)
+Lose 2 Stability
+20 → 18 Stability
 ```
 
 ### 5.6 Event Cards
@@ -415,9 +419,9 @@ flowchart TB
 
     StabCheck --> Nat20{Natural 20?}
     Nat20 -->|Yes| GainStab[+1 Stability<br/>Lucid state]
-    Nat20 -->|No| CheckFail{Roll < 10?}
+    Nat20 -->|No| CheckFail{Roll 1-10?}
 
-    CheckFail -->|Yes| LoseStab[Lose Stability<br/>= card rank]
+    CheckFail -->|Yes| LoseStab[Lose Stability by roll<br/>1: -3, 2-5: -2, 6-10: -1]
     CheckFail -->|No| Safe
 
     LoseStab --> Nat1{Natural 1?}
@@ -431,7 +435,7 @@ flowchart TB
     Check4 -->|Yes| Lose
     Check4 -->|No| Safe
 
-    Ace --> Safe
+    Ace --> StabCheck
     GainStab --> Safe
     Surreal --> Safe
     Safe --> More{More cards?}
@@ -519,7 +523,7 @@ const cards = deck.splice(0, cardsToDraw);
 ```
 Loss Condition 1: Stability ≤ 0
 - Failed too many Stability checks
-- Drew too many high-rank Challenge cards
+- Rolled low on too many Stability checks
 
 Loss Condition 2: 4 Kings Revealed
 - All Failure Counter cards revealed
@@ -532,13 +536,33 @@ Loss Condition 3: Deck Exhaustion (rare)
 
 ### 7.3 Expected Outcomes
 
+**Design target:** a win rate under 1%, matching standard Wretched & Alone. The SRD says the Ace of Hearts salvation "offers a <1% win rate" and that "it is more common to lose the game than it is to win. This is intentional". Winning should feel possible but almost never happen; the game is about building tension, not winning.
+
+Monte Carlo simulation that drives the real game actions (`startGame`, `rollForTasks`, `drawCard`, `confirmCard`, `failureCheck`, `successCheck`, `recordRound`, and the `applyPending*` functions) through a full game loop with the live RNG. Sample: 40,000 Normal and 20,000 Easy games. The deck is the standard 52 cards with no `skip-damage` or `return-king` modifiers, and every Salvation check is taken.
+
 ```
-Expected Win Rate: 15-20%
-Most Common Loss: Stability depletion (60%)
-Second Most Common: King limit (25%)
-Third Most Common: Bad Salvation luck (10%)
-Deck Exhaustion: Very rare (5%)
+                          Normal (difficulty 1)    Easy (difficulty 0)
+Win rate:                 0.69% (275 / 40000)      1.72% (343 / 20000)
+  95% confidence:         0.61% - 0.77%            1.54% - 1.89%
+Loss, 4 Kings revealed:   90.3% (36130 / 40000)    91.2% (18247 / 20000)
+Loss, Stability depleted: 9.0%  (3595 / 40000)     7.1%  (1410 / 20000)
+Loss, deck exhaustion:    0 observed               0 observed
+Average length:           12.3 rounds              12.1 rounds
+Stability checks / game:  15.8                     15.0
+Salvation checks / game:  4.9                      11.2
 ```
+
+Every win came after all 4 Aces were revealed, apart from 6 Normal and 6 Easy wins (out of 275 and 343) that had fewer Aces.
+
+**Comparison with standard Wretched & Alone** (simulated, 2,000,000 games each, with the block tower never falling, so these are upper bounds):
+
+```
+SRD core rules (10 tokens, remove one on a 6):            ~0.0001% (1 win in 2,000,000)
+Common house rule (each other Ace widens success by 1):   0.43%
+This game, Normal:                                        0.69%
+```
+
+Normal, which is what every `.game.md` game plays, sits within the SRD's <1% target. That puts it alongside the standard system, where the salvation track usually cannot finish before the fourth King. Easy (Ace of Hearts revealed at the start) is above 1%, and it can be enabled by the game author (`difficulty: easy` in the `.game.md` frontmatter) or by the player (Difficulty in the settings menu).
 
 ---
 
@@ -546,78 +570,55 @@ Deck Exhaustion: Very rare (5%)
 
 ### 8.1 Stability Check Math
 
-**Base Check:** Roll d20 vs DC 10
+**Base Check:** Roll d20 and look up the loss (see the Stability Loss Table in 5.5)
 
 ```
-Success Rate: 55% (roll 10-20)
-Failure Rate: 45% (roll 1-9)
+Loss of 3 (roll 1):      5%
+Loss of 2 (roll 2-5):   20%
+Loss of 1 (roll 6-10):  25%
+No loss (roll 11-20):   50%
 
-With Lucid (advantage):
-Success Rate: ~80%
+Expected loss per check: 0.8 Stability
 
-With Surreal (disadvantage):
-Success Rate: ~30%
+With Lucid (advantage):    25% chance of any loss, ~0.3 expected loss
+With Surreal (disadvantage): 75% chance of any loss, ~1.3 expected loss
 ```
 
 ### 8.2 Expected Stability Loss
 
-**Challenge Card Distribution:**
-
-| Rank | Count | Damage on Fail | Expected Loss per Game |
-| ---- | ----- | -------------- | ---------------------- |
-| 3    | 4     | 3              | ~5.4                   |
-| 5    | 4     | 5              | ~9.0                   |
-| 7    | 4     | 7              | ~12.6                  |
-| 9    | 4     | 9              | ~16.2                  |
-
-**Total Expected Loss:** ~43 Stability over full game
-
-**With Starting Stability of 20:**
-
-- Need to draw ~9-10 Challenge cards on average to deplete
-- Typical game draws 25-35 cards total
-- ~8-11 Challenge cards expected per game
-- Balance is TIGHT - little room for error
+Each odd-ranked card (A, 3, 5, 7, 9; 20 cards in the deck) triggers one check, and the loss does not depend on rank. At ~0.8 Stability per check, a typical game loses only a few Stability per handful of checks; drawing every odd card would average about 16 Stability. Bad streaks (low rolls, Surreal) are what deplete Stability, so Stability pressure is moderate rather than punishing.
 
 ### 8.3 Salvation Success Rates
 
-**Simulation Results (1000 games):**
+**Expected token change per Salvation check** (exact, averaged over all 20 d20 results using `calculateSalvationResult`; positive means tokens are added on average):
 
 ```
-1 Ace (17 threshold, 20% rate):
-- Expected checks to remove 10 tokens: 50
-- Typical game length: Very long
-- Win rate: ~5%
-
-2 Aces (14 threshold, 35% rate):
-- Expected checks to remove 10 tokens: 28
-- Typical game length: Long
-- Win rate: ~10%
-
-3 Aces (11 threshold, 50% rate):
-- Expected checks to remove 10 tokens: 20
-- Typical game length: Moderate
-- Win rate: ~20%
-
-4 Aces (auto-win):
-- Expected checks to remove 10 tokens: 5
-- Typical game length: Short
-- Win rate: ~40%
+1 Ace  (threshold 17): +0.6 tokens per check
+2 Aces (threshold 14): +0.3 tokens per check
+3 Aces (threshold 11):  0.0 tokens per check
+4 Aces (auto-success): -1.0 token per check (about 10 checks to clear 10 tokens)
 ```
 
-**Strategic Takeaway:** Collecting Aces is CRITICAL to victory. Each Ace dramatically improves win chances.
+**Simulation Results (40,000 Normal and 20,000 Easy games, same method as 7.3):** wins by Aces revealed when the game ended
+
+```
+Normal: 0-2 Aces: 0 wins in 9,030 games  | 3 Aces: 6 wins in 12,136 games (0.05%)  | 4 Aces: 269 wins in 18,834 games (1.4%)
+Easy:   1 Ace: 0 wins in 582 games       | 2 Aces: 1 win in 2,406 games (0.04%)    | 3 Aces: 5 wins in 5,892 games (0.08%) | 4 Aces: 337 wins in 11,120 games (3.0%)
+```
+
+**Strategic Takeaway:** Only the fourth Ace produces net token removal on average, so winning in practice requires all 4 Aces, and most games end first (see 7.3).
 
 ### 8.4 King Threat
 
 ```
-Probability of drawing all 4 Kings: ~8% per game
+Probability the fourth King ends the game: ~90% (90.3% of Normal games in the 7.3 simulation)
 
 Average Kings revealed by game end:
 - Short game (15 cards): 1.2
 - Medium game (30 cards): 2.3
 - Long game (45 cards): 3.5
 
-King limit losses: ~25% of total defeats
+King limit losses: ~91% of total defeats (Stability depletion is the other ~9%)
 ```
 
 ---
@@ -741,7 +742,7 @@ SALVATION CHECK:
 A♥:       Unlock Salvation
 A♦♣♠:     +1 Aces (improve threshold)
 K♥♦♣♠:    +1 Kings (4 = lose)
-3,5,7,9:  Stability check (lose rank on fail)
+A,3,5,7,9:  Stability check (loss set by roll: 1=-3, 2-5=-2, 6-10=-1, else 0)
 2,4,6,8,10,J,Q: Safe (no check)
 ```
 

@@ -35,8 +35,6 @@
  * @returns {Object} Keyboard shortcut controls
  */
 
-import { onMount, onDestroy } from 'svelte';
-
 export function useKeyboardShortcuts({
 	onSpace = null,
 	onEnter = null,

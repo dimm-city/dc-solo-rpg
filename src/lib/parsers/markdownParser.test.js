@@ -97,6 +97,22 @@ describe('Markdown Parser', () => {
 		});
 	});
 
+	describe('Narrative modifiers in built deck', () => {
+		it('keeps skip-damage and return-king on exactly one Ace each', () => {
+			const markdown = readFileSync(
+				join(process.cwd(), 'static', 'games', 'future-lost.game.md'),
+				'utf-8'
+			);
+			const { deck } = parseGameFile(markdown);
+			const skip = deck.filter((c) => c.modifier === 'skip-damage');
+			const ret = deck.filter((c) => c.modifier === 'return-king');
+			expect(skip).toHaveLength(1);
+			expect(ret).toHaveLength(1);
+			expect(skip[0].card).toBe('A');
+			expect(ret[0].card).toBe('A');
+		});
+	});
+
 	describe('Invalid Card Counts', () => {
 		it('should reject game with too few Primary Success cards', () => {
 			const invalidMarkdown = `---
@@ -1146,5 +1162,32 @@ Description
 			expect(result.deck.filter((c) => c.type === 'challenge')).toHaveLength(16);
 			expect(result.deck.filter((c) => c.type === 'event')).toHaveLength(28);
 		});
+	});
+});
+
+describe('Markdown Parser - difficulty frontmatter', () => {
+	const base = readFileSync(join(process.cwd(), 'static', 'games', 'future-lost.game.md'), 'utf-8');
+	const withDifficulty = (line) => base.replace(/^---\r?\n/, `---\n${line}\n`);
+
+	it('should parse difficulty: easy as 0', () => {
+		expect(parseGameFile(withDifficulty('difficulty: easy')).options).toEqual({ difficulty: 0 });
+	});
+
+	it('should parse difficulty case-insensitively', () => {
+		expect(parseGameFile(withDifficulty('difficulty: Normal')).options).toEqual({ difficulty: 1 });
+	});
+
+	it('should default to Normal when difficulty is absent', () => {
+		expect(parseGameFile(base).options).toEqual({ difficulty: 1 });
+	});
+
+	it('should throw ValidationError for an invalid difficulty', () => {
+		const markdown = withDifficulty('difficulty: hard');
+		expect(() => parseGameFile(markdown)).toThrow(ValidationError);
+		expect(() => parseGameFile(markdown)).toThrow(/easy, normal/);
+	});
+
+	it('should reject object-prototype keys as difficulty', () => {
+		expect(() => parseGameFile(withDifficulty('difficulty: constructor'))).toThrow(ValidationError);
 	});
 });

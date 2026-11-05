@@ -46,6 +46,7 @@ export function useEnrichedRounds(savedGame) {
 	);
 
 	// Group cards by round number
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- throwaway local, not reactive state
 	const roundsMap = new Map();
 	for (const cardEntry of cardEntries) {
 		const roundNum = cardEntry.round;

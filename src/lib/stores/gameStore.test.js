@@ -2,7 +2,7 @@
  * Unit tests for gameStore.svelte.js
  * Tests the Svelte 5 runes-based game state management
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import {
 	gameState,
 	getCurrentScreen,

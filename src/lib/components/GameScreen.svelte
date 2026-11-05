@@ -2,7 +2,9 @@
 	import { gameState, transitionTo } from '../stores/gameStore.svelte.js';
 	import { fade } from 'svelte/transition';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { marked } from 'marked';
+	import { sanitizeHtml } from '../utils/sanitizeHtml.js';
 	import '../../game.css';
 	import { getAudioSettings, getGameplaySettings, speak } from '../stores/audioStore.svelte.js';
 	import { autoAdvance, autoRoll } from '../utils/autoPlay.js';
@@ -10,7 +12,6 @@
 	import LoadScreen from './LoadScreen.svelte';
 	import GameOver from './GameOver.svelte';
 	import JournalEntry from './JournalEntry.svelte';
-	import InitialDamageRoll from './InitialDamageRoll.svelte';
 	import FinalDamageRoll from './FinalDamageRoll.svelte';
 	import DrawCard from './DrawCard.svelte';
 	import StatusDisplay from './StatusDisplay.svelte';
@@ -40,7 +41,6 @@
 	import { recordRound, restartGame, exitGame } from '../stores/gameActions.svelte.js';
 
 	let {
-		systemSettings = {},
 		onfailurecheckcompleted = () => {},
 		onjournalsaved = () => {},
 		showHelpModal = $bindable(false)
@@ -144,7 +144,7 @@
 		if (typeof window !== 'undefined') {
 			window.location.href = '/';
 		} else {
-			goto('/');
+			goto(resolve('/'));
 		}
 	}
 
@@ -170,10 +170,6 @@
 		showHelpModal = true;
 	}
 
-	function handleHelpClose() {
-		showHelpModal = false;
-	}
-
 	function handleSettingsClick() {
 		showSettingsModal = true;
 	}
@@ -186,8 +182,7 @@
 		showExitModal = false;
 		// Navigate to home page to reset game state
 		// DiceBox persists in the layout so no reinitialization needed
-		// eslint-disable-next-line svelte/no-navigation-without-resolve
-		goto('/');
+		goto(resolve('/'));
 	}
 
 	function handleExitCancel() {
@@ -335,7 +330,6 @@
 	$effect(() => {
 		// Only run when screen actually changes
 		if (currentScreen !== lastScreen) {
-			const prevScreen = lastScreen;
 			lastScreen = currentScreen;
 
 			// Cancel previous screen's auto-play (using untrack to prevent loop)
@@ -345,7 +339,7 @@
 
 			// Handle screen-specific entry logic (delay to next tick)
 			setTimeout(() => {
-				handleScreenEntry(currentScreen, prevScreen);
+				handleScreenEntry(currentScreen);
 			}, 0);
 		}
 	});
@@ -354,7 +348,7 @@
 	 * Pure screen entry handler - called once per screen change
 	 * Separated from $effect to prevent reactive loops
 	 */
-	function handleScreenEntry(screen, prevScreen) {
+	function handleScreenEntry(screen) {
 		switch (screen) {
 			case 'showIntro':
 				// Trigger auto-play for intro screen
@@ -622,7 +616,8 @@
 		<div class="intro-story-container">
 			<div class="content">
 				<h1>{gameState.config?.title || 'Game Introduction'}</h1>
-				{@html marked(gameState.config?.introduction ?? '')}
+				<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized via sanitizeHtml -->
+				{@html sanitizeHtml(marked(gameState.config?.introduction ?? ''))}
 			</div>
 			<ButtonBar>
 				<ContinueButton
@@ -1200,7 +1195,6 @@
 		.main-screen-area {
 			z-index: 1;
 			align-items: flex-end; /* Align card to bottom on mobile to prevent status bar overlap */
-			
 		}
 
 		/* Remove z-index from screen container to fix stacking context */

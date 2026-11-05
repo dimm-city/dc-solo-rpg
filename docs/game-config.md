@@ -29,8 +29,8 @@ The format uses five card types that map directly to the standard 52-card deck:
 
 1. **Primary Success** (1 card) - Ace of Hearts (salvation mechanism)
 2. **Failure Counter** (4 cards) - All Kings (escalating threat)
-3. **Narrative** (3 cards) - Remaining Aces (bonus/help cards, do NOT trigger damage unless modified)
-4. **Challenge** (16 cards) - Odd-numbered cards: 3, 5, 7, 9 (trigger damage checks)
+3. **Narrative** (3 cards) - Remaining Aces (bonus/help cards; as odd ranks they trigger a Stability check unless the card has `skip-damage`)
+4. **Challenge** (16 cards) - Ranks 3, 5, 7, 9 (trigger Stability checks, as do all Aces)
 5. **Event** (28 cards) - Even-numbered cards: 2, 4, 6, 8, 10, J, Q (safe from damage)
 
 **Total:** 1 + 4 + 3 + 16 + 28 = 52 cards ✓
@@ -39,11 +39,11 @@ The format uses five card types that map directly to the standard 52-card deck:
 
 Narrative cards can optionally include special one-time modifiers:
 
-- **`skip-damage`** - Skip the next damage check (max 1 per game)
+- **`skip-damage`** - This card skips its own Stability check (max 1 per game)
   - Syntax: `## Narrative: skip-damage`
-  - Example: "A moment of perfect timing saves you from the next danger"
+  - Example: "A moment of perfect timing saves you from harm"
 
-- **`return-king`** - Return a previously drawn King to the deck (max 1 per game)
+- **`return-king`** - When confirmed, shuffles one revealed King back into the deck at a random position; no effect if no King is revealed (max 1 per game)
   - Syntax: `## Narrative: return-king`
   - Example: "A second chance to undo a catastrophic setback"
 
@@ -139,7 +139,7 @@ in their eyes - they've survived by taking from others.
 
 In the chaos of your escape, something impossible happens. A piece of falling
 debris catches on a support beam at the last second. The universe aligns in
-your favor, just this once, shielding you from the next danger.
+your favor, just this once, shielding you from harm.
 
 ---
 
@@ -200,10 +200,13 @@ title: Your Game Title # Required
 subtitle: Your Game Subtitle # Optional
 win-message: Victory message # Required
 lose-message: Defeat message # Required
+difficulty: normal # Optional: easy or normal (default normal)
 ---
 ```
 
-**Only 4 fields total** - simple and focused
+**Only 5 fields total** - simple and focused
+
+`difficulty` sets the game's default. `easy` starts with the Ace of Hearts already revealed; `normal` (or omitting the field) plays the full deck. Values are case-insensitive and anything else is an error. Players can override it in the settings menu.
 
 ### 2. Introduction Sections (Required)
 
@@ -262,8 +265,8 @@ Story here...
 
 **Available modifiers:**
 
-- `skip-damage` - Skip next damage check (max 1 per game)
-- `return-king` - Return King to deck (max 1 per game)
+- `skip-damage` - This card skips its own Stability check (max 1 per game)
+- `return-king` - Shuffle a revealed King back into the deck; no effect if none revealed (max 1 per game)
 
 These are **optional** - standard `### Narrative` cards are valid without modifiers.
 
@@ -347,12 +350,11 @@ These simplifications apply to the system:
 
 - **Primary Success** - Ace of Hearts only (activates salvation countdown)
 - **Failure Counter** - All Kings (4 revealed = instant game over)
-- **Narrative** - Remaining Aces (bonus/help cards, do NOT trigger damage unless modified)
-  - Each Ace adds +1 to bonus counter (reduces damage)
+- **Narrative** - Remaining Aces (bonus/help cards)
+  - Each Ace increments `acesRevealed`, which improves the Salvation threshold (it does not reduce damage)
   - May include `skip-damage` or `return-king` modifiers (max 1 each)
-  - Standard Narrative cards are safe - no damage checks
-  - Only trigger damage if explicitly given a damage-trigger modifier (future feature)
-- **Challenge** - Odd-numbered cards: 3, 5, 7, 9 (trigger damage checks)
+  - Aces are odd ranks, so every Narrative card triggers a Stability check unless it has `skip-damage` (which skips that card's own check)
+- **Challenge** - Ranks 3, 5, 7, 9 (trigger Stability checks, as do all Aces)
 - **Event** - Even-numbered cards: 2, 4, 6, 8, 10, J, Q (safe from damage)
 
 ### 4. Smart Validation

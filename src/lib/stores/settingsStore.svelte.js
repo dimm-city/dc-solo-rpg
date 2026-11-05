@@ -4,14 +4,15 @@ import { logger } from '../utils/logger.js';
 /**
  * Settings store with localStorage persistence
  * Manages global user preferences for the game
- * Note: Difficulty is controlled by game config, not user settings
+ * difficulty: null = use the game's default, 0 = Easy, 1 = Normal
  */
 
 const SETTINGS_KEY = 'gameSettings';
 
 // Default settings
 const DEFAULT_SETTINGS = {
-	diceTheme: 'default'
+	diceTheme: 'default',
+	difficulty: null
 };
 
 /**
@@ -28,7 +29,8 @@ function loadSettings() {
 		if (stored) {
 			const parsed = JSON.parse(stored);
 			return {
-				diceTheme: parsed.diceTheme ?? DEFAULT_SETTINGS.diceTheme
+				diceTheme: parsed.diceTheme ?? DEFAULT_SETTINGS.diceTheme,
+				difficulty: parsed.difficulty === 0 || parsed.difficulty === 1 ? parsed.difficulty : null
 			};
 		}
 	} catch (e) {

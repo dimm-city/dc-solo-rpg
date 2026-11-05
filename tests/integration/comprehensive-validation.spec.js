@@ -38,26 +38,6 @@ test('COMPREHENSIVE: Full game validation with logic verification', async ({ pag
 		console.log(`📍 Screen ${gameTracking.screensVisited.length}: ${screenName}`);
 	};
 
-	// Helper: Get game state from page
-	const getGameState = async () => {
-		return await page
-			.evaluate(() => {
-				// Access the global game state from the Svelte app
-				const state = window.__GAME_STATE__ || {};
-				return {
-					tower: state.tower || 54,
-					tokens: state.tokens || 10,
-					round: state.round || 0,
-					kingsRevealed: state.kingsRevealed || 0,
-					bonus: state.bonus || 0,
-					aceOfHeartsRevealed: state.aceOfHeartsRevealed || false,
-					gameOver: state.gameOver || false,
-					win: state.win || false
-				};
-			})
-			.catch(() => null);
-	};
-
 	// Helper: Extract visible game stats from UI
 	const extractUIStats = async () => {
 		try {
@@ -73,7 +53,7 @@ test('COMPREHENSIVE: Full game validation with logic verification', async ({ pag
 				tokens: tokens ? parseInt(tokens) : null,
 				round: round ? parseInt(round) : null
 			};
-		} catch (e) {
+		} catch {
 			return { tower: null, tokens: null, round: null };
 		}
 	};

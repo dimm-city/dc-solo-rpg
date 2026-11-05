@@ -33,6 +33,7 @@ function convertToGameConfig(parsed, slug) {
 			failureCheckLoss: parsed['lose-message'],
 			failureCounterLoss: parsed['lose-message']
 		},
+		options: parsed.options,
 		deck: parsed.deck,
 		introduction: formatIntroduction(parsed.introduction),
 		loaded: true,

@@ -1,10 +1,6 @@
 <script>
 	import { signIn } from '@auth/sveltekit/client';
-	import NeuralBackground from '$lib/components/NeuralBackground.svelte';
 	import { fade } from 'svelte/transition';
-
-	/** @type {import('./$types').PageData} */
-	let { data } = $props();
 
 	async function handleGoogleSignIn() {
 		await signIn('google', { callbackUrl: '/' });
@@ -58,7 +54,6 @@
 		</div>
 	</div>
 </div>
-
 
 <style>
 	:global(body) {
@@ -246,4 +241,3 @@
 		}
 	}
 </style>
-

@@ -8,10 +8,9 @@
  * Purpose: Find hidden bugs by exercising real game scenarios
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { gameState, transitionTo } from './gameStore.svelte.js';
 import {
-	initializeGame,
 	drawCard,
 	confirmCard,
 	rollForTasks,
@@ -19,9 +18,7 @@ import {
 	getFailureCheckRoll,
 	applyPendingDiceRoll,
 	getSalvationCheckRoll,
-	applyPendingSuccessCheck,
-	getInitialDamageRoll,
-	applyPendingInitialDamageRoll
+	applyPendingSuccessCheck
 } from './gameActions.svelte.js';
 import { mockDieRoll, mockDieRollSequence, resetRNG } from '../services/random.js';
 
@@ -115,7 +112,7 @@ describe('Game Integration Tests - Based on Documentation', () => {
 			gameState.acesRevealed = 1;
 			gameState.tokens = 10;
 
-			const { roll, threshold, tokenChange } = getSalvationCheckRoll();
+			const { threshold } = getSalvationCheckRoll();
 
 			expect(threshold).toBe(17);
 			// With 1 Ace, rolls of 17, 18, 19, 20 succeed (4 out of 20 = 20%)
@@ -329,7 +326,7 @@ describe('Game Integration Tests - Based on Documentation', () => {
 				{ roll: 20, expectedLoss: 0 } // Natural 20 = no damage + gain
 			];
 
-			testCases.forEach(({ roll, expectedLoss }) => {
+			testCases.forEach(({ roll }) => {
 				mockDieRoll(roll);
 				const result = getFailureCheckRoll();
 

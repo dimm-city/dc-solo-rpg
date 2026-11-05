@@ -108,7 +108,7 @@ test.describe('V2 Gameplay Mechanics', () => {
 				cardsDrawn++;
 
 				// Get card info
-				const cardText = await page
+				await page
 					.locator('.byte-container, .dc-card-container')
 					.textContent()
 					.catch(() => '');
@@ -209,7 +209,7 @@ test.describe('V2 Gameplay Mechanics', () => {
 		// 4. Verify final damage roll screen appears
 
 		// For now, we verify the component exists in the codebase
-		const hasComponent = await page
+		await page
 			.evaluate(() => {
 				// Check if FinalDamageRoll component is loaded
 				return document.querySelector('[data-testid="screen-finalDamageRoll"]') !== null;

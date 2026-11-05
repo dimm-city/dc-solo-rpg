@@ -113,9 +113,3 @@ wget https://huggingface.co/Supertone/supertonic/resolve/main/voice_styles/M2.js
 Models provided by Supertone Inc. under the OpenRAIL-M License.
 
 See: https://github.com/supertone-inc/supertonic
-
-## More Information
-
-For complete setup instructions and troubleshooting, see:
-
-- `docs/supertonic-tts-setup.md` in the project root

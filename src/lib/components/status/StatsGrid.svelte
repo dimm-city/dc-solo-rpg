@@ -14,10 +14,6 @@
 	import AbilitiesPanel from './AbilitiesPanel.svelte';
 	import SuccessTokensPanel from './SuccessTokensPanel.svelte';
 	import DeckVisualization from '../DeckVisualization.svelte';
-	import { innerWidth } from 'svelte/reactivity/window';
-
-	// Reactive screen width tracking
-	const isMobile = $derived((innerWidth.current ?? 1024) <= 600);
 
 	// Reactive data-augmented-ui attribute for deck readout
 	const deckAugmentedUI = 'tl-clip tr-clip br-clip bl-clip border';
@@ -161,7 +157,6 @@
 			justify-content: space-between;
 			& > div:last-of-type {
 				direction: rtl;
-				
 			}
 		}
 
@@ -177,7 +172,8 @@
 			display: grid;
 			grid-template-columns: repeat(3, 1fr);
 			grid-template-rows: auto auto;
-			grid-template-areas: 'stability deck abilities'
+			grid-template-areas:
+				'stability deck abilities'
 				'failure dice success';
 			gap: var(--space-xs);
 			width: 100%;

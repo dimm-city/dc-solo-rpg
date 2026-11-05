@@ -3,6 +3,8 @@
  * Parses .game.md files into game configuration objects
  */
 
+import { logger } from '../utils/logger.js';
+
 /**
  * Custom error class for validation failures
  */
@@ -104,7 +106,6 @@ function parseIntroduction(introduction) {
 	const sections = [];
 	const headingRegex = /^##\s+(.+)$/gm;
 
-	let lastIndex = 0;
 	let match;
 	const matches = [];
 
@@ -495,6 +496,20 @@ function assignCardsByType(deck, cards, ranks, suits, type, usedAssignments, add
 }
 
 /**
+ * Convert the optional `difficulty` frontmatter value to a difficulty number
+ * @param {string} [value] - Raw frontmatter value ("easy" or "normal", any case)
+ * @returns {number} 0 = Easy, 1 = Normal (default when absent)
+ */
+function parseDifficulty(value) {
+	if (value === undefined || value === '') return 1;
+	const key = value.toLowerCase();
+	if (key !== 'easy' && key !== 'normal') {
+		throw new ValidationError(`Invalid difficulty "${value}". Allowed values: easy, normal`);
+	}
+	return key === 'easy' ? 0 : 1;
+}
+
+/**
  * Main parser function
  * Parse Type-Based Markdown format into game configuration
  * @param {string} markdown - Raw markdown content
@@ -525,11 +540,14 @@ export function parseGameFile(markdown) {
 		const deck = assignCardsToDeck(cardsByType);
 
 		// 7. Build final configuration
+		const difficulty = parseDifficulty(frontmatter.difficulty);
+
 		return {
 			title: frontmatter.title,
 			subtitle: frontmatter.subtitle || '',
 			'win-message': frontmatter['win-message'],
 			'lose-message': frontmatter['lose-message'],
+			options: { difficulty },
 			introduction: introductionSections,
 			deck,
 			metadata: {

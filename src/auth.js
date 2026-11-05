@@ -1,5 +1,5 @@
 import { SvelteKitAuth } from '@auth/sveltekit';
-import Google from "@auth/sveltekit/providers/google";
+import Google from '@auth/sveltekit/providers/google';
 
 import { env } from '$env/dynamic/private';
 
@@ -14,13 +14,12 @@ export const { handle, signIn, signOut } = SvelteKitAuth({
 	trustHost: true,
 	callbacks: {
 		async session({ session, token }) {
-			console.log("Auth Session Callback - Session:", session, "Token:", token);
 			if (session?.user) {
 				session.user.id = token.sub;
 			}
 			return session;
 		}
-	},
+	}
 	// pages: {
 	// 	signIn: '/signin'
 	// }

@@ -5,6 +5,7 @@
 import { gameState, transitionTo } from './gameStore.svelte.js';
 import { initializeGame } from './gameInit.js';
 import { logger } from '../utils/logger.js';
+import { randomInt } from '../services/random.js';
 import { saveGame, loadGame, clearSave, restoreGameState } from './indexedDBStorage.js';
 import {
 	convertD20ToCardCount,
@@ -306,6 +307,32 @@ export function drawCard() {
 }
 
 /**
+ * return-king modifier: put the first revealed King (hearts, diamonds, clubs, spades order)
+ * back into the deck at a random position so it can be drawn again.
+ * @param {Object} card - The Narrative card carrying the modifier (annotated with the outcome)
+ */
+function returnKingToDeck(card) {
+	const suit = ['hearts', 'diamonds', 'clubs', 'spades'].find(
+		(s) => gameState[`kingOf${s.charAt(0).toUpperCase() + s.slice(1)}`]
+	);
+	if (!suit) {
+		card.modifierResult = 'No King to return';
+		gameState.status = card.modifierResult;
+		return;
+	}
+
+	// Reinsert a fresh copy of the King (the log keeps its own entry, with id/round/gameState)
+	const logged = gameState.log.find((l) => l.card === 'K' && l.suit === suit);
+	const { id, round, gameState: snapshot, ...king } = logged ?? { card: 'K', suit };
+	gameState.deck.splice(randomInt(0, gameState.deck.length), 0, king);
+
+	gameState.kingsRevealed -= 1;
+	gameState[`kingOf${suit.charAt(0).toUpperCase() + suit.slice(1)}`] = false;
+	card.modifierResult = 'A King returns to the deck';
+	gameState.status = card.modifierResult;
+}
+
+/**
  * Confirm drawn card and apply pending updates
  *
  * Called when player dismisses the card. Applies pending stat changes (Aces, Kings),
@@ -359,6 +386,11 @@ export function confirmCard() {
 		logger.debug('[confirmCard] Applied pending kings change');
 	}
 
+	// return-king modifier: shuffle a revealed King back into the deck (no effect if none revealed)
+	if (card?.modifier === 'return-king') {
+		returnKingToDeck(card);
+	}
+
 	// Check for pending game over condition (4 kings, tower collapse, etc.)
 	if (gameState.pendingUpdates.gameOverCondition) {
 		const condition = gameState.pendingUpdates.gameOverCondition;
@@ -381,7 +413,8 @@ export function confirmCard() {
 		const oddRanks = ['A', '3', '5', '7', '9'];
 		const isOdd = oddRanks.includes(card.card);
 
-		if (isOdd) {
+		// skip-damage modifier: this card skips its own failure check
+		if (isOdd && card.modifier !== 'skip-damage') {
 			// Odd card requires failure check
 			transitionTo('failureCheck');
 		} else if (gameState.cardsToDraw > 0) {
@@ -612,11 +645,11 @@ export function applyPendingDiceRoll() {
 /**
  * Legacy failure check (kept for compatibility)
  * @deprecated Use getFailureCheckRoll + applyFailureCheckResult
- * @returns {Promise<number>}
+ * @returns {Promise<Object>} Roll result from getFailureCheckRoll() ({ roll, wasLucid, ... })
  */
 export async function failureCheck() {
 	const result = getFailureCheckRoll();
-	applyFailureCheckResult(result);
+	applyFailureCheckResult(result.roll);
 	return result;
 }
 
@@ -665,6 +698,7 @@ export async function recordRound(journalEntry) {
 		round: gameState.round,
 		text: journalEntry.text || '',
 		audioData: journalEntry.audioData || null,
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- timestamp string only, not reactive state
 		dateRecorded: journalEntry.dateRecorded || new Date().toISOString()
 	};
 

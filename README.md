@@ -12,7 +12,7 @@ The web component is also highly configurable, allowing for customization of gam
 
 ### D20 Mechanics
 
-- **Stability**: 20 points (your life). Failed checks cost Stability equal to the card rank.
+- **Stability**: 20 points (your life). Odd-ranked cards trigger a Stability check; the d20 roll sets the loss (1 = -3, 2-5 = -2, 6-10 = -1, 11-19 = 0, 20 = no loss and +1 Stability).
 - **Tokens**: Start with 10. Remove all to win through Salvation checks.
 - **Aces Revealed**: Collect Aces to improve Salvation success rate (20% → 35% → 50% → 100%).
 - **Lucid State**: Natural 20 grants advantage on next roll.
@@ -30,14 +30,13 @@ For complete mechanics documentation, see [D20 Mechanics Guide](./docs/d20-mecha
 
 ## Easy Game Creation
 
-The game creation process for the DC Solo RPG system is designed to be easy for anyone. The three steps to create a game are:
+A game is a single markdown file (`.game.md`). The three steps to create one are:
 
-1. Download the game templates
-1. Modify the `config.yml` file that holds the game configuration, such as the title, subtitle, introduction, and more.
-1. Modify the description of each card in the `deck.csv` file to provide the card text.
-1. Modify the `theme.css` file to achieve the desired visual style, such as colors, fonts, and layout.
+1. Copy the [game template](./docs/game-template.game.md).
+1. Fill in the frontmatter (title, subtitle, win and lose messages) and the introduction.
+1. Write the story text for each card type (Primary Success, Failure Counter, Narrative, Challenge and Event). The system assigns the cards to the 52-card deck for you.
 
-Read the full guide here: [How to build a game](./docs/how-to-build-a-game.md)
+Read the full guides here: [Game config format](./docs/game-config.md) and [Type-based format guide](./docs/simplified-type-based-format.md)
 
 ## Demo
 
@@ -77,7 +76,10 @@ You can preview the production build with `npm run preview`.
 
 ## Authentication Setup
 
-This application requires Google OAuth authentication for users to access games. Follow these steps to set up authentication:
+> **Sign-in is currently turned off** (`REQUIRE_SIGN_IN = false` in `src/hooks.server.js`), so anyone can play without an account and no OAuth settings are needed.
+> To require Google sign-in, complete the steps below and set it to `true`.
+
+This application can require Google OAuth authentication for users to access games. Follow these steps to set up authentication:
 
 ### 1. Create Google OAuth Credentials
 
@@ -95,11 +97,13 @@ This application requires Google OAuth authentication for users to access games.
 ### 2. Configure Environment Variables
 
 1. Copy `.env.example` to `.env`:
+
    ```bash
    cp .env.example .env
    ```
 
 2. Edit `.env` and add your credentials:
+
    ```env
    GOOGLE_CLIENT_ID=your_google_client_id_here
    GOOGLE_CLIENT_SECRET=your_google_client_secret_here

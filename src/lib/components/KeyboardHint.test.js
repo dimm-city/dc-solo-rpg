@@ -2,14 +2,13 @@
  * Unit tests for KeyboardHint component
  * Tests the keyboard shortcut hint that appears and fades
  *
- * NOTE: Skipped due to Svelte 5 + @testing-library/svelte compatibility issues
  * Component is validated through build and Playwright integration tests
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render } from '@testing-library/svelte';
 import KeyboardHint from './KeyboardHint.svelte';
 
-describe.skip('KeyboardHint', () => {
+describe('KeyboardHint', () => {
 	beforeEach(() => {
 		vi.useFakeTimers();
 	});

@@ -23,8 +23,7 @@
  * @returns {Object} Reactive layout state
  */
 
-import { onMount, onDestroy } from 'svelte';
-import { logger } from '$lib/utils/logger.js';
+import { onMount } from 'svelte';
 
 export function useResponsiveLayout() {
 	// Reactive state using Svelte 5 runes

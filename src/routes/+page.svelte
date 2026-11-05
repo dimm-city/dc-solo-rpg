@@ -1,9 +1,9 @@
 <script>
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { browser } from '$app/environment';
-	import { page } from '$app/state';
 	import { signOut } from '@auth/sveltekit/client';
 	import ConfirmModal from '$lib/components/ConfirmModal.svelte';
 	import AboutModal from '$lib/components/AboutModal.svelte';
@@ -29,7 +29,6 @@
 	} from '$lib/stores/indexedDBStorage.js';
 	import { resumeGame, deleteSavedGame } from '$lib/stores/gameActions.svelte.js';
 	import { gameState } from '$lib/stores/gameStore.svelte.js';
-	import SignIn from '$lib/components/SignIn.svelte';
 
 	/** @type {import('./$types').PageData} */
 	let { data } = $props();
@@ -118,9 +117,9 @@
 	function handleStartGame(game) {
 		// Navigate to game without confirmation
 		if (game.isCustom) {
-			goto(`/game/custom/${game.slug}`);
+			goto(resolve('/game/custom/[slug]', { slug: game.slug }));
 		} else {
-			goto(`/game/${game.slug}`);
+			goto(resolve('/game/[slug]', { slug: game.slug }));
 		}
 	}
 
@@ -177,9 +176,9 @@
 		if (await resumeGame(slug)) {
 			// Game resumed successfully - navigate directly without confirmation
 			if (game.isCustom) {
-				goto(`/game/custom/${slug}`);
+				goto(resolve('/game/custom/[slug]', { slug }));
 			} else {
-				goto(`/game/${slug}`);
+				goto(resolve('/game/[slug]', { slug }));
 			}
 		} else {
 			uploadStatus = 'Failed to resume game';
@@ -271,7 +270,7 @@
 	function handleLearnToPlay() {
 		// Mark as shown for this session
 		markInstructionsShownInSession();
-		goto('/how-to');
+		goto(resolve('/how-to'));
 	}
 
 	function handleSkipOnce() {
@@ -468,9 +467,7 @@
 {/if}
 
 <!-- Story Mode Views -->
-{#if !page.data.session?.user}
-	<SignIn />
-{:else if showStoryMode && selectedStoryGame}
+{#if showStoryMode && selectedStoryGame}
 	<StoryMode savedGame={selectedStoryGame} onExit={handleExitStoryMode} />
 {:else if showBrowseGames}
 	<BrowseGames onSelectGame={handleSelectStoryGame} onBack={handleExitBrowseGames} />
@@ -623,23 +620,29 @@
 						<path d="M12 17h.01"></path>
 					</svg>
 				</button>
-				<button onclick={handleSignOut} class="header-button signout-button" aria-label="Sign Out">
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						width="24"
-						height="24"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
+				{#if data.session?.user}
+					<button
+						onclick={handleSignOut}
+						class="header-button signout-button"
+						aria-label="Sign Out"
 					>
-						<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-						<polyline points="16 17 21 12 16 7"></polyline>
-						<line x1="21" y1="12" x2="9" y2="12"></line>
-					</svg>
-				</button>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							width="24"
+							height="24"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						>
+							<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+							<polyline points="16 17 21 12 16 7"></polyline>
+							<line x1="21" y1="12" x2="9" y2="12"></line>
+						</svg>
+					</button>
+				{/if}
 			</div>
 
 			<!-- Mobile hamburger menu button (visible only on small screens) -->
@@ -785,24 +788,26 @@
 					</svg>
 					<span>Help</span>
 				</button>
-				<button class="mobile-menu-item signout-menu-item" onclick={handleSignOut}>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						width="20"
-						height="20"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					>
-						<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-						<polyline points="16 17 21 12 16 7"></polyline>
-						<line x1="21" y1="12" x2="9" y2="12"></line>
-					</svg>
-					<span>Sign Out</span>
-				</button>
+				{#if data.session?.user}
+					<button class="mobile-menu-item signout-menu-item" onclick={handleSignOut}>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							width="20"
+							height="20"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						>
+							<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+							<polyline points="16 17 21 12 16 7"></polyline>
+							<line x1="21" y1="12" x2="9" y2="12"></line>
+						</svg>
+						<span>Sign Out</span>
+					</button>
+				{/if}
 			</div>
 		{/if}
 
@@ -814,7 +819,7 @@
 		<div class="welcome-container">
 			<div class="dc-start-screen-container" data-testid="game-selector">
 				<div class="game-cards-grid">
-					{#each allGames as game, index}
+					{#each allGames as game, index (index)}
 						{@const gameSlug =
 							game.slug || game.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'unknown'}
 						{@const saveData = gameSaveData[gameSlug]}

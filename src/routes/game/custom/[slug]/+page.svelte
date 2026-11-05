@@ -7,6 +7,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 
 	const availableDiceThemes = getAllDiceThemes();
 	let gameConfig = $state(null);
@@ -28,7 +29,7 @@
 			error = `Custom game "${slug}" not found`;
 			// Redirect back to home after showing error
 			setTimeout(() => {
-				goto('/');
+				goto(resolve('/'));
 			}, 3000);
 			return;
 		}

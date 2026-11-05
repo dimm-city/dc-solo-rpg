@@ -1,5 +1,6 @@
 <script>
 	import { onMount, onDestroy } from 'svelte';
+	import { logger } from '../utils/logger.js';
 
 	// 'idle', 'anticipating', 'materializing', 'revealed', 'dismissing'
 

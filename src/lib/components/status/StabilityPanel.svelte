@@ -260,7 +260,6 @@
 			min-width: 60px;
 			width: 100%;
 			transform: scaleX(1.1);
-
 		}
 	}
 

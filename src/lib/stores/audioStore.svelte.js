@@ -253,7 +253,7 @@ export async function updateAudioSettings(updates) {
 
 	// Update provider-specific settings if provided
 	const providerSpecificKeys = ['ttsApiKey', 'ttsVoice', 'ttsApiEndpoint', 'ttsModel'];
-	const hasProviderSpecificUpdates = Object.keys(updates).some(key =>
+	const hasProviderSpecificUpdates = Object.keys(updates).some((key) =>
 		providerSpecificKeys.includes(key)
 	);
 
@@ -294,8 +294,7 @@ export async function updateAudioSettings(updates) {
 	const providerConfig = getCurrentProviderSettings();
 
 	// Check if we need to re-initialize the provider
-	const needsReinitialization =
-		providerChanged || hasProviderSpecificUpdates;
+	const needsReinitialization = providerChanged || hasProviderSpecificUpdates;
 
 	if (needsReinitialization) {
 		try {

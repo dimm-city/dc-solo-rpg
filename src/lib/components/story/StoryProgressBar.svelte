@@ -25,7 +25,7 @@
 			<div class="progress-fill" style="width: {progressPercentage}%"></div>
 		</div>
 		<div class="progress-markers">
-			{#each Array(totalRounds) as _, i}
+			{#each Array(totalRounds) as _, i (i)}
 				<button
 					class="progress-marker"
 					class:active={i === currentRound}

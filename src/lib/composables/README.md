@@ -485,4 +485,3 @@ When creating new composables:
 
 - [Svelte 5 Runes Documentation](https://svelte-5-preview.vercel.app/docs/runes)
 - [CLAUDE.md](../../../CLAUDE.md) - Project instructions
-- [Refactoring Status](../../../docs/refactoring/STATUS.md) - Refactoring progress
