@@ -23,11 +23,16 @@
 
 	// Reactive data-augmented-ui attribute for luck stat
 	const luckAugmentedUI = $derived(
-		isMobile ? 'tr-clip tl-clip bl-clip-x border' : 'tl-clip-y l-rect-y tr-clip-x br-clip-x border'
+		isMobile ? 'tr-clip tl-clip bl-clip-x border' : 'tl-clip tr-clip-x br-clip-x border'
 	);
 
 	// Aces revealed count (includes pending changes)
 	const bonusPercent = $derived(gameState.acesRevealed + (gameState.pendingUpdates.aceChange || 0));
+
+	const abilityNames = ['Luck', 'Shield', 'Mushroom', 'Surge'];
+	/** Accessible name and tooltip for the nth ability icon */
+	const abilityLabel = (n) =>
+		`${abilityNames[n - 1]}: ${bonusPercent >= n ? 'unlocked' : `locked until Ace ${n}`}`;
 </script>
 
 <div
@@ -41,6 +46,8 @@
 		<svg
 			class="ability-icon"
 			class:active={bonusPercent >= 1}
+			role="img"
+			aria-label={abilityLabel(1)}
 			xmlns="http://www.w3.org/2000/svg"
 			width="12"
 			height="12"
@@ -51,6 +58,7 @@
 			stroke-linecap="round"
 			stroke-linejoin="round"
 		>
+			<title>{abilityLabel(1)}</title>
 			<path
 				d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"
 			/>
@@ -59,6 +67,8 @@
 		<svg
 			class="ability-icon"
 			class:active={bonusPercent >= 2}
+			role="img"
+			aria-label={abilityLabel(2)}
 			xmlns="http://www.w3.org/2000/svg"
 			width="12"
 			height="12"
@@ -69,33 +79,25 @@
 			stroke-linecap="round"
 			stroke-linejoin="round"
 		>
+			<title>{abilityLabel(2)}</title>
 			<path
 				d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"
 			/>
 		</svg>
-		<!-- Heart - Health/Resilience -->
-		<img src="/shroom-64.png" alt="" class="ability-icon" />
-		<!-- <svg
+		<!-- Mushroom - the third Ace -->
+		<img
+			src="/shroom-64.png"
+			alt={abilityLabel(3)}
+			title={abilityLabel(3)}
 			class="ability-icon"
 			class:active={bonusPercent >= 3}
-			xmlns="http://www.w3.org/2000/svg"
-			width="12"
-			height="12"
-			viewBox="0 0 24 24"
-			fill="none"
-			stroke="currentColor"
-			stroke-width="2"
-			stroke-linecap="round"
-			stroke-linejoin="round"
-		>
-			<path
-				d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"
-			/>
-		</svg> -->
+		/>
 		<!-- Zap - Energy/Action -->
 		<svg
 			class="ability-icon"
 			class:active={bonusPercent >= 4}
+			role="img"
+			aria-label={abilityLabel(4)}
 			xmlns="http://www.w3.org/2000/svg"
 			width="12"
 			height="12"
@@ -106,6 +108,7 @@
 			stroke-linecap="round"
 			stroke-linejoin="round"
 		>
+			<title>{abilityLabel(4)}</title>
 			<path
 				d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"
 			/>
@@ -147,9 +150,9 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		justify-content: space-between;
-		gap: 0.375rem;
-		padding: 1rem 1.625rem;
+		justify-content: flex-start;
+		gap: 0.25rem;
+		padding: 0.375rem 1rem;
 		position: relative;
 		overflow: visible;
 		min-height: 36px;
@@ -166,7 +169,10 @@
 	.bonus-stat {
 		grid-area: abilities;
 		/* Augmented UI Configuration - Power source with rightward tab */
-		--aug-border-bg: linear-gradient(135deg, var(--color-brand-yellow), var(--color-neon-cyan));
+		--aug-border-bg: var(
+			--frame-border,
+			linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta))
+		);
 		--aug-tl: 10px;
 		/* Slot ← receives Health's tab (mobile) */
 		--aug-l: 0px;
@@ -186,19 +192,13 @@
 		font-weight: bold;
 		text-transform: uppercase;
 		letter-spacing: 0.1em;
-		font-family: 'Courier New', monospace;
+		font-family: var(--font-mono, 'Share Tech Mono', ui-monospace, monospace);
 		opacity: 1; /* Remove opacity, rely on color/shadow for hierarchy */
 		text-align: left;
 		align-self: center;
 		flex: 0 0 auto;
 		white-space: nowrap;
-		min-width: 58px;
-		/* Add padding to avoid clip zones */
-		padding-left: 2px;
-		/* Display help icon inline */
-		display: flex;
-		align-items: center;
-		gap: 0.2rem;
+		text-align: center;
 	}
 
 	.bonus-stat .stat-label {
@@ -273,15 +273,6 @@
 			font-size: 0.625rem;
 			min-width: 48px;
 			letter-spacing: 0.08em;
-		}
-
-		.stat-icon {
-			width: 12px;
-			height: 12px;
-		}
-
-		.ability-indicators {
-			gap: 2px;
 		}
 
 		.ability-icon {

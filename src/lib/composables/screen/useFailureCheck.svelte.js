@@ -1,13 +1,12 @@
 /**
- * useFailureCheck - Failure Check screen logic composable
+ * useFailureCheck - Stability check screen logic composable
  *
- * Manages the state and logic for the "Failure Check" screen, including:
- * - Dice rolling state and result
- * - Integration with damage calculation and state updates
- * - Auto-play trigger integration
- * - Button text based on state
+ * Two steps on one button:
+ * 1. Roll: dice animate, the result is applied (the HUD updates) and a result line
+ *    stays on screen. The button becomes "Continue".
+ * 2. Continue: only now does the game move on (next card, Salvation or the journal).
  *
- * @param {Function} onCompleted - Callback when failure check is completed
+ * @param {Function} onCompleted - Callback when the check is completed (after Continue)
  * @returns {Object} Failure check state and actions
  */
 
@@ -15,43 +14,50 @@ import {
 	getFailureCheckRoll,
 	applyFailureCheckResult,
 	applyPendingDiceRoll,
-	confirmFailureCheck
+	advanceAfterFailureCheck
 } from '../../stores/gameActions.svelte.js';
 import { rollDice } from '../../stores/diceStore.svelte.js';
 import { gameState } from '../../stores/gameStore.svelte.js';
+import { formatStabilityResult } from '../../utils/rollResult.js';
 
 export function useFailureCheck(onCompleted = () => {}) {
 	let failureCheckRolling = $state(false);
 	let failureCheckResult = $state();
+	let failureCheckResultLine = $state('');
 
 	/**
-	 * Handle failure check roll and confirmation
+	 * Roll the check, or (once rolled) continue to the next step
 	 */
 	async function handleFailureCheck(triggerAutoPlay) {
 		if (failureCheckRolling) return;
 
 		const currentScreen = gameState.state;
+		if (currentScreen !== 'failureCheck') return;
 
-		if (currentScreen == 'failureCheck' && !failureCheckResult) {
+		if (!failureCheckResult) {
 			failureCheckRolling = true;
-			const { roll, wasLucid, wasSurreal } = getFailureCheckRoll();
-			failureCheckResult = roll;
-			// Store pending updates (don't apply yet)
-			applyFailureCheckResult(roll);
-			// Roll dice and wait for animation to complete
-			// Pass modifier state for visual dice roll (2d20 if was Lucid/Surreal)
-			await rollDice(roll, { isLucid: wasLucid, isSurreal: wasSurreal });
-			failureCheckRolling = false;
-			// NOW apply the pending updates after dice animation completes
-			applyPendingDiceRoll();
+			try {
+				const { roll, wasLucid, wasSurreal } = getFailureCheckRoll();
+				failureCheckResult = roll;
+				const towerBefore = gameState.tower;
+				// Store pending updates (don't apply yet)
+				applyFailureCheckResult(roll);
+				// Roll dice and wait for animation to complete
+				// Pass modifier state for visual dice roll (2d20 if was Lucid/Surreal)
+				await rollDice(roll, { isLucid: wasLucid, isSurreal: wasSurreal });
+				// Apply the result after the animation, but stay here until the player continues
+				applyPendingDiceRoll({ advance: false });
+				failureCheckResultLine = formatStabilityResult(roll, towerBefore, gameState.tower);
+			} finally {
+				failureCheckRolling = false;
+			}
 			// Trigger auto-play after roll completes (event-driven)
 			if (triggerAutoPlay) {
 				setTimeout(() => triggerAutoPlay(), 0);
 			}
-			await confirmFailureCheck();
+		} else {
+			advanceAfterFailureCheck();
 			onCompleted(gameState.state);
-		} else if (failureCheckResult) {
-			await confirmFailureCheck();
 		}
 	}
 
@@ -60,6 +66,7 @@ export function useFailureCheck(onCompleted = () => {}) {
 	 */
 	function resetState() {
 		failureCheckResult = undefined;
+		failureCheckResultLine = '';
 		failureCheckRolling = false;
 	}
 
@@ -73,6 +80,9 @@ export function useFailureCheck(onCompleted = () => {}) {
 		},
 		get result() {
 			return failureCheckResult;
+		},
+		get resultLine() {
+			return failureCheckResultLine;
 		},
 		get buttonText() {
 			return buttonText;

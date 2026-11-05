@@ -3,11 +3,10 @@
    Matching dimm.city website aesthetic EXACTLY
    ============================================ */
 
-/* Import Google Fonts - wrapped in @layer to make non-blocking
-   If this fails, fallback fonts will be used from font-family declarations */
-@layer google-fonts {
-	@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;500;600;700&display=swap');
-}
+/* augmented-ui is bundled through Vite (no external CDN dependency).
+   Google Fonts (Orbitron, Inter, Share Tech Mono) load from a <link> in app.html;
+   an @import nested in @layer is ignored by browsers, so it must not live here. */
+@import 'augmented-ui/augmented-ui.min.css';
 
 /* Load custom display font */
 @font-face {
@@ -41,8 +40,20 @@
 	--color-text-muted: rgba(255, 255, 255, 0.6);
 
 	/* === TYPOGRAPHY === */
+	/* Font roles:
+	   --font-display (lixdu): titles at 24px and above ONLY. Never for numbers or small
+	     labels, it misreads at small sizes ("TASKS" -> "TASHS", a 4 reads as "Ч").
+	   --font-mono (Share Tech Mono): HUD numbers, labels and IDs (use tabular-nums).
+	   --font-body (Inter): reading text. */
 	--font-display: 'lixdu', 'Orbitron', 'Tomorrow', sans-serif;
 	--font-body: 'Inter', 'Tomorrow', sans-serif;
+	--font-mono: 'Share Tech Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+	/* === SHARED UI TOKENS === */
+	--color-danger: #ff4d6d; /* danger only: Kings, Stability loss, critical states */
+	--frame-border: linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta));
+	--content-max: 720px; /* desktop reading column */
+	--cta-max: 480px; /* primary button max width on desktop */
 
 	/* Font Sizes - 8px baseline grid */
 	--text-xs: 0.75rem;
@@ -268,6 +279,14 @@ h3 {
 	margin-bottom: var(--space-md);
 }
 
+/* h4-h6 render below 24px, so they use the body face (see font roles in :root) */
+h4,
+h5,
+h6 {
+	font-family: var(--font-body);
+	font-weight: 700;
+}
+
 h4 {
 	font-size: var(--text-xl);
 	color: var(--color-text-primary);
@@ -338,7 +357,7 @@ main {
 }
 
 .hero p {
-	font-family: var(--font-display);
+	font-family: var(--font-mono);
 	font-size: var(--text-base);
 	font-weight: 700;
 	color: var(--color-neon-cyan);
@@ -445,7 +464,7 @@ textarea::placeholder {
 
 label {
 	display: block;
-	font-family: var(--font-display);
+	font-family: var(--font-body);
 	font-size: var(--text-sm);
 	font-weight: 700;
 	color: #ffffff;
@@ -465,37 +484,6 @@ label {
 
 .hidden {
 	display: none !important;
-}
-
-.text-yellow {
-	color: var(--color-brand-yellow);
-}
-
-.text-cyan {
-	color: var(--color-neon-cyan);
-}
-
-.text-magenta {
-	color: var(--color-cyber-magenta);
-}
-
-/* ============================================
-   CONTENT BOXES - CYBERPUNK STYLE
-   ============================================ */
-
-.cyber-box {
-	position: relative;
-	background: var(--color-bg-secondary);
-	border: var(--border-width-thick) solid var(--color-cyber-magenta);
-	padding: var(--space-md);
-	margin-bottom: var(--space-md);
-	overflow: hidden;
-
-	/* Augmented UI */
-	--aug-border-all: var(--border-width-thick);
-	--aug-border-bg: var(--color-cyber-magenta);
-	--aug-tl: var(--aug-clip-md);
-	--aug-br: var(--aug-clip-md);
 }
 
 /* ============================================
@@ -587,43 +575,6 @@ body::before {
 	}
 }
 
-/* Card deck atmospheric effect with enhanced feedback */
-.dc-card {
-	position: relative;
-	transition: all var(--transition-base);
-}
-
-.dc-card:hover,
-.dc-card:focus-within {
-	cursor: pointer;
-	transform: translateY(-4px);
-	box-shadow:
-		0 8px 24px rgba(0, 255, 255, 0.3),
-		0 0 20px rgba(217, 70, 239, 0.2);
-}
-
-.dc-card::before {
-	content: '';
-	position: absolute;
-	inset: -2px;
-	border: 2px solid var(--color-neon-cyan);
-	border-radius: inherit;
-	opacity: 0;
-	transition: opacity var(--transition-base);
-	pointer-events: none;
-	z-index: -1;
-}
-
-.dc-card:hover::before,
-.dc-card:focus-within::before {
-	opacity: 1;
-}
-
-.dc-card:active {
-	transform: translateY(-2px);
-	box-shadow: 0 4px 16px rgba(0, 255, 255, 0.4);
-}
-
 /* Add subtle glow to form containers */
 .form-container::after {
 	content: '';
@@ -640,21 +591,6 @@ body::before {
 .form-container:hover::after {
 	opacity: 1;
 } */
-
-/* Atmospheric background pattern */
-.cyber-box::before {
-	content: '';
-	position: absolute;
-	inset: 0;
-	background: repeating-linear-gradient(
-		90deg,
-		transparent,
-		transparent 2px,
-		rgba(255, 215, 0, 0.02) 2px,
-		rgba(255, 215, 0, 0.02) 4px
-	);
-	pointer-events: none;
-}
 
 /* ============================================
    RESPONSIVE DESIGN
@@ -737,59 +673,10 @@ body::before {
 	}
 }
 
-/* Special round transition - page turn effect for new rounds */
-.round-transition {
-	animation: page-turn var(--anim-slow) var(--ease-in-out);
-}
-
-@keyframes page-turn {
-	0% {
-		opacity: 1;
-		transform: perspective(1000px) rotateY(0deg);
-	}
-
-	50% {
-		opacity: 0.5;
-		transform: perspective(1000px) rotateY(90deg);
-	}
-
-	100% {
-		opacity: 1;
-		transform: perspective(1000px) rotateY(0deg);
-	}
-}
-
-/* Journal transition - opening book effect for journal entries */
-.journal-transition {
-	animation: book-open var(--anim-very-slow) var(--ease-smooth);
-}
-
-@keyframes book-open {
-	0% {
-		opacity: 0;
-		transform: perspective(1200px) rotateX(-15deg) scale(0.95);
-		filter: blur(4px);
-	}
-
-	50% {
-		opacity: 0.7;
-		transform: perspective(1200px) rotateX(-5deg) scale(0.98);
-		filter: blur(2px);
-	}
-
-	100% {
-		opacity: 1;
-		transform: perspective(1200px) rotateX(0deg) scale(1);
-		filter: blur(0);
-	}
-}
-
 /* Respect reduced motion preferences - override all screen transitions */
 @media (prefers-reduced-motion: reduce) {
 	.screen-transition-out,
-	.screen-transition-in,
-	.round-transition,
-	.journal-transition {
+	.screen-transition-in {
 		animation: none !important;
 		transition-duration: 0.01ms !important;
 	}

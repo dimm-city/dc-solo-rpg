@@ -81,56 +81,50 @@
 </div>
 
 <style>
-	/* Persistent DiceBox container - fills viewport, behind all content */
+	/* Persistent DiceBox container. The throw area sits between the HUD and the button bar:
+	   --hud-bottom is published by StatsGrid, the bottom offset leaves room for the button bar. */
 	.dice-container {
 		position: fixed;
-		top: 2.5rem; /* Below toolbar */
+		top: var(--hud-bottom, 2.5rem);
 		left: 0.25rem;
 		right: 0.25rem;
-		bottom: 0.5rem;
+		bottom: 6rem;
 
-		z-index: -10; /* Behind everything - neural background and all content */
-		pointer-events: none; /* Don't block clicks */
+		z-index: -10;
+		pointer-events: none;
 		background: transparent;
-		opacity: 0.35; /* Very transparent when sunk into background */
-		filter: brightness(0.7) blur(1px); /* Dimmed and slightly blurred for depth */
-		transform: scale(1); /* Default scale */
+		/* Resting state: gone. Settled dice never linger over the HUD, card or button. */
+		opacity: 0;
+		transform: scale(0.95);
+		/* Delayed z-index pattern: after .rolling ends the container keeps its z-index of 9999 while
+		   it fades, then drops behind (250ms = ANIMATION_DURATION.DICE_FADE) */
 		transition:
-			opacity 2s ease-in-out,
-			filter 2s ease-in-out,
-			transform 2s ease-in-out;
+			opacity 250ms ease-out,
+			transform 250ms ease-out,
+			z-index 0s 250ms;
 	}
 
+	/* Hidden off the game screens */
 	.dice-container.hidden {
-		opacity: 0;
 		visibility: hidden;
 	}
 
-	/* When rolling, bring dice to front with immediate transition */
+	/* Rolling: in front, fully visible, immediately */
 	.dice-container.rolling {
 		z-index: 9999;
-		opacity: 1; /* Full opacity when rolling */
-		filter: brightness(1) blur(0px); /* Full brightness and sharp when on top */
-		transform: scale(1); /* Normal scale when rolling */
+		opacity: 1;
+		transform: scale(1);
 		transition:
-			opacity 0.3s ease-out,
-			filter 0.3s ease-out,
-			transform 0.3s ease-out,
-			z-index 0s 0s; /* Immediate z-index change when becoming active */
+			opacity 150ms ease-out,
+			transform 150ms ease-out,
+			z-index 0s 0s;
 	}
 
-	/* Fade-out state: dice fade back to background position */
-	.dice-container:not(.rolling):not(.hidden) {
-		/* Transition back to background state */
-		z-index: -10; /* Behind everything */
-		opacity: 0.35; /* Return to background opacity (visible but dim) */
-		transform: scale(1); /* Return to normal scale */
-		filter: brightness(0.7) blur(1px); /* Return to background blur/dim */
-		transition:
-			opacity 800ms ease-out,
-			transform 800ms ease-out,
-			filter 800ms ease-out,
-			z-index 0s 0s; /* Immediate z-index drop to send dice to background */
+	@media (prefers-reduced-motion: reduce) {
+		.dice-container,
+		.dice-container.rolling {
+			transition: none;
+		}
 	}
 
 	/* Canvas from DiceBox should fill the container */

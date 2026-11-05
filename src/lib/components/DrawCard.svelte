@@ -37,34 +37,6 @@
 	}
 
 	/**
-	 * Expose button text for toolbar - derived from animation stage and card state
-	 */
-	export function getButtonText() {
-		if (animationStage === 'idle') return 'Draw Card';
-		if (animationStage === 'anticipating' || animationStage === 'materializing')
-			return 'Drawing...';
-		if (animationStage === 'revealed') {
-			// Determine what happens next based on the card
-			const card = gameState.currentCard;
-			if (card) {
-				// Per Wretched & Alone SRD: A, 3, 5, 7, 9 are odd-ranked and trigger damage
-				const oddRanks = ['A', '3', '5', '7', '9'];
-				const isOdd = oddRanks.includes(card.card);
-
-				if (isOdd) {
-					return 'Roll for Damage';
-				} else if (gameState.cardsToDraw > 0) {
-					return `Draw Next Card (${gameState.cardsToDraw} left)`;
-				} else {
-					return 'Continue';
-				}
-			}
-			return 'Continue';
-		}
-		return 'Uploading...';
-	}
-
-	/**
 	 * Expose button disabled state for toolbar - derived from animation stage
 	 */
 	export function isButtonDisabled() {
@@ -97,23 +69,13 @@
 </div>
 
 <style>
+	/* The overlay stage centres the card; the card sizes itself (see CardDisplay) */
 	.dc-draw-card-container {
 		display: grid;
-		height: calc(100% - 75px);
-
+		place-items: center;
 		width: 100%;
-		max-width: 100%; /* Prevent horizontal overflow */
-		justify-content: center;
-		align-content: center;
-		/* text-align: center; */
-		overflow: hidden;
+		height: 100%;
+		overflow: visible; /* card glow extends past the card edge */
 		box-sizing: border-box;
-	}
-
-	@media (max-width: 450px) or (max-height: 600px) {
-		.dc-draw-card-container {
-			/* align-content: start;
-			height: calc(100% - 50px); */
-		}
 	}
 </style>

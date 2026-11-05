@@ -2,6 +2,7 @@
 // seed: tests/seed.spec.ts
 
 import { test, expect } from '@playwright/test';
+import { INSTRUCTIONS_SEEN_KEY } from './helpers';
 
 test.describe('Splash Screen and Instructions Flow', () => {
 	test.beforeEach(async ({ page, context }) => {
@@ -17,22 +18,22 @@ test.describe('Splash Screen and Instructions Flow', () => {
 	test('should show splash screen on first visit', async ({ page }) => {
 		await page.goto('/');
 
-		// After a few seconds, splash should have completed
-		await page.waitForTimeout(4000);
+		// The splash overlay is up on arrival
+		await expect(page.locator('.splash-overlay')).toBeVisible();
 
-		// Verify splash was marked as shown
-		expect(await page.evaluate(() => sessionStorage.getItem('splashShown'))).toBe('true');
+		// ...and when it completes, it marks itself as shown for this session
+		await expect
+			.poll(() => page.evaluate(() => sessionStorage.getItem('splashShown')))
+			.toBe('true');
+		await expect(page.locator('.splash-overlay')).toHaveCount(0);
 	});
 
 	test('should show instructions choice after splash on first visit', async ({ page }) => {
 		await page.goto('/');
 
-		// Wait for splash to complete
-		await page.waitForTimeout(4000);
-
-		// Instructions choice should be visible
+		// Instructions choice should appear once the splash completes
 		const instructionsChoice = page.locator('.instructions-choice-container');
-		await expect(instructionsChoice).toBeVisible({ timeout: 2000 });
+		await expect(instructionsChoice).toBeVisible();
 
 		// Verify title (exact text is "How To Play" with capital T)
 		await expect(page.locator('h1').filter({ hasText: 'How To Play' })).toBeVisible();
@@ -40,7 +41,6 @@ test.describe('Splash Screen and Instructions Flow', () => {
 
 	test('should display all three instruction choice cards', async ({ page }) => {
 		await page.goto('/');
-		await page.waitForTimeout(4000); // Wait for splash
 
 		// Verify all three choice cards are visible
 		const learnCard = page.locator('.choice-card').filter({ hasText: 'Learn How to Play' });
@@ -55,7 +55,6 @@ test.describe('Splash Screen and Instructions Flow', () => {
 
 	test('should navigate to how-to page when clicking Learn How to Play', async ({ page }) => {
 		await page.goto('/');
-		await page.waitForTimeout(4000); // Wait for splash
 
 		// Click Learn How to Play card
 		const learnCard = page.locator('.choice-card').filter({ hasText: 'Learn How to Play' });
@@ -67,48 +66,47 @@ test.describe('Splash Screen and Instructions Flow', () => {
 
 	test('should show game selection when clicking Skip Once', async ({ page }) => {
 		await page.goto('/');
-		await page.waitForTimeout(4000); // Wait for splash
 
 		// Click Skip Once card
 		const skipOnceCard = page.locator('.choice-card').filter({ hasText: 'Skip Once' });
 		await skipOnceCard.click();
 
-		// Wait for transition
-		await page.waitForTimeout(500);
-
 		// Verify game selection screen is visible
 		await expect(page.locator('[data-testid="home-page"]')).toBeVisible();
 		await expect(page.locator('[data-testid="game-selector"]')).toBeVisible();
+
+		// Skip Once does not remember the choice
+		expect(
+			await page.evaluate((key) => localStorage.getItem(key), INSTRUCTIONS_SEEN_KEY)
+		).toBeNull();
 	});
 
 	test('should show game selection and remember preference when clicking Skip Always', async ({
 		page
 	}) => {
 		await page.goto('/');
-		await page.waitForTimeout(4000); // Wait for splash
 
 		// Click Skip Always card
 		const skipAlwaysCard = page.locator('.choice-card').filter({ hasText: 'Skip Always' });
 		await skipAlwaysCard.click();
 
-		// Wait for transition
-		await page.waitForTimeout(500);
-
 		// Verify game selection screen is visible
 		await expect(page.locator('[data-testid="home-page"]')).toBeVisible();
 
 		// Verify localStorage was set
-		const instructionsSeen = await page.evaluate(() => localStorage.getItem('instructionsSeen'));
+		const instructionsSeen = await page.evaluate(
+			(key) => localStorage.getItem(key),
+			INSTRUCTIONS_SEEN_KEY
+		);
 		expect(instructionsSeen).toBe('true');
 	});
 
 	test('should skip splash on returning visit in same session', async ({ page }) => {
 		// First visit
 		await page.goto('/');
-		await page.waitForTimeout(4000); // Wait for splash
 		const skipOnceCard = page.locator('.choice-card').filter({ hasText: 'Skip Once' });
 		await skipOnceCard.click();
-		await page.waitForTimeout(500);
+		await expect(page.locator('[data-testid="home-page"]')).toBeVisible();
 
 		// Reload page
 		await page.reload();
@@ -120,20 +118,16 @@ test.describe('Splash Screen and Instructions Flow', () => {
 	test('should skip instructions after Skip Always is chosen', async ({ page, context }) => {
 		// First visit
 		await page.goto('/');
-		await page.waitForTimeout(4000);
 		const skipAlwaysCard = page.locator('.choice-card').filter({ hasText: 'Skip Always' });
 		await skipAlwaysCard.click();
-		await page.waitForTimeout(500);
+		await expect(page.locator('[data-testid="home-page"]')).toBeVisible();
 
 		// Close and reopen (new session, same context to preserve localStorage)
 		await page.evaluate(() => sessionStorage.clear());
 		await page.goto('/');
 
-		// Wait for splash
-		await page.waitForTimeout(4000);
-
-		// Should skip instructions and go to game selection
-		await expect(page.locator('[data-testid="home-page"]')).toBeVisible({ timeout: 2000 });
+		// After the splash, should skip instructions and go to game selection
+		await expect(page.locator('[data-testid="home-page"]')).toBeVisible();
 
 		// Instructions choice should NOT be visible
 		await expect(page.locator('.instructions-choice-container')).not.toBeVisible();
@@ -141,7 +135,7 @@ test.describe('Splash Screen and Instructions Flow', () => {
 
 	test('should have proper styling on instruction choice cards', async ({ page }) => {
 		await page.goto('/');
-		await page.waitForTimeout(4000);
+		await expect(page.locator('.instructions-choice-container')).toBeVisible();
 
 		// Check first card (Learn How to Play)
 		const learnCard = page.locator('.choice-card').filter({ hasText: 'Learn How to Play' });
@@ -156,16 +150,16 @@ test.describe('Splash Screen and Instructions Flow', () => {
 
 	test('should have hover effect on instruction choice cards', async ({ page }) => {
 		await page.goto('/');
-		await page.waitForTimeout(4000);
 
 		const learnCard = page.locator('.choice-card').filter({ hasText: 'Learn How to Play' });
+		await expect(learnCard).toBeVisible();
 
 		// Hover over card
 		await learnCard.hover();
-		await page.waitForTimeout(300);
 
-		// Card should have transform
-		const transform = await learnCard.evaluate((el) => window.getComputedStyle(el).transform);
-		expect(transform).not.toBe('none');
+		// Card should lift (translateY) once the hover transition runs
+		await expect
+			.poll(() => learnCard.evaluate((el) => window.getComputedStyle(el).transform))
+			.not.toBe('none');
 	});
 });

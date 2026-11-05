@@ -8,16 +8,17 @@
 	import '../../game.css';
 	import { getAudioSettings, getGameplaySettings, speak } from '../stores/audioStore.svelte.js';
 	import { autoAdvance, autoRoll } from '../utils/autoPlay.js';
+	import { ANIMATION_DURATION } from '../constants/animations.js';
 
 	import LoadScreen from './LoadScreen.svelte';
 	import GameOver from './GameOver.svelte';
 	import JournalEntry from './JournalEntry.svelte';
-	import FinalDamageRoll from './FinalDamageRoll.svelte';
 	import DrawCard from './DrawCard.svelte';
 	import StatusDisplay from './StatusDisplay.svelte';
 	import ContinueButton from './ContinueButton.svelte';
 	import ConfirmModal from './ConfirmModal.svelte';
 	import MiniStatusHUD from './MiniStatusHUD.svelte';
+	import RuleCaption from './RuleCaption.svelte';
 	import KeyboardHint from './KeyboardHint.svelte';
 	import ButtonBar from './ButtonBar.svelte';
 	import OverlayModal from './OverlayModal.svelte';
@@ -29,13 +30,14 @@
 	import RollForTasksController from './game/RollForTasksController.svelte';
 	import FailureCheckController from './game/FailureCheckController.svelte';
 	import SuccessCheckController from './game/SuccessCheckController.svelte';
+	import InitialDamageController from './game/InitialDamageController.svelte';
+	import StartRoundController from './game/StartRoundController.svelte';
 
 	// Screen composables
 	import { useRollForTasks } from '../composables/screen/useRollForTasks.svelte.js';
 	import { useFailureCheck } from '../composables/screen/useFailureCheck.svelte.js';
 	import { useSuccessCheck } from '../composables/screen/useSuccessCheck.svelte.js';
 	import { useInitialDamage } from '../composables/screen/useInitialDamage.svelte.js';
-	import { useFinalDamage } from '../composables/screen/useFinalDamage.svelte.js';
 
 	// Game actions
 	import { recordRound, restartGame, exitGame } from '../stores/gameActions.svelte.js';
@@ -48,14 +50,13 @@
 
 	const currentScreen = $derived(gameState.state);
 	// Reduced from 300ms to 200ms for snappier, more mechanical feel
-	const TRANSITION_DURATION = 200;
+	const TRANSITION_DURATION = ANIMATION_DURATION.NORMAL;
 
 	// Instantiate screen composables
 	const rollForTasks = useRollForTasks();
 	const failureCheck = useFailureCheck(onfailurecheckcompleted);
 	const successCheck = useSuccessCheck();
 	const initialDamage = useInitialDamage();
-	const finalDamage = useFinalDamage();
 
 	// Contextual background text for each screen
 	const contextText = $derived.by(() => {
@@ -92,13 +93,6 @@
 						'The Ace of Hearts has appeared. Roll to remove a token from your countdown.',
 					showStats: true
 				};
-			case 'finalDamageRoll':
-				return {
-					title: 'The Final Test',
-					description:
-						"You've completed the countdown, but salvation comes with one final risk. Roll one last time to see if you truly escape...",
-					showStats: true
-				};
 			case 'startRound':
 				return {
 					title: `Round ${gameState.round}`,
@@ -114,6 +108,44 @@
 		}
 	});
 
+	// What the last roll on this screen did, shown at full contrast until the player continues
+	const resultLine = $derived.by(() => {
+		switch (currentScreen) {
+			case 'initialDamageRoll':
+				return initialDamage.resultLine;
+			case 'rollForTasks':
+				return rollForTasks.resultLine;
+			case 'failureCheck':
+				return failureCheck.resultLine;
+			case 'successCheck':
+				return successCheck.resultLine;
+			default:
+				return '';
+		}
+	});
+
+	// Screen reader announcements: result lines and key events
+	let liveMessage = $state('');
+	$effect(() => {
+		if (resultLine) liveMessage = resultLine;
+	});
+	let seenKings = untrack(() => gameState.kingsRevealed);
+	let seenSalvation = untrack(() => gameState.aceOfHeartsRevealed);
+	$effect(() => {
+		const kings = gameState.kingsRevealed;
+		const salvation = gameState.aceOfHeartsRevealed;
+		if (kings > seenKings) {
+			liveMessage = `King revealed. ${kings} of 4.`;
+		} else if (salvation && !seenSalvation) {
+			liveMessage = 'Salvation unlocked. The Ace of Hearts has appeared.';
+		}
+		seenKings = kings;
+		seenSalvation = salvation;
+	});
+
+	// The ending owns the screen: no status HUD over it
+	const showStatusHUD = $derived(currentScreen !== 'gameOver' && currentScreen !== 'finalLog');
+
 	// DrawCard ref for auto-draw on screen entry
 	let drawCardRef = $state();
 
@@ -128,10 +160,6 @@
 		journal.audioData = null;
 		journalSaved = true;
 		onjournalsaved(journal);
-	}
-
-	async function handleJournalNext() {
-		// recordRound already handles the state transition
 	}
 
 	async function handleJournalRestart() {
@@ -153,9 +181,7 @@
 		currentScreen === 'drawCard' ||
 			currentScreen === 'failureCheck' ||
 			currentScreen === 'successCheck' ||
-			currentScreen === 'finalDamageRoll' ||
-			currentScreen === 'log' ||
-			currentScreen === 'finalLog'
+			currentScreen === 'log'
 	);
 
 	let showExitModal = $state(false);
@@ -190,43 +216,105 @@
 	}
 
 	/**
+	 * The primary action of the current round step: the same thing its visible button does.
+	 * Returns null for steps whose button lives elsewhere (intro, card, journal).
+	 */
+	function getPrimaryAction() {
+		switch (currentScreen) {
+			case 'initialDamageRoll':
+				return {
+					disabled: initialDamage.rolling,
+					run: () => initialDamage.handleInitialDamageRoll(triggerAutoPlayForCurrentScreen)
+				};
+			case 'startRound':
+				return { disabled: false, run: beginRound };
+			case 'rollForTasks':
+				return {
+					disabled: rollForTasks.buttonDisabled,
+					run: () => rollForTasks.handleRollForTasks(triggerAutoPlayForCurrentScreen)
+				};
+			case 'failureCheck':
+				return {
+					disabled: failureCheck.rolling,
+					run: () => failureCheck.handleFailureCheck(triggerAutoPlayForCurrentScreen)
+				};
+			case 'successCheck':
+				return {
+					disabled: successCheck.rolling,
+					run: () => successCheck.handleSuccessCheck(triggerAutoPlayForCurrentScreen)
+				};
+			default:
+				return null;
+		}
+	}
+
+	function beginRound() {
+		transitionTo('rollForTasks');
+	}
+
+	// Buttons that live outside the round steps (intro and journal)
+	const OTHER_PRIMARY_BUTTONS = [
+		'story-continue-button',
+		'journal-save-button',
+		'journal-next-button'
+	];
+
+	function clickVisiblePrimaryButton() {
+		for (const testid of OTHER_PRIMARY_BUTTONS) {
+			const button = document.querySelector(`[data-testid="${testid}"]`);
+			if (button && !button.disabled && button.getClientRects().length > 0) {
+				button.click();
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * Global keyboard shortcut handler
-	 * Allows Space/Enter to trigger primary action on each screen
+	 * Space/Enter trigger the visible, enabled primary button of the current step.
+	 * A focused button, link or field keeps its own native behaviour.
 	 */
 	function handleKeyPress(event) {
-		// Ignore if user is typing in an input/textarea
-		if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
-			return;
-		}
+		if (event.key !== ' ' && event.key !== 'Enter') return;
+		if (event.defaultPrevented || event.repeat) return;
 
-		// Ignore if modal is open
-		if (showExitModal) {
-			return;
-		}
-
-		const key = event.key.toLowerCase();
-
-		// Space or Enter triggers the primary action button on the current screen
-		if (key === ' ' || key === 'enter') {
-			event.preventDefault();
-
-			// Cancel any auto-play on user interaction
+		// Typing, or a focused control that activates itself
+		const target = event.target;
+		if (
+			target.isContentEditable ||
+			target.closest?.('input, textarea, select, button, a, summary, [role="button"]')
+		) {
 			cancelAutoPlay();
+			return;
+		}
 
-			// Find the primary action button on the current screen and click it
-			const primaryButton = document.querySelector(
-				'[data-testid="start-round-button"], [data-testid="card-deck-button"], [data-testid="continue-button"]'
-			);
+		// Ignore if a modal is open
+		if (showExitModal || showSettingsModal || showHelpModal) {
+			return;
+		}
 
-			if (primaryButton && !primaryButton.disabled) {
-				primaryButton.click();
+		// Cancel any auto-play on user interaction
+		cancelAutoPlay();
+
+		const action = getPrimaryAction();
+		if (action) {
+			event.preventDefault();
+			if (!action.disabled) action.run();
+		} else if (currentScreen === 'drawCard') {
+			// The card is the control on this step
+			if (drawCardRef && !drawCardRef.isButtonDisabled()) {
+				event.preventDefault();
+				drawCardRef.handleButtonClick();
 			}
+		} else if (clickVisiblePrimaryButton()) {
+			event.preventDefault();
 		}
 	}
 
 	/**
-	 * Handle clicks anywhere on the screen to advance the game
-	 * Only triggers if clicking on non-interactive elements
+	 * Handle clicks on the table: does exactly what the visible primary button does,
+	 * and only while that button is enabled. Never advances without a button.
 	 */
 	function handleScreenClick(event) {
 		// Cancel any auto-play on user interaction
@@ -241,59 +329,20 @@
 			target.tagName === 'A' ||
 			target.closest('button') ||
 			target.closest('a') ||
-			target.closest('[role="button"]') ||
-			target.closest('.toolbar-button');
+			target.closest('[role="button"]');
 
 		if (isInteractive) {
 			return;
 		}
 
-		// Ignore if modal is open
-		if (showExitModal) {
+		// Ignore if a modal is open
+		if (showExitModal || showSettingsModal || showHelpModal) {
 			return;
 		}
 
-		// Trigger the appropriate action based on the current screen
-		switch (currentScreen) {
-			case 'showIntro':
-				transitionTo('initialDamageRoll');
-				break;
-			case 'initialDamageRoll':
-				if (!initialDamage.rolling && !initialDamage.result) {
-					initialDamage.handleInitialDamageRoll(triggerAutoPlayForCurrentScreen);
-				}
-				break;
-			case 'startRound':
-				transitionTo('rollForTasks');
-				break;
-			case 'rollForTasks':
-				if (!rollForTasks.buttonDisabled) {
-					rollForTasks.handleRollForTasks(triggerAutoPlayForCurrentScreen);
-				}
-				break;
-			case 'drawCard':
-				// No keyboard handler - user must click the card directly to dismiss
-				break;
-			case 'failureCheck':
-				if (!failureCheck.rolling) {
-					failureCheck.handleFailureCheck(triggerAutoPlayForCurrentScreen);
-				}
-				break;
-			case 'successCheck':
-				if (!successCheck.rolling) {
-					successCheck.handleSuccessCheck(triggerAutoPlayForCurrentScreen);
-				}
-				break;
-			case 'finalDamageRoll':
-				if (!finalDamage.rolling) {
-					finalDamage.handleFinalDamageRoll(triggerAutoPlayForCurrentScreen);
-				}
-				break;
-			case 'log':
-			case 'finalLog':
-				// Journal screen - user must click the save button explicitly
-				// Tapping the screen should NOT save or advance
-				break;
+		const action = getPrimaryAction();
+		if (action && !action.disabled) {
+			action.run();
 		}
 	}
 
@@ -395,13 +444,6 @@
 				triggerAutoPlayForCurrentScreen();
 				break;
 
-			case 'finalDamageRoll':
-				// Reset state using composable
-				finalDamage.resetState();
-				// Trigger auto-play
-				triggerAutoPlayForCurrentScreen();
-				break;
-
 			case 'drawCard':
 				// Auto-draw first card when entering drawCard state
 				// Small delay to ensure CardDeck component is fully initialized
@@ -460,7 +502,7 @@
 					autoPlayCanceller = autoAdvance({
 						text: null,
 						shouldRead: false,
-						action: () => transitionTo('startRound')
+						action: () => initialDamage.handleInitialDamageRoll(triggerAutoPlayForCurrentScreen)
 					});
 				}
 				break;
@@ -566,34 +608,6 @@
 					});
 				}
 				break;
-
-			case 'finalDamageRoll':
-				// Auto-read prompt first if enabled and not yet rolled
-				if (audioSettings.autoReadPrompts && finalDamage.result === undefined) {
-					const promptText =
-						'You have completed the countdown, but salvation comes with one final risk. Roll one last time.';
-					speak(promptText);
-				}
-
-				// Auto-roll if enabled and not yet rolled
-				if (
-					gameplaySettings.autoRollDice &&
-					finalDamage.result === undefined &&
-					!finalDamage.rolling
-				) {
-					autoPlayCanceller = autoRoll(() =>
-						finalDamage.handleFinalDamageRoll(triggerAutoPlayForCurrentScreen)
-					);
-				}
-				// Auto-continue after result if enabled
-				else if (gameplaySettings.autoContinueAfterReading && finalDamage.result !== undefined) {
-					autoPlayCanceller = autoAdvance({
-						text: null,
-						shouldRead: false,
-						action: () => transitionTo('finalLog')
-					});
-				}
-				break;
 		}
 	}
 </script>
@@ -605,28 +619,6 @@
 		transition:fade={{ duration: TRANSITION_DURATION }}
 	>
 		<LoadScreen />
-	</div>
-{:else if currentScreen == 'showIntro'}
-	<div
-		class="dc-game-bg dc-intro-wrapper"
-		data-testid="screen-showIntro"
-		transition:fade={{ duration: TRANSITION_DURATION }}
-		onclick={handleScreenClick}
-	>
-		<div class="intro-story-container">
-			<div class="content">
-				<h1>{gameState.config?.title || 'Game Introduction'}</h1>
-				<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized via sanitizeHtml -->
-				{@html sanitizeHtml(marked(gameState.config?.introduction ?? ''))}
-			</div>
-			<ButtonBar>
-				<ContinueButton
-					text="Begin Your Journey"
-					onclick={() => transitionTo('initialDamageRoll')}
-					testid="story-continue-button"
-				/>
-			</ButtonBar>
-		</div>
 	</div>
 {:else if currentScreen == 'gameOver'}
 	<div
@@ -642,20 +634,27 @@
 	</div>
 {:else}
 	<div class="game-screen dc-game-bg">
+		<!-- The table stays mounted under the intro, so the hand-off never goes through black -->
 		<!-- UI Content Layer -->
-		<div class="ui-content-layer">
-			<div class="status-display-area dc-fade-in" data-testid="status-display">
-				<StatusDisplay
-					onHelpClick={handleHelpClick}
-					onExitClick={handleExitClick}
-					onSettingsClick={handleSettingsClick}
-				/>
-			</div>
+		<div
+			class="ui-content-layer"
+			class:behind-intro={currentScreen == 'showIntro'}
+			inert={currentScreen == 'showIntro'}
+		>
+			{#if showStatusHUD}
+				<div class="status-display-area dc-fade-in" data-testid="status-display">
+					<StatusDisplay
+						onHelpClick={handleHelpClick}
+						onExitClick={handleExitClick}
+						onSettingsClick={handleSettingsClick}
+					/>
+				</div>
+			{/if}
 			<!-- svelte-ignore a11y_click_events_have_key_events -->
 			<!-- svelte-ignore a11y_no_static_element_interactions -->
 			<div class="main-screen-area dc-table-bg" onclick={handleScreenClick}>
 				<!-- Background contextual text -->
-				<ContextBackground {contextText} />
+				<ContextBackground {contextText} {resultLine} />
 
 				{#key currentScreen}
 					{#if currentScreen == 'initialDamageRoll'}
@@ -664,15 +663,19 @@
 							data-testid="screen-initialDamageRoll"
 							transition:fade={{ duration: TRANSITION_DURATION }}
 						>
-							<!-- <InitialDamageRoll /> -->
+							<InitialDamageController
+								{initialDamage}
+								triggerAutoPlay={triggerAutoPlayForCurrentScreen}
+							/>
 						</div>
 					{:else if currentScreen == 'startRound'}
 						<div
-							class="dc-fade-in dc-screen-container dc-start-round-screen"
+							class="dc-fade-in dc-screen-container"
 							data-testid="screen-startRound"
 							transition:fade={{ duration: TRANSITION_DURATION }}
 						>
-							<!-- Round text now shown in background -->
+							<!-- Round text is shown in the background -->
+							<StartRoundController onbegin={beginRound} />
 						</div>
 					{:else if currentScreen == 'rollForTasks'}
 						<div
@@ -686,7 +689,7 @@
 							/>
 						</div>
 					{:else if currentScreen == 'drawCard'}
-						<OverlayModal isVisible={true} zIndex={50}>
+						<OverlayModal isVisible={true} label="Card drawn">
 							<DrawCard bind:this={drawCardRef} />
 						</OverlayModal>
 					{:else if currentScreen == 'failureCheck'}
@@ -711,114 +714,62 @@
 								triggerAutoPlay={triggerAutoPlayForCurrentScreen}
 							/>
 						</div>
-					{:else if currentScreen == 'finalDamageRoll'}
-						<div
-							class="dc-fade-in dc-screen-container"
-							data-testid="screen-finalDamageRoll"
-							transition:fade={{ duration: TRANSITION_DURATION }}
-						>
-							<FinalDamageRoll />
-						</div>
 					{:else if currentScreen == 'finalLog' || currentScreen == 'log'}
-						<OverlayModal isVisible={true} zIndex={50}>
+						<OverlayModal
+							isVisible={true}
+							label={gameState.gameOver ? 'Final log' : 'Journal entry'}
+							tone={gameState.gameOver ? (gameState.win ? 'victory' : 'loss') : 'default'}
+						>
 							<JournalEntry
 								bind:journalText={journal.text}
 								bind:audioData={journal.audioData}
 								{journalSaved}
 								onSave={handleJournalSave}
-								onNext={handleJournalNext}
 								onRestart={handleJournalRestart}
 								onExit={handleJournalExit}
 							/>
 						</OverlayModal>
+					{:else if currentScreen == 'showIntro'}
+						<!-- The intro overlay covers the table until the player begins -->
 					{:else}
 						<div transition:fade={{ duration: TRANSITION_DURATION }}>error: {currentScreen}</div>
 					{/if}
 				{/key}
+				<RuleCaption />
 			</div>
-
-			<!-- Toolbar at bottom with exit button and deck visualization -->
-			<!-- <div class="toolbar-area">
-				<div
-					class="toolbar-background"
-					data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
-				></div>
-
-				<div class="toolbar-left">
-				</div>
-				<div class="toolbar-center">
-					{#if currentScreen === 'startRound'}
-						<ContinueButton
-							text="Begin Round {gameState.round}"
-							onclick={() => transitionTo('rollForTasks')}
-							testid="start-round-button"
-						/>
-					{:else if currentScreen === 'rollForTasks'}
-						<ContinueButton
-							text={rollForTasks.buttonText}
-							onclick={handleRollForTasks}
-							disabled={rollForTasks.buttonDisabled}
-							testid="roll-tasks-button"
-						/>
-					{:else if currentScreen === 'failureCheck'}
-						<ContinueButton
-							text={failureCheck.buttonText}
-							onclick={handleFailureCheck}
-							disabled={failureCheck.rolling}
-							testid="failure-check-button"
-						/>
-					{:else if currentScreen === 'successCheck'}
-						<ContinueButton
-							text={successCheck.buttonText}
-							onclick={handleSuccessCheck}
-							disabled={successCheck.rolling}
-							testid="success-check-button"
-						/>
-					{:else if currentScreen === 'finalDamageRoll'}
-						<ContinueButton
-							text={finalDamage.buttonText}
-							onclick={handleFinalDamageRoll}
-							disabled={finalDamage.rolling}
-							testid="final-damage-roll-button"
-						/>
-					{:else if currentScreen === 'log' || currentScreen === 'finalLog'}
-						{#if journalSaved}
-							{#if gameState.gameOver}
-								<ButtonBar bordered={false} gameBackground={false}>
-									<ContinueButton
-										text={gameState.config?.labels?.journalEntryRestartButtonText ?? 'Restart'}
-										onclick={handleJournalRestart}
-										testid="journal-restart-button"
-									/>
-									<ContinueButton
-										text={gameState.config?.labels?.journalEntryExitButtonText ?? 'Exit'}
-										onclick={handleJournalExit}
-										testid="journal-exit-button"
-									/>
-								</ButtonBar>
-							{:else}
-								<ContinueButton
-									text={gameState.config?.labels?.journalEntryNextButtonText ?? 'Continue to Next Round'}
-									onclick={handleJournalNext}
-									testid="journal-next-button"
-								/>
-							{/if}
-						{:else}
-							<ContinueButton
-								text={gameState.config?.labels?.journalEntrySaveButtonText ?? 'Record Entry'}
-								onclick={handleJournalSave}
-								testid="journal-save-button"
-							/>
-						{/if}
-					{/if}
-				</div>
-				<div class="toolbar-right">
-					<DeckVisualization />
-				</div>
-			</div> -->
 		</div>
+
+		{#if currentScreen == 'showIntro'}
+			<!-- Fades out (300ms) first; the table then fades in underneath it -->
+			<div
+				class="dc-game-bg dc-intro-wrapper"
+				data-testid="screen-showIntro"
+				in:fade|global={{ duration: TRANSITION_DURATION }}
+				out:fade={{ duration: ANIMATION_DURATION.SLOW }}
+			>
+				<div class="intro-story-container">
+					<div class="content">
+						<h1>{gameState.config?.title || 'Game Introduction'}</h1>
+						<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized via sanitizeHtml -->
+						{@html sanitizeHtml(marked(gameState.config?.introduction ?? ''))}
+					</div>
+					<ButtonBar>
+						<ContinueButton
+							text="Begin Your Journey"
+							onclick={() => transitionTo('initialDamageRoll')}
+							testid="story-continue-button"
+						/>
+					</ButtonBar>
+				</div>
+			</div>
+		{/if}
 	</div>
 {/if}
+
+<!-- Announces results and key events to screen readers -->
+<div class="sr-only" role="status" aria-live="polite" aria-atomic="true" data-testid="live-region">
+	{liveMessage}
+</div>
 
 <!-- Mini Status HUD - Shows during card screens -->
 <MiniStatusHUD show={showMiniHUD} />
@@ -848,12 +799,28 @@
 		overflow: hidden;
 	}
 
+	/* The intro sits over the table, which stays mounted underneath */
 	.dc-intro-wrapper {
+		position: absolute;
+		inset: 0;
+		z-index: 200;
 		display: flex;
 		flex-direction: column;
 		overflow: visible;
 		min-height: 0;
 		height: 100%;
+	}
+
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		margin: -1px;
+		padding: 0;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+		border: 0;
 	}
 
 	.intro-story-container {
@@ -874,6 +841,10 @@
 		padding: var(--space-md);
 		background-color: transparent;
 		min-height: 0;
+		/* Reading column: no 180-character lines on desktop */
+		width: 100%;
+		max-width: var(--content-max, 720px);
+		margin-inline: auto;
 	}
 
 	.intro-story-container .content h1 {
@@ -921,172 +892,25 @@
 		pointer-events: none; /* Allow dice clicks through */
 	}
 
+	/* The table fades in once the intro has faded out (300ms), never over it */
+	.ui-content-layer {
+		transition: opacity 300ms ease-out 300ms;
+	}
+
+	.ui-content-layer.behind-intro {
+		opacity: 0;
+		transition: none;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.ui-content-layer {
+			transition: none;
+		}
+	}
+
 	/* Re-enable pointer events for interactive UI elements */
 	.ui-content-layer > * {
 		pointer-events: auto;
-	}
-
-	/* Toolbar Area - Bottom bar with deck viz and buttons */
-	.toolbar-area {
-		grid-area: toolbar-area;
-
-		/* Layout - CSS Grid for responsive stacking */
-		display: grid;
-		grid-template-columns: auto 1fr auto;
-		grid-template-areas: 'left center right';
-		align-items: center;
-		gap: var(--space-md);
-		width: 100%;
-		min-height: 60px;
-		padding: var(--space-md);
-		position: relative;
-
-		/* Slide-in animation from bottom - dramatic delayed entrance */
-		animation: toolbar-slide-in 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 1.2s forwards;
-		opacity: 0; /* Start invisible */
-	}
-
-	/* Augmented UI background - positioned behind content, doesn't clip children */
-	.toolbar-background {
-		position: absolute;
-		inset: 0;
-		z-index: -1;
-		pointer-events: none;
-
-		/* Augmented UI Configuration - Match player-round-bar */
-		--aug-border-all: 2px;
-		--aug-border-bg: linear-gradient(135deg, #00eeff 0%, #ff00ff 50%, #00ffaa 100%);
-		--aug-tl: 14px;
-		--aug-tr: 14px;
-		--aug-br: 14px;
-		--aug-bl: 14px;
-
-		/* Glassmorphism Effect - Match player-round-bar */
-		background: linear-gradient(
-			135deg,
-			rgba(100, 50, 200, 0.3),
-			rgba(50, 150, 255, 0.25),
-			rgba(100, 50, 200, 0.2)
-		);
-		backdrop-filter: blur(12px) saturate(180%);
-		-webkit-backdrop-filter: blur(12px) saturate(180%);
-
-		/* Enhanced Multi-layer Glow - Match player-round-bar */
-		box-shadow:
-			0 0 30px rgba(0, 238, 255, 0.7),
-			0 0 60px rgba(0, 238, 255, 0.4),
-			0 0 90px rgba(0, 238, 255, 0.2),
-			inset 0 0 30px rgba(255, 0, 255, 0.25),
-			inset 0 0 50px rgba(0, 255, 255, 0.1);
-	}
-
-	@keyframes toolbar-slide-in {
-		from {
-			transform: translateY(100%);
-			opacity: 0;
-		}
-		to {
-			transform: translateY(0);
-			opacity: 1;
-		}
-	}
-
-	.toolbar-left {
-		grid-area: left;
-		display: flex;
-		align-items: center;
-		justify-content: flex-start;
-		gap: var(--space-md);
-	}
-
-	.toolbar-center {
-		grid-area: center;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		min-width: 0;
-	}
-
-	.toolbar-right {
-		grid-area: right;
-		display: flex;
-		align-items: center;
-		justify-content: flex-end;
-		gap: var(--space-md);
-	}
-
-	.toolbar-button {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 44px;
-		height: 44px;
-		background: linear-gradient(135deg, rgba(30, 30, 40, 0.8), rgba(20, 20, 30, 0.9));
-		border: 1px solid rgba(0, 255, 255, 0.3);
-		border-radius: 4px;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		color: var(--color-neon-cyan);
-		backdrop-filter: blur(5px);
-		-webkit-backdrop-filter: blur(5px);
-	}
-
-	.toolbar-button:hover {
-		background: linear-gradient(135deg, rgba(40, 40, 50, 0.9), rgba(30, 30, 40, 0.95));
-		border-color: var(--color-neon-cyan);
-		box-shadow:
-			0 0 15px rgba(0, 255, 255, 0.4),
-			inset 0 0 10px rgba(0, 255, 255, 0.1);
-		transform: translateY(-2px);
-	}
-
-	.toolbar-button:active {
-		transform: translateY(0);
-	}
-
-	.exit-button {
-		/* No border or background - transparent styling */
-		background: transparent;
-		border: none;
-		color: var(--color-neon-cyan);
-		backdrop-filter: none;
-		-webkit-backdrop-filter: none;
-	}
-
-	.exit-button:hover {
-		background: transparent;
-		border: none;
-		/* Enhanced neon cyan glow on hover */
-		color: var(--color-neon-cyan);
-		filter: drop-shadow(0 0 8px rgba(0, 255, 255, 0.8)) drop-shadow(0 0 15px rgba(0, 255, 255, 0.5));
-		transform: scale(1.1);
-	}
-
-	.exit-button:active {
-		transform: scale(1);
-		filter: drop-shadow(0 0 12px rgba(0, 255, 255, 1)) drop-shadow(0 0 20px rgba(0, 255, 255, 0.7));
-	}
-
-	.help-button {
-		/* Transparent styling like exit button */
-		background: transparent;
-		border: none;
-		color: var(--color-neon-cyan);
-		backdrop-filter: none;
-		-webkit-backdrop-filter: none;
-	}
-
-	.help-button:hover {
-		background: transparent;
-		border: none;
-		color: var(--color-neon-cyan);
-		filter: drop-shadow(0 0 8px rgba(0, 255, 255, 0.8)) drop-shadow(0 0 15px rgba(0, 255, 255, 0.5));
-		transform: scale(1.1);
-	}
-
-	.help-button:active {
-		transform: scale(1);
-		filter: drop-shadow(0 0 12px rgba(0, 255, 255, 1)) drop-shadow(0 0 20px rgba(0, 255, 255, 0.7));
 	}
 
 	.main-screen-area {
@@ -1113,47 +937,6 @@
 		z-index: 1;
 	}
 
-	/* Background contextual text */
-	.context-text-background {
-		position: absolute;
-		top: 45%;
-		left: 50%;
-		transform: translate(-50%, -50%);
-		text-align: center;
-		pointer-events: none;
-		user-select: none;
-		-webkit-user-select: none;
-		-moz-user-select: none;
-		z-index: 0;
-		max-width: 90%;
-	}
-
-	.context-title {
-		font-size: clamp(1.75rem, 5vw, 3.5rem);
-		font-weight: 700;
-		color: var(--color-neon-cyan);
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
-		line-height: 1.35;
-		margin: 0 0 0.75rem 0;
-		font-family: 'lixdu', 'Courier New', monospace;
-		opacity: 0.3;
-		text-shadow: 0 0 10px var(--yellow);
-	}
-
-	.context-description {
-		font-size: clamp(0.875rem, 1.5vw, 1rem);
-		color: rgba(255, 255, 255, 0.5);
-		line-height: 1.6;
-		margin: 0;
-		max-width: 600px;
-		margin-inline: auto;
-		font-weight: 400;
-		letter-spacing: 0;
-		text-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
-		opacity: 0.5;
-	}
-
 	.dc-table-bg {
 		border-radius: var(--dc-default-border-radius);
 		/* Background removed to show neural network animation on all screens */
@@ -1171,17 +954,7 @@
 		position: relative;
 	}
 
-	.dc-start-round-screen {
-		text-align: center;
-		display: grid;
-		justify-content: center;
-		align-content: center;
-		h4 {
-			vertical-align: middle;
-		}
-	}
-
-	/* Mobile responsiveness - Move exit and deck outside toolbar */
+	/* Mobile responsiveness */
 	@media (max-width: 450px) or (max-height: 600px) {
 		.status-display-area {
 			width: 100%;
@@ -1190,7 +963,7 @@
 			z-index: auto; /* Remove z-index to allow natural stacking */
 		}
 
-		/* Allow overflow on parent containers so toolbar items can appear above */
+		/* Allow overflow on parent containers */
 		.game-screen,
 		.ui-content-layer,
 		.main-screen-area {
@@ -1206,46 +979,6 @@
 		/* Remove z-index from screen container to fix stacking context */
 		.main-screen-area > div.dc-screen-container {
 			z-index: auto;
-		}
-
-		.toolbar-area {
-			/* Keep only center area in toolbar */
-			grid-template-columns: 1fr;
-			grid-template-areas: 'center';
-			padding: var(--space-sm);
-		}
-
-		.toolbar-left,
-		.toolbar-right {
-			/* Position absolutely OUTSIDE and ABOVE the toolbar */
-			position: absolute;
-			bottom: calc(100% + var(--space-sm)); /* Position above the toolbar */
-			width: auto;
-		}
-
-		.toolbar-left {
-			left: 0;
-			justify-content: flex-start;
-		}
-
-		.toolbar-right {
-			right: 0;
-			justify-content: flex-end;
-		}
-
-		.toolbar-center {
-			/* Full width in toolbar */
-			width: 100%;
-		}
-
-		/* Make buttons take full width */
-		.toolbar-center > :global(*) {
-			width: 100%;
-		}
-
-		.toolbar-center :global(.aug-button-wrapper),
-		.toolbar-center :global(.aug-button) {
-			width: 100%;
 		}
 	}
 </style>

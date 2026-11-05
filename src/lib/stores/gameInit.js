@@ -92,7 +92,7 @@ export function initializeGame(gameConfig, player, options = {}) {
 		acesRevealed: aceOfHeartsRevealed ? 1 : 0, // D20 system: Track Aces for salvation threshold
 		gameOver: false,
 		win: false,
-		tower: 20, // D20 system: Always start at 20 Stability (was 54 in d6 system)
+		tower: 20, // D20 system: Always start at 20 Stability
 		log: [],
 		journalEntries: [],
 		cardsToDraw: 0,

@@ -95,6 +95,11 @@
 			}
 		}
 
+		// "Read your story" at the end of a game links here with ?story to open the Story Library
+		if (new URLSearchParams(window.location.search).has('story')) {
+			showBrowseGames = true;
+		}
+
 		// Load custom games
 		customGames = getCustomGames();
 		allGames = [...customGames, ...data.games].sort((a, b) => a.title.localeCompare(b.title));
@@ -1037,7 +1042,8 @@
 	}
 
 	.version-text {
-		font-family: var(--font-display);
+		font-family: var(--font-mono);
+		font-variant-numeric: tabular-nums;
 		font-size: clamp(0.75rem, 1.5vw, 1rem);
 		font-weight: 700;
 		color: var(--color-brand-yellow);
@@ -1120,7 +1126,7 @@
 		background: transparent;
 		border: none;
 		color: var(--color-brand-yellow);
-		font-family: var(--font-display);
+		font-family: var(--font-body);
 		font-size: var(--text-sm);
 		font-weight: 600;
 		text-transform: uppercase;
@@ -1516,8 +1522,9 @@
 	   ============================================ */
 
 	.game-card-title {
+		/* Display font only at 24px and above */
 		font-family: 'lixdu', monospace;
-		font-size: clamp(1.25rem, 1.8vw, 1.75rem);
+		font-size: clamp(1.5rem, 1.8vw, 1.75rem);
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
 		color: var(--color-brand-yellow);
@@ -1530,7 +1537,7 @@
 	}
 
 	.game-subtitle {
-		font-family: 'Courier New', monospace;
+		font-family: var(--font-body);
 		font-size: clamp(0.8rem, 1vw, 0.95rem);
 		color: rgba(255, 255, 255, 0.8);
 		text-align: center;
@@ -1602,10 +1609,6 @@
 		.welcome-container {
 			padding-inline: var(--space-lg);
 		}
-
-		.page-header h2 {
-			font-size: var(--text-2xl);
-		}
 	}
 
 	/* Medium screens - show hamburger menu to prevent crowding */
@@ -1649,10 +1652,6 @@
 
 		.page-header {
 			padding: var(--space-sm) var(--space-md);
-		}
-
-		.page-header h2 {
-			font-size: var(--text-xl);
 		}
 
 		.header-buttons {
@@ -1818,8 +1817,10 @@
 	}
 
 	.choice-card h3 {
+		/* Below 24px the display font misreads ("HOW" -> "HOLL!"), so use the body face */
+		font-family: var(--font-body);
 		font-size: clamp(1.25rem, 2vw, 1.5rem);
-		font-weight: 600;
+		font-weight: 700;
 		color: white;
 		margin: 0;
 	}

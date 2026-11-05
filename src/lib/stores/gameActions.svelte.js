@@ -558,7 +558,7 @@ export function applyFailureCheckResult(result) {
  * await animateDiceRoll(roll); // Show 3D dice animation
  * applyPendingDiceRoll(); // Apply after animation completes
  */
-export function applyPendingDiceRoll() {
+export function applyPendingDiceRoll({ advance = true } = {}) {
 	if (gameState.pendingUpdates.diceRoll === null) {
 		logger.warn('[applyPendingDiceRoll] No pending dice roll to apply');
 		return;
@@ -623,19 +623,29 @@ export function applyPendingDiceRoll() {
 		gameState.status =
 			gameState.config.labels?.failureCheckLoss ?? 'Stability collapsed completely';
 		gameState.gameOver = true;
+	}
+
+	if (advance) {
+		advanceAfterFailureCheck();
+	}
+}
+
+/**
+ * Leave the Stability check screen once the player has seen the result
+ *
+ * Counterpart to applyPendingDiceRoll({ advance: false }): the state was already
+ * updated (so the HUD shows it), this only moves to the next screen and saves.
+ */
+export function advanceAfterFailureCheck() {
+	if (gameState.gameOver) {
 		transitionTo('gameOver');
+	} else if (gameState.cardsToDraw > 0) {
+		transitionTo('drawCard');
+	} else if (gameState.aceOfHeartsRevealed && gameState.tokens > 0) {
+		// All cards drawn - check for success check first, then journal
+		transitionTo('successCheck');
 	} else {
-		// Continue with next card or end turn
-		if (gameState.cardsToDraw > 0) {
-			transitionTo('drawCard');
-		} else {
-			// All cards drawn - check for success check first, then journal
-			if (gameState.aceOfHeartsRevealed && gameState.tokens > 0) {
-				transitionTo('successCheck');
-			} else {
-				transitionTo('log');
-			}
-		}
+		transitionTo('log');
 	}
 
 	// Auto-save after applying damage
@@ -651,19 +661,6 @@ export async function failureCheck() {
 	const result = getFailureCheckRoll();
 	applyFailureCheckResult(result.roll);
 	return result;
-}
-
-/**
- * Confirm failure check and proceed
- *
- * Placeholder function for consistency. State transition is actually handled
- * in applyPendingDiceRoll() after dice animation completes.
- *
- * @see {applyPendingDiceRoll} - Handles actual state transition
- * @see {getFailureCheckRoll} - Initiates the failure check
- */
-export function confirmFailureCheck() {
-	// State transition already handled in applyPendingDiceRoll
 }
 
 /**
@@ -857,7 +854,7 @@ export function successCheck() {
  * await animateDiceRoll(result.roll); // Show 3D dice animation
  * applyPendingSuccessCheck(); // Apply after animation completes
  */
-export function applyPendingSuccessCheck() {
+export function applyPendingSuccessCheck({ advance = true } = {}) {
 	if (gameState.pendingUpdates.diceRoll === null) {
 		logger.warn('[applyPendingSuccessCheck] No pending success check to apply');
 		return;
@@ -895,7 +892,6 @@ export function applyPendingSuccessCheck() {
 		gameState.tokens
 	);
 
-	// Transition based on token state
 	if (gameState.tokens === 0) {
 		// D20 System: Victory when tokens reach 0 (no final damage roll)
 		gameState.win = true;
@@ -903,6 +899,19 @@ export function applyPendingSuccessCheck() {
 		gameState.status =
 			gameState.config.labels?.successCheckWin ?? 'Victory! Against all odds, you escaped.';
 		logger.info('[applyPendingSuccessCheck] VICTORY - All tokens removed');
+	}
+
+	if (advance) {
+		advanceAfterSuccessCheck();
+	}
+}
+
+/**
+ * Leave the Salvation check screen once the player has seen the result
+ * (victory goes to the ending, otherwise to the round's journal entry)
+ */
+export function advanceAfterSuccessCheck() {
+	if (gameState.gameOver) {
 		transitionTo('gameOver');
 
 		// Auto-save after victory
@@ -954,7 +963,7 @@ export function performInitialDamageRoll(roll) {
  * Apply pending initial damage roll after dice animation completes
  * D20 system: Handles both stability loss and stability gain
  */
-export function applyPendingInitialDamageRoll() {
+export function applyPendingInitialDamageRoll({ advance = true } = {}) {
 	if (gameState.pendingUpdates.diceRoll === null) {
 		logger.warn('[applyPendingInitialDamageRoll] No pending initial damage roll to apply');
 		return;
@@ -1007,106 +1016,17 @@ export function applyPendingInitialDamageRoll() {
 		id: '0.0'
 	});
 
-	// Transition to first round (via startRound screen)
+	if (advance) {
+		advanceAfterInitialDamage();
+	}
+}
+
+/**
+ * Leave the initial instability screen once the player has seen the result
+ * (first round, via the startRound screen)
+ */
+export function advanceAfterInitialDamage() {
 	transitionTo('startRound');
-}
-
-/**
- * Perform the final damage roll after all tokens are removed
- * NOTE: This function is for legacy d6 system compatibility only
- * D20 system does not use final damage roll - victory occurs immediately when tokens = 0
- * @param {number} roll - Dice roll result
- * @deprecated D20 system handles victory in applyPendingSuccessCheck()
- */
-export function performFinalDamageRoll(roll) {
-	logger.debug('[performFinalDamageRoll] Roll:', roll, 'Tower:', gameState.tower);
-
-	// Store pending updates (to be applied after dice animation)
-	gameState.pendingUpdates.diceRoll = roll;
-
-	// Calculate damage (D20 system: no bonus modifier)
-	const damage = Math.max(roll, 0);
-	gameState.pendingUpdates.towerDamage = damage;
-
-	logger.debug(`[performFinalDamageRoll] Stored pending roll ${roll}, pending damage: ${damage}`);
-
-	// Note: State transitions will happen in applyPendingFinalDamageRoll after animation
-}
-
-/**
- * Apply pending final damage roll after dice animation completes
- * NOTE: For legacy d6 system compatibility only
- * @deprecated D20 system handles victory in applyPendingSuccessCheck()
- */
-export function applyPendingFinalDamageRoll() {
-	if (gameState.pendingUpdates.diceRoll === null) {
-		logger.warn('[applyPendingFinalDamageRoll] No pending final damage roll to apply');
-		return;
-	}
-
-	const roll = gameState.pendingUpdates.diceRoll;
-	const damage = gameState.pendingUpdates.towerDamage;
-
-	// Apply dice roll
-	gameState.diceRoll = roll;
-
-	// Apply tower damage
-	gameState.tower = Math.max(gameState.tower - damage, 0);
-
-	// Clear pending updates
-	gameState.pendingUpdates.diceRoll = null;
-	gameState.pendingUpdates.towerDamage = null;
-
-	logger.debug(
-		`[applyPendingFinalDamageRoll] Applied final damage roll: ${roll}, damage: ${damage}, tower now: ${gameState.tower}`
-	);
-
-	// Log the final roll
-	gameState.log.push({
-		type: 'final-damage',
-		roll,
-		damage,
-		tower: gameState.tower,
-		timestamp: Date.now(),
-		round: gameState.round,
-		id: `${gameState.round}.final`
-	});
-
-	// Determine outcome
-	if (gameState.tower > 0) {
-		// VICTORY - Survived the final test
-		gameState.win = true;
-		gameState.gameOver = true;
-		gameState.status =
-			gameState.config.labels?.successCheckWin ?? 'Victory! Against all odds, you survived.';
-		logger.info('[applyPendingFinalDamageRoll] VICTORY - Player survived final roll');
-	} else {
-		// DEFEAT - Victory snatched away
-		gameState.win = false;
-		gameState.gameOver = true;
-		gameState.status =
-			gameState.config.labels?.finalDamageRollLoss ??
-			'So close... Victory was within reach, but the final test proved too much.';
-		logger.info('[applyPendingFinalDamageRoll] DEFEAT - Final roll depleted tower');
-	}
-
-	transitionTo('gameOver');
-
-	// Auto-save after final damage roll
-	saveGame(gameState);
-}
-
-/**
- * Confirm Salvation check and proceed
- *
- * Placeholder function for consistency. State transition is actually handled
- * in applyPendingSuccessCheck() after dice animation completes.
- *
- * @see {applyPendingSuccessCheck} - Handles actual state transition and victory check
- * @see {successCheck} - Initiates the Salvation check
- */
-export function confirmSuccessCheck() {
-	// State transition already handled in applyPendingSuccessCheck
 }
 
 /**

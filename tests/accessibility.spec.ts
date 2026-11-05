@@ -2,90 +2,98 @@
 // seed: tests/seed.spec.ts
 
 import { test, expect } from '@playwright/test';
+import { openHomePage, openContentModal, openHeaderMenu } from './helpers';
 
 test.describe('Accessibility', () => {
 	test.beforeEach(async ({ page }) => {
-		// Skip splash and instructions
-		await page.goto('/');
-		await page.evaluate(() => {
-			sessionStorage.setItem('splashShown', 'true');
-			localStorage.setItem('instructionsSeen', 'true');
-		});
-		await page.goto('/');
-		await page.waitForSelector('[data-testid="home-page"]', { timeout: 10000 });
+		await openHomePage(page);
 	});
 
 	test('should have proper ARIA labels on header buttons', async ({ page }) => {
-		// Check About button
-		const aboutButton = page.locator('button[aria-label="About"]');
-		await expect(aboutButton).toHaveAttribute('aria-label', 'About');
+		// The menu button is icon-only, so it needs an explicit label and state
+		const toggle = page.getByRole('button', { name: 'Toggle menu' });
+		await expect(toggle).toHaveAttribute('aria-label', 'Toggle menu');
+		await expect(toggle).toHaveAttribute('aria-expanded', 'false');
 
-		// Check Settings button
-		const settingsButton = page.locator('button[aria-label="Settings"]');
-		await expect(settingsButton).toHaveAttribute('aria-label', 'Settings');
+		// Every menu action has a visible text label that names it
+		await openHeaderMenu(page);
+		const items = page.locator('.mobile-menu button');
+		const count = await items.count();
+		expect(count).toBeGreaterThanOrEqual(6);
+		for (let i = 0; i < count; i++) {
+			await expect(items.nth(i)).toHaveAccessibleName(/\S/);
+		}
+		await expect(page.getByRole('button', { name: 'About', exact: true })).toBeVisible();
+		await expect(page.getByRole('button', { name: 'Settings', exact: true })).toBeVisible();
+		await expect(page.getByRole('button', { name: 'Help', exact: true })).toBeVisible();
+	});
 
-		// Check How to Play link
-		const howToLink = page.locator('a[aria-label="How to Play"]');
-		await expect(howToLink).toHaveAttribute('aria-label', 'How to Play');
+	test('should have accessible names on game card buttons', async ({ page }) => {
+		const startButtons = page.locator('.game-card').getByRole('button', { name: 'Start new game' });
+		expect(await startButtons.count()).toBe(await page.locator('.game-card').count());
 	});
 
 	test('should have proper modal ARIA attributes', async ({ page }) => {
-		// Click a game card to open modal
-		await page.click('.game-card');
+		const dialog = await openContentModal(page, 'About');
 
-		const modal = page.locator('.modal-backdrop');
+		// Check role and aria-modal
+		await expect(dialog).toHaveAttribute('role', 'dialog');
+		await expect(dialog).toHaveAttribute('aria-modal', 'true');
 
-		// Check role
-		await expect(modal).toHaveAttribute('role', 'dialog');
-
-		// Check aria-modal
-		await expect(modal).toHaveAttribute('aria-modal', 'true');
-
-		// Check aria-labelledby
-		await expect(modal).toHaveAttribute('aria-labelledby', 'modal-title');
+		// aria-labelledby points at the visible title
+		const labelledBy = await dialog.getAttribute('aria-labelledby');
+		expect(labelledBy).toBeTruthy();
+		await expect(page.locator(`[id="${labelledBy}"]`)).toHaveText('About');
 	});
 
 	test('should have visible focus indicators', async ({ page }) => {
-		// Focus a game card
-		const firstCard = page.locator('.game-card').first();
-		await firstCard.focus();
+		// Reach the first Start button by keyboard so :focus-visible applies
+		await page.getByRole('button', { name: 'Toggle menu' }).focus();
+		await page.keyboard.press('Tab');
 
-		// Element should have focus
-		await expect(firstCard).toBeFocused();
+		const startButton = page.locator('.game-card').first().getByRole('button', {
+			name: 'Start new game'
+		});
+		await expect(startButton).toBeFocused();
 
-		// Get outline
-		const outline = await firstCard.evaluate((el) => window.getComputedStyle(el).outline);
-
-		// Should have visible focus indicator (outline should not be 'none')
-		expect(outline).toContain('2px');
+		// Should have a visible focus indicator (3px neon outline from styles.css)
+		const outline = await startButton.evaluate((el) => {
+			const style = window.getComputedStyle(el);
+			return { style: style.outlineStyle, width: style.outlineWidth };
+		});
+		expect(outline.style).not.toBe('none');
+		expect(outline.width).toBe('3px');
 	});
 
 	test('should support keyboard navigation through all interactive elements', async ({ page }) => {
-		let tabCount = 0;
-		const maxTabs = 20;
+		const cardCount = await page.locator('.game-card').count();
+		const visited: string[] = [];
 
-		// Tab through elements
-		while (tabCount < maxTabs) {
+		// Tab from the top of the page; the sequence should be the menu button, then each Start button
+		await page.locator('body').click({ position: { x: 1, y: 1 } });
+		for (let i = 0; i < cardCount + 1; i++) {
 			await page.keyboard.press('Tab');
-			tabCount++;
-
-			const focused = page.locator(':focus');
-			const tagName = await focused.evaluate((el) => el.tagName.toLowerCase());
-
-			// Stop if we've cycled through
-			if (tagName === 'body') break;
+			visited.push(
+				await page.evaluate(
+					() =>
+						document.activeElement?.getAttribute('aria-label') ||
+						document.activeElement?.tagName.toLowerCase() ||
+						''
+				)
+			);
 		}
 
-		// We should have been able to tab through multiple elements
-		expect(tabCount).toBeGreaterThan(5);
+		expect(visited[0]).toBe('Toggle menu');
+		expect(visited.slice(1)).toEqual(Array(cardCount).fill('Start new game'));
 	});
 
 	test('should have proper heading hierarchy', async ({ page }) => {
-		// Check for h2 in header (if present)
-		const headings = await page.locator('h1, h2, h3, h4, h5, h6').allTextContents();
+		// Game titles are headings, one per card
+		const headings = page.locator('h1, h2, h3, h4, h5, h6');
+		expect(await headings.count()).toBeGreaterThan(0);
 
-		// Should have some headings
-		expect(headings.length).toBeGreaterThan(0);
+		const titles = page.locator('.game-card h3.game-card-title');
+		expect(await titles.count()).toBe(await page.locator('.game-card').count());
 	});
 
 	test('should have alt text on logo image', async ({ page }) => {
@@ -97,39 +105,36 @@ test.describe('Accessibility', () => {
 	});
 
 	test('should respect reduced motion preference', async ({ page }) => {
+		// Without the preference the cards fade in with an animation
+		const firstCard = page.locator('.game-card').first();
+		await expect
+			.poll(() => firstCard.evaluate((el) => window.getComputedStyle(el).animationName))
+			.not.toBe('none');
+
 		// Emulate prefers-reduced-motion
 		await page.emulateMedia({ reducedMotion: 'reduce' });
 
 		// Reload to apply media query
 		await page.reload();
-		await page.waitForSelector('[data-testid="home-page"]', { timeout: 10000 });
+		await expect(page.getByTestId('home-page')).toBeVisible();
 
-		// Check that animations are disabled or reduced
-		const firstCard = page.locator('.game-card').first();
-		const animationName = await firstCard.evaluate((el) => {
-			const style = window.getComputedStyle(el);
-			return style.animationName;
-		});
-
-		// In reduced motion mode, animations should be 'none' or empty
-		// This test verifies the CSS media query is working
-		expect(animationName === 'none' || animationName === '').toBeTruthy();
+		// In reduced motion mode, animations should be 'none'
+		await expect(page.locator('.game-card').first()).toBeVisible();
+		const animationName = await page
+			.locator('.game-card')
+			.first()
+			.evaluate((el) => window.getComputedStyle(el).animationName);
+		expect(animationName).toBe('none');
 	});
 
 	test('should have semantic HTML structure', async ({ page }) => {
-		// Verify main landmarks
-		const sections = page.locator('section');
-		const count = await sections.count();
-		expect(count).toBeGreaterThan(0);
+		// Main content is a section
+		expect(await page.locator('section').count()).toBeGreaterThan(0);
 
 		// Verify buttons are actual button elements
-		const buttons = page.locator('button');
-		const buttonCount = await buttons.count();
-		expect(buttonCount).toBeGreaterThan(0);
+		expect(await page.locator('button').count()).toBeGreaterThan(0);
 
-		// Verify links are actual anchor elements
-		const links = page.locator('a');
-		const linkCount = await links.count();
-		expect(linkCount).toBeGreaterThan(0);
+		// Nothing pretends to be a button: clickable controls are real <button> elements
+		expect(await page.locator('[role="button"]:not(button)').count()).toBe(0);
 	});
 });

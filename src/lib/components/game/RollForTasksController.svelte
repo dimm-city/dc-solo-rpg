@@ -8,8 +8,7 @@
 	 * @component
 	 */
 
-	import ContinueButton from '../ContinueButton.svelte';
-	import ButtonBar from '../ButtonBar.svelte';
+	import StepAction from './StepAction.svelte';
 
 	// rollForTasks: the useRollForTasks() instance owned by GameScreen, shared with its
 	// table-tap and auto-play handlers so they all see the same roll state
@@ -22,14 +21,12 @@
 </script>
 
 <div class="roll-for-tasks-screen">
-	<ButtonBar>
-		<ContinueButton
-			text={rollForTasks.buttonText}
-			onclick={handleClick}
-			disabled={rollForTasks.buttonDisabled}
-			testid="roll-tasks-button"
-		/>
-	</ButtonBar>
+	<StepAction
+		text={rollForTasks.buttonText}
+		onclick={handleClick}
+		disabled={rollForTasks.buttonDisabled}
+		testid="roll-tasks-button"
+	/>
 </div>
 
 <style>

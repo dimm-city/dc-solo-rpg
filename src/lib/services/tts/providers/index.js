@@ -29,23 +29,6 @@ export function getProvider(providerName) {
 	return Provider;
 }
 
-/**
- * Get list of available provider names
- * @returns {string[]}
- */
-export function getAvailableProviders() {
-	return Object.keys(TTS_PROVIDERS);
-}
-
-/**
- * Check if a provider is available
- * @param {string} providerName
- * @returns {boolean}
- */
-export function isProviderAvailable(providerName) {
-	return providerName in TTS_PROVIDERS;
-}
-
 // Export individual providers
 export {
 	BrowserTTSProvider,

@@ -386,15 +386,6 @@ export async function speak(text, options = {}) {
 }
 
 /**
- * Stop current speech
- */
-export function stopSpeaking() {
-	ttsService.stop();
-	ttsState.isSpeaking = false;
-	ttsState.currentText = null;
-}
-
-/**
  * Get available voices from current provider
  * @returns {Promise<Array>}
  */
@@ -422,17 +413,4 @@ export function getAudioSettings() {
 
 export function getGameplaySettings() {
 	return gameplaySettings;
-}
-
-export function getTTSState() {
-	return ttsState;
-}
-
-export function isAutoPlayEnabled() {
-	return (
-		audioSettings.autoReadCards ||
-		audioSettings.autoReadPrompts ||
-		gameplaySettings.autoRollDice ||
-		gameplaySettings.autoContinueAfterReading
-	);
 }

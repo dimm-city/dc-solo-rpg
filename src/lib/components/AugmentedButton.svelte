@@ -94,6 +94,8 @@
 	.aug-button-wrapper {
 		margin: 0 auto;
 		width: fit-content;
+		/* Desktop: never stretch the CTA across the whole screen (phones are narrower than the cap) */
+		max-width: min(100%, var(--cta-max, 480px));
 		display: block;
 		position: relative;
 
@@ -173,7 +175,8 @@
 		text-decoration: none;
 
 		/* Background & Visual Treatment */
-		background: linear-gradient(135deg, var(--color-cyber-magenta), var(--color-cyber-magenta-alt));
+		/* Deep magenta to violet: yellow text on it measures 5.4:1+ (WCAG AA) */
+		background: linear-gradient(135deg, #831d98, #6d22c7);
 		border: none;
 		cursor: pointer;
 
@@ -261,7 +264,7 @@
 	/* Hover state */
 	.aug-button:hover {
 		/* Enhance brightness and lift button */
-		filter: brightness(1.15);
+		filter: brightness(1.08);
 		/* transform: translateY(-3px); */
 
 		/* Enhance inner glow on hover */
@@ -277,11 +280,20 @@
 		transform: translateY(-2px);
 	}
 
-	/* Focus state */
+	/* Focus state: keyboard focus only. The button is clip-pathed, so an outline would be cut off;
+	   use a thick white augmented-ui border plus a cyan glow on the (unclipped) wrapper instead. */
 	.aug-button:focus {
-		/* Focus ring outside the glow effects */
-		outline: 3px solid var(--color-brand-yellow);
-		outline-offset: 8px;
+		outline: none;
+	}
+
+	.aug-button:focus-visible {
+		--aug-border-all: 6px;
+		--aug-border-bg: #ffffff;
+	}
+
+	.aug-button-wrapper:has(.aug-button:focus-visible),
+	.aug-button-wrapper.primary:has(.aug-button:focus-visible) {
+		filter: drop-shadow(0 0 3px var(--color-neon-cyan)) drop-shadow(0 0 12px var(--color-neon-cyan));
 	}
 
 	/* Active state - pressed feeling */
@@ -314,17 +326,6 @@
 		.aug-button {
 			padding: 0.75rem 1.5rem;
 			font-size: 1rem;
-		}
-	}
-
-	/* Add safe spacing for stacked buttons */
-	.aug-button-wrapper + .aug-button-wrapper {
-		margin-top: var(--space-xl);
-	}
-
-	@media (max-width: 768px) {
-		.aug-button-wrapper + .aug-button-wrapper {
-			margin-top: var(--space-lg);
 		}
 	}
 

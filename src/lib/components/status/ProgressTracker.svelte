@@ -71,7 +71,10 @@
 	.progress-tracker {
 		/* Augmented UI Configuration */
 		--aug-border-all: 2px;
-		--aug-border-bg: linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta));
+		--aug-border-bg: var(
+			--frame-border,
+			linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta))
+		);
 		--aug-tl: 12px;
 		--aug-tr: 12px;
 		grid-area: progress;
@@ -126,7 +129,8 @@
 		display: flex;
 		align-items: baseline;
 		gap: 0.25rem;
-		font-family: 'Courier New', monospace;
+		font-family: var(--font-mono, 'Share Tech Mono', ui-monospace, monospace);
+		font-variant-numeric: tabular-nums;
 		white-space: nowrap;
 		flex-shrink: 0;
 	}

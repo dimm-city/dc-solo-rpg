@@ -2,76 +2,67 @@
 // seed: tests/seed.spec.ts
 
 import { test, expect } from '@playwright/test';
+import { INSTRUCTIONS_SEEN_KEY, openHomePage, openContentModal, clickMenuItem } from './helpers';
 
 test.describe('Integration and Edge Cases', () => {
 	test('should handle rapid modal opening and closing', async ({ page }) => {
-		// Setup
-		await page.goto('/');
-		await page.evaluate(() => {
-			sessionStorage.setItem('splashShown', 'true');
-			localStorage.setItem('instructionsSeen', 'true');
-		});
-		await page.goto('/');
-		await page.waitForSelector('[data-testid="home-page"]', { timeout: 10000 });
+		await openHomePage(page);
 
 		// Rapidly open and close About modal
 		for (let i = 0; i < 3; i++) {
-			await page.click('button[aria-label="About"]');
-			await page.waitForTimeout(100);
-			await page.click('.info-modal-button:has-text("Close")');
-			await page.waitForTimeout(100);
+			const dialog = await openContentModal(page, 'About');
+			await dialog.getByRole('button', { name: 'Done' }).click();
+			await expect(page.getByRole('dialog')).toHaveCount(0);
 		}
 
 		// Should still be functional
-		await page.click('button[aria-label="About"]');
-		await expect(page.locator('.overlay-modal-container')).toBeVisible();
+		await openContentModal(page, 'About');
+		await expect(page.getByRole('dialog')).toHaveCount(1);
 	});
 
 	test('should prevent multiple modals from opening simultaneously', async ({ page }) => {
-		// Setup
-		await page.goto('/');
-		await page.evaluate(() => {
-			sessionStorage.setItem('splashShown', 'true');
-			localStorage.setItem('instructionsSeen', 'true');
-		});
-		await page.goto('/');
-		await page.waitForSelector('[data-testid="home-page"]', { timeout: 10000 });
+		await openHomePage(page);
 
 		// Open About modal
-		await page.click('button[aria-label="About"]');
-		await expect(page.locator('.overlay-modal-container')).toBeVisible();
+		await openContentModal(page, 'About');
 
-		// Try to open Settings modal (should close About first or prevent)
-		await page.click('button[aria-label="Settings"]');
+		// The modal scrim covers the header, so the menu behind it cannot be reached
+		const toggle = page.locator('.hamburger-button');
+		await expect(toggle).toBeVisible();
+		const toggleIsCovered = await toggle.evaluate((el) => {
+			const box = el.getBoundingClientRect();
+			const top = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
+			return top !== el && !el.contains(top);
+		});
+		expect(toggleIsCovered).toBe(true);
 
-		// Only one modal should be visible
-		const modals = page.locator('.overlay-modal-container');
-		const count = await modals.count();
-		expect(count).toBeLessThanOrEqual(1);
+		// Only one modal is open
+		await expect(page.getByRole('dialog')).toHaveCount(1);
+		await expect(page.getByRole('dialog')).toHaveAccessibleName('About');
 	});
 
-	test('should handle game selection cancellation and re-selection', async ({ page }) => {
-		// Setup
-		await page.goto('/');
-		await page.evaluate(() => {
-			sessionStorage.setItem('splashShown', 'true');
-			localStorage.setItem('instructionsSeen', 'true');
+	test('should handle starting a game, going back and starting again', async ({ page }) => {
+		await openHomePage(page);
+
+		const firstStart = page.locator('.game-card').first().getByRole('button', {
+			name: 'Start new game'
 		});
-		await page.goto('/');
-		await page.waitForSelector('[data-testid="home-page"]', { timeout: 10000 });
 
-		const firstCard = page.locator('.game-card').first();
+		// Start the game and come back via the browser's back button
+		await firstStart.click();
+		await expect(page).toHaveURL(/\/game\/[a-z0-9-]+$/);
+		await expect(page.getByTestId('screen-showIntro')).toBeVisible();
+		await page.goBack();
+		await expect(page.getByTestId('home-page')).toBeVisible();
 
-		// Select and cancel
-		await firstCard.click();
-		await page.click('button:has-text("CANCEL")');
-
-		// Select again
-		await firstCard.click();
-		await expect(page.locator('.modal-backdrop')).toBeVisible();
-
-		// Should work normally
-		await expect(page.locator('button:has-text("START GAME")')).toBeVisible();
+		// Start it again and it works normally
+		await page
+			.locator('.game-card')
+			.first()
+			.getByRole('button', { name: 'Start new game' })
+			.click();
+		await expect(page).toHaveURL(/\/game\/[a-z0-9-]+$/);
+		await expect(page.getByTestId('screen-showIntro')).toBeVisible();
 	});
 
 	test('should maintain state after browser refresh', async ({ page }) => {
@@ -82,85 +73,69 @@ test.describe('Integration and Edge Cases', () => {
 			localStorage.clear();
 		});
 		await page.goto('/');
-		await page.waitForTimeout(4000); // Wait for splash
 
+		// Splash, then the choice screen
 		const skipAlwaysCard = page.locator('.choice-card').filter({ hasText: 'Skip Always' });
-		if (await skipAlwaysCard.isVisible()) {
-			await skipAlwaysCard.click();
-			await page.waitForTimeout(500);
-		}
+		await expect(skipAlwaysCard).toBeVisible();
+		await skipAlwaysCard.click();
+		await expect(page.getByTestId('home-page')).toBeVisible();
+		expect(await page.evaluate((key) => localStorage.getItem(key), INSTRUCTIONS_SEEN_KEY)).toBe(
+			'true'
+		);
 
 		// Refresh page
 		await page.reload();
 
 		// Should skip instructions
-		await expect(page.locator('[data-testid="home-page"]')).toBeVisible({ timeout: 5000 });
+		await expect(page.locator('[data-testid="home-page"]')).toBeVisible();
+		await expect(page.locator('.instructions-choice-container')).toHaveCount(0);
 	});
 
 	test('should handle viewport resize while modal is open', async ({ page }) => {
-		// Setup
-		await page.goto('/');
-		await page.evaluate(() => {
-			sessionStorage.setItem('splashShown', 'true');
-			localStorage.setItem('instructionsSeen', 'true');
-		});
-		await page.goto('/');
-		await page.waitForSelector('[data-testid="home-page"]', { timeout: 10000 });
+		await openHomePage(page);
+		await page.setViewportSize({ width: 1280, height: 720 });
 
 		// Open About modal
-		await page.click('button[aria-label="About"]');
-		await expect(page.locator('.overlay-modal-container')).toBeVisible();
+		const dialog = await openContentModal(page, 'About');
 
 		// Resize to mobile
 		await page.setViewportSize({ width: 375, height: 667 });
 
-		// Modal should still be visible and functional
-		await expect(page.locator('.overlay-modal-container')).toBeVisible();
-		await expect(page.locator('.info-modal-button:has-text("Close")')).toBeVisible();
+		// Modal should still be visible and functional, now as a full-screen sheet
+		await expect(dialog).toBeVisible();
+		await expect(dialog.getByRole('button', { name: 'Done' })).toBeVisible();
+		const wrapper = await page.locator('.content-modal-wrapper').boundingBox();
+		expect(wrapper!.width).toBeCloseTo(375, 0);
+		expect(wrapper!.height).toBeCloseTo(667, 0);
 
 		// Should be able to close
-		await page.click('.info-modal-button:has-text("Close")');
-		await expect(page.locator('.overlay-modal-container')).not.toBeVisible();
+		await dialog.getByRole('button', { name: 'Done' }).click();
+		await expect(page.getByRole('dialog')).toHaveCount(0);
 	});
 
 	test('should handle rapid game card clicking', async ({ page }) => {
-		// Setup
-		await page.goto('/');
-		await page.evaluate(() => {
-			sessionStorage.setItem('splashShown', 'true');
-			localStorage.setItem('instructionsSeen', 'true');
-		});
-		await page.goto('/');
-		await page.waitForSelector('[data-testid="home-page"]', { timeout: 10000 });
+		await openHomePage(page);
 
 		const cards = page.locator('.game-card');
-		const count = await cards.count();
+		expect(await cards.count()).toBeGreaterThanOrEqual(2);
 
-		if (count >= 2) {
-			// Click first card
-			await cards.nth(0).click();
-			await page.waitForTimeout(100);
+		// Clicking around the card bodies in quick succession does nothing (no selection,
+		// no confirmation); only the Start button acts.
+		await cards.nth(0).locator('.game-card-title').click();
+		await cards.nth(1).locator('.game-card-title').click();
+		await cards.nth(0).locator('.game-card-title').click();
 
-			// Click second card quickly
-			await cards.nth(1).click();
-
-			// Should have a modal open
-			await expect(page.locator('.modal-backdrop')).toBeVisible();
-		}
+		await expect(page.getByRole('dialog')).toHaveCount(0);
+		await expect(page).toHaveURL(/\/$/);
+		await expect(page.getByTestId('home-page')).toBeVisible();
 	});
 
 	test('should load all game data correctly', async ({ page }) => {
-		// Setup
-		await page.goto('/');
-		await page.evaluate(() => {
-			sessionStorage.setItem('splashShown', 'true');
-			localStorage.setItem('instructionsSeen', 'true');
-		});
-		await page.goto('/');
-		await page.waitForSelector('[data-testid="home-page"]', { timeout: 10000 });
+		await openHomePage(page);
 
 		// Verify games are loaded
 		const gameCards = page.locator('.game-card');
+		await expect(gameCards.first()).toBeVisible();
 		const count = await gameCards.count();
 
 		expect(count).toBeGreaterThan(0);
@@ -173,20 +148,25 @@ test.describe('Integration and Edge Cases', () => {
 		}
 	});
 
-	test('should handle localStorage unavailable gracefully', async ({ page, context }) => {
-		// This test simulates incognito/privacy mode where localStorage might fail
-		// We can't fully disable localStorage, but we can test that the app doesn't crash
-
-		// Setup
-		await page.goto('/');
-		await page.evaluate(() => {
-			sessionStorage.setItem('splashShown', 'true');
-			localStorage.setItem('instructionsSeen', 'true');
+	test('should handle localStorage unavailable gracefully', async ({ page }) => {
+		// Simulate privacy mode where every localStorage access throws
+		await page.addInitScript(() => {
+			Object.defineProperty(window, 'localStorage', {
+				get() {
+					throw new DOMException('The operation is insecure.', 'SecurityError');
+				}
+			});
 		});
 		await page.goto('/');
-		await page.waitForSelector('[data-testid="home-page"]', { timeout: 10000 });
+		await page.evaluate(() => sessionStorage.setItem('splashShown', 'true'));
+		await page.goto('/');
 
-		// App should load successfully
+		// Without a stored "seen" flag the instructions choice is offered; skipping once
+		// does not need localStorage, so the player can still reach the games.
+		const skipOnce = page.locator('.choice-card').filter({ hasText: 'Skip Once' });
+		await expect(skipOnce).toBeVisible();
+		await skipOnce.click();
+
 		await expect(page.locator('[data-testid="home-page"]')).toBeVisible();
 		await expect(page.locator('[data-testid="game-selector"]')).toBeVisible();
 	});
@@ -196,7 +176,7 @@ test.describe('Integration and Edge Cases', () => {
 
 		page.on('console', (msg) => {
 			if (msg.type() === 'error') {
-				errors.push(msg.text());
+				errors.push(`${msg.text()} (${msg.location().url})`);
 			}
 		});
 
@@ -204,33 +184,23 @@ test.describe('Integration and Edge Cases', () => {
 			errors.push(error.message);
 		});
 
-		// Setup
-		await page.goto('/');
-		await page.evaluate(() => {
-			sessionStorage.setItem('splashShown', 'true');
-			localStorage.setItem('instructionsSeen', 'true');
-		});
-		await page.goto('/');
-		await page.waitForSelector('[data-testid="home-page"]', { timeout: 10000 });
+		await openHomePage(page);
+		await expect(page.locator('.game-card').first()).toBeVisible();
 
-		// Should have no errors
-		expect(errors.length).toBe(0);
+		// ERR_TUNNEL_CONNECTION_FAILED is the Google Fonts stylesheet on networks that block it, not the app
+		const appErrors = errors.filter((text) => !text.includes('net::ERR_TUNNEL_CONNECTION_FAILED'));
+		expect(appErrors).toEqual([]);
 	});
 
 	test('should handle Escape key press when no modal is open', async ({ page }) => {
-		// Setup
-		await page.goto('/');
-		await page.evaluate(() => {
-			sessionStorage.setItem('splashShown', 'true');
-			localStorage.setItem('instructionsSeen', 'true');
-		});
-		await page.goto('/');
-		await page.waitForSelector('[data-testid="home-page"]', { timeout: 10000 });
+		await openHomePage(page);
 
 		// Press Escape
 		await page.keyboard.press('Escape');
 
 		// Page should still be functional
 		await expect(page.locator('[data-testid="home-page"]')).toBeVisible();
+		await clickMenuItem(page, 'About');
+		await expect(page.getByRole('dialog')).toBeVisible();
 	});
 });

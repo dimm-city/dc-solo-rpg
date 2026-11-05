@@ -96,23 +96,24 @@
 	.settings-section {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-md);
+		gap: var(--space-lg, 1.5rem);
 	}
 
+	/* Display face is for 24px+ titles only; section headings use the body face */
 	.settings-section h3 {
-		font-family: var(--font-display);
-		font-size: 1.25rem;
+		font-family: var(--font-body, 'Inter', sans-serif);
+		font-size: 1.125rem;
+		font-weight: 700;
 		color: var(--color-neon-cyan);
 		margin: 0;
-		padding-bottom: var(--space-sm);
-		border-bottom: 2px solid rgba(0, 255, 255, 0.3);
 	}
 
 	.section-description {
-		font-size: 0.875rem;
-		color: rgba(255, 255, 255, 0.7);
+		font-size: 0.9375rem;
+		color: #b8c5d6;
 		line-height: 1.5;
 		margin: 0;
+		max-width: 65ch;
 	}
 
 	.form-group {
@@ -122,43 +123,40 @@
 	}
 
 	.form-group label {
-		font-size: 0.875rem;
+		font-size: 1rem;
 		font-weight: 600;
-		color: rgba(255, 255, 255, 0.9);
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
+		line-height: 1.4;
+		color: #fff;
 	}
 
 	.form-group input,
 	.form-group select {
-		padding: var(--space-md);
-		background: rgba(0, 0, 0, 0.4);
-		border: 2px solid rgba(255, 255, 255, 0.2);
+		box-sizing: border-box;
+		min-height: 44px;
+		padding: 10px 14px;
+		background: #07101a;
+		border: 1px solid #6a87a3;
 		border-radius: 4px;
-		color: rgba(255, 255, 255, 0.9);
-		font-size: 0.9rem;
-		transition: all var(--transition-base);
+		color: #fff;
+		font-family: inherit;
+		font-size: 1rem;
 	}
 
-	.form-group input:focus,
-	.form-group select:focus {
-		outline: none;
+	.form-group input:focus-visible,
+	.form-group select:focus-visible {
+		outline: 2px solid var(--color-neon-cyan);
+		outline-offset: 2px;
 		border-color: var(--color-neon-cyan);
-		box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
 	}
 
 	.help-text {
-		font-size: 0.75rem;
-		color: rgba(255, 255, 255, 0.5);
-		line-height: 1.4;
+		font-size: 0.875rem;
+		color: #aebbcc;
+		line-height: 1.5;
 	}
 
 	.help-text a {
 		color: var(--color-neon-cyan);
-		text-decoration: none;
-	}
-
-	.help-text a:hover {
 		text-decoration: underline;
 	}
 </style>

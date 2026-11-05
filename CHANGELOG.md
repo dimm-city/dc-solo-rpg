@@ -5,6 +5,14 @@ All notable changes to the Dream Console (DC Solo RPG) project will be documente
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Removed
+
+- **Public API (breaking):** the legacy d6 final damage roll exports `performFinalDamageRoll` and `applyPendingFinalDamageRoll`, and the no-op placeholders `confirmFailureCheck` and `confirmSuccessCheck` (all re-exported from `gameActions.svelte.js`). The D20 flow never used them.
+- The unreachable `finalDamageRoll` game state, `GAME_STATES.FINAL_DAMAGE_ROLL`, and its transitions.
+- Unused internals: the `configuration/` classes (`GameSettings`, `GameOptions`, `DifficultyLevels`, `GameLabels`), the superseded `gameSave.js`, orphaned components and composables, unused helper exports, unused CSS, and unused dependencies (`fft.js`, `@auth/core`, `@sveltejs/adapter-auto`, `happy-dom`, `puppeteer-core`, `tslib`).
+
 ## [0.2.0] - 2025-11-17
 
 ### Major UI/UX Improvements (Phase 1 & 2)

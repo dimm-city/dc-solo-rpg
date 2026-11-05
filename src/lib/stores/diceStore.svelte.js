@@ -19,7 +19,9 @@ let containerElement = $state(null);
  * Svelte 5 requires exported state to be objects (not reassigned primitives)
  */
 let diceState = $state({
-	isRolling: false
+	isRolling: false,
+	/** The last completed roll ({ rolls, finalValue, isLucid, isSurreal }) so the HUD can show which die counted */
+	lastRoll: null
 });
 
 /**
@@ -138,25 +140,10 @@ export async function initializeDiceBox(container) {
 }
 
 /**
- * Get the current DiceBox instance
- */
-export function getDiceBox() {
-	return diceBoxInstance;
-}
-
-/**
  * Check if DiceBox is initialized
  */
 export function isDiceBoxInitialized() {
 	return isInitialized && diceBoxInstance !== null;
-}
-
-/**
- * Get whether dice are currently rolling
- * @deprecated Use diceState.isRolling directly for reactivity
- */
-export function getDiceRolling() {
-	return diceState.isRolling;
 }
 
 /**
@@ -206,6 +193,13 @@ export async function rollDice(value = null, options = {}) {
 
 	const { isLucid = false, isSurreal = false } = options;
 
+	// Clear any dice left from the previous roll before throwing again
+	try {
+		diceBoxInstance.clearDice?.();
+	} catch (error) {
+		logger.warn('[diceStore] Could not clear previous dice:', error);
+	}
+
 	// Set rolling state to true immediately
 	diceState.isRolling = true;
 
@@ -252,6 +246,8 @@ export async function rollDice(value = null, options = {}) {
 	} else if (isSurreal && rolls.length === 2) {
 		finalValue = Math.min(rolls[0], rolls[1]);
 	}
+
+	diceState.lastRoll = { rolls, finalValue, isLucid, isSurreal };
 
 	return {
 		total: result.total,

@@ -9,8 +9,7 @@
 	 */
 
 	import { gameState } from '../../stores/gameStore.svelte.js';
-	import ContinueButton from '../ContinueButton.svelte';
-	import ButtonBar from '../ButtonBar.svelte';
+	import StepAction from './StepAction.svelte';
 
 	// failureCheck: the useFailureCheck() instance owned by GameScreen, shared with its
 	// table-tap and auto-play handlers so they all see the same roll state
@@ -34,14 +33,12 @@
 	{/if}
 
 	<!-- Action Button -->
-	<ButtonBar>
-		<ContinueButton
-			text={failureCheck.buttonText}
-			onclick={handleClick}
-			disabled={failureCheck.rolling}
-			testid="failure-check-button"
-		/>
-	</ButtonBar>
+	<StepAction
+		text={failureCheck.buttonText}
+		onclick={handleClick}
+		disabled={failureCheck.rolling}
+		testid="failure-check-button"
+	/>
 </div>
 
 <style>

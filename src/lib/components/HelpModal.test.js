@@ -11,15 +11,12 @@ import { tick } from 'svelte';
 import HelpModal from './HelpModal.svelte';
 
 const SECTION_TITLES = [
-	'Stability (Your Life)',
-	'Tokens (Path to Victory)',
-	'Abilities (Aces)',
-	'Failure Counter (Kings)',
-	'Lucid & Surreal States',
-	'Card Types',
-	'The Deck',
-	'How to Win',
-	'How to Lose'
+	'The goal',
+	'Rounds and cards',
+	'Stability checks',
+	'Lucid and Surreal',
+	'Salvation',
+	'How it ends'
 ];
 
 async function renderModal(props = {}) {
@@ -56,9 +53,10 @@ describe('HelpModal', () => {
 	it('should display help message text', async () => {
 		await renderModal();
 
-		expect(document.body.textContent).toContain('You start with 20 Stability');
-		expect(document.body.textContent).toContain('Challenge cards');
-		expect(document.body.textContent).toContain('Reveal all 4 Kings');
+		expect(document.body.textContent).toContain('20 Stability');
+		expect(document.body.textContent).toContain('Odd cards');
+		expect(document.body.textContent).toContain('all 4 Kings');
+		expect(document.body.textContent).toContain('Roll 17 or higher');
 	});
 
 	it('should have "Got it" as confirm button text', async () => {

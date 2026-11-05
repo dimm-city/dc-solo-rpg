@@ -8,66 +8,84 @@
 	let { isOpen = false, onClose, appVersion = '0.2.0' } = $props();
 </script>
 
-<ContentModal {isOpen} title="About Dream Console" {onClose}>
+<ContentModal {isOpen} title="About" {onClose}>
 	<div class="about-content">
-		<p>
-			Dream Console is a narrative-driven solo role-playing game built on the Wretched and Alone
-			system. Each playthrough offers a unique adventure through the cyberpunk streets of Dimm City.
+		<p class="about-lead">
+			Dream Console is a solo journaling game for the quiet hours. You draw cards, roll a d20, and
+			write what happens.
 		</p>
-		<p>
-			The game uses a standard 52-card deck and dice rolls to guide your story, presenting
-			challenges and shaping the narrative as you draw cards and make decisions.
-		</p>
-		<p class="version-info">
-			Version {appVersion}
-		</p>
-		<p class="attribution">
-			This work is based on The Wretched (loottheroom.itch.io/wretched), product of Chris Bissette
-			and Loot The Room, and licensed under CC Attribution 3.0 Unported.
-		</p>
+
+		<section class="cm-section" aria-labelledby="about-play">
+			<h3 class="cm-section-title" id="about-play">How it plays</h3>
+			<p>
+				It is built on the Wretched and Alone system. A standard 52-card deck sets the pace and a
+				d20 decides the risk, while every prompt invites you to write your own story through the
+				neon streets of Dimm City.
+			</p>
+		</section>
+
+		<section class="cm-section" aria-labelledby="about-credits">
+			<h3 class="cm-section-title" id="about-credits">Credits</h3>
+			<p class="about-credit">
+				This work is based on
+				<a href="https://loottheroom.itch.io/wretched" target="_blank" rel="noopener noreferrer"
+					>The Wretched</a
+				>, product of Chris Bissette and Loot The Room, and licensed under
+				<a
+					href="https://creativecommons.org/licenses/by/3.0/"
+					target="_blank"
+					rel="noopener noreferrer">CC Attribution 3.0 Unported</a
+				>.
+			</p>
+		</section>
+
+		<p class="version-info">Version {appVersion}</p>
 	</div>
 </ContentModal>
 
 <style>
 	.about-content {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-md, 1rem);
+		max-width: 65ch;
 	}
 
 	.about-content p {
 		margin: 0;
-		line-height: 1.6;
-		color: var(--dc-default-text-color, #ffffff);
+		color: #e2e9f2;
 	}
 
-	.version-info {
-		font-size: 0.9rem;
-		color: rgba(255, 255, 255, 0.6);
-		font-weight: 400;
-		text-align: center;
-		margin-top: var(--space-md, 1rem);
-		padding-top: var(--space-md, 1rem);
-		border-top: 1px solid rgba(255, 255, 255, 0.2);
+	.about-lead + :global(.cm-section) {
+		margin-top: 32px;
+		padding-top: 32px;
+		border-top: 1px solid rgba(255, 255, 255, 0.14);
 	}
 
-	.attribution {
-		font-size: 0.85rem;
-		color: rgba(255, 255, 255, 0.7);
-		font-style: italic;
-		padding-top: var(--space-sm, 0.5rem);
-		border-top: 1px solid rgba(255, 255, 255, 0.1);
-		margin-top: var(--space-sm, 0.5rem);
+	.about-content .cm-section-title {
+		margin-bottom: 12px;
 	}
 
-	@media (max-width: 600px) {
-		.about-content p {
-			font-size: 0.9rem;
-		}
+	.about-lead {
+		font-size: 1.1875rem;
+		color: #d5dfeb;
+		margin-bottom: 8px;
+	}
 
-		.version-info,
-		.attribution {
-			font-size: 0.8rem;
-		}
+	.about-content a {
+		color: var(--color-neon-cyan, #00ffff);
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+
+	.about-content a:focus-visible {
+		outline: 2px solid var(--color-neon-cyan, #00ffff);
+		outline-offset: 2px;
+	}
+
+	.about-content .version-info {
+		margin-top: 40px;
+		padding-top: 24px;
+		border-top: 1px solid rgba(255, 255, 255, 0.14);
+		font-family: var(--font-mono, 'Share Tech Mono', ui-monospace, monospace);
+		font-size: 0.875rem;
+		color: #aebbcc;
 	}
 </style>

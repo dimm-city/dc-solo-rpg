@@ -1,6 +1,11 @@
 <script>
 	/**
-	 * OverlayModal - Dialog with layered fog effect
+	 * OverlayModal - Full-viewport dialog layer with a fog scrim.
+	 *
+	 * The layer is moved to <body> so no transformed or clipped ancestor in the game
+	 * board can shrink its fixed positioning: the scrim always covers the whole
+	 * viewport, HUD included. Children size their own panel (card, journal sheet).
+	 * Focus moves into the dialog on open, is trapped while open and returns on close.
 	 */
 	import { scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -9,17 +14,74 @@
 	let {
 		children,
 		isVisible = true,
-		zIndex = 50,
-		fixedHeight = null, // Optional fixed height (e.g., "70dvh")
-		animateHeight = false // Whether to animate height from 40dvh to 70dvh
+		zIndex = 5000, // Above the HUD (1000) and below content modals (9999)
+		label = 'Dialog', // Accessible name for the dialog
+		tone = 'default' // 'victory' | 'loss' tint the scrim for the ending
 	} = $props();
 
-	let modalHeight = $derived(fixedHeight ?? (animateHeight ? '70dvh' : null));
+	const FOCUSABLE =
+		'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+	/**
+	 * Svelte action: move the node to <body> so fixed positioning is viewport-relative.
+	 * When a parent block is torn down Svelte only removes the nodes at the original
+	 * location, so the moved node must remove itself.
+	 */
+	function portal(node) {
+		document.body.appendChild(node);
+		return {
+			destroy() {
+				node.remove();
+			}
+		};
+	}
+
+	/** Svelte action: move focus in, trap Tab, restore focus on close */
+	function focusTrap(node) {
+		const previous = document.activeElement;
+		const tabbables = () => [...node.querySelectorAll(FOCUSABLE)].filter((el) => el.offsetParent);
+
+		// Prefer an explicit autofocus target, otherwise the dialog itself
+		const initial = node.querySelector('[data-autofocus]');
+		(initial ?? node).focus({ preventScroll: true });
+
+		function onKeydown(event) {
+			if (event.key !== 'Tab') return;
+			const items = tabbables();
+			if (items.length === 0) {
+				event.preventDefault();
+				node.focus();
+				return;
+			}
+			const first = items[0];
+			const last = items[items.length - 1];
+			const active = document.activeElement;
+			if (event.shiftKey && (active === first || active === node)) {
+				event.preventDefault();
+				last.focus();
+			} else if (!event.shiftKey && active === last) {
+				event.preventDefault();
+				first.focus();
+			} else if (!node.contains(active)) {
+				event.preventDefault();
+				first.focus();
+			}
+		}
+		node.addEventListener('keydown', onKeydown);
+
+		return {
+			destroy() {
+				node.removeEventListener('keydown', onKeydown);
+				if (previous instanceof HTMLElement && document.contains(previous)) {
+					previous.focus({ preventScroll: true });
+				}
+			}
+		};
+	}
 
 	/**
 	 * Cloud fog transition for modal backdrop
 	 * Speed: 200ms (mechanical/ethereal aesthetic)
-	 * Easing: cubicOut for natural deceleration on entry, cubicIn for acceleration on exit
 	 * Effect: Fades in/out fog with subtle scale (0.95 to 1.0)
 	 */
 	function cloudFogTransition(node, { delay = 0, duration = ANIMATION_DURATION.NORMAL }) {
@@ -27,13 +89,11 @@
 			delay,
 			duration,
 			tick: (t) => {
-				// Use cubicOut for smoother easing (matches the scale transition)
 				const eased = cubicOut(t);
-				const scale = 0.95 + eased * 0.05; // Subtle scale from 0.95 to 1.0
+				const cloudScale = 0.95 + eased * 0.05;
 
-				const clouds = node.querySelectorAll('.cloud');
-				clouds.forEach((cloud) => {
-					cloud.style.transform = `translate(-50%, -50%) scale(${scale})`;
+				node.querySelectorAll('.cloud').forEach((cloud) => {
+					cloud.style.transform = `translate(-50%, -50%) scale(${cloudScale})`;
 				});
 
 				node.style.opacity = `${eased}`;
@@ -100,100 +160,124 @@
 </svg>
 
 {#if isVisible}
-	<!-- Fog overlay with layered clouds -->
-	<!-- Animation: Fades in/out simultaneously with modal at 200ms -->
+	<!-- One root element so the whole layer can live in <body> -->
 	<div
-		class="fog-overlay"
-		style="z-index: {zIndex - 1};"
-		in:cloudFogTransition={{ duration: ANIMATION_DURATION.NORMAL, delay: 0 }}
-		out:cloudFogTransition={{ duration: ANIMATION_DURATION.NORMAL, delay: 0 }}
-	>
-		<div class="cloud back"></div>
-		<div class="cloud mid"></div>
-		<div class="cloud front"></div>
-	</div>
-
-	<!-- Modal content wrapper -->
-	<!-- Animation: Fades in/out with scale (0.95 to 1.0) simultaneously with fog at 200ms -->
-	<!-- Entry: ease-out for deceleration, Exit: ease-in for acceleration (modal pattern) -->
-	<div
-		class="modal-wrapper"
+		class="overlay-layer"
 		style="z-index: {zIndex};"
-		style:height={modalHeight}
-		data-augmented-ui="tl-clip tr-clip br-clip bl-clip"
-		in:scale={{
-			duration: ANIMATION_DURATION.NORMAL,
-			delay: 0,
-			start: 0.95,
-			opacity: 0,
-			easing: cubicOut
-		}}
-		out:scale={{
-			duration: ANIMATION_DURATION.NORMAL,
-			delay: 0,
-			start: 0.95,
-			opacity: 0,
-			easing: cubicOut
-		}}
+		use:portal
+		role="dialog"
+		aria-modal="true"
+		aria-label={label}
+		tabindex="-1"
+		use:focusTrap
 	>
-		{@render children()}
+		<!-- Scrim: opaque enough that nothing from the board or HUD shows through -->
+		<div
+			class="scrim"
+			class:victory={tone === 'victory'}
+			class:loss={tone === 'loss'}
+			aria-hidden="true"
+			in:cloudFogTransition={{ duration: ANIMATION_DURATION.NORMAL, delay: 0 }}
+			out:cloudFogTransition={{ duration: ANIMATION_DURATION.NORMAL, delay: 0 }}
+		>
+			<div class="cloud back"></div>
+			<div class="cloud mid"></div>
+			<div class="cloud front"></div>
+		</div>
+
+		<!-- Stage: centres the panel the child renders. Entry/exit is opacity + scale only. -->
+		<div
+			class="stage"
+			in:scale={{
+				duration: ANIMATION_DURATION.NORMAL,
+				start: 0.95,
+				opacity: 0,
+				easing: cubicOut
+			}}
+			out:scale={{
+				duration: ANIMATION_DURATION.NORMAL,
+				start: 0.95,
+				opacity: 0,
+				easing: cubicOut
+			}}
+		>
+			{@render children()}
+		</div>
 	</div>
 {/if}
 
 <style>
-	.modal-wrapper {
-		display: flex;
-		justify-content: center;
-		position: fixed;
-		/* top: 50%;
-		left: 50%;
-		transform: translate(-50%, -50%); */
-		margin: 0;
-		padding: 0;
-		border: none;
-		background: transparent;
-
-		width: 100%;
-		/*max-width: min(90vw, 1200px);
-		 height: calc(100vh - var(--dc-toolbar-height) - var(--space-lg) * 2); */
-
-		/* Scrollable content within modal */
-		overflow-y: auto;
-		overflow-x: hidden;
-
-		/* Better scrolling on mobile */
-		-webkit-overflow-scrolling: touch;
-	}
-
-	/* Fog overlay container */
-	/* CRITICAL: pointer-events: auto to capture all clicks and prevent interaction with content below */
-	.fog-overlay {
+	.overlay-layer {
 		position: fixed;
 		inset: 0;
-		pointer-events: auto; /* CHANGED: Capture clicks to prevent clicking through to game content */
+		width: 100vw;
+		height: 100dvh;
+		display: grid;
+		place-items: center;
 		overflow: hidden;
-		display: flex;
-		align-items: center;
-		justify-content: center;
+		outline: none;
+		/* Never let a gesture on the overlay scroll or rubber-band the board behind it */
+		overscroll-behavior: contain;
+	}
 
-		opacity: 0.75;
-		backdrop-filter: blur(6px) brightness(0.8);
-		-webkit-backdrop-filter: blur(6px) brightness(0.8);
-		cursor: default; /* Show default cursor on backdrop */
+	/* Scrim: dark base plus fog. Captures every pointer event so the board is inert. */
+	.scrim {
+		position: absolute;
+		inset: 0;
+		pointer-events: auto;
+		overflow: hidden;
+		background: rgba(3, 5, 12, 0.97);
+		backdrop-filter: blur(6px);
+		-webkit-backdrop-filter: blur(6px);
+		cursor: default;
+	}
+
+	/* The ending tints the scrim instead of drawing its own backdrop */
+	.scrim.loss {
+		background-color: #05070a;
+		background-image:
+			radial-gradient(circle at 50% 50%, rgba(255, 0, 255, 0.08), transparent 75%),
+			radial-gradient(circle at 25% 75%, rgba(255, 42, 109, 0.1), transparent 70%);
+	}
+
+	.scrim.victory {
+		background-color: #05070a;
+		background-image:
+			radial-gradient(circle at 50% 50%, rgba(255, 215, 0, 0.12), transparent 75%),
+			radial-gradient(circle at 25% 75%, rgba(0, 255, 100, 0.1), transparent 70%);
+	}
+
+	.stage {
+		position: relative;
+		display: grid;
+		place-items: center;
+		width: 100%;
+		height: 100%;
+		/* One track exactly the size of the stage, so a panel's percentage height
+		   resolves against the viewport instead of growing with its content */
+		grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+		/* Panels stay clear of notches and home indicators */
+		padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px)
+			env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+		box-sizing: border-box;
+		/* The stage itself is empty space; only the panel takes pointer events */
+		pointer-events: none;
+	}
+
+	.stage > :global(*) {
+		pointer-events: auto;
 	}
 
 	/* Cloud layers for realistic fog */
-	.fog-overlay .cloud {
+	.scrim .cloud {
 		position: absolute;
 		top: 50%;
 		left: 50%;
 		transform: translate(-50%, -50%) scale(1);
 		border-radius: 50%;
-		opacity: 1;
 	}
 
-	/* Back layer: large, faint cloud - cyberpunk dark blue */
-	.fog-overlay .cloud.back {
+	.scrim .cloud.back {
 		width: 220vw;
 		height: 200vh;
 		background: rgba(8, 20, 40, 0.3);
@@ -204,8 +288,7 @@
 		opacity: 0.25;
 	}
 
-	/* Middle layer: medium cloud - purple tint */
-	.fog-overlay .cloud.mid {
+	.scrim .cloud.mid {
 		width: 180vw;
 		height: 160vh;
 		background: rgba(20, 10, 30, 0.35);
@@ -216,8 +299,7 @@
 		opacity: 0.4;
 	}
 
-	/* Front layer: bright cloud closest to viewer - cyan accent */
-	.fog-overlay .cloud.front {
+	.scrim .cloud.front {
 		width: 140vw;
 		height: 120vh;
 		background: rgba(0, 40, 60, 0.4);
@@ -228,54 +310,42 @@
 		opacity: 0.55;
 	}
 
-	@media (max-width: 768px) {
-		.fog-overlay .cloud.back {
-			width: 250vw;
-			height: 220vh;
+	/* Phones and reduced motion: the three feTurbulence fog layers are expensive to
+	   rasterize, so use a static gradient instead */
+	@media (max-width: 600px) {
+		.scrim {
+			backdrop-filter: none;
+			-webkit-backdrop-filter: none;
+			background-image: radial-gradient(
+				ellipse at 50% 40%,
+				rgba(0, 40, 60, 0.7),
+				rgba(5, 8, 18, 0.95)
+			);
 		}
 
-		.fog-overlay .cloud.mid {
-			width: 200vw;
-			height: 180vh;
-		}
-
-		.fog-overlay .cloud.front {
-			width: 160vw;
-			height: 140vh;
-		}
-	}
-
-	/* Improved responsive behavior */
-	/* @media (max-width: 900px) {
-		.modal-wrapper {
-			max-width: 95vw;
-			height: 80dvh;
-		}
-	} */
-
-	@media (max-width: 800px) {
-		.modal-wrapper {
-			max-width: 100vw;
-			min-height: 60dvh;
-			max-height: calc(100dvh - var(--space-md) * 2);
-			/* Shift modal down to avoid covering status display */
-			/* top: calc(50% + 30px); */
+		.scrim .cloud {
+			display: none;
 		}
 	}
 
-	@media (max-width: 400px) {
-		.modal-wrapper {
-			bottom: 0;
-			position: absolute;
-			/* height: calc(100vh - 300px); */
+	@media (prefers-reduced-motion: reduce) {
+		.scrim {
+			backdrop-filter: none;
+			-webkit-backdrop-filter: none;
+			background-image: radial-gradient(
+				ellipse at 50% 40%,
+				rgba(0, 40, 60, 0.7),
+				rgba(5, 8, 18, 0.95)
+			);
 		}
-	}
 
-	/* Landscape mobile optimization */
-	@media (max-height: 600px) and (orientation: landscape) {
-		.modal-wrapper {
-			height: 95dvh;
-			max-height: calc(100dvh - var(--space-sm));
+		.scrim.loss,
+		.scrim.victory {
+			background-image: none;
+		}
+
+		.scrim .cloud {
+			display: none;
 		}
 	}
 </style>

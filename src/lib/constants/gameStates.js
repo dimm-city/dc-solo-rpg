@@ -42,9 +42,6 @@ export const GAME_STATES = {
 	/** Salvation check (Ace of Hearts unlocks token removal) */
 	SUCCESS_CHECK: 'successCheck',
 
-	/** Final damage roll (legacy d6 system, deprecated in D20) */
-	FINAL_DAMAGE_ROLL: 'finalDamageRoll',
-
 	/** Game over state */
 	GAME_OVER: 'gameOver',
 
@@ -57,21 +54,3 @@ export const GAME_STATES = {
 	/** Error screen state */
 	ERROR_SCREEN: 'errorScreen'
 };
-
-/**
- * Helper to get state constant value by key
- * @param {string} key - State key (e.g., 'DRAW_CARD')
- * @returns {string} State value (e.g., 'drawCard')
- */
-export function getStateValue(key) {
-	return GAME_STATES[key];
-}
-
-/**
- * Helper to check if a value is a valid state
- * @param {string} value - State value to check
- * @returns {boolean} True if value is a valid state
- */
-export function isValidState(value) {
-	return Object.values(GAME_STATES).includes(value);
-}

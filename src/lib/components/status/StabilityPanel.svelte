@@ -1,15 +1,17 @@
 <script>
 	/**
-	 * StabilityPanel - Stability stat panel with gradient bar
+	 * StabilityPanel - Stability number + bar
 	 *
-	 * Displays current stability with a visual bar that changes color based on value.
-	 * Uses Augmented UI styling with dynamic gradients and glows.
+	 * Shows `n/20` in the mono font and a bar that scales with `transform: scaleX()`.
+	 * Four tiers (steady, caution, danger, critical) escalate colour and, at critical, a slow pulse.
+	 * Damage flashes the panel for 300ms with a 2px shake (colour only under reduced motion).
 	 *
 	 * @component
 	 */
 
 	import { gameState } from '../../stores/gameStore.svelte.js';
 	import { innerWidth } from 'svelte/reactivity/window';
+	import { MAX_STABILITY, stabilityTier } from './hudTiers.js';
 
 	let {
 		/** Animation delay in seconds */
@@ -18,64 +20,53 @@
 		animationDuration = 0.7
 	} = $props();
 
-	// Reactive screen width tracking
 	const isMobile = $derived((innerWidth.current ?? 1024) <= 600);
-
-	// Reactive data-augmented-ui attribute for health stat
 	const healthAugmentedUI = $derived(
 		isMobile ? 'tl-clip tr-clip br-clip-x border' : 'tl-clip tr-clip-x br-clip-x border'
 	);
 
-	// Stability gradient - changes based on value (low = red, high = green)
-	const stabilityGradient = $derived(() => {
-		const stability = gameState.tower;
-		if (stability >= 10) {
-			// High stability - positive colors (green)
-			return 'linear-gradient(90deg, #00ff88, #00cc66)';
-		} else {
-			// Low stability - warning/danger colors (red/magenta)
-			return 'linear-gradient(90deg, #ff0055, #d946ef)';
+	const tier = $derived(stabilityTier(gameState.tower));
+	const fraction = $derived(Math.max(0, Math.min(1, gameState.tower / MAX_STABILITY)));
+
+	// Flash + shake when Stability drops
+	let hit = $state(false);
+	let previous = gameState.tower;
+	let hitTimer;
+	$effect(() => {
+		const current = gameState.tower;
+		if (current < previous) {
+			hit = true;
+			clearTimeout(hitTimer);
+			hitTimer = setTimeout(() => (hit = false), 300); // ANIMATION_DURATION.SLOW
 		}
+		previous = current;
+		return () => clearTimeout(hitTimer);
 	});
-
-	const stabilityGlow = $derived(() => {
-		const stability = gameState.tower;
-		return stability >= 10 ? '#00ff88' : '#ff0055';
-	});
-
-	const stabilityPercent = $derived((gameState.tower / 20) * 100);
 </script>
 
 <div
-	class="stat-item health-stat slide-down"
+	class="stat-item health-stat slide-down tier-{tier}"
+	class:hit
 	data-augmented-ui={healthAugmentedUI}
+	data-testid="stability-panel"
 	style="animation-delay: {animationDelay}s; animation-duration: {animationDuration}s"
 >
-	<div class="stat-label">
-		<svg
-			class="stat-icon"
-			xmlns="http://www.w3.org/2000/svg"
-			width="16"
-			height="16"
-			viewBox="0 0 24 24"
-			fill="none"
-			stroke="currentColor"
-			stroke-width="2"
-			stroke-linecap="round"
-			stroke-linejoin="round"
-		>
-			<path
-				d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"
-			/>
-			<path d="M3.22 13H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27" />
-		</svg>
-		STABILITY
-	</div>
-	<div class="stat-bar stability-bar">
+	<div class="flash" aria-hidden="true"></div>
+	<div class="body">
+		<div class="stat-label">STABILITY</div>
+		<div class="stability-value" aria-label="Stability {gameState.tower} of {MAX_STABILITY}">
+			<span class="current">{gameState.tower}</span><span class="max">/{MAX_STABILITY}</span>
+		</div>
 		<div
-			class="stat-fill stability-fill"
-			style="width: {stabilityPercent}%; background: {stabilityGradient()}; box-shadow: 0 0 10px {stabilityGlow()}"
-		></div>
+			class="stat-bar stability-bar"
+			role="progressbar"
+			aria-label="Stability"
+			aria-valuemin="0"
+			aria-valuemax={MAX_STABILITY}
+			aria-valuenow={gameState.tower}
+		>
+			<div class="stability-fill" style="transform: scaleX({fraction})"></div>
+		</div>
 	</div>
 </div>
 
@@ -98,168 +89,200 @@
 	}
 
 	.stat-item {
-		/* Augmented UI Base Configuration */
 		--aug-border-all: 2px;
+		--tier-color: #00ff88;
+		--tier-glow: rgba(0, 255, 136, 0.45);
 
 		width: stretch;
 		max-width: 150px;
-		/* Truly Compact Layout */
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		justify-content: space-between;
-		gap: 0.375rem;
+		justify-content: flex-start;
+		gap: 0.25rem;
 		padding: 0.375rem 0.625rem;
 		position: relative;
 		overflow: visible;
 
-		/* Darker Glassmorphism Background */
 		background: linear-gradient(135deg, rgba(10, 10, 20, 0.7), rgba(15, 15, 25, 0.6));
 		backdrop-filter: blur(8px) saturate(140%);
 		-webkit-backdrop-filter: blur(8px) saturate(140%);
+	}
 
-		/* Subtle inner shine */
-		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+	.tier-steady {
+		--tier-color: #00ff88;
+		--tier-glow: rgba(0, 255, 136, 0.45);
+	}
+	.tier-caution {
+		--tier-color: var(--color-brand-yellow, #ffd700);
+		--tier-glow: rgba(255, 215, 0, 0.45);
+	}
+	.tier-danger {
+		--tier-color: #ff8a3d;
+		--tier-glow: rgba(255, 138, 61, 0.5);
+	}
+	.tier-critical {
+		--tier-color: var(--color-danger, #ff4d6d);
+		--tier-glow: rgba(255, 77, 109, 0.6);
 	}
 
 	.health-stat {
-		/* Augmented UI Configuration - Entry point with rightward tab */
-		--aug-border-bg: linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta));
-		--aug-tl: 8px; /* Gentle entry */
-		--aug-tr: 14px; /* Strong tab → connects to Failure */
-		--aug-br: 14px; /* Strong tab → connects to Bonus (mobile) */
-
-		/* Right side rectangle extension - creates puzzle tab */
+		--aug-border-bg: var(
+			--frame-border,
+			linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta))
+		);
+		--aug-tl: 8px;
+		--aug-tr: 14px;
+		--aug-br: 14px;
 		--aug-r-extend1: 30px;
 		--aug-r-inset1: 12px;
 		grid-area: stability;
-		/* PRIMARY importance - Enhanced Glow */
 		box-shadow:
-			0 0 20px rgba(0, 255, 255, 0.5),
-			0 0 40px rgba(0, 255, 255, 0.25),
-			inset 0 0 15px rgba(0, 255, 255, 0.12),
+			0 0 20px var(--tier-glow),
+			inset 0 0 15px rgba(0, 255, 255, 0.1),
 			inset 0 1px 0 rgba(255, 255, 255, 0.05);
 	}
 
+	/* Damage: a red wash over the panel plus a 2px shake of its contents.
+	   Not on the host: its ::before/::after draw the augmented-ui frame and its animation is the entrance. */
+	.flash {
+		position: absolute;
+		inset: 0;
+		background: var(--color-danger, #ff4d6d);
+		opacity: 0;
+		pointer-events: none;
+	}
+	.hit .flash {
+		animation: stabilityFlash 0.3s ease-out;
+	}
+	.body {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.25rem;
+		width: 100%;
+	}
+	.hit .body {
+		animation: stabilityShake 0.3s linear;
+	}
+
+	@keyframes stabilityShake {
+		0%,
+		100% {
+			transform: translateX(0);
+		}
+		25% {
+			transform: translateX(-2px);
+		}
+		50% {
+			transform: translateX(2px);
+		}
+		75% {
+			transform: translateX(-2px);
+		}
+	}
+
+	@keyframes stabilityFlash {
+		from {
+			opacity: 0.45;
+		}
+		to {
+			opacity: 0;
+		}
+	}
+
+	/* Labels sit at the top of every panel */
 	.stat-label {
-		font-size: 0.75rem; /* 12px - compact for desktop */
+		font-size: 0.75rem;
 		font-weight: bold;
 		text-transform: uppercase;
 		letter-spacing: 0.1em;
-		font-family: 'Courier New', monospace;
-		opacity: 1; /* Remove opacity, rely on color/shadow for hierarchy */
-		text-align: left;
-		align-self: center;
-		flex: 0 0 auto;
-		white-space: nowrap;
-		min-width: 58px;
-		/* Add padding to avoid clip zones */
-		padding-left: 2px;
-		/* Display help icon inline */
-		display: flex;
-		align-items: center;
-		gap: 0.2rem;
-	}
-
-	.stat-icon {
-		width: 14px;
-		height: 14px;
-		flex-shrink: 0;
-		display: inline-block;
-		display: none;
-		vertical-align: middle;
-		filter: drop-shadow(0 0 3px currentColor);
-	}
-
-	.health-stat .stat-label {
+		font-family: var(--font-mono, 'Share Tech Mono', ui-monospace, monospace);
 		color: #00ffaa;
-		text-shadow:
-			0 0 12px currentColor,
-			0 0 24px currentColor,
-			0 1px 2px rgba(0, 0, 0, 0.8); /* Add dark shadow for contrast */
+		text-align: center;
+		align-self: center;
+		white-space: nowrap;
+		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 	}
 
-	/* Stat Bars */
+	.stability-value {
+		font-family: var(--font-mono, 'Share Tech Mono', ui-monospace, monospace);
+		font-variant-numeric: tabular-nums;
+		line-height: 1;
+		color: var(--tier-color);
+		text-shadow: 0 0 12px var(--tier-glow);
+	}
+	.stability-value .current {
+		font-size: 1.5rem; /* 24px */
+		font-weight: 700;
+	}
+	.stability-value .max {
+		font-size: 1rem;
+		color: rgba(255, 255, 255, 0.7);
+		text-shadow: none;
+	}
+
+	/* The bar is a fixed 10px track; only the fill's transform changes */
 	.stat-bar {
-		height: 5px;
+		height: 10px;
+		flex: 0 0 auto;
+		width: 100%;
+		min-width: 80px;
 		background: rgba(0, 0, 0, 0.5);
 		border: 1px solid rgba(255, 255, 255, 0.2);
 		position: relative;
 		overflow: hidden;
-		align-self: center;
-		flex: 1 1 auto;
-		min-width: 35px;
 		border-radius: 2px;
-		/* Add margin to avoid clip zones */
-		margin-right: 2px;
+	}
+
+	.stability-fill {
+		height: 100%;
+		width: 100%;
+		transform-origin: left center;
+		background: var(--tier-color);
+		box-shadow: 0 0 10px var(--tier-glow);
+		transition:
+			transform 0.3s ease-out,
+			background-color 0.3s ease-out;
+		animation: fillBarGrow 0.5s ease-out backwards;
 	}
 
 	@keyframes fillBarGrow {
 		from {
-			width: 0;
-			opacity: 0;
+			transform: scaleX(0);
 		}
-		to {
+	}
+
+	/* Critical: slow pulse */
+	.tier-critical .stability-value,
+	.tier-critical .stability-fill {
+		animation: criticalPulse 1.6s ease-in-out infinite;
+	}
+
+	@keyframes criticalPulse {
+		0%,
+		100% {
 			opacity: 1;
 		}
+		50% {
+			opacity: 0.55;
+		}
 	}
 
-	.stat-fill {
-		height: 100%;
-		transition: width 0.3s linear;
-		position: relative;
-		box-shadow: 0 0 10px currentColor;
-		animation: fillBarGrow 0.5s linear forwards;
-	}
-
-	/* Stability bar - larger since no stat value */
-	.stability-bar {
-		height: 12px;
-		flex: 1 1 auto;
-		min-width: 80px;
-		width: stretch;
-	}
-
-	/* Stability fill - gradient and glow set via inline styles (reactive) */
-	.stability-fill {
-		transition: all 0.3s ease;
-	}
-
-	/* Mobile responsive */
 	@media (max-width: 600px) {
 		.stat-item {
 			width: stretch;
 			min-width: 0;
 			padding: 0.25rem 0.5rem;
-			gap: 0.25rem;
-			flex-direction: column;
 		}
 
 		.health-stat {
-			--aug-tl: 8px; /* Gentle entry */
-			--aug-tr: 8px; /* Strong tab → connects to Failure */
-			--aug-br: 8px; /* Strong tab → connects to Bonus (mobile) */
-
-			/* Right side rectangle extension - creates puzzle tab */
-			--aug-r-extend1: 30px;
-			--aug-r-inset1: 12px;
+			--aug-tl: 8px;
+			--aug-tr: 8px;
+			--aug-br: 8px;
 		}
 		.stat-label {
 			font-size: 0.625rem;
-			min-width: 48px;
-			letter-spacing: 0.08em;
-		}
-
-		.stat-icon {
-			width: 12px;
-			height: 12px;
-		}
-
-		.stability-bar {
-			height: 10px;
-			min-width: 60px;
-			width: 100%;
-			transform: scaleX(1.1);
 		}
 	}
 
@@ -269,9 +292,23 @@
 			opacity: 1;
 		}
 
-		.stat-fill {
+		.stability-fill {
 			animation: none;
-			opacity: 1;
+			transition: none;
+		}
+
+		/* Damage: colour only */
+		.hit .body {
+			animation: none;
+		}
+		.hit .flash {
+			animation: none;
+			opacity: 0.3;
+		}
+
+		.tier-critical .stability-value,
+		.tier-critical .stability-fill {
+			animation: none;
 		}
 	}
 </style>

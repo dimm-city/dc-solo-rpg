@@ -3,7 +3,7 @@
  * Provides helpers for auto-advancing, auto-rolling, and TTS integration
  */
 
-import { getAudioSettings, getGameplaySettings, speak } from '../stores/audioStore.svelte.js';
+import { getGameplaySettings, speak } from '../stores/audioStore.svelte.js';
 import { logger } from './logger.js';
 
 /**
@@ -11,7 +11,7 @@ import { logger } from './logger.js';
  * @param {number} ms - Delay in milliseconds
  * @returns {Promise<boolean>} - Resolves to true if completed, false if cancelled
  */
-export function createCancellableDelay(ms) {
+function createCancellableDelay(ms) {
 	let timeoutId = null;
 	let cancelled = false;
 
@@ -115,30 +115,4 @@ export function autoRoll(rollAction) {
 	});
 
 	return { cancel };
-}
-
-/**
- * Check if any auto-play features are enabled
- */
-export function isAutoPlayEnabled() {
-	const audioSettings = getAudioSettings();
-	const gameplaySettings = getGameplaySettings();
-
-	return (
-		audioSettings.autoReadCards ||
-		audioSettings.autoReadPrompts ||
-		audioSettings.autoAnnounceRolls ||
-		gameplaySettings.autoRollDice ||
-		gameplaySettings.autoContinueAfterReading
-	);
-}
-
-/**
- * Get auto-advance countdown text
- * @param {number} remaining - Milliseconds remaining
- * @returns {string}
- */
-export function getCountdownText(remaining) {
-	const seconds = Math.ceil(remaining / 1000);
-	return `${seconds}s`;
 }

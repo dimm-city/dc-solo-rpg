@@ -8,8 +8,7 @@
 	 * @component
 	 */
 
-	import ContinueButton from '../ContinueButton.svelte';
-	import ButtonBar from '../ButtonBar.svelte';
+	import StepAction from './StepAction.svelte';
 
 	// successCheck: the useSuccessCheck() instance owned by GameScreen, shared with its
 	// table-tap and auto-play handlers so they all see the same roll state
@@ -22,14 +21,12 @@
 </script>
 
 <div class="success-check-screen">
-	<ButtonBar>
-		<ContinueButton
-			text={successCheck.buttonText}
-			onclick={handleClick}
-			disabled={successCheck.rolling}
-			testid="success-check-button"
-		/>
-	</ButtonBar>
+	<StepAction
+		text={successCheck.buttonText}
+		onclick={handleClick}
+		disabled={successCheck.rolling}
+		testid="success-check-button"
+	/>
 </div>
 
 <style>

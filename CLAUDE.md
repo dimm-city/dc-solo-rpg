@@ -380,9 +380,6 @@ resetRNG();
 
 ### Configuration
 
-- `src/lib/configuration/GameSettings.js` - Game settings object
-- `src/lib/configuration/GameOptions.js` - Game options
-- `src/lib/configuration/DifficultyLevels.js` - Difficulty configuration
 - `src/lib/configuration/DiceThemes.js` - Dice theme configuration
 
 ### Entry Points

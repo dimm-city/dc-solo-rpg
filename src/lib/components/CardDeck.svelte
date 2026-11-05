@@ -14,6 +14,11 @@
 		onconfirmcard = () => {}
 	} = $props();
 
+	// Brief anticipation beat while the card back is already on screen
+	const ANTICIPATION_MS = 250;
+	// Staggered face reveal: header 150ms, headline 300ms, body 450ms, footer 600ms (+300ms each)
+	const MATERIALIZE_MS = 900;
+
 	// animationStage is now bindable so changes propagate to parent
 	/**
 	 * Handle proceed button click - request card draw and start animation
@@ -25,9 +30,9 @@
 			// Request a new card from the parent
 			onrequestcard();
 
-			// Anticipation phase - grid accelerates
+			// Anticipation phase - card back appears immediately
 			animationStage = 'anticipating';
-			await sleep(400);
+			await sleep(ANTICIPATION_MS);
 
 			// Wait for card to be set by parent
 			let attempts = 0;
@@ -45,7 +50,7 @@
 
 			// Materialization phase - byte appears with glitch
 			animationStage = 'materializing';
-			await sleep(1000);
+			await sleep(MATERIALIZE_MS);
 
 			// Revealed phase - stable display
 			animationStage = 'revealed';
@@ -172,56 +177,6 @@
 			await handleDismiss();
 		}
 	}
-
-	/**
-	 * Get current button text based on animation stage
-	 */
-	export function getButtonText() {
-		if (animationStage === 'idle') return 'PROCEED TO NEXT BYTE';
-		if (animationStage === 'anticipating' || animationStage === 'materializing')
-			return 'LOADING...';
-		if (animationStage === 'revealed') return 'CONTINUE';
-		return 'UPLOADING...';
-	}
-
-	/**
-	 * Get button disabled state based on animation stage
-	 */
-	export function getButtonDisabled() {
-		return (
-			animationStage === 'anticipating' ||
-			animationStage === 'materializing' ||
-			animationStage === 'dismissing'
-		);
-	}
-
-	/**
-	 * Public API - manually trigger card display (if needed)
-	 */
-	export const showCard = async (newCard) => {
-		card = newCard;
-		if (animationStage === 'anticipating') {
-			// Card arrived, continue animation
-			return;
-		}
-		// Otherwise start from beginning
-		animationStage = 'materializing';
-		await sleep(1000);
-		animationStage = 'revealed';
-	};
-
-	/**
-	 * Public API - reset the interface
-	 */
-	export const reset = async () => {
-		if (animationStage === 'revealed') {
-			await handleDismiss();
-		} else {
-			animationStage = 'idle';
-			card = null;
-			// Don't trigger auto-draw on manual reset
-		}
-	};
 </script>
 
 <div class="dc-card-deck" class:active={animationStage !== 'idle'}>
@@ -230,18 +185,12 @@
 </div>
 
 <style>
-	/* ============================================
-	   CARD DECK CONTAINER
-	   ============================================ */
-
 	.dc-card-deck {
-		display: flex;
+		display: grid;
+		place-items: center;
 		width: 100%;
 		height: 100%;
-		max-height: calc(100svh - var(--toolbar-height, 250px)); /* Account for toolbar height */
-
-		overflow: hidden;
-
-		/* padding: var(--space-md, 1rem); */
+		/* Visible so the card glow is not cut off at the deck edge */
+		overflow: visible;
 	}
 </style>

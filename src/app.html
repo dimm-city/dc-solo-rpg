@@ -2,25 +2,14 @@
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
-		<!-- <link rel="icon" href="%sveltekit.assets%/favicon.png" /> -->
-		<meta
-			name="viewport"
-			content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
-		/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 		<meta name="apple-mobile-web-app-capable" content="yes" />
 		<meta name="mobile-web-app-capable" content="yes" />
 		<title>Dream Console</title>
-		<!-- Load external CSS resources with graceful degradation to prevent page crash if they fail -->
+		<link rel="icon" type="image/png" href="%sveltekit.assets%/d20-150.png" />
+		<!-- Google Fonts load non-blocking and degrade to fallback fonts if they fail -->
 		<link
-			rel="stylesheet"
-			type="text/css"
-			href="https://unpkg.com/augmented-ui@2/augmented-ui.min.css"
-			media="print"
-			onload="this.media='all'"
-			onerror="this.remove(); console.warn('Failed to load augmented-ui, using fallback styles')"
-		/>
-		<link
-			href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap"
+			href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;500;600;700&family=Share+Tech+Mono&display=swap"
 			rel="stylesheet"
 			media="print"
 			onload="this.media='all'"
