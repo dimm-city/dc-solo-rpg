@@ -340,8 +340,7 @@
 			target.tagName === 'A' ||
 			target.closest('button') ||
 			target.closest('a') ||
-			target.closest('[role="button"]') ||
-			target.closest('.toolbar-button');
+			target.closest('[role="button"]');
 
 		if (isInteractive) {
 			return;
@@ -792,86 +791,6 @@
 				{/key}
 				<RuleCaption />
 			</div>
-
-			<!-- Toolbar at bottom with exit button and deck visualization -->
-			<!-- <div class="toolbar-area">
-				<div
-					class="toolbar-background"
-					data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
-				></div>
-
-				<div class="toolbar-left">
-				</div>
-				<div class="toolbar-center">
-					{#if currentScreen === 'startRound'}
-						<ContinueButton
-							text="Begin Round {gameState.round}"
-							onclick={() => transitionTo('rollForTasks')}
-							testid="start-round-button"
-						/>
-					{:else if currentScreen === 'rollForTasks'}
-						<ContinueButton
-							text={rollForTasks.buttonText}
-							onclick={handleRollForTasks}
-							disabled={rollForTasks.buttonDisabled}
-							testid="roll-tasks-button"
-						/>
-					{:else if currentScreen === 'failureCheck'}
-						<ContinueButton
-							text={failureCheck.buttonText}
-							onclick={handleFailureCheck}
-							disabled={failureCheck.rolling}
-							testid="failure-check-button"
-						/>
-					{:else if currentScreen === 'successCheck'}
-						<ContinueButton
-							text={successCheck.buttonText}
-							onclick={handleSuccessCheck}
-							disabled={successCheck.rolling}
-							testid="success-check-button"
-						/>
-					{:else if currentScreen === 'finalDamageRoll'}
-						<ContinueButton
-							text={finalDamage.buttonText}
-							onclick={handleFinalDamageRoll}
-							disabled={finalDamage.rolling}
-							testid="final-damage-roll-button"
-						/>
-					{:else if currentScreen === 'log' || currentScreen === 'finalLog'}
-						{#if journalSaved}
-							{#if gameState.gameOver}
-								<ButtonBar bordered={false} gameBackground={false}>
-									<ContinueButton
-										text={gameState.config?.labels?.journalEntryRestartButtonText ?? 'Restart'}
-										onclick={handleJournalRestart}
-										testid="journal-restart-button"
-									/>
-									<ContinueButton
-										text={gameState.config?.labels?.journalEntryExitButtonText ?? 'Exit'}
-										onclick={handleJournalExit}
-										testid="journal-exit-button"
-									/>
-								</ButtonBar>
-							{:else}
-								<ContinueButton
-									text={gameState.config?.labels?.journalEntryNextButtonText ?? 'Continue to Next Round'}
-									onclick={handleJournalNext}
-									testid="journal-next-button"
-								/>
-							{/if}
-						{:else}
-							<ContinueButton
-								text={gameState.config?.labels?.journalEntrySaveButtonText ?? 'Record Entry'}
-								onclick={handleJournalSave}
-								testid="journal-save-button"
-							/>
-						{/if}
-					{/if}
-				</div>
-				<div class="toolbar-right">
-					<DeckVisualization />
-				</div>
-			</div> -->
 		</div>
 
 		{#if currentScreen == 'showIntro'}
@@ -1048,169 +967,6 @@
 		pointer-events: auto;
 	}
 
-	/* Toolbar Area - Bottom bar with deck viz and buttons */
-	.toolbar-area {
-		grid-area: toolbar-area;
-
-		/* Layout - CSS Grid for responsive stacking */
-		display: grid;
-		grid-template-columns: auto 1fr auto;
-		grid-template-areas: 'left center right';
-		align-items: center;
-		gap: var(--space-md);
-		width: 100%;
-		min-height: 60px;
-		padding: var(--space-md);
-		position: relative;
-
-		/* Slide-in animation from bottom - dramatic delayed entrance */
-		animation: toolbar-slide-in 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 1.2s forwards;
-		opacity: 0; /* Start invisible */
-	}
-
-	/* Augmented UI background - positioned behind content, doesn't clip children */
-	.toolbar-background {
-		position: absolute;
-		inset: 0;
-		z-index: -1;
-		pointer-events: none;
-
-		/* Augmented UI Configuration - Match player-round-bar */
-		--aug-border-all: 2px;
-		--aug-border-bg: linear-gradient(135deg, #00eeff 0%, #ff00ff 50%, #00ffaa 100%);
-		--aug-tl: 14px;
-		--aug-tr: 14px;
-		--aug-br: 14px;
-		--aug-bl: 14px;
-
-		/* Glassmorphism Effect - Match player-round-bar */
-		background: linear-gradient(
-			135deg,
-			rgba(100, 50, 200, 0.3),
-			rgba(50, 150, 255, 0.25),
-			rgba(100, 50, 200, 0.2)
-		);
-		backdrop-filter: blur(12px) saturate(180%);
-		-webkit-backdrop-filter: blur(12px) saturate(180%);
-
-		/* Enhanced Multi-layer Glow - Match player-round-bar */
-		box-shadow:
-			0 0 30px rgba(0, 238, 255, 0.7),
-			0 0 60px rgba(0, 238, 255, 0.4),
-			0 0 90px rgba(0, 238, 255, 0.2),
-			inset 0 0 30px rgba(255, 0, 255, 0.25),
-			inset 0 0 50px rgba(0, 255, 255, 0.1);
-	}
-
-	@keyframes toolbar-slide-in {
-		from {
-			transform: translateY(100%);
-			opacity: 0;
-		}
-		to {
-			transform: translateY(0);
-			opacity: 1;
-		}
-	}
-
-	.toolbar-left {
-		grid-area: left;
-		display: flex;
-		align-items: center;
-		justify-content: flex-start;
-		gap: var(--space-md);
-	}
-
-	.toolbar-center {
-		grid-area: center;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		min-width: 0;
-	}
-
-	.toolbar-right {
-		grid-area: right;
-		display: flex;
-		align-items: center;
-		justify-content: flex-end;
-		gap: var(--space-md);
-	}
-
-	.toolbar-button {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 44px;
-		height: 44px;
-		background: linear-gradient(135deg, rgba(30, 30, 40, 0.8), rgba(20, 20, 30, 0.9));
-		border: 1px solid rgba(0, 255, 255, 0.3);
-		border-radius: 4px;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		color: var(--color-neon-cyan);
-		backdrop-filter: blur(5px);
-		-webkit-backdrop-filter: blur(5px);
-	}
-
-	.toolbar-button:hover {
-		background: linear-gradient(135deg, rgba(40, 40, 50, 0.9), rgba(30, 30, 40, 0.95));
-		border-color: var(--color-neon-cyan);
-		box-shadow:
-			0 0 15px rgba(0, 255, 255, 0.4),
-			inset 0 0 10px rgba(0, 255, 255, 0.1);
-		transform: translateY(-2px);
-	}
-
-	.toolbar-button:active {
-		transform: translateY(0);
-	}
-
-	.exit-button {
-		/* No border or background - transparent styling */
-		background: transparent;
-		border: none;
-		color: var(--color-neon-cyan);
-		backdrop-filter: none;
-		-webkit-backdrop-filter: none;
-	}
-
-	.exit-button:hover {
-		background: transparent;
-		border: none;
-		/* Enhanced neon cyan glow on hover */
-		color: var(--color-neon-cyan);
-		filter: drop-shadow(0 0 8px rgba(0, 255, 255, 0.8)) drop-shadow(0 0 15px rgba(0, 255, 255, 0.5));
-		transform: scale(1.1);
-	}
-
-	.exit-button:active {
-		transform: scale(1);
-		filter: drop-shadow(0 0 12px rgba(0, 255, 255, 1)) drop-shadow(0 0 20px rgba(0, 255, 255, 0.7));
-	}
-
-	.help-button {
-		/* Transparent styling like exit button */
-		background: transparent;
-		border: none;
-		color: var(--color-neon-cyan);
-		backdrop-filter: none;
-		-webkit-backdrop-filter: none;
-	}
-
-	.help-button:hover {
-		background: transparent;
-		border: none;
-		color: var(--color-neon-cyan);
-		filter: drop-shadow(0 0 8px rgba(0, 255, 255, 0.8)) drop-shadow(0 0 15px rgba(0, 255, 255, 0.5));
-		transform: scale(1.1);
-	}
-
-	.help-button:active {
-		transform: scale(1);
-		filter: drop-shadow(0 0 12px rgba(0, 255, 255, 1)) drop-shadow(0 0 20px rgba(0, 255, 255, 0.7));
-	}
-
 	.main-screen-area {
 		grid-area: main-screen-area;
 		cursor: pointer;
@@ -1235,47 +991,6 @@
 		z-index: 1;
 	}
 
-	/* Background contextual text */
-	.context-text-background {
-		position: absolute;
-		top: 45%;
-		left: 50%;
-		transform: translate(-50%, -50%);
-		text-align: center;
-		pointer-events: none;
-		user-select: none;
-		-webkit-user-select: none;
-		-moz-user-select: none;
-		z-index: 0;
-		max-width: 90%;
-	}
-
-	.context-title {
-		font-size: clamp(1.75rem, 5vw, 3.5rem);
-		font-weight: 700;
-		color: var(--color-neon-cyan);
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
-		line-height: 1.35;
-		margin: 0 0 0.75rem 0;
-		font-family: 'lixdu', 'Courier New', monospace;
-		opacity: 0.3;
-		text-shadow: 0 0 10px var(--yellow);
-	}
-
-	.context-description {
-		font-size: clamp(0.875rem, 1.5vw, 1rem);
-		color: rgba(255, 255, 255, 0.5);
-		line-height: 1.6;
-		margin: 0;
-		max-width: 600px;
-		margin-inline: auto;
-		font-weight: 400;
-		letter-spacing: 0;
-		text-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
-		opacity: 0.5;
-	}
-
 	.dc-table-bg {
 		border-radius: var(--dc-default-border-radius);
 		/* Background removed to show neural network animation on all screens */
@@ -1293,17 +1008,7 @@
 		position: relative;
 	}
 
-	.dc-start-round-screen {
-		text-align: center;
-		display: grid;
-		justify-content: center;
-		align-content: center;
-		h4 {
-			vertical-align: middle;
-		}
-	}
-
-	/* Mobile responsiveness - Move exit and deck outside toolbar */
+	/* Mobile responsiveness */
 	@media (max-width: 450px) or (max-height: 600px) {
 		.status-display-area {
 			width: 100%;
@@ -1312,7 +1017,7 @@
 			z-index: auto; /* Remove z-index to allow natural stacking */
 		}
 
-		/* Allow overflow on parent containers so toolbar items can appear above */
+		/* Allow overflow on parent containers */
 		.game-screen,
 		.ui-content-layer,
 		.main-screen-area {
@@ -1328,46 +1033,6 @@
 		/* Remove z-index from screen container to fix stacking context */
 		.main-screen-area > div.dc-screen-container {
 			z-index: auto;
-		}
-
-		.toolbar-area {
-			/* Keep only center area in toolbar */
-			grid-template-columns: 1fr;
-			grid-template-areas: 'center';
-			padding: var(--space-sm);
-		}
-
-		.toolbar-left,
-		.toolbar-right {
-			/* Position absolutely OUTSIDE and ABOVE the toolbar */
-			position: absolute;
-			bottom: calc(100% + var(--space-sm)); /* Position above the toolbar */
-			width: auto;
-		}
-
-		.toolbar-left {
-			left: 0;
-			justify-content: flex-start;
-		}
-
-		.toolbar-right {
-			right: 0;
-			justify-content: flex-end;
-		}
-
-		.toolbar-center {
-			/* Full width in toolbar */
-			width: 100%;
-		}
-
-		/* Make buttons take full width */
-		.toolbar-center > :global(*) {
-			width: 100%;
-		}
-
-		.toolbar-center :global(.aug-button-wrapper),
-		.toolbar-center :global(.aug-button) {
-			width: 100%;
 		}
 	}
 </style>
