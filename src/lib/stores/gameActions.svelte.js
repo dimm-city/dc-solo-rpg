@@ -664,19 +664,6 @@ export async function failureCheck() {
 }
 
 /**
- * Confirm failure check and proceed
- *
- * Placeholder function for consistency. State transition is actually handled
- * in applyPendingDiceRoll() after dice animation completes.
- *
- * @see {applyPendingDiceRoll} - Handles actual state transition
- * @see {getFailureCheckRoll} - Initiates the failure check
- */
-export function confirmFailureCheck() {
-	// State transition already handled in applyPendingDiceRoll
-}
-
-/**
  * Record round in journal
  * @param {object} journalEntry - Journal entry
  * @param {string} [journalEntry.text] - Entry text (optional)
@@ -1040,19 +1027,6 @@ export function applyPendingInitialDamageRoll({ advance = true } = {}) {
  */
 export function advanceAfterInitialDamage() {
 	transitionTo('startRound');
-}
-
-/**
- * Confirm Salvation check and proceed
- *
- * Placeholder function for consistency. State transition is actually handled
- * in applyPendingSuccessCheck() after dice animation completes.
- *
- * @see {applyPendingSuccessCheck} - Handles actual state transition and victory check
- * @see {successCheck} - Initiates the Salvation check
- */
-export function confirmSuccessCheck() {
-	// State transition already handled in applyPendingSuccessCheck
 }
 
 /**

@@ -194,12 +194,3 @@ export function clearCustomGames() {
 		return false;
 	}
 }
-
-/**
- * Check if a custom game exists
- * @param {string} slug - Game slug
- * @returns {boolean} True if game exists
- */
-export function hasCustomGame(slug) {
-	return getCustomGame(slug) !== null;
-}

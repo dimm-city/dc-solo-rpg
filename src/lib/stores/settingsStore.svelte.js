@@ -91,11 +91,3 @@ export function resetSettings() {
 	Object.assign(settings, DEFAULT_SETTINGS);
 	saveSettings(settings);
 }
-
-/**
- * Export a getter function for reactive access to settings
- * @returns {object} Current settings state
- */
-export function getSettingsState() {
-	return settings;
-}

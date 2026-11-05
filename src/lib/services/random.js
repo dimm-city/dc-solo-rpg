@@ -109,22 +109,6 @@ export function resetRNG() {
 }
 
 /**
- * Create a seeded RNG for reproducible randomness
- * Uses a simple Linear Congruential Generator (LCG)
- * @param {number} seed - Seed value for the RNG
- * @returns {Function} RNG function that can be passed to setRNG()
- */
-export function createSeededRNG(seed) {
-	let state = seed % 2147483647;
-	if (state <= 0) state += 2147483646;
-
-	return function () {
-		state = (state * 16807) % 2147483647;
-		return (state - 1) / 2147483646;
-	};
-}
-
-/**
  * Mock a specific die roll result
  * Convenience function for testing
  * @param {number} result - The result to return (1-20 for D20)

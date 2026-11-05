@@ -135,15 +135,6 @@ export function getDiceTheme(key) {
 }
 
 /**
- * Get dice themes by category
- * @param {string} category - The category to filter by
- * @returns {Array} Array of dice theme objects matching the category
- */
-export function getDiceThemesByCategory(category) {
-	return DICE_THEMES.filter((theme) => theme.category === category);
-}
-
-/**
  * Get the default dice theme
  * @returns {Object} The default dice theme
  */

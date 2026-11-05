@@ -177,56 +177,6 @@
 			await handleDismiss();
 		}
 	}
-
-	/**
-	 * Get current button text based on animation stage
-	 */
-	export function getButtonText() {
-		if (animationStage === 'idle') return 'PROCEED TO NEXT BYTE';
-		if (animationStage === 'anticipating' || animationStage === 'materializing')
-			return 'LOADING...';
-		if (animationStage === 'revealed') return 'CONTINUE';
-		return 'UPLOADING...';
-	}
-
-	/**
-	 * Get button disabled state based on animation stage
-	 */
-	export function getButtonDisabled() {
-		return (
-			animationStage === 'anticipating' ||
-			animationStage === 'materializing' ||
-			animationStage === 'dismissing'
-		);
-	}
-
-	/**
-	 * Public API - manually trigger card display (if needed)
-	 */
-	export const showCard = async (newCard) => {
-		card = newCard;
-		if (animationStage === 'anticipating') {
-			// Card arrived, continue animation
-			return;
-		}
-		// Otherwise start from beginning
-		animationStage = 'materializing';
-		await sleep(MATERIALIZE_MS);
-		animationStage = 'revealed';
-	};
-
-	/**
-	 * Public API - reset the interface
-	 */
-	export const reset = async () => {
-		if (animationStage === 'revealed') {
-			await handleDismiss();
-		} else {
-			animationStage = 'idle';
-			card = null;
-			// Don't trigger auto-draw on manual reset
-		}
-	};
 </script>
 
 <div class="dc-card-deck" class:active={animationStage !== 'idle'}>

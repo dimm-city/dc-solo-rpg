@@ -7,7 +7,6 @@ import {
 	drawCard,
 	confirmCard,
 	failureCheck,
-	confirmFailureCheck,
 	recordRound,
 	successCheck,
 	restartGame,
@@ -346,20 +345,6 @@ describe('WAAStore', () => {
 			expect(gameState.pendingUpdates.diceRoll).toBe(8);
 
 			gameState.rollWithModifiers = originalRoll;
-		});
-	});
-
-	describe('confirmFailureCheck', () => {
-		test('should update the current screen', async () => {
-			const initialState = {
-				state: 'failureCheck'
-			};
-			Object.assign(gameState, initialState);
-
-			await confirmFailureCheck();
-
-			// After confirm, the state should remain the same (transitionToScreen just animates)
-			expect(gameState.state).toBe('failureCheck');
 		});
 	});
 

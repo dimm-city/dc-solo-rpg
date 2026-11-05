@@ -140,25 +140,10 @@ export async function initializeDiceBox(container) {
 }
 
 /**
- * Get the current DiceBox instance
- */
-export function getDiceBox() {
-	return diceBoxInstance;
-}
-
-/**
  * Check if DiceBox is initialized
  */
 export function isDiceBoxInitialized() {
 	return isInitialized && diceBoxInstance !== null;
-}
-
-/**
- * Get whether dice are currently rolling
- * @deprecated Use diceState.isRolling directly for reactivity
- */
-export function getDiceRolling() {
-	return diceState.isRolling;
 }
 
 /**
