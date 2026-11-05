@@ -355,30 +355,32 @@ Event             | 2,4,6,8,10,J,Q| 28    | 53%
 **Effects:**
 
 1. Trigger Stability check (roll d20)
-2. Compare roll to 10 (default DC)
-3. Failure: Lose Stability equal to card rank
-4. Natural 20: +1 Stability (max 20) + Lucid state
-5. Natural 1: Surreal state
+2. Stability lost is determined by the roll (see table below), not by the card's rank
+3. Natural 20: no loss, +1 Stability (max 20) + Lucid state
+4. Natural 1: lose 3 Stability + Surreal state
 
 **Narrative Role:** Tests, obstacles, dangers that threaten your Stability.
 
 **Stability Loss Table:**
 
-| Card Rank | Stability Lost on Failure |
-| --------- | ------------------------- |
-| 3         | 3                         |
-| 5         | 5                         |
-| 7         | 7                         |
-| 9         | 9                         |
+| d20 Roll | Stability Change | State Change |
+| -------- | ---------------- | ------------ |
+| 1        | -3               | Surreal      |
+| 2-5      | -2               |              |
+| 6-10     | -1               |              |
+| 11-19    | 0                |              |
+| 20       | 0, then +1 (max 20) | Lucid     |
+
+Every odd-ranked card (A, 3, 5, 7, 9) triggers this check; the card's rank does not affect the loss.
 
 **Example:**
 
 ```
 Draw 9♠ (Challenge card)
 Roll d20 for Stability check
-Roll = 7 (< 10, failure)
-Lose 9 Stability
-20 → 11 Stability
+Roll = 4 (2-5 range)
+Lose 2 Stability
+20 → 18 Stability
 ```
 
 ### 5.6 Event Cards
@@ -415,9 +417,9 @@ flowchart TB
 
     StabCheck --> Nat20{Natural 20?}
     Nat20 -->|Yes| GainStab[+1 Stability<br/>Lucid state]
-    Nat20 -->|No| CheckFail{Roll < 10?}
+    Nat20 -->|No| CheckFail{Roll 1-10?}
 
-    CheckFail -->|Yes| LoseStab[Lose Stability<br/>= card rank]
+    CheckFail -->|Yes| LoseStab[Lose Stability by roll<br/>1: -3, 2-5: -2, 6-10: -1]
     CheckFail -->|No| Safe
 
     LoseStab --> Nat1{Natural 1?}
@@ -519,7 +521,7 @@ const cards = deck.splice(0, cardsToDraw);
 ```
 Loss Condition 1: Stability ≤ 0
 - Failed too many Stability checks
-- Drew too many high-rank Challenge cards
+- Rolled low on too many Stability checks
 
 Loss Condition 2: 4 Kings Revealed
 - All Failure Counter cards revealed
@@ -546,38 +548,23 @@ Deck Exhaustion: Very rare (5%)
 
 ### 8.1 Stability Check Math
 
-**Base Check:** Roll d20 vs DC 10
+**Base Check:** Roll d20 and look up the loss (see the Stability Loss Table in 5.5)
 
 ```
-Success Rate: 55% (roll 10-20)
-Failure Rate: 45% (roll 1-9)
+Loss of 3 (roll 1):      5%
+Loss of 2 (roll 2-5):   20%
+Loss of 1 (roll 6-10):  25%
+No loss (roll 11-20):   50%
 
-With Lucid (advantage):
-Success Rate: ~80%
+Expected loss per check: 0.8 Stability
 
-With Surreal (disadvantage):
-Success Rate: ~30%
+With Lucid (advantage):    25% chance of any loss, ~0.3 expected loss
+With Surreal (disadvantage): 75% chance of any loss, ~1.3 expected loss
 ```
 
 ### 8.2 Expected Stability Loss
 
-**Challenge Card Distribution:**
-
-| Rank | Count | Damage on Fail | Expected Loss per Game |
-| ---- | ----- | -------------- | ---------------------- |
-| 3    | 4     | 3              | ~5.4                   |
-| 5    | 4     | 5              | ~9.0                   |
-| 7    | 4     | 7              | ~12.6                  |
-| 9    | 4     | 9              | ~16.2                  |
-
-**Total Expected Loss:** ~43 Stability over full game
-
-**With Starting Stability of 20:**
-
-- Need to draw ~9-10 Challenge cards on average to deplete
-- Typical game draws 25-35 cards total
-- ~8-11 Challenge cards expected per game
-- Balance is TIGHT - little room for error
+Each odd-ranked card (A, 3, 5, 7, 9; 20 cards in the deck) triggers one check, and the loss does not depend on rank. At ~0.8 Stability per check, a typical game loses only a few Stability per handful of checks; drawing every odd card would average about 16 Stability. Bad streaks (low rolls, Surreal) are what deplete Stability, so Stability pressure is moderate rather than punishing.
 
 ### 8.3 Salvation Success Rates
 
@@ -741,7 +728,7 @@ SALVATION CHECK:
 A♥:       Unlock Salvation
 A♦♣♠:     +1 Aces (improve threshold)
 K♥♦♣♠:    +1 Kings (4 = lose)
-3,5,7,9:  Stability check (lose rank on fail)
+A,3,5,7,9:  Stability check (loss set by roll: 1=-3, 2-5=-2, 6-10=-1, else 0)
 2,4,6,8,10,J,Q: Safe (no check)
 ```
 

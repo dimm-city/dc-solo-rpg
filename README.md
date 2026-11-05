@@ -12,7 +12,7 @@ The web component is also highly configurable, allowing for customization of gam
 
 ### D20 Mechanics
 
-- **Stability**: 20 points (your life). Failed checks cost Stability equal to the card rank.
+- **Stability**: 20 points (your life). Odd-ranked cards trigger a Stability check; the d20 roll sets the loss (1 = -3, 2-5 = -2, 6-10 = -1, 11-19 = 0, 20 = no loss and +1 Stability).
 - **Tokens**: Start with 10. Remove all to win through Salvation checks.
 - **Aces Revealed**: Collect Aces to improve Salvation success rate (20% → 35% → 50% → 100%).
 - **Lucid State**: Natural 20 grants advantage on next roll.

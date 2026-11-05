@@ -279,9 +279,8 @@ Drawing the Ace of Hearts unlocks Salvation checks. Each subsequent Ace improves
 
 4. **Challenge** - Odd cards (3, 5, 7, 9) - 16 cards
    - **Usually** trigger Stability checks (d20 roll)
-   - Failure: Lose Stability equal to card rank
-   - Natural 20: +1 Stability (max 20) + Lucid state
-   - Natural 1: Surreal state
+   - Loss comes from the roll, not the card: natural 1 = -3 (+ Surreal), 2-5 = -2, 6-10 = -1, 11-19 = 0
+   - Natural 20: no loss, +1 Stability (max 20) + Lucid state
 
 5. **Event** - Even cards (2, 4, 6, 8, 10, J, Q) - 28 cards
    - **Usually** safe from Stability checks
