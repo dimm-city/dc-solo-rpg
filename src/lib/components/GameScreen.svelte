@@ -172,10 +172,6 @@
 		onjournalsaved(journal);
 	}
 
-	async function handleJournalNext() {
-		// recordRound already handles the state transition
-	}
-
 	async function handleJournalRestart() {
 		await restartGame();
 	}
@@ -780,7 +776,6 @@
 								bind:audioData={journal.audioData}
 								{journalSaved}
 								onSave={handleJournalSave}
-								onNext={handleJournalNext}
 								onRestart={handleJournalRestart}
 								onExit={handleJournalExit}
 							/>

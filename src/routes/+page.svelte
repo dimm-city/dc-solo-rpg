@@ -95,6 +95,11 @@
 			}
 		}
 
+		// "Read your story" at the end of a game links here with ?story to open the Story Library
+		if (new URLSearchParams(window.location.search).has('story')) {
+			showBrowseGames = true;
+		}
+
 		// Load custom games
 		customGames = getCustomGames();
 		allGames = [...customGames, ...data.games].sort((a, b) => a.title.localeCompare(b.title));
