@@ -699,7 +699,6 @@ The ONNX Runtime Web WASM files are loaded from jsDelivr (`ort.env.wasm.wasmPath
 - `src/lib/services/tts/providers/BaseTTSProvider.js` - Base class the provider extends
 - `src/lib/services/tts/providers/index.js` - Registers the provider under the `supertonic` key
 - `src/lib/services/tts/textToSpeech.js` - TTS service that selects and drives the active provider
-- `docs/tts-lessons-learned.md`, `docs/supertonic-tts-implementation.md`, `docs/supertonic-tts-setup.md` - Historical notes; parts describe the earlier server-side `onnxruntime-node` design and are out of date
 
 ### Usage
 

@@ -412,4 +412,3 @@ When adding new common components:
 - [Animation Style Guide](../../../docs/animation-style-guide.md)
 - [Animation Constants](../../constants/animations.js)
 - [CLAUDE.md](../../../CLAUDE.md) - Project instructions
-- [Refactoring Status](../../../docs/refactoring/STATUS.md)
