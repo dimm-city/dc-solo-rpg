@@ -7,6 +7,7 @@ import { mockDieRoll, resetRNG } from '../../services/random.js';
 import { useFailureCheck } from './useFailureCheck.svelte.js';
 import { useSuccessCheck } from './useSuccessCheck.svelte.js';
 import { useRollForTasks } from './useRollForTasks.svelte.js';
+import { useInitialDamage } from './useInitialDamage.svelte.js';
 
 vi.mock('../../stores/diceStore.svelte.js', () => ({ rollDice: vi.fn(async () => {}) }));
 vi.mock('../../stores/indexedDBStorage.js', () => ({
@@ -57,6 +58,19 @@ describe('useFailureCheck', () => {
 		await check.handleFailureCheck();
 		check.resetState();
 		expect(check.resultLine).toBe('');
+	});
+});
+
+describe('useInitialDamage', () => {
+	it('rolls a d20 through the random service and reads the d20 damage table', async () => {
+		gameState.state = 'initialDamageRoll';
+		const roll = useInitialDamage();
+		mockDieRoll(15); // only possible on a d20; 11-19 costs nothing
+
+		await roll.handleInitialDamageRoll();
+		expect(roll.result).toBe(15);
+		expect(gameState.tower).toBe(20);
+		expect(roll.resultLine).toBe('Rolled 15 · no Stability lost · 20/20');
 	});
 });
 

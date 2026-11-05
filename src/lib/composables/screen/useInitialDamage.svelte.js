@@ -16,6 +16,7 @@ import {
 } from '../../stores/gameActions.svelte.js';
 import { rollDice } from '../../stores/diceStore.svelte.js';
 import { gameState } from '../../stores/gameStore.svelte.js';
+import { rollDie } from '../../services/random.js';
 import { formatStabilityResult } from '../../utils/rollResult.js';
 
 export function useInitialDamage() {
@@ -36,7 +37,8 @@ export function useInitialDamage() {
 		}
 
 		initialDamageRolling = true;
-		const rollResult = Math.floor(Math.random() * 6) + 1;
+		// d20, like every other check: the result is read off the d20 Stability table
+		const rollResult = rollDie(20);
 		initialDamageResult = rollResult;
 
 		try {
