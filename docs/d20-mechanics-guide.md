@@ -363,13 +363,13 @@ Event             | 2,4,6,8,10,J,Q| 28    | 53%
 
 **Stability Loss Table:**
 
-| d20 Roll | Stability Change | State Change |
-| -------- | ---------------- | ------------ |
-| 1        | -3               | Surreal      |
-| 2-5      | -2               |              |
-| 6-10     | -1               |              |
-| 11-19    | 0                |              |
-| 20       | 0, then +1 (max 20) | Lucid     |
+| d20 Roll | Stability Change    | State Change |
+| -------- | ------------------- | ------------ |
+| 1        | -3                  | Surreal      |
+| 2-5      | -2                  |              |
+| 6-10     | -1                  |              |
+| 11-19    | 0                   |              |
+| 20       | 0, then +1 (max 20) | Lucid        |
 
 Every odd-ranked card (A, 3, 5, 7, 9) triggers this check; the card's rank does not affect the loss.
 

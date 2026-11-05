@@ -99,7 +99,10 @@ describe('Markdown Parser', () => {
 
 	describe('Narrative modifiers in built deck', () => {
 		it('keeps skip-damage and return-king on exactly one Ace each', () => {
-			const markdown = readFileSync(join(process.cwd(), 'static', 'games', 'future-lost.game.md'), 'utf-8');
+			const markdown = readFileSync(
+				join(process.cwd(), 'static', 'games', 'future-lost.game.md'),
+				'utf-8'
+			);
 			const { deck } = parseGameFile(markdown);
 			const skip = deck.filter((c) => c.modifier === 'skip-damage');
 			const ret = deck.filter((c) => c.modifier === 'return-king');
