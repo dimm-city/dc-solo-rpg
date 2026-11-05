@@ -74,8 +74,7 @@
 			/>
 		</svg>
 		<!-- Heart - Health/Resilience -->
-		 <img src="/shroom-64.png" alt=""
-			class="ability-icon">
+		<img src="/shroom-64.png" alt="" class="ability-icon" />
 		<!-- <svg
 			class="ability-icon"
 			class:active={bonusPercent >= 3}
@@ -228,7 +227,6 @@
 		stroke: #00eeff;
 		filter: drop-shadow(0 0 2px rgba(0, 238, 255, 0.3));
 		transition: all 0.2s linear;
-		
 	}
 
 	.ability-icon.active {

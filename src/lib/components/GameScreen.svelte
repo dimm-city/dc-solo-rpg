@@ -1193,7 +1193,6 @@
 		.main-screen-area {
 			z-index: 1;
 			align-items: flex-end; /* Align card to bottom on mobile to prevent status bar overlap */
-			
 		}
 
 		/* Remove z-index from screen container to fix stacking context */

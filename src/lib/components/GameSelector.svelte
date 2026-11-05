@@ -3,11 +3,7 @@
 	import AugmentedButton from './AugmentedButton.svelte';
 	import { hasSavedGame, getSaveMetadata } from '../stores/indexedDBStorage.js';
 	import { resumeGame, deleteSavedGame } from '../stores/gameActions.svelte.js';
-	import {
-		getCustomGames,
-		addCustomGame,
-		removeCustomGame
-	} from '../stores/customGames.js';
+	import { getCustomGames, addCustomGame, removeCustomGame } from '../stores/customGames.js';
 
 	let {
 		players = [],

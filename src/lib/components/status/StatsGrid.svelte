@@ -157,7 +157,6 @@
 			justify-content: space-between;
 			& > div:last-of-type {
 				direction: rtl;
-				
 			}
 		}
 
@@ -173,7 +172,8 @@
 			display: grid;
 			grid-template-columns: repeat(3, 1fr);
 			grid-template-rows: auto auto;
-			grid-template-areas: 'stability deck abilities'
+			grid-template-areas:
+				'stability deck abilities'
 				'failure dice success';
 			gap: var(--space-xs);
 			width: 100%;

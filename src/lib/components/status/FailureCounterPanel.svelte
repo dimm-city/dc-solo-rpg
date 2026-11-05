@@ -67,7 +67,7 @@
 	<div class="king-indicators">
 		{#each Array(4) as _, i (i)}
 			<div class="king-icon" class:revealed={i < failurePercent}>
-				<img src="/skull-color-64.png" alt="">
+				<img src="/skull-color-64.png" alt="" />
 				<!-- <svg
 					class="stat-icon"
 					xmlns="http://www.w3.org/2000/svg"

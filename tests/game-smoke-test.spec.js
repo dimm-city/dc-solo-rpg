@@ -131,12 +131,9 @@ test.describe('DC Solo RPG - Smoke Test', () => {
 		}
 
 		// Wait for game selector
-		await page.waitForSelector(
-			'[data-testid="game-selector"], .dc-start-screen-container',
-			{
-				timeout: 10000
-			}
-		);
+		await page.waitForSelector('[data-testid="game-selector"], .dc-start-screen-container', {
+			timeout: 10000
+		});
 
 		console.log('✓ Game selection screen loaded');
 

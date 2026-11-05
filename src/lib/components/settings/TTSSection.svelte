@@ -61,7 +61,11 @@
 			} else if (key === 'ttsApiKey' || key === 'ttsApiEndpoint') {
 				// Reload voices when API key or endpoint changes (for API-based providers)
 				const currentProvider = getAudioSettings().ttsProvider;
-				if (currentProvider === 'elevenlabs' || currentProvider === 'openai' || currentProvider === 'dimmcityai') {
+				if (
+					currentProvider === 'elevenlabs' ||
+					currentProvider === 'openai' ||
+					currentProvider === 'dimmcityai'
+				) {
 					await loadVoices();
 				}
 			}

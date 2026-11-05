@@ -310,10 +310,11 @@
 		.dice-readout {
 			justify-content: center;
 		}
-		
-		.dice-value, .dice-label {
+
+		.dice-value,
+		.dice-label {
 			display: none;
-			height: 0
+			height: 0;
 		}
 
 		.dice-pip {
