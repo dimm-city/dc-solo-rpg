@@ -242,9 +242,6 @@ export function useAutoPlay() {
 	};
 }
 
-// Also export the standalone functions for backward compatibility
-export { createCancellableDelay as createCancellableDelay };
-
 /**
  * Standalone autoAdvance function (backward compatible)
  * @deprecated Use useAutoPlay().advance() instead

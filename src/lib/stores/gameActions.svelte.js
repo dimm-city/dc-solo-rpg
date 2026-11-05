@@ -612,11 +612,11 @@ export function applyPendingDiceRoll() {
 /**
  * Legacy failure check (kept for compatibility)
  * @deprecated Use getFailureCheckRoll + applyFailureCheckResult
- * @returns {Promise<number>}
+ * @returns {Promise<Object>} Roll result from getFailureCheckRoll() ({ roll, wasLucid, ... })
  */
 export async function failureCheck() {
 	const result = getFailureCheckRoll();
-	applyFailureCheckResult(result);
+	applyFailureCheckResult(result.roll);
 	return result;
 }
 

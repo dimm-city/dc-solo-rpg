@@ -3,6 +3,8 @@
  * Parses .game.md files into game configuration objects
  */
 
+import { logger } from '../utils/logger.js';
+
 /**
  * Custom error class for validation failures
  */

@@ -3,6 +3,8 @@
  * Tracks whether the user has seen the "How to Play" instructions
  */
 
+import { logger } from './logger.js';
+
 const STORAGE_KEY = 'dc-solo-rpg:instructions-seen';
 const SESSION_KEY = 'dc-solo-rpg:instructions-shown-in-session';
 

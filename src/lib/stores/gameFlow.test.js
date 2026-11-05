@@ -349,6 +349,24 @@ describe('WAAStore', () => {
 
 			gameState.rollWithModifiers = originalRoll;
 		});
+
+		test('should store a numeric diceRoll in pendingUpdates (deprecated failureCheck)', async () => {
+			const originalRoll = gameState.rollWithModifiers;
+			gameState.rollWithModifiers = vi.fn(() => ({ roll: 8, wasLucid: false, wasSurreal: false }));
+
+			gameState.state = 'failureCheck';
+			gameState.gameOver = false;
+			gameState.tower = 20;
+			gameState.config = {};
+
+			const result = await failureCheck();
+
+			expect(result.roll).toBe(8);
+			expect(typeof gameState.pendingUpdates.diceRoll).toBe('number');
+			expect(gameState.pendingUpdates.diceRoll).toBe(8);
+
+			gameState.rollWithModifiers = originalRoll;
+		});
 	});
 
 	describe('confirmFailureCheck', () => {
