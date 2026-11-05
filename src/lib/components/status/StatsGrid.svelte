@@ -14,52 +14,90 @@
 	import AbilitiesPanel from './AbilitiesPanel.svelte';
 	import SuccessTokensPanel from './SuccessTokensPanel.svelte';
 	import DeckVisualization from '../DeckVisualization.svelte';
+	import CompactHUD from './CompactHUD.svelte';
+	import { gameState } from '../../stores/gameStore.svelte.js';
+	import { resizeDiceBox } from '../../stores/diceStore.svelte.js';
+
+	// Phones get a single compact row instead, hidden while a card or journal overlay is open
+	const overlayOpen = $derived(
+		gameState.state === 'drawCard' || gameState.state === 'log' || gameState.state === 'finalLog'
+	);
+
+	// Publish where the HUD ends so the dice throw area starts below it (see +layout.svelte)
+	let hud = $state();
+	$effect(() => {
+		if (!hud || typeof ResizeObserver === 'undefined') return;
+		let last = -1;
+		const publish = () => {
+			const bottom = Math.round(hud.getBoundingClientRect().bottom) + 8;
+			// resizeDiceBox() fires a window resize, so only act on a real change
+			if (bottom === last) return;
+			last = bottom;
+			document.documentElement.style.setProperty('--hud-bottom', `${bottom}px`);
+			resizeDiceBox();
+		};
+		const observer = new ResizeObserver(publish);
+		observer.observe(hud);
+		window.addEventListener('resize', publish);
+		publish();
+		return () => {
+			observer.disconnect();
+			window.removeEventListener('resize', publish);
+			document.documentElement.style.removeProperty('--hud-bottom');
+		};
+	});
 
 	// Reactive data-augmented-ui attribute for deck readout
 	const deckAugmentedUI = 'tl-clip tr-clip br-clip bl-clip border';
 </script>
 
-<div class="stats-grid">
-	<!-- Left column: Stability + Failure -->
-	<div>
-		<StabilityPanel animationDelay={0.15} animationDuration={0.7} />
-		<FailureCounterPanel animationDelay={0.25} animationDuration={0.85} />
-	</div>
+<div class="hud" bind:this={hud}>
+	{#if !overlayOpen}
+		<CompactHUD />
+	{/if}
 
-	<!-- Center column: Dice + Deck -->
-	<div>
-		<DiceReadout animationDelay={0.35} animationDuration={0.75} />
-		<div
-			class="deck-readout slide-down"
-			data-augmented-ui={deckAugmentedUI}
-			style="animation-delay: 0.45s; animation-duration: 0.75s"
-		>
-			<div class="deck-label">
-				<svg
-					class="deck-icon"
-					xmlns="http://www.w3.org/2000/svg"
-					width="14"
-					height="14"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-				>
-					<path d="M12 2v20M2 12h20" />
-					<rect x="4" y="4" width="16" height="16" rx="2" />
-				</svg>
-				CARDS LEFT
-			</div>
-			<DeckVisualization />
+	<div class="stats-grid">
+		<!-- Left column: Stability + Failure -->
+		<div>
+			<StabilityPanel animationDelay={0.15} animationDuration={0.7} />
+			<FailureCounterPanel animationDelay={0.25} animationDuration={0.85} />
 		</div>
-	</div>
 
-	<!-- Right column: Abilities + Success Tokens -->
-	<div>
-		<AbilitiesPanel animationDelay={0.55} animationDuration={0.85} />
-		<SuccessTokensPanel animationDelay={0.65} animationDuration={0.75} />
+		<!-- Center column: Dice + Deck -->
+		<div>
+			<DiceReadout animationDelay={0.35} animationDuration={0.75} />
+			<div
+				class="deck-readout slide-down"
+				data-augmented-ui={deckAugmentedUI}
+				style="animation-delay: 0.45s; animation-duration: 0.75s"
+			>
+				<div class="deck-label">
+					<svg
+						class="deck-icon"
+						xmlns="http://www.w3.org/2000/svg"
+						width="14"
+						height="14"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					>
+						<path d="M12 2v20M2 12h20" />
+						<rect x="4" y="4" width="16" height="16" rx="2" />
+					</svg>
+					CARDS LEFT
+				</div>
+				<DeckVisualization />
+			</div>
+		</div>
+
+		<!-- Right column: Abilities + Success Tokens -->
+		<div>
+			<AbilitiesPanel animationDelay={0.55} animationDuration={0.85} />
+			<SuccessTokensPanel animationDelay={0.65} animationDuration={0.75} />
+		</div>
 	</div>
 </div>
 
@@ -79,6 +117,10 @@
 			transform: translateY(0);
 			opacity: 1;
 		}
+	}
+
+	.hud {
+		width: 100%;
 	}
 
 	/* Stats Grid */
@@ -102,7 +144,10 @@
 	/* Deck Readout */
 	.deck-readout {
 		--aug-border-all: 2px;
-		--aug-border-bg: linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta));
+		--aug-border-bg: var(
+			--frame-border,
+			linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta))
+		);
 		--aug-tl: 6px;
 		--aug-tr: 6px;
 		--aug-br: 6px;
@@ -122,8 +167,7 @@
 		-webkit-backdrop-filter: blur(10px) saturate(150%);
 
 		box-shadow:
-			0 0 8px rgba(0, 255, 255, 0.3),
-			0 0 16px rgba(217, 70, 239, 0.15),
+			0 0 8px rgba(0, 255, 255, 0.25),
 			inset 0 0 8px rgba(0, 255, 255, 0.08);
 	}
 
@@ -131,12 +175,10 @@
 		font-size: var(--text-xs);
 		font-weight: bold;
 		text-transform: uppercase;
-		letter-spacing: 0.15em;
-		font-family: 'Courier New', monospace;
+		letter-spacing: 0.1em;
+		font-family: var(--font-mono, 'Share Tech Mono', ui-monospace, monospace);
 		color: #00eeff;
-		text-shadow:
-			0 0 10px rgba(0, 238, 255, 1),
-			0 0 20px rgba(0, 238, 255, 0.6);
+		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 		display: flex;
 		align-items: center;
 		gap: 0.25rem;
@@ -166,48 +208,9 @@
 		}
 	}
 
-	/* Mobile - Simple 2x3 Grid Layout */
+	/* Phones: the compact HUD row replaces the grid */
 	@media (max-width: 600px) {
 		.stats-grid {
-			display: grid;
-			grid-template-columns: repeat(3, 1fr);
-			grid-template-rows: auto auto;
-			grid-template-areas:
-				'stability deck abilities'
-				'failure dice success';
-			gap: var(--space-xs);
-			width: 100%;
-			max-width: 100vw;
-			overflow: hidden;
-		}
-
-		/* Reset all column positioning to auto-flow */
-		.stats-grid > div {
-			display: contents;
-		}
-
-		/* Ensure stat items fit within grid cells */
-		.stats-grid :global(.stat-item) {
-			width: 100%;
-			max-width: 100%;
-			min-width: 0;
-			box-sizing: border-box;
-		}
-
-		/* Reduce deck readout size on mobile */
-		.deck-readout {
-			min-width: 0;
-			width: 100%;
-			max-width: 100%;
-			min-height: unset;
-			padding: var(--space-xs);
-			align-items: center;
-			justify-content: center;
-		}
-
-		.deck-label {
-			font-size: 0.625rem;
-			letter-spacing: 0.1em;
 			display: none;
 		}
 	}

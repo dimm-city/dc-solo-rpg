@@ -89,7 +89,12 @@
 	style="animation-delay: 0s; animation-duration: 0.6s"
 >
 	<!-- Exit Button on far left -->
-	<button class="status-bar-button exit-button" onclick={onExitClick} aria-label="Exit game">
+	<button
+		class="status-bar-button exit-button"
+		onclick={onExitClick}
+		aria-label="Exit game"
+		title="Exit game"
+	>
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
 			width="20"
@@ -107,7 +112,12 @@
 		</svg>
 	</button>
 	<!-- Help Button on far right -->
-	<button class="status-bar-button help-button" onclick={onHelpClick} aria-label="Game help">
+	<button
+		class="status-bar-button help-button"
+		onclick={onHelpClick}
+		aria-label="Game help"
+		title="Game help"
+	>
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
 			width="20"
@@ -130,6 +140,7 @@
 		class="status-bar-button settings-button"
 		onclick={onSettingsClick}
 		aria-label="Game settings"
+		title="Game settings"
 	>
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
@@ -168,6 +179,7 @@
 		class="status-bar-button dice-theme-button"
 		onclick={() => (showDiceThemePicker = true)}
 		aria-label="Change dice theme"
+		title="Change dice theme"
 	>
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
@@ -196,6 +208,7 @@
 		class:active={autoPlayEnabled()}
 		onclick={toggleAutoPlay}
 		aria-label="Toggle Auto-Play"
+		aria-pressed={autoPlayEnabled()}
 		title="Toggle Auto-Play"
 	>
 		<svg
@@ -219,6 +232,7 @@
 		class:active={audioEnabled()}
 		onclick={toggleAudio}
 		aria-label="Toggle Audio"
+		aria-pressed={audioEnabled()}
 		title="Toggle Audio"
 	>
 		<!-- <svg
@@ -279,7 +293,10 @@
 	.player-round-bar {
 		/* Augmented UI Configuration - Uniform corner clips */
 		--aug-border-all: 2px;
-		--aug-border-bg: linear-gradient(135deg, #00eeff 0%, #ff00ff 50%, #00ffaa 100%);
+		--aug-border-bg: var(
+			--frame-border,
+			linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta))
+		);
 		--aug-tl: 14px;
 		--aug-tr: 14px;
 		--aug-br: 14px;
@@ -417,7 +434,7 @@
 			padding-inline: var(--space-sm);
 			padding-block: var(--space-xs);
 			height: 3.5rem;
-			align-items: flex-end;
+			align-items: center;
 		}
 
 		.player-round-bar h5 {
@@ -433,9 +450,11 @@
 			display: none; /* Hide round on mobile for space */
 		}
 
-		/* Make buttons smaller on mobile */
+		/* 44x44 touch targets */
 		.status-bar-button {
-			padding: var(--space-xs);
+			min-width: 44px;
+			min-height: 44px;
+			padding: 0;
 		}
 
 		.status-bar-button svg {
@@ -447,8 +466,8 @@
 	/* Extra small screens - tighter spacing */
 	@media (max-width: 400px) {
 		.player-round-bar {
-			gap: 2px;
-			padding-inline: var(--space-xs);
+			gap: 0;
+			padding-inline: 2px;
 		}
 
 		.info-segment {
@@ -456,8 +475,8 @@
 		}
 
 		.status-bar-button svg {
-			width: 16px;
-			height: 16px;
+			width: 20px;
+			height: 20px;
 		}
 	}
 

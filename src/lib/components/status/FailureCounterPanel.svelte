@@ -2,12 +2,11 @@
 	/**
 	 * FailureCounterPanel - Failure counter (Kings) panel
 	 *
-	 * Displays the 4 Kings as failure indicators. When all 4 are revealed, game is lost.
-	 * Uses Augmented UI styling with reveal animations.
+	 * Shows "n/4" and the 4 Kings as skulls in a 2x2 grid. Each newly lit skull ignites,
+	 * lit skulls pulse harder as the count rises, and at 3 of 4 the panel turns urgent.
 	 *
 	 * @component
 	 */
-
 	import { gameState } from '../../stores/gameStore.svelte.js';
 	import { innerWidth } from 'svelte/reactivity/window';
 
@@ -18,93 +17,58 @@
 		animationDuration = 0.85
 	} = $props();
 
-	// Reactive screen width tracking
 	const isMobile = $derived((innerWidth.current ?? 1024) <= 600);
-
-	// Reactive data-augmented-ui attribute for failure stat
 	const failureAugmentedUI = $derived(
 		isMobile ? 'bl-clip br-clip tr-clip-x border' : 'l-rect tr-clip br-clip-x border'
 	);
 
 	// Kings revealed count (includes pending changes)
-	const failurePercent = $derived(
-		gameState.kingsRevealed + (gameState.pendingUpdates.kingsChange || 0)
+	const count = $derived(
+		Math.max(0, Math.min(4, gameState.kingsRevealed + (gameState.pendingUpdates.kingsChange || 0)))
 	);
 
-	// Label from config or default
 	const failureLabel = $derived(
-		gameState.config?.labels?.failureCounters?.toUpperCase() ?? 'FAILURE'
+		gameState.config?.labels?.failureCounters?.toUpperCase() ?? 'KINGS'
 	);
+
+	// Index of the skull that just lit, for the one-off ignite animation
+	let igniting = $state(-1);
+	let previous = count;
+	let igniteTimer;
+	$effect(() => {
+		const current = count;
+		if (current > previous) {
+			igniting = current - 1;
+			clearTimeout(igniteTimer);
+			igniteTimer = setTimeout(() => (igniting = -1), 600); // ANIMATION_DURATION.CARD_DISMISS
+		}
+		previous = current;
+		return () => clearTimeout(igniteTimer);
+	});
 </script>
 
 <div
 	class="stat-item failure-stat slide-down-and-left"
+	class:urgent={count >= 3}
+	data-level={count}
 	data-augmented-ui={failureAugmentedUI}
+	data-testid="failure-panel"
 	style="animation-delay: {animationDelay}s; animation-duration: {animationDuration}s"
 >
-	<div class="stat-label">
-		<!-- <svg
-			class="stat-icon"
-			xmlns="http://www.w3.org/2000/svg"
-			width="16"
-			height="16"
-			viewBox="0 0 24 24"
-			fill="none"
-			stroke="currentColor"
-			stroke-width="2"
-			stroke-linecap="round"
-			stroke-linejoin="round"
-		>
-			<path d="m12.5 17-.5-1-.5 1h1z" />
-			<path
-				d="M15 22a1 1 0 0 0 1-1v-1a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20v1a1 1 0 0 0 1 1z"
-			/>
-			<circle cx="15" cy="12" r="1" />
-			<circle cx="9" cy="12" r="1" />
-		</svg> -->
-		{failureLabel}
+	<div class="stat-label">{failureLabel}</div>
+	<div class="king-count" aria-label="{count} of 4 Kings revealed">
+		<span class="current">{count}</span><span class="max">/4</span>
 	</div>
-	<div class="king-indicators">
+	<div class="king-indicators" aria-hidden="true">
 		{#each Array(4) as _, i (i)}
-			<div class="king-icon" class:revealed={i < failurePercent}>
+			<div class="king-icon" class:revealed={i < count} class:igniting={i === igniting}>
 				<img src="/skull-color-64.png" alt="" />
-				<!-- <svg
-					class="stat-icon"
-					xmlns="http://www.w3.org/2000/svg"
-					width="16"
-					height="16"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-				>
-					<path d="m12.5 17-.5-1-.5 1h1z" />
-					<path
-						d="M15 22a1 1 0 0 0 1-1v-1a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20v1a1 1 0 0 0 1 1z"
-					/>
-					<circle cx="15" cy="12" r="1" />
-					<circle cx="9" cy="12" r="1" />
-				</svg> -->
-				<!-- <svg
-					xmlns="http://www.w3.org/2000/svg"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-				>
-					<path d="M2 20h20v-4a6 6 0 0 0-12 0v4zm0 0v-4a6 6 0 1 1 12 0v4zM12 2v4m-4-2 4 2 4-2" />
-				</svg> -->
 			</div>
 		{/each}
 	</div>
 </div>
 
 <style>
-	/* Animation */
 	.slide-down-and-left {
 		animation: slideDownAndLeft 0.4s linear forwards;
 		opacity: 0;
@@ -130,101 +94,115 @@
 	}
 
 	.stat-item {
-		/* Augmented UI Base Configuration */
 		--aug-border-all: 2px;
 
 		width: min-content;
-		/* Truly Compact Layout */
 		display: flex;
-		flex-direction: row;
-		align-items: start;
-		justify-content: start;
-		gap: 0.375rem;
+		flex-direction: column;
+		align-items: center;
+		justify-content: flex-start;
+		gap: 0.25rem;
 		padding: 0.375rem 0.625rem;
 		position: relative;
 		overflow: visible;
 		min-height: 36px;
 
-		/* Darker Glassmorphism Background */
 		background: linear-gradient(135deg, rgba(10, 10, 20, 0.7), rgba(15, 15, 25, 0.6));
 		backdrop-filter: blur(8px) saturate(140%);
 		-webkit-backdrop-filter: blur(8px) saturate(140%);
-
-		/* Subtle inner shine */
-		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 	}
 
 	.failure-stat {
-		/* Augmented UI Configuration - Receiver with matching inset */
-		--aug-border-bg: linear-gradient(135deg, var(--color-cyber-magenta), var(--color-brand-yellow));
-		--aug-tl: 14px; /* Slot ← receives Health's tab */
-		--aug-tr: 8px; /* Gentle transition */
-		--aug-br: 14px; /* Strong tab → connects to Success (mobile) */
-
-		/* Left side rectangle inset - receives puzzle tab from health */
-		/* Match health's right extension for perfect fit */
+		--aug-border-bg: var(
+			--frame-border,
+			linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta))
+		);
+		--aug-tl: 14px;
+		--aug-tr: 8px;
+		--aug-br: 14px;
 		--aug-l-extend1: 40px;
 		--aug-l-inset1: 10px;
+		--king-pulse-scale: 1;
+		--king-pulse-time: 0s;
+
 		grid-area: failure;
-		display: flex;
-		flex-direction: column;
-		justify-content: start;
 		margin-inline-start: -30px;
 		padding-inline-start: 2rem;
-		/* SECONDARY importance - Reduced Glow */
 		box-shadow:
-			0 0 12px rgba(217, 70, 239, 0.4),
-			0 0 24px rgba(217, 70, 239, 0.2),
-			inset 0 0 10px rgba(217, 70, 239, 0.1),
-			inset 0 1px 0 rgba(255, 255, 255, 0.05);
+			0 0 12px rgba(217, 70, 239, 0.3),
+			inset 0 0 10px rgba(217, 70, 239, 0.1);
+		transition: box-shadow 0.3s ease-out;
+	}
+
+	/* Lit skulls pulse harder and faster as Kings fall */
+	.failure-stat[data-level='1'] {
+		--king-pulse-scale: 1.03;
+		--king-pulse-time: 3s;
+	}
+	.failure-stat[data-level='2'] {
+		--king-pulse-scale: 1.06;
+		--king-pulse-time: 2.2s;
+	}
+	.failure-stat[data-level='3'] {
+		--king-pulse-scale: 1.1;
+		--king-pulse-time: 1.4s;
+	}
+	.failure-stat[data-level='4'] {
+		--king-pulse-scale: 1.14;
+		--king-pulse-time: 0.9s;
+	}
+
+	/* 3 of 4: danger colour, the count is the loudest thing in the HUD */
+	.failure-stat.urgent {
+		--aug-border-bg: var(--color-danger, #ff4d6d);
+		box-shadow:
+			0 0 18px rgba(255, 77, 109, 0.55),
+			inset 0 0 14px rgba(255, 77, 109, 0.2);
 	}
 
 	.stat-label {
-		font-size: 0.75rem; /* 12px - compact for desktop */
+		font-size: 0.75rem;
 		font-weight: bold;
 		text-transform: uppercase;
 		letter-spacing: 0.1em;
-		font-family: 'Courier New', monospace;
-		opacity: 1; /* Remove opacity, rely on color/shadow for hierarchy */
-		text-align: left;
+		font-family: var(--font-mono, 'Share Tech Mono', ui-monospace, monospace);
+		color: var(--color-danger, #ff4d6d);
+		text-align: center;
 		align-self: center;
-		flex: 0 0 auto;
 		white-space: nowrap;
-		min-width: 58px;
-		/* Add padding to avoid clip zones */
-		padding-left: 2px;
-		/* Display help icon inline */
-		display: flex;
-		align-items: center;
-		gap: 0.2rem;
+		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 	}
 
-	.stat-icon {
-		width: 14px;
-		height: 14px;
-		flex-shrink: 0;
-		display: inline-block;
-		vertical-align: middle;
-		filter: drop-shadow(0 0 3px currentColor);
+	.king-count {
+		font-family: var(--font-mono, 'Share Tech Mono', ui-monospace, monospace);
+		font-variant-numeric: tabular-nums;
+		line-height: 1;
+		color: #fff;
+		transition: color 0.2s linear;
+	}
+	.king-count .current {
+		font-size: 1.25rem;
+		font-weight: 700;
+	}
+	.king-count .max {
+		font-size: 0.875rem;
+		color: rgba(255, 255, 255, 0.7);
+	}
+	.urgent .king-count {
+		color: var(--color-danger, #ff4d6d);
+		text-shadow: 0 0 12px rgba(255, 77, 109, 0.8);
+	}
+	.urgent .king-count .current {
+		font-size: 1.75rem;
 	}
 
-	.failure-stat .stat-label {
-		color: #ff0066;
-		text-shadow:
-			0 0 12px currentColor,
-			0 0 24px currentColor,
-			0 1px 2px rgba(0, 0, 0, 0.8); /* Add dark shadow for contrast */
-	}
-
-	/* King Indicators for Failure Stat */
+	/* 2x2 skulls */
 	.king-indicators {
-		display: flex;
-		gap: 5px;
-		align-items: center;
+		display: grid;
+		grid-template-columns: repeat(2, 32px);
+		gap: 4px;
 		justify-content: center;
 		padding: 2px;
-		flex-wrap: wrap;
-		width: 96px;
 	}
 
 	.king-icon {
@@ -233,32 +211,53 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		transition: all 0.2s linear;
 		opacity: 0.2;
+		transition: opacity 0.2s linear;
 	}
 
 	.king-icon img {
 		width: 100%;
 		height: 100%;
-		stroke: #ff0066;
-		filter: drop-shadow(0 0 2px rgba(255, 0, 102, 0.3));
+		filter: grayscale(1) drop-shadow(0 0 2px rgba(255, 77, 109, 0.3));
 	}
 
 	.king-icon.revealed {
 		opacity: 1;
-		filter: grayscale(0);
-		animation: kingReveal 0.2s linear forwards;
+		animation: kingPulse var(--king-pulse-time) ease-in-out infinite;
 	}
 
 	.king-icon.revealed img {
-		stroke: #ff0066;
-		filter: drop-shadow(0 0 6px rgba(255, 0, 102, 0.9));
+		filter: grayscale(0) drop-shadow(0 0 6px rgba(255, 77, 109, 0.9));
 	}
 
-	@keyframes kingReveal {
+	/* Newly lit skull: a short flare, then it joins the pulse */
+	.king-icon.revealed.igniting {
+		animation:
+			kingIgnite 0.6s ease-out,
+			kingPulse var(--king-pulse-time) ease-in-out 0.6s infinite;
+	}
+	.king-icon.igniting img {
+		animation: kingIgniteGlow 0.6s ease-out;
+	}
+
+	@keyframes kingPulse {
+		0%,
+		100% {
+			transform: scale(1);
+		}
+		50% {
+			transform: scale(var(--king-pulse-scale));
+		}
+	}
+
+	@keyframes kingIgnite {
 		0% {
-			transform: scale(0.7);
+			transform: scale(0.6);
 			opacity: 0.2;
+		}
+		40% {
+			transform: scale(1.35);
+			opacity: 1;
 		}
 		100% {
 			transform: scale(1);
@@ -266,7 +265,18 @@
 		}
 	}
 
-	/* Mobile responsive */
+	@keyframes kingIgniteGlow {
+		0% {
+			filter: grayscale(1) brightness(2);
+		}
+		40% {
+			filter: grayscale(0) brightness(2.2) drop-shadow(0 0 14px rgba(255, 77, 109, 1));
+		}
+		100% {
+			filter: grayscale(0) drop-shadow(0 0 6px rgba(255, 77, 109, 0.9));
+		}
+	}
+
 	@media (max-width: 600px) {
 		.stat-item {
 			width: 100%;
@@ -275,29 +285,9 @@
 			padding: 0.25rem 0.5rem;
 			margin-inline-start: 0;
 			padding-inline-start: 0.5rem;
-			flex-direction: column-reverse;
-			justify-content: flex-start;
-			align-items: center;
 		}
-
 		.stat-label {
 			font-size: 0.625rem;
-			min-width: 48px;
-			letter-spacing: 0.08em;
-		}
-
-		.stat-icon {
-			width: 12px;
-			height: 12px;
-		}
-
-		.king-indicators {
-			gap: 2px;
-		}
-
-		.king-icon {
-			width: 24px;
-			height: 24px;
 		}
 	}
 
@@ -306,13 +296,12 @@
 			animation: none;
 			opacity: 1;
 		}
-
-		.king-icon {
-			transition: none;
-		}
-
-		.king-icon.revealed {
+		.king-icon,
+		.king-icon.revealed,
+		.king-icon.revealed.igniting,
+		.king-icon.igniting img {
 			animation: none;
+			transition: none;
 		}
 	}
 </style>

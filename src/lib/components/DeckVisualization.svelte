@@ -7,7 +7,7 @@
 </script>
 
 {#if cardsRemaining > 0}
-	<div class="deck-container" title="{cardsRemaining} cards remaining">
+	<div class="deck-container" title="{cardsRemaining} cards remaining" data-testid="deck-count">
 		<div class="deck-stack" style="height: {deckHeight}px">
 			{#each Array(visibleLayers) as _, i (i)}
 				<div
@@ -87,7 +87,7 @@
 		flex-direction: column;
 		align-items: center;
 		gap: 0.125rem;
-		font-family: 'lixdu', 'Courier New', monospace;
+		font-family: var(--font-mono, 'Share Tech Mono', ui-monospace, monospace);
 		text-align: center;
 		position: absolute;
 		z-index: 10;
@@ -105,7 +105,7 @@
 
 	.text {
 		font-size: 0.5rem;
-		font-family: 'Orbitron', sans-serif;
+		font-family: var(--font-mono, 'Share Tech Mono', ui-monospace, monospace);
 		color: var(--color-brand-yellow);
 		text-transform: uppercase;
 		letter-spacing: 0.05em;

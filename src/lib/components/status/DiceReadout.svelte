@@ -1,18 +1,17 @@
 <script>
 	/**
-	 * DiceReadout - Dice roll display panel
+	 * DiceReadout - Last roll display panel
 	 *
-	 * Displays the last dice roll with:
-	 * - Large numerical value
-	 * - Binary pips representing the roll
-	 * - Modifier state (Lucid/Surreal) with icons
-	 *
-	 * This component is HIGHLY REUSABLE - can be used in other game screens.
+	 * Shows the last d20 result as a number on every screen size. If that roll was 2d20
+	 * (Lucid or Surreal), it also says which die counted, e.g. "high of 15, 6". When the
+	 * next roll will be 2d20, a LUCID or SURREAL badge says so.
 	 *
 	 * @component
 	 */
 
 	import { gameState } from '../../stores/gameStore.svelte.js';
+	import { diceState } from '../../stores/diceStore.svelte.js';
+	import { describeTwoDiceRoll } from './hudTiers.js';
 
 	let {
 		/** Animation delay in seconds */
@@ -21,121 +20,38 @@
 		animationDuration = 0.75
 	} = $props();
 
-	// Dice pips - convert dice roll to 5 pips (dice pattern)
-	// Pips are arranged like 5 on a six-sided die: 4 corners + 1 center
-	const dicePips = $derived(() => {
-		const roll = gameState.diceRoll || 0;
-		// Create array of 5 boolean values - which pips are active based on the roll value
-		const pips = [false, false, false, false, false];
-
-		// Map d20 roll to pip pattern (0-20 range, using 5-bit binary)
-		const binary = roll.toString(2).padStart(5, '0');
-		for (let i = 0; i < 5; i++) {
-			pips[i] = binary[i] === '1';
-		}
-
-		return pips;
-	});
-
-	const modifierColor = $derived.by(() => {
-		if (gameState.isLucid) return '#00ffaa'; // Green for advantage
-		if (gameState.isSurreal) return '#ff0066'; // Red for disadvantage
-		return null;
-	});
+	const hasRolled = $derived(gameState.diceRoll > 0);
+	const detail = $derived(describeTwoDiceRoll(diceState.lastRoll, gameState.diceRoll));
+	const modifier = $derived(gameState.isLucid ? 'lucid' : gameState.isSurreal ? 'surreal' : null);
 </script>
 
 <div
 	class="dice-readout slide-down"
 	data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
+	data-testid="dice-readout"
 	style="animation-delay: {animationDelay}s; animation-duration: {animationDuration}s"
 >
-	<div class="dice-label" style="color: {modifierColor}">
-		{#if gameState.isLucid}
-			<svg
-				xmlns="http://www.w3.org/2000/svg"
-				width="16"
-				height="16"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			>
-				<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
-				<polyline points="16 7 22 7 22 13"></polyline>
-			</svg>
-		{:else if gameState.isSurreal}
-			<svg
-				xmlns="http://www.w3.org/2000/svg"
-				width="16"
-				height="16"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			>
-				<polyline points="22 17 13.5 8.5 8.5 13.5 2 7"></polyline>
-				<polyline points="16 17 22 17 22 11"></polyline>
-			</svg>
-		{:else}
-			<svg
-				class="dice-icon"
-				xmlns="http://www.w3.org/2000/svg"
-				width="14"
-				height="14"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			>
-				<rect width="12" height="12" x="2" y="10" rx="2" ry="2" />
-				<path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6" />
-				<path d="M6 18h.01" />
-				<path d="M10 14h.01" />
-				<path d="M15 6h.01" />
-				<path d="M18 9h.01" />
-			</svg>
-		{/if}
+	<div class="dice-label">LAST ROLL</div>
 
-		LAST ROLL
+	<div
+		class="dice-value"
+		aria-label={hasRolled ? `Last roll ${gameState.diceRoll}` : 'No roll yet'}
+	>
+		{hasRolled ? gameState.diceRoll : '--'}
 	</div>
 
-	<div class="dice-value">{gameState.diceRoll}</div>
-	<div class="dice-pips">
-		<!-- Top row -->
-		<div class="pip-row">
-			<span class="dice-pip" class:active={dicePips()[0]} style="--pip-delay: 0ms">
-				<span class="pip-dot"></span>
-			</span>
-			<span class="dice-pip" class:active={dicePips()[1]} style="--pip-delay: 150ms">
-				<span class="pip-dot"></span>
-			</span>
+	{#if detail}
+		<div class="dice-detail">({detail})</div>
+	{/if}
+
+	{#if modifier}
+		<div class="modifier-state {modifier}">
+			{modifier === 'lucid' ? 'LUCID: next roll high of 2d20' : 'SURREAL: next roll low of 2d20'}
 		</div>
-		<!-- Center row -->
-		<div class="pip-row center-row">
-			<span class="dice-pip center-pip" class:active={dicePips()[2]} style="--pip-delay: 300ms">
-				<span class="pip-dot"></span>
-			</span>
-		</div>
-		<!-- Bottom row -->
-		<div class="pip-row">
-			<span class="dice-pip" class:active={dicePips()[3]} style="--pip-delay: 450ms">
-				<span class="pip-dot"></span>
-			</span>
-			<span class="dice-pip" class:active={dicePips()[4]} style="--pip-delay: 600ms">
-				<span class="pip-dot"></span>
-			</span>
-		</div>
-	</div>
+	{/if}
 </div>
 
 <style>
-	/* Animation */
 	.slide-down {
 		animation: slideDown 0.4s linear forwards;
 		opacity: 0;
@@ -152,10 +68,12 @@
 		}
 	}
 
-	/* Digital Dice Readout */
 	.dice-readout {
 		--aug-border-all: 2px;
-		--aug-border-bg: linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta));
+		--aug-border-bg: var(
+			--frame-border,
+			linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta))
+		);
 		--aug-tl: 6px;
 		--aug-tr: 6px;
 		--aug-br: 6px;
@@ -165,7 +83,7 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		justify-content: space-between;
+		justify-content: flex-start;
 		gap: var(--space-xs);
 		padding: var(--space-sm);
 		min-width: 90px;
@@ -173,11 +91,8 @@
 		background: linear-gradient(135deg, rgba(10, 10, 20, 0.9), rgba(15, 15, 25, 0.8));
 		backdrop-filter: blur(10px) saturate(150%);
 		-webkit-backdrop-filter: blur(10px) saturate(150%);
-
-		/* TERTIARY importance - Subtle Glow */
 		box-shadow:
-			0 0 8px rgba(0, 255, 255, 0.3),
-			0 0 16px rgba(217, 70, 239, 0.15),
+			0 0 8px rgba(0, 255, 255, 0.25),
 			inset 0 0 8px rgba(0, 255, 255, 0.08);
 	}
 
@@ -185,146 +100,52 @@
 		font-size: var(--text-xs);
 		font-weight: bold;
 		text-transform: uppercase;
-		letter-spacing: 0.15em;
-		font-family: 'Courier New', monospace;
+		letter-spacing: 0.1em;
+		font-family: var(--font-mono, 'Share Tech Mono', ui-monospace, monospace);
 		color: #00eeff;
-		text-shadow:
-			0 0 10px rgba(0, 238, 255, 1),
-			0 0 20px rgba(0, 238, 255, 0.6);
-		display: flex;
-		align-items: center;
-		gap: 0.25rem;
-	}
-
-	.dice-icon {
-		flex-shrink: 0;
-		display: inline-block;
-		vertical-align: middle;
-		filter: drop-shadow(0 0 4px currentColor);
-	}
-
-	/* Modifier state indicator */
-	.modifier-state {
-		font-size: var(--text-xs);
-		font-weight: bold;
-		text-transform: uppercase;
-		letter-spacing: 0.2em;
-		font-family: 'Courier New', monospace;
-		text-shadow:
-			0 0 10px currentColor,
-			0 0 20px currentColor;
-		animation: modifier-pulse 1s ease-in-out infinite;
-	}
-
-	@keyframes modifier-pulse {
-		0%,
-		100% {
-			opacity: 1;
-		}
-		50% {
-			opacity: 0.6;
-		}
+		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+		white-space: nowrap;
 	}
 
 	.dice-value {
 		font-size: 2rem;
-		font-weight: 900;
-		font-family: 'Courier New', monospace;
-		color: #ffee00;
-		text-shadow:
-			0 0 15px rgba(255, 238, 0, 1),
-			0 0 30px rgba(255, 238, 0, 0.6),
-			0 0 45px rgba(255, 238, 0, 0.3);
+		font-weight: 700;
+		font-family: var(--font-mono, 'Share Tech Mono', ui-monospace, monospace);
+		font-variant-numeric: tabular-nums;
+		color: var(--color-brand-yellow, #ffd700);
+		text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
 		line-height: 1;
 	}
 
-	/* Dice pips display */
-	.dice-pips {
-		display: flex;
-		gap: 3px;
-		flex-wrap: nowrap;
-		justify-content: center;
-		min-width: 54px;
-		flex-direction: column;
+	.dice-detail,
+	.modifier-state {
+		font-family: var(--font-mono, 'Share Tech Mono', ui-monospace, monospace);
+		font-size: var(--text-xs);
+		line-height: 1.2;
+		text-align: center;
 	}
 
-	.pip-row {
-		display: flex;
-		gap: 8px;
-		justify-content: space-between;
-		align-items: center;
+	.dice-detail {
+		color: rgba(255, 255, 255, 0.8);
+		white-space: nowrap;
 	}
 
-	.pip-row.center-row {
-		justify-content: center;
+	.modifier-state {
+		font-weight: bold;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		max-width: 110px;
+	}
+	.modifier-state.lucid {
+		color: #00ffaa;
+	}
+	.modifier-state.surreal {
+		color: var(--color-danger, #ff4d6d);
 	}
 
-	.dice-pip {
-		width: 6px;
-		height: 6px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		position: relative;
-		opacity: 0.3;
-		transition: opacity 0.3s ease;
-	}
-
-	.dice-pip.active {
-		opacity: 1;
-	}
-
-	.pip-dot {
-		width: 100%;
-		height: 100%;
-		border-radius: 50%;
-		background: transparent;
-		border: 1px solid rgba(0, 255, 255, 0.4);
-		transition: all 0.3s ease;
-	}
-
-	.dice-pip.active .pip-dot {
-		background: linear-gradient(135deg, #00eeff, #d946ef);
-		border-color: rgba(0, 255, 255, 1);
-		box-shadow:
-			0 0 6px rgba(0, 255, 255, 0.8),
-			inset 0 0 3px rgba(255, 255, 255, 0.4);
-		animation: pip-pulse 2s ease-in-out infinite;
-		animation-delay: var(--pip-delay, 0ms);
-	}
-
-	@keyframes pip-pulse {
-		0%,
-		100% {
-			opacity: 1;
-			transform: scale(1);
-		}
-		50% {
-			opacity: 0.7;
-			transform: scale(1.1);
-		}
-	}
-
-	/* Mobile responsive */
 	@media (max-width: 600px) {
 		.dice-readout {
-			justify-content: center;
-		}
-
-		.dice-value,
-		.dice-label {
-			display: none;
-			height: 0;
-		}
-
-		.dice-pip {
-			width: 13px;
-			height: 13px;
-		}
-
-		.pip-dot {
-			width: 4px;
-			height: 4px;
+			min-width: 0;
 		}
 	}
 
@@ -332,14 +153,6 @@
 		.slide-down {
 			animation: none;
 			opacity: 1;
-		}
-
-		.modifier-state {
-			animation: none;
-		}
-
-		.dice-pip.active .pip-dot {
-			animation: none;
 		}
 	}
 </style>
