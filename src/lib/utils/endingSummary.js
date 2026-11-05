@@ -26,7 +26,7 @@ export function getEndingCause(state) {
  * Text for the ending screen: the author's main line, a game-written cause line
  * and (on a loss) the afterword.
  * @param {{kingsRevealed?: number, tower?: number, win?: boolean, status?: string}} state
- * @param {object} [labels] - game labels (GameLabels)
+ * @param {object} [labels] - game labels from the game config
  */
 export function getEndingText(state, labels = {}) {
 	const cause = getEndingCause(state);
