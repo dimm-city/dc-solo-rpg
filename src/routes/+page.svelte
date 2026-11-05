@@ -3,7 +3,6 @@
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { browser } from '$app/environment';
-	import { page } from '$app/state';
 	import { signOut } from '@auth/sveltekit/client';
 	import ConfirmModal from '$lib/components/ConfirmModal.svelte';
 	import AboutModal from '$lib/components/AboutModal.svelte';
@@ -29,7 +28,6 @@
 	} from '$lib/stores/indexedDBStorage.js';
 	import { resumeGame, deleteSavedGame } from '$lib/stores/gameActions.svelte.js';
 	import { gameState } from '$lib/stores/gameStore.svelte.js';
-	import SignIn from '$lib/components/SignIn.svelte';
 
 	/** @type {import('./$types').PageData} */
 	let { data } = $props();
@@ -468,9 +466,7 @@
 {/if}
 
 <!-- Story Mode Views -->
-{#if !page.data.session?.user}
-	<SignIn />
-{:else if showStoryMode && selectedStoryGame}
+{#if showStoryMode && selectedStoryGame}
 	<StoryMode savedGame={selectedStoryGame} onExit={handleExitStoryMode} />
 {:else if showBrowseGames}
 	<BrowseGames onSelectGame={handleSelectStoryGame} onBack={handleExitBrowseGames} />

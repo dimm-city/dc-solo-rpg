@@ -1,5 +1,20 @@
-export { handle } from './auth.js';
-// import { sequence } from '@sveltejs/kit/hooks';
+import { redirect } from '@sveltejs/kit';
+import { sequence } from '@sveltejs/kit/hooks';
+import { handle as authHandle } from './auth.js';
+import { isPublicPath } from '$lib/auth/publicPaths.js';
 
-// // You can add additional hooks here and combine them with sequence()
-// export const handle = sequence(authHandle);
+/** @type {import('@sveltejs/kit').Handle} */
+async function authorize({ event, resolve }) {
+	const { pathname } = event.url;
+	const session = await event.locals.auth();
+
+	if (pathname === '/signin' && session?.user) {
+		throw redirect(303, '/');
+	}
+	if (!session?.user && !isPublicPath(pathname)) {
+		throw redirect(303, '/signin');
+	}
+	return resolve(event);
+}
+
+export const handle = sequence(authHandle, authorize);
