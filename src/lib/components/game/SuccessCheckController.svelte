@@ -8,14 +8,12 @@
 	 * @component
 	 */
 
-	import { useSuccessCheck } from '../../composables/screen/useSuccessCheck.svelte.js';
 	import ContinueButton from '../ContinueButton.svelte';
 	import ButtonBar from '../ButtonBar.svelte';
 
-	let { triggerAutoPlay = null } = $props();
-
-	// Use composable for state management
-	const successCheck = useSuccessCheck();
+	// successCheck: the useSuccessCheck() instance owned by GameScreen, shared with its
+	// table-tap and auto-play handlers so they all see the same roll state
+	let { successCheck, triggerAutoPlay = null } = $props();
 
 	// Handle button click
 	async function handleClick() {

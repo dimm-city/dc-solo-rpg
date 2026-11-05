@@ -680,7 +680,10 @@
 							data-testid="screen-rollForTasks"
 							transition:fade={{ duration: TRANSITION_DURATION }}
 						>
-							<RollForTasksController triggerAutoPlay={triggerAutoPlayForCurrentScreen} />
+							<RollForTasksController
+								{rollForTasks}
+								triggerAutoPlay={triggerAutoPlayForCurrentScreen}
+							/>
 						</div>
 					{:else if currentScreen == 'drawCard'}
 						<OverlayModal isVisible={true} zIndex={50}>
@@ -693,7 +696,7 @@
 							transition:fade={{ duration: TRANSITION_DURATION }}
 						>
 							<FailureCheckController
-								onCompleted={onfailurecheckcompleted}
+								{failureCheck}
 								triggerAutoPlay={triggerAutoPlayForCurrentScreen}
 							/>
 						</div>
@@ -703,7 +706,10 @@
 							data-testid="screen-successCheck"
 							transition:fade={{ duration: TRANSITION_DURATION }}
 						>
-							<SuccessCheckController triggerAutoPlay={triggerAutoPlayForCurrentScreen} />
+							<SuccessCheckController
+								{successCheck}
+								triggerAutoPlay={triggerAutoPlayForCurrentScreen}
+							/>
 						</div>
 					{:else if currentScreen == 'finalDamageRoll'}
 						<div

@@ -8,14 +8,12 @@
 	 * @component
 	 */
 
-	import { useRollForTasks } from '../../composables/screen/useRollForTasks.svelte.js';
 	import ContinueButton from '../ContinueButton.svelte';
 	import ButtonBar from '../ButtonBar.svelte';
 
-	let { triggerAutoPlay = null } = $props();
-
-	// Use composable for state management
-	const rollForTasks = useRollForTasks();
+	// rollForTasks: the useRollForTasks() instance owned by GameScreen, shared with its
+	// table-tap and auto-play handlers so they all see the same roll state
+	let { rollForTasks, triggerAutoPlay = null } = $props();
 
 	// Handle button click
 	async function handleClick() {
