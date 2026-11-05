@@ -307,7 +307,7 @@ Event             | 2,4,6,8,10,J,Q| 28    | 53%
 1. Unlock Salvation checks
 2. Set tokens to 10
 3. Increment acesRevealed to 1
-4. No Stability check (it's a Narrative card)
+4. Triggers a Stability check (Aces are odd ranks)
 
 **Narrative Role:** The moment hope emerges. The path to escape becomes visible.
 
@@ -319,8 +319,8 @@ Event             | 2,4,6,8,10,J,Q| 28    | 53%
 
 1. Increment acesRevealed
 2. Improve Salvation threshold
-3. No Stability check
-4. Optional modifiers: skip-damage, return-king
+3. Triggers a Stability check (Aces are odd ranks), unless the card has `skip-damage`
+4. Optional modifiers: skip-damage (this card skips its own Stability check), return-king (if any King is revealed, one is shuffled back into the deck; otherwise no effect)
 
 **Narrative Role:** Moments of respite, reflection, and empowerment.
 
@@ -351,6 +351,8 @@ Event             | 2,4,6,8,10,J,Q| 28    | 53%
 ### 5.5 Challenge Cards
 
 **Cards:** 3, 5, 7, 9 (all suits) - 16 total
+
+Challenge cards are not the only cards that trigger a Stability check: every odd rank does, so the four Aces (Primary Success and Narrative) trigger one too.
 
 **Effects:**
 
@@ -433,7 +435,7 @@ flowchart TB
     Check4 -->|Yes| Lose
     Check4 -->|No| Safe
 
-    Ace --> Safe
+    Ace --> StabCheck
     GainStab --> Safe
     Surreal --> Safe
     Safe --> More{More cards?}
@@ -534,13 +536,20 @@ Loss Condition 3: Deck Exhaustion (rare)
 
 ### 7.3 Expected Outcomes
 
+Monte Carlo simulation that drives the real game actions (`startGame`, `rollForTasks`, `drawCard`, `confirmCard`, `failureCheck`, `successCheck`, `recordRound`, and the `applyPending*` functions) through a full game loop with the live RNG. Sample: 4,000 games per difficulty. The deck is the standard 52 cards with no `skip-damage` or `return-king` modifiers, and every Salvation check is taken.
+
 ```
-Expected Win Rate: 15-20%
-Most Common Loss: Stability depletion (60%)
-Second Most Common: King limit (25%)
-Third Most Common: Bad Salvation luck (10%)
-Deck Exhaustion: Very rare (5%)
+                          Normal (difficulty 1)   Easy (difficulty 0)
+Win rate:                 0.6%  (24 / 4000)       1.5%  (60 / 4000)
+Loss, 4 Kings revealed:   90.5% (3621 / 4000)     90.7% (3629 / 4000)
+Loss, Stability depleted: 8.9%  (355 / 4000)      7.8%  (311 / 4000)
+Loss, deck exhaustion:    0 observed              0 observed
+Average length:           12.4 rounds             12.1 rounds
+Stability checks / game:  15.8                    15.1
+Salvation checks / game:  5.0                     11.1
 ```
+
+Every win came after all 4 Aces were revealed, except 1 of the 60 easy-mode wins (3 Aces).
 
 ---
 
@@ -568,31 +577,23 @@ Each odd-ranked card (A, 3, 5, 7, 9; 20 cards in the deck) triggers one check, a
 
 ### 8.3 Salvation Success Rates
 
-**Simulation Results (1000 games):**
+**Expected token change per Salvation check** (exact, averaged over all 20 d20 results using `calculateSalvationResult`; positive means tokens are added on average):
 
 ```
-1 Ace (17 threshold, 20% rate):
-- Expected checks to remove 10 tokens: 50
-- Typical game length: Very long
-- Win rate: ~5%
-
-2 Aces (14 threshold, 35% rate):
-- Expected checks to remove 10 tokens: 28
-- Typical game length: Long
-- Win rate: ~10%
-
-3 Aces (11 threshold, 50% rate):
-- Expected checks to remove 10 tokens: 20
-- Typical game length: Moderate
-- Win rate: ~20%
-
-4 Aces (auto-win):
-- Expected checks to remove 10 tokens: 5
-- Typical game length: Short
-- Win rate: ~40%
+1 Ace  (threshold 17): +0.6 tokens per check
+2 Aces (threshold 14): +0.3 tokens per check
+3 Aces (threshold 11):  0.0 tokens per check
+4 Aces (auto-success): -1.0 token per check (about 10 checks to clear 10 tokens)
 ```
 
-**Strategic Takeaway:** Collecting Aces is CRITICAL to victory. Each Ace dramatically improves win chances.
+**Simulation Results (4,000 games per difficulty, same method as 7.3):** wins by Aces revealed when the game ended
+
+```
+Normal: 0-3 Aces: 0 wins in 2,061 games   | 4 Aces: 24 wins in 1,939 games (1.2%)
+Easy:   1-2 Aces: 0 wins in 568 games     | 3 Aces: 1 win in 1,211 games (0.08%) | 4 Aces: 59 wins in 2,221 games (2.7%)
+```
+
+**Strategic Takeaway:** Only the fourth Ace produces net token removal on average, so winning in practice requires all 4 Aces, and most games end first (see 7.3).
 
 ### 8.4 King Threat
 

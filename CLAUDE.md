@@ -156,7 +156,7 @@ lose-message: Defeat message
 
 ### Challenge
 
-[16 cards - Odd ranks (3,5,7,9) - trigger damage checks]
+[16 cards - Ranks 3, 5, 7, 9 - Stability checks (like all odd ranks, Aces included)]
 
 ### Event
 
@@ -267,6 +267,7 @@ Drawing the Ace of Hearts unlocks Salvation checks. Each subsequent Ace improves
 1. **Primary Success (Salvation)** - Ace of Hearts
    - Unlocks Salvation checks
    - First Ace sets threshold to 17 (20% win chance)
+   - Odd rank, so it also triggers a Stability check
 
 2. **Failure Counter** - All 4 Kings
    - Revealing all 4 = instant game over
@@ -275,10 +276,11 @@ Drawing the Ace of Hearts unlocks Salvation checks. Each subsequent Ace improves
 3. **Narrative (Abilities)** - Remaining 3 Aces
    - Reflective moments, emotional beats
    - Each Ace improves Salvation threshold
+   - Aces are odd ranks, so every Ace (Ace of Hearts included) triggers a Stability check, unless a Narrative card carries `skip-damage`
    - Optional special modifiers (skip-damage, return-king)
 
-4. **Challenge** - Odd cards (3, 5, 7, 9) - 16 cards
-   - **Usually** trigger Stability checks (d20 roll)
+4. **Challenge** - Ranks 3, 5, 7, 9 - 16 cards
+   - Trigger Stability checks (d20 roll)
    - Loss comes from the roll, not the card: natural 1 = -3 (+ Surreal), 2-5 = -2, 6-10 = -1, 11-19 = 0
    - Natural 20: no loss, +1 Stability (max 20) + Lucid state
 

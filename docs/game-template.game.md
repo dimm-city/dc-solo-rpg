@@ -54,11 +54,10 @@ Based on Wretched and Alone SRD mechanics:
 3. NARRATIVE (3 cards - remaining Aces: A♦, A♣, A♠)
    - SRD term: "Bonus or help in your plight"
    - Reflective moments, emotional beats, small victories
-   - Each Ace adds +1 to bonus counter (reduces damage)
+   - Each Ace triggers a Stability check (odd rank) and improves the Salvation threshold
    - Optional: Assign special one-time modifiers to up to 2 cards:
      * "skip-damage" - this card skips its own Stability check
      * "return-king" - shuffle a revealed King back into the deck (no effect if none revealed)
-   - Optional: May assign a challenge modifier to for a failure check along with another optional modifier
 
 4. CHALLENGE (16 cards - odd ranks: 3, 5, 7, 9)
    - Usually trigger damage checks (tower pulls)

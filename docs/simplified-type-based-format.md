@@ -47,7 +47,7 @@ Based on the **Wretched and Alone SRD** mechanics:
 - **Count**: 16 cards (odd-numbered cards: 3, 5, 7, 9)
 - **SRD Mechanics**: "Usually requires you to pull from the tower" - odd-numbered cards **usually** trigger a block tower pull. If tower falls = game over
 - **Purpose**: Immediate dangerous moments that physically test fate through the tower
-- **Note**: Only odd numbered cards 3-9, excluding Aces (4 ranks × 4 suits = 16 cards). The "usually" qualifier preserves designer flexibility per SRD intent
+- **Note**: The Challenge type is the odd ranks 3, 5, 7, 9 (4 ranks × 4 suits = 16 cards); the four Aces are odd ranks too but belong to Primary Success/Narrative, and they also trigger a Stability check. The "usually" qualifier preserves designer flexibility per SRD intent
 
 ### 4. Event
 
@@ -60,10 +60,10 @@ Based on the **Wretched and Alone SRD** mechanics:
 
 - **Count**: 3 cards (remaining Aces: A♦, A♣, A♠)
 - **SRD Term**: "Bonus or help in your plight"
-- **Mechanics**: Provides some advantage or relief; does NOT trigger damage checks unless modified
+- **Mechanics**: Provides some advantage or relief (each Ace improves the Salvation threshold); as odd ranks, Aces trigger a Stability check unless the card has `skip-damage`
 - **Purpose**: Reflective moments, emotional beats, and small victories that help sustain hope
 - **Special**: Writers can use these for character development, connections, or moments of beauty amid despair
-- **Note**: Standard Narrative cards are safe moments of respite. They only trigger damage if explicitly given a damage-trigger modifier (future feature)
+- **Note**: Aces are odd ranks, so Narrative cards trigger a Stability check like any other odd card. Only `skip-damage` removes it (the card skips its own check)
 
 ---
 
@@ -125,7 +125,7 @@ to avoid it entirely.
 
 ### Note on "Multiple Mechanics"
 
-The Primary Success card inherently has dual behavior (activates salvation countdown AND may trigger damage check), but this is handled by standard game logic for all Aces - no special syntax needed.
+The Primary Success card inherently has dual behavior (activates salvation countdown AND triggers a Stability check), but this is handled by standard game logic for all Aces - no special syntax needed.
 
 ---
 
@@ -1174,7 +1174,7 @@ This format supports **all mechanics** described in the Wretched and Alone Mecha
 - Activates win condition
 - Places 10 tokens
 - Begins countdown mechanic
-- May trigger damage check (designer choice)
+- Triggers a Stability check (odd rank), like every Ace
 
 ✅ **Failure Counter** - 4 cards (all Kings)
 
@@ -1185,9 +1185,9 @@ This format supports **all mechanics** described in the Wretched and Alone Mecha
 
 ✅ **Narrative (Bonus/Help)** - 3 cards (remaining Aces)
 
-- Increment bonus counter (+1 damage reduction each)
+- Increment `acesRevealed` (improves the Salvation threshold)
 - Reflective/emotional content
-- May trigger damage checks (designer choice)
+- Trigger a Stability check (odd rank) unless the card has `skip-damage`
 - Can host special one-time mechanics
 
 ✅ **Challenge** - 16 cards (odd ranks: 3, 5, 7, 9)
@@ -1207,7 +1207,7 @@ This format supports **all mechanics** described in the Wretched and Alone Mecha
 ✅ **Skip Damage (`skip-damage`)** - One-time tower pull skip (Narrative only)
 ✅ **Return King (`return-king`)** - Shuffle King back to deck (Narrative only)
 ✅ **Explicit card assignment** - Manual placement for thematic suits
-✅ **Bonus counter system** - Damage reduction from Aces (0-4)
+✅ **Aces counter** - `acesRevealed` (0-4) sets the Salvation threshold
 ✅ **Win condition countdown** - 10 tokens with dice rolls
 ✅ **Final damage roll** - SRD-compliant final tension
 ✅ **Primary Success dual behavior** - Salvation + damage check (handled by game logic)
@@ -1215,7 +1215,7 @@ This format supports **all mechanics** described in the Wretched and Alone Mecha
 ### Designer Flexibility (SRD-Aligned)
 
 ✅ **"Usually" qualifier** - Odd/even rules are guidelines, not absolutes
-✅ **Aces may or may not trigger damage** - Designer decides per game
+✅ **Aces trigger Stability checks** - Like all odd ranks; only `skip-damage` skips a card's own check
 ✅ **Custom mechanics extensibility** - Future-proof for additional mechanics
 ✅ **Progressive rule teaching** - Tutorial through card prompts
 ✅ **Accessibility options** - Optional damage mechanics

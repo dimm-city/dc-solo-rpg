@@ -29,8 +29,8 @@ The format uses five card types that map directly to the standard 52-card deck:
 
 1. **Primary Success** (1 card) - Ace of Hearts (salvation mechanism)
 2. **Failure Counter** (4 cards) - All Kings (escalating threat)
-3. **Narrative** (3 cards) - Remaining Aces (bonus/help cards, do NOT trigger damage unless modified)
-4. **Challenge** (16 cards) - Odd-numbered cards: 3, 5, 7, 9 (trigger damage checks)
+3. **Narrative** (3 cards) - Remaining Aces (bonus/help cards; as odd ranks they trigger a Stability check unless the card has `skip-damage`)
+4. **Challenge** (16 cards) - Ranks 3, 5, 7, 9 (trigger Stability checks, as do all Aces)
 5. **Event** (28 cards) - Even-numbered cards: 2, 4, 6, 8, 10, J, Q (safe from damage)
 
 **Total:** 1 + 4 + 3 + 16 + 28 = 52 cards ✓
@@ -347,12 +347,11 @@ These simplifications apply to the system:
 
 - **Primary Success** - Ace of Hearts only (activates salvation countdown)
 - **Failure Counter** - All Kings (4 revealed = instant game over)
-- **Narrative** - Remaining Aces (bonus/help cards, do NOT trigger damage unless modified)
-  - Each Ace adds +1 to bonus counter (reduces damage)
+- **Narrative** - Remaining Aces (bonus/help cards)
+  - Each Ace increments `acesRevealed`, which improves the Salvation threshold (it does not reduce damage)
   - May include `skip-damage` or `return-king` modifiers (max 1 each)
-  - Standard Narrative cards are safe - no damage checks
-  - Only trigger damage if explicitly given a damage-trigger modifier (future feature)
-- **Challenge** - Odd-numbered cards: 3, 5, 7, 9 (trigger damage checks)
+  - Aces are odd ranks, so every Narrative card triggers a Stability check unless it has `skip-damage` (which skips that card's own check)
+- **Challenge** - Ranks 3, 5, 7, 9 (trigger Stability checks, as do all Aces)
 - **Event** - Even-numbered cards: 2, 4, 6, 8, 10, J, Q (safe from damage)
 
 ### 4. Smart Validation
