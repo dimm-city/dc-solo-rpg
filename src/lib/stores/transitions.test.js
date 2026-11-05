@@ -19,7 +19,6 @@ describe('transitions', () => {
 				'endTurn',
 				'log',
 				'successCheck',
-				'finalDamageRoll',
 				'gameOver',
 				'finalLog',
 				'exitGame',

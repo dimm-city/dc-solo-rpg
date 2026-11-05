@@ -42,9 +42,6 @@ export const GAME_STATES = {
 	/** Salvation check (Ace of Hearts unlocks token removal) */
 	SUCCESS_CHECK: 'successCheck',
 
-	/** Final damage roll (legacy d6 system, deprecated in D20) */
-	FINAL_DAMAGE_ROLL: 'finalDamageRoll',
-
 	/** Game over state */
 	GAME_OVER: 'gameOver',
 

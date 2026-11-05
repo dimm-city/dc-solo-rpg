@@ -262,7 +262,6 @@ Screen-specific composables that manage state and logic for each game screen.
 - `useFailureCheck()` - Failure Check screen logic
 - `useSuccessCheck()` - Success Check (Salvation) screen logic
 - `useInitialDamage()` - Initial Damage Roll screen logic
-- `useFinalDamage()` - Final Damage Roll screen logic
 
 **Features:**
 
@@ -455,7 +454,6 @@ The following enhancements are planned for Phase 2:
    - Extract `useFailureCheck.svelte.js` to separate file (120-150 lines)
    - Extract `useSuccessCheck.svelte.js` to separate file (120-150 lines)
    - Extract `useInitialDamage.svelte.js` to separate file (80-100 lines)
-   - Extract `useFinalDamage.svelte.js` to separate file (80-100 lines)
 
 2. **CardDeck composables**:
    - `useCardAnimationState.svelte.js` (200-250 lines)

@@ -132,8 +132,7 @@ export function saveGame(gameState) {
 			'drawCard',
 			'failureCheck',
 			'log',
-			'successCheck',
-			'finalDamageRoll'
+			'successCheck'
 		];
 
 		if (!validStatesForSaving.includes(gameState.state)) {

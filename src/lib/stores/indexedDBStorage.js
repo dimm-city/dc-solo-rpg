@@ -211,7 +211,6 @@ export async function saveGame(gameState) {
 			'failureCheck',
 			'log',
 			'successCheck',
-			'finalDamageRoll',
 			'gameOver' // Include to save completed games
 		];
 

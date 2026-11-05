@@ -13,7 +13,6 @@
 	import LoadScreen from './LoadScreen.svelte';
 	import GameOver from './GameOver.svelte';
 	import JournalEntry from './JournalEntry.svelte';
-	import FinalDamageRoll from './FinalDamageRoll.svelte';
 	import DrawCard from './DrawCard.svelte';
 	import StatusDisplay from './StatusDisplay.svelte';
 	import ContinueButton from './ContinueButton.svelte';
@@ -39,7 +38,6 @@
 	import { useFailureCheck } from '../composables/screen/useFailureCheck.svelte.js';
 	import { useSuccessCheck } from '../composables/screen/useSuccessCheck.svelte.js';
 	import { useInitialDamage } from '../composables/screen/useInitialDamage.svelte.js';
-	import { useFinalDamage } from '../composables/screen/useFinalDamage.svelte.js';
 
 	// Game actions
 	import { recordRound, restartGame, exitGame } from '../stores/gameActions.svelte.js';
@@ -59,7 +57,6 @@
 	const failureCheck = useFailureCheck(onfailurecheckcompleted);
 	const successCheck = useSuccessCheck();
 	const initialDamage = useInitialDamage();
-	const finalDamage = useFinalDamage();
 
 	// Contextual background text for each screen
 	const contextText = $derived.by(() => {
@@ -94,13 +91,6 @@
 					title: 'Success Check',
 					description:
 						'The Ace of Hearts has appeared. Roll to remove a token from your countdown.',
-					showStats: true
-				};
-			case 'finalDamageRoll':
-				return {
-					title: 'The Final Test',
-					description:
-						"You've completed the countdown, but salvation comes with one final risk. Roll one last time to see if you truly escape...",
 					showStats: true
 				};
 			case 'startRound':
@@ -191,7 +181,6 @@
 		currentScreen === 'drawCard' ||
 			currentScreen === 'failureCheck' ||
 			currentScreen === 'successCheck' ||
-			currentScreen === 'finalDamageRoll' ||
 			currentScreen === 'log'
 	);
 
@@ -455,13 +444,6 @@
 				triggerAutoPlayForCurrentScreen();
 				break;
 
-			case 'finalDamageRoll':
-				// Reset state using composable
-				finalDamage.resetState();
-				// Trigger auto-play
-				triggerAutoPlayForCurrentScreen();
-				break;
-
 			case 'drawCard':
 				// Auto-draw first card when entering drawCard state
 				// Small delay to ensure CardDeck component is fully initialized
@@ -626,34 +608,6 @@
 					});
 				}
 				break;
-
-			case 'finalDamageRoll':
-				// Auto-read prompt first if enabled and not yet rolled
-				if (audioSettings.autoReadPrompts && finalDamage.result === undefined) {
-					const promptText =
-						'You have completed the countdown, but salvation comes with one final risk. Roll one last time.';
-					speak(promptText);
-				}
-
-				// Auto-roll if enabled and not yet rolled
-				if (
-					gameplaySettings.autoRollDice &&
-					finalDamage.result === undefined &&
-					!finalDamage.rolling
-				) {
-					autoPlayCanceller = autoRoll(() =>
-						finalDamage.handleFinalDamageRoll(triggerAutoPlayForCurrentScreen)
-					);
-				}
-				// Auto-continue after result if enabled
-				else if (gameplaySettings.autoContinueAfterReading && finalDamage.result !== undefined) {
-					autoPlayCanceller = autoAdvance({
-						text: null,
-						shouldRead: false,
-						action: () => transitionTo('finalLog')
-					});
-				}
-				break;
 		}
 	}
 </script>
@@ -759,14 +713,6 @@
 								{successCheck}
 								triggerAutoPlay={triggerAutoPlayForCurrentScreen}
 							/>
-						</div>
-					{:else if currentScreen == 'finalDamageRoll'}
-						<div
-							class="dc-fade-in dc-screen-container"
-							data-testid="screen-finalDamageRoll"
-							transition:fade={{ duration: TRANSITION_DURATION }}
-						>
-							<FinalDamageRoll />
 						</div>
 					{:else if currentScreen == 'finalLog' || currentScreen == 'log'}
 						<OverlayModal
