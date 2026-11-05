@@ -17,15 +17,17 @@ import {
 } from '../../stores/gameActions.svelte.js';
 import { rollDice } from '../../stores/diceStore.svelte.js';
 import { gameState } from '../../stores/gameStore.svelte.js';
+import { formatTaskResult } from '../../utils/rollResult.js';
 
 export function useRollForTasks() {
 	let rollTasksRolled = $state(false);
 	let rollTasksRolling = $state(false);
 	let rollTasksConfirming = $state(false);
+	let rollTasksResultLine = $state('');
 
 	/**
 	 * Handle roll/confirm action for tasks
-	 * First click: Roll dice
+	 * First click: Roll dice (result line stays up)
 	 * Second click: Confirm and transition
 	 */
 	async function handleRollForTasks(triggerAutoPlay) {
@@ -39,13 +41,14 @@ export function useRollForTasks() {
 		} else {
 			// Roll
 			rollTasksRolling = true;
-			const { roll, wasLucid, wasSurreal } = await rollForTasks();
+			const { roll, cardCount, wasLucid, wasSurreal } = await rollForTasks();
 			// Roll dice and wait for animation to complete
 			// Pass modifier state for visual dice roll (2d20 if was Lucid/Surreal)
 			await rollDice(roll, { isLucid: wasLucid, isSurreal: wasSurreal });
 			rollTasksRolling = false;
 			// Apply pending dice roll after animation completes
 			applyPendingTaskRoll();
+			rollTasksResultLine = formatTaskResult(roll, cardCount);
 			rollTasksRolled = true;
 			// Trigger auto-play after roll completes (event-driven)
 			if (triggerAutoPlay) {
@@ -61,6 +64,7 @@ export function useRollForTasks() {
 		rollTasksRolled = false;
 		rollTasksRolling = false;
 		rollTasksConfirming = false;
+		rollTasksResultLine = '';
 	}
 
 	// Reactive button text
@@ -84,6 +88,9 @@ export function useRollForTasks() {
 		},
 		get confirming() {
 			return rollTasksConfirming;
+		},
+		get resultLine() {
+			return rollTasksResultLine;
 		},
 		get buttonText() {
 			return buttonText;

@@ -8,6 +8,7 @@
 	import '../../game.css';
 	import { getAudioSettings, getGameplaySettings, speak } from '../stores/audioStore.svelte.js';
 	import { autoAdvance, autoRoll } from '../utils/autoPlay.js';
+	import { ANIMATION_DURATION } from '../constants/animations.js';
 
 	import LoadScreen from './LoadScreen.svelte';
 	import GameOver from './GameOver.svelte';
@@ -29,6 +30,8 @@
 	import RollForTasksController from './game/RollForTasksController.svelte';
 	import FailureCheckController from './game/FailureCheckController.svelte';
 	import SuccessCheckController from './game/SuccessCheckController.svelte';
+	import InitialDamageController from './game/InitialDamageController.svelte';
+	import StartRoundController from './game/StartRoundController.svelte';
 
 	// Screen composables
 	import { useRollForTasks } from '../composables/screen/useRollForTasks.svelte.js';
@@ -48,7 +51,7 @@
 
 	const currentScreen = $derived(gameState.state);
 	// Reduced from 300ms to 200ms for snappier, more mechanical feel
-	const TRANSITION_DURATION = 200;
+	const TRANSITION_DURATION = ANIMATION_DURATION.NORMAL;
 
 	// Instantiate screen composables
 	const rollForTasks = useRollForTasks();
@@ -114,6 +117,44 @@
 		}
 	});
 
+	// What the last roll on this screen did, shown at full contrast until the player continues
+	const resultLine = $derived.by(() => {
+		switch (currentScreen) {
+			case 'initialDamageRoll':
+				return initialDamage.resultLine;
+			case 'rollForTasks':
+				return rollForTasks.resultLine;
+			case 'failureCheck':
+				return failureCheck.resultLine;
+			case 'successCheck':
+				return successCheck.resultLine;
+			default:
+				return '';
+		}
+	});
+
+	// Screen reader announcements: result lines and key events
+	let liveMessage = $state('');
+	$effect(() => {
+		if (resultLine) liveMessage = resultLine;
+	});
+	let seenKings = untrack(() => gameState.kingsRevealed);
+	let seenSalvation = untrack(() => gameState.aceOfHeartsRevealed);
+	$effect(() => {
+		const kings = gameState.kingsRevealed;
+		const salvation = gameState.aceOfHeartsRevealed;
+		if (kings > seenKings) {
+			liveMessage = `King revealed. ${kings} of 4.`;
+		} else if (salvation && !seenSalvation) {
+			liveMessage = 'Salvation unlocked. The Ace of Hearts has appeared.';
+		}
+		seenKings = kings;
+		seenSalvation = salvation;
+	});
+
+	// The ending owns the screen: no status HUD over it
+	const showStatusHUD = $derived(currentScreen !== 'gameOver' && currentScreen !== 'finalLog');
+
 	// DrawCard ref for auto-draw on screen entry
 	let drawCardRef = $state();
 
@@ -154,8 +195,7 @@
 			currentScreen === 'failureCheck' ||
 			currentScreen === 'successCheck' ||
 			currentScreen === 'finalDamageRoll' ||
-			currentScreen === 'log' ||
-			currentScreen === 'finalLog'
+			currentScreen === 'log'
 	);
 
 	let showExitModal = $state(false);
@@ -190,43 +230,105 @@
 	}
 
 	/**
+	 * The primary action of the current round step: the same thing its visible button does.
+	 * Returns null for steps whose button lives elsewhere (intro, card, journal).
+	 */
+	function getPrimaryAction() {
+		switch (currentScreen) {
+			case 'initialDamageRoll':
+				return {
+					disabled: initialDamage.rolling,
+					run: () => initialDamage.handleInitialDamageRoll(triggerAutoPlayForCurrentScreen)
+				};
+			case 'startRound':
+				return { disabled: false, run: beginRound };
+			case 'rollForTasks':
+				return {
+					disabled: rollForTasks.buttonDisabled,
+					run: () => rollForTasks.handleRollForTasks(triggerAutoPlayForCurrentScreen)
+				};
+			case 'failureCheck':
+				return {
+					disabled: failureCheck.rolling,
+					run: () => failureCheck.handleFailureCheck(triggerAutoPlayForCurrentScreen)
+				};
+			case 'successCheck':
+				return {
+					disabled: successCheck.rolling,
+					run: () => successCheck.handleSuccessCheck(triggerAutoPlayForCurrentScreen)
+				};
+			default:
+				return null;
+		}
+	}
+
+	function beginRound() {
+		transitionTo('rollForTasks');
+	}
+
+	// Buttons that live outside the round steps (intro and journal)
+	const OTHER_PRIMARY_BUTTONS = [
+		'story-continue-button',
+		'journal-save-button',
+		'journal-next-button'
+	];
+
+	function clickVisiblePrimaryButton() {
+		for (const testid of OTHER_PRIMARY_BUTTONS) {
+			const button = document.querySelector(`[data-testid="${testid}"]`);
+			if (button && !button.disabled && button.getClientRects().length > 0) {
+				button.click();
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * Global keyboard shortcut handler
-	 * Allows Space/Enter to trigger primary action on each screen
+	 * Space/Enter trigger the visible, enabled primary button of the current step.
+	 * A focused button, link or field keeps its own native behaviour.
 	 */
 	function handleKeyPress(event) {
-		// Ignore if user is typing in an input/textarea
-		if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
-			return;
-		}
+		if (event.key !== ' ' && event.key !== 'Enter') return;
+		if (event.defaultPrevented || event.repeat) return;
 
-		// Ignore if modal is open
-		if (showExitModal) {
-			return;
-		}
-
-		const key = event.key.toLowerCase();
-
-		// Space or Enter triggers the primary action button on the current screen
-		if (key === ' ' || key === 'enter') {
-			event.preventDefault();
-
-			// Cancel any auto-play on user interaction
+		// Typing, or a focused control that activates itself
+		const target = event.target;
+		if (
+			target.isContentEditable ||
+			target.closest?.('input, textarea, select, button, a, summary, [role="button"]')
+		) {
 			cancelAutoPlay();
+			return;
+		}
 
-			// Find the primary action button on the current screen and click it
-			const primaryButton = document.querySelector(
-				'[data-testid="start-round-button"], [data-testid="card-deck-button"], [data-testid="continue-button"]'
-			);
+		// Ignore if a modal is open
+		if (showExitModal || showSettingsModal || showHelpModal) {
+			return;
+		}
 
-			if (primaryButton && !primaryButton.disabled) {
-				primaryButton.click();
+		// Cancel any auto-play on user interaction
+		cancelAutoPlay();
+
+		const action = getPrimaryAction();
+		if (action) {
+			event.preventDefault();
+			if (!action.disabled) action.run();
+		} else if (currentScreen === 'drawCard') {
+			// The card is the control on this step
+			if (drawCardRef && !drawCardRef.isButtonDisabled()) {
+				event.preventDefault();
+				drawCardRef.handleButtonClick();
 			}
+		} else if (clickVisiblePrimaryButton()) {
+			event.preventDefault();
 		}
 	}
 
 	/**
-	 * Handle clicks anywhere on the screen to advance the game
-	 * Only triggers if clicking on non-interactive elements
+	 * Handle clicks on the table: does exactly what the visible primary button does,
+	 * and only while that button is enabled. Never advances without a button.
 	 */
 	function handleScreenClick(event) {
 		// Cancel any auto-play on user interaction
@@ -248,52 +350,14 @@
 			return;
 		}
 
-		// Ignore if modal is open
-		if (showExitModal) {
+		// Ignore if a modal is open
+		if (showExitModal || showSettingsModal || showHelpModal) {
 			return;
 		}
 
-		// Trigger the appropriate action based on the current screen
-		switch (currentScreen) {
-			case 'showIntro':
-				transitionTo('initialDamageRoll');
-				break;
-			case 'initialDamageRoll':
-				if (!initialDamage.rolling && !initialDamage.result) {
-					initialDamage.handleInitialDamageRoll(triggerAutoPlayForCurrentScreen);
-				}
-				break;
-			case 'startRound':
-				transitionTo('rollForTasks');
-				break;
-			case 'rollForTasks':
-				if (!rollForTasks.buttonDisabled) {
-					rollForTasks.handleRollForTasks(triggerAutoPlayForCurrentScreen);
-				}
-				break;
-			case 'drawCard':
-				// No keyboard handler - user must click the card directly to dismiss
-				break;
-			case 'failureCheck':
-				if (!failureCheck.rolling) {
-					failureCheck.handleFailureCheck(triggerAutoPlayForCurrentScreen);
-				}
-				break;
-			case 'successCheck':
-				if (!successCheck.rolling) {
-					successCheck.handleSuccessCheck(triggerAutoPlayForCurrentScreen);
-				}
-				break;
-			case 'finalDamageRoll':
-				if (!finalDamage.rolling) {
-					finalDamage.handleFinalDamageRoll(triggerAutoPlayForCurrentScreen);
-				}
-				break;
-			case 'log':
-			case 'finalLog':
-				// Journal screen - user must click the save button explicitly
-				// Tapping the screen should NOT save or advance
-				break;
+		const action = getPrimaryAction();
+		if (action && !action.disabled) {
+			action.run();
 		}
 	}
 
@@ -460,7 +524,7 @@
 					autoPlayCanceller = autoAdvance({
 						text: null,
 						shouldRead: false,
-						action: () => transitionTo('startRound')
+						action: () => initialDamage.handleInitialDamageRoll(triggerAutoPlayForCurrentScreen)
 					});
 				}
 				break;
@@ -606,28 +670,6 @@
 	>
 		<LoadScreen />
 	</div>
-{:else if currentScreen == 'showIntro'}
-	<div
-		class="dc-game-bg dc-intro-wrapper"
-		data-testid="screen-showIntro"
-		transition:fade={{ duration: TRANSITION_DURATION }}
-		onclick={handleScreenClick}
-	>
-		<div class="intro-story-container">
-			<div class="content">
-				<h1>{gameState.config?.title || 'Game Introduction'}</h1>
-				<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized via sanitizeHtml -->
-				{@html sanitizeHtml(marked(gameState.config?.introduction ?? ''))}
-			</div>
-			<ButtonBar>
-				<ContinueButton
-					text="Begin Your Journey"
-					onclick={() => transitionTo('initialDamageRoll')}
-					testid="story-continue-button"
-				/>
-			</ButtonBar>
-		</div>
-	</div>
 {:else if currentScreen == 'gameOver'}
 	<div
 		class="dc-fade-in dc-screen-container"
@@ -642,20 +684,27 @@
 	</div>
 {:else}
 	<div class="game-screen dc-game-bg">
+		<!-- The table stays mounted under the intro, so the hand-off never goes through black -->
 		<!-- UI Content Layer -->
-		<div class="ui-content-layer">
-			<div class="status-display-area dc-fade-in" data-testid="status-display">
-				<StatusDisplay
-					onHelpClick={handleHelpClick}
-					onExitClick={handleExitClick}
-					onSettingsClick={handleSettingsClick}
-				/>
-			</div>
+		<div
+			class="ui-content-layer"
+			class:behind-intro={currentScreen == 'showIntro'}
+			inert={currentScreen == 'showIntro'}
+		>
+			{#if showStatusHUD}
+				<div class="status-display-area dc-fade-in" data-testid="status-display">
+					<StatusDisplay
+						onHelpClick={handleHelpClick}
+						onExitClick={handleExitClick}
+						onSettingsClick={handleSettingsClick}
+					/>
+				</div>
+			{/if}
 			<!-- svelte-ignore a11y_click_events_have_key_events -->
 			<!-- svelte-ignore a11y_no_static_element_interactions -->
 			<div class="main-screen-area dc-table-bg" onclick={handleScreenClick}>
 				<!-- Background contextual text -->
-				<ContextBackground {contextText} />
+				<ContextBackground {contextText} {resultLine} />
 
 				{#key currentScreen}
 					{#if currentScreen == 'initialDamageRoll'}
@@ -664,15 +713,19 @@
 							data-testid="screen-initialDamageRoll"
 							transition:fade={{ duration: TRANSITION_DURATION }}
 						>
-							<!-- <InitialDamageRoll /> -->
+							<InitialDamageController
+								{initialDamage}
+								triggerAutoPlay={triggerAutoPlayForCurrentScreen}
+							/>
 						</div>
 					{:else if currentScreen == 'startRound'}
 						<div
-							class="dc-fade-in dc-screen-container dc-start-round-screen"
+							class="dc-fade-in dc-screen-container"
 							data-testid="screen-startRound"
 							transition:fade={{ duration: TRANSITION_DURATION }}
 						>
-							<!-- Round text now shown in background -->
+							<!-- Round text is shown in the background -->
+							<StartRoundController onbegin={beginRound} />
 						</div>
 					{:else if currentScreen == 'rollForTasks'}
 						<div
@@ -731,6 +784,8 @@
 								onExit={handleJournalExit}
 							/>
 						</OverlayModal>
+					{:else if currentScreen == 'showIntro'}
+						<!-- The intro overlay covers the table until the player begins -->
 					{:else}
 						<div transition:fade={{ duration: TRANSITION_DURATION }}>error: {currentScreen}</div>
 					{/if}
@@ -817,8 +872,38 @@
 				</div>
 			</div> -->
 		</div>
+
+		{#if currentScreen == 'showIntro'}
+			<!-- Fades out (300ms) first; the table then fades in underneath it -->
+			<div
+				class="dc-game-bg dc-intro-wrapper"
+				data-testid="screen-showIntro"
+				in:fade|global={{ duration: TRANSITION_DURATION }}
+				out:fade={{ duration: ANIMATION_DURATION.SLOW }}
+			>
+				<div class="intro-story-container">
+					<div class="content">
+						<h1>{gameState.config?.title || 'Game Introduction'}</h1>
+						<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized via sanitizeHtml -->
+						{@html sanitizeHtml(marked(gameState.config?.introduction ?? ''))}
+					</div>
+					<ButtonBar>
+						<ContinueButton
+							text="Begin Your Journey"
+							onclick={() => transitionTo('initialDamageRoll')}
+							testid="story-continue-button"
+						/>
+					</ButtonBar>
+				</div>
+			</div>
+		{/if}
 	</div>
 {/if}
+
+<!-- Announces results and key events to screen readers -->
+<div class="sr-only" role="status" aria-live="polite" aria-atomic="true" data-testid="live-region">
+	{liveMessage}
+</div>
 
 <!-- Mini Status HUD - Shows during card screens -->
 <MiniStatusHUD show={showMiniHUD} />
@@ -848,12 +933,28 @@
 		overflow: hidden;
 	}
 
+	/* The intro sits over the table, which stays mounted underneath */
 	.dc-intro-wrapper {
+		position: absolute;
+		inset: 0;
+		z-index: 200;
 		display: flex;
 		flex-direction: column;
 		overflow: visible;
 		min-height: 0;
 		height: 100%;
+	}
+
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		margin: -1px;
+		padding: 0;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+		border: 0;
 	}
 
 	.intro-story-container {
@@ -874,6 +975,10 @@
 		padding: var(--space-md);
 		background-color: transparent;
 		min-height: 0;
+		/* Reading column: no 180-character lines on desktop */
+		width: 100%;
+		max-width: var(--content-max, 720px);
+		margin-inline: auto;
 	}
 
 	.intro-story-container .content h1 {
@@ -919,6 +1024,22 @@
 			'main-screen-area'
 			'toolbar-area';
 		pointer-events: none; /* Allow dice clicks through */
+	}
+
+	/* The table fades in once the intro has faded out (300ms), never over it */
+	.ui-content-layer {
+		transition: opacity 300ms ease-out 300ms;
+	}
+
+	.ui-content-layer.behind-intro {
+		opacity: 0;
+		transition: none;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.ui-content-layer {
+			transition: none;
+		}
 	}
 
 	/* Re-enable pointer events for interactive UI elements */

@@ -1,26 +1,25 @@
 <script>
-	import { onMount } from 'svelte';
-
 	let { show = false } = $props();
 	let visible = $state(false);
 
-	onMount(() => {
-		if (show) {
-			// Show hint after a brief delay
-			const showTimer = setTimeout(() => {
-				visible = true;
-			}, 1000);
+	// Runs whenever `show` turns on, not only at mount: GameScreen sets it after the
+	// first round starts. Space and Enter do press the visible primary button.
+	$effect(() => {
+		if (!show) return;
 
-			// Hide hint after 5 seconds
-			const hideTimer = setTimeout(() => {
-				visible = false;
-			}, 6000);
+		// Show hint after a brief delay, hide after 5 seconds
+		const showTimer = setTimeout(() => {
+			visible = true;
+		}, 1000);
+		const hideTimer = setTimeout(() => {
+			visible = false;
+		}, 6000);
 
-			return () => {
-				clearTimeout(showTimer);
-				clearTimeout(hideTimer);
-			};
-		}
+		return () => {
+			clearTimeout(showTimer);
+			clearTimeout(hideTimer);
+			visible = false;
+		};
 	});
 </script>
 

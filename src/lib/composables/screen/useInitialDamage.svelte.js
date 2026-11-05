@@ -1,50 +1,59 @@
 /**
- * useInitialDamage - Initial Damage Roll screen logic composable
+ * useInitialDamage - Initial instability roll composable
  *
- * Manages the state and logic for the "Initial Damage Roll" screen, including:
- * - Dice rolling state and result
- * - Initial stability loss before game begins
- * - Auto-play trigger integration
- * - Button text based on state
+ * Two steps on one button:
+ * 1. Roll: dice animate, Stability updates and a result line stays on screen.
+ *    The button becomes "Continue".
+ * 2. Continue: only now does the first round start.
  *
  * @returns {Object} Initial damage state and actions
  */
 
 import {
 	performInitialDamageRoll,
-	applyPendingInitialDamageRoll
+	applyPendingInitialDamageRoll,
+	advanceAfterInitialDamage
 } from '../../stores/gameActions.svelte.js';
 import { rollDice } from '../../stores/diceStore.svelte.js';
 import { gameState } from '../../stores/gameStore.svelte.js';
+import { formatStabilityResult } from '../../utils/rollResult.js';
 
 export function useInitialDamage() {
 	let initialDamageRolling = $state(false);
 	let initialDamageResult = $state();
+	let initialDamageResultLine = $state('');
 
 	/**
-	 * Handle initial damage roll
+	 * Roll the initial instability, or (once rolled) continue to round 1
 	 */
 	async function handleInitialDamageRoll(triggerAutoPlay) {
-		if (initialDamageRolling || initialDamageResult !== undefined) return;
+		if (initialDamageRolling) return;
 		if (gameState.state !== 'initialDamageRoll') return;
+
+		if (initialDamageResult !== undefined) {
+			advanceAfterInitialDamage();
+			return;
+		}
 
 		initialDamageRolling = true;
 		const rollResult = Math.floor(Math.random() * 6) + 1;
 		initialDamageResult = rollResult;
 
 		try {
+			const towerBefore = gameState.tower;
 			// Store pending updates
 			performInitialDamageRoll(rollResult);
 			// Roll dice and wait for animation to complete
 			await rollDice(rollResult);
-			// Apply pending initial damage roll after animation completes
-			applyPendingInitialDamageRoll();
-			// Trigger auto-play after roll completes (event-driven)
-			if (triggerAutoPlay) {
-				setTimeout(() => triggerAutoPlay(), 0);
-			}
+			// Apply after animation, but stay here until the player continues
+			applyPendingInitialDamageRoll({ advance: false });
+			initialDamageResultLine = formatStabilityResult(rollResult, towerBefore, gameState.tower);
 		} finally {
 			initialDamageRolling = false;
+		}
+		// Trigger auto-play after roll completes (event-driven)
+		if (triggerAutoPlay) {
+			setTimeout(() => triggerAutoPlay(), 0);
 		}
 	}
 
@@ -53,13 +62,12 @@ export function useInitialDamage() {
 	 */
 	function resetState() {
 		initialDamageResult = undefined;
+		initialDamageResultLine = '';
 		initialDamageRolling = false;
 	}
 
 	// Reactive button text
-	const buttonText = $derived(
-		initialDamageResult ? 'Continue to Round 1' : 'Roll for Initial Damage'
-	);
+	const buttonText = $derived(initialDamageResult ? 'Continue' : 'Roll for instability');
 
 	return {
 		// State (read-only via getters)
@@ -68,6 +76,9 @@ export function useInitialDamage() {
 		},
 		get result() {
 			return initialDamageResult;
+		},
+		get resultLine() {
+			return initialDamageResultLine;
 		},
 		get buttonText() {
 			return buttonText;

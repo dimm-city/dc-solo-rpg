@@ -558,7 +558,7 @@ export function applyFailureCheckResult(result) {
  * await animateDiceRoll(roll); // Show 3D dice animation
  * applyPendingDiceRoll(); // Apply after animation completes
  */
-export function applyPendingDiceRoll() {
+export function applyPendingDiceRoll({ advance = true } = {}) {
 	if (gameState.pendingUpdates.diceRoll === null) {
 		logger.warn('[applyPendingDiceRoll] No pending dice roll to apply');
 		return;
@@ -623,19 +623,29 @@ export function applyPendingDiceRoll() {
 		gameState.status =
 			gameState.config.labels?.failureCheckLoss ?? 'Stability collapsed completely';
 		gameState.gameOver = true;
+	}
+
+	if (advance) {
+		advanceAfterFailureCheck();
+	}
+}
+
+/**
+ * Leave the Stability check screen once the player has seen the result
+ *
+ * Counterpart to applyPendingDiceRoll({ advance: false }): the state was already
+ * updated (so the HUD shows it), this only moves to the next screen and saves.
+ */
+export function advanceAfterFailureCheck() {
+	if (gameState.gameOver) {
 		transitionTo('gameOver');
+	} else if (gameState.cardsToDraw > 0) {
+		transitionTo('drawCard');
+	} else if (gameState.aceOfHeartsRevealed && gameState.tokens > 0) {
+		// All cards drawn - check for success check first, then journal
+		transitionTo('successCheck');
 	} else {
-		// Continue with next card or end turn
-		if (gameState.cardsToDraw > 0) {
-			transitionTo('drawCard');
-		} else {
-			// All cards drawn - check for success check first, then journal
-			if (gameState.aceOfHeartsRevealed && gameState.tokens > 0) {
-				transitionTo('successCheck');
-			} else {
-				transitionTo('log');
-			}
-		}
+		transitionTo('log');
 	}
 
 	// Auto-save after applying damage
@@ -857,7 +867,7 @@ export function successCheck() {
  * await animateDiceRoll(result.roll); // Show 3D dice animation
  * applyPendingSuccessCheck(); // Apply after animation completes
  */
-export function applyPendingSuccessCheck() {
+export function applyPendingSuccessCheck({ advance = true } = {}) {
 	if (gameState.pendingUpdates.diceRoll === null) {
 		logger.warn('[applyPendingSuccessCheck] No pending success check to apply');
 		return;
@@ -895,7 +905,6 @@ export function applyPendingSuccessCheck() {
 		gameState.tokens
 	);
 
-	// Transition based on token state
 	if (gameState.tokens === 0) {
 		// D20 System: Victory when tokens reach 0 (no final damage roll)
 		gameState.win = true;
@@ -903,6 +912,19 @@ export function applyPendingSuccessCheck() {
 		gameState.status =
 			gameState.config.labels?.successCheckWin ?? 'Victory! Against all odds, you escaped.';
 		logger.info('[applyPendingSuccessCheck] VICTORY - All tokens removed');
+	}
+
+	if (advance) {
+		advanceAfterSuccessCheck();
+	}
+}
+
+/**
+ * Leave the Salvation check screen once the player has seen the result
+ * (victory goes to the ending, otherwise to the round's journal entry)
+ */
+export function advanceAfterSuccessCheck() {
+	if (gameState.gameOver) {
 		transitionTo('gameOver');
 
 		// Auto-save after victory
@@ -954,7 +976,7 @@ export function performInitialDamageRoll(roll) {
  * Apply pending initial damage roll after dice animation completes
  * D20 system: Handles both stability loss and stability gain
  */
-export function applyPendingInitialDamageRoll() {
+export function applyPendingInitialDamageRoll({ advance = true } = {}) {
 	if (gameState.pendingUpdates.diceRoll === null) {
 		logger.warn('[applyPendingInitialDamageRoll] No pending initial damage roll to apply');
 		return;
@@ -1007,7 +1029,16 @@ export function applyPendingInitialDamageRoll() {
 		id: '0.0'
 	});
 
-	// Transition to first round (via startRound screen)
+	if (advance) {
+		advanceAfterInitialDamage();
+	}
+}
+
+/**
+ * Leave the initial instability screen once the player has seen the result
+ * (first round, via the startRound screen)
+ */
+export function advanceAfterInitialDamage() {
 	transitionTo('startRound');
 }
 
