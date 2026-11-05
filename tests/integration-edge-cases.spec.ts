@@ -187,14 +187,8 @@ test.describe('Integration and Edge Cases', () => {
 		await openHomePage(page);
 		await expect(page.locator('.game-card').first()).toBeVisible();
 
-		// Two kinds of error come from the browser or the network, not from the app:
-		// - ERR_TUNNEL_CONNECTION_FAILED: the Google Fonts stylesheet on networks that block it
-		// - the browser's own /favicon.ico request, which 404s because no favicon is shipped
-		//   (logged only once per browser, so it would make this test order-dependent)
-		const appErrors = errors.filter(
-			(text) =>
-				!text.includes('net::ERR_TUNNEL_CONNECTION_FAILED') && !text.endsWith('/favicon.ico)')
-		);
+		// ERR_TUNNEL_CONNECTION_FAILED is the Google Fonts stylesheet on networks that block it, not the app
+		const appErrors = errors.filter((text) => !text.includes('net::ERR_TUNNEL_CONNECTION_FAILED'));
 		expect(appErrors).toEqual([]);
 	});
 

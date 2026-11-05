@@ -223,14 +223,10 @@ test.describe('DC Solo RPG - Smoke Test', () => {
 			fullPage: true
 		});
 
-		// Fail the test if there are errors. Two kinds come from the browser or the network, not
-		// from the app:
-		// - ERR_TUNNEL_CONNECTION_FAILED: the Google Fonts stylesheet on networks that block it
-		// - the browser's own /favicon.ico request, which 404s because no favicon is shipped
-		//   (logged only once per browser, so it would make this test order-dependent)
+		// Fail the test if there are errors, except ERR_TUNNEL_CONNECTION_FAILED: that is the
+		// Google Fonts stylesheet on networks that block it, not the app
 		const appErrors = consoleErrors.filter(
-			(error) =>
-				!error.includes('net::ERR_TUNNEL_CONNECTION_FAILED') && !error.endsWith('/favicon.ico)')
+			(error) => !error.includes('net::ERR_TUNNEL_CONNECTION_FAILED')
 		);
 		expect(appErrors).toEqual([]);
 	});
