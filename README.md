@@ -30,14 +30,13 @@ For complete mechanics documentation, see [D20 Mechanics Guide](./docs/d20-mecha
 
 ## Easy Game Creation
 
-The game creation process for the DC Solo RPG system is designed to be easy for anyone. The three steps to create a game are:
+A game is a single markdown file (`.game.md`). The three steps to create one are:
 
-1. Download the game templates
-1. Modify the `config.yml` file that holds the game configuration, such as the title, subtitle, introduction, and more.
-1. Modify the description of each card in the `deck.csv` file to provide the card text.
-1. Modify the `theme.css` file to achieve the desired visual style, such as colors, fonts, and layout.
+1. Copy the [game template](./docs/game-template.game.md).
+1. Fill in the frontmatter (title, subtitle, win and lose messages) and the introduction.
+1. Write the story text for each card type (Primary Success, Failure Counter, Narrative, Challenge and Event). The system assigns the cards to the 52-card deck for you.
 
-Read the full guide here: [How to build a game](./docs/how-to-build-a-game.md)
+Read the full guides here: [Game config format](./docs/game-config.md) and [Type-based format guide](./docs/simplified-type-based-format.md)
 
 ## Demo
 

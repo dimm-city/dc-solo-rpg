@@ -40,10 +40,8 @@ export async function load({ event, parent }) {
 	// Check authentication
 	const { session } = await parent();
 	//const session = await event.locals.auth();
-	console.log("Games Page Server Load - Session:", session);
 	// Redirect to sign-in if not authenticated
 	if (!session?.user) {
-		console.log("User not authenticated");
 		//throw redirect(303, '/signin');
 	}
 

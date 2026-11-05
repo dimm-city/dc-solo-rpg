@@ -14,7 +14,6 @@ export const { handle, signIn, signOut } = SvelteKitAuth({
 	trustHost: true,
 	callbacks: {
 		async session({ session, token }) {
-			console.log("Auth Session Callback - Session:", session, "Token:", token);
 			if (session?.user) {
 				session.user.id = token.sub;
 			}
