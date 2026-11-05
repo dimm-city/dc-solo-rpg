@@ -3,6 +3,7 @@
 	import { fade } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { marked } from 'marked';
+	import { sanitizeHtml } from '../utils/sanitizeHtml.js';
 	import '../../game.css';
 	import { getAudioSettings, getGameplaySettings, speak } from '../stores/audioStore.svelte.js';
 	import { autoAdvance, autoRoll } from '../utils/autoPlay.js';
@@ -615,7 +616,8 @@
 		<div class="intro-story-container">
 			<div class="content">
 				<h1>{gameState.config?.title || 'Game Introduction'}</h1>
-				{@html marked(gameState.config?.introduction ?? '')}
+				<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized via sanitizeHtml -->
+				{@html sanitizeHtml(marked(gameState.config?.introduction ?? ''))}
 			</div>
 			<ButtonBar>
 				<ContinueButton
