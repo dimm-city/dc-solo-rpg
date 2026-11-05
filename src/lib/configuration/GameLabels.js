@@ -68,6 +68,17 @@ export class GameLabels {
 		this.failureCounterLoss =
 			labels?.failureCounterLoss ?? 'You have failed suffer a catastrophic failure.';
 
+		/** @property {string} kingsCauseLine - Game-written line naming why the game ended, when all Kings are drawn. */
+		this.kingsCauseLine = labels?.kingsCauseLine ?? 'The fourth King was revealed.';
+
+		/** @property {string} stabilityCauseLine - Game-written line naming why the game ended, when Stability hits 0. */
+		this.stabilityCauseLine = labels?.stabilityCauseLine ?? 'Your Stability reached 0.';
+
+		/** @property {string} gameOverAfterword - Short afterword shown after a loss (the SRD debrief). */
+		this.gameOverAfterword =
+			labels?.gameOverAfterword ??
+			'Winning was never likely. What you wrote along the way is the story.';
+
 		/** @property {string} successCheckWin - Text for the win message. */
 		this.successCheckWin =
 			labels?.successCheckWin ?? 'Congratulations! You have succeeded in your quest!';

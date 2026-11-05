@@ -1,7 +1,7 @@
 <script>
 	import { gameState } from '../stores/gameStore.svelte.js';
 	import ContinueButton from './ContinueButton.svelte';
-	import ButtonBar from './ButtonBar.svelte';
+	import RunRecap from './RunRecap.svelte';
 	import { onMount } from 'svelte';
 	import { fade, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -11,18 +11,47 @@
 	import AudioRecorder from './journal/AudioRecorder.svelte';
 	import AudioPlayback from './journal/AudioPlayback.svelte';
 	import AutoJournalTimer from './journal/AutoJournalTimer.svelte';
+	import { getEndingCause, getStatusLine } from '../utils/endingSummary.js';
+	import { getJournalPrompts, getFinalPrompts } from '../configuration/journalPrompts.js';
+
+	// How long "Entry saved" shows before the game moves on
+	const SAVED_BEAT = 800;
 
 	let {
 		journalText = $bindable(''),
 		audioData = $bindable(null),
 		onSave,
-		onNext,
 		onRestart,
 		onExit,
 		journalSaved = false
 	} = $props();
 
 	const currentEvents = $derived(gameState.log.filter((l) => l.round === gameState.round));
+
+	// The final log belongs to the ending: it covers the whole run
+	const isFinal = $derived(gameState.gameOver);
+	const statusLine = $derived(getStatusLine(gameState));
+	const prompts = $derived(
+		isFinal
+			? getFinalPrompts(getEndingCause(gameState), gameState.win)
+			: getJournalPrompts(currentEvents)
+	);
+
+	// Save flow: write -> "Entry saved" beat -> next round (or epitaph on the final log)
+	let saving = $state(false);
+	let savedText = $state('');
+	let beatTimeout = null;
+	const epitaphText = $derived(
+		savedText ||
+			gameState.journalEntries.find((entry) => entry.round === gameState.round)?.text ||
+			''
+	);
+	let showAudio = $state(false);
+
+	function usePrompt(prompt) {
+		cancelAutoJournalTimer();
+		journalText = journalText ? `${journalText.trimEnd()}\n\n${prompt}\n` : `${prompt}\n`;
+	}
 
 	// Audio recording state
 	let mediaRecorder = $state(null);
@@ -165,6 +194,7 @@
 	// Cleanup on unmount
 	onMount(() => {
 		return () => {
+			clearTimeout(beatTimeout);
 			if (recordingInterval) {
 				clearInterval(recordingInterval);
 			}
@@ -214,7 +244,7 @@
 			if (gameplaySettings.autoHandleJournaling === 'skip') {
 				// Small delay to allow UI to settle
 				timeout = setTimeout(() => {
-					handleSave();
+					handleSave(false);
 				}, 500);
 			}
 			// Timed mode: countdown timer
@@ -265,18 +295,26 @@
 		autoJournalTimeRemaining = 0;
 	}
 
-	// Wrapper for onSave that stops recording if active (event-driven pattern)
-	function handleSave() {
-		// Stop recording if active when saving
+	// Wrapper for onSave: stops recording, shows "Entry saved" for a beat, then saves
+	function handleSave(withBeat = true) {
+		if (saving) return;
+		saving = true;
+		cancelAutoJournalTimer();
 		if (isRecording) {
 			stopRecording();
 		}
-		onSave();
+		savedText = journalText.trim();
+		beatTimeout = setTimeout(() => onSave(), withBeat ? SAVED_BEAT : 0);
 	}
 </script>
 
+{#if isFinal}
+	<div class="final-backdrop" class:victory={gameState.win} aria-hidden="true"></div>
+{/if}
+
 <div
 	class="dc-journal-container"
+	class:final={isFinal}
 	in:fade={{ duration: ANIMATION_DURATION.NORMAL }}
 	data-augmented-ui="tl-clip br-clip tr-clip bl-clip border"
 >
@@ -284,63 +322,122 @@
 		class="journal-header-area"
 		in:fade={{ duration: ANIMATION_DURATION.SLOW, delay: ANIMATION_DURATION.FAST }}
 	>
-		<h6>{gameState.config?.labels?.journalEntryHeader ?? 'Journal Entry'}</h6>
+		<h6>
+			{isFinal ? 'Final Log' : (gameState.config?.labels?.journalEntryHeader ?? 'Journal Entry')}
+		</h6>
 
-		{#each currentEvents as event (event.id)}
-			<p>{event.description}</p>
-		{/each}
-	</div>
-
-	<div
-		class="text-entry-area"
-		in:scale={{
-			duration: ANIMATION_DURATION.SLOW,
-			delay: ANIMATION_DURATION.NORMAL,
-			easing: cubicOut,
-			start: 0.95
-		}}
-	>
-		<textarea
-			bind:value={journalText}
-			rows="5"
-			placeholder="Write your journal entry here..."
-			disabled={journalSaved}
-			oninput={() => cancelAutoJournalTimer()}
-		></textarea>
-	</div>
-
-	<div
-		class="audio-entry-area"
-		augmented-ui="tl-clip br-clip border"
-		in:scale={{
-			duration: ANIMATION_DURATION.SLOW,
-			delay: ANIMATION_DURATION.SLOW,
-			easing: cubicOut,
-			start: 0.95
-		}}
-	>
-		{#if audioURL}
-			<AudioPlayback
-				{recordingTime}
-				{isPlaying}
-				{journalSaved}
-				onPlay={playAudio}
-				onDelete={deleteAudio}
-			/>
+		{#if isFinal}
+			<RunRecap compact showMoments />
 		{:else}
-			<AudioRecorder
-				{isRecording}
-				{isPaused}
-				{recordingTime}
-				{journalSaved}
-				{audioError}
-				hasAudioURL={!!audioURL}
-				onStart={startRecording}
-				onPause={togglePause}
-				onStop={stopRecording}
-			/>
+			<p class="status-line" data-testid="journal-status-line">{statusLine}</p>
+			{#each currentEvents as event (event.id)}
+				<p>{event.description}</p>
+			{/each}
 		{/if}
 	</div>
+
+	{#if journalSaved && isFinal}
+		<div
+			class="epitaph"
+			data-testid="journal-epitaph"
+			in:fade={{ duration: ANIMATION_DURATION.SLOW }}
+		>
+			{#if epitaphText}
+				<blockquote>{epitaphText}</blockquote>
+			{:else}
+				<blockquote class="empty">You left no words. The silence is a record too.</blockquote>
+			{/if}
+			<p class="epitaph-by">
+				{gameState.player?.name ?? ''}, round {gameState.round}
+			</p>
+		</div>
+	{:else}
+		<div
+			class="text-entry-area"
+			in:scale={{
+				duration: ANIMATION_DURATION.SLOW,
+				delay: ANIMATION_DURATION.NORMAL,
+				easing: cubicOut,
+				start: 0.95
+			}}
+		>
+			<div class="prompt-chips" aria-label="Prompts to reflect on">
+				{#each prompts as prompt (prompt)}
+					<button
+						type="button"
+						class="chip"
+						disabled={saving || journalSaved}
+						onclick={() => usePrompt(prompt)}>{prompt}</button
+					>
+				{/each}
+			</div>
+			<textarea
+				bind:value={journalText}
+				rows="5"
+				placeholder={prompts[0] ?? 'Write your journal entry here...'}
+				disabled={saving || journalSaved}
+				oninput={() => cancelAutoJournalTimer()}
+			></textarea>
+			{#if !showAudio && !audioURL && !isRecording}
+				<button
+					type="button"
+					class="voice-toggle"
+					disabled={saving}
+					aria-label="Add a voice note"
+					title="Add a voice note"
+					data-testid="journal-voice-toggle"
+					onclick={() => (showAudio = true)}
+				>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						width="18"
+						height="18"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						aria-hidden="true"
+					>
+						<rect x="9" y="2" width="6" height="12" rx="3" />
+						<path d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8" />
+					</svg>
+					<span>Voice note</span>
+				</button>
+			{/if}
+		</div>
+
+		{#if showAudio || audioURL || isRecording}
+			<div
+				class="audio-entry-area"
+				augmented-ui="tl-clip br-clip border"
+				in:fade={{ duration: ANIMATION_DURATION.NORMAL }}
+			>
+				{#if audioURL}
+					<AudioPlayback
+						{recordingTime}
+						{isPlaying}
+						{journalSaved}
+						onPlay={playAudio}
+						onDelete={deleteAudio}
+					/>
+				{:else}
+					<AudioRecorder
+						{isRecording}
+						{isPaused}
+						{recordingTime}
+						{journalSaved}
+						{audioError}
+						hasAudioURL={!!audioURL}
+						onStart={startRecording}
+						onPause={togglePause}
+						onStop={stopRecording}
+					/>
+				{/if}
+			</div>
+		{/if}
+	{/if}
 
 	<div class="button-area">
 		<AutoJournalTimer
@@ -348,31 +445,33 @@
 			totalTime={getGameplaySettings().journalPauseTime}
 		/>
 
-		{#if journalSaved}
-			{#if gameState.gameOver}
-				<ButtonBar bordered={false} gameBackground={false}>
-					<ContinueButton
-						text={gameState.config?.labels?.journalEntryRestartButtonText ?? 'Restart'}
-						onclick={onRestart}
-						testid="journal-restart-button"
-					/>
-					<ContinueButton
-						text={gameState.config?.labels?.journalEntryExitButtonText ?? 'Exit'}
-						onclick={onExit}
-						testid="journal-exit-button"
-					/>
-				</ButtonBar>
-			{:else}
+		{#if journalSaved && isFinal}
+			<div class="final-actions">
 				<ContinueButton
-					text={gameState.config?.labels?.journalEntryNextButtonText ?? 'Continue to Next Round'}
-					onclick={onNext}
-					testid="journal-next-button"
+					text="Read your story"
+					onclick={() => window.location.assign('/?story=1')}
+					testid="journal-story-button"
 				/>
-			{/if}
+				<ContinueButton
+					text={gameState.config?.labels?.journalEntryRestartButtonText ?? 'Play again'}
+					onclick={onRestart}
+					testid="journal-restart-button"
+				/>
+				<ContinueButton text="Home" onclick={onExit} testid="journal-exit-button" />
+			</div>
+		{:else if saving}
+			<p
+				class="saved-beat"
+				role="status"
+				data-testid="journal-saved"
+				in:fade={{ duration: ANIMATION_DURATION.FAST }}
+			>
+				Entry saved
+			</p>
 		{:else}
 			<ContinueButton
 				text={gameState.config?.labels?.journalEntrySaveButtonText ?? 'Record Entry'}
-				onclick={handleSave}
+				onclick={() => handleSave()}
 				testid="journal-save-button"
 			/>
 		{/if}
@@ -380,7 +479,26 @@
 </div>
 
 <style>
+	/* Final log sits over the Game Over backdrop */
+	.final-backdrop {
+		position: fixed;
+		inset: 0;
+		z-index: 0;
+		background-color: #05070a;
+		background-image:
+			radial-gradient(circle at 50% 50%, rgba(255, 0, 255, 0.08), transparent 75%),
+			radial-gradient(circle at 25% 75%, rgba(255, 42, 109, 0.1), transparent 70%);
+	}
+
+	.final-backdrop.victory {
+		background-image:
+			radial-gradient(circle at 50% 50%, rgba(255, 215, 0, 0.12), transparent 75%),
+			radial-gradient(circle at 25% 75%, rgba(0, 255, 100, 0.1), transparent 70%);
+	}
+
 	.dc-journal-container {
+		position: relative;
+		z-index: 1;
 		display: grid;
 		height: 100%;
 		grid-template-columns: 1fr;
@@ -396,7 +514,17 @@
 		box-sizing: border-box;
 		overflow: hidden;
 		align-items: end;
-		max-width: 90svw;
+		max-width: min(90svw, var(--content-max, 720px));
+		padding: var(--space-md);
+		row-gap: var(--space-sm);
+
+		/* Theme frame instead of the default white border */
+		--aug-border-all: 2px;
+		--aug-border-bg: var(
+			--frame-border,
+			linear-gradient(135deg, var(--color-neon-cyan, #0ff), var(--color-cyber-magenta, #f0f))
+		);
+		background: rgba(5, 7, 10, 0.85);
 	}
 
 	.button-area {
@@ -408,11 +536,38 @@
 		padding: var(--space-xs) 0;
 	}
 
+	.saved-beat {
+		margin: 0;
+		font-family: var(--font-mono, 'Share Tech Mono', ui-monospace, monospace);
+		font-size: 1.125rem;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--color-brand-yellow, #ffe400);
+	}
+
 	.journal-header-area {
 		grid-area: header-area;
 		overflow-y: auto;
 		max-height: 25svh;
 		margin-bottom: var(--space-sm);
+	}
+
+	/* The final log shows the whole run, so it needs the room */
+	.final .journal-header-area {
+		max-height: none;
+	}
+
+	.final-actions {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: var(--space-sm);
+		width: 100%;
+	}
+
+	.final-actions :global(button) {
+		flex: 1 1 8rem;
+		max-width: 14rem;
 	}
 
 	.journal-header-area h6 {
@@ -427,12 +582,77 @@
 		line-height: var(--line-height-base);
 	}
 
+	.journal-header-area .status-line {
+		text-align: center;
+		font-family: var(--font-mono, 'Share Tech Mono', ui-monospace, monospace);
+		font-variant-numeric: tabular-nums;
+		font-size: 0.875rem;
+		letter-spacing: 0.05em;
+		color: var(--color-brand-yellow, #ffe400);
+	}
+
 	.text-entry-area {
 		grid-area: text-entry-area;
 		display: flex;
 		flex-direction: column;
 		min-height: 0;
 		margin-bottom: var(--space-sm);
+	}
+
+	.prompt-chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-xs) var(--space-sm);
+		margin-bottom: var(--space-sm);
+	}
+
+	.chip {
+		padding: 0.25rem 0.75rem;
+		min-height: 2rem;
+		font-family: var(--font-body, 'Inter', sans-serif);
+		font-size: 0.8125rem;
+		color: var(--color-neon-cyan, #0ff);
+		background: transparent;
+		border: 1px solid rgba(0, 255, 255, 0.4);
+		border-radius: 999px;
+		cursor: pointer;
+		transition:
+			background 150ms ease-out,
+			border-color 150ms ease-out;
+	}
+
+	.chip:hover:not(:disabled),
+	.chip:focus-visible {
+		background: rgba(0, 255, 255, 0.12);
+		border-color: var(--color-neon-cyan, #0ff);
+	}
+
+	.chip:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.voice-toggle {
+		align-self: flex-start;
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-xs);
+		margin-top: var(--space-sm);
+		padding: 0.25rem 0.5rem;
+		min-height: 2rem;
+		font-family: var(--font-mono, 'Share Tech Mono', ui-monospace, monospace);
+		font-size: 0.8125rem;
+		color: rgba(255, 255, 255, 0.75);
+		background: transparent;
+		border: 1px solid rgba(255, 255, 255, 0.25);
+		border-radius: 4px;
+		cursor: pointer;
+	}
+
+	.voice-toggle:hover:not(:disabled),
+	.voice-toggle:focus-visible {
+		color: var(--color-neon-cyan, #0ff);
+		border-color: var(--color-neon-cyan, #0ff);
 	}
 
 	textarea {
@@ -470,16 +690,52 @@
 	}
 
 	textarea::placeholder {
-		color: rgba(255, 255, 255, 0.4);
+		color: rgba(255, 255, 255, 0.55);
+	}
+
+	/* Epitaph: the saved entry, shown back */
+	.epitaph {
+		grid-area: text-entry-area;
+		margin-bottom: var(--space-sm);
+		text-align: center;
+	}
+
+	.epitaph blockquote {
+		margin: 0;
+		padding: var(--space-md);
+		max-height: 30svh;
+		overflow-y: auto;
+		white-space: pre-wrap;
+		font-family: var(--font-body, 'Inter', sans-serif);
+		font-size: 1.125rem;
+		font-style: italic;
+		line-height: 1.7;
+		color: rgba(255, 255, 255, 0.92);
+		border-left: 2px solid var(--color-neon-cyan, #0ff);
+		text-align: left;
+	}
+
+	.epitaph blockquote.empty {
+		color: rgba(255, 255, 255, 0.7);
+	}
+
+	.epitaph-by {
+		margin: var(--space-sm) 0 0;
+		font-family: var(--font-mono, 'Share Tech Mono', ui-monospace, monospace);
+		font-size: 0.8125rem;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: rgba(255, 255, 255, 0.7);
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		textarea {
+		textarea,
+		.chip {
 			transition: none;
 		}
 	}
 
-	/* Audio Entry Area */
+	/* Audio Entry Area: a secondary panel, opened from the voice note button */
 	.audio-entry-area {
 		grid-area: audio-entry-area;
 		display: flex;
@@ -501,11 +757,21 @@
 		--aug-br: 12px;
 	}
 
+	/* The audio heading must not outrank "Journal entry" */
+	.audio-entry-area :global(.audio-section-header) {
+		font-family: var(--font-mono, 'Share Tech Mono', ui-monospace, monospace);
+		font-size: 0.75rem;
+		color: rgba(255, 255, 255, 0.75);
+	}
+
+	.audio-entry-area :global(.audio-section-header .audio-header-icon) {
+		color: inherit;
+	}
+
 	/* Responsive Design */
 	@media (max-width: 640px) {
 		.dc-journal-container {
 			padding: var(--space-sm);
-			row-gap: var(--space-sm);
 			width: 100%;
 		}
 
@@ -522,15 +788,10 @@
 	@media (max-height: 700px) {
 		.dc-journal-container {
 			padding: var(--space-sm);
-			row-gap: var(--space-sm);
 		}
 
 		.journal-header-area h6 {
 			font-size: var(--text-xl);
-			margin-bottom: var(--space-sm);
-		}
-
-		.journal-header-area blockquote {
 			margin-bottom: var(--space-sm);
 		}
 
