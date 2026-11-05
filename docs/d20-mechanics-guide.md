@@ -536,20 +536,33 @@ Loss Condition 3: Deck Exhaustion (rare)
 
 ### 7.3 Expected Outcomes
 
-Monte Carlo simulation that drives the real game actions (`startGame`, `rollForTasks`, `drawCard`, `confirmCard`, `failureCheck`, `successCheck`, `recordRound`, and the `applyPending*` functions) through a full game loop with the live RNG. Sample: 4,000 games per difficulty. The deck is the standard 52 cards with no `skip-damage` or `return-king` modifiers, and every Salvation check is taken.
+**Design target:** a win rate under 1%, matching standard Wretched & Alone. The SRD says the Ace of Hearts salvation "offers a <1% win rate" and that "it is more common to lose the game than it is to win. This is intentional". Winning should feel possible but almost never happen; the game is about building tension, not winning.
+
+Monte Carlo simulation that drives the real game actions (`startGame`, `rollForTasks`, `drawCard`, `confirmCard`, `failureCheck`, `successCheck`, `recordRound`, and the `applyPending*` functions) through a full game loop with the live RNG. Sample: 40,000 Normal and 20,000 Easy games. The deck is the standard 52 cards with no `skip-damage` or `return-king` modifiers, and every Salvation check is taken.
 
 ```
-                          Normal (difficulty 1)   Easy (difficulty 0)
-Win rate:                 0.6%  (24 / 4000)       1.5%  (60 / 4000)
-Loss, 4 Kings revealed:   90.5% (3621 / 4000)     90.7% (3629 / 4000)
-Loss, Stability depleted: 8.9%  (355 / 4000)      7.8%  (311 / 4000)
-Loss, deck exhaustion:    0 observed              0 observed
-Average length:           12.4 rounds             12.1 rounds
-Stability checks / game:  15.8                    15.1
-Salvation checks / game:  5.0                     11.1
+                          Normal (difficulty 1)    Easy (difficulty 0)
+Win rate:                 0.69% (275 / 40000)      1.72% (343 / 20000)
+  95% confidence:         0.61% - 0.77%            1.54% - 1.89%
+Loss, 4 Kings revealed:   90.3% (36130 / 40000)    91.2% (18247 / 20000)
+Loss, Stability depleted: 9.0%  (3595 / 40000)     7.1%  (1410 / 20000)
+Loss, deck exhaustion:    0 observed               0 observed
+Average length:           12.3 rounds              12.1 rounds
+Stability checks / game:  15.8                     15.0
+Salvation checks / game:  4.9                      11.2
 ```
 
-Every win came after all 4 Aces were revealed, except 1 of the 60 easy-mode wins (3 Aces).
+Every win came after all 4 Aces were revealed, apart from 6 Normal and 6 Easy wins (out of 275 and 343) that had fewer Aces.
+
+**Comparison with standard Wretched & Alone** (simulated, 2,000,000 games each, with the block tower never falling, so these are upper bounds):
+
+```
+SRD core rules (10 tokens, remove one on a 6):            ~0.0001% (1 win in 2,000,000)
+Common house rule (each other Ace widens success by 1):   0.43%
+This game, Normal:                                        0.69%
+```
+
+Normal, which is what every `.game.md` game plays, sits within the SRD's <1% target. That puts it alongside the standard system, where the salvation track usually cannot finish before the fourth King. Easy (Ace of Hearts revealed at the start) is above 1%, but it can only be enabled through the library API: the markdown parser does not read a `difficulty` field.
 
 ---
 
@@ -586,11 +599,11 @@ Each odd-ranked card (A, 3, 5, 7, 9; 20 cards in the deck) triggers one check, a
 4 Aces (auto-success): -1.0 token per check (about 10 checks to clear 10 tokens)
 ```
 
-**Simulation Results (4,000 games per difficulty, same method as 7.3):** wins by Aces revealed when the game ended
+**Simulation Results (40,000 Normal and 20,000 Easy games, same method as 7.3):** wins by Aces revealed when the game ended
 
 ```
-Normal: 0-3 Aces: 0 wins in 2,061 games   | 4 Aces: 24 wins in 1,939 games (1.2%)
-Easy:   1-2 Aces: 0 wins in 568 games     | 3 Aces: 1 win in 1,211 games (0.08%) | 4 Aces: 59 wins in 2,221 games (2.7%)
+Normal: 0-2 Aces: 0 wins in 9,030 games  | 3 Aces: 6 wins in 12,136 games (0.05%)  | 4 Aces: 269 wins in 18,834 games (1.4%)
+Easy:   1 Ace: 0 wins in 582 games       | 2 Aces: 1 win in 2,406 games (0.04%)    | 3 Aces: 5 wins in 5,892 games (0.08%) | 4 Aces: 337 wins in 11,120 games (3.0%)
 ```
 
 **Strategic Takeaway:** Only the fourth Ace produces net token removal on average, so winning in practice requires all 4 Aces, and most games end first (see 7.3).
@@ -598,14 +611,14 @@ Easy:   1-2 Aces: 0 wins in 568 games     | 3 Aces: 1 win in 1,211 games (0.08%)
 ### 8.4 King Threat
 
 ```
-Probability of drawing all 4 Kings: ~8% per game
+Probability the fourth King ends the game: ~90% (90.3% of Normal games in the 7.3 simulation)
 
 Average Kings revealed by game end:
 - Short game (15 cards): 1.2
 - Medium game (30 cards): 2.3
 - Long game (45 cards): 3.5
 
-King limit losses: ~25% of total defeats
+King limit losses: ~91% of total defeats (Stability depletion is the other ~9%)
 ```
 
 ---
