@@ -8,15 +8,13 @@
 	 * @component
 	 */
 
-	import { useFailureCheck } from '../../composables/screen/useFailureCheck.svelte.js';
 	import { gameState } from '../../stores/gameStore.svelte.js';
 	import ContinueButton from '../ContinueButton.svelte';
 	import ButtonBar from '../ButtonBar.svelte';
 
-	let { onCompleted = () => {}, triggerAutoPlay = null } = $props();
-
-	// Use composable for state management
-	const failureCheck = useFailureCheck(onCompleted);
+	// failureCheck: the useFailureCheck() instance owned by GameScreen, shared with its
+	// table-tap and auto-play handlers so they all see the same roll state
+	let { failureCheck, triggerAutoPlay = null } = $props();
 
 	// Handle button click
 	async function handleClick() {
