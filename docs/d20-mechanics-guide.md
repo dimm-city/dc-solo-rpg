@@ -562,7 +562,7 @@ Common house rule (each other Ace widens success by 1):   0.43%
 This game, Normal:                                        0.69%
 ```
 
-Normal, which is what every `.game.md` game plays, sits within the SRD's <1% target. That puts it alongside the standard system, where the salvation track usually cannot finish before the fourth King. Easy (Ace of Hearts revealed at the start) is above 1%, but it can only be enabled through the library API: the markdown parser does not read a `difficulty` field.
+Normal, which is what every `.game.md` game plays, sits within the SRD's <1% target. That puts it alongside the standard system, where the salvation track usually cannot finish before the fourth King. Easy (Ace of Hearts revealed at the start) is above 1%, and it can be enabled by the game author (`difficulty: easy` in the `.game.md` frontmatter) or by the player (Difficulty in the settings menu).
 
 ---
 

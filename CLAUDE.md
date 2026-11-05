@@ -335,14 +335,14 @@ resetRNG();
   introduction: { /* markdown sections */ },
   deck: [ /* 52 card objects */ ],
   options: {
-    difficulty: 0, // 0 = easy (Ace of Hearts pre-revealed), 1 = normal
+    difficulty: 0, // 0 = easy (Ace of Hearts pre-revealed), 1 = normal; author default (frontmatter), overridable by the player
     startingTokens: 10, // Number of tokens to start with
     diceTheme: "pinkdreams"  // Dice theme (user can change in settings)
   }
 }
 ```
 
-**Note:** Difficulty is controlled by the game author in the config frontmatter, not by user settings. Users can only change dice theme.
+**Note:** Difficulty has an author default (`difficulty: easy|normal` in the `.game.md` frontmatter, Normal if absent) and a player override ("Game default", "Normal" or "Easy" in the settings modal). Precedence: frontmatter < player setting < explicit `options` passed to `startGame`. Users can also change dice theme.
 
 **Card Object:**
 

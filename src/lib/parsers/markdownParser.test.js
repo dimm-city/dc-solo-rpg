@@ -1164,3 +1164,30 @@ Description
 		});
 	});
 });
+
+describe('Markdown Parser - difficulty frontmatter', () => {
+	const base = readFileSync(join(process.cwd(), 'static', 'games', 'future-lost.game.md'), 'utf-8');
+	const withDifficulty = (line) => base.replace(/^---\r?\n/, `---\n${line}\n`);
+
+	it('should parse difficulty: easy as 0', () => {
+		expect(parseGameFile(withDifficulty('difficulty: easy')).options).toEqual({ difficulty: 0 });
+	});
+
+	it('should parse difficulty case-insensitively', () => {
+		expect(parseGameFile(withDifficulty('difficulty: Normal')).options).toEqual({ difficulty: 1 });
+	});
+
+	it('should default to Normal when difficulty is absent', () => {
+		expect(parseGameFile(base).options).toEqual({ difficulty: 1 });
+	});
+
+	it('should throw ValidationError for an invalid difficulty', () => {
+		const markdown = withDifficulty('difficulty: hard');
+		expect(() => parseGameFile(markdown)).toThrow(ValidationError);
+		expect(() => parseGameFile(markdown)).toThrow(/easy, normal/);
+	});
+
+	it('should reject object-prototype keys as difficulty', () => {
+		expect(() => parseGameFile(withDifficulty('difficulty: constructor'))).toThrow(ValidationError);
+	});
+});
