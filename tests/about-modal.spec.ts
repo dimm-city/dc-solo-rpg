@@ -76,7 +76,7 @@ test.describe('About Modal', () => {
 		const backdropFilter = await backdrop.evaluate(
 			(el) =>
 				window.getComputedStyle(el).backdropFilter ||
-				window.getComputedStyle(el).webkitBackdropFilter
+				window.getComputedStyle(el).getPropertyValue('-webkit-backdrop-filter')
 		);
 
 		expect(backdropFilter).toContain('blur');
@@ -102,7 +102,7 @@ test.describe('About Modal', () => {
 		const height = await content.evaluate((el) => window.getComputedStyle(el).height);
 
 		// Height should be approximately 70% of viewport
-		const viewportHeight = await page.viewportSize().then((size) => size!.height);
+		const viewportHeight = page.viewportSize()!.height;
 		const expectedHeight = viewportHeight * 0.7;
 		const actualHeight = parseFloat(height);
 

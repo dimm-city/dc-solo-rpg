@@ -94,7 +94,7 @@ test.describe('Settings Modal', () => {
 		const content = page.locator('.overlay-modal-content');
 		const height = await content.evaluate((el) => window.getComputedStyle(el).height);
 
-		const viewportHeight = await page.viewportSize().then((size) => size!.height);
+		const viewportHeight = page.viewportSize()!.height;
 		const expectedHeight = viewportHeight * 0.7;
 		const actualHeight = parseFloat(height);
 
