@@ -39,11 +39,11 @@ The format uses five card types that map directly to the standard 52-card deck:
 
 Narrative cards can optionally include special one-time modifiers:
 
-- **`skip-damage`** - Skip the next damage check (max 1 per game)
+- **`skip-damage`** - This card skips its own Stability check (max 1 per game)
   - Syntax: `## Narrative: skip-damage`
-  - Example: "A moment of perfect timing saves you from the next danger"
+  - Example: "A moment of perfect timing saves you from harm"
 
-- **`return-king`** - Return a previously drawn King to the deck (max 1 per game)
+- **`return-king`** - When confirmed, shuffles one revealed King back into the deck at a random position; no effect if no King is revealed (max 1 per game)
   - Syntax: `## Narrative: return-king`
   - Example: "A second chance to undo a catastrophic setback"
 
@@ -139,7 +139,7 @@ in their eyes - they've survived by taking from others.
 
 In the chaos of your escape, something impossible happens. A piece of falling
 debris catches on a support beam at the last second. The universe aligns in
-your favor, just this once, shielding you from the next danger.
+your favor, just this once, shielding you from harm.
 
 ---
 
@@ -262,8 +262,8 @@ Story here...
 
 **Available modifiers:**
 
-- `skip-damage` - Skip next damage check (max 1 per game)
-- `return-king` - Return King to deck (max 1 per game)
+- `skip-damage` - This card skips its own Stability check (max 1 per game)
+- `return-king` - Shuffle a revealed King back into the deck; no effect if none revealed (max 1 per game)
 
 These are **optional** - standard `### Narrative` cards are valid without modifiers.
 

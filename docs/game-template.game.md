@@ -56,8 +56,8 @@ Based on Wretched and Alone SRD mechanics:
    - Reflective moments, emotional beats, small victories
    - Each Ace adds +1 to bonus counter (reduces damage)
    - Optional: Assign special one-time modifiers to up to 2 cards:
-     * "skip-damage" - skip next damage check once
-     * "return-king" - shuffle a previously drawn King back into deck once
+     * "skip-damage" - this card skips its own Stability check
+     * "return-king" - shuffle a revealed King back into the deck (no effect if none revealed)
    - Optional: May assign a challenge modifier to for a failure check along with another optional modifier
 
 4. CHALLENGE (16 cards - odd ranks: 3, 5, 7, 9)
@@ -149,9 +149,7 @@ Consider progression: This final King represents ultimate catastrophic failure. 
 
 [Optional longer narrative - describe how the protagonist avoids danger this time]
 
-This card provides a one-time ability to skip the next damage check when instructed. Use narrative to convey this mechanically: "when danger comes next, you'll be prepared" or "this shields you from the next threat."
-
-Strategic value: Players will save this for critical low-resource moments.
+This card skips its own Stability check. Use narrative to convey safety: "this moment shields you from harm."
 
 ---
 
@@ -161,7 +159,7 @@ Strategic value: Players will save this for critical low-resource moments.
 
 [Optional longer narrative - describe how a catastrophic setback can be undone]
 
-This card provides a one-time ability to shuffle a previously drawn King back into the deck. Use narrative to convey reversal or undoing: "you find a way to reverse what seemed irreversible" or "the catastrophe can be unwound."
+When this card is confirmed, one revealed King is shuffled back into the deck (nothing happens if none is revealed). Use narrative to convey reversal or undoing: "you find a way to reverse what seemed irreversible" or "the catastrophe can be unwound."
 
 Strategic value: This resets the failure counter, providing critical relief.
 

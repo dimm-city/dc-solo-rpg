@@ -79,7 +79,7 @@ This will require miracles. Or at least, very specific pre-collapse technology t
 
 In the chaos of your escape from the collapsing structure, something impossible happens. A piece of falling debris that should have crushed you catches on a support beam at the last second. A gas leak that should have ignited doesn't. A patrol that should have spotted you turns the other way.
 
-The universe aligns in your favor, just this once. You make it through unscathed, heart pounding, knowing that next time you face danger, you might not be so lucky.
+The universe aligns in your favor, just this once. You make it through unscathed, heart pounding, knowing that your luck may not hold forever.
 
 But for now, you're alive. And sometimes, in this broken world, that's the only miracle you need.
 

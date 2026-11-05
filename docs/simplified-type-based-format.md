@@ -76,10 +76,10 @@ Per the Wretched and Alone SRD, some cards can have **special one-time effects**
 #### 1. Skip Damage (`skip-damage`)
 
 - **Can be assigned to**: ONE Narrative card only
-- **Effect**: Player may skip the next damage check when instructed
-- **Example text**: _"The next time you are told to pull from the tower you may choose not to"_
+- **Effect**: This card skips its own Stability check (it still counts as an Ace)
+- **Example text**: _"This moment of grace shields you from harm"_
 - **Usage**: One-time only per game
-- **Strategic value**: Save for critical moments when resources are low
+- **Strategic value**: A guaranteed safe Ace
 
 **Example:**
 
@@ -88,15 +88,14 @@ Per the Wretched and Alone SRD, some cards can have **special one-time effects**
 
 **A stroke of incredible luck protects you**
 
-This moment of grace shields you from the next danger. The next time you would
-pull from the tower, you may choose not to.
+This moment of grace shields you from harm.
 ```
 
 #### 2. Return King (`return-king`)
 
 - **Can be assigned to**: ONE Narrative card only
-- **Effect**: Allows player to shuffle a previously drawn King back into the deck
-- **Example text**: _"If you have previously drawn the King of Spades you may shuffle it back into the deck"_
+- **Effect**: When the card is confirmed, one revealed King is shuffled back into the deck at a random position (the Ace still triggers its own Stability check). No effect if no King has been revealed
+- **Example text**: _"A King slips back into the deck"_
 - **Usage**: One-time only per game
 - **Strategic value**: Resets the failure counter, providing critical relief
 
@@ -107,8 +106,8 @@ pull from the tower, you may choose not to.
 
 **A second chance emerges from the darkness**
 
-Against all odds, you find a way to undo a catastrophic setback. If you have
-previously drawn the King of Spades, you may shuffle it back into the deck.
+Against all odds, you find a way to undo a catastrophic setback. A King that
+was already revealed slips back into the deck.
 ```
 
 ### Combining Modifiers with Card Assignment
@@ -889,8 +888,8 @@ The parser extracts the modifier and passes it to the engine:
 
 **Current (Built-in):**
 
-- `skip-damage` - Skip next damage check (one-time, Narrative only)
-- `return-king` - Return King to deck (one-time, Narrative only)
+- `skip-damage` - This card skips its own Stability check (one-time, Narrative only)
+- `return-king` - Shuffle a revealed King back into the deck (one-time, Narrative only)
 
 **Future (Extensible):**
 
@@ -1105,7 +1104,7 @@ What are they trying to achieve? What's at stake?
 **[Short description - one-time protection from danger]**
 
 [Optional: A moment of incredible luck or perfect timing that shields you from
-the next danger. Use this mechanic strategically when resources are low.]
+harm. This card skips its own Stability check.]
 
 ---
 
