@@ -19,6 +19,7 @@
 	import ContinueButton from './ContinueButton.svelte';
 	import ConfirmModal from './ConfirmModal.svelte';
 	import MiniStatusHUD from './MiniStatusHUD.svelte';
+	import RuleCaption from './RuleCaption.svelte';
 	import KeyboardHint from './KeyboardHint.svelte';
 	import ButtonBar from './ButtonBar.svelte';
 	import OverlayModal from './OverlayModal.svelte';
@@ -790,6 +791,7 @@
 						<div transition:fade={{ duration: TRANSITION_DURATION }}>error: {currentScreen}</div>
 					{/if}
 				{/key}
+				<RuleCaption />
 			</div>
 
 			<!-- Toolbar at bottom with exit button and deck visualization -->
