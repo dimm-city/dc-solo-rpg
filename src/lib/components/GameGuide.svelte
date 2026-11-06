@@ -54,11 +54,33 @@
 		...extraContents
 	]);
 
+	/** The nearest ancestor that scrolls (the modal body, or the page) */
+	function scrollParent(el) {
+		for (let node = el.parentElement; node; node = node.parentElement) {
+			const { overflowY } = getComputedStyle(node);
+			if (
+				(overflowY === 'auto' || overflowY === 'scroll') &&
+				node.scrollHeight > node.clientHeight
+			) {
+				return node;
+			}
+		}
+		return document.scrollingElement;
+	}
+
+	// Scroll only the scroller: scrollIntoView would also shift overflow-hidden ancestors
+	// (the modal frame) when the section is near the end
 	function jumpTo(id) {
 		const target = document.getElementById(id);
 		if (!target) return;
 		const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-		target.scrollIntoView({ block: 'start', behavior: reduce ? 'auto' : 'smooth' });
+		const scroller = scrollParent(target);
+		const top =
+			target.getBoundingClientRect().top -
+			scroller.getBoundingClientRect().top +
+			scroller.scrollTop -
+			8;
+		scroller.scrollTo({ top, behavior: reduce ? 'auto' : 'smooth' });
 		target.focus({ preventScroll: true });
 	}
 </script>

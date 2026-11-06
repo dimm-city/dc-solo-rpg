@@ -39,10 +39,10 @@
 		</a>
 	</nav>
 
-	<article class="static-column">
-		<h1 class="static-title">{title}</h1>
+	<section class="static-column" aria-labelledby="static-title">
+		<h1 id="static-title" class="static-title">{title}</h1>
 		{@render children()}
-	</article>
+	</section>
 </div>
 
 <style>
