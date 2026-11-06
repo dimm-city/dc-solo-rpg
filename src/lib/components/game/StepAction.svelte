@@ -2,36 +2,67 @@
 	/**
 	 * StepAction - The one primary button of a round step, always in the same slot
 	 *
-	 * Wraps ContinueButton in a ButtonBar and, when the player is Lucid or Surreal,
-	 * shows a small chip above it so they know before they roll.
+	 * GameScreen mounts it once, outside the per-screen {#key} block: moving to the next
+	 * step changes only its label (a 120ms crossfade), so the button never blinks out.
+	 *
+	 * `hint` is the Lucid/Surreal modifier the roll will use ("Lucid: 2 dice, keep high").
+	 * Only roll buttons pass one, and it is part of the label, never a separate chip.
+	 * `changed` briefly highlights a button that has just changed meaning (GameScreen ignores
+	 * presses for that moment, so a press meant for the old button never lands on the new one).
 	 *
 	 * @component
 	 */
 
-	import { gameState } from '../../stores/gameStore.svelte.js';
-	import ContinueButton from '../ContinueButton.svelte';
+	import { fade } from 'svelte/transition';
+	import AugmentedButton from '../AugmentedButton.svelte';
 	import ButtonBar from '../ButtonBar.svelte';
+	import { ANIMATION_DURATION } from '../../constants/animations.js';
 
-	let { text, onclick, disabled = false, testid } = $props();
+	let {
+		text,
+		hint = null,
+		onclick,
+		disabled = false,
+		busy = false,
+		changed = false,
+		testid,
+		id = undefined
+	} = $props();
 
-	const chip = $derived(
-		gameState.isLucid
-			? { kind: 'lucid', label: 'Lucid', hint: 'roll two dice, keep the higher' }
-			: gameState.isSurreal
-				? { kind: 'surreal', label: 'Surreal', hint: 'roll two dice, keep the lower' }
-				: null
-	);
+	/** The label swap: a 120ms state change (shorter than FAST), or instant under reduced motion */
+	const LABEL_SWAP_MS = Math.min(120, ANIMATION_DURATION.FAST);
+	const reduceMotion =
+		typeof window !== 'undefined' &&
+		window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+	const swap = { duration: reduceMotion ? 0 : LABEL_SWAP_MS };
+
+	const label = $derived(hint ? `${text} · ${hint}` : text);
 </script>
 
-<div class="step-action">
-	{#if chip}
-		<p class="state-chip {chip.kind}" data-testid="state-chip">
-			<strong>{chip.label}</strong>
-			<span>{chip.hint}</span>
-		</p>
-	{/if}
+<div class="step-action" class:changed {id}>
 	<ButtonBar>
-		<ContinueButton {text} {onclick} {disabled} {testid} />
+		<AugmentedButton
+			text={label}
+			{onclick}
+			{disabled}
+			{testid}
+			class="step-button{busy ? ' busy' : ''}"
+		>
+			<span class="label-stack" aria-hidden="true">
+				{#key label}
+					<span class="label" in:fade={swap} out:fade={swap}>
+						<span class="label-main">{text}</span>
+						{#if hint}
+							<span
+								class="label-hint"
+								class:surreal={hint.startsWith('Surreal')}
+								data-testid="roll-modifier">{hint}</span
+							>
+						{/if}
+					</span>
+				{/key}
+			</span>
+		</AugmentedButton>
 	</ButtonBar>
 </div>
 
@@ -39,33 +70,42 @@
 	.step-action {
 		display: grid;
 		justify-items: center;
-		gap: var(--space-xs, 0.25rem);
 		width: 100%;
 	}
 
-	.state-chip {
-		margin: 0;
-		padding: 0.25rem 0.75rem;
-		border: 1px solid currentColor;
-		border-radius: 999px;
-		background: rgba(0, 0, 0, 0.6);
-		font-family: var(--font-mono, 'Share Tech Mono', ui-monospace, monospace);
-		font-size: var(--text-sm, 0.875rem);
-		letter-spacing: 0.04em;
-		text-align: center;
+	/* Old and new labels share one cell, so the swap is a crossfade with no layout jump */
+	.label-stack {
+		display: grid;
+		place-items: center;
+	}
+
+	.label {
+		grid-area: 1 / 1;
+		display: grid;
+		justify-items: center;
+		gap: 0.125rem;
+	}
+
+	.label-hint {
+		font-family: var(--font-body, 'Inter', system-ui, sans-serif);
+		font-size: 0.8125rem;
+		font-weight: 600;
+		letter-spacing: 0.02em;
+		text-transform: none;
 		color: var(--color-neon-cyan, #00ffff);
 	}
 
-	.state-chip.surreal {
+	.label-hint.surreal {
 		color: var(--color-cyber-magenta, #ff00ff);
 	}
 
-	.state-chip strong {
-		text-transform: uppercase;
-		margin-right: 0.5ch;
+	/* The button has just changed meaning: a short highlight while presses are held off
+	   (on the button itself, so the wrapper's glow filter is left alone) */
+	.step-action.changed :global(.aug-button) {
+		filter: brightness(1.4);
 	}
 
-	.state-chip span {
-		color: #fff;
+	.step-action :global(.step-button.busy .aug-button) {
+		cursor: progress;
 	}
 </style>

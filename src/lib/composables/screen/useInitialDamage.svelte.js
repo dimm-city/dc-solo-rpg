@@ -2,8 +2,8 @@
  * useInitialDamage - Initial instability roll composable
  *
  * Two steps on one button:
- * 1. Roll: dice animate, Stability updates and a result line stays on screen.
- *    The button becomes "Continue".
+ * 1. Roll: dice animate ("Rolling…"; a press skips to the result), Stability updates and a
+ *    result line stays on screen. The button becomes "Continue".
  * 2. Continue: only now does the first round start.
  *
  * @returns {Object} Initial damage state and actions
@@ -14,10 +14,13 @@ import {
 	applyPendingInitialDamageRoll,
 	advanceAfterInitialDamage
 } from '../../stores/gameActions.svelte.js';
-import { rollDice } from '../../stores/diceStore.svelte.js';
+import { rollDice, skipRoll } from '../../stores/diceStore.svelte.js';
 import { gameState } from '../../stores/gameStore.svelte.js';
-import { rollDie } from '../../services/random.js';
-import { formatStabilityResult } from '../../utils/rollResult.js';
+import {
+	formatStabilityResult,
+	formatModifierHint,
+	ROLLING_LABEL
+} from '../../utils/rollResult.js';
 
 export function useInitialDamage() {
 	let initialDamageRolling = $state(false);
@@ -25,11 +28,14 @@ export function useInitialDamage() {
 	let initialDamageResultLine = $state('');
 
 	/**
-	 * Roll the initial instability, or (once rolled) continue to round 1
+	 * Roll the initial instability, skip a roll in flight, or (once rolled) continue to round 1
 	 */
 	async function handleInitialDamageRoll(triggerAutoPlay) {
-		if (initialDamageRolling) return;
 		if (gameState.state !== 'initialDamageRoll') return;
+		if (initialDamageRolling) {
+			skipRoll();
+			return;
+		}
 
 		if (initialDamageResult !== undefined) {
 			advanceAfterInitialDamage();
@@ -37,19 +43,25 @@ export function useInitialDamage() {
 		}
 
 		initialDamageRolling = true;
-		// d20, like every other check: the result is read off the d20 Stability table
-		const rollResult = rollDie(20);
-		initialDamageResult = rollResult;
-
 		try {
 			const towerBefore = gameState.tower;
-			// Store pending updates
-			performInitialDamageRoll(rollResult);
-			// Roll dice and wait for animation to complete
-			await rollDice(rollResult);
+			// The same d20 roll as every other check (Lucid/Surreal included); pending until the dice land
+			const thrown = performInitialDamageRoll();
+			initialDamageResult = thrown.roll;
+			await rollDice(thrown.roll, {
+				isLucid: thrown.wasLucid,
+				isSurreal: thrown.wasSurreal,
+				dice: thrown.dice
+			});
 			// Apply after animation, but stay here until the player continues
 			applyPendingInitialDamageRoll({ advance: false });
-			initialDamageResultLine = formatStabilityResult(rollResult, towerBefore, gameState.tower);
+			initialDamageResultLine = formatStabilityResult(
+				thrown.roll,
+				towerBefore,
+				gameState.tower,
+				20,
+				thrown
+			);
 		} finally {
 			initialDamageRolling = false;
 		}
@@ -69,7 +81,19 @@ export function useInitialDamage() {
 	}
 
 	// Reactive button text
-	const buttonText = $derived(initialDamageResult ? 'Continue' : 'Roll for instability');
+	const buttonText = $derived(
+		initialDamageRolling
+			? ROLLING_LABEL
+			: initialDamageResult !== undefined
+				? 'Continue'
+				: 'Roll for instability'
+	);
+	// The modifier the roll will use, shown on the roll button only
+	const buttonHint = $derived(
+		initialDamageResult === undefined && !initialDamageRolling
+			? formatModifierHint(gameState)
+			: null
+	);
 
 	return {
 		// State (read-only via getters)
@@ -84,6 +108,9 @@ export function useInitialDamage() {
 		},
 		get buttonText() {
 			return buttonText;
+		},
+		get buttonHint() {
+			return buttonHint;
 		},
 
 		// Actions

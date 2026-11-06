@@ -813,11 +813,7 @@ describe('Game Integration Tests - Based on Documentation', () => {
 			transitionTo('initialDamageRoll');
 			expect(gameState.state).toBe('initialDamageRoll');
 
-			// initialDamageRoll → startRound
-			transitionTo('startRound');
-			expect(gameState.state).toBe('startRound');
-
-			// startRound → rollForTasks
+			// initialDamageRoll → rollForTasks (round 1 opens on Roll for Tasks)
 			transitionTo('rollForTasks');
 			expect(gameState.state).toBe('rollForTasks');
 
@@ -841,9 +837,9 @@ describe('Game Integration Tests - Based on Documentation', () => {
 			transitionTo('log');
 			expect(gameState.state).toBe('log');
 
-			// log → startRound (next round)
-			transitionTo('startRound');
-			expect(gameState.state).toBe('startRound');
+			// log → rollForTasks (next round)
+			transitionTo('rollForTasks');
+			expect(gameState.state).toBe('rollForTasks');
 		});
 
 		it('should reject invalid state transitions', () => {

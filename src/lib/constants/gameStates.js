@@ -21,10 +21,7 @@ export const GAME_STATES = {
 	/** Initial damage roll (SRD digital enhancement) */
 	INITIAL_DAMAGE_ROLL: 'initialDamageRoll',
 
-	/** Start a new round */
-	START_ROUND: 'startRound',
-
-	/** Roll d20 to determine number of cards to draw */
+	/** A round opens here: roll d20 to determine number of cards to draw */
 	ROLL_FOR_TASKS: 'rollForTasks',
 
 	/** Draw a card from the deck */

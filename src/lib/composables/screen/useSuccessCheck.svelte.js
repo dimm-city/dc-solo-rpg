@@ -2,8 +2,9 @@
  * useSuccessCheck - Salvation check screen logic composable
  *
  * Two steps on one button:
- * 1. Roll: dice animate, the tokens update and a result line stays on screen.
- *    The button becomes "Continue".
+ * 1. Roll: dice animate ("Rolling…"; a press skips to the result), the tokens update and a
+ *    result line stays on screen. The button becomes "Continue".
+ *    With all four Aces, Salvation is automatic: no dice, the result shows at once.
  * 2. Continue: only now does the game move on (the ending or the journal).
  *
  * The roll button shows the target before rolling ("need 14+").
@@ -15,39 +16,55 @@ import {
 	successCheck,
 	applyPendingSuccessCheck,
 	advanceAfterSuccessCheck,
-	getSalvationThreshold
+	getCurrentSalvationThreshold
 } from '../../stores/gameActions.svelte.js';
-import { rollDice } from '../../stores/diceStore.svelte.js';
+import { rollDice, skipRoll } from '../../stores/diceStore.svelte.js';
 import { gameState } from '../../stores/gameStore.svelte.js';
-import { formatSalvationResult, formatSalvationButton } from '../../utils/rollResult.js';
+import {
+	formatSalvationResult,
+	formatSalvationButton,
+	formatModifierHint,
+	ROLLING_LABEL
+} from '../../utils/rollResult.js';
 
 export function useSuccessCheck() {
 	let successCheckRolling = $state(false);
-	let successCheckResult = $state();
+	let successCheckDone = $state(false);
 	let successCheckResultLine = $state('');
 
 	/**
-	 * Roll the check, or (once rolled) continue to the next step
+	 * Roll the check, skip a roll in flight, or (once rolled) continue to the next step
 	 */
 	async function handleSuccessCheck(triggerAutoPlay) {
-		if (successCheckRolling) return;
-
 		const currentScreen = gameState.state;
 		if (currentScreen !== 'successCheck') return;
+		if (successCheckRolling) {
+			skipRoll();
+			return;
+		}
 
-		if (!successCheckResult) {
+		if (!successCheckDone) {
 			successCheckRolling = true;
 			try {
 				// Threshold before rolling: the Aces can't change mid-check
-				const threshold = getSalvationThreshold(gameState.acesRevealed);
-				const { roll, wasLucid, wasSurreal } = await successCheck();
-				successCheckResult = roll;
-				// Roll dice and wait for animation to complete
-				// Pass modifier state for visual dice roll (2d20 if was Lucid/Surreal)
-				await rollDice(roll, { isLucid: wasLucid, isSurreal: wasSurreal });
+				const thrown = await successCheck();
+				successCheckDone = true;
+				if (!thrown.automatic) {
+					// Show the dice the game rolled (2d20 if Lucid/Surreal) and wait for them to land
+					await rollDice(thrown.roll, {
+						isLucid: thrown.wasLucid,
+						isSurreal: thrown.wasSurreal,
+						dice: thrown.dice
+					});
+				}
 				// Apply the result after the animation, but stay here until the player continues
 				applyPendingSuccessCheck({ advance: false });
-				successCheckResultLine = formatSalvationResult(roll, threshold, gameState.tokens);
+				successCheckResultLine = formatSalvationResult(
+					thrown.roll,
+					thrown.threshold,
+					gameState.tokens,
+					thrown
+				);
 			} finally {
 				successCheckRolling = false;
 			}
@@ -64,16 +81,37 @@ export function useSuccessCheck() {
 	 * Reset state when entering screen
 	 */
 	function resetState() {
-		successCheckResult = undefined;
+		successCheckDone = false;
 		successCheckResultLine = '';
 		successCheckRolling = false;
 	}
 
+	/**
+	 * A game saved mid-roll (Salvation saves as it rolls) resumes on that roll's result,
+	 * rather than offering the roll again. Call after resetState() on screen entry.
+	 */
+	function resumePending() {
+		const { diceRoll, tokenChange } = gameState.pendingUpdates;
+		if (gameState.state !== 'successCheck' || tokenChange === null) return;
+		const threshold = getCurrentSalvationThreshold();
+		applyPendingSuccessCheck({ advance: false });
+		successCheckDone = true;
+		successCheckResultLine = formatSalvationResult(diceRoll, threshold, gameState.tokens);
+	}
+
 	// Reactive button text: the target is shown before rolling
 	const buttonText = $derived(
-		successCheckResult
-			? 'Continue'
-			: formatSalvationButton(getSalvationThreshold(Math.max(gameState.acesRevealed, 1)))
+		successCheckRolling
+			? ROLLING_LABEL
+			: successCheckDone
+				? 'Continue'
+				: formatSalvationButton(getCurrentSalvationThreshold())
+	);
+	// The modifier the roll will use, shown on the roll button only (an automatic Salvation rolls nothing)
+	const buttonHint = $derived(
+		successCheckDone || successCheckRolling || getCurrentSalvationThreshold() === 0
+			? null
+			: formatModifierHint(gameState)
 	);
 
 	return {
@@ -81,8 +119,9 @@ export function useSuccessCheck() {
 		get rolling() {
 			return successCheckRolling;
 		},
+		/** true once this screen's check has been made */
 		get result() {
-			return successCheckResult;
+			return successCheckDone || undefined;
 		},
 		get resultLine() {
 			return successCheckResultLine;
@@ -90,9 +129,13 @@ export function useSuccessCheck() {
 		get buttonText() {
 			return buttonText;
 		},
+		get buttonHint() {
+			return buttonHint;
+		},
 
 		// Actions
 		handleSuccessCheck,
-		resetState
+		resetState,
+		resumePending
 	};
 }

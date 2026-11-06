@@ -22,7 +22,7 @@ async function leaveGameInProgress(page: Page) {
 			const storageModule = '/src/lib/stores/indexedDBStorage.js';
 			const { saveGame } = await import(/* @vite-ignore */ storageModule);
 			await saveGame({
-				state: 'startRound',
+				state: 'rollForTasks',
 				config: { slug, title },
 				journalEntries: [],
 				round: 1,

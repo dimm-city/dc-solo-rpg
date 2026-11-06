@@ -1,9 +1,15 @@
 <script>
+	/**
+	 * RuleCaption - shows the current one-time rule caption at the top of the table.
+	 *
+	 * `captions` is the useRuleCaptions() instance owned by GameScreen, which also announces
+	 * each caption through the game's single live region (after the result line), so this
+	 * region is not live itself. A covered caption is hidden; its countdown is paused.
+	 */
 	import { fade } from 'svelte/transition';
-	import { useRuleCaptions } from '../composables/useRuleCaptions.svelte.js';
 	import { ANIMATION_DURATION } from '../constants/animations.js';
 
-	const captions = useRuleCaptions();
+	let { captions } = $props();
 	const reduceMotion =
 		typeof window !== 'undefined' &&
 		window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -15,9 +21,9 @@
 
 <svelte:window onkeydown={onKeydown} />
 
-<div class="rule-caption-region" aria-live="polite" aria-atomic="true">
+<div class="rule-caption-region">
 	{#key captions.current?.id}
-		{#if captions.current}
+		{#if captions.current && !captions.paused}
 			<!-- svelte-ignore a11y_click_events_have_key_events -->
 			<!-- svelte-ignore a11y_no_static_element_interactions -->
 			<div

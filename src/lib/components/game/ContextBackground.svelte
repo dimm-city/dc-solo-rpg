@@ -2,11 +2,19 @@
 	/**
 	 * ContextBackground - Contextual background text overlay
 	 *
-	 * Displays screen-specific title and description text in the background
-	 * of game screens. Uses fade transitions when switching between screens.
+	 * Displays screen-specific title and description text in the upper part of the table.
+	 * Uses fade transitions when switching between screens.
 	 *
 	 * Once a roll resolves, `resultLine` replaces the description at full contrast
 	 * and stays until the player continues.
+	 *
+	 * contextText: { title, description, eyebrow?, notice? }
+	 * - eyebrow: a small line above the title, e.g. the card that caused a Stability check
+	 * - notice: what a card modifier just did ("King of Hearts returns to the deck · 1 of 4")
+	 *
+	 * The block's bottom edge sits at 40% of the table and the text grows upwards from it; the
+	 * dice land below 44% (see the dice container in src/routes/+layout.svelte), so a die
+	 * never comes to rest on the result line.
 	 *
 	 * @component
 	 */
@@ -25,28 +33,33 @@
 			in:fade={{ duration: ANIMATION_DURATION.FAST, delay: ANIMATION_DURATION.FAST }}
 			out:fade={{ duration: ANIMATION_DURATION.FAST }}
 		>
-			<h2 class="context-title">{contextText.title}</h2>
+			{#if contextText.eyebrow}
+				<p class="context-eyebrow" data-testid="context-card">{contextText.eyebrow}</p>
+			{/if}
+			<h2 class="context-title" data-testid="context-title">{contextText.title}</h2>
 			{#if resultLine}
 				<p class="context-result" data-testid="result-line">{resultLine}</p>
 			{:else}
 				<p class="context-description">{contextText.description}</p>
+			{/if}
+			{#if contextText.notice}
+				<p class="context-notice" data-testid="context-notice">{contextText.notice}</p>
 			{/if}
 		</div>
 	{/key}
 {/if}
 
 <style>
-	/* Background contextual text */
+	/* Background contextual text: bottom-anchored at 40% of the table, growing upwards */
 	.context-text-background {
 		position: absolute;
-		top: 45%;
+		bottom: 60%;
 		/* Centered with auto margins rather than left:50%, which would cap the
 		   shrink-to-fit width at half the container and clip long titles on phones */
 		left: 0;
 		right: 0;
 		margin-inline: auto;
 		width: min(92%, 60rem);
-		transform: translateY(-50%);
 		text-align: center;
 		pointer-events: none;
 		user-select: none;
@@ -55,17 +68,33 @@
 		z-index: 0;
 	}
 
-	/* Display font is for titles of 24px and up only */
+	/* The card behind this check: "7♠ · Caught in a toxic gas leak" */
+	.context-eyebrow {
+		font-family: var(--font-body, 'Inter', sans-serif);
+		font-size: 0.875rem;
+		font-weight: 600;
+		letter-spacing: 0.02em;
+		color: #d9d9e6;
+		margin: 0 0 0.5rem 0;
+		max-width: 600px;
+		margin-inline: auto;
+		text-shadow: 0 1px 8px rgba(0, 0, 0, 0.9);
+	}
+
+	/* Display font is for titles of 20px and up only. Whole words wrap, never mid-word. */
 	.context-title {
-		font-size: clamp(1.5rem, 5vw, 3.5rem);
+		font-size: clamp(1.25rem, 6.5vw, 3.5rem);
 		font-weight: 700;
 		color: var(--color-neon-cyan);
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
-		line-height: 1.25;
+		line-height: 1.2;
 		margin: 0 0 0.75rem 0;
 		font-family: var(--font-display, 'lixdu', 'Courier New', monospace);
-		overflow-wrap: break-word;
+		overflow-wrap: normal;
+		word-break: normal;
+		hyphens: none;
+		text-wrap: balance;
 		opacity: 0.6;
 		text-shadow: 0 0 10px var(--yellow);
 	}
@@ -96,6 +125,19 @@
 		max-width: 600px;
 		margin-inline: auto;
 		overflow-wrap: break-word;
+		text-wrap: balance;
+		text-shadow: 0 1px 8px rgba(0, 0, 0, 0.9);
+	}
+
+	/* What a card modifier just did */
+	.context-notice {
+		font-family: var(--font-body, 'Inter', sans-serif);
+		font-size: clamp(0.875rem, 1.8vw, 1rem);
+		font-weight: 600;
+		color: var(--color-neon-cyan, #00ffff);
+		line-height: 1.5;
+		margin: 0.5rem auto 0;
+		max-width: 600px;
 		text-shadow: 0 1px 8px rgba(0, 0, 0, 0.9);
 	}
 </style>

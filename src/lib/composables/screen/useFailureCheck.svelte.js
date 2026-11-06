@@ -2,9 +2,10 @@
  * useFailureCheck - Stability check screen logic composable
  *
  * Two steps on one button:
- * 1. Roll: dice animate, the result is applied (the HUD updates) and a result line
- *    stays on screen. The button becomes "Continue".
- * 2. Continue: only now does the game move on (next card, Salvation or the journal).
+ * 1. Roll: dice animate ("Rolling…"; a press skips to the result), the result is applied
+ *    (the HUD updates) and a result line stays on screen. The button becomes "Continue",
+ *    or "Face the end" when the roll took the last of the Stability.
+ * 2. Continue: only now does the game move on (next card, Salvation, the journal or the end).
  *
  * @param {Function} onCompleted - Callback when the check is completed (after Continue)
  * @returns {Object} Failure check state and actions
@@ -16,9 +17,13 @@ import {
 	applyPendingDiceRoll,
 	advanceAfterFailureCheck
 } from '../../stores/gameActions.svelte.js';
-import { rollDice } from '../../stores/diceStore.svelte.js';
+import { rollDice, skipRoll } from '../../stores/diceStore.svelte.js';
 import { gameState } from '../../stores/gameStore.svelte.js';
-import { formatStabilityResult } from '../../utils/rollResult.js';
+import {
+	formatStabilityResult,
+	formatModifierHint,
+	ROLLING_LABEL
+} from '../../utils/rollResult.js';
 
 export function useFailureCheck(onCompleted = () => {}) {
 	let failureCheckRolling = $state(false);
@@ -26,28 +31,39 @@ export function useFailureCheck(onCompleted = () => {}) {
 	let failureCheckResultLine = $state('');
 
 	/**
-	 * Roll the check, or (once rolled) continue to the next step
+	 * Roll the check, skip a roll in flight, or (once rolled) continue to the next step
 	 */
 	async function handleFailureCheck(triggerAutoPlay) {
-		if (failureCheckRolling) return;
-
 		const currentScreen = gameState.state;
 		if (currentScreen !== 'failureCheck') return;
+		if (failureCheckRolling) {
+			skipRoll();
+			return;
+		}
 
 		if (!failureCheckResult) {
 			failureCheckRolling = true;
 			try {
-				const { roll, wasLucid, wasSurreal } = getFailureCheckRoll();
-				failureCheckResult = roll;
+				const thrown = getFailureCheckRoll();
+				failureCheckResult = thrown.roll;
 				const towerBefore = gameState.tower;
 				// Store pending updates (don't apply yet)
-				applyFailureCheckResult(roll);
-				// Roll dice and wait for animation to complete
-				// Pass modifier state for visual dice roll (2d20 if was Lucid/Surreal)
-				await rollDice(roll, { isLucid: wasLucid, isSurreal: wasSurreal });
+				applyFailureCheckResult(thrown.roll);
+				// Show the dice the game rolled (2d20 if Lucid/Surreal) and wait for them to land
+				await rollDice(thrown.roll, {
+					isLucid: thrown.wasLucid,
+					isSurreal: thrown.wasSurreal,
+					dice: thrown.dice
+				});
 				// Apply the result after the animation, but stay here until the player continues
 				applyPendingDiceRoll({ advance: false });
-				failureCheckResultLine = formatStabilityResult(roll, towerBefore, gameState.tower);
+				failureCheckResultLine = formatStabilityResult(
+					thrown.roll,
+					towerBefore,
+					gameState.tower,
+					20,
+					thrown
+				);
 			} finally {
 				failureCheckRolling = false;
 			}
@@ -71,7 +87,19 @@ export function useFailureCheck(onCompleted = () => {}) {
 	}
 
 	// Reactive button text
-	const buttonText = $derived(failureCheckResult ? 'Continue' : 'Roll for Damage');
+	const buttonText = $derived(
+		failureCheckRolling
+			? ROLLING_LABEL
+			: failureCheckResult
+				? gameState.gameOver
+					? 'Face the end'
+					: 'Continue'
+				: 'Roll for damage'
+	);
+	// The modifier the roll will use, shown on the roll button only
+	const buttonHint = $derived(
+		failureCheckResult || failureCheckRolling ? null : formatModifierHint(gameState)
+	);
 
 	return {
 		// State (read-only via getters)
@@ -86,6 +114,9 @@ export function useFailureCheck(onCompleted = () => {}) {
 		},
 		get buttonText() {
 			return buttonText;
+		},
+		get buttonHint() {
+			return buttonHint;
 		},
 
 		// Actions

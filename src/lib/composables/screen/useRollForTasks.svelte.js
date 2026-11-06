@@ -1,12 +1,12 @@
 /**
- * useRollForTasks - Roll for Tasks screen logic composable
+ * useRollForTasks - Roll for Tasks screen logic composable (the screen titled "Round N")
  *
- * Manages the state and logic for the "Roll for Tasks" screen, including:
- * - Roll button state (rolled/rolling/confirming)
- * - Dice rolling integration with 3D animation
- * - Auto-play trigger integration
- * - Button text and disabled state
+ * 1. Roll: dice animate ("Rolling…"; a press skips to the result), then a result line
+ *    ("Rolled 17 · Draw 5 cards") stays on screen.
+ * 2. The cards are dealt on their own DEAL_DELAY_MS later. A press deals at once.
  *
+ * @param {Object} [options]
+ * @param {number} [options.dealDelay] - ms from the result to the deal
  * @returns {Object} Roll for tasks state and actions
  */
 
@@ -15,45 +15,73 @@ import {
 	confirmTaskRoll,
 	applyPendingTaskRoll
 } from '../../stores/gameActions.svelte.js';
-import { rollDice } from '../../stores/diceStore.svelte.js';
+import { rollDice, skipRoll } from '../../stores/diceStore.svelte.js';
 import { gameState } from '../../stores/gameStore.svelte.js';
-import { formatTaskResult } from '../../utils/rollResult.js';
+import { formatTaskResult, formatModifierHint, ROLLING_LABEL } from '../../utils/rollResult.js';
 
-export function useRollForTasks() {
+/** Time to read the result line before the cards are dealt */
+export const DEAL_DELAY_MS = 1200;
+
+export function useRollForTasks({ dealDelay = DEAL_DELAY_MS } = {}) {
 	let rollTasksRolled = $state(false);
 	let rollTasksRolling = $state(false);
 	let rollTasksConfirming = $state(false);
 	let rollTasksResultLine = $state('');
+	let dealTimer = null;
+
+	function cancelDeal() {
+		if (dealTimer) clearTimeout(dealTimer);
+		dealTimer = null;
+	}
+
+	/** Deal the cards (once, and only from this screen) */
+	async function deal() {
+		cancelDeal();
+		if (rollTasksConfirming || gameState.state !== 'rollForTasks') return;
+		rollTasksConfirming = true;
+		try {
+			await confirmTaskRoll();
+		} finally {
+			rollTasksConfirming = false;
+		}
+	}
 
 	/**
-	 * Handle roll/confirm action for tasks
-	 * First click: Roll dice (result line stays up)
-	 * Second click: Confirm and transition
+	 * Roll; skip a roll in flight; or, once rolled, deal now instead of waiting
 	 */
 	async function handleRollForTasks(triggerAutoPlay) {
-		if (rollTasksRolling || rollTasksConfirming) return;
+		if (rollTasksConfirming) return;
+		if (rollTasksRolling) {
+			skipRoll();
+			return;
+		}
 
 		if (rollTasksRolled) {
-			// Confirm
-			rollTasksConfirming = true;
-			await confirmTaskRoll();
-			rollTasksConfirming = false;
-		} else {
-			// Roll
-			rollTasksRolling = true;
-			const { roll, cardCount, wasLucid, wasSurreal } = await rollForTasks();
-			// Roll dice and wait for animation to complete
-			// Pass modifier state for visual dice roll (2d20 if was Lucid/Surreal)
-			await rollDice(roll, { isLucid: wasLucid, isSurreal: wasSurreal });
-			rollTasksRolling = false;
+			await deal();
+			return;
+		}
+
+		rollTasksRolling = true;
+		try {
+			const thrown = await rollForTasks();
+			// Show the dice the game rolled (2d20 if Lucid/Surreal) and wait for them to land
+			await rollDice(thrown.roll, {
+				isLucid: thrown.wasLucid,
+				isSurreal: thrown.wasSurreal,
+				dice: thrown.dice
+			});
 			// Apply pending dice roll after animation completes
 			applyPendingTaskRoll();
-			rollTasksResultLine = formatTaskResult(roll, cardCount);
+			rollTasksResultLine = formatTaskResult(thrown.roll, thrown.cardCount, thrown);
 			rollTasksRolled = true;
-			// Trigger auto-play after roll completes (event-driven)
-			if (triggerAutoPlay) {
-				setTimeout(() => triggerAutoPlay(), 0);
-			}
+		} finally {
+			rollTasksRolling = false;
+		}
+		// Deal on its own once the player has had a moment with the result
+		dealTimer = setTimeout(deal, dealDelay);
+		// Trigger auto-play after roll completes (event-driven)
+		if (triggerAutoPlay) {
+			setTimeout(() => triggerAutoPlay(), 0);
 		}
 	}
 
@@ -61,6 +89,7 @@ export function useRollForTasks() {
 	 * Reset state when entering screen
 	 */
 	function resetState() {
+		cancelDeal();
 		rollTasksRolled = false;
 		rollTasksRolling = false;
 		rollTasksConfirming = false;
@@ -69,14 +98,20 @@ export function useRollForTasks() {
 
 	// Reactive button text
 	const buttonText = $derived(
-		rollTasksRolled
-			? (gameState.config?.labels?.rollForTasksResultHeader ??
+		rollTasksRolling
+			? ROLLING_LABEL
+			: rollTasksRolled
+				? (gameState.config?.labels?.rollForTasksResultHeader ??
 					`Draw ${gameState.cardsToDraw} Card${gameState.cardsToDraw !== 1 ? 's' : ''}`)
-			: (gameState.config?.labels?.rollForTasksHeader ?? 'Roll Dice')
+				: (gameState.config?.labels?.rollForTasksHeader ?? 'Roll for tasks')
+	);
+	// The modifier the roll will use, shown on the roll button only
+	const buttonHint = $derived(
+		rollTasksRolled || rollTasksRolling ? null : formatModifierHint(gameState)
 	);
 
-	// Reactive button disabled state
-	const buttonDisabled = $derived(rollTasksRolling || rollTasksConfirming);
+	// Reactive button disabled state: a press while rolling skips, so only the deal itself locks it
+	const buttonDisabled = $derived(rollTasksConfirming);
 
 	return {
 		// State (read-only via getters)
@@ -95,12 +130,16 @@ export function useRollForTasks() {
 		get buttonText() {
 			return buttonText;
 		},
+		get buttonHint() {
+			return buttonHint;
+		},
 		get buttonDisabled() {
 			return buttonDisabled;
 		},
 
 		// Actions
 		handleRollForTasks,
-		resetState
+		resetState,
+		cancelDeal
 	};
 }

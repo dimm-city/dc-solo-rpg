@@ -1,15 +1,20 @@
 /**
  * The check composables roll once, publish a result line and wait; a second press continues.
+ * While the dice roll the button reads "Rolling…" and a press skips to the result.
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { gameState } from '../../stores/gameStore.svelte.js';
-import { mockDieRoll, resetRNG } from '../../services/random.js';
+import { mockDieRoll, mockDieRollSequence, resetRNG } from '../../services/random.js';
+import { rollDice, skipRoll } from '../../stores/diceStore.svelte.js';
 import { useFailureCheck } from './useFailureCheck.svelte.js';
 import { useSuccessCheck } from './useSuccessCheck.svelte.js';
-import { useRollForTasks } from './useRollForTasks.svelte.js';
+import { useRollForTasks, DEAL_DELAY_MS } from './useRollForTasks.svelte.js';
 import { useInitialDamage } from './useInitialDamage.svelte.js';
 
-vi.mock('../../stores/diceStore.svelte.js', () => ({ rollDice: vi.fn(async () => {}) }));
+vi.mock('../../stores/diceStore.svelte.js', () => ({
+	rollDice: vi.fn(async () => {}),
+	skipRoll: vi.fn(() => true)
+}));
 vi.mock('../../stores/indexedDBStorage.js', () => ({
 	saveGame: vi.fn(),
 	loadGame: vi.fn(),
@@ -17,8 +22,20 @@ vi.mock('../../stores/indexedDBStorage.js', () => ({
 	restoreGameState: vi.fn()
 }));
 
+/** A rollDice that waits until the test lets the dice land */
+function holdDice() {
+	let land;
+	rollDice.mockImplementationOnce(() => new Promise((resolve) => (land = resolve)));
+	return async () => {
+		await vi.waitFor(() => expect(land).toBeTypeOf('function'));
+		await land();
+	};
+}
+
 beforeEach(() => {
 	resetRNG();
+	rollDice.mockClear();
+	skipRoll.mockClear();
 	for (const key of Object.keys(gameState.pendingUpdates)) gameState.pendingUpdates[key] = null;
 	Object.assign(gameState, {
 		tower: 20,
@@ -34,10 +51,13 @@ beforeEach(() => {
 	});
 });
 
+afterEach(() => vi.useRealTimers());
+
 describe('useFailureCheck', () => {
 	it('applies and explains the roll, then continues on the second press', async () => {
 		gameState.state = 'failureCheck';
 		const check = useFailureCheck();
+		expect(check.buttonText).toBe('Roll for damage');
 		mockDieRoll(4);
 
 		await check.handleFailureCheck();
@@ -49,6 +69,49 @@ describe('useFailureCheck', () => {
 
 		await check.handleFailureCheck();
 		expect(gameState.state).toBe('drawCard');
+	});
+
+	it('reads "Rolling…" while the dice roll, and a press then skips to the result', async () => {
+		gameState.state = 'failureCheck';
+		const check = useFailureCheck();
+		const land = holdDice();
+		mockDieRoll(12);
+
+		const rolling = check.handleFailureCheck();
+		expect(check.rolling).toBe(true);
+		expect(check.buttonText).toBe('Rolling…');
+
+		await check.handleFailureCheck(); // a press during the roll
+		expect(skipRoll).toHaveBeenCalledTimes(1);
+		expect(gameState.state).toBe('failureCheck');
+
+		await land();
+		await rolling;
+		expect(check.buttonText).toBe('Continue');
+	});
+
+	it('shows the Lucid modifier on the roll button only, and both dice in the result', async () => {
+		gameState.state = 'failureCheck';
+		gameState.isLucid = true;
+		const check = useFailureCheck();
+		expect(check.buttonHint).toBe('Lucid: 2 dice, keep high');
+		mockDieRollSequence([5, 19]);
+
+		await check.handleFailureCheck();
+		expect(rollDice).toHaveBeenCalledWith(19, { isLucid: true, isSurreal: false, dice: [5, 19] });
+		expect(check.resultLine).toBe('Rolled 19 (high of 5, 19) · no Stability lost · 20/20');
+		expect(check.buttonHint).toBeNull();
+	});
+
+	it('words the fatal roll and its button', async () => {
+		gameState.state = 'failureCheck';
+		gameState.tower = 2;
+		const check = useFailureCheck();
+		mockDieRoll(3);
+
+		await check.handleFailureCheck();
+		expect(check.resultLine).toBe('Rolled 3 · −2 Stability · 0/20 · nothing left to hold on to');
+		expect(check.buttonText).toBe('Face the end');
 	});
 
 	it('clears the result line on reset', async () => {
@@ -72,6 +135,31 @@ describe('useInitialDamage', () => {
 		expect(gameState.tower).toBe(20);
 		expect(roll.resultLine).toBe('Rolled 15 · no Stability lost · 20/20');
 	});
+
+	it('uses the modifier like every other roll', async () => {
+		gameState.state = 'initialDamageRoll';
+		gameState.isSurreal = true;
+		const roll = useInitialDamage();
+		expect(roll.buttonHint).toBe('Surreal: 2 dice, keep low');
+		mockDieRollSequence([9, 14]);
+
+		await roll.handleInitialDamageRoll();
+		expect(roll.result).toBe(9);
+		expect(gameState.isSurreal).toBe(false);
+		expect(roll.resultLine).toBe('Rolled 9 (low of 9, 14) · −1 Stability · 19/20');
+	});
+
+	it('reads "Rolling…" while rolling, then Continue', async () => {
+		gameState.state = 'initialDamageRoll';
+		const roll = useInitialDamage();
+		const land = holdDice();
+		mockDieRoll(15);
+		const rolling = roll.handleInitialDamageRoll();
+		expect(roll.buttonText).toBe('Rolling…');
+		await land();
+		await rolling;
+		expect(roll.buttonText).toBe('Continue');
+	});
 });
 
 describe('useSuccessCheck', () => {
@@ -90,16 +178,101 @@ describe('useSuccessCheck', () => {
 		await check.handleSuccessCheck();
 		expect(gameState.state).toBe('log');
 	});
+
+	it('CK-03: with four Aces there are no dice; one press shows the result', async () => {
+		gameState.state = 'successCheck';
+		gameState.acesRevealed = 4;
+		gameState.isLucid = true;
+		const check = useSuccessCheck();
+		expect(check.buttonText).toBe('Remove a token · automatic');
+		expect(check.buttonHint).toBeNull(); // nothing is rolled, so nothing uses the modifier
+
+		await check.handleSuccessCheck();
+		expect(rollDice).not.toHaveBeenCalled();
+		expect(check.resultLine).toBe('Automatic · −1 token · 9 left');
+		expect(check.buttonText).toBe('Continue');
+		expect(gameState.isLucid).toBe(true);
+	});
+
+	it('resumes a Salvation roll saved in flight on its result, without a second roll', () => {
+		gameState.state = 'successCheck';
+		gameState.pendingUpdates.diceRoll = 16;
+		gameState.pendingUpdates.tokenChange = -1;
+		const check = useSuccessCheck();
+		check.resetState();
+		check.resumePending();
+		expect(gameState.tokens).toBe(9);
+		expect(check.resultLine).toBe('Rolled 16 · −1 token · 9 left');
+		expect(check.buttonText).toBe('Continue');
+		expect(rollDice).not.toHaveBeenCalled();
+	});
 });
 
 describe('useRollForTasks', () => {
-	it('publishes the cards to draw', async () => {
+	it('publishes the cards to draw and the deal for the card overlay', async () => {
 		gameState.state = 'rollForTasks';
 		const tasks = useRollForTasks();
+		expect(tasks.buttonText).toBe('Roll for tasks');
 		mockDieRoll(17);
 
 		await tasks.handleRollForTasks();
 		expect(tasks.resultLine).toBe('Rolled 17 · Draw 5 cards');
+		expect(gameState.taskRoll).toEqual({ roll: 17, dice: [17], cards: 5 });
 		expect(gameState.state).toBe('rollForTasks');
+		tasks.resetState();
+	});
+
+	it('deals the cards on its own after the result', async () => {
+		vi.useFakeTimers();
+		gameState.state = 'rollForTasks';
+		const tasks = useRollForTasks();
+		mockDieRoll(8);
+
+		await tasks.handleRollForTasks();
+		vi.advanceTimersByTime(DEAL_DELAY_MS - 1);
+		expect(gameState.state).toBe('rollForTasks');
+		await vi.advanceTimersByTimeAsync(1);
+		expect(gameState.state).toBe('drawCard');
+	});
+
+	it('a press after the result deals at once, and only once', async () => {
+		vi.useFakeTimers();
+		gameState.state = 'rollForTasks';
+		const tasks = useRollForTasks();
+		mockDieRoll(8);
+
+		await tasks.handleRollForTasks();
+		await tasks.handleRollForTasks();
+		expect(gameState.state).toBe('drawCard');
+		await vi.advanceTimersByTimeAsync(DEAL_DELAY_MS);
+		expect(gameState.state).toBe('drawCard'); // the pending deal was cancelled
+	});
+
+	it('leaving the screen cancels the deal', async () => {
+		vi.useFakeTimers();
+		gameState.state = 'rollForTasks';
+		const tasks = useRollForTasks();
+		mockDieRoll(8);
+
+		await tasks.handleRollForTasks();
+		tasks.resetState();
+		await vi.advanceTimersByTimeAsync(DEAL_DELAY_MS);
+		expect(gameState.state).toBe('rollForTasks');
+	});
+
+	it('reads "Rolling…" while the dice roll, and a press skips to the result', async () => {
+		gameState.state = 'rollForTasks';
+		const tasks = useRollForTasks();
+		const land = holdDice();
+		mockDieRoll(17);
+		const rolling = tasks.handleRollForTasks();
+		expect(tasks.buttonText).toBe('Rolling…');
+		expect(tasks.buttonDisabled).toBe(false);
+		await tasks.handleRollForTasks();
+		expect(skipRoll).toHaveBeenCalledTimes(1);
+		await land();
+		await rolling;
+		expect(tasks.buttonText).toBe('Draw 5 Cards');
+		tasks.resetState();
 	});
 });

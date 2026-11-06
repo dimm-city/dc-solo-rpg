@@ -228,9 +228,6 @@ describe('gameStore', () => {
 			transitionTo('initialDamageRoll');
 			expect(gameState.state).toBe('initialDamageRoll');
 
-			transitionTo('startRound');
-			expect(gameState.state).toBe('startRound');
-
 			transitionTo('rollForTasks');
 			expect(gameState.state).toBe('rollForTasks');
 		});
@@ -408,5 +405,40 @@ describe('gameStore', () => {
 			updateGameState({ stylesheet: '/games/test/game.css' });
 			expect(gameState.stylesheet).toBe('/games/test/game.css');
 		});
+	});
+});
+
+describe('getDealProgress (for the card overlay)', () => {
+	it('is null before the round is rolled', async () => {
+		const { gameState, getDealProgress } = await import('./gameStore.svelte.js');
+		gameState.taskRoll = null;
+		expect(getDealProgress()).toBeNull();
+	});
+
+	it('gives "Rolled 17 · 5 cards" before the first card and "Card 2 of 5" after', async () => {
+		const { gameState, getDealProgress } = await import('./gameStore.svelte.js');
+		gameState.taskRoll = { roll: 17, dice: [17], cards: 5 };
+		gameState.cardsToDraw = 5;
+		expect(getDealProgress()).toEqual({ roll: 17, dice: [17], total: 5, current: 0 });
+		gameState.cardsToDraw = 3; // two cards drawn
+		expect(getDealProgress().current).toBe(2);
+	});
+});
+
+describe('startRound', () => {
+	it('opens the round on Roll for Tasks and clears the last deal', async () => {
+		const { gameState } = await import('./gameStore.svelte.js');
+		const { startRound } = await import('./gameActions.svelte.js');
+		Object.assign(gameState, {
+			state: 'log',
+			round: 2,
+			taskRoll: { roll: 9, dice: [9], cards: 3 },
+			lastCard: { card: '5', suit: 'clubs' }
+		});
+		startRound();
+		expect(gameState.state).toBe('rollForTasks');
+		expect(gameState.round).toBe(3);
+		expect(gameState.taskRoll).toBeNull();
+		expect(gameState.lastCard).toBeNull();
 	});
 });
