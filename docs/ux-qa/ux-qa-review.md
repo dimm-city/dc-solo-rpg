@@ -7,7 +7,7 @@ restart. Branch: `claude/vibrant-curie-w9bn88`.
 ## Status
 
 - Started: 2026-11-06, against `main` at 17b967d (PR #50 merged).
-- Current phase: complete.
+- Current phase: review complete; fix round in progress (see **Fix round**).
 - Last section completed: Recommendations (all coverage items done).
 
 ## How to resume after a restart
@@ -1241,6 +1241,36 @@ and checked against the captures. "Observed" is from the 10fps sheets (swiftshad
 | Story library and cards     | `BrowseGames.svelte`, `GameCard.svelte` | fly 20px, 250ms quintOut                       | fine                                     | keep     | none                                      |
 | Loading ring                | `LoadScreen.svelte`                     | 1.6s pulse                                     | fine                                     | keep     | none                                      |
 | Recorder and player         | `AudioRecorder`, `AudioPlayer`          | pulse, wave                                    | fine                                     | keep     | none                                      |
+
+## Fix round (2026-11-06)
+
+**Owner decisions:**
+
+- Any natural 20 makes the player Lucid, and any natural 1 makes them Surreal, on every d20 roll.
+- The "one button per step" rule may be broken: Begin Round can go, and cards can deal on their
+  own.
+- Every identified issue is to be worked through.
+
+**Lead's defaults:**
+
+- The product name is "Dream Console", with Dimm City as the maker.
+- Key art is generated CSS/SVG per game.
+- `MiniStatusHUD` is deleted.
+- All TTS providers stay; the ones that need a key are gated behind it.
+
+**Teams.** Each team works on its own branch (`ux/<team>`, local worktrees, merged into
+`claude/vibrant-curie-w9bn88` by the lead):
+
+| Team                                  | Findings                                                                                                                         | Status  |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| T1 Rules, rolls and round flow        | LS-01–07, GS-01–03, RF-01–03, RF-05, CK-01 (result lines), CK-02–04, MN-02, RC-02, AC-03 (tab order), AC-04, AC-05, AN-02, VP-03 | running |
+| T2 Card, overlays, journal and ending | AN-01, AN-04, RF-04, CK-01 (card face), AC-01, AC-02, JR-01–04, VP-04, EN-01–04, MN-03, MN-05, VP-01 (card, journal, Game Over)  | running |
+| T3 Home, pages, menus and settings    | ST-01–05, MN-01, MN-04, MN-06, HM-01–07, JR-05, RC-03, AN-06 (home and splash)                                                   | running |
+| T4 HUD, layout and visual system      | HD-01–04, VP-01, VP-02, RC-01, AN-03, AN-05, AN-06 (navigation), AC-03 (focus ring), MN-07, animation tokens, self-hosted fonts  | running |
+| T5 Story                              | SM-01–05                                                                                                                         | running |
+
+If the container restarts mid-round, team branches that were not merged yet are lost. Merged work
+is on `claude/vibrant-curie-w9bn88`. Re-dispatch any team whose status above is not "merged".
 
 ## Recommendations
 
