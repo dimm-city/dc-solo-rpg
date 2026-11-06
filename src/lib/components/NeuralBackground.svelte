@@ -67,7 +67,7 @@
 		function draw() {
 			ctx.clearRect(0, 0, width, height);
 			for (const mote of motes) {
-				const r = mote.size * 4;
+				const r = mote.size * 3;
 				ctx.globalAlpha = moteAlpha(mote);
 				ctx.drawImage(sprites[mote.hue], mote.x - r, mote.y - r, r * 2, r * 2);
 			}

@@ -29,9 +29,13 @@
 	}
 
 	/* AN-05: the header's own slide-down played under the intro, unseen; the HUD block fades
-	   in as one piece instead */
+	   in as one piece instead. Without that animation Chromium paints the bar's backdrop-filter
+	   outside its clip-path (filled corners), and the blur re-ran under the moving background
+	   every frame anyway (it sits over a near-black table), so the bar drops it. */
 	.status-display-container > :global(.player-round-bar) {
 		animation: none;
 		opacity: 1;
+		backdrop-filter: none;
+		-webkit-backdrop-filter: none;
 	}
 </style>

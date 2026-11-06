@@ -13,7 +13,7 @@ export const MOTE_LIFE = ANIMATION_DURATION.AMBIENT_SLOW;
 const DRIFT = 8;
 
 /** Brightest a mote gets */
-export const MOTE_MAX_ALPHA = 0.5;
+export const MOTE_MAX_ALPHA = 0.35;
 
 /**
  * A new mote somewhere in a w x h field. `age` starts the field part-way through a cycle,
