@@ -7,8 +7,8 @@ restart. Branch: `claude/vibrant-curie-w9bn88`.
 ## Status
 
 - Started: 2026-11-06, against `main` at 17b967d (PR #50 merged).
-- Current phase: broad review, next: Auto-play, keyboard, screen reader, reduced motion (coverage item 13).
-- Last section completed: Story Library and story mode (items 10-12 done).
+- Current phase: broad review, next: Animation inventory (coverage item 14).
+- Last section completed: Auto-play, keyboard, screen reader, reduced motion (item 13 done).
 
 ## How to resume after a restart
 
@@ -95,7 +95,7 @@ Tick an item only when its findings are written below.
 - [x] Journal: entry, prompts, save beat, audio record and playback, auto-journal timer, TTS
 - [x] Endings: win, loss by Kings, loss by Stability, final log, epitaph, run recap
 - [x] Story Library and story mode (browse, read, navigate, generated story)
-- [ ] Auto-play, keyboard-only play, screen reader announcements, reduced motion
+- [x] Auto-play, keyboard-only play, screen reader announcements, reduced motion
 - [ ] Every animation and transition (timing, easing, jank, layering, consistency)
 - [ ] Viewports: 1440x900, 1280x720, tablet, iPhone 13, small phone (360x640), landscape phone
 
@@ -889,6 +889,72 @@ through the store), `endings/*/13-…`, `14-…`.
 - **Recommendation:** slide the incoming round in from the side it comes from (16px, 200ms,
   opacity plus transform) while the outgoing round fades over 120ms; never show neither. Clamp
   dialog titles at `clamp(1.25rem, 6vw, 2rem)`.
+- **Effort:** S.
+
+### 13. Auto-play, keyboard-only play, screen reader, reduced motion
+
+Evidence: `lucid/auto-desktop-lucid/` and `auto.out`, `lucid/keys-desktop-lucid/log.jsonl`,
+`a11y/` (`a11y.cjs`: desktop, `reducedMotion: 'reduce'`), `a11y/sheet.png`.
+
+What works: keyboard-only play gets through every step (24 Space/Enter presses and 0 dead
+presses in `keys-desktop-lucid`). The revealed card takes focus and gets a 5px white ring.
+Result lines and King or Salvation events reach a polite live region. Header buttons have
+names and a 3px cyan focus ring.
+
+#### AC-01 · S2 · Auto-play shows each card for two seconds
+
+- **What happens:** the header Auto-Play preset sets `autoAdvanceDelay: 2000`. With read-aloud
+  off, `CardDeck` dismisses a revealed card after that delay (`CardDeck.svelte:122-128`). In
+  the auto run, cards were on screen about 2s each (`auto.out`, revealed 38.3s, dismissing
+  40.3s). Cards carry 60–100 words, which take 15–25s to read. Auto-play also arms only on the
+  next screen (LS-07).
+- **Recommendation:** with read-aloud off, scale the card hold with its length: 1.5s plus 60ms
+  per word, capped at 15s, and pause while the pointer is over the card or it has focus. Show a
+  thin progress line at the card's bottom edge so the player can see it is about to move on.
+- **Effort:** S.
+
+#### AC-02 · S2 · Screen readers hear "Continue, button" instead of the card
+
+- **What happens:** the revealed card takes focus as `role="button"` with
+  `aria-label="Continue"` (`card/CardDisplay.svelte:107-109`). The label replaces the card's
+  content as its accessible name, so focus announces "Continue, button". The card's title and
+  story are never read, and the live region still holds the previous roll's line ("Rolled 5 ·
+  Draw 2 cards", `a11y.cjs` output).
+- **Recommendation:** label the card by its content: `aria-labelledby` pointing at the title,
+  plus `aria-describedby` at the story, and put "Press Enter to continue" in a visually hidden
+  hint. When a card is revealed, announce "8 of Spades, Event: You discover a shortcut through
+  the city" in the live region.
+- **Effort:** S.
+
+#### AC-03 · S2 · The primary button has no visible keyboard focus
+
+- **What happens:** Tab reaches the step button after the six header buttons, and it shows no
+  focus indicator (`outline: none`; the clip-path cuts any outline), while the header buttons
+  show a 3px cyan ring (`a11y.cjs` tab order). This fails WCAG 2.4.7. The step button is also
+  the seventh tab stop on every screen.
+- **Recommendation:** a focus style inside the clip: `:focus-visible` swaps the border to 3px
+  white and adds an inner glow. Put the step button first in the tab order (DOM order, or skip
+  the header with a "Skip to action" link).
+- **Effort:** S. `AugmentedButton.svelte`.
+
+#### AC-04 · S2 · Reduced motion still throws 3D dice for 3–4 seconds
+
+- **What happens:** with `prefers-reduced-motion: reduce`, the die still tumbles across the
+  table (`a11y/03-reduced-roll-400ms.png`), and the step stays locked for 3.4s. The earlier
+  review raised this, and it is still open: `diceStore.svelte.js` never checks the preference.
+  The rest of the app does honour it (fades become instant, the GameOver beat is skipped).
+- **Recommendation:** under reduced motion, skip `diceBoxInstance.roll()`. Show the result as a
+  large number in a d20 outline for 600ms (opacity only), then the result line.
+- **Effort:** S. `src/lib/stores/diceStore.svelte.js:189-259`.
+
+#### AC-05 · S3 · Live-region and caption announcements compete
+
+- **What happens:** the result line goes to the game's live region, while the rule caption has
+  its own `aria-live` region and the keyboard hint is a third `role="status"`. A natural 20 on
+  a first game fires the result line and the Lucid caption in the same tick, and screen readers
+  drop or merge one of them.
+- **Recommendation:** route captions through the single live region, queued 1s after the result
+  line.
 - **Effort:** S.
 
 ## Animation inventory
