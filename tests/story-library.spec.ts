@@ -52,8 +52,11 @@ async function seed(page: Page, plan: Plan) {
 
 async function writeSave(page: Page, plan: Plan) {
 	await page.evaluate(async (plan) => {
-		const gs = await import('/src/lib/stores/gameStore.svelte.js');
-		const st = await import('/src/lib/stores/indexedDBStorage.js');
+		// Module URLs the dev server serves; held in variables so TypeScript does not resolve them
+		const storeUrl = '/src/lib/stores/gameStore.svelte.js';
+		const storageUrl = '/src/lib/stores/indexedDBStorage.js';
+		const gs = await import(storeUrl);
+		const st = await import(storageUrl);
 		for (let i = 0; i < 100 && (gs.gameState.deck?.length ?? 0) < 40; i++) {
 			await new Promise((r) => setTimeout(r, 100));
 		}
