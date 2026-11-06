@@ -161,7 +161,7 @@ describe('gameActions - Core Game Mechanics', () => {
 
 			await startRound();
 
-			expect(gameState.state).toBe('startRound');
+			expect(gameState.state).toBe('rollForTasks');
 		});
 	});
 
@@ -697,15 +697,15 @@ describe('gameActions - Core Game Mechanics', () => {
 			expect(gameState.journalEntries[0].dateRecorded).toBeDefined();
 		});
 
-		it('should transition to startRound regardless of Ace status', async () => {
+		it('should open the next round regardless of Ace status', async () => {
 			// D20 workflow: success checks happen during confirmCard, not after recordRound
-			// recordRound always transitions to startRound (success check happens before journal)
+			// recordRound always opens the next round on Roll for Tasks (success check happens before journal)
 			gameState.aceOfHeartsRevealed = true;
 			gameState.state = 'log';
 
 			await recordRound({ text: 'Entry' });
 
-			expect(gameState.state).toBe('startRound');
+			expect(gameState.state).toBe('rollForTasks');
 		});
 
 		it('should start new round if Ace not yet revealed', async () => {
@@ -713,8 +713,8 @@ describe('gameActions - Core Game Mechanics', () => {
 
 			await recordRound({ text: 'Entry' });
 
-			// startRound transitions to startRound state first, then to rollForTasks
-			expect(gameState.state).toBe('startRound');
+			// startRound opens the round on Roll for Tasks
+			expect(gameState.state).toBe('rollForTasks');
 		});
 
 		it('should throw error if no journal entry provided', async () => {
@@ -769,7 +769,7 @@ describe('gameActions - Core Game Mechanics', () => {
 
 	describe('State Transitions - transitionTo', () => {
 		it('should transition to specified screen', () => {
-			gameState.state = 'startRound';
+			gameState.state = 'initialDamageRoll';
 
 			transitionTo('rollForTasks');
 

@@ -2,7 +2,7 @@
  * Game initialization utilities
  * Centralized logic for initializing game state
  */
-import { gameState } from './gameStore.svelte.js';
+import { gameState, createRunState } from './gameStore.svelte.js';
 import { getSettings } from './settingsStore.svelte.js';
 import { shuffleArray } from '../services/random.js';
 import { getDiceTheme } from '../configuration/DiceThemes.js';
@@ -71,9 +71,10 @@ export function initializeGame(gameConfig, player, options = {}) {
 	if (restartDifficulty === undefined) delete restartConfig.options.difficulty;
 	else restartConfig.options.difficulty = restartDifficulty;
 
-	// Initialize all game state in one operation
+	// Initialize all game state in one operation, starting from a fresh run so nothing
+	// (Lucid, Surreal, pending updates, the last card) carries over from an earlier game.
 	// Note: Initial damage roll is now interactive, applied after intro screen
-	Object.assign(gameState, {
+	Object.assign(gameState, createRunState(), {
 		config: finalConfig,
 		originalConfig: restartConfig,
 		stylesheet: finalConfig.stylesheet || gameConfig.stylesheet || '',
@@ -83,21 +84,9 @@ export function initializeGame(gameConfig, player, options = {}) {
 		player,
 		playerName: player.name,
 		tokens: startingTokens,
-		kingsRevealed: 0,
-		kingOfHearts: false,
-		kingOfDiamonds: false,
-		kingOfClubs: false,
-		kingOfSpades: false,
 		aceOfHeartsRevealed,
 		acesRevealed: aceOfHeartsRevealed ? 1 : 0, // D20 system: Track Aces for salvation threshold
-		gameOver: false,
-		win: false,
 		tower: 20, // D20 system: Always start at 20 Stability
-		log: [],
-		journalEntries: [],
-		cardsToDraw: 0,
-		currentCard: null,
-		diceRoll: 0,
 		deck
 	});
 }

@@ -98,7 +98,8 @@ describe('WAAStore', () => {
 
 		// Assert that the round number in the gameState is incremented
 		expect(gameState.round).toBe(2);
-		expect(gameState.state).toBe('startRound');
+		// A round opens on Roll for Tasks (titled "Round N"); there is no Begin Round step
+		expect(gameState.state).toBe('rollForTasks');
 	});
 
 	// Test rollForTasks - D20 System
@@ -350,7 +351,7 @@ describe('WAAStore', () => {
 
 	// Test recordRound
 	describe('recordRound', () => {
-		test('should record the round and transition to startRound', async () => {
+		test('should record the round and open the next round', async () => {
 			const journalEntry = { text: 'Journal entry 1' };
 			const initialState = {
 				round: 1,
@@ -368,11 +369,11 @@ describe('WAAStore', () => {
 			expect(gameState.journalEntries).toEqual([
 				expect.objectContaining({ text: journalEntry.text, round: initialState.round })
 			]);
-			// recordRound now always transitions to startRound (success check happens before journal)
-			expect(gameState.state).toBe('startRound');
+			// recordRound always opens the next round (success check happens before journal)
+			expect(gameState.state).toBe('rollForTasks');
 		});
 
-		test('should record the round and transition to startRound (no ace)', async () => {
+		test('should record the round and open the next round (no ace)', async () => {
 			const journalEntry = { text: 'Journal entry 1' };
 			const initialState = {
 				round: 1,
@@ -389,7 +390,7 @@ describe('WAAStore', () => {
 			expect(gameState.journalEntries).toEqual([
 				expect.objectContaining({ text: journalEntry.text, round: initialState.round })
 			]);
-			expect(gameState.state).toBe('startRound');
+			expect(gameState.state).toBe('rollForTasks');
 		});
 
 		test('should throw an error if no journal entry provided', async () => {

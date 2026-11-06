@@ -111,6 +111,7 @@ describe('Initial instability roll', () => {
 		expect(gameState.tower).toBe(18);
 		expect(gameState.state).toBe('initialDamageRoll');
 		advanceAfterInitialDamage();
-		expect(gameState.state).toBe('startRound');
+		// Round 1 opens straight on Roll for Tasks
+		expect(gameState.state).toBe('rollForTasks');
 	});
 });
