@@ -3,18 +3,20 @@
  *
  * Watches gameState and queues a short caption the first time each rule shows up
  * in a game (odd card, King, Ace of Hearts, other Aces, Lucid, Surreal, failed Salvation).
- * The "seen" set lives in memory and resets with every new game. Nothing is queued when
- * the player chose "I know how to play, never show instructions again".
+ * The "seen" set lives in memory and resets with every new game; each id is also recorded
+ * once (markRuleTipSeen) for the Help modal's "Rules you've met". Nothing is queued while
+ * rule tips are off (Settings › Gameplay › Rule tips).
  *
  * `createRuleCaptions` holds the trigger logic (plain state, easy to test);
  * `useRuleCaptions` wires it to gameState and the RuleCaption component.
  */
 import { gameState } from '../stores/gameStore.svelte.js';
 import { getSalvationThreshold } from '../services/d20Mechanics.js';
-import { hasSeenInstructions } from '../utils/instructionsStorage.js';
+import { areRuleTipsEnabled, markRuleTipSeen } from '../utils/instructionsStorage.js';
 
 const ODD_RANKS = ['A', '3', '5', '7', '9'];
 const RESET_STATES = ['loadGame', 'showIntro'];
+const tipsOff = () => !areRuleTipsEnabled();
 
 /** Pick the fields we compare between observations. */
 function snapshot(g) {
@@ -35,9 +37,10 @@ function snapshot(g) {
 }
 
 /**
- * @param {{ isDisabled?: () => boolean }} [options] isDisabled returns true when captions are turned off
+ * @param {{ isDisabled?: () => boolean, onSeen?: (id: string) => void }} [options]
+ *   isDisabled returns true when captions are turned off; onSeen records a caption once shown
  */
-export function createRuleCaptions({ isDisabled = () => false } = {}) {
+export function createRuleCaptions({ isDisabled = () => false, onSeen = markRuleTipSeen } = {}) {
 	let seen = [];
 	let prev = null;
 	/** @type {{ id: string, text: string }[]} */
@@ -47,6 +50,7 @@ export function createRuleCaptions({ isDisabled = () => false } = {}) {
 		if (seen.includes(id)) return;
 		seen.push(id);
 		queue.push({ id, text });
+		onSeen(id);
 	}
 
 	function reset() {
@@ -136,7 +140,7 @@ export function createRuleCaptions({ isDisabled = () => false } = {}) {
  * Component wiring: call once in RuleCaption. Returns the visible caption and a dismiss function.
  */
 export function useRuleCaptions({ displayMs = 6000 } = {}) {
-	const tracker = createRuleCaptions({ isDisabled: () => hasSeenInstructions() });
+	const tracker = createRuleCaptions({ isDisabled: tipsOff });
 	let current = $state(null);
 	let timer = null;
 
@@ -158,7 +162,7 @@ export function useRuleCaptions({ displayMs = 6000 } = {}) {
 	$effect(() => {
 		const g = gameState;
 		tracker.observe(g);
-		if (RESET_STATES.includes(g.state) || g.gameOver || hasSeenInstructions()) {
+		if (RESET_STATES.includes(g.state) || g.gameOver || tipsOff()) {
 			clearTimer();
 			current = null;
 		} else if (!current) {
