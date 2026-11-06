@@ -47,6 +47,8 @@ async function openGame(page: Page) {
 	}, INSTRUCTIONS_SEEN_KEY);
 	await page.goto(`/game/${SLUG}`);
 	await expect(page.getByTestId('screen-showIntro')).toBeVisible({ timeout: 30000 });
+	// An ordinary opening roll, so no Lucid or Surreal carries into the test
+	await store(page, 'rnd.mockDieRoll(13)');
 }
 
 test.describe('Round flow', () => {

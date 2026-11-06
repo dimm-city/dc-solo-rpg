@@ -70,7 +70,10 @@ export async function playToFirstRound(page: Page) {
 	await expect(initial).toHaveAccessibleName('Continue', { timeout: 30000 });
 	await pressStep(page, 'initial-damage-button');
 
-	// There is no Begin Round step: round 1 opens on Roll for Tasks, titled "Round 1"
-	await expect(page.getByTestId('roll-tasks-button')).toHaveAccessibleName('Roll for tasks');
+	// There is no Begin Round step: round 1 opens on Roll for Tasks, titled "Round 1".
+	// A natural 20 or 1 on the opening roll puts its modifier on this roll button.
+	await expect(page.getByTestId('roll-tasks-button')).toHaveAccessibleName(
+		/^Roll for tasks( · (Lucid: 2 dice, keep high|Surreal: 2 dice, keep low))?$/
+	);
 	await expect(page.getByRole('heading', { name: 'Round 1' })).toBeVisible();
 }
