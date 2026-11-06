@@ -47,10 +47,13 @@ async function openDeleteConfirmation(page: Page) {
 		.getByTestId(`game-card-${SLUG}`)
 		.getByRole('button', { name: 'Delete saved game' })
 		.click();
-	const modal = page.locator('.modal-backdrop');
+	const modal = page.getByRole('dialog', { name: 'Delete Saved Game' });
 	await expect(modal).toBeVisible();
 	return modal;
 }
+
+/** The confirmation is built on the shared dialog: its scrim is the content-modal backdrop */
+const scrim = (page: Page) => page.locator('.content-modal-backdrop');
 
 test.describe('Game start and confirmation modal', () => {
 	test('should start a game straight from the Start button, with no confirmation', async ({
@@ -66,7 +69,7 @@ test.describe('Game start and confirmation modal', () => {
 		// Goes directly to the game; the old "Load Game / START GAME / CANCEL" step is gone
 		await expect(page).toHaveURL(`/game/${SLUG}`);
 		await expect(page.getByTestId('screen-showIntro')).toBeVisible();
-		await expect(page.locator('.modal-backdrop')).toHaveCount(0);
+		await expect(page.getByRole('dialog')).toHaveCount(0);
 		await expect(page.getByRole('button', { name: 'START GAME' })).toHaveCount(0);
 	});
 
@@ -84,22 +87,41 @@ test.describe('Game start and confirmation modal', () => {
 	test('should open a delete confirmation naming the game', async ({ page }) => {
 		const modal = await openDeleteConfirmation(page);
 
-		// Proper dialog semantics
-		await expect(modal).toHaveAttribute('role', 'dialog');
+		// Proper dialog semantics: a modal dialog named by its title, holding focus
 		await expect(modal).toHaveAttribute('aria-modal', 'true');
-		await expect(modal).toHaveAttribute('aria-labelledby', 'modal-title');
+		await expect(modal.getByRole('heading', { name: 'Delete Saved Game' })).toBeVisible();
+		await expect(modal).toBeFocused();
 
-		await expect(page.locator('#modal-title')).toHaveText('Delete Saved Game');
-		const body = modal.locator('.modal-body p');
+		const body = modal.getByTestId('confirm-message');
 		await expect(body).toContainText(GAME_TITLE);
 		await expect(body).toContainText('cannot be undone');
 	});
 
-	test('should have DELETE and CANCEL buttons', async ({ page }) => {
+	test('should have DELETE and CANCEL buttons, and a 44px close target', async ({ page }) => {
 		const modal = await openDeleteConfirmation(page);
 
-		await expect(modal.getByRole('button', { name: 'DELETE' })).toBeVisible();
+		await expect(modal.getByRole('button', { name: 'DELETE', exact: true })).toBeVisible();
 		await expect(modal.getByRole('button', { name: 'CANCEL' })).toBeVisible();
+		const close = await modal.getByRole('button', { name: /^Close/ }).boundingBox();
+		expect(close?.width).toBeGreaterThanOrEqual(44);
+		expect(close?.height).toBeGreaterThanOrEqual(44);
+	});
+
+	test('should style DELETE as an outlined destructive action, not a filled CTA', async ({
+		page
+	}) => {
+		const modal = await openDeleteConfirmation(page);
+
+		const style = await modal
+			.getByRole('button', { name: 'DELETE', exact: true })
+			.evaluate((el) => {
+				const cs = window.getComputedStyle(el);
+				return { bg: cs.backgroundImage + cs.backgroundColor, border: cs.borderTopColor };
+			});
+		// Transparent fill with a red border
+		expect(style.bg).toContain('rgba(0, 0, 0, 0)');
+		expect(style.bg).not.toContain('gradient');
+		expect(style.border).toBe('rgb(255, 77, 109)');
 	});
 
 	test('should keep the save when clicking CANCEL', async ({ page }) => {
@@ -107,19 +129,19 @@ test.describe('Game start and confirmation modal', () => {
 
 		await modal.getByRole('button', { name: 'CANCEL' }).click();
 
-		await expect(page.locator('.modal-backdrop')).toHaveCount(0);
+		await expect(page.getByRole('dialog')).toHaveCount(0);
 		await expect(
 			page.getByTestId(`game-card-${SLUG}`).getByRole('button', { name: 'Resume saved game' })
 		).toBeVisible();
 	});
 
 	test('should close modal when clicking backdrop', async ({ page }) => {
-		const modal = await openDeleteConfirmation(page);
+		await openDeleteConfirmation(page);
 
 		// Click backdrop (not the modal content)
-		await modal.click({ position: { x: 5, y: 5 } });
+		await scrim(page).click({ position: { x: 5, y: 5 } });
 
-		await expect(page.locator('.modal-backdrop')).toHaveCount(0);
+		await expect(page.getByRole('dialog')).toHaveCount(0);
 		await expect(
 			page.getByTestId(`game-card-${SLUG}`).getByRole('button', { name: 'Resume saved game' })
 		).toBeVisible();
@@ -130,38 +152,40 @@ test.describe('Game start and confirmation modal', () => {
 
 		await page.keyboard.press('Escape');
 
-		await expect(page.locator('.modal-backdrop')).toHaveCount(0);
+		await expect(page.getByRole('dialog')).toHaveCount(0);
 		await expect(
 			page.getByTestId(`game-card-${SLUG}`).getByRole('button', { name: 'Resume saved game' })
 		).toBeVisible();
 	});
 
-	test('should have highest z-index', async ({ page }) => {
+	test('should sit on top of everything', async ({ page }) => {
 		const modal = await openDeleteConfirmation(page);
 
-		const zIndex = await modal.evaluate((el) => window.getComputedStyle(el).zIndex);
-
-		expect(parseInt(zIndex)).toBeGreaterThan(100000);
+		// The topmost element at the dialog's centre belongs to the dialog
+		const box = await modal.boundingBox();
+		const onTop = await page.evaluate(
+			({ x, y }) => !!document.elementFromPoint(x, y)?.closest('[role="dialog"]'),
+			{ x: box!.x + box!.width / 2, y: box!.y + box!.height / 2 }
+		);
+		expect(onTop).toBe(true);
 	});
 
-	test('should have backdrop blur effect', async ({ page }) => {
-		const modal = await openDeleteConfirmation(page);
+	test('should cover the page with its scrim', async ({ page }) => {
+		await openDeleteConfirmation(page);
 
-		const backdropFilter = await modal.evaluate(
-			(el) =>
-				window.getComputedStyle(el).backdropFilter ||
-				window.getComputedStyle(el).getPropertyValue('-webkit-backdrop-filter')
+		// A corner of the viewport hits the scrim, not the page beneath
+		const hit = await page.evaluate(
+			() => !!document.elementFromPoint(5, 5)?.closest('.content-modal-backdrop')
 		);
-
-		expect(backdropFilter).toContain('blur');
+		expect(hit).toBe(true);
 	});
 
 	test('should delete the save and offer Start again when confirming', async ({ page }) => {
 		const modal = await openDeleteConfirmation(page);
 
-		await modal.getByRole('button', { name: 'DELETE' }).click();
+		await modal.getByRole('button', { name: 'DELETE', exact: true }).click();
 
-		await expect(page.locator('.modal-backdrop')).toHaveCount(0);
+		await expect(page.getByRole('dialog')).toHaveCount(0);
 		await expect(page.locator('.upload-status')).toHaveText('Saved game deleted');
 		const card = page.getByTestId(`game-card-${SLUG}`);
 		await expect(card.getByRole('button', { name: 'Start new game' })).toBeVisible();

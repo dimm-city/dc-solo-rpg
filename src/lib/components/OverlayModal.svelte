@@ -1,13 +1,19 @@
 <script>
 	/**
-	 * OverlayModal - Full-viewport dialog layer with a fog scrim.
+	 * OverlayModal - Full-viewport dialog layer over a dark scrim (card, journal, ending).
 	 *
 	 * The layer is moved to <body> so no transformed or clipped ancestor in the game
 	 * board can shrink its fixed positioning: the scrim always covers the whole
 	 * viewport, HUD included. Children size their own panel (card, journal sheet).
 	 * Focus moves into the dialog on open, is trapped while open and returns on close.
+	 *
+	 * Motion: the dialog entrance used everywhere (200ms fade plus an 8px rise, cubicOut; 140ms
+	 * out). The transitions are global, so they also play when the game screen mounts or drops the
+	 * overlay. The scrim is a static gradient: only its opacity animates. An ending tone
+	 * ('victory' | 'loss') shows at full opacity at once, so the cut from one ending layer to the
+	 * next never passes through black.
 	 */
-	import { scale } from 'svelte/transition';
+	import { fade, fly, scale } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import { ANIMATION_DURATION } from '$lib/constants/animations.js';
 
@@ -19,8 +25,22 @@
 		tone = 'default' // 'victory' | 'loss' tint the scrim for the ending
 	} = $props();
 
+	const IN_MS = ANIMATION_DURATION.NORMAL; // 200
+	const OUT_MS = 140;
+	const RISE_PX = 8;
+
 	const FOCUSABLE =
 		'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+	const reducedMotion = () =>
+		typeof window !== 'undefined' &&
+		window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+
+	const isEnding = $derived(tone === 'victory' || tone === 'loss');
+	// Another overlay is still fading out underneath (e.g. card to journal): its scrim already
+	// covers the board, so this one need not fade in over a glimpse of the table
+	const startsCovered =
+		typeof document !== 'undefined' && !!document.querySelector('.overlay-layer');
 
 	/**
 	 * Svelte action: move the node to <body> so fixed positioning is viewport-relative.
@@ -72,92 +92,37 @@
 		return {
 			destroy() {
 				node.removeEventListener('keydown', onKeydown);
-				if (previous instanceof HTMLElement && document.contains(previous)) {
+				// Give focus back only if it is still ours: the next dialog may already hold it
+				const active = document.activeElement;
+				const ours = !active || active === document.body || node.contains(active);
+				if (ours && previous instanceof HTMLElement && document.contains(previous)) {
 					previous.focus({ preventScroll: true });
 				}
 			}
 		};
 	}
 
+	const scrimIn = () => ({ duration: isEnding || startsCovered || reducedMotion() ? 0 : IN_MS });
+	const scrimOut = () => ({ duration: reducedMotion() ? 0 : OUT_MS });
+	const stageIn = () => ({
+		y: RISE_PX,
+		duration: reducedMotion() ? 0 : IN_MS,
+		easing: cubicOut
+	});
+	const stageOut = () => ({ start: 0.98, duration: reducedMotion() ? 0 : OUT_MS });
+
 	/**
-	 * Cloud fog transition for modal backdrop
-	 * Speed: 200ms (mechanical/ethereal aesthetic)
-	 * Effect: Fades in/out fog with subtle scale (0.95 to 1.0)
+	 * A layer on its way out must not take input meant for the screen under it, however slowly
+	 * the device paints the fade. The component is paused during an outro, so set it on the DOM.
 	 */
-	function cloudFogTransition(node, { delay = 0, duration = ANIMATION_DURATION.NORMAL }) {
-		return {
-			delay,
-			duration,
-			tick: (t) => {
-				const eased = cubicOut(t);
-				const cloudScale = 0.95 + eased * 0.05;
-
-				node.querySelectorAll('.cloud').forEach((cloud) => {
-					cloud.style.transform = `translate(-50%, -50%) scale(${cloudScale})`;
-				});
-
-				node.style.opacity = `${eased}`;
-			}
-		};
+	function release(event) {
+		const layer = event.currentTarget.closest('.overlay-layer');
+		if (!layer) return;
+		layer.inert = true;
+		layer.style.pointerEvents = 'none';
+		layer.querySelector('.scrim')?.style.setProperty('pointer-events', 'none');
 	}
 </script>
-
-<!-- SVG filters for realistic fog clouds -->
-<svg width="0" height="0" aria-hidden="true" style="position: absolute;">
-	<defs>
-		<!-- Back layer: subtle turbulence with soft edges -->
-		<filter id="fog-filter-back" x="-20%" y="-20%" width="140%" height="140%">
-			<feTurbulence
-				type="fractalNoise"
-				baseFrequency="0.006"
-				numOctaves="4"
-				seed="5"
-				result="noise"
-			/>
-			<feDisplacementMap
-				in="SourceGraphic"
-				in2="noise"
-				scale="160"
-				xChannelSelector="R"
-				yChannelSelector="G"
-			/>
-		</filter>
-		<!-- Middle layer: moderate turbulence -->
-		<filter id="fog-filter-mid" x="-20%" y="-20%" width="140%" height="140%">
-			<feTurbulence
-				type="fractalNoise"
-				baseFrequency="0.009"
-				numOctaves="4"
-				seed="7"
-				result="noise"
-			/>
-			<feDisplacementMap
-				in="SourceGraphic"
-				in2="noise"
-				scale="120"
-				xChannelSelector="G"
-				yChannelSelector="B"
-			/>
-		</filter>
-		<!-- Front layer: sharper details, closer to viewer -->
-		<filter id="fog-filter-front" x="-20%" y="-20%" width="140%" height="140%">
-			<feTurbulence
-				type="fractalNoise"
-				baseFrequency="0.013"
-				numOctaves="3"
-				seed="11"
-				result="noise"
-			/>
-			<feDisplacementMap
-				in="SourceGraphic"
-				in2="noise"
-				scale="90"
-				xChannelSelector="B"
-				yChannelSelector="R"
-			/>
-		</filter>
-	</defs>
-</svg>
 
 {#if isVisible}
 	<!-- One root element so the whole layer can live in <body> -->
@@ -177,29 +142,16 @@
 			class:victory={tone === 'victory'}
 			class:loss={tone === 'loss'}
 			aria-hidden="true"
-			in:cloudFogTransition={{ duration: ANIMATION_DURATION.NORMAL, delay: 0 }}
-			out:cloudFogTransition={{ duration: ANIMATION_DURATION.NORMAL, delay: 0 }}
-		>
-			<div class="cloud back"></div>
-			<div class="cloud mid"></div>
-			<div class="cloud front"></div>
-		</div>
+			in:fade|global={scrimIn()}
+			out:fade|global={scrimOut()}
+		></div>
 
-		<!-- Stage: centres the panel the child renders. Entry/exit is opacity + scale only. -->
+		<!-- Stage: centres the panel the child renders. Entry/exit is opacity + transform only. -->
 		<div
 			class="stage"
-			in:scale={{
-				duration: ANIMATION_DURATION.NORMAL,
-				start: 0.95,
-				opacity: 0,
-				easing: cubicOut
-			}}
-			out:scale={{
-				duration: ANIMATION_DURATION.NORMAL,
-				start: 0.95,
-				opacity: 0,
-				easing: cubicOut
-			}}
+			in:fly|global={stageIn()}
+			out:scale|global={stageOut()}
+			onoutrostart={release}
 		>
 			{@render children()}
 		</div>
@@ -213,6 +165,8 @@
 		width: 100vw;
 		height: 100dvh;
 		display: grid;
+		/* One viewport-sized track, so the stage (and the panel in it) can never outgrow the screen */
+		grid-template: minmax(0, 1fr) / minmax(0, 1fr);
 		place-items: center;
 		overflow: hidden;
 		outline: none;
@@ -220,19 +174,21 @@
 		overscroll-behavior: contain;
 	}
 
-	/* Scrim: dark base plus fog. Captures every pointer event so the board is inert. */
+	/* Scrim: a static gradient (no filters, no per-frame work). Captures every pointer
+	   event so the board is inert. */
 	.scrim {
 		position: absolute;
 		inset: 0;
 		pointer-events: auto;
-		overflow: hidden;
-		background: rgba(3, 5, 12, 0.97);
-		backdrop-filter: blur(6px);
-		-webkit-backdrop-filter: blur(6px);
 		cursor: default;
+		background-color: rgb(4, 7, 15);
+		background-image:
+			radial-gradient(ellipse 70% 55% at 50% 42%, rgba(0, 60, 90, 0.42), transparent 70%),
+			radial-gradient(ellipse 60% 50% at 18% 88%, rgba(70, 24, 96, 0.3), transparent 70%),
+			radial-gradient(ellipse 55% 45% at 85% 12%, rgba(0, 70, 110, 0.22), transparent 70%);
 	}
 
-	/* The ending tints the scrim instead of drawing its own backdrop */
+	/* The ending tints the scrim instead of drawing its own backdrop (same as GameOver) */
 	.scrim.loss {
 		background-color: #05070a;
 		background-image:
@@ -266,86 +222,5 @@
 
 	.stage > :global(*) {
 		pointer-events: auto;
-	}
-
-	/* Cloud layers for realistic fog */
-	.scrim .cloud {
-		position: absolute;
-		top: 50%;
-		left: 50%;
-		transform: translate(-50%, -50%) scale(1);
-		border-radius: 50%;
-	}
-
-	.scrim .cloud.back {
-		width: 220vw;
-		height: 200vh;
-		background: rgba(8, 20, 40, 0.3);
-		box-shadow:
-			0 0 300px 150px rgba(8, 20, 40, 0.5),
-			0 0 600px 300px rgba(8, 20, 40, 0.3);
-		filter: url(#fog-filter-back);
-		opacity: 0.25;
-	}
-
-	.scrim .cloud.mid {
-		width: 180vw;
-		height: 160vh;
-		background: rgba(20, 10, 30, 0.35);
-		box-shadow:
-			0 0 250px 120px rgba(20, 10, 30, 0.6),
-			0 0 500px 240px rgba(20, 10, 30, 0.4);
-		filter: url(#fog-filter-mid);
-		opacity: 0.4;
-	}
-
-	.scrim .cloud.front {
-		width: 140vw;
-		height: 120vh;
-		background: rgba(0, 40, 60, 0.4);
-		box-shadow:
-			0 0 200px 100px rgba(0, 80, 120, 0.7),
-			0 0 400px 200px rgba(0, 60, 90, 0.5);
-		filter: url(#fog-filter-front);
-		opacity: 0.55;
-	}
-
-	/* Phones and reduced motion: the three feTurbulence fog layers are expensive to
-	   rasterize, so use a static gradient instead */
-	@media (max-width: 600px) {
-		.scrim {
-			backdrop-filter: none;
-			-webkit-backdrop-filter: none;
-			background-image: radial-gradient(
-				ellipse at 50% 40%,
-				rgba(0, 40, 60, 0.7),
-				rgba(5, 8, 18, 0.95)
-			);
-		}
-
-		.scrim .cloud {
-			display: none;
-		}
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.scrim {
-			backdrop-filter: none;
-			-webkit-backdrop-filter: none;
-			background-image: radial-gradient(
-				ellipse at 50% 40%,
-				rgba(0, 40, 60, 0.7),
-				rgba(5, 8, 18, 0.95)
-			);
-		}
-
-		.scrim.loss,
-		.scrim.victory {
-			background-image: none;
-		}
-
-		.scrim .cloud {
-			display: none;
-		}
 	}
 </style>

@@ -1,32 +1,24 @@
 <script>
 	/**
-	 * AutoJournalTimer - Auto-journal countdown timer component
-	 *
-	 * Displays countdown timer with progress bar for auto-journal functionality
-	 * Shows time remaining and hint to cancel
+	 * AutoJournalTimer - countdown before auto-play moves past the journal.
+	 * Typing or recording cancels it (the journal clears timeRemaining).
 	 *
 	 * @component
 	 * @example
-	 * <AutoJournalTimer
-	 *   timeRemaining={5000}
-	 *   totalTime={10000}
-	 * />
+	 * <AutoJournalTimer timeRemaining={5000} totalTime={10000} />
 	 */
 
 	let { timeRemaining = 0, totalTime = 10000 } = $props();
 
-	let progress = $derived((timeRemaining / totalTime) * 100);
+	let fraction = $derived(totalTime > 0 ? Math.min(1, Math.max(0, timeRemaining / totalTime)) : 0);
 	let secondsRemaining = $derived(Math.ceil(timeRemaining / 1000));
 </script>
 
 {#if timeRemaining > 0}
-	<div class="auto-journal-timer">
-		<div class="timer-text">
-			Auto-continuing in {secondsRemaining}s
-			<span class="timer-hint">(write or record to cancel)</span>
-		</div>
-		<div class="timer-bar-container">
-			<div class="timer-bar" style="width: {progress}%"></div>
+	<div class="auto-journal-timer" data-testid="auto-journal-timer">
+		<p class="timer-text">Continuing in {secondsRemaining}s · type to stay</p>
+		<div class="timer-track" aria-hidden="true">
+			<div class="timer-bar" style:transform="scaleX({fraction})"></div>
 		</div>
 	</div>
 {/if}
@@ -34,54 +26,32 @@
 <style>
 	.auto-journal-timer {
 		width: 100%;
-		margin-bottom: var(--space-md);
 	}
 
 	.timer-text {
-		font-size: var(--text-sm);
-		color: var(--color-text-secondary);
+		margin: 0 0 var(--space-xs, 0.25rem);
+		font-family: var(--font-body, 'Inter', sans-serif);
+		font-size: 0.8125rem;
+		font-weight: 500;
+		font-variant-numeric: tabular-nums;
 		text-align: center;
-		margin-bottom: var(--space-xs);
-		font-family: var(--font-display);
+		color: rgba(255, 255, 255, 0.78);
 	}
 
-	.timer-hint {
-		display: block;
-		font-size: var(--text-xs);
-		color: var(--color-text-tertiary);
-		margin-top: var(--space-xs);
-		font-style: italic;
-	}
-
-	.timer-bar-container {
-		width: 100%;
-		height: 4px;
-		background: rgba(0, 255, 255, 0.1);
-		border-radius: 2px;
+	.timer-track {
+		height: 3px;
+		background: rgba(0, 255, 255, 0.12);
 		overflow: hidden;
-		position: relative;
 	}
 
+	/* Shrinks from the right; transform only, updated every 100ms */
 	.timer-bar {
 		height: 100%;
-		background: linear-gradient(90deg, var(--color-neon-cyan), var(--color-neon-pink));
-		border-radius: 2px;
-		transition: width 0.1s linear;
-		box-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
+		background: linear-gradient(90deg, var(--color-neon-cyan, #0ff), var(--color-neon-pink, #f0f));
+		transform-origin: left center;
+		transition: transform 100ms linear;
 	}
 
-	/* Responsive design */
-	@media (max-width: 768px) {
-		.timer-text {
-			font-size: var(--text-xs);
-		}
-
-		.timer-hint {
-			font-size: 0.65rem;
-		}
-	}
-
-	/* Accessibility: Reduced motion */
 	@media (prefers-reduced-motion: reduce) {
 		.timer-bar {
 			transition: none;

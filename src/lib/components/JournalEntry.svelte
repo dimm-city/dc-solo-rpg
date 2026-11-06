@@ -6,14 +6,12 @@
 	import { fade } from 'svelte/transition';
 	import { ANIMATION_DURATION } from '$lib/constants/animations.js';
 	import { getAudioSettings, getGameplaySettings, speak } from '../stores/audioStore.svelte.js';
-	import { logger } from '../utils/logger.js';
-	import AudioRecorder from './journal/AudioRecorder.svelte';
-	import AudioPlayback from './journal/AudioPlayback.svelte';
+	import VoiceNote from './journal/VoiceNote.svelte';
 	import AutoJournalTimer from './journal/AutoJournalTimer.svelte';
 	import { getEndingCause, getStatusLine } from '../utils/endingSummary.js';
 	import { getJournalPrompts, getFinalPrompts } from '../configuration/journalPrompts.js';
 
-	// How long "Entry saved" shows before the game moves on
+	// How long "Saved to your log" shows before the game moves on
 	const SAVED_BEAT = 800;
 
 	let {
@@ -35,8 +33,14 @@
 			? getFinalPrompts(getEndingCause(gameState), gameState.win)
 			: getJournalPrompts(currentEvents)
 	);
+	const sheetLabel = $derived(
+		isFinal
+			? `Round ${gameState.round}`
+			: (gameState.config?.labels?.journalEntryHeader ?? 'Journal')
+	);
+	const sheetTitle = $derived(isFinal ? 'Final Log' : `Round ${gameState.round}`);
 
-	// Save flow: write -> "Entry saved" beat -> next round (or epitaph on the final log)
+	// Save flow: write -> "Saved to your log" beat -> next round (or epitaph on the final log)
 	let saving = $state(false);
 	let savedText = $state('');
 	let beatTimeout = null;
@@ -45,7 +49,8 @@
 			gameState.journalEntries.find((entry) => entry.round === gameState.round)?.text ||
 			''
 	);
-	let showAudio = $state(false);
+
+	let voiceNote = $state();
 
 	const SUIT_GLYPHS = { hearts: '♥', diamonds: '♦', clubs: '♣', spades: '♠' };
 	const cardLabel = (event) => `${event.card}${SUIT_GLYPHS[event.suit] ?? ''}`;
@@ -65,211 +70,44 @@
 		journalText = journalText ? `${journalText.trimEnd()}\n\n${prompt}\n` : `${prompt}\n`;
 	}
 
-	// Audio recording state
-	let mediaRecorder = $state(null);
-	let audioChunks = $state([]);
-	let isRecording = $state(false);
-	let isPaused = $state(false);
-	let recordingTime = $state(0);
-	let recordingInterval = $state(null);
-	let audioURL = $state(null);
-	let isPlaying = $state(false);
-	let audioElement = $state(null);
-	let audioError = $state(null);
-
 	// Auto-journal timer state
 	let autoJournalTimer = $state(null);
 	let autoJournalTimeRemaining = $state(0);
 	let autoJournalInterval = $state(null);
 
-	// Start recording
-	async function startRecording() {
-		// Cancel auto-journal timer when user starts interacting
-		cancelAutoJournalTimer();
+	onMount(() => () => clearTimeout(beatTimeout));
 
-		try {
-			audioError = null;
-			const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-			// Create MediaRecorder with appropriate format
-			const options = { mimeType: 'audio/webm' };
-			if (!MediaRecorder.isTypeSupported('audio/webm')) {
-				options.mimeType = 'audio/mp4';
-			}
-			if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-				options.mimeType = '';
-			}
-
-			mediaRecorder = new MediaRecorder(stream, options);
-			audioChunks = [];
-
-			mediaRecorder.ondataavailable = (event) => {
-				if (event.data.size > 0) {
-					audioChunks.push(event.data);
-				}
-			};
-
-			mediaRecorder.onstop = () => {
-				const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-				audioURL = URL.createObjectURL(audioBlob);
-
-				// Convert to base64 for storage
-				const reader = new FileReader();
-				reader.readAsDataURL(audioBlob);
-				reader.onloadend = () => {
-					audioData = reader.result;
-				};
-
-				// Stop all tracks
-				stream.getTracks().forEach((track) => track.stop());
-			};
-
-			mediaRecorder.start();
-			isRecording = true;
-			isPaused = false;
-			recordingTime = 0;
-
-			// Start timer
-			recordingInterval = setInterval(() => {
-				if (!isPaused) {
-					recordingTime++;
-				}
-			}, 1000);
-		} catch (error) {
-			logger.error('[JournalEntry] Error starting recording:', error);
-			audioError = 'Microphone access denied. Please enable microphone permissions.';
-		}
-	}
-
-	// Pause/resume recording
-	function togglePause() {
-		if (!mediaRecorder) return;
-
-		if (isPaused) {
-			mediaRecorder.resume();
-			isPaused = false;
-		} else {
-			mediaRecorder.pause();
-			isPaused = true;
-		}
-	}
-
-	// Stop recording
-	function stopRecording() {
-		if (mediaRecorder && isRecording) {
-			mediaRecorder.stop();
-			isRecording = false;
-			isPaused = false;
-			if (recordingInterval) {
-				clearInterval(recordingInterval);
-				recordingInterval = null;
-			}
-		}
-	}
-
-	// Play audio
-	function playAudio() {
-		if (!audioURL) return;
-
-		if (audioElement && !audioElement.paused) {
-			audioElement.pause();
-			audioElement.currentTime = 0;
-			isPlaying = false;
-		} else {
-			if (!audioElement) {
-				audioElement = new Audio(audioURL);
-				audioElement.onended = () => {
-					isPlaying = false;
-				};
-			}
-			audioElement.play();
-			isPlaying = true;
-		}
-	}
-
-	// Delete audio
-	function deleteAudio() {
-		if (audioElement) {
-			audioElement.pause();
-			audioElement = null;
-		}
-		if (audioURL) {
-			URL.revokeObjectURL(audioURL);
-		}
-		audioURL = null;
-		audioData = null;
-		isPlaying = false;
-		recordingTime = 0;
-		audioError = null;
-	}
-
-	// Cleanup on unmount
-	onMount(() => {
-		return () => {
-			clearTimeout(beatTimeout);
-			if (recordingInterval) {
-				clearInterval(recordingInterval);
-			}
-			if (audioElement) {
-				audioElement.pause();
-			}
-			if (audioURL) {
-				URL.revokeObjectURL(audioURL);
-			}
-			if (mediaRecorder && isRecording) {
-				mediaRecorder.stream.getTracks().forEach((track) => track.stop());
-			}
-		};
-	});
-
-	// ✅ FIXED: Extract timer logic to pure function, use proper cleanup pattern
 	$effect(() => {
 		// Only react to settings and journal saved state
 		const gameplaySettings = getGameplaySettings();
 		const audioSettings = getAudioSettings();
 		const isSaved = journalSaved;
-
-		// Setup timers based on current settings
-		const cleanup = setupAutoJournaling(gameplaySettings, audioSettings, isSaved);
-
-		// Cleanup on effect re-run or unmount
-		return cleanup;
+		return setupAutoJournaling(gameplaySettings, audioSettings, isSaved);
 	});
 
 	/**
-	 * Pure function to setup auto-journaling timers
-	 * Returns cleanup function
+	 * Set up auto-journaling timers; returns the cleanup
 	 */
 	function setupAutoJournaling(gameplaySettings, audioSettings, isSaved) {
 		let interval = null;
 		let timeout = null;
 		let timeRemaining = 0;
 
-		// Only run timer if not saved yet
 		if (!isSaved) {
-			// Speak prompt if enabled
 			if (audioSettings.autoReadPrompts) {
 				speak('Take a moment to reflect on what just happened.');
 			}
 
-			// Skip mode: immediately save
 			if (gameplaySettings.autoHandleJournaling === 'skip') {
-				// Small delay to allow UI to settle
-				timeout = setTimeout(() => {
-					handleSave(false);
-				}, 500);
-			}
-			// Timed mode: countdown timer
-			else if (gameplaySettings.autoHandleJournaling === 'timed') {
-				const pauseTime = gameplaySettings.journalPauseTime;
-				timeRemaining = pauseTime;
+				// Skip mode: save straight away, after the sheet has settled
+				timeout = setTimeout(() => handleSave(false), 500);
+			} else if (gameplaySettings.autoHandleJournaling === 'timed') {
+				// Timed mode: countdown, updated every 100ms
+				timeRemaining = gameplaySettings.journalPauseTime;
 				autoJournalTimeRemaining = timeRemaining;
-
-				// Update countdown every 100ms for smooth UI
 				interval = setInterval(() => {
 					timeRemaining = Math.max(0, timeRemaining - 100);
 					autoJournalTimeRemaining = timeRemaining;
-
 					if (timeRemaining <= 0) {
 						clearInterval(interval);
 						interval = null;
@@ -279,18 +117,12 @@
 			}
 		}
 
-		// Store references for cancelAutoJournalTimer
 		autoJournalTimer = timeout;
 		autoJournalInterval = interval;
 
-		// Return cleanup function
 		return () => {
-			if (interval) {
-				clearInterval(interval);
-			}
-			if (timeout) {
-				clearTimeout(timeout);
-			}
+			if (interval) clearInterval(interval);
+			if (timeout) clearTimeout(timeout);
 		};
 	}
 
@@ -307,14 +139,12 @@
 		autoJournalTimeRemaining = 0;
 	}
 
-	// Wrapper for onSave: stops recording, shows "Entry saved" for a beat, then saves
+	// Stops any recording, shows "Saved to your log" for a beat, then saves
 	function handleSave(withBeat = true) {
 		if (saving) return;
 		saving = true;
 		cancelAutoJournalTimer();
-		if (isRecording) {
-			stopRecording();
-		}
+		voiceNote?.stop();
 		savedText = journalText.trim();
 		beatTimeout = setTimeout(() => onSave(), withBeat ? SAVED_BEAT : 0);
 	}
@@ -323,13 +153,16 @@
 <div
 	class="journal-sheet dc-journal-container"
 	class:final={isFinal}
+	class:won={isFinal && gameState.win}
+	class:saving
 	data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
 >
 	<!-- 1. Header: what this is, and where you stand -->
 	<header class="sheet-header">
-		<h2 class="sheet-title">
-			{isFinal ? 'Final Log' : (gameState.config?.labels?.journalEntryHeader ?? 'Journal Entry')}
-		</h2>
+		<div class="sheet-heading">
+			<p class="sheet-label">{sheetLabel}</p>
+			<h2 class="sheet-title">{sheetTitle}</h2>
+		</div>
 		{#if !isFinal}
 			<p class="status-line" data-testid="journal-status-line">{statusLine}</p>
 		{/if}
@@ -401,40 +234,10 @@
 					oninput={() => cancelAutoJournalTimer()}
 				></textarea>
 			</section>
-
-			{#if showAudio || audioURL || isRecording}
-				<div
-					class="audio-entry-area"
-					augmented-ui="tl-clip br-clip border"
-					in:fade={{ duration: ANIMATION_DURATION.NORMAL }}
-				>
-					{#if audioURL}
-						<AudioPlayback
-							{recordingTime}
-							{isPlaying}
-							{journalSaved}
-							onPlay={playAudio}
-							onDelete={deleteAudio}
-						/>
-					{:else}
-						<AudioRecorder
-							{isRecording}
-							{isPaused}
-							{recordingTime}
-							{journalSaved}
-							{audioError}
-							hasAudioURL={!!audioURL}
-							onStart={startRecording}
-							onPause={togglePause}
-							onStop={stopRecording}
-						/>
-					{/if}
-				</div>
-			{/if}
 		{/if}
 	</div>
 
-	<!-- 5. Actions, pinned to the bottom of the sheet -->
+	<!-- 5. Actions, pinned to the bottom of the sheet: voice note left, Record Entry right -->
 	<footer class="sheet-actions">
 		<AutoJournalTimer
 			timeRemaining={autoJournalTimeRemaining}
@@ -445,60 +248,63 @@
 			<div class="final-actions">
 				<ContinueButton
 					text="Read your story"
+					variant="primary"
 					onclick={() => window.location.assign('/?story=1')}
 					testid="journal-story-button"
 				/>
-				<ContinueButton
-					text={gameState.config?.labels?.journalEntryRestartButtonText ?? 'Play again'}
-					onclick={onRestart}
-					testid="journal-restart-button"
-				/>
-				<ContinueButton text="Home" onclick={onExit} testid="journal-exit-button" />
-			</div>
-		{:else if saving}
-			<p
-				class="saved-beat"
-				role="status"
-				data-testid="journal-saved"
-				in:fade={{ duration: ANIMATION_DURATION.FAST }}
-			>
-				Entry saved
-			</p>
-		{:else}
-			<div class="action-row">
-				{#if !showAudio && !audioURL && !isRecording}
+				<div class="text-actions">
 					<button
 						type="button"
-						class="voice-toggle"
-						disabled={saving}
-						data-testid="journal-voice-toggle"
-						onclick={() => (showAudio = true)}
+						class="text-action"
+						onclick={onRestart}
+						data-testid="journal-restart-button"
 					>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							width="18"
-							height="18"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							aria-hidden="true"
-						>
-							<rect x="9" y="2" width="6" height="12" rx="3" />
-							<path d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8" />
-						</svg>
-						<span>Voice note</span>
+						{gameState.config?.labels?.journalEntryRestartButtonText ?? 'Play again'}
 					</button>
+					<button
+						type="button"
+						class="text-action"
+						onclick={onExit}
+						data-testid="journal-exit-button"
+					>
+						Home
+					</button>
+				</div>
+			</div>
+		{:else}
+			<div class="action-row">
+				{#if !journalSaved}
+					<VoiceNote
+						bind:this={voiceNote}
+						bind:audioData
+						disabled={saving}
+						onstart={cancelAutoJournalTimer}
+					/>
 				{/if}
-				<ContinueButton
-					class="record-entry"
-					variant="primary"
-					text={gameState.config?.labels?.journalEntrySaveButtonText ?? 'Record Entry'}
-					onclick={() => handleSave()}
-					testid="journal-save-button"
-				/>
+				<!-- One slot: the button, then the saved beat in its place -->
+				<div class="save-slot">
+					{#if saving}
+						<p
+							class="saved-beat"
+							role="status"
+							data-testid="journal-saved"
+							in:fade={{ duration: ANIMATION_DURATION.FAST }}
+						>
+							<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+								<path d="M20 6 9 17l-5-5" />
+							</svg>
+							Saved to your log
+						</p>
+					{:else}
+						<ContinueButton
+							class="record-entry"
+							variant="primary"
+							text={gameState.config?.labels?.journalEntrySaveButtonText ?? 'Record Entry'}
+							onclick={() => handleSave()}
+							testid="journal-save-button"
+						/>
+					{/if}
+				</div>
 			</div>
 		{/if}
 	</footer>
@@ -535,6 +341,15 @@
 		--aug-bl: 16px;
 	}
 
+	/* The ending: the frame takes the ending's colour */
+	.journal-sheet.final {
+		--aug-border-bg: linear-gradient(135deg, #ff2a6d, var(--color-cyber-magenta, #f0f));
+	}
+
+	.journal-sheet.final.won {
+		--aug-border-bg: linear-gradient(135deg, #ffe400, #00ff64);
+	}
+
 	/* Header */
 	.sheet-header,
 	.sheet-actions {
@@ -547,19 +362,45 @@
 		flex: none;
 		display: flex;
 		flex-wrap: wrap;
-		align-items: baseline;
+		align-items: flex-end;
 		justify-content: space-between;
 		gap: var(--space-xs) var(--space-md);
 		padding-bottom: var(--space-md);
 		border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 	}
 
+	.sheet-heading {
+		display: flex;
+		flex-direction: column;
+		gap: 0.125rem;
+	}
+
+	.sheet-label,
+	.section-label {
+		margin: 0;
+		font-family: var(--font-body, 'Inter', sans-serif);
+		font-size: 0.75rem;
+		font-weight: 600;
+		line-height: 1.4;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		text-shadow: none;
+		color: rgba(255, 255, 255, 0.72);
+	}
+
+	.sheet-label {
+		color: var(--color-neon-cyan, #0ff);
+	}
+
+	/* Display face only at 28px and up */
 	.sheet-title {
 		margin: 0;
 		font-family: var(--font-display, inherit);
-		font-size: 1.5rem;
-		line-height: 1.2;
+		font-size: 2rem;
+		font-weight: normal;
+		line-height: 1.1;
 		letter-spacing: 0.04em;
+		white-space: nowrap;
 		color: var(--color-brand-yellow, #ffe400);
 	}
 
@@ -588,14 +429,7 @@
 	}
 
 	.section-label {
-		margin: 0 0 var(--space-xs);
-		font-family: var(--font-mono, 'Share Tech Mono', ui-monospace, monospace);
-		font-size: 0.8125rem;
-		font-weight: 400;
-		letter-spacing: 0.12em;
-		text-transform: uppercase;
-		text-shadow: none;
-		color: rgba(255, 255, 255, 0.72);
+		margin-bottom: var(--space-xs);
 	}
 
 	/* What happened this round: compact, scrolls inside itself when long */
@@ -668,7 +502,7 @@
 		justify-content: center;
 	}
 
-	/* Prompts */
+	/* Prompts: chips wrap, on every screen */
 	.prompt-chips {
 		flex: none;
 		display: flex;
@@ -678,6 +512,7 @@
 
 	.chip {
 		min-height: 44px;
+		max-width: 100%;
 		padding: var(--space-sm) var(--space-md);
 		font-family: var(--font-body, 'Inter', sans-serif);
 		font-size: 0.9375rem;
@@ -686,11 +521,11 @@
 		color: var(--color-neon-cyan, #0ff);
 		background: transparent;
 		border: 1px solid rgba(0, 255, 255, 0.45);
-		border-radius: 999px;
+		border-radius: 22px;
 		cursor: pointer;
 		transition:
-			background 150ms ease-out,
-			border-color 150ms ease-out;
+			background 120ms ease-out,
+			border-color 120ms ease-out;
 	}
 
 	.chip:hover:not(:disabled),
@@ -730,7 +565,8 @@
 		transition:
 			border-color 200ms cubic-bezier(0.4, 0, 0.6, 1),
 			box-shadow 200ms cubic-bezier(0.4, 0, 0.6, 1),
-			background 200ms cubic-bezier(0.4, 0, 0.6, 1);
+			background 200ms cubic-bezier(0.4, 0, 0.6, 1),
+			opacity 200ms ease-out;
 	}
 
 	textarea:hover {
@@ -757,32 +593,10 @@
 		color: rgba(255, 255, 255, 0.6);
 	}
 
-	/* Audio panel: a secondary section, opened from the voice note button */
-	.audio-entry-area {
-		flex: none;
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-sm);
-		padding: var(--space-md);
-		background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 20, 30, 0.3));
-		border: 2px solid rgba(0, 255, 255, 0.4);
-		border-radius: 4px;
-		min-height: 0;
-		--aug-border-all: 2px;
-		--aug-border-bg: rgba(0, 255, 255, 0.2);
-		--aug-tl: 12px;
-		--aug-br: 12px;
-	}
-
-	/* The audio heading must not outrank "Journal entry" */
-	.audio-entry-area :global(.audio-section-header) {
-		font-family: var(--font-mono, 'Share Tech Mono', ui-monospace, monospace);
-		font-size: 0.75rem;
-		color: rgba(255, 255, 255, 0.75);
-	}
-
-	.audio-entry-area :global(.audio-section-header .audio-header-icon) {
-		color: inherit;
+	/* The saved beat: what you wrote steps back while the confirmation takes the button's place */
+	.journal-sheet.saving textarea:disabled {
+		opacity: 0.6;
+		cursor: default;
 	}
 
 	/* Epitaph: the saved entry, shown back */
@@ -818,14 +632,15 @@
 	.epitaph-by {
 		margin: 0;
 		padding-left: var(--space-lg);
-		font-family: var(--font-mono, 'Share Tech Mono', ui-monospace, monospace);
+		font-family: var(--font-body, 'Inter', sans-serif);
 		font-size: 0.8125rem;
-		letter-spacing: 0.1em;
+		font-weight: 600;
+		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		color: rgba(255, 255, 255, 0.72);
 	}
 
-	/* Actions: pinned, primary on the right, voice note secondary on the left */
+	/* Actions: pinned, voice note on the left, Record Entry on the right */
 	.sheet-actions {
 		flex: none;
 		display: flex;
@@ -838,57 +653,85 @@
 	.action-row {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
 		gap: var(--space-md);
+		min-height: 52px;
 	}
 
-	.action-row > :global(.aug-button-wrapper.record-entry) {
-		margin: 0 0 0 auto;
-	}
-
-	.voice-toggle {
-		display: inline-flex;
+	.save-slot {
+		display: flex;
 		align-items: center;
-		justify-content: center;
-		gap: var(--space-sm);
-		min-height: 44px;
-		padding: var(--space-sm) var(--space-md);
-		font-family: var(--font-mono, 'Share Tech Mono', ui-monospace, monospace);
-		font-size: 0.9375rem;
-		color: rgba(255, 255, 255, 0.85);
-		background: transparent;
-		border: 1px solid rgba(255, 255, 255, 0.35);
-		border-radius: 4px;
-		cursor: pointer;
+		justify-content: flex-end;
+		min-height: 52px;
+		margin-left: auto;
 	}
 
-	.voice-toggle:hover:not(:disabled),
-	.voice-toggle:focus-visible {
-		color: var(--color-neon-cyan, #0ff);
-		border-color: var(--color-neon-cyan, #0ff);
+	.save-slot :global(.aug-button-wrapper.record-entry) {
+		margin: 0;
 	}
 
 	.saved-beat {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-sm);
 		margin: 0;
-		text-align: center;
-		font-family: var(--font-mono, 'Share Tech Mono', ui-monospace, monospace);
-		font-size: 1.125rem;
-		letter-spacing: 0.1em;
-		text-transform: uppercase;
-		color: var(--color-brand-yellow, #ffe400);
+		padding: 0 var(--space-md);
+		font-family: var(--font-body, 'Inter', sans-serif);
+		font-size: 1.0625rem;
+		font-weight: 600;
+		letter-spacing: 0.04em;
+		color: var(--color-neon-cyan, #0ff);
+		text-shadow: 0 0 12px rgba(0, 255, 255, 0.45);
 	}
 
+	.saved-beat svg {
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 2.5;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	/* The ending's actions: one primary, two quiet text buttons */
 	.final-actions {
 		display: flex;
-		flex-wrap: wrap;
-		justify-content: center;
+		flex-direction: column;
+		align-items: center;
 		gap: var(--space-sm);
 		width: 100%;
 	}
 
-	.final-actions :global(button) {
-		flex: 1 1 8rem;
-		max-width: 18rem;
+	.text-actions {
+		display: flex;
+		justify-content: center;
+		gap: var(--space-lg);
+	}
+
+	.text-action {
+		min-height: 44px;
+		padding: 0 var(--space-md);
+		font-family: var(--font-body, 'Inter', sans-serif);
+		font-size: 0.875rem;
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: rgba(255, 255, 255, 0.82);
+		background: none;
+		border: none;
+		cursor: pointer;
+		text-decoration: underline;
+		text-decoration-color: rgba(255, 255, 255, 0.3);
+		text-underline-offset: 0.3em;
+	}
+
+	.text-action:hover,
+	.text-action:focus-visible {
+		color: var(--color-neon-cyan, #0ff);
+		text-decoration-color: currentColor;
+	}
+
+	.text-action:focus-visible {
+		outline: 2px solid var(--color-neon-cyan, #0ff);
+		outline-offset: 2px;
 	}
 
 	@media (prefers-reduced-motion: reduce) {
@@ -916,21 +759,12 @@
 			padding-bottom: var(--space-sm);
 		}
 
+		.sheet-title {
+			font-size: 1.75rem;
+		}
+
 		.round-list {
 			max-height: 16dvh;
-		}
-
-		/* One scrollable row of chips: the writing area keeps the height */
-		.prompt-chips {
-			flex-wrap: nowrap;
-			overflow-x: auto;
-			scrollbar-width: none;
-			overscroll-behavior-x: contain;
-		}
-
-		.chip {
-			flex: none;
-			white-space: nowrap;
 		}
 
 		textarea {
@@ -942,9 +776,25 @@
 			padding-top: var(--space-sm);
 		}
 
+		/* One row: the 44px mic, then Record Entry filling the rest */
 		.action-row {
-			flex-wrap: wrap-reverse;
+			gap: var(--space-sm);
+		}
+
+		.save-slot {
+			flex: 1;
 			justify-content: center;
+		}
+
+		.save-slot :global(.aug-button-wrapper.record-entry) {
+			flex: 1;
+			max-width: none;
+		}
+
+		.save-slot :global(.aug-button-wrapper.record-entry .aug-button) {
+			width: 100%;
+			padding-inline: var(--space-sm);
+			white-space: nowrap;
 		}
 	}
 
@@ -952,14 +802,66 @@
 	@media (max-height: 500px) {
 		.journal-sheet {
 			padding: var(--space-sm) var(--space-md);
+			gap: var(--space-sm);
+		}
+
+		.sheet-header {
+			padding-bottom: var(--space-xs);
+		}
+
+		.sheet-title {
+			font-size: 1.75rem;
+		}
+
+		/* Landscape phones: the writing area comes first; labels go, the lists shrink to a row */
+		.section-label {
+			display: none;
+		}
+
+		.sheet-body {
+			gap: var(--space-sm);
 		}
 
 		.round-list {
-			max-height: 5.5rem;
+			max-height: 2.75rem;
+		}
+
+		.round-list li {
+			padding-block: var(--space-xs);
+		}
+
+		.prompt-chips {
+			flex-wrap: nowrap;
+			overflow-x: auto;
+			scrollbar-width: none;
+		}
+
+		.chip {
+			flex: none;
+			white-space: nowrap;
+		}
+
+		/* The Game Over screen just showed the recap: here the writing gets the room */
+		.journal-sheet.final .recap {
+			display: none;
+		}
+
+		.chip {
+			min-height: 36px;
+			padding: 0.25rem var(--space-md);
 		}
 
 		.writing {
-			min-height: 6rem;
+			min-height: 5rem;
+		}
+
+		.sheet-actions {
+			padding-top: var(--space-xs);
+		}
+
+		.action-row,
+		.save-slot {
+			min-height: 44px;
 		}
 	}
 </style>
