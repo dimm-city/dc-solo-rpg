@@ -341,8 +341,8 @@
 			rgba(50, 150, 255, 0.25),
 			rgba(100, 50, 200, 0.2)
 		);
-		backdrop-filter: blur(12px) saturate(180%);
-		-webkit-backdrop-filter: blur(12px) saturate(180%);
+		/* No backdrop-filter: Chromium paints it outside the clip-path (filled corners), and the
+		   blur re-ran every frame over a near-black table anyway */
 		box-shadow:
 			0 0 30px rgba(0, 238, 255, 0.5),
 			inset 0 0 30px rgba(255, 0, 255, 0.2);
