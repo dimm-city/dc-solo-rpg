@@ -113,9 +113,6 @@ const PROVIDER_NAMES = { anthropic: 'Anthropic', openai: 'OpenAI', custom: 'Your
 const ANTHROPIC_API = 'https://api.anthropic.com/v1';
 const OPENAI_API = 'https://api.openai.com/v1';
 
-/** Claude models that accept server-side refusal fallback (`fallbacks: "default"`) */
-const CLAUDE_FALLBACK_MODELS = new Set(['claude-sonnet-5-5', 'claude-opus-5-5']);
-
 /**
  * The model to call for a provider. Settings saved before SM-02 hold retired Claude 3 IDs
  * (and switching provider used to carry a Claude ID over to OpenAI), so anything that is not a
@@ -257,11 +254,6 @@ async function generateWithAnthropic(prompt, settings, fetchImpl) {
 		output_config: { effort: 'low' },
 		messages: [{ role: 'user', content: prompt }]
 	};
-	if (CLAUDE_FALLBACK_MODELS.has(model)) {
-		// If a safety classifier declines, the API retries on its recommended fallback model
-		headers['anthropic-beta'] = 'server-side-fallback-2026-07-01';
-		body.fallbacks = 'default';
-	}
 
 	const response = await request(
 		'anthropic',
@@ -274,7 +266,7 @@ async function generateWithAnthropic(prompt, settings, fetchImpl) {
 	if (data.stop_reason === 'refusal') {
 		throw new Error('Claude declined to write this story. Try again, or pick another model.');
 	}
-	// The reply can hold thinking and fallback blocks before the text
+	// The reply can hold thinking blocks before the text
 	const text = (data.content || [])
 		.filter((block) => block.type === 'text')
 		.map((block) => block.text)
