@@ -1,5 +1,5 @@
 /**
- * First-run and teaching preferences, kept in localStorage (sessionStorage for the session flag)
+ * First-run and teaching preferences, kept in localStorage
  *
  * - instructions-seen: the player has made the first-time "how do you want to start" choice
  * - splash-seen: the splash has played once on this install
@@ -10,18 +10,15 @@
 import { logger } from './logger.js';
 
 const STORAGE_KEY = 'dc-solo-rpg:instructions-seen';
-const SESSION_KEY = 'dc-solo-rpg:instructions-shown-in-session';
 export const SPLASH_KEY = 'dc-solo-rpg:splash-seen';
 export const RULE_TIPS_KEY = 'dc-solo-rpg:rule-tips';
 export const RULE_TIPS_SEEN_KEY = 'dc-solo-rpg:rule-tips-seen';
 
-const getStorage = (kind) => (kind === 'session' ? sessionStorage : localStorage);
-
 /** Read a key, or null when storage is missing (SSR) or throws (privacy mode) */
-function read(key, kind = 'local') {
+function read(key) {
 	if (typeof window === 'undefined') return null;
 	try {
-		return getStorage(kind).getItem(key);
+		return localStorage.getItem(key);
 	} catch (error) {
 		logger.warn(`[instructionsStorage] Failed to read ${key}:`, error);
 		return null;
@@ -29,11 +26,11 @@ function read(key, kind = 'local') {
 }
 
 /** Write (or with value null, remove) a key; failures are logged, never thrown */
-function write(key, value, kind = 'local') {
+function write(key, value) {
 	if (typeof window === 'undefined') return;
 	try {
-		if (value === null) getStorage(kind).removeItem(key);
-		else getStorage(kind).setItem(key, value);
+		if (value === null) localStorage.removeItem(key);
+		else localStorage.setItem(key, value);
 	} catch (error) {
 		logger.warn(`[instructionsStorage] Failed to write ${key}:`, error);
 	}
@@ -55,19 +52,6 @@ export function markInstructionsAsSeen() {
 /** Clear the instructions seen flag (for testing/debugging) */
 export function clearInstructionsSeen() {
 	write(STORAGE_KEY, null);
-}
-
-/**
- * Check if instructions have been shown in this session
- * @returns {boolean} True if instructions have been shown in this session
- */
-export function hasShownInstructionsInSession() {
-	return read(SESSION_KEY, 'session') === 'true';
-}
-
-/** Mark instructions as shown for this session */
-export function markInstructionsShownInSession() {
-	write(SESSION_KEY, 'true', 'session');
 }
 
 /**

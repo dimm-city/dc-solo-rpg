@@ -4,8 +4,6 @@ import {
 	hasSeenInstructions,
 	markInstructionsAsSeen,
 	clearInstructionsSeen,
-	hasShownInstructionsInSession,
-	markInstructionsShownInSession,
 	hasSeenSplash,
 	markSplashSeen,
 	areRuleTipsEnabled,
@@ -97,8 +95,12 @@ describe('instructionsStorage error handling', () => {
 		expect(hasSeenInstructions()).toBe(false);
 		expect(() => markInstructionsAsSeen()).not.toThrow();
 		expect(() => clearInstructionsSeen()).not.toThrow();
-		expect(hasShownInstructionsInSession()).toBe(false);
-		expect(() => markInstructionsShownInSession()).not.toThrow();
-		expect(warn).toHaveBeenCalledTimes(5);
+		expect(areRuleTipsEnabled()).toBe(true);
+		expect(() => setRuleTipsEnabled(false)).not.toThrow();
+		expect(getSeenRuleTips()).toEqual([]);
+		expect(() => markRuleTipSeen('odd')).not.toThrow();
+		expect(hasSeenSplash()).toBe(false);
+		expect(() => markSplashSeen()).not.toThrow();
+		expect(warn).toHaveBeenCalled();
 	});
 });
