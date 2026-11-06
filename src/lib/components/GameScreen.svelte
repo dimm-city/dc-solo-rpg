@@ -912,12 +912,13 @@
 		background: transparent;
 	}
 
+	/* The header and the one-row HUD. AN-05: the block fades in once (.dc-fade-in, 200ms) or,
+	   at game start, with the table as the intro leaves; nothing in it slides. */
 	.status-display-area {
 		display: grid;
 		justify-content: stretch;
 		align-content: start;
 		width: 100%;
-		opacity: 0.9;
 		grid-area: status-area;
 		z-index: 100;
 		position: relative;
@@ -948,6 +949,56 @@
 		/* Remove z-index from screen container to fix stacking context */
 		.main-screen-area > div.dc-screen-container {
 			z-index: auto;
+		}
+	}
+
+	/* ============================================
+	   VP-01: LANDSCAPE PHONES (up to 500px tall)
+	   The HUD is the short one-row HUD. The step button moves to a right-hand column beside
+	   the table, so the HUD, the table and the button share the width, not the height.
+	   ============================================ */
+	@media (max-height: 500px) and (orientation: landscape) {
+		.game-screen {
+			--action-col: clamp(200px, 32vw, 280px);
+		}
+
+		.ui-content-layer {
+			row-gap: 0.375rem;
+			padding: 0.375rem max(0.5rem, env(safe-area-inset-right)) 0.375rem
+				max(0.5rem, env(safe-area-inset-left));
+		}
+
+		/* Title and result line centre in the space left of the button column */
+		.main-screen-area :global(.context-text-background) {
+			right: var(--action-col);
+			width: auto;
+			padding-inline: 0.5rem;
+		}
+
+		.main-screen-area :global(.context-title) {
+			font-size: clamp(1.25rem, 8vh, 2.25rem);
+			margin-bottom: 0.375rem;
+		}
+
+		/* The step button (and its Lucid/Surreal chip) in the right-hand column */
+		.main-screen-area :global(.step-action) {
+			position: absolute;
+			top: 0;
+			right: 0;
+			bottom: 0;
+			width: var(--action-col);
+			align-content: center;
+		}
+
+		/* The intro reads on the left with its button on the right, like the table */
+		.intro-story-container {
+			flex-direction: row;
+			align-items: center;
+		}
+
+		.intro-story-container > :global(.button-bar) {
+			flex: none;
+			width: var(--action-col);
 		}
 	}
 </style>
