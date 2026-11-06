@@ -77,7 +77,8 @@ test.describe('Header and Navigation', () => {
 
 	test('should close the menu when clicking elsewhere', async ({ page }) => {
 		await openHeaderMenu(page);
-		await page.getByRole('heading', { level: 1 }).click();
+		// A point on the page well away from the menu (bottom-left corner)
+		await page.mouse.click(8, page.viewportSize()!.height - 8);
 		await expect(page.locator('.mobile-menu')).toHaveCount(0);
 	});
 
