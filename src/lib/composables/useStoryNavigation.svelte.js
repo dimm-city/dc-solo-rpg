@@ -1,68 +1,74 @@
 /**
  * useStoryNavigation - Story mode navigation state and controls
  *
- * Manages round navigation with keyboard support and smooth transitions.
+ * Tracks the current round and the direction of the last move (so the round view can slide
+ * the next round in from the side it comes from), and handles the arrow keys and Escape.
  *
- * @param {number} totalRounds - Total number of rounds in the story
- * @param {Function} onExit - Callback when user exits via Escape key
+ * Keys only drive story mode when nothing else owns them: a key pressed while a dialog is open,
+ * inside a text field, select or menu, or already handled elsewhere is left alone. Without this,
+ * Escape in the AI settings dialog closed story mode too (SM-03), and the arrow keys in the
+ * API key field changed rounds behind the dialog.
+ *
+ * @param {number | (() => number)} totalRounds - Number of rounds, or a getter for it
+ * @param {Function} onExit - Called when the player presses Escape
  * @returns {Object} Navigation state and control functions
  *
  * @example
- * const nav = useStoryNavigation(10, () => logger.debug('exit'));
- * nav.nextRound(); // Navigate to next round
- * nav.previousRound(); // Navigate to previous round
- * nav.jumpToRound(5); // Jump to specific round
+ * const nav = useStoryNavigation(() => rounds.length, onExit);
+ * nav.nextRound(); // direction becomes 1
+ * nav.previousRound(); // direction becomes -1
+ * nav.jumpToRound(5);
  */
 
-import { ANIMATION_DURATION } from '$lib/constants/animations.js';
+/** Elements that use the arrow keys or Escape themselves */
+const KEY_OWNERS =
+	'input, textarea, select, [contenteditable=""], [contenteditable="true"], [role="menu"], [role="menuitem"], [role="dialog"], [aria-modal="true"]';
+
+/**
+ * Whether story mode should leave a key press alone.
+ * @param {KeyboardEvent} event
+ * @param {Document} [doc]
+ * @returns {boolean}
+ */
+export function shouldIgnoreStoryKey(event, doc = globalThis.document) {
+	if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return true;
+	if (event.target?.closest?.(KEY_OWNERS)) return true;
+	// A dialog anywhere on the page (dialogs are portalled to <body>) owns the keyboard
+	return !!doc?.querySelector?.('[aria-modal="true"]');
+}
 
 export function useStoryNavigation(totalRounds, onExit) {
-	let currentRoundIndex = $state(0);
-	let isNavigating = $state(false);
+	const getTotal = typeof totalRounds === 'function' ? totalRounds : () => totalRounds;
 
-	// Derived navigation state
+	let currentRoundIndex = $state(0);
+	/** 1 when the last move went forward, -1 when it went back */
+	let direction = $state(1);
+
 	let canGoPrevious = $derived(currentRoundIndex > 0);
-	let canGoNext = $derived(currentRoundIndex < totalRounds - 1);
+	let canGoNext = $derived(currentRoundIndex < getTotal() - 1);
+
+	function goTo(index) {
+		if (index === currentRoundIndex || index < 0 || index >= getTotal()) return;
+		direction = index > currentRoundIndex ? 1 : -1;
+		currentRoundIndex = index;
+	}
 
 	function previousRound() {
-		if (!canGoPrevious || isNavigating) return;
-		isNavigating = true;
-		setTimeout(() => {
-			currentRoundIndex--;
-			isNavigating = false;
-		}, ANIMATION_DURATION.FAST);
+		goTo(currentRoundIndex - 1);
 	}
 
 	function nextRound() {
-		if (!canGoNext || isNavigating) return;
-		isNavigating = true;
-		setTimeout(() => {
-			currentRoundIndex++;
-			isNavigating = false;
-		}, ANIMATION_DURATION.FAST);
-	}
-
-	function jumpToRound(index) {
-		if (index === currentRoundIndex || isNavigating) return;
-		if (index < 0 || index >= totalRounds) return;
-		isNavigating = true;
-		setTimeout(() => {
-			currentRoundIndex = index;
-			isNavigating = false;
-		}, ANIMATION_DURATION.FAST);
+		goTo(currentRoundIndex + 1);
 	}
 
 	function handleKeyboard(event) {
-		if (event.key === 'ArrowLeft') {
-			previousRound();
-		} else if (event.key === 'ArrowRight') {
-			nextRound();
-		} else if (event.key === 'Escape') {
-			onExit();
-		}
+		if (!['ArrowLeft', 'ArrowRight', 'Escape'].includes(event.key)) return;
+		if (shouldIgnoreStoryKey(event)) return;
+		if (event.key === 'ArrowLeft') previousRound();
+		else if (event.key === 'ArrowRight') nextRound();
+		else onExit();
 	}
 
-	// Keyboard navigation effect
 	$effect(() => {
 		window.addEventListener('keydown', handleKeyboard);
 		return () => {
@@ -74,11 +80,8 @@ export function useStoryNavigation(totalRounds, onExit) {
 		get currentRoundIndex() {
 			return currentRoundIndex;
 		},
-		set currentRoundIndex(value) {
-			currentRoundIndex = value;
-		},
-		get isNavigating() {
-			return isNavigating;
+		get direction() {
+			return direction;
 		},
 		get canGoPrevious() {
 			return canGoPrevious;
@@ -88,6 +91,6 @@ export function useStoryNavigation(totalRounds, onExit) {
 		},
 		previousRound,
 		nextRound,
-		jumpToRound
+		jumpToRound: goTo
 	};
 }
