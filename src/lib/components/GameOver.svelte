@@ -20,7 +20,6 @@
 		!!getEndingCause(gameState) &&
 		!window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 	let beatDone = $state(!hasBeat);
-	console.log('DBG', hasBeat, gameState.win, getEndingCause(gameState), gameState.kingsRevealed);
 	let drained = $state(0);
 	let startStability = $state(MAX_STABILITY);
 
