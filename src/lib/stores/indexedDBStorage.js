@@ -734,3 +734,23 @@ export async function deleteAIStory(saveKey) {
 		return false;
 	}
 }
+
+/**
+ * Delete a completed game from the Story Library, with its journal audio and AI story audio
+ * @param {string} saveKey - Save key (gameSlug:completed:timestamp)
+ * @returns {Promise<boolean>} Success status
+ */
+export async function deleteCompletedGame(saveKey) {
+	if (!saveKey?.includes(':completed:')) return false;
+	try {
+		const db = await initDB();
+		await db.delete(SAVE_STORE, saveKey);
+		await db.delete(AUDIO_STORE, saveKey);
+		await db.delete(AUDIO_STORE, `${saveKey}:story-audio`);
+		logger.info('[deleteCompletedGame] Deleted', saveKey);
+		return true;
+	} catch (error) {
+		logger.error('[deleteCompletedGame] Failed to delete completed game:', error);
+		return false;
+	}
+}

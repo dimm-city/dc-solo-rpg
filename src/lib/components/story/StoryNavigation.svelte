@@ -1,22 +1,12 @@
 <script>
 	/**
-	 * StoryNavigation - Navigation controls for story mode
-	 *
-	 * Provides previous/next buttons, round indicator, and keyboard hints
+	 * StoryNavigation - Previous / Next for story mode, pinned to the bottom of the reader
 	 *
 	 * @component
 	 * @example
-	 * <StoryNavigation
-	 *   currentRound={2}
-	 *   totalRounds={10}
-	 *   canGoPrevious={true}
-	 *   canGoNext={true}
-	 *   onPrevious={() => logger.debug('prev')}
-	 *   onNext={() => logger.debug('next')}
-	 * />
+	 * <StoryNavigation currentRound={2} totalRounds={10} canGoPrevious canGoNext
+	 *   onPrevious={prev} onNext={next} />
 	 */
-
-	import AugmentedButton from '../AugmentedButton.svelte';
 
 	let {
 		currentRound = 0,
@@ -28,163 +18,161 @@
 	} = $props();
 </script>
 
-<!-- Navigation Controls -->
-<div class="navigation-controls" data-augmented-ui="tl-clip tr-clip border">
-	<AugmentedButton
+<nav class="story-navigation" aria-label="Rounds">
+	<button
+		type="button"
+		class="nav-button"
 		onclick={onPrevious}
 		disabled={!canGoPrevious}
-		label="Previous Round"
-		style="secondary"
+		aria-label="Previous round"
 	>
-		<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" slot="icon">
-			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 16l-6-6 6-6" />
-		</svg>
-		Previous
-	</AugmentedButton>
+		<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12 16l-6-6 6-6" /></svg>
+		<span class="nav-label">Previous</span>
+	</button>
 
-	<div class="round-indicator">
-		<span class="current">{currentRound + 1}</span>
-		<span class="separator">/</span>
-		<span class="total">{totalRounds}</span>
-	</div>
+	<p class="round-indicator" role="status" aria-live="polite">
+		Round <strong>{currentRound + 1}</strong> of {totalRounds}
+	</p>
 
-	<AugmentedButton onclick={onNext} disabled={!canGoNext} label="Next Round" style="secondary">
-		Next
-		<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" slot="icon">
-			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4l6 6-6 6" />
-		</svg>
-	</AugmentedButton>
-</div>
+	<button
+		type="button"
+		class="nav-button"
+		onclick={onNext}
+		disabled={!canGoNext}
+		aria-label="Next round"
+	>
+		<span class="nav-label">Next</span>
+		<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M8 4l6 6-6 6" /></svg>
+	</button>
 
-<!-- Keyboard hints -->
-<div class="keyboard-hints">
-	<span class="hint">
-		<kbd>←</kbd>
-		Previous
-	</span>
-	<span class="hint">
-		<kbd>→</kbd>
-		Next
-	</span>
-	<span class="hint">
-		<kbd>Esc</kbd>
-		Exit
-	</span>
-</div>
+	<p class="keyboard-hints" aria-hidden="true">
+		<kbd>←</kbd><kbd>→</kbd> turn the page · <kbd>Esc</kbd> back to the library
+	</p>
+</nav>
 
 <style>
-	/* Navigation Controls */
-	.navigation-controls {
-		display: flex;
+	.story-navigation {
+		position: sticky;
+		bottom: 0;
+		z-index: 2;
+		display: grid;
+		grid-template-columns: 1fr auto 1fr;
 		align-items: center;
-		justify-content: space-between;
-		gap: var(--space-lg);
-		padding: var(--space-xl);
-		background: rgba(0, 0, 0, 0.4);
+		gap: 8px 16px;
+		/* Full-width bar; its controls line up with the 640px reading column */
+		padding: 12px max(16px, calc((100% - 640px) / 2), env(safe-area-inset-right, 0px))
+			max(12px, env(safe-area-inset-bottom, 0px))
+			max(16px, calc((100% - 640px) / 2), env(safe-area-inset-left, 0px));
+		background: rgba(8, 12, 18, 0.92);
+		border-top: 1px solid rgba(255, 255, 255, 0.12);
+		backdrop-filter: blur(10px);
+		-webkit-backdrop-filter: blur(10px);
+		font-family: var(--font-body);
+	}
 
-		/* Augmented UI */
-		--aug-tl: 16px;
-		--aug-tr: 16px;
-		--aug-border-bg: linear-gradient(135deg, rgba(138, 43, 226, 0.2), rgba(75, 0, 130, 0.1));
-		--aug-border: 2px;
-		--aug-border-fallback-color: rgba(138, 43, 226, 0.3);
+	.nav-button {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		min-height: 44px;
+		padding: 0 16px;
+		background: transparent;
+		border: 1px solid rgba(0, 255, 255, 0.6);
+		border-radius: 4px;
+		color: #fff;
+		font-family: var(--font-body);
+		font-size: 1rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition:
+			background-color 150ms ease-out,
+			opacity 150ms ease-out;
+	}
+
+	.nav-button:first-child {
+		justify-self: start;
+	}
+
+	.nav-button:nth-child(3) {
+		justify-self: end;
+	}
+
+	.nav-button svg {
+		flex-shrink: 0;
+		width: 18px;
+		height: 18px;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 2.25;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	.nav-button:hover:not(:disabled) {
+		background: rgba(0, 255, 255, 0.14);
+	}
+
+	.nav-button:disabled {
+		opacity: 0.35;
+		cursor: default;
 	}
 
 	.round-indicator {
-		display: flex;
-		align-items: baseline;
-		gap: var(--space-xs);
-		font-family: 'Courier New', monospace;
+		margin: 0;
+		font-size: 0.9375rem;
+		color: #aebbcc;
+		white-space: nowrap;
+		font-variant-numeric: tabular-nums;
 	}
 
-	.round-indicator .current {
-		font-size: 2rem;
-		font-weight: 700;
-		color: var(--color-neon-cyan);
-		text-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+	.round-indicator strong {
+		font-size: 1.125rem;
+		color: #fff;
 	}
 
-	.round-indicator .separator {
-		font-size: 1.25rem;
-		color: rgba(255, 255, 255, 0.4);
-	}
-
-	.round-indicator .total {
-		font-size: 1.25rem;
-		color: rgba(255, 255, 255, 0.6);
-	}
-
-	/* Keyboard Hints */
 	.keyboard-hints {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: var(--space-xl);
-		padding: var(--space-md);
-		color: rgba(255, 255, 255, 0.6);
-		font-size: var(--text-sm);
-	}
-
-	.hint {
-		display: flex;
-		align-items: center;
-		gap: var(--space-xs);
+		grid-column: 1 / -1;
+		justify-self: center;
+		margin: 0;
+		font-size: 0.8125rem;
+		color: #8396ab;
 	}
 
 	kbd {
-		padding: var(--space-xs) var(--space-sm);
-		background: rgba(255, 255, 255, 0.1);
-		border: 1px solid rgba(255, 255, 255, 0.2);
-		border-radius: 4px;
-		font-family: 'Courier New', monospace;
-		font-size: var(--text-xs);
-		color: var(--color-neon-cyan);
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+		display: inline-block;
+		min-width: 1.6em;
+		margin-right: 2px;
+		padding: 0 4px;
+		border: 1px solid rgba(255, 255, 255, 0.25);
+		border-radius: 3px;
+		font-family: var(--font-body);
+		font-size: 0.75rem;
+		text-align: center;
+		color: #d5dfeb;
 	}
 
-	/* Responsive */
-	@media (max-width: 768px) {
-		.navigation-controls {
-			flex-direction: row;
-			justify-content: space-between;
-			padding: var(--space-md);
-			gap: var(--space-md);
-		}
-
-		.navigation-controls :global(button) {
-			flex: 1;
-			min-width: 0;
-			font-size: 0.875rem;
-			padding: var(--space-sm) var(--space-md);
-		}
-
-		.round-indicator {
-			position: relative;
-			flex-shrink: 0;
-			gap: var(--space-xs);
-		}
-
-		.round-indicator .current {
-			font-size: 1.5rem;
-		}
-
-		.round-indicator .separator,
-		.round-indicator .total {
-			font-size: 1rem;
-		}
-
+	/* Touch screens: no keyboard hints; icon-only buttons on narrow phones */
+	@media (hover: none), (max-width: 768px) {
 		.keyboard-hints {
-			display: none; /* Hide on mobile */
+			display: none;
 		}
 	}
 
-	@media (min-width: 769px) and (max-width: 1024px) {
-		.navigation-controls {
-			padding: var(--space-sm);
+	@media (max-width: 360px) {
+		.nav-label {
+			display: none;
 		}
 
-		.round-indicator .current {
-			font-size: 1.25rem;
+		.nav-button {
+			width: 48px;
+			justify-content: center;
+			padding: 0;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.nav-button {
+			transition: none;
 		}
 	}
 </style>

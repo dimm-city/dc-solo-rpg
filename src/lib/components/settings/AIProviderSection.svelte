@@ -1,9 +1,11 @@
 <!--
- * AIProviderSection - AI Provider configuration section
+ * AIProviderSection - AI story summary provider settings
  *
- * Provides UI for configuring AI story generation provider settings
+ * Provider, API key, model (one current default per provider) and a "Test key" button that
+ * makes one tiny call and says in plain words whether the key works. Uses the shared cm-*
+ * form styles from ContentModal.
  *
- * @component ⭐ REUSABLE
+ * @component
  * @example
  * <AIProviderSection
  *   bind:aiProvider={aiProvider}
@@ -14,149 +16,225 @@
  -->
 
 <script>
+	import {
+		CLAUDE_MODELS,
+		DEFAULT_MODELS,
+		testAIConnection
+	} from '../../services/storyGeneration.js';
+
 	let {
 		aiProvider = $bindable('anthropic'),
 		aiApiKey = $bindable(''),
-		aiModel = $bindable('claude-3-5-sonnet-20241022'),
+		aiModel = $bindable(DEFAULT_MODELS.anthropic),
 		customEndpoint = $bindable('')
 	} = $props();
+
+	/** @type {{ok: boolean, message: string} | null} */
+	let testResult = $state(null);
+	let testing = $state(false);
+	let resultElement = $state();
+	// Results belong to the settings they were made with; a newer test wins
+	let testRun = 0;
+
+	function changeProvider(event) {
+		aiProvider = event.currentTarget.value;
+		// Each provider has its own model list; never carry a Claude ID over to OpenAI
+		aiModel = DEFAULT_MODELS[aiProvider] ?? '';
+		testResult = null;
+	}
+
+	function clearResult() {
+		testResult = null;
+	}
+
+	async function testKey() {
+		const run = ++testRun;
+		testing = true;
+		testResult = null;
+		const result = await testAIConnection({
+			provider: aiProvider,
+			apiKey: aiApiKey,
+			model: aiModel,
+			customEndpoint
+		});
+		if (run !== testRun) return;
+		testResult = result;
+		testing = false;
+		// On phones the result line can sit under the dialog's footer; bring it into view
+		requestAnimationFrame(() => resultElement?.scrollIntoView?.({ block: 'nearest' }));
+	}
 </script>
 
-<section class="settings-section">
-	<h3>AI Provider</h3>
-	<p class="section-description">
-		Choose your AI provider for story generation. You'll need an API key from the selected provider.
+<section class="cm-section" aria-labelledby="ai-provider-heading">
+	<h3 class="cm-section-title" id="ai-provider-heading">AI provider</h3>
+	<p class="cm-section-desc">
+		Story summaries use your own API key. It stays in this browser and is sent only to the provider
+		you choose.
 	</p>
 
-	<div class="form-group">
-		<label for="ai-provider">Provider</label>
-		<select id="ai-provider" bind:value={aiProvider}>
-			<option value="anthropic">Anthropic (Claude)</option>
-			<option value="openai">OpenAI (GPT-4)</option>
-			<option value="custom">Custom Endpoint</option>
-		</select>
-	</div>
-
-	<div class="form-group">
-		<label for="ai-api-key">API Key</label>
-		<input id="ai-api-key" type="password" bind:value={aiApiKey} placeholder="Enter your API key" />
-		<small class="help-text">
-			{#if aiProvider === 'anthropic'}
-				Get your API key from <a
-					href="https://console.anthropic.com/"
-					target="_blank"
-					rel="noopener">console.anthropic.com</a
-				>
-			{:else if aiProvider === 'openai'}
-				Get your API key from <a
-					href="https://platform.openai.com/api-keys"
-					target="_blank"
-					rel="noopener">platform.openai.com</a
-				>
-			{:else}
-				Enter your custom API endpoint URL below
-			{/if}
-		</small>
-	</div>
-
-	{#if aiProvider === 'anthropic'}
-		<div class="form-group">
-			<label for="ai-model">Model</label>
-			<select id="ai-model" bind:value={aiModel}>
-				<option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet (Recommended)</option>
-				<option value="claude-3-opus-20240229">Claude 3 Opus</option>
-				<option value="claude-3-haiku-20240307">Claude 3 Haiku</option>
+	<div class="cm-rows">
+		<div class="cm-row">
+			<label class="cm-label" for="ai-provider">Provider</label>
+			<select id="ai-provider" class="cm-control" value={aiProvider} onchange={changeProvider}>
+				<option value="anthropic">Anthropic (Claude)</option>
+				<option value="openai">OpenAI</option>
+				<option value="custom">Custom endpoint</option>
 			</select>
 		</div>
-	{:else if aiProvider === 'openai'}
-		<div class="form-group">
-			<label for="ai-model">Model</label>
-			<select id="ai-model" bind:value={aiModel}>
-				<option value="gpt-4o">GPT-4o (Recommended)</option>
-				<option value="gpt-4-turbo">GPT-4 Turbo</option>
-				<option value="gpt-4">GPT-4</option>
-			</select>
-		</div>
-	{/if}
 
-	{#if aiProvider === 'custom'}
-		<div class="form-group">
-			<label for="custom-endpoint">Custom Endpoint URL</label>
+		{#if aiProvider === 'custom'}
+			<div class="cm-row">
+				<label class="cm-label" for="custom-endpoint">Endpoint URL</label>
+				<input
+					id="custom-endpoint"
+					class="cm-control"
+					type="url"
+					bind:value={customEndpoint}
+					oninput={clearResult}
+					placeholder="https://your-api.example.com/generate"
+				/>
+			</div>
+		{/if}
+
+		<div class="cm-row">
+			<div>
+				<label class="cm-label" for="ai-api-key">API key</label>
+				<p class="cm-help" id="ai-api-key-help">
+					{#if aiProvider === 'anthropic'}
+						Create one at <a
+							href="https://platform.claude.com/settings/keys"
+							target="_blank"
+							rel="noopener">platform.claude.com</a
+						>.
+					{:else if aiProvider === 'openai'}
+						Create one at <a
+							href="https://platform.openai.com/api-keys"
+							target="_blank"
+							rel="noopener">platform.openai.com</a
+						>.
+					{:else}
+						Sent as a Bearer token to your endpoint.
+					{/if}
+				</p>
+			</div>
 			<input
-				id="custom-endpoint"
-				type="url"
-				bind:value={customEndpoint}
-				placeholder="https://your-api.example.com/generate"
+				id="ai-api-key"
+				class="cm-control"
+				type="password"
+				autocomplete="off"
+				spellcheck="false"
+				aria-describedby="ai-api-key-help"
+				bind:value={aiApiKey}
+				oninput={clearResult}
+				placeholder="Paste your API key"
 			/>
 		</div>
-	{/if}
+
+		{#if aiProvider === 'anthropic'}
+			<div class="cm-row">
+				<label class="cm-label" for="ai-model">Model</label>
+				<select id="ai-model" class="cm-control" bind:value={aiModel} onchange={clearResult}>
+					{#each CLAUDE_MODELS as model (model.id)}
+						<option value={model.id}>{model.label}</option>
+					{/each}
+				</select>
+			</div>
+		{:else if aiProvider === 'openai'}
+			<div class="cm-row">
+				<div>
+					<label class="cm-label" for="ai-model">Model</label>
+					<p class="cm-help" id="ai-model-help">
+						Any chat model your key can use. Test key checks that it exists.
+					</p>
+				</div>
+				<input
+					id="ai-model"
+					class="cm-control"
+					type="text"
+					autocomplete="off"
+					spellcheck="false"
+					aria-describedby="ai-model-help"
+					bind:value={aiModel}
+					oninput={clearResult}
+					placeholder={DEFAULT_MODELS.openai}
+				/>
+			</div>
+		{/if}
+	</div>
+
+	<div class="key-test">
+		<button
+			type="button"
+			class="cm-btn test-button"
+			onclick={testKey}
+			disabled={testing}
+			aria-describedby="ai-test-result"
+		>
+			{testing ? 'Testing…' : 'Test key'}
+		</button>
+		<p
+			bind:this={resultElement}
+			id="ai-test-result"
+			class="test-result"
+			class:ok={testResult?.ok}
+			class:failed={testResult && !testResult.ok}
+			role="status"
+			aria-live="polite"
+		>
+			{#if testResult}
+				<span class="result-mark" aria-hidden="true">{testResult.ok ? '✓' : '!'}</span>
+				<span>{testResult.message}</span>
+			{/if}
+		</p>
+	</div>
 </section>
 
 <style>
-	.settings-section {
+	.key-test {
 		display: flex;
-		flex-direction: column;
-		gap: var(--space-lg, 1.5rem);
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 8px 16px;
+		margin-top: 8px;
 	}
 
-	/* Display face is for 24px+ titles only; section headings use the body face */
-	.settings-section h3 {
-		font-family: var(--font-body, 'Inter', sans-serif);
-		font-size: 1.125rem;
-		font-weight: 700;
-		color: var(--color-neon-cyan);
+	.test-button {
+		flex: 0 0 auto;
+		min-width: 140px;
+	}
+
+	.test-button:disabled {
+		opacity: 0.6;
+		cursor: progress;
+	}
+
+	.test-result {
+		flex: 1 1 240px;
+		display: flex;
+		align-items: baseline;
+		gap: 8px;
 		margin: 0;
-	}
-
-	.section-description {
+		min-height: 1.5em;
 		font-size: 0.9375rem;
-		color: #b8c5d6;
 		line-height: 1.5;
-		margin: 0;
-		max-width: 65ch;
+		color: #d5dfeb;
 	}
 
-	.form-group {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-sm);
+	.test-result.ok {
+		color: #7dffb3;
 	}
 
-	.form-group label {
-		font-size: 1rem;
-		font-weight: 600;
-		line-height: 1.4;
-		color: #fff;
+	.test-result.failed {
+		color: #ff8fa3;
 	}
 
-	.form-group input,
-	.form-group select {
-		box-sizing: border-box;
-		min-height: 44px;
-		padding: 10px 14px;
-		background: #07101a;
-		border: 1px solid #6a87a3;
-		border-radius: 4px;
-		color: #fff;
-		font-family: inherit;
-		font-size: 1rem;
+	.result-mark {
+		flex-shrink: 0;
+		font-weight: 700;
 	}
 
-	.form-group input:focus-visible,
-	.form-group select:focus-visible {
-		outline: 2px solid var(--color-neon-cyan);
-		outline-offset: 2px;
-		border-color: var(--color-neon-cyan);
-	}
-
-	.help-text {
-		font-size: 0.875rem;
-		color: #aebbcc;
-		line-height: 1.5;
-	}
-
-	.help-text a {
-		color: var(--color-neon-cyan);
+	.cm-help a {
+		color: var(--color-neon-cyan, #00ffff);
 		text-decoration: underline;
 	}
 </style>
