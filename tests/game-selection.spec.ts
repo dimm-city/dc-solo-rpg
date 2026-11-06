@@ -111,6 +111,15 @@ test.describe('Game Selection Screen', () => {
 		const viewport = page.viewportSize()!;
 		test.skip(viewport.width <= 640, 'one card per row on phones');
 
+		// Measure once the cards have finished fading in
+		await page.waitForFunction(() =>
+			document
+				.getAnimations()
+				.every(
+					(a) => a.playState !== 'running' || a.effect?.getComputedTiming().endTime === Infinity
+				)
+		);
+
 		const cards = page.locator('.game-card');
 		const a = await cards.nth(0).boundingBox();
 		const b = await cards.nth(1).boundingBox();
