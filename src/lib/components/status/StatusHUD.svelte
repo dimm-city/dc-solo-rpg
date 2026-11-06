@@ -200,18 +200,20 @@
 		.status-hud {
 			--aug-tl: 8px;
 			--aug-br: 8px;
-			grid-template-columns: 1.45fr 1.25fr 1fr 1fr 0.85fr 1fr;
+			grid-template-columns: 1.4fr 1.2fr 1fr 1.05fr 0.95fr 1fr;
 			padding: 0 0.125rem;
 		}
 
+		/* Three rows (label, value, meta) on one grid: every label sits on the same line */
 		:global(.status-hud .hud-cell) {
+			justify-content: flex-start;
 			gap: 2px;
-			padding: 0 0.125rem;
+			padding: 7px 0.125rem 0;
 		}
 
 		:global(.status-hud .hud-label) {
 			font-size: 0.6875rem; /* 11px: six labels share 360px */
-			letter-spacing: 0.04em;
+			letter-spacing: 0.03em;
 		}
 
 		:global(.status-hud .hud-readout) {
