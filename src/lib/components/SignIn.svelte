@@ -147,9 +147,13 @@
 		text-align: center;
 	}
 
+	/* Small title and button: Inter 600 uppercase (the display face is for 28px and up) */
 	.signin-card h2 {
-		font-family: var(--font-display);
-		font-size: var(--text-2xl);
+		font-family: var(--font-body);
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		font-size: var(--text-xl);
 		color: var(--color-neon-cyan);
 		text-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
 		margin: 0 0 var(--space-md) 0;
@@ -173,9 +177,11 @@
 		color: #1f1f1f;
 		border: none;
 		border-radius: 8px;
-		font-family: var(--font-display);
+		font-family: var(--font-body);
 		font-size: var(--text-base);
 		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
 		cursor: pointer;
 		transition: all 0.3s ease;
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -221,7 +227,7 @@
 		}
 
 		.signin-card h2 {
-			font-size: var(--text-xl);
+			font-size: var(--text-lg);
 		}
 
 		.subtitle {
