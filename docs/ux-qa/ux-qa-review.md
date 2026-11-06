@@ -1267,10 +1267,11 @@ and checked against the captures. "Observed" is from the 10fps sheets (swiftshad
 | T2 Card, overlays, journal and ending | AN-01, AN-04, RF-04, CK-01 (card face), AC-01, AC-02, JR-01–04, VP-04, EN-01–04, MN-03, MN-05, VP-01 (card, journal, Game Over)  | running |
 | T3 Home, pages, menus and settings    | ST-01–05, MN-01, MN-04, MN-06, HM-01–07, JR-05, RC-03, AN-06 (home and splash)                                                   | running |
 | T4 HUD, layout and visual system      | HD-01–04, VP-01, VP-02, RC-01, AN-03, AN-05, AN-06 (navigation), AC-03 (focus ring), MN-07, animation tokens, self-hosted fonts  | running |
-| T5 Story                              | SM-01–05                                                                                                                         | running |
+| T5 Story                              | SM-01–05 (merged at 0b17fb6; the beta refusal fallback was removed after review)                                                 | merged  |
 
-If the container restarts mid-round, team branches that were not merged yet are lost. Merged work
-is on `claude/vibrant-curie-w9bn88`. Re-dispatch any team whose status above is not "merged".
+Team worktrees live in `/home/user/dc-solo-rpg-wt/<team>`. They survived one container restart, and
+the teams were resumed. Merged work is on `claude/vibrant-curie-w9bn88`. If a worktree is ever lost,
+re-dispatch any team whose status above is not "merged".
 
 ## Recommendations
 
