@@ -17,7 +17,6 @@
 	import StatusDisplay from './StatusDisplay.svelte';
 	import ContinueButton from './ContinueButton.svelte';
 	import ConfirmModal from './ConfirmModal.svelte';
-	import MiniStatusHUD from './MiniStatusHUD.svelte';
 	import RuleCaption from './RuleCaption.svelte';
 	import KeyboardHint from './KeyboardHint.svelte';
 	import ButtonBar from './ButtonBar.svelte';
@@ -175,14 +174,6 @@
 			goto(resolve('/'));
 		}
 	}
-
-	// Show mini HUD during card-related screens
-	const showMiniHUD = $derived(
-		currentScreen === 'drawCard' ||
-			currentScreen === 'failureCheck' ||
-			currentScreen === 'successCheck' ||
-			currentScreen === 'log'
-	);
 
 	let showExitModal = $state(false);
 	let showKeyboardHint = $state(false);
@@ -770,9 +761,6 @@
 <div class="sr-only" role="status" aria-live="polite" aria-atomic="true" data-testid="live-region">
 	{liveMessage}
 </div>
-
-<!-- Mini Status HUD - Shows during card screens -->
-<MiniStatusHUD show={showMiniHUD} />
 
 <!-- Keyboard Hint - Shows on desktop for first round -->
 <KeyboardHint show={showKeyboardHint} />
