@@ -8,7 +8,7 @@ import AugmentedButton from './AugmentedButton.svelte';
 describe('AugmentedButton', () => {
 	it('renders no key-cap by default', () => {
 		const { container } = render(AugmentedButton, { props: { text: 'Continue' } });
-		expect(container.querySelector('kbd')).toBeNull();
+		expect(container.querySelector('.key-hint')).toBeNull();
 	});
 
 	it('shows the hint as a decorative key-cap inside the button', () => {
@@ -16,10 +16,11 @@ describe('AugmentedButton', () => {
 			props: { text: 'Roll for Tasks', hint: 'Space', variant: 'primary' }
 		});
 		const button = getByRole('button', { name: 'Roll for Tasks' });
-		const kbd = button.querySelector('kbd.key-hint');
-		expect(kbd.textContent).toBe('Space');
-		// The key-cap is not part of what a screen reader announces
-		expect(kbd.getAttribute('aria-hidden')).toBe('true');
+		const keycap = button.querySelector('.key-hint');
+		expect(keycap.dataset.hint).toBe('Space');
+		// Drawn by CSS: the button's text and accessible name stay its label
+		expect(button.textContent.trim()).toBe('Roll for Tasks');
+		expect(keycap.getAttribute('aria-hidden')).toBe('true');
 		expect(button.getAttribute('aria-label')).toBe('Roll for Tasks');
 	});
 

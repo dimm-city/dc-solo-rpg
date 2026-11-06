@@ -86,8 +86,9 @@
 				{text}
 			{/if}
 			{#if hint}
-				<!-- Decorative: the accessible name stays the label; shown on pointer devices only -->
-				<kbd class="key-hint" aria-hidden="true">{hint}</kbd>
+				<!-- Decorative, pointer devices only. The text comes from CSS (attr), so the button's
+				     text and accessible name stay its label. -->
+				<span class="key-hint" data-hint={hint} aria-hidden="true"></span>
 			{/if}
 		</button>
 	{/if}
@@ -272,6 +273,10 @@
 		text-transform: uppercase;
 		opacity: 0.75;
 		background: rgba(0, 0, 0, 0.18);
+	}
+
+	.key-hint::before {
+		content: attr(data-hint);
 	}
 
 	@media (hover: hover) and (pointer: fine) {
