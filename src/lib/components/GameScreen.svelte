@@ -1200,13 +1200,14 @@
 			margin-bottom: 0.375rem;
 		}
 
-		/* The step button (and its Lucid/Surreal chip) in the right-hand column */
-		.main-screen-area :global(.step-action) {
+		/* The step button's slot is the right-hand column, full table height, button centred */
+		.step-slot {
 			position: absolute;
 			top: 0;
 			right: 0;
 			bottom: 0;
 			width: var(--action-col);
+			display: grid;
 			align-content: center;
 		}
 
