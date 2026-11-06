@@ -7,8 +7,8 @@ restart. Branch: `claude/vibrant-curie-w9bn88`.
 ## Status
 
 - Started: 2026-11-06, against `main` at 17b967d (PR #50 merged).
-- Current phase: broad review, next: Viewports (coverage item 15), then Recommendations.
-- Last section completed: Animations and inventory (item 14 done).
+- Current phase: complete.
+- Last section completed: Recommendations (all coverage items done).
 
 ## How to resume after a restart
 
@@ -63,6 +63,24 @@ state chip, the rule caption, the result line and the card stage.
   against when the promise resolves (when the button wakes).
 - `midroll-resize.cjs`: checks for HUD or dice-world resizes during a Lucid roll.
 - `sheet.py`: contact sheets from extracted frames.
+- `playthrough.cjs <label> desktop|mobile` (a copy of the e2e tool, writing to
+  `ux-qa/playthrough/`) plus `animations.py` (10fps sheets, 4s per action): full games on the
+  production build (`pt-desktop`: 14 rounds, loss by Kings; `pt-mobile`).
+- `tour.cjs <vp>` (production build): splash, instructions choice, home, menu, every modal
+  scrolled to the end, Story Library, /about, /how-to, /signin and two error pages.
+- `delete-modal.cjs`, `endings.cjs win|kings|stability <vp> [reduced]`, `checks.cjs` (return-king,
+  skip-damage, 4 Aces, natural 1 on Salvation, Stability tiers), `journal.cjs` (fake microphone
+  via `--use-fake-device-for-media-stream`), `story.cjs` (writes a 5-round completed game through
+  the store), `a11y.cjs` (tab order, focus rings, accessible names, reduced motion),
+  `viewports.cjs <vp>` (fit checks), `step-swap.cjs` and `probe-hint.cjs` (rAF and layout
+  probes), `resume-aces.cjs`.
+- `insert.py` and `commit.sh`: add a section to this document and push it (prettier, then
+  commit only this file, then push with 2/4/8/16s retries).
+
+**Timing caveat for the playthrough sheets.** The logged action time is taken before
+Playwright's actionability wait, so sheet offsets can be 0.3–0.5s early. Running two browsers at
+once (as during the mobile playthrough) slows everything; durations in findings come from code
+or from single-browser rAF probes.
 
 **Fonts.** Inter renders (installed locally). Orbitron and Share Tech Mono do NOT: Google Fonts
 is blocked and neither is installed, so HUD mono text falls back to DejaVu Sans Mono and any
@@ -97,7 +115,7 @@ Tick an item only when its findings are written below.
 - [x] Story Library and story mode (browse, read, navigate, generated story)
 - [x] Auto-play, keyboard-only play, screen reader announcements, reduced motion
 - [x] Every animation and transition (timing, easing, jank, layering, consistency)
-- [ ] Viewports: 1440x900, 1280x720, tablet, iPhone 13, small phone (360x640), landscape phone
+- [x] Viewports: 1440x900, 1280x720, tablet, iPhone 13, small phone (360x640), landscape phone
 
 ## Findings
 
@@ -1081,6 +1099,74 @@ for order, gaps and layering.
   8px.
 - **Effort:** S.
 
+### 15. Viewports
+
+Evidence: `viewports/<vp>/` (`viewports.cjs`: intro, instability roll and result, card, journal,
+Game Over, with a fit check of every button, card and textarea), `viewports/*-sheet.png`,
+`viewports/phones-sheet.png`, `lucid/captions-*`, `tour/*`.
+
+Measured HUD height: 196px at 1440x900 and at 1280x720 (27% of the 720px screen), 306px on iPad
+portrait (28%), and 128px on phones (header plus the 64px CompactHUD).
+
+#### VP-01 · S1 · Landscape phones cannot play
+
+- **Viewport:** iPhone 13 landscape, 750x342.
+- **What happens:** at 750px wide the desktop HUD is used, and it takes 306 of 342px.
+  - The step button is below the fold: "ROLL FOR INSTABILITY" at y=338–380, and in the caption
+    run "DRAW 6 CARDS" at y=373 with the table area 4px tall.
+  - The page cannot scroll (scrollHeight equals the viewport).
+  - The card shrinks to about 130px wide with its text cut.
+  - The journal's textarea (y=322–398) and Record Entry button are off screen, and so is Game
+    Over's "Record your final log" (y=414–456).
+  - The Kings panel sits on top of the Stability panel.
+
+  Evidence: `lucid/captions-landscape-20/02-lucid-caption-up.png`,
+  `viewports/phones-sheet.png` (bottom rows), `viewports.out`.
+
+- **Recommendation:** treat `(max-height: 500px)` as a phone. Use the CompactHUD, and put the
+  step button in a right-hand column beside the table, so the HUD, table and button share the
+  width, not the height. As a stop-gap (S), show a "Turn your phone upright" panel in
+  landscape below 500px tall.
+- **Effort:** M (stop-gap S).
+
+#### VP-02 · S2 · Tablet portrait gets the desktop HUD, unbalanced and 306px tall
+
+- **Viewport:** iPad portrait, 810x1080.
+- **What happens:** Stability, Kings, Success and Abilities stack in a 2x2 block on the left,
+  with Last Roll and Cards on the right and nothing in between. The HUD is 28% of the screen.
+  The intro text fills the top third, then 600px of empty space before the button
+  (`viewports/ipad-sheet.png`).
+- **Recommendation:** use the CompactHUD up to 900px wide (or everywhere, HD-02), and centre the
+  intro column vertically (GS-02).
+- **Effort:** S.
+
+#### VP-03 · S3 · On small phones the screen title breaks mid-word
+
+- **Viewport:** 360x640.
+- **What happens:** "INITIAL INSTABILITY" wraps as "INITIAL / INSTABILIT / Y"
+  (`viewports/phones-sheet.png`, row 2). The cause is `overflow-wrap: break-word` with a 24px
+  minimum size in lixdu (`ContextBackground.svelte:60-68`). The die also lands on the result
+  line on every phone size (RF-02).
+- **Recommendation:** `font-size: clamp(1.25rem, 7vw, 3.5rem)`, `overflow-wrap: normal`, and
+  shorter titles ("Instability", "Salvation").
+- **Effort:** S.
+
+#### VP-04 · S3 · On phones the journal's actions stack in the wrong order
+
+- **Viewport:** iPhone 13 and 360x640.
+- **What happens:** the action row wraps, so RECORD ENTRY sits above "Voice note"
+  (`viewports/phones-sheet.png`, journal column), putting the secondary action at the bottom
+  under the thumb.
+- **Recommendation:** one row: a 44px microphone icon button on the left, Record Entry filling
+  the rest.
+- **Effort:** S.
+
+#### Fit at 1440x900, 1280x720 and on iPhone 13
+
+No control is off screen at these sizes (`viewports.out`: `offscreen: []`). At 1280x720 the
+card, journal and Game Over all fit, but the 196px HUD leaves the table 480px for the title, the
+dice, the result line and the button, which is why dice and result line collide.
+
 ## Animation inventory
 
 Every animation and transition, from code (`grep` of `@keyframes`, `transition:`, `in:`/`out:`)
@@ -1158,4 +1244,125 @@ and checked against the captures. "Observed" is from the 10fps sheets (swiftshad
 
 ## Recommendations
 
-_Prioritised plan, written last: what to fix first and how._
+### Earlier reviews: what is fixed, open, or fixed badly
+
+The earlier reviews are `playthrough/reviews/game-ux.md`, `visual-design.md` and
+`visual-design-v2.md` in the scratchpad.
+
+**Fixed well by PR #50:**
+
+- the table-tap re-roll;
+- a result line on every roll, held until Continue;
+- one button per step, in the same slot;
+- Space and Enter press the visible button;
+- one-time rule captions;
+- numbers in the HUD (n/20, n/4, tokens left);
+- the CompactHUD on phones;
+- King escalation (the pulse speeds up per King);
+- Stability tiers with the damage flash;
+- journal prompts, status line and saved beat;
+- the ending's cause line, recap, afterword and Read your story;
+- rank and suit on cards;
+- dice hidden at rest;
+- ContextBackground contrast;
+- "GAME OVER" spacing;
+- the zoom lock removed;
+- tap-to-advance removed from the intro;
+- a content column and centred CTAs on desktop.
+
+**Fixed badly:**
+
+- **The keyboard hint** now renders as a clipped strip (HD-04, RC-01).
+- **The 2d20 caption** ("high of 15, 6") is wired to a field dice-box never fills (LS-03).
+- **The "Entry saved" beat** is too faint to register (JR-02).
+- **The fourth-King beat** exists but sits between dead frames, away from the card (EN-01).
+- **Captions.** The "Skip always" choice silently turns captions off (RC-03).
+- **Dice placement.** Dice no longer cover the HUD, but now land on the result line (RF-02).
+
+**Still open:**
+
+- no authored art direction, and an empty home (HM-01);
+- the Stability panel's stray tab (HD-01);
+- the Stability check never names its card (RF-03);
+- the 3D dice ignore reduced motion (AC-04);
+- the display font used at small sizes (MN-07);
+- the turbulence fog cost on phones (AN-04);
+- fonts still load from Google Fonts. When it is unavailable (as in these captures), HUD
+  numbers fall back to the system monospace and Orbitron is lost. Self-host Inter and one mono.
+
+### Prioritised plan
+
+Effort: S under half a day, M one to three days, L longer.
+
+**1. Rules the player is misled about (all S1/S2, all S effort, do first)**
+
+1. LS-02: reset `isLucid`, `isSurreal` and `pendingUpdates` in `initializeGame`.
+2. LS-04: save and restore `acesRevealed`, `isLucid` and `isSurreal`. Bump `SAVE_VERSION`.
+3. ST-01 and HM-05: replace /how-to with the Game Guide, and fix MN-01 (natural 20 on any
+   roll).
+4. VP-01 stop-gap: "Turn your phone upright" in landscape.
+5. CK-01: show what skip-damage and return-king cards do.
+
+**2. The reported Lucid/Surreal "extra confirmation" (S)**
+
+LS-01 (the pill only on the roll button, in its label), LS-03 (read `result.sets`; say which
+die counted), LS-07 (arm auto-play on toggle).
+
+**3. One global CSS rule that breaks three components (S)**
+
+HD-04: scope `Game.svelte:131`, so the keyboard hint works. Delete `MiniStatusHUD`.
+
+**4. Pace: target 8 inputs and 25s per round, down from about 15 and 40 (M)**
+
+GS-01 (drop Begin Round), RF-01 (deal on its own after the task roll), LS-05 and LS-06 (resolve
+dice at rest, tap to skip, a 400ms guard on a changed button), CK-03 (no dice for automatic
+Salvation).
+
+**5. The card, the heart of the game (M)**
+
+AN-01 (600ms card to card, no blank face, no glitch, a 220ms dismiss), AN-02 (a persistent
+button slot), RF-04 (size the card to its content; a mechanic footer instead of BYTE-IDs).
+
+**6. Rolls that read (S)**
+
+RF-02 (dice in the lower table, the result line above), RF-03 (name the triggering card),
+CK-02 (call it "Salvation" everywhere), GS-03 ("Rolling…" while rolling).
+
+**7. Access (S)**
+
+AC-02 (the card's accessible name is its content), AC-03 (a focus ring on the primary button),
+AC-04 (no 3D throw under reduced motion), AC-01 (auto-play holds a card long enough to read it),
+AC-05 (one live region).
+
+**8. The ending and the story (M)**
+
+EN-01 (stage the fourth King on the card, 1.5s, no dead frames), EN-02 (the final log on the
+ending backdrop), SM-01 (story mode leads with the player's words), SM-02 (current AI models and
+a key test), SM-03 and SM-04.
+
+**9. One visual system (M)**
+
+HD-02 (the CompactHUD design at all widths), VP-02, MN-03 (one modal entrance and footer),
+MN-07 (display font only for screen titles), AN-03 (one ambient loop; static CTA glow; pause
+`NeuralBackground`), and one animation token set (section 14).
+
+**10. First impression (M–L)**
+
+HM-01 (a real home with key art per game), HM-02 (labelled Play and Continue with round and
+date), HM-04 (a 1.2s skippable splash, one product name), HM-06 (labelled header actions on
+desktop).
+
+### Quick wins (S, about an hour each)
+
+- LS-02 reset; LS-03 `result.sets`; LS-04 save fields.
+- HD-04 scope the global rule.
+- MN-01 Help text; MN-02 Exit copy.
+- EN-04 remove the `console.log`.
+- ST-03 redirect /signin.
+- CK-03 no dice at 4 Aces.
+- AC-03 focus ring.
+- RC-02 pause captions under overlays.
+- JR-03 timer font and `scaleX`.
+- VP-03 title wrap.
+- JR-01 fix `data-augmented-ui`.
+- SM-03 Escape.
