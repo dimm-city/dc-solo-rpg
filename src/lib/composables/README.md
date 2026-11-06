@@ -16,18 +16,23 @@ Screen-specific composables that manage state and logic for each game screen.
 
 **Available Composables:**
 
-- `useRollForTasks()` - Roll for Tasks screen logic
-- `useFailureCheck()` - Failure Check screen logic
-- `useSuccessCheck()` - Success Check (Salvation) screen logic
-- `useInitialDamage()` - Initial Damage Roll screen logic
+- `useRollForTasks()` - Roll for Tasks ("Round N"): the roll, then the cards are dealt on their own
+- `useFailureCheck()` - Stability check screen logic
+- `useSuccessCheck()` - Salvation screen logic (automatic, with no dice, at four Aces)
+- `useInitialDamage()` - The opening instability roll
 
 **Features:**
 
-- Screen-specific state management (rolling, confirming, results)
-- Integration with dice rolling and 3D animations
+- Every roll goes through `gameState.rollWithModifiers()`, so Lucid/Surreal applies to every roll
+- Integration with dice rolling and 3D animations; "Rolling…" while the dice roll, and a press
+  then skips to the result
+- A result line that stays until the player continues
 - Auto-play trigger support
-- Button state management (text, disabled)
+- Button state (`buttonText`, plus `buttonHint`: the modifier, on roll buttons only)
 - State reset on screen transitions
+
+GameScreen owns one instance of each and mounts a single `StepAction` button for every step,
+driven by the current screen's composable.
 
 **Usage Example (useRollForTasks):**
 
@@ -36,30 +41,24 @@ import { useRollForTasks } from '$lib/composables/screen/useRollForTasks.svelte.
 
 const rollTasks = useRollForTasks();
 
-// Handle roll/confirm action
+// Roll; a second press during the roll skips it; once rolled, a press deals at once
 async function onButtonClick() {
 	await rollTasks.handleRollForTasks(triggerAutoPlay);
 }
 
-// Access state
-$: buttonText = rollTasks.rollTasksRolled ? 'CONFIRM' : 'ROLL';
-$: isDisabled = rollTasks.rollTasksRolling || rollTasks.rollTasksConfirming;
+// Access state: rollTasks.buttonText, rollTasks.buttonHint, rollTasks.resultLine, rollTasks.rolling
 
-// Reset on screen change
-$effect(() => {
-	if (currentScreen === 'rollForTasks') {
-		rollTasks.resetState();
-	}
-});
+// Reset when the screen is entered (also cancels a pending deal)
+rollTasks.resetState();
 ```
 
 **Common Pattern:**
 Each screen composable exports:
 
-- State variables (e.g., `rolled`, `rolling`, `confirming`)
+- State getters (e.g., `rolled`, `rolling`, `result`, `resultLine`)
 - Handler function (e.g., `handleRollForTasks()`)
-- Reset function (e.g., `resetState()`)
-- Derived values for UI (button text, disabled state)
+- Reset function (`resetState()`)
+- Derived values for the button (`buttonText`, `buttonHint`)
 
 ---
 
