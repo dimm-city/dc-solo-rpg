@@ -11,26 +11,33 @@ import { INSTRUCTIONS_SEEN_KEY, playToFirstRound, pressStep } from './helpers';
 test.describe.configure({ timeout: 60000 });
 
 const SLUG = 'future-lost';
+// Vite serves the app's modules at these URLs on the dev server (held in variables so the
+// type checker does not try to resolve them)
+const GAME_STORE = '/src/lib/stores/gameStore.svelte.js';
+const RANDOM = '/src/lib/services/random.js';
 
 /** Run code against the live stores (dev server only) */
 async function store(page: Page, src: string) {
-	await page.evaluate(async (src) => {
-		const gs = await import(/* @vite-ignore */ '/src/lib/stores/gameStore.svelte.js');
-		const rnd = await import(/* @vite-ignore */ '/src/lib/services/random.js');
-		new Function('gs', 'rnd', src)(gs, rnd);
-	}, src);
+	await page.evaluate(
+		async ({ src, modules }) => {
+			const gs = await import(/* @vite-ignore */ modules[0]);
+			const rnd = await import(/* @vite-ignore */ modules[1]);
+			new Function('gs', 'rnd', src)(gs, rnd);
+		},
+		{ src, modules: [GAME_STORE, RANDOM] }
+	);
 }
 
 const gameStateOf = (page: Page) =>
-	page.evaluate(async () => {
-		const { gameState } = await import(/* @vite-ignore */ '/src/lib/stores/gameStore.svelte.js');
+	page.evaluate(async (gameStore) => {
+		const { gameState } = await import(/* @vite-ignore */ gameStore);
 		return {
 			state: gameState.state,
 			round: gameState.round,
 			isLucid: gameState.isLucid,
 			taskRoll: gameState.taskRoll
 		};
-	});
+	}, GAME_STORE);
 
 async function openGame(page: Page) {
 	await page.emulateMedia({ reducedMotion: 'reduce' });
