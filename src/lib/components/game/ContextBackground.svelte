@@ -83,7 +83,7 @@
 
 	/* Display font is for titles of 20px and up only. Whole words wrap, never mid-word. */
 	.context-title {
-		font-size: clamp(1.25rem, 7vw, 3.5rem);
+		font-size: clamp(1.25rem, 6.5vw, 3.5rem);
 		font-weight: 700;
 		color: var(--color-neon-cyan);
 		text-transform: uppercase;
