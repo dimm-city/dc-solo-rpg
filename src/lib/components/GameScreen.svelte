@@ -18,7 +18,6 @@
 	import ContinueButton from './ContinueButton.svelte';
 	import ConfirmModal from './ConfirmModal.svelte';
 	import RuleCaption from './RuleCaption.svelte';
-	import KeyboardHint from './KeyboardHint.svelte';
 	import ButtonBar from './ButtonBar.svelte';
 	import OverlayModal from './OverlayModal.svelte';
 	import SettingsModal from './settings/SettingsModal.svelte';
@@ -176,7 +175,6 @@
 	}
 
 	let showExitModal = $state(false);
-	let showKeyboardHint = $state(false);
 	let showSettingsModal = $state(false);
 
 	function handleExitClick() {
@@ -339,13 +337,6 @@
 
 	onMount(() => {
 		window.addEventListener('keydown', handleKeyPress);
-
-		// Show keyboard hint when game starts (on desktop only)
-		const isDesktop = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-		if (isDesktop && currentScreen === 'startRound') {
-			showKeyboardHint = true;
-		}
-
 		return () => window.removeEventListener('keydown', handleKeyPress);
 	});
 
@@ -403,13 +394,6 @@
 				break;
 
 			case 'startRound':
-				// Show keyboard hint on first round (desktop only)
-				if (typeof window !== 'undefined') {
-					const isDesktop = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-					if (isDesktop && gameState.round === 1) {
-						showKeyboardHint = true;
-					}
-				}
 				// Trigger auto-play
 				triggerAutoPlayForCurrentScreen();
 				break;
@@ -761,9 +745,6 @@
 <div class="sr-only" role="status" aria-live="polite" aria-atomic="true" data-testid="live-region">
 	{liveMessage}
 </div>
-
-<!-- Keyboard Hint - Shows on desktop for first round -->
-<KeyboardHint show={showKeyboardHint} />
 
 <!-- Modal rendered at root level, outside game-screen container -->
 <ConfirmModal
