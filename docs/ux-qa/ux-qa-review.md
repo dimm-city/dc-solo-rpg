@@ -7,8 +7,8 @@ restart. Branch: `claude/vibrant-curie-w9bn88`.
 ## Status
 
 - Started: 2026-11-06, against `main` at 17b967d (PR #50 merged).
-- Current phase: broad review, next: Journal (coverage item 10).
-- Last section completed: Rule captions and keyboard hint (items 5-9 done).
+- Current phase: broad review, next: Auto-play, keyboard, screen reader, reduced motion (coverage item 13).
+- Last section completed: Story Library and story mode (items 10-12 done).
 
 ## How to resume after a restart
 
@@ -92,9 +92,9 @@ Tick an item only when its findings are written below.
 - [x] Stability check, Salvation check, Lucid and Surreal, skip-damage and return-king cards
 - [x] HUD: desktop panels and the phone compact HUD, every tier and state change
 - [x] Rule captions and keyboard hint
-- [ ] Journal: entry, prompts, save beat, audio record and playback, auto-journal timer, TTS
-- [ ] Endings: win, loss by Kings, loss by Stability, final log, epitaph, run recap
-- [ ] Story Library and story mode (browse, read, navigate, generated story)
+- [x] Journal: entry, prompts, save beat, audio record and playback, auto-journal timer, TTS
+- [x] Endings: win, loss by Kings, loss by Stability, final log, epitaph, run recap
+- [x] Story Library and story mode (browse, read, navigate, generated story)
 - [ ] Auto-play, keyboard-only play, screen reader announcements, reduced motion
 - [ ] Every animation and transition (timing, easing, jank, layering, consistency)
 - [ ] Viewports: 1440x900, 1280x720, tablet, iPhone 13, small phone (360x640), landscape phone
@@ -712,6 +712,183 @@ each firing on first contact and gone after 6s, are the right way to teach throu
   setting to turn captions back on, and no record of past captions.
 - **Recommendation:** a "Rule tips" toggle in Settings, Gameplay. List each caption once seen in
   the Help modal under "Rules you've met".
+- **Effort:** S.
+
+### 10. Journal: entry, prompts, save beat, voice note, auto-journal timer, read-aloud
+
+Evidence: `journal/desktop/` and `journal/desktop-sheet.png` (dev server; fake microphone through
+`--use-fake-device-for-media-stream`), `playthrough/sheet-mobile-start.png`, `endings/*`.
+Read-aloud was reviewed in Settings and in code only: the capture machine has no audio output.
+
+What works: the sheet leads with "This round" (rank, suit and title of each card), two prompt
+chips, the status line ("Stability 14/20 · 1 of 4 Kings"), and focus lands in the textarea on
+desktop but not on touch, so the keyboard does not cover the sheet. This is a real
+improvement since PR #50.
+
+#### JR-01 · S2 · Opening the voice note pushes its controls out of view
+
+- **What happens:** "Voice note" adds an "AUDIO RECORDING (OPTIONAL)" panel inside the sheet's
+  scroll area, under the textarea. At 1280x800 the Play and Delete buttons after recording are
+  cut off at the bottom edge (`journal/desktop/06-recorded.png`). The panel has no close
+  control: once opened it stays. The two buttons are icon-only, with a `title` but no visible
+  label. The panel's frame never renders, because the attribute is `augmented-ui=` instead of
+  `data-augmented-ui=` (`JournalEntry.svelte:408`).
+- **Recommendation:** put the voice note on the footer row: a record button that turns into
+  "● 0:07 · Stop", then "▶ 0:07 · Delete". Nothing is added inside the scroll area. Fix the
+  attribute.
+- **Effort:** S–M. `JournalEntry.svelte:395-430`, `journal/AudioRecorder.svelte`,
+  `journal/AudioPlayback.svelte`.
+
+#### JR-02 · S3 · The "Entry saved" beat is too faint to register
+
+- **What happens:** after Record Entry, the footer swaps to a small grey "ENTRY SAVED" for 800ms
+  and the sheet fades (`endings/kings-desktop-b.png`, frame 2). It reads as the sheet going
+  dead, not as a moment.
+- **Recommendation:** keep the 800ms, but make it the sheet's moment: the entry text dims to 60%,
+  a cyan "Saved to your log" with a check replaces the button in the same slot, and the sheet
+  then scales to 0.98 as it fades out.
+- **Effort:** S.
+
+#### JR-03 · S3 · The auto-journal countdown is set in the display font
+
+- **What happens:** "AUTO-CONTINUING IN 7S (WRITE OR RECORD TO CANCEL)" is lixdu caps at about
+  14px (`journal/desktop/11-auto-timer-2s.png`). Its bar animates `width`, which the house
+  style guide lists as an anti-pattern.
+- **Recommendation:** Inter at 13px: "Continuing in 7s · type to stay". Animate the bar with
+  `transform: scaleX()`.
+- **Effort:** S. `journal/AutoJournalTimer.svelte`.
+
+#### JR-04 · S3 · On phones the prompt chips are cut off and the title wraps
+
+- **What happens:** at 390px "JOURNAL ENTRY" wraps to two lines, and the second prompt chip is
+  cut at the right edge ("What are you afrai", `playthrough/sheet-mobile-start.png`, frame 11).
+- **Recommendation:** let chips wrap (`flex-wrap: wrap`), and title the sheet "Round 3" in the
+  display font with "Journal" as a small label.
+- **Effort:** S.
+
+#### JR-05 · S3 · Read-aloud is offered with providers that cannot work yet
+
+- **What happens:** Settings, Narration lists DimmCityAI, OpenAI and ElevenLabs next to the free
+  browser voice. Without a key, each shows "Key needed" under a collapsed "Advanced" disclosure,
+  and nothing stops the player from choosing one. The on-device Supertonic voice that CLAUDE.md
+  documents is commented out of the list (`settings/TTSSection.svelte:115`).
+- **Recommendation:** list only the browser voice until a key is present, with "Add a voice
+  service" as a link that opens the key field. Either bring Supertonic back or drop it from
+  CLAUDE.md.
+- **Effort:** S.
+
+### 11. Endings: win, loss by Kings, loss by Stability, final log, epitaph, recap
+
+Evidence: `endings/kings-desktop/`, `endings/win-desktop/`, `endings/stability-desktop/`,
+`endings/kings-beat-sheet.png` (10fps from the video), `playthrough/sheet-desktop-end.png`.
+
+What works: the ending now names its cause ("The fourth King was revealed." or "Your Stability
+reached 0."), shows a recap (rounds, cards, Kings, Aces, final Stability), adds the afterword on
+a loss, hides the HUD, and closes on an epitaph with Read your story, Play again and Home. These
+are fixes from PR #50, and they land.
+
+#### EN-01 · S2 · The final King gets the same reveal as any card, and the beat has dead frames
+
+- **What happens** (`endings/kings-beat-sheet.png`, offsets from the tap on the fourth King):
+  - +0.6s to +1.5s: the standard 600ms card dismissal.
+  - +1.6s to +1.8s: 200ms of an empty, black table.
+  - +2.0s to +2.4s: four 56px skulls ignite in the middle of an empty screen.
+  - +2.6s to +2.8s: 400ms of empty magenta.
+  - +3.0s to +4.0s: GAME OVER drops in letter by letter, then the recap.
+
+  The fourth King's card itself is a normal reveal with a DOOM badge
+  (`endings/kings-desktop/02-fourth-king-card.png`).
+
+- **Recommendation (redesign the beat):** stage it on the card. When the fourth King is revealed,
+  hold the card 400ms, ignite the four skulls in the HUD row above it (250ms stagger), then cut
+  the card to the ending backdrop with no black or empty frames. Total 1.5s from reveal to
+  title. Let the title fade in as one word over 400ms, not letter by letter.
+- **Effort:** M. `GameOver.svelte`, `CardDeck.svelte`.
+
+#### EN-02 · S3 · The final log drops the ending's backdrop and shrinks the recap to 10px
+
+- **What happens:** "Record your final log" opens the same blue fog as a round's journal
+  (`endings/kings-desktop-b.png`, frames 1–3). The recap ("ROUNDS SURVIVED 1 CARDS DRAWN 1
+  KINGS…") runs as one 10–11px mono line. The three end buttons have equal weight, and Home has
+  a different (yellow) frame.
+- **Recommendation:** keep the ending backdrop (magenta for a loss, green for a win) behind the
+  final log. Lay the recap out as the same 5-tile grid as the Game Over screen. Make "Read your
+  story" primary and the other two text buttons.
+- **Effort:** S.
+
+#### EN-03 · S3 · The ending layout leaves an orphan tile
+
+- **What happens:** five recap tiles in a 4-column grid leave "FINAL STABILITY" alone on a second
+  row (six tiles on a win leave two). The message is in mono at 14px, smaller than the cause
+  line's visual weight suggests (`endings/win-stab-sheet.png`).
+- **Recommendation:** five or six equal tiles in one row on desktop (3x2 on phone). Set the
+  message in Inter at 18px.
+- **Effort:** S.
+
+#### EN-04 · S4 · A debug log ships in the ending
+
+- **What happens:** `GameOver.svelte:23` runs `console.log('DBG', …)` on every ending.
+- **Recommendation:** remove it.
+- **Effort:** S.
+
+### 12. Story Library and story mode
+
+Evidence: `story/desktop/`, `story/iphone13/` and their sheets (a 5-round completed game written
+through the store), `endings/*/13-…`, `14-…`.
+
+#### SM-01 · S2 · Story mode leads with an AI upsell and buries the player's writing
+
+- **What happens:**
+  - The page opens on a large "AI STORY SUMMARY" panel ("Configure your AI provider…") above
+    the rounds (`story/desktop/02-story-top.png`).
+  - Each round lists every card in full, then the player's own journal entry under them, then a
+    stats strip. The entry sits about one screen down.
+  - The page is 2953px tall at 1280x800.
+- **Why it matters:** this is where the player's story is meant to live, and it reads as a
+  settings dashboard.
+- **Recommendation (redesign):** lead each round with the journal entry in a reading face (Inter
+  18px, 640px measure), with the round's cards as a single line of chips above it ("J♣ · 4♦ ·
+  K♠"), each expandable. Move AI summary to a small "Summarise with AI" button in the header.
+- **Effort:** M. `StoryMode.svelte`, `StoryRound.svelte`.
+
+#### SM-02 · S2 · The AI story settings offer retired models
+
+- **What happens:** the model list is Claude 3.5 Sonnet (Recommended), Claude 3 Opus and Claude 3
+  Haiku, or GPT-4o, GPT-4 Turbo and GPT-4 (`settings/AIProviderSection.svelte:66-77`;
+  `storyGeneration.js:138` defaults to `claude-3-5-sonnet-20241022`). Retired model IDs fail at
+  the provider, so a player who pastes a key gets an error.
+- **Recommendation:** current model IDs, a single default, and a "Test key" button that makes
+  one tiny call and reports the result before the player leaves settings.
+- **Effort:** S.
+
+#### SM-03 · S3 · Escape in the AI settings also exits story mode
+
+- **What happens:** with the AI settings open, Escape closed the dialog and story mode together,
+  landing in the Library (`story/desktop/07-after-escape.png`). The story's own keyboard handler
+  (`useStoryNavigation.svelte.js:60`) does not check for an open dialog.
+- **Recommendation:** ignore Escape in the story handler while a dialog is open, or stop
+  propagation in the dialog.
+- **Effort:** S.
+
+#### SM-04 · S3 · Library cards hide the outcome and use the retired word "Tower"
+
+- **What happens:** each card shows Player, Journey, "Tower: 14" and the date, but not whether
+  the run was a win or a loss, and how it ended. The delete control is a red × next to the
+  title, one tap from "View story". On iPhone the back button renders as an empty circle (its
+  chevron is missing). The 1400px sort dropdown sits above a single card.
+- **Recommendation:** card = title, an "Escaped" or "Taken by the fourth King" line, rounds and
+  date, with Delete in an overflow menu. Rename Tower to Stability everywhere (also in story
+  mode's header and round stats, which say "Tower", "Failures" and "Tokens").
+- **Effort:** S.
+
+#### SM-05 · S3 · Round navigation blanks the content, and the title overflows on phones
+
+- **What happens:** the crossfade between rounds shows an empty content area for about 150ms
+  (`story/iphone13/04-nav-arrow-150ms.png`). On iPhone, "AI STORY GENERATION SETTINGS" runs off
+  the right edge.
+- **Recommendation:** slide the incoming round in from the side it comes from (16px, 200ms,
+  opacity plus transform) while the outgoing round fades over 120ms; never show neither. Clamp
+  dialog titles at `clamp(1.25rem, 6vw, 2rem)`.
 - **Effort:** S.
 
 ## Animation inventory
