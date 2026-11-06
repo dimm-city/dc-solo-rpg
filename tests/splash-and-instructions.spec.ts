@@ -2,11 +2,11 @@
 // seed: tests/seed.spec.ts
 
 import { test, expect } from '@playwright/test';
-import { INSTRUCTIONS_SEEN_KEY } from './helpers';
+import { INSTRUCTIONS_SEEN_KEY, RULE_TIPS_KEY, SPLASH_SEEN_KEY, openContentModal } from './helpers';
 
-test.describe('Splash Screen and Instructions Flow', () => {
+test.describe('Splash and first-time choice', () => {
 	test.beforeEach(async ({ page, context }) => {
-		// Clear all storage before each test
+		// Start every test as a brand-new install
 		await context.clearCookies();
 		await page.goto('/');
 		await page.evaluate(() => {
@@ -15,151 +15,133 @@ test.describe('Splash Screen and Instructions Flow', () => {
 		});
 	});
 
-	test('should show splash screen on first visit', async ({ page }) => {
+	test('shows a short splash once per install', async ({ page }) => {
 		await page.goto('/');
 
-		// The splash overlay is up on arrival
+		const splash = page.locator('.splash-overlay');
+		await expect(splash).toBeVisible();
+		await expect(splash.getByRole('heading', { name: 'Dream Console' })).toBeVisible();
+		await expect(splash).toContainText('Dimm City');
+
+		// 1.2s in all, then it is gone and remembered
+		const shownAt = Date.now();
+		await expect(splash).toHaveCount(0, { timeout: 3000 });
+		expect(Date.now() - shownAt).toBeLessThan(2500);
+		expect(await page.evaluate((key) => localStorage.getItem(key), SPLASH_SEEN_KEY)).toBe('true');
+
+		// A new session on the same install skips it
+		await page.evaluate(() => sessionStorage.clear());
+		await page.reload();
+		await expect(page.locator('.instructions-choice-container')).toBeVisible();
+		await expect(splash).toHaveCount(0);
+	});
+
+	test('a key press skips the splash', async ({ page }) => {
+		await page.goto('/');
+		const splash = page.locator('.splash-overlay');
+		await expect(splash).toBeVisible();
+
+		await page.keyboard.press('Space');
+		await expect(splash).toHaveCount(0, { timeout: 800 });
+		await expect(page.locator('.instructions-choice-container')).toBeVisible();
+	});
+
+	test('never shows the splash and the next screen at once', async ({ page }) => {
+		await page.goto('/');
 		await expect(page.locator('.splash-overlay')).toBeVisible();
 
-		// ...and when it completes, it marks itself as shown for this session
-		await expect
-			.poll(() => page.evaluate(() => sessionStorage.getItem('splashShown')))
-			.toBe('true');
-		await expect(page.locator('.splash-overlay')).toHaveCount(0);
+		// Poll every animation frame until the panel appears: the splash must already be gone
+		const overlap = await page.evaluate(
+			() =>
+				new Promise((resolve) => {
+					const check = () => {
+						const panel = document.querySelector('.instructions-choice-container');
+						if (panel) return resolve(!!document.querySelector('.splash-overlay'));
+						requestAnimationFrame(check);
+					};
+					check();
+				})
+		);
+		expect(overlap).toBe(false);
 	});
 
-	test('should show instructions choice after splash on first visit', async ({ page }) => {
+	test('offers one compact panel with all three choices in view', async ({ page }) => {
 		await page.goto('/');
 
-		// Instructions choice should appear once the splash completes
-		const instructionsChoice = page.locator('.instructions-choice-container');
-		await expect(instructionsChoice).toBeVisible();
-
-		// Verify title (exact text is "How To Play" with capital T)
-		await expect(page.locator('h1').filter({ hasText: 'How To Play' })).toBeVisible();
+		const panel = page.locator('.instructions-choice-container');
+		await expect(panel).toBeVisible();
+		const choices = [
+			panel.getByRole('button', { name: /^Play/ }),
+			panel.getByRole('button', { name: 'Read the rules first' }),
+			panel.getByRole('button', { name: "I know how to play: don't show tips." })
+		];
+		const viewport = page.viewportSize()!;
+		for (const choice of choices) {
+			await expect(choice).toBeVisible();
+			const box = await choice.boundingBox();
+			expect(box!.y + box!.height).toBeLessThanOrEqual(viewport.height);
+		}
+		await expect(panel.getByRole('button', { name: /^Play/ })).toContainText(
+			'The game teaches you as you go.'
+		);
 	});
 
-	test('should display all three instruction choice cards', async ({ page }) => {
+	test('Play goes to the games with rule tips on, and is remembered', async ({ page }) => {
 		await page.goto('/');
+		await page.getByRole('button', { name: /^Play/ }).click();
 
-		// Verify all three choice cards are visible
-		const learnCard = page.locator('.choice-card').filter({ hasText: 'Learn How to Play' });
-		await expect(learnCard).toBeVisible();
+		await expect(page.getByTestId('home-page')).toBeVisible();
+		await expect(page.getByTestId('game-selector')).toBeVisible();
+		const stored = await page.evaluate(
+			([seen, tips]) => [localStorage.getItem(seen), localStorage.getItem(tips)],
+			[INSTRUCTIONS_SEEN_KEY, RULE_TIPS_KEY]
+		);
+		expect(stored).toEqual(['true', 'true']);
 
-		const skipOnceCard = page.locator('.choice-card').filter({ hasText: 'Skip Once' });
-		await expect(skipOnceCard).toBeVisible();
-
-		const skipAlwaysCard = page.locator('.choice-card').filter({ hasText: 'Skip Always' });
-		await expect(skipAlwaysCard).toBeVisible();
+		// Next visit goes straight to the games
+		await page.reload();
+		await expect(page.getByTestId('home-page')).toBeVisible();
+		await expect(page.locator('.instructions-choice-container')).toHaveCount(0);
 	});
 
-	test('should navigate to how-to page when clicking Learn How to Play', async ({ page }) => {
+	test('Read the rules first opens the Game Guide, then goes on to the games', async ({ page }) => {
 		await page.goto('/');
+		await page.getByRole('button', { name: 'Read the rules first' }).click();
 
-		// Click Learn How to Play card
-		const learnCard = page.locator('.choice-card').filter({ hasText: 'Learn How to Play' });
-		await learnCard.click();
+		const dialog = page.getByRole('dialog');
+		await expect(dialog).toHaveAccessibleName('Game Guide');
+		await expect(dialog.getByRole('heading', { name: 'Lucid and Surreal' })).toBeAttached();
 
-		// Verify navigation
-		await expect(page).toHaveURL('/how-to');
+		await dialog.getByRole('button', { name: 'Got it' }).click();
+		await expect(page.getByTestId('home-page')).toBeVisible();
+		expect(await page.evaluate((key) => localStorage.getItem(key), RULE_TIPS_KEY)).toBe('true');
 	});
 
-	test('should show game selection when clicking Skip Once', async ({ page }) => {
-		await page.goto('/');
-
-		// Click Skip Once card
-		const skipOnceCard = page.locator('.choice-card').filter({ hasText: 'Skip Once' });
-		await skipOnceCard.click();
-
-		// Verify game selection screen is visible
-		await expect(page.locator('[data-testid="home-page"]')).toBeVisible();
-		await expect(page.locator('[data-testid="game-selector"]')).toBeVisible();
-
-		// Skip Once does not remember the choice
-		expect(
-			await page.evaluate((key) => localStorage.getItem(key), INSTRUCTIONS_SEEN_KEY)
-		).toBeNull();
-	});
-
-	test('should show game selection and remember preference when clicking Skip Always', async ({
+	test('"don\'t show tips" turns rule tips off, and Settings can turn them back on', async ({
 		page
 	}) => {
 		await page.goto('/');
+		await page.getByRole('button', { name: "I know how to play: don't show tips." }).click();
+		await expect(page.getByTestId('home-page')).toBeVisible();
+		expect(await page.evaluate((key) => localStorage.getItem(key), RULE_TIPS_KEY)).toBe('false');
 
-		// Click Skip Always card
-		const skipAlwaysCard = page.locator('.choice-card').filter({ hasText: 'Skip Always' });
-		await skipAlwaysCard.click();
-
-		// Verify game selection screen is visible
-		await expect(page.locator('[data-testid="home-page"]')).toBeVisible();
-
-		// Verify localStorage was set
-		const instructionsSeen = await page.evaluate(
-			(key) => localStorage.getItem(key),
-			INSTRUCTIONS_SEEN_KEY
-		);
-		expect(instructionsSeen).toBe('true');
+		const dialog = await openContentModal(page, 'Settings');
+		const tips = dialog.getByRole('switch', { name: 'Rule tips' });
+		await expect(tips).not.toBeChecked();
+		await tips.check();
+		expect(await page.evaluate((key) => localStorage.getItem(key), RULE_TIPS_KEY)).toBe('true');
 	});
 
-	test('should skip splash on returning visit in same session', async ({ page }) => {
-		// First visit
+	test('the panel is gone for good once a choice is made', async ({ page }) => {
 		await page.goto('/');
-		const skipOnceCard = page.locator('.choice-card').filter({ hasText: 'Skip Once' });
-		await skipOnceCard.click();
-		await expect(page.locator('[data-testid="home-page"]')).toBeVisible();
+		await page.getByRole('button', { name: /^Play/ }).click();
+		await expect(page.getByTestId('home-page')).toBeVisible();
 
-		// Reload page
-		await page.reload();
-
-		// Should go directly to game selection (no splash)
-		await expect(page.locator('[data-testid="home-page"]')).toBeVisible({ timeout: 2000 });
-	});
-
-	test('should skip instructions after Skip Always is chosen', async ({ page, context }) => {
-		// First visit
-		await page.goto('/');
-		const skipAlwaysCard = page.locator('.choice-card').filter({ hasText: 'Skip Always' });
-		await skipAlwaysCard.click();
-		await expect(page.locator('[data-testid="home-page"]')).toBeVisible();
-
-		// Close and reopen (new session, same context to preserve localStorage)
+		// A new session on the same install: no splash, no panel
 		await page.evaluate(() => sessionStorage.clear());
 		await page.goto('/');
-
-		// After the splash, should skip instructions and go to game selection
-		await expect(page.locator('[data-testid="home-page"]')).toBeVisible();
-
-		// Instructions choice should NOT be visible
-		await expect(page.locator('.instructions-choice-container')).not.toBeVisible();
-	});
-
-	test('should have proper styling on instruction choice cards', async ({ page }) => {
-		await page.goto('/');
-		await expect(page.locator('.instructions-choice-container')).toBeVisible();
-
-		// Check first card (Learn How to Play)
-		const learnCard = page.locator('.choice-card').filter({ hasText: 'Learn How to Play' });
-		await expect(learnCard).toBeVisible();
-
-		// Verify icon is visible
-		await expect(learnCard.locator('svg')).toBeVisible();
-
-		// Verify recommendation badge
-		await expect(learnCard.locator('.recommendation')).toBeVisible();
-	});
-
-	test('should have hover effect on instruction choice cards', async ({ page }) => {
-		await page.goto('/');
-
-		const learnCard = page.locator('.choice-card').filter({ hasText: 'Learn How to Play' });
-		await expect(learnCard).toBeVisible();
-
-		// Hover over card
-		await learnCard.hover();
-
-		// Card should lift (translateY) once the hover transition runs
-		await expect
-			.poll(() => learnCard.evaluate((el) => window.getComputedStyle(el).transform))
-			.not.toBe('none');
+		await expect(page.getByTestId('home-page')).toBeVisible();
+		await expect(page.locator('.splash-overlay')).toHaveCount(0);
+		await expect(page.locator('.instructions-choice-container')).toHaveCount(0);
 	});
 });

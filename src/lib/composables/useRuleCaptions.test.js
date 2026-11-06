@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createRuleCaptions } from './useRuleCaptions.svelte.js';
+import { getSeenRuleTips } from '../utils/instructionsStorage.js';
 
 function base(over = {}) {
 	return {
@@ -121,6 +122,23 @@ describe('createRuleCaptions', () => {
 		c.observe(base({ kingsRevealed: 1 }));
 		c.observe(base({ kingsRevealed: 1, gameOver: true }));
 		expect(c.pending).toBe(0);
+	});
+
+	it('records each caption it shows for "Rules you\'ve met", once per id', () => {
+		const shown = [];
+		const t = createRuleCaptions({ onSeen: (id) => shown.push(id) });
+		t.observe(base());
+		t.observe(base({ kingsRevealed: 1 }));
+		t.observe(base({ kingsRevealed: 2, isLucid: true }));
+		expect(shown).toEqual(['king', 'lucid']);
+	});
+
+	it('persists shown captions to storage by default', () => {
+		localStorage.clear();
+		const t = createRuleCaptions();
+		t.observe(base());
+		t.observe(base({ isSurreal: true }));
+		expect(getSeenRuleTips()).toEqual(['surreal']);
 	});
 });
 

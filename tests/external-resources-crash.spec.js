@@ -24,9 +24,9 @@ async function expectPageFunctional(page) {
 	const content = await page.content();
 	expect(content.length).toBeGreaterThan(100);
 
-	// The splash plays, then the first-visit choice screen appears
+	// The splash plays, then the first-time panel appears
 	await expect(page.locator('.instructions-choice-container')).toBeVisible();
-	await expect(page.locator('.choice-card')).toHaveCount(3);
+	await expect(page.locator('.instructions-choice-container button')).toHaveCount(3);
 }
 
 test.describe('External Resource Loading Issues', () => {
@@ -115,7 +115,7 @@ test.describe('External Resource Loading Issues', () => {
 		expect(screenshot.length).toBeGreaterThan(0);
 
 		// ...and the game can still be reached and started with no CDN at all
-		await page.locator('.choice-card').filter({ hasText: 'Skip Once' }).click();
+		await page.getByRole('button', { name: /^Play/ }).click();
 		await expect(page.getByTestId('home-page')).toBeVisible();
 		await page.locator('.start-btn').first().click();
 		await expect(page).toHaveURL(/\/game\/[a-z0-9-]+$/);

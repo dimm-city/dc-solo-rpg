@@ -24,6 +24,7 @@
 </script>
 
 <svelte:head>
+	<title>{data.gameConfig.title} · Dream Console</title>
 	<link rel="stylesheet" href={data.gameConfig.stylesheet} />
 </svelte:head>
 

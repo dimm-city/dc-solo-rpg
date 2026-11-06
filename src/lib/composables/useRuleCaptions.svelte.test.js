@@ -7,7 +7,10 @@ import { flushSync } from 'svelte';
 import { gameState } from '../stores/gameStore.svelte.js';
 import { useRuleCaptions } from './useRuleCaptions.svelte.js';
 
-vi.mock('../utils/instructionsStorage.js', () => ({ hasSeenInstructions: () => false }));
+vi.mock('../utils/instructionsStorage.js', () => ({
+	areRuleTipsEnabled: () => true,
+	markRuleTipSeen: () => {}
+}));
 
 const DISPLAY_MS = 1000;
 let paused = $state(false);
