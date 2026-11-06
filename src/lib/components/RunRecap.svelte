@@ -1,7 +1,8 @@
 <script>
 	/**
 	 * RunRecap - the whole run in a few numbers, from real game state.
-	 * Used on the Game Over screen and (compact) above the final log.
+	 * The same tile grid on the Game Over screen and (compact) in the final log:
+	 * one row on wider screens, three per row on phones.
 	 */
 	import { gameState } from '../stores/gameStore.svelte.js';
 	import { getRunRecap, getKeyMoments } from '../utils/endingSummary.js';
@@ -36,36 +37,48 @@
 
 <style>
 	.run-recap {
+		--gap: var(--space-sm, 0.5rem);
 		width: 100%;
-		max-width: var(--content-max, 720px);
-		font-family: var(--font-mono, 'Share Tech Mono', ui-monospace, monospace);
-		font-variant-numeric: tabular-nums;
+		max-width: 880px;
 	}
 
+	/* One row of equal tiles; three per row on phones (see below) */
 	dl {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
-		gap: var(--space-sm, 0.5rem);
+		display: flex;
+		gap: var(--gap);
 		margin: 0;
 	}
 
 	.stat {
-		padding: var(--space-sm, 0.5rem) var(--space-md, 1rem);
+		flex: 1 1 0;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		gap: 0.25rem;
+		padding: var(--space-sm, 0.5rem) var(--space-sm, 0.5rem);
 		border: 1px solid rgba(0, 255, 255, 0.25);
 		background: rgba(0, 0, 0, 0.35);
 		text-align: center;
 	}
 
 	dt {
-		font-size: 0.75rem;
+		font-family: var(--font-body, 'Inter', sans-serif);
+		font-size: 0.6875rem;
+		font-weight: 600;
+		line-height: 1.3;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
-		color: rgba(255, 255, 255, 0.7);
+		color: rgba(255, 255, 255, 0.72);
 	}
 
 	dd {
-		margin: 0.15rem 0 0;
+		margin: 0;
+		font-family: var(--font-mono, 'Share Tech Mono', ui-monospace, monospace);
+		font-variant-numeric: tabular-nums;
 		font-size: 1.375rem;
+		line-height: 1.2;
+		white-space: nowrap;
 		color: var(--color-brand-yellow, #ffe400);
 	}
 
@@ -73,29 +86,28 @@
 		color: var(--color-danger, #ff4d6d);
 	}
 
-	.compact dl {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: center;
-		gap: var(--space-xs, 0.25rem) var(--space-md, 1rem);
-	}
-
+	/* Final log: the same tiles, a step smaller */
 	.compact .stat {
-		padding: 0;
-		border: none;
-		background: none;
-		display: flex;
-		gap: 0.4em;
-		align-items: baseline;
-	}
-
-	.compact dt {
-		font-size: 0.75rem;
+		padding: 0.375rem var(--space-xs, 0.25rem);
 	}
 
 	.compact dd {
-		margin: 0;
-		font-size: 0.875rem;
+		font-size: 1.125rem;
+	}
+
+	@media (max-width: 600px) {
+		dl {
+			flex-wrap: wrap;
+			justify-content: center;
+		}
+
+		.stat {
+			flex: 0 0 calc((100% - 2 * var(--gap)) / 3);
+		}
+
+		dd {
+			font-size: 1.125rem;
+		}
 	}
 
 	.moments {
@@ -106,6 +118,7 @@
 		list-style: none;
 		margin: var(--space-sm, 0.5rem) 0 0;
 		padding: 0;
+		font-family: var(--font-body, 'Inter', sans-serif);
 		font-size: 0.8125rem;
 		color: rgba(255, 255, 255, 0.85);
 	}
@@ -123,5 +136,6 @@
 	.round {
 		opacity: 0.7;
 		margin-right: 0.25em;
+		font-variant-numeric: tabular-nums;
 	}
 </style>
