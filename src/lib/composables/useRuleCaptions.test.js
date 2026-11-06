@@ -123,3 +123,22 @@ describe('createRuleCaptions', () => {
 		expect(c.pending).toBe(0);
 	});
 });
+
+describe('createRuleCaptions: Salvation on Easy', () => {
+	it('teaches Salvation on the first Salvation screen when the Ace of Hearts starts revealed', () => {
+		const c = createRuleCaptions();
+		c.observe(base({ state: 'rollForTasks', aceOfHeartsRevealed: true, acesRevealed: 1 }));
+		c.observe(base({ state: 'successCheck', aceOfHeartsRevealed: true, acesRevealed: 1 }));
+		c.observe(base({ state: 'log', aceOfHeartsRevealed: true, acesRevealed: 1 }));
+		c.observe(base({ state: 'successCheck', aceOfHeartsRevealed: true, acesRevealed: 1 }));
+		expect(drain(c)).toEqual(['salvation']);
+	});
+
+	it('does not repeat it in a normal game, where the Ace of Hearts already taught it', () => {
+		const c = createRuleCaptions();
+		c.observe(base());
+		c.observe(base({ state: 'drawCard', acesRevealed: 1, aceOfHeartsRevealed: true }));
+		c.observe(base({ state: 'successCheck', acesRevealed: 1, aceOfHeartsRevealed: true }));
+		expect(drain(c)).toEqual(['salvation']);
+	});
+});

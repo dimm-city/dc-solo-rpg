@@ -14,6 +14,8 @@ import { getSalvationThreshold } from '../services/d20Mechanics.js';
 import { hasSeenInstructions } from '../utils/instructionsStorage.js';
 
 const ODD_RANKS = ['A', '3', '5', '7', '9'];
+const SALVATION_CAPTION =
+	'Salvation unlocked. At the end of each round, roll to remove a token. Clear them all to win.';
 const RESET_STATES = ['loadGame', 'showIntro'];
 
 /** Pick the fields we compare between observations. */
@@ -89,10 +91,7 @@ export function createRuleCaptions({ isDisabled = () => false } = {}) {
 
 		if (next.aces > before.aces) {
 			if (next.heartsAce && !before.heartsAce) {
-				fire(
-					'salvation',
-					'Salvation unlocked. At the end of each round, roll to remove a token. Clear them all to win.'
-				);
+				fire('salvation', SALVATION_CAPTION);
 			} else if (next.heartsAce) {
 				const need = getSalvationThreshold(next.aces);
 				fire(
@@ -109,6 +108,11 @@ export function createRuleCaptions({ isDisabled = () => false } = {}) {
 		}
 		if (next.surreal && !before.surreal) {
 			fire('surreal', 'Surreal. Your next roll uses two dice and keeps the lower.');
+		}
+
+		// Easy starts with the Ace of Hearts revealed, so teach Salvation on its first screen
+		if (next.state === 'successCheck' && before.state !== 'successCheck') {
+			fire('salvation', SALVATION_CAPTION);
 		}
 
 		if (next.tokens > before.tokens && next.heartsAce) {
@@ -133,36 +137,69 @@ export function createRuleCaptions({ isDisabled = () => false } = {}) {
 }
 
 /**
- * Component wiring: call once in RuleCaption. Returns the visible caption and a dismiss function.
+ * Component wiring: call once (GameScreen) and hand the result to RuleCaption.
+ * Returns the visible caption and a dismiss function.
+ *
+ * At most one caption starts per screen; the rest wait for the next screen. While
+ * isPaused() is true (an overlay or dialog covers the table) the visible caption's
+ * countdown stops and nothing new starts, so no caption runs out unseen.
+ *
+ * @param {{ displayMs?: number, isPaused?: () => boolean }} [options]
  */
-export function useRuleCaptions({ displayMs = 6000 } = {}) {
+export function useRuleCaptions({ displayMs = 6000, isPaused = () => false } = {}) {
 	const tracker = createRuleCaptions({ isDisabled: () => hasSeenInstructions() });
 	let current = $state(null);
 	let timer = null;
+	let remaining = 0;
+	let startedAt = 0;
+	/** The screen the latest caption started on */
+	let shownOn = null;
 
 	function clearTimer() {
 		if (timer) clearTimeout(timer);
 		timer = null;
 	}
 
-	function showNext() {
+	function startTimer(ms) {
 		clearTimer();
+		remaining = ms;
+		startedAt = Date.now();
+		timer = setTimeout(dismiss, ms);
+	}
+
+	function pauseTimer() {
+		if (!timer) return;
+		clearTimer();
+		remaining = Math.max(0, remaining - (Date.now() - startedAt));
+	}
+
+	function showNext(screen) {
 		current = tracker.next();
-		if (current) timer = setTimeout(dismiss, displayMs);
+		if (current) {
+			shownOn = screen;
+			startTimer(displayMs);
+		}
 	}
 
 	function dismiss() {
-		showNext();
+		clearTimer();
+		current = null;
 	}
 
 	$effect(() => {
 		const g = gameState;
 		tracker.observe(g);
+		const paused = isPaused();
 		if (RESET_STATES.includes(g.state) || g.gameOver || hasSeenInstructions()) {
 			clearTimer();
 			current = null;
-		} else if (!current) {
-			showNext();
+			shownOn = null;
+		} else if (paused) {
+			pauseTimer();
+		} else if (current) {
+			if (!timer) startTimer(remaining);
+		} else if (g.state !== shownOn) {
+			showNext(g.state);
 		}
 	});
 
@@ -171,6 +208,10 @@ export function useRuleCaptions({ displayMs = 6000 } = {}) {
 	return {
 		get current() {
 			return current;
+		},
+		/** True while the caption is covered (RuleCaption hides it, its countdown is stopped) */
+		get paused() {
+			return isPaused();
 		},
 		dismiss
 	};

@@ -9,6 +9,11 @@
 	import { getAudioSettings, getGameplaySettings, speak } from '../stores/audioStore.svelte.js';
 	import { autoAdvance, autoRoll } from '../utils/autoPlay.js';
 	import { ANIMATION_DURATION } from '../constants/animations.js';
+	import { formatIntroGoal } from '../utils/rollResult.js';
+	import { createAnnouncer } from '../utils/liveAnnouncer.js';
+	import { skipRoll } from '../stores/diceStore.svelte.js';
+	import { saveGame } from '../stores/indexedDBStorage.js';
+	import { useRuleCaptions } from '../composables/useRuleCaptions.svelte.js';
 
 	import LoadScreen from './LoadScreen.svelte';
 	import GameOver from './GameOver.svelte';
@@ -17,7 +22,6 @@
 	import StatusDisplay from './StatusDisplay.svelte';
 	import ContinueButton from './ContinueButton.svelte';
 	import ConfirmModal from './ConfirmModal.svelte';
-	import MiniStatusHUD from './MiniStatusHUD.svelte';
 	import RuleCaption from './RuleCaption.svelte';
 	import KeyboardHint from './KeyboardHint.svelte';
 	import ButtonBar from './ButtonBar.svelte';
@@ -27,11 +31,7 @@
 
 	// Screen-specific components
 	import ContextBackground from './game/ContextBackground.svelte';
-	import RollForTasksController from './game/RollForTasksController.svelte';
-	import FailureCheckController from './game/FailureCheckController.svelte';
-	import SuccessCheckController from './game/SuccessCheckController.svelte';
-	import InitialDamageController from './game/InitialDamageController.svelte';
-	import StartRoundController from './game/StartRoundController.svelte';
+	import StepAction from './game/StepAction.svelte';
 
 	// Screen composables
 	import { useRollForTasks } from '../composables/screen/useRollForTasks.svelte.js';
@@ -40,7 +40,12 @@
 	import { useInitialDamage } from '../composables/screen/useInitialDamage.svelte.js';
 
 	// Game actions
-	import { recordRound, restartGame, exitGame } from '../stores/gameActions.svelte.js';
+	import {
+		recordRound,
+		restartGame,
+		exitGame,
+		getCurrentSalvationThreshold
+	} from '../stores/gameActions.svelte.js';
 
 	let {
 		onfailurecheckcompleted = () => {},
@@ -51,6 +56,8 @@
 	const currentScreen = $derived(gameState.state);
 	// Reduced from 300ms to 200ms for snappier, more mechanical feel
 	const TRANSITION_DURATION = ANIMATION_DURATION.NORMAL;
+	/** After the step button changes meaning, presses are held off this long (it is highlighted) */
+	const STEP_GUARD_MS = 400;
 
 	// Instantiate screen composables
 	const rollForTasks = useRollForTasks();
@@ -58,53 +65,74 @@
 	const successCheck = useSuccessCheck();
 	const initialDamage = useInitialDamage();
 
+	let showExitModal = $state(false);
+	let showKeyboardHint = $state(false);
+	let showSettingsModal = $state(false);
+
+	// Overlays (card, journal) and dialogs cover the table: rule captions wait while they do
+	const overlayOpen = $derived(
+		currentScreen === 'drawCard' ||
+			currentScreen === 'log' ||
+			currentScreen === 'finalLog' ||
+			showExitModal ||
+			showSettingsModal ||
+			showHelpModal
+	);
+	const captions = useRuleCaptions({ isPaused: () => overlayOpen });
+
+	const SUIT_SYMBOLS = { hearts: '♥', diamonds: '♦', clubs: '♣', spades: '♠' };
+
+	/** "7♠ · Caught in a toxic gas leak" */
+	function cardLine(card) {
+		if (!card) return null;
+		const name = `${card.card}${SUIT_SYMBOLS[card.suit] ?? ''}`;
+		return card.description ? `${name} · ${card.description}` : name;
+	}
+
+	/** What a modifier card confirmed this round did, while the table shows it */
+	const modifierNotice = $derived(
+		gameState.lastCard?.round === gameState.round
+			? (gameState.lastCard?.modifierResult ?? null)
+			: null
+	);
+
+	function salvationDescription() {
+		const need = getCurrentSalvationThreshold();
+		return need === 0
+			? 'All four Aces are out. Salvation is automatic: one token comes off.'
+			: `Roll to remove a token. You need ${need}+.`;
+	}
+
 	// Contextual background text for each screen
 	const contextText = $derived.by(() => {
 		switch (currentScreen) {
 			case 'initialDamageRoll':
 				return {
-					title: 'Initial Instability',
+					title: 'Instability',
 					description:
-						"Before your journey begins, the situation is already precarious. Roll to see how much ground you've already lost...",
-					showStats: true
+						"Before your journey begins, the situation is already precarious. Roll to see how much ground you've already lost..."
 				};
 			case 'rollForTasks':
+				// The round opens here; after the roll the title stays and the result line gives the count
 				return {
-					title: rollForTasks.rolled
-						? `Draw ${gameState.cardsToDraw} Card${gameState.cardsToDraw !== 1 ? 's' : ''}`
-						: 'Roll for Tasks',
-					description: rollForTasks.rolled
-						? 'Your fate has been determined. Proceed to draw your cards.'
-						: 'Roll the dice to determine how many challenges you must face this round.',
-					showStats: true
+					title: `Round ${gameState.round}`,
+					description: 'Roll to see how many cards you draw this round.'
 				};
-			case 'drawCard':
-				return null; // No background text for card drawing
 			case 'failureCheck':
 				return {
 					title: 'Stability Check',
-					description: 'An odd card demands a price. Roll to see how much stability you lose.',
-					showStats: true
+					eyebrow: cardLine(gameState.lastCard),
+					description: 'An odd card demands a price. Roll to see how much Stability you lose.',
+					notice: modifierNotice
 				};
 			case 'successCheck':
 				return {
-					title: 'Success Check',
-					description:
-						'The Ace of Hearts has appeared. Roll to remove a token from your countdown.',
-					showStats: true
+					title: 'Salvation',
+					description: salvationDescription(),
+					notice: modifierNotice
 				};
-			case 'startRound':
-				return {
-					title: `Round ${gameState.round}`,
-					description: 'A new chapter begins. Prepare yourself for what lies ahead.',
-					showStats: true
-				};
-			case 'log':
-				return null; // No background text for journaling
-			case 'finalLog':
-				return null; // No background text for final journal entry
 			default:
-				return null;
+				return null; // Card, journal and ending screens have no background text
 		}
 	});
 
@@ -124,10 +152,98 @@
 		}
 	});
 
-	// Screen reader announcements: result lines and key events
-	let liveMessage = $state('');
+	// ===== The step button: one slot, mounted once, for every round step =====
+
+	function stepFor(screen) {
+		const trigger = triggerAutoPlayForCurrentScreen;
+		switch (screen) {
+			case 'initialDamageRoll':
+				return {
+					composable: initialDamage,
+					testid: 'initial-damage-button',
+					run: () => initialDamage.handleInitialDamageRoll(trigger)
+				};
+			case 'rollForTasks':
+				return {
+					composable: rollForTasks,
+					testid: 'roll-tasks-button',
+					disabled: rollForTasks.buttonDisabled,
+					run: () => rollForTasks.handleRollForTasks(trigger)
+				};
+			case 'failureCheck':
+				return {
+					composable: failureCheck,
+					testid: 'failure-check-button',
+					run: () => failureCheck.handleFailureCheck(trigger)
+				};
+			case 'successCheck':
+				return {
+					composable: successCheck,
+					testid: 'success-check-button',
+					run: () => successCheck.handleSuccessCheck(trigger)
+				};
+			default:
+				return null; // The intro, card and journal have their own controls
+		}
+	}
+
+	/**
+	 * The primary action of the current round step: what its button, Space/Enter and a tap
+	 * on the table all do. While the dice roll, it skips to the result.
+	 */
+	const step = $derived.by(() => {
+		const s = stepFor(currentScreen);
+		if (!s) return null;
+		return {
+			text: s.composable.buttonText,
+			hint: s.composable.buttonHint,
+			busy: s.composable.rolling,
+			disabled: s.disabled ?? false,
+			testid: s.testid,
+			run: s.run
+		};
+	});
+
+	// LS-06: when the button changes meaning (Roll → Rolling… → Continue), hold presses off
+	// briefly and highlight it, so a press meant for the old button never lands on the new one
+	let stepGuardUntil = 0;
+	let stepChanged = $state(false);
+	let stepChangedTimer = null;
+	const stepMeaning = $derived(
+		step ? `${currentScreen}|${step.text}|${step.hint ?? ''}|${step.disabled}` : ''
+	);
 	$effect(() => {
-		if (resultLine) liveMessage = resultLine;
+		if (!stepMeaning) return;
+		stepGuardUntil = performance.now() + STEP_GUARD_MS;
+		stepChanged = true;
+		clearTimeout(stepChangedTimer);
+		stepChangedTimer = setTimeout(() => (stepChanged = false), STEP_GUARD_MS);
+	});
+
+	/** Run the step action, unless it is disabled or has only just changed meaning */
+	function runStep() {
+		if (!step || step.disabled || leaving) return false;
+		if (performance.now() < stepGuardUntil) return false;
+		cancelAutoPlay();
+		step.run();
+		return true;
+	}
+
+	// ===== Screen reader: one polite live region for results, events and captions =====
+	let liveMessage = $state('');
+	const announcer = createAnnouncer((message) => (liveMessage = message));
+	$effect(() => {
+		if (resultLine) announcer.announce(resultLine, { first: true });
+	});
+	$effect(() => {
+		if (modifierNotice) announcer.announce(modifierNotice);
+	});
+	let announcedCaption = null;
+	$effect(() => {
+		const caption = captions.current;
+		if (!caption || captions.paused || caption.id === announcedCaption) return;
+		announcedCaption = caption.id;
+		untrack(() => announcer.announce(caption.text));
 	});
 	let seenKings = untrack(() => gameState.kingsRevealed);
 	let seenSalvation = untrack(() => gameState.aceOfHeartsRevealed);
@@ -135,9 +251,9 @@
 		const kings = gameState.kingsRevealed;
 		const salvation = gameState.aceOfHeartsRevealed;
 		if (kings > seenKings) {
-			liveMessage = `King revealed. ${kings} of 4.`;
+			announcer.announce(`King revealed. ${kings} of 4.`, { first: true });
 		} else if (salvation && !seenSalvation) {
-			liveMessage = 'Salvation unlocked. The Ace of Hearts has appeared.';
+			announcer.announce('Salvation unlocked. The Ace of Hearts has appeared.', { first: true });
 		}
 		seenKings = kings;
 		seenSalvation = salvation;
@@ -145,6 +261,37 @@
 
 	// The ending owns the screen: no status HUD over it
 	const showStatusHUD = $derived(currentScreen !== 'gameOver' && currentScreen !== 'finalLog');
+
+	// The intro's closing line, built from this game's numbers
+	const introGoal = $derived(
+		formatIntroGoal({
+			stability: gameState.tower,
+			tokens: gameState.tokens,
+			aceRevealed: gameState.aceOfHeartsRevealed
+		})
+	);
+
+	// The intro column: a fade mask and a scroll cue while there is more text below
+	let introScroller = $state();
+	let introOverflows = $state(false);
+	let introAtEnd = $state(true);
+	function measureIntro() {
+		if (!introScroller) return;
+		const { scrollTop, scrollHeight, clientHeight } = introScroller;
+		introOverflows = scrollHeight > clientHeight + 1;
+		introAtEnd = scrollTop + clientHeight >= scrollHeight - 8;
+	}
+	$effect(() => {
+		if (!introScroller || typeof ResizeObserver === 'undefined') return;
+		// The observer's first callback comes after layout, so the cue never flashes on a column that fits
+		const observer = new ResizeObserver(measureIntro);
+		observer.observe(introScroller);
+		if (introScroller.firstElementChild) observer.observe(introScroller.firstElementChild);
+		return () => observer.disconnect();
+	});
+	function scrollIntro() {
+		introScroller?.scrollBy({ top: introScroller.clientHeight * 0.8, behavior: 'smooth' });
+	}
 
 	// DrawCard ref for auto-draw on screen entry
 	let drawCardRef = $state();
@@ -176,18 +323,6 @@
 		}
 	}
 
-	// Show mini HUD during card-related screens
-	const showMiniHUD = $derived(
-		currentScreen === 'drawCard' ||
-			currentScreen === 'failureCheck' ||
-			currentScreen === 'successCheck' ||
-			currentScreen === 'log'
-	);
-
-	let showExitModal = $state(false);
-	let showKeyboardHint = $state(false);
-	let showSettingsModal = $state(false);
-
 	function handleExitClick() {
 		showExitModal = true;
 	}
@@ -204,52 +339,39 @@
 		showSettingsModal = false;
 	}
 
+	/** Set while leaving: no auto-play, auto-deal or auto-draw may start */
+	let leaving = false;
+
+	/**
+	 * Leave for the home screen with the progress saved, as the Exit dialog promises:
+	 * a roll in flight lands first, a result on screen is committed (as Continue would),
+	 * then the game is saved and the run is reset, so the next game starts clean.
+	 */
 	async function handleExitConfirm() {
 		showExitModal = false;
-		// Navigate to home page to reset game state
-		// DiceBox persists in the layout so no reinitialization needed
-		goto(resolve('/'));
+		leaving = true;
+		cancelAutoPlay();
+		rollForTasks.cancelDeal();
+
+		const current = stepFor(currentScreen);
+		if (current?.composable.rolling) {
+			skipRoll();
+			for (let i = 0; i < 40 && current.composable.rolling; i++) {
+				await new Promise((r) => setTimeout(r, 25));
+			}
+		}
+		if (current && current.composable.result !== undefined && !current.composable.rolling) {
+			await current.run();
+		}
+		// An ending reached on the way was saved as a completed game already
+		if (gameState.state !== 'gameOver') await saveGame(gameState);
+
+		await goto(resolve('/'));
+		await exitGame();
 	}
 
 	function handleExitCancel() {
 		showExitModal = false;
-	}
-
-	/**
-	 * The primary action of the current round step: the same thing its visible button does.
-	 * Returns null for steps whose button lives elsewhere (intro, card, journal).
-	 */
-	function getPrimaryAction() {
-		switch (currentScreen) {
-			case 'initialDamageRoll':
-				return {
-					disabled: initialDamage.rolling,
-					run: () => initialDamage.handleInitialDamageRoll(triggerAutoPlayForCurrentScreen)
-				};
-			case 'startRound':
-				return { disabled: false, run: beginRound };
-			case 'rollForTasks':
-				return {
-					disabled: rollForTasks.buttonDisabled,
-					run: () => rollForTasks.handleRollForTasks(triggerAutoPlayForCurrentScreen)
-				};
-			case 'failureCheck':
-				return {
-					disabled: failureCheck.rolling,
-					run: () => failureCheck.handleFailureCheck(triggerAutoPlayForCurrentScreen)
-				};
-			case 'successCheck':
-				return {
-					disabled: successCheck.rolling,
-					run: () => successCheck.handleSuccessCheck(triggerAutoPlayForCurrentScreen)
-				};
-			default:
-				return null;
-		}
-	}
-
-	function beginRound() {
-		transitionTo('rollForTasks');
 	}
 
 	// Buttons that live outside the round steps (intro and journal)
@@ -297,10 +419,9 @@
 		// Cancel any auto-play on user interaction
 		cancelAutoPlay();
 
-		const action = getPrimaryAction();
-		if (action) {
+		if (step) {
 			event.preventDefault();
-			if (!action.disabled) action.run();
+			runStep();
 		} else if (currentScreen === 'drawCard') {
 			// The card is the control on this step
 			if (drawCardRef && !drawCardRef.isButtonDisabled()) {
@@ -340,22 +461,27 @@
 			return;
 		}
 
-		const action = getPrimaryAction();
-		if (action && !action.disabled) {
-			action.run();
-		}
+		runStep();
+	}
+
+	/** AC-03: the skip link takes keyboard users from the header straight to the step button */
+	function skipToStep(event) {
+		event.preventDefault();
+		document.querySelector('#step-action button')?.focus();
 	}
 
 	onMount(() => {
 		window.addEventListener('keydown', handleKeyPress);
 
-		// Show keyboard hint when game starts (on desktop only)
-		const isDesktop = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-		if (isDesktop && currentScreen === 'startRound') {
-			showKeyboardHint = true;
-		}
-
-		return () => window.removeEventListener('keydown', handleKeyPress);
+		return () => {
+			window.removeEventListener('keydown', handleKeyPress);
+			leaving = true;
+			cancelAutoPlay();
+			rollForTasks.cancelDeal();
+			announcer.clear();
+			clearTimeout(drawTimer);
+			clearTimeout(stepChangedTimer);
+		};
 	});
 
 	// ===== AUTO-PLAY (Event-driven, NOT using $effect to avoid infinite loops) =====
@@ -369,6 +495,23 @@
 		}
 	}
 
+	// LS-07: arm auto-play the moment it is switched on, and drop the pending step when it is
+	// switched off (the header toggle only changes the setting)
+	const autoPlayOn = $derived.by(() => {
+		const gameplay = getGameplaySettings();
+		return gameplay.autoRollDice || gameplay.autoContinueAfterReading;
+	});
+	let autoPlayWasOn = untrack(() => autoPlayOn);
+	$effect(() => {
+		const on = autoPlayOn;
+		if (on === autoPlayWasOn) return;
+		autoPlayWasOn = on;
+		untrack(() => {
+			cancelAutoPlay();
+			if (on) triggerAutoPlayForCurrentScreen();
+		});
+	});
+
 	/**
 	 * SINGLE UNIFIED SCREEN CHANGE HANDLER
 	 * ✅ FIXED: Use guard pattern to prevent re-triggering on same screen
@@ -380,75 +523,76 @@
 		// Only run when screen actually changes
 		if (currentScreen !== lastScreen) {
 			lastScreen = currentScreen;
+			const screen = currentScreen;
 
-			// Cancel previous screen's auto-play (using untrack to prevent loop)
 			untrack(() => {
+				// Cancel previous screen's auto-play
 				cancelAutoPlay();
+				// Reset the step's roll state at once, so the button never shows the last visit's label
+				resetStep(screen);
 			});
 
 			// Handle screen-specific entry logic (delay to next tick)
 			setTimeout(() => {
-				handleScreenEntry(currentScreen);
+				handleScreenEntry(screen);
 			}, 0);
 		}
 	});
+
+	function resetStep(screen) {
+		switch (screen) {
+			case 'initialDamageRoll':
+				initialDamage.resetState();
+				break;
+			case 'rollForTasks':
+				rollForTasks.resetState();
+				break;
+			case 'failureCheck':
+				failureCheck.resetState();
+				break;
+			case 'successCheck':
+				successCheck.resetState();
+				// A game saved mid-roll resumes on that roll's result
+				successCheck.resumePending();
+				break;
+		}
+	}
+
+	let drawTimer = null;
 
 	/**
 	 * Pure screen entry handler - called once per screen change
 	 * Separated from $effect to prevent reactive loops
 	 */
 	function handleScreenEntry(screen) {
+		if (leaving || screen !== currentScreen) return;
 		switch (screen) {
-			case 'showIntro':
-				// Trigger auto-play for intro screen
-				triggerAutoPlayForCurrentScreen();
-				break;
-
-			case 'initialDamageRoll':
-				// Reset state using composable
-				initialDamage.resetState();
-				// Trigger auto-play
-				triggerAutoPlayForCurrentScreen();
-				break;
-
-			case 'startRound':
-				// Show keyboard hint on first round (desktop only)
-				if (typeof window !== 'undefined') {
-					const isDesktop = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-					if (isDesktop && gameState.round === 1) {
-						showKeyboardHint = true;
-					}
-				}
-				// Trigger auto-play
-				triggerAutoPlayForCurrentScreen();
-				break;
-
 			case 'rollForTasks':
-				// Reset state using composable
-				rollForTasks.resetState();
-				// Trigger auto-play
+				// Show keyboard hint on first round (desktop only)
+				if (typeof window !== 'undefined' && gameState.round === 1) {
+					showKeyboardHint = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+				}
 				triggerAutoPlayForCurrentScreen();
 				break;
 
+			case 'showIntro':
+			case 'initialDamageRoll':
 			case 'failureCheck':
-				// Reset state using composable
-				failureCheck.resetState();
-				// Trigger auto-play
-				triggerAutoPlayForCurrentScreen();
-				break;
-
 			case 'successCheck':
-				// Reset state using composable
-				successCheck.resetState();
-				// Trigger auto-play
 				triggerAutoPlayForCurrentScreen();
 				break;
 
 			case 'drawCard':
 				// Auto-draw first card when entering drawCard state
 				// Small delay to ensure CardDeck component is fully initialized
-				setTimeout(() => {
-					if (drawCardRef && gameState.cardsToDraw > 0) {
+				clearTimeout(drawTimer);
+				drawTimer = setTimeout(() => {
+					if (
+						!leaving &&
+						gameState.state === 'drawCard' &&
+						drawCardRef &&
+						gameState.cardsToDraw > 0
+					) {
 						drawCardRef.handleButtonClick();
 					}
 				}, 100);
@@ -467,6 +611,9 @@
 	 * Called directly from event handlers to avoid $effect infinite loops
 	 */
 	function triggerAutoPlayForCurrentScreen() {
+		if (leaving) return;
+		// One pending auto step at a time
+		cancelAutoPlay();
 		const audioSettings = getAudioSettings();
 		const gameplaySettings = getGameplaySettings();
 
@@ -492,13 +639,21 @@
 				}
 
 				// Auto-roll if enabled and not yet rolled
-				if (gameplaySettings.autoRollDice && initialDamage.result === undefined) {
+				if (
+					gameplaySettings.autoRollDice &&
+					initialDamage.result === undefined &&
+					!initialDamage.rolling
+				) {
 					autoPlayCanceller = autoRoll(() =>
 						initialDamage.handleInitialDamageRoll(triggerAutoPlayForCurrentScreen)
 					);
 				}
 				// Auto-continue after result if enabled
-				else if (gameplaySettings.autoContinueAfterReading && initialDamage.result !== undefined) {
+				else if (
+					gameplaySettings.autoContinueAfterReading &&
+					initialDamage.result !== undefined &&
+					!initialDamage.rolling
+				) {
 					autoPlayCanceller = autoAdvance({
 						text: null,
 						shouldRead: false,
@@ -507,49 +662,20 @@
 				}
 				break;
 
-			case 'startRound':
-				if (gameplaySettings.autoContinueAfterReading) {
-					const roundText = `Round ${gameState.round} begins`;
-					const shouldRead = audioSettings.autoReadPrompts;
-					autoPlayCanceller = autoAdvance({
-						text: shouldRead ? roundText : null,
-						shouldRead,
-						action: () => transitionTo('rollForTasks')
-					});
-				}
-				break;
-
 			case 'rollForTasks':
 				// Auto-read prompt first if enabled and not yet rolled
 				if (audioSettings.autoReadPrompts && !rollForTasks.rolled) {
-					const promptText =
-						'Roll the dice to determine how many challenges you must face this round.';
-					speak(promptText);
+					speak(`Round ${gameState.round}. Roll to see how many cards you draw this round.`);
 				}
 
-				// Auto-roll if enabled and not yet rolled
+				// Auto-roll if enabled and not yet rolled (the cards are dealt on their own after the roll)
 				if (gameplaySettings.autoRollDice && !rollForTasks.rolled && !rollForTasks.rolling) {
 					autoPlayCanceller = autoRoll(() =>
 						rollForTasks.handleRollForTasks(triggerAutoPlayForCurrentScreen)
 					);
-				}
-				// Auto-confirm after roll if enabled
-				else if (
-					gameplaySettings.autoContinueAfterReading &&
-					rollForTasks.rolled &&
-					!rollForTasks.confirming
-				) {
-					// Announce result
-					if (audioSettings.autoAnnounceRolls) {
-						const resultText = `You rolled a ${gameState.diceRoll}. Draw ${gameState.cardsToDraw} card${gameState.cardsToDraw !== 1 ? 's' : ''}.`;
-						speak(resultText);
-					}
-
-					autoPlayCanceller = autoAdvance({
-						text: null,
-						shouldRead: false,
-						action: () => rollForTasks.handleRollForTasks(triggerAutoPlayForCurrentScreen)
-					});
+				} else if (rollForTasks.rolled && audioSettings.autoAnnounceRolls) {
+					const resultText = `You rolled a ${gameState.diceRoll}. Draw ${gameState.cardsToDraw} card${gameState.cardsToDraw !== 1 ? 's' : ''}.`;
+					speak(resultText);
 				}
 				break;
 
@@ -557,7 +683,7 @@
 				// Auto-read prompt first if enabled and not yet rolled
 				if (audioSettings.autoReadPrompts && failureCheck.result === undefined) {
 					const promptText =
-						'An odd card demands a price. Roll to see how much stability you lose.';
+						'An odd card demands a price. Roll to see how much Stability you lose.';
 					speak(promptText);
 				}
 
@@ -572,7 +698,11 @@
 					);
 				}
 				// Auto-continue after result if enabled
-				else if (gameplaySettings.autoContinueAfterReading && failureCheck.result !== undefined) {
+				else if (
+					gameplaySettings.autoContinueAfterReading &&
+					failureCheck.result !== undefined &&
+					!failureCheck.rolling
+				) {
 					autoPlayCanceller = autoAdvance({
 						text: null,
 						shouldRead: false,
@@ -584,9 +714,7 @@
 			case 'successCheck':
 				// Auto-read prompt first if enabled and not yet rolled
 				if (audioSettings.autoReadPrompts && successCheck.result === undefined) {
-					const promptText =
-						'The Ace of Hearts has appeared. Roll to remove a token from your countdown.';
-					speak(promptText);
+					speak(`Salvation. ${salvationDescription()}`);
 				}
 
 				// Auto-roll if enabled and not yet rolled
@@ -600,7 +728,11 @@
 					);
 				}
 				// Auto-continue after result if enabled
-				else if (gameplaySettings.autoContinueAfterReading && successCheck.result !== undefined) {
+				else if (
+					gameplaySettings.autoContinueAfterReading &&
+					successCheck.result !== undefined &&
+					!successCheck.rolling
+				) {
 					autoPlayCanceller = autoAdvance({
 						text: null,
 						shouldRead: false,
@@ -622,7 +754,7 @@
 	</div>
 {:else if currentScreen == 'gameOver'}
 	<div
-		class="dc-fade-in dc-screen-container"
+		class="dc-screen-container"
 		data-testid="screen-gameOver"
 		transition:fade={{ duration: TRANSITION_DURATION }}
 	>
@@ -641,8 +773,12 @@
 			class:behind-intro={currentScreen == 'showIntro'}
 			inert={currentScreen == 'showIntro'}
 		>
+			{#if step}
+				<!-- AC-03: the first tab stop skips the header and goes to the step button -->
+				<a class="skip-link" href="#step-action" onclick={skipToStep}>Skip to action</a>
+			{/if}
 			{#if showStatusHUD}
-				<div class="status-display-area dc-fade-in" data-testid="status-display">
+				<div class="status-display-area" data-testid="status-display">
 					<StatusDisplay
 						onHelpClick={handleHelpClick}
 						onExitClick={handleExitClick}
@@ -657,63 +793,10 @@
 				<ContextBackground {contextText} {resultLine} />
 
 				{#key currentScreen}
-					{#if currentScreen == 'initialDamageRoll'}
-						<div
-							class="dc-fade-in dc-screen-container"
-							data-testid="screen-initialDamageRoll"
-							transition:fade={{ duration: TRANSITION_DURATION }}
-						>
-							<InitialDamageController
-								{initialDamage}
-								triggerAutoPlay={triggerAutoPlayForCurrentScreen}
-							/>
-						</div>
-					{:else if currentScreen == 'startRound'}
-						<div
-							class="dc-fade-in dc-screen-container"
-							data-testid="screen-startRound"
-							transition:fade={{ duration: TRANSITION_DURATION }}
-						>
-							<!-- Round text is shown in the background -->
-							<StartRoundController onbegin={beginRound} />
-						</div>
-					{:else if currentScreen == 'rollForTasks'}
-						<div
-							class="dc-fade-in dc-screen-container"
-							data-testid="screen-rollForTasks"
-							transition:fade={{ duration: TRANSITION_DURATION }}
-						>
-							<RollForTasksController
-								{rollForTasks}
-								triggerAutoPlay={triggerAutoPlayForCurrentScreen}
-							/>
-						</div>
-					{:else if currentScreen == 'drawCard'}
+					{#if currentScreen == 'drawCard'}
 						<OverlayModal isVisible={true} label="Card drawn">
 							<DrawCard bind:this={drawCardRef} />
 						</OverlayModal>
-					{:else if currentScreen == 'failureCheck'}
-						<div
-							class="dc-fade-in dc-screen-container"
-							data-testid="screen-failureCheck"
-							transition:fade={{ duration: TRANSITION_DURATION }}
-						>
-							<FailureCheckController
-								{failureCheck}
-								triggerAutoPlay={triggerAutoPlayForCurrentScreen}
-							/>
-						</div>
-					{:else if currentScreen == 'successCheck'}
-						<div
-							class="dc-fade-in dc-screen-container"
-							data-testid="screen-successCheck"
-							transition:fade={{ duration: TRANSITION_DURATION }}
-						>
-							<SuccessCheckController
-								{successCheck}
-								triggerAutoPlay={triggerAutoPlayForCurrentScreen}
-							/>
-						</div>
 					{:else if currentScreen == 'finalLog' || currentScreen == 'log'}
 						<OverlayModal
 							isVisible={true}
@@ -729,13 +812,29 @@
 								onExit={handleJournalExit}
 							/>
 						</OverlayModal>
-					{:else if currentScreen == 'showIntro'}
-						<!-- The intro overlay covers the table until the player begins -->
-					{:else}
+					{:else if !step && currentScreen != 'showIntro'}
 						<div transition:fade={{ duration: TRANSITION_DURATION }}>error: {currentScreen}</div>
 					{/if}
 				{/key}
-				<RuleCaption />
+
+				<!-- AN-02: one step button for every round step, mounted once. Moving to the next
+				     step changes its label only; it never blinks out between steps. -->
+				{#if step}
+					<!-- No entrance of its own: coming back from the card, the overlay fades off it -->
+					<div class="step-slot" data-testid="screen-{currentScreen}">
+						<StepAction
+							id="step-action"
+							text={step.text}
+							hint={step.hint}
+							busy={step.busy}
+							disabled={step.disabled}
+							changed={stepChanged}
+							testid={step.testid}
+							onclick={runStep}
+						/>
+					</div>
+				{/if}
+				<RuleCaption {captions} />
 			</div>
 		</div>
 
@@ -748,10 +847,42 @@
 				out:fade={{ duration: ANIMATION_DURATION.SLOW }}
 			>
 				<div class="intro-story-container">
-					<div class="content">
-						<h1>{gameState.config?.title || 'Game Introduction'}</h1>
-						<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized via sanitizeHtml -->
-						{@html sanitizeHtml(marked(gameState.config?.introduction ?? ''))}
+					<div class="intro-scroll-area">
+						<div
+							class="content"
+							class:overflows={introOverflows}
+							class:at-end={introAtEnd}
+							bind:this={introScroller}
+							onscroll={measureIntro}
+						>
+							<div class="intro-column">
+								<h1>{gameState.config?.title || 'Game Introduction'}</h1>
+								<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized via sanitizeHtml -->
+								{@html sanitizeHtml(marked(gameState.config?.introduction ?? ''))}
+								<p class="intro-goal" data-testid="intro-goal">{introGoal}</p>
+							</div>
+						</div>
+						{#if introOverflows && !introAtEnd}
+							<button
+								type="button"
+								class="intro-scroll-cue"
+								aria-label="Scroll the introduction"
+								onclick={scrollIntro}
+								in:fade={{ duration: ANIMATION_DURATION.FAST, delay: ANIMATION_DURATION.SLOW }}
+								out:fade={{ duration: ANIMATION_DURATION.FAST }}
+							>
+								<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+									<path
+										d="M6 9l6 6 6-6"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+									/>
+								</svg>
+							</button>
+						{/if}
 					</div>
 					<ButtonBar>
 						<ContinueButton
@@ -766,13 +897,10 @@
 	</div>
 {/if}
 
-<!-- Announces results and key events to screen readers -->
+<!-- The game's one live region: result lines, key events and rule captions, in that order -->
 <div class="sr-only" role="status" aria-live="polite" aria-atomic="true" data-testid="live-region">
 	{liveMessage}
 </div>
-
-<!-- Mini Status HUD - Shows during card screens -->
-<MiniStatusHUD show={showMiniHUD} />
 
 <!-- Keyboard Hint - Shows on desktop for first round -->
 <KeyboardHint show={showKeyboardHint} />
@@ -780,10 +908,10 @@
 <!-- Modal rendered at root level, outside game-screen container -->
 <ConfirmModal
 	isOpen={showExitModal}
-	title="Exit Game"
-	message="Are you sure you want to exit? Your current game progress will be lost and you'll return to the options screen."
-	confirmText="Exit Game"
-	cancelText="Continue Playing"
+	title="Leave the game?"
+	message="Your progress is saved. Continue it from the home screen."
+	confirmText="Leave"
+	cancelText="Keep playing"
 	onConfirm={handleExitConfirm}
 	onCancel={handleExitCancel}
 />
@@ -811,6 +939,35 @@
 		height: 100%;
 	}
 
+	/* AC-03: hidden until focused, then a visible chip at the top of the table */
+	.skip-link {
+		position: absolute;
+		top: 0.5rem;
+		left: 0.5rem;
+		z-index: 300;
+		padding: 0.5rem 0.75rem;
+		background: #08080f;
+		color: var(--color-neon-cyan, #00ffff);
+		border: 2px solid var(--color-neon-cyan, #00ffff);
+		font-family: var(--font-body, 'Inter', sans-serif);
+		font-weight: 600;
+		text-decoration: none;
+		transform: translateY(calc(-100% - 1rem));
+	}
+
+	.skip-link:focus-visible {
+		transform: none;
+		outline: none;
+	}
+
+	/* The step button sits at the bottom of the table, above the dice */
+	.step-slot {
+		align-self: end;
+		width: 100%;
+		position: relative;
+		z-index: 1;
+	}
+
 	.sr-only {
 		position: absolute;
 		width: 1px;
@@ -834,17 +991,67 @@
 		box-sizing: border-box;
 	}
 
+	/* The intro's text area: the column is centred while it fits, and scrolls from the top
+	   (with a fade mask and a scroll cue at the bottom edge) when it does not */
+	.intro-scroll-area {
+		position: relative;
+		flex: 1;
+		min-height: 0;
+		display: flex;
+	}
+
 	.intro-story-container .content {
 		flex: 1;
+		display: flex;
+		flex-direction: column;
 		overflow-y: auto;
 		overflow-x: hidden;
 		padding: var(--space-md);
 		background-color: transparent;
 		min-height: 0;
-		/* Reading column: no 180-character lines on desktop */
+		width: 100%;
+		box-sizing: border-box;
+	}
+
+	.intro-story-container .content.overflows:not(.at-end) {
+		mask-image: linear-gradient(to bottom, #000 calc(100% - 24px), transparent);
+	}
+
+	/* Reading column: no 180-character lines on desktop */
+	.intro-column {
+		margin-block: auto;
 		width: 100%;
 		max-width: var(--content-max, 720px);
 		margin-inline: auto;
+	}
+
+	/* What winning takes, in this game's numbers */
+	.intro-goal {
+		margin-top: var(--space-lg);
+		font-weight: 600;
+		color: #fff;
+	}
+
+	.intro-scroll-cue {
+		position: absolute;
+		left: 50%;
+		bottom: 0.25rem;
+		transform: translateX(-50%);
+		display: grid;
+		place-items: center;
+		width: 44px;
+		height: 44px;
+		padding: 0;
+		border: 1px solid rgba(0, 255, 255, 0.5);
+		border-radius: 50%;
+		background: rgba(8, 8, 20, 0.85);
+		color: var(--color-neon-cyan, #00ffff);
+		cursor: pointer;
+	}
+
+	.intro-scroll-cue:focus-visible {
+		outline: 3px solid var(--color-neon-cyan, #00ffff);
+		outline-offset: 2px;
 	}
 
 	.intro-story-container .content h1 {
@@ -928,15 +1135,6 @@
 		align-items: center;
 	}
 
-	.main-screen-area > div.dc-screen-container {
-		width: 100%;
-		height: 100%;
-		overflow: visible; /* Allow glows and neural effects to extend beyond container */
-		box-sizing: border-box;
-		position: relative; /* Ensure content appears above neural background */
-		z-index: 1;
-	}
-
 	.dc-table-bg {
 		border-radius: var(--dc-default-border-radius);
 		/* Background removed to show neural network animation on all screens */
@@ -976,8 +1174,8 @@
 			align-items: flex-end; /* Align card to bottom on mobile to prevent status bar overlap */
 		}
 
-		/* Remove z-index from screen container to fix stacking context */
-		.main-screen-area > div.dc-screen-container {
+		/* No z-index on the step slot on phones, to keep the stacking context flat */
+		.step-slot {
 			z-index: auto;
 		}
 	}

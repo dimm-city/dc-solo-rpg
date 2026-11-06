@@ -25,4 +25,4 @@
 	} = $props();
 </script>
 
-<AugmentedButton {text} {onclick} {disabled} class="dc-fade-in {className}" {testid} {variant} />
+<AugmentedButton {text} {onclick} {disabled} class={className} {testid} {variant} />

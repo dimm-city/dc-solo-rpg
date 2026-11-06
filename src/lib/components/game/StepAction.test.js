@@ -1,117 +1,56 @@
 /**
- * The screen controllers must use the composable instance owned by GameScreen.
- * When each controller created its own instance, GameScreen's table-tap handler
- * held a separate copy that never saw the button's roll, so tapping the table
- * after rolling started a second roll and replaced the result.
+ * StepAction is the one step button GameScreen mounts for every round step.
+ * It shows the Lucid/Surreal modifier only when its caller passes one (the roll buttons),
+ * inside the label, and never as a separate chip.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { gameState } from '../../stores/gameStore.svelte.js';
+import { describe, it, expect, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
-import RollForTasksController from './RollForTasksController.svelte';
-import FailureCheckController from './FailureCheckController.svelte';
-import SuccessCheckController from './SuccessCheckController.svelte';
-import InitialDamageController from './InitialDamageController.svelte';
-import StartRoundController from './StartRoundController.svelte';
 import StepAction from './StepAction.svelte';
 
-const cases = [
-	{
-		name: 'RollForTasksController',
-		Component: RollForTasksController,
-		prop: 'rollForTasks',
-		handler: 'handleRollForTasks',
-		disabledKey: 'buttonDisabled',
-		testid: 'roll-tasks-button'
-	},
-	{
-		name: 'FailureCheckController',
-		Component: FailureCheckController,
-		prop: 'failureCheck',
-		handler: 'handleFailureCheck',
-		disabledKey: 'rolling',
-		testid: 'failure-check-button'
-	},
-	{
-		name: 'SuccessCheckController',
-		Component: SuccessCheckController,
-		prop: 'successCheck',
-		handler: 'handleSuccessCheck',
-		disabledKey: 'rolling',
-		testid: 'success-check-button'
-	}
-];
-
-describe.each(cases)('$name', ({ Component, prop, handler, disabledKey, testid }) => {
-	it('renders its button from the shared instance and calls its handler', async () => {
-		const shared = { buttonText: 'SHARED STATE', [disabledKey]: false, [handler]: vi.fn() };
-		const triggerAutoPlay = vi.fn();
-		const { getByTestId } = render(Component, { props: { [prop]: shared, triggerAutoPlay } });
-
-		const button = getByTestId(testid);
-		expect(button.textContent).toContain('SHARED STATE');
-
-		await fireEvent.click(button);
-		expect(shared[handler]).toHaveBeenCalledTimes(1);
-		expect(shared[handler]).toHaveBeenCalledWith(triggerAutoPlay);
-	});
-
-	it('disables its button while the shared instance is rolling', () => {
-		const shared = { buttonText: 'ROLLING', [disabledKey]: true, [handler]: vi.fn() };
-		const { getByTestId } = render(Component, { props: { [prop]: shared } });
-
-		expect(getByTestId(testid).disabled).toBe(true);
-	});
-});
-
 describe('StepAction', () => {
-	beforeEach(() => {
-		gameState.isLucid = false;
-		gameState.isSurreal = false;
-	});
-
-	it('shows a Lucid chip before the player rolls', () => {
-		gameState.isLucid = true;
+	it('renders its label and calls its handler', async () => {
+		const onclick = vi.fn();
 		const { getByTestId } = render(StepAction, {
-			props: { text: 'Roll', onclick: vi.fn(), testid: 'x-button' }
+			props: { text: 'Roll for damage', onclick, testid: 'x-button' }
 		});
-		expect(getByTestId('state-chip').textContent).toContain('Lucid');
+		const button = getByTestId('x-button');
+		expect(button.textContent).toContain('Roll for damage');
+		expect(button.getAttribute('aria-label')).toBe('Roll for damage');
+
+		await fireEvent.click(button);
+		expect(onclick).toHaveBeenCalledTimes(1);
 	});
 
-	it('shows a Surreal chip and no chip otherwise', () => {
-		gameState.isSurreal = true;
-		const first = render(StepAction, { props: { text: 'Roll', testid: 'a-button' } });
-		expect(first.getByTestId('state-chip').textContent).toContain('Surreal');
-		first.unmount();
-
-		gameState.isSurreal = false;
-		const second = render(StepAction, { props: { text: 'Roll', testid: 'b-button' } });
-		expect(second.queryByTestId('state-chip')).toBeNull();
-	});
-});
-
-describe('InitialDamageController and StartRoundController', () => {
-	it('gives the initial roll a button that calls the shared handler', async () => {
-		const shared = {
-			buttonText: 'Roll for instability',
-			rolling: false,
-			handleInitialDamageRoll: vi.fn()
-		};
-		const { getByTestId } = render(InitialDamageController, {
-			props: { initialDamage: shared }
+	it('puts the modifier inside the roll button label', () => {
+		const { getByTestId } = render(StepAction, {
+			props: { text: 'Roll for damage', hint: 'Lucid: 2 dice, keep high', testid: 'roll-button' }
 		});
-		const button = getByTestId('initial-damage-button');
-		expect(button.textContent).toContain('Roll for instability');
-		await fireEvent.click(button);
-		expect(shared.handleInitialDamageRoll).toHaveBeenCalledTimes(1);
+		const button = getByTestId('roll-button');
+		expect(getByTestId('roll-modifier').textContent).toBe('Lucid: 2 dice, keep high');
+		expect(button.contains(getByTestId('roll-modifier'))).toBe(true);
+		expect(button.getAttribute('aria-label')).toBe('Roll for damage · Lucid: 2 dice, keep high');
 	});
 
-	it('gives the round start a Begin Round button', async () => {
-		gameState.round = 3;
-		const onbegin = vi.fn();
-		const { getByTestId } = render(StartRoundController, { props: { onbegin } });
-		const button = getByTestId('start-round-button');
-		expect(button.textContent).toContain('Begin Round 3');
-		await fireEvent.click(button);
-		expect(onbegin).toHaveBeenCalledTimes(1);
+	it('shows no modifier and no chip without a hint (Continue, Draw and the rest)', () => {
+		const { queryByTestId, container } = render(StepAction, {
+			props: { text: 'Continue', testid: 'continue-button' }
+		});
+		expect(queryByTestId('roll-modifier')).toBeNull();
+		expect(queryByTestId('state-chip')).toBeNull();
+		expect(container.textContent.trim()).toBe('Continue');
+	});
+
+	it('disables the button when asked', () => {
+		const { getByTestId } = render(StepAction, {
+			props: { text: 'Draw 3 Cards', disabled: true, testid: 'deal-button' }
+		});
+		expect(getByTestId('deal-button').disabled).toBe(true);
+	});
+
+	it('marks a button that has just changed meaning', () => {
+		const { container } = render(StepAction, {
+			props: { text: 'Continue', changed: true, testid: 'c-button' }
+		});
+		expect(container.querySelector('.step-action.changed')).not.toBeNull();
 	});
 });
