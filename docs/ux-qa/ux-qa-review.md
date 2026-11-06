@@ -7,8 +7,8 @@ restart. Branch: `claude/vibrant-curie-w9bn88`.
 ## Status
 
 - Started: 2026-11-06, against `main` at 17b967d (PR #50 merged).
-- Current phase: broad review, next: Game start (coverage item 5).
-- Last section completed: Static pages (items 2-4 done).
+- Current phase: broad review, next: Journal (coverage item 10).
+- Last section completed: Rule captions and keyboard hint (items 5-9 done).
 
 ## How to resume after a restart
 
@@ -87,11 +87,11 @@ Tick an item only when its findings are written below.
 - [x] Home: splash, instructions choice, game selector, game cards, saved-game continue and delete
 - [x] Header and menus (desktop and phone), About, Help, Settings (every control), dice theme picker
 - [x] Static pages: /about, /how-to, /signin
-- [ ] Game start: loading, intro, opening instability roll
-- [ ] Round flow: start round, roll for tasks, draw card, card reveal and dismiss
-- [ ] Stability check, Salvation check, Lucid and Surreal, skip-damage and return-king cards
-- [ ] HUD: desktop panels and the phone compact HUD, every tier and state change
-- [ ] Rule captions and keyboard hint
+- [x] Game start: loading, intro, opening instability roll
+- [x] Round flow: start round, roll for tasks, draw card, card reveal and dismiss
+- [x] Stability check, Salvation check, Lucid and Surreal, skip-damage and return-king cards
+- [x] HUD: desktop panels and the phone compact HUD, every tier and state change
+- [x] Rule captions and keyboard hint
 - [ ] Journal: entry, prompts, save beat, audio record and playback, auto-journal timer, TTS
 - [ ] Endings: win, loss by Kings, loss by Stability, final log, epitaph, run recap
 - [ ] Story Library and story mode (browse, read, navigate, generated story)
@@ -475,6 +475,243 @@ Evidence: `tour/*/25-…` to `30-…`, `tour/d1440-sheet-pages.png`.
 
 - **What happens:** `<title>` is "Dream Console" on every route, including inside a game.
 - **Recommendation:** "Future Lost · Dream Console", "Story Library · Dream Console", and so on.
+- **Effort:** S.
+
+### 5. Game start: loading, intro, opening instability roll
+
+Evidence: `playthrough/pt-desktop/` (production build, 1440x900) and `playthrough/pt-mobile/`
+(iPhone 13), with `playthrough/sheet-start.png` and `sheet-mobile-start.png`.
+
+#### GS-01 · S3 · Four presses and about 20 seconds from Play to the first card
+
+- **What happens:** Play (t=12.0s), Begin Your Journey (14.6), Roll for Instability (17.1),
+  Continue (21.0), Begin Round 1 (23.3), Roll Dice (25.5), first card on screen at about 33s
+  (`playthrough/pt-desktop/timeline.json`). "Round 1 · A new chapter begins. Prepare yourself
+  for what lies ahead." is a whole step with its own button, and it comes back every round.
+- **Recommendation (simplify):** delete the Begin Round step. Make "Round N" the title of the
+  Roll for Tasks screen. That saves one press per round, about 14 per game. Keep the opening
+  instability roll: it teaches the Stability table on a roll that cannot hurt much.
+- **Effort:** S. `StartRoundController.svelte`, `transitions.js`.
+
+#### GS-02 · S3 · The intro is a document with a gap, cut off on phones
+
+- **What happens:** on desktop the intro text ends at 45% of the height, then there is an empty
+  gap, then a button pinned to the bottom (`sheet-start.png`, frame 2). On iPhone, the text runs
+  under the button with no cue that it scrolls ("…and return home. But in this dark future,
+  every" is cut, `pt-mobile/shots/007`). The headings are lixdu yellow at 20–24px. Nothing at
+  the end says what winning means.
+- **Recommendation:** centre the column vertically, add a 24px fade mask and a "scroll" chevron
+  when it overflows, and end on one plain line: "Hold on to your Stability. Find the Ace of
+  Hearts. Clear 10 tokens to escape."
+- **Effort:** S. `GameScreen.svelte` (`.intro-story-container`).
+
+#### GS-03 · S3 · While the die is rolling, the button already says "Continue"
+
+- **What happens:** on the instability, Stability and Salvation steps, the label switches to
+  "CONTINUE" (disabled) the moment Roll is pressed, before the result exists (`sheet-start.png`,
+  frame 4; `checks/desktop-teach/` frame 4). Roll for Tasks keeps "ROLL DICE" (disabled)
+  instead. The cause is that the label derives from the stored result, which is set before the
+  animation: `useInitialDamage.svelte.js:72`, `useFailureCheck.svelte.js:74`,
+  `useSuccessCheck.svelte.js:73`.
+- **Recommendation:** label "Rolling…" while `rolling` is true on every step, then the post-roll
+  label.
+- **Effort:** S.
+
+### 6. Round flow: roll for tasks, draw, card reveal and dismiss
+
+Evidence: `playthrough/pt-desktop/timeline.json` (14 rounds), `playthrough/sheet-round.png`,
+`checks/desktop-teach/`, `lucid/captions-iphone13-1/`.
+
+#### RF-01 · S2 · A round is about 40 seconds of mostly mechanical presses
+
+- **What happens:** over 14 rounds on desktop, each round took 21–53s (median about 40s), with
+  4–11 button presses plus 3–11 card or table taps. The script tapped the table 74 times
+  because no enabled button had been visible for a second: every roll locks input for 3–4s
+  (under swiftshader). A typical round: Begin Round, Roll, Draw N, N card taps, Roll plus
+  Continue for each odd card, Roll plus Continue for Salvation, Record Entry. That is 13–16
+  inputs, most of them confirmations of something the game already decided.
+- **Why it matters:** in Wretched and Alone the ritual is drawing and writing. Here the
+  confirmations crowd out both, and dread decays into clicking.
+- **Recommendation (simplify), target 8 inputs and 25s per round or less:**
+  1. Remove Begin Round (GS-01).
+  2. Start dealing on its own 1.2s after the Roll for Tasks result, keeping "Rolled 17 · 5
+     cards" in the card overlay's header. One press fewer.
+  3. Let a tap during a roll snap the dice to their faces (LS-05).
+  4. Dismiss cards in 300ms, not 600 (see the Animation inventory).
+- **Effort:** M.
+
+#### RF-02 · S2 · The dice come to rest on top of the result line
+
+- **What happens:** the throw area is the whole table, and the result line sits at 45% height,
+  so the die often lands on it. On iPhone: "Surreal: your next roll keeps the low[die]ice"
+  (`lucid/captions-iphone13-1/02-lucid-caption-up.png`). On desktop: "Natural 1 · +2 tokens · 6
+  left · Surreal: your next roll k[die]" (`checks/desktop-teach/09-salvation-nat1.png`). The
+  dice stay up for 750ms after the result appears (DICE_DELAY plus DICE_FADE).
+- **Recommendation:** either confine the dice to the lower half of the table (container top at
+  55%, with the result line above it), or fade the dice out first (250ms) and only then fade the
+  result line in. The first is better: the die stays visible as evidence.
+- **Effort:** S. `src/routes/+layout.svelte:86-92`, `ContextBackground.svelte:41-49`.
+
+#### RF-03 · S3 · The Stability check never says which card caused it
+
+- **What happens:** the check screen says "An odd card demands a price", but not which card.
+  `FailureCheckController` has a card block for that, but `confirmCard` clears `currentCard`
+  before the transition (`gameActions.svelte.js:408`), so it never renders. This was flagged
+  before PR #50 and is still open.
+- **Recommendation:** keep the confirmed card as `gameState.lastCard`, and show "7♠ · Caught in a
+  toxic gas leak" as a small line above the title.
+- **Effort:** S.
+
+#### RF-04 · S3 · The card is roomy, but silent about what it does
+
+- **What happens:**
+  - On desktop the card is about 540x760px; the text ends near 55% of its height, and a pulsing
+    ring fills the empty middle (`sheet-round.png`, frame 3).
+  - "BYTE-6-HEA" is still printed in the footer.
+  - The badge says EVENT, CHALLENGE, DOOM or BONUS. It never says the consequence: an odd card
+    looks no different from an even one until the next screen.
+- **Recommendation:** size the card to its content (min-height 420px, max-height 640px). Replace
+  the ID with a one-line mechanic footer for the cards that matter: "Odd · a Stability check
+  follows", "King · 3 of 4", "Ace · Salvation now needs 14+".
+- **Effort:** S–M. `src/lib/components/card/CardDisplay.svelte:274`.
+
+#### RF-05 · S4 · After the roll, the title repeats the button
+
+- **What happens:** after Roll for Tasks the title becomes "DRAW 1 CARD" above a "DRAW 1 CARD"
+  button (`pt-mobile/shots/017`).
+- **Recommendation:** keep the title "Round N"; the result line carries the count.
+- **Effort:** S. `GameScreen.svelte:72-75`.
+
+### 7. Stability check, Salvation, Lucid and Surreal, card modifiers, Easy
+
+Evidence: `checks/desktop-teach/` (forced: return-king, skip-damage, 4 Aces, natural 1 on
+Salvation, Stability tiers), `resume-aces/`, `lucid/`. See also LS-01 to LS-07.
+
+#### CK-01 · S2 · skip-damage and return-king cards do their work in silence
+
+- **What happens:**
+  - Both carry the same "BONUS" badge as any Ace. Nothing on the card says what it does.
+  - return-king: Kings drop from 2/4 to 1/4 with no message
+    (`checks/desktop-teach/02-return-king-card.png`, `03-after-return-king.png`).
+    `gameState.status = 'A King returns to the deck'` is set but rendered nowhere.
+  - skip-damage: the Ace is odd, but the game goes straight to the journal
+    (`05-skip-damage-card.png`, `06-after-skip-damage.png`), right after a rule caption taught
+    "Odd cards test your Stability".
+- **Why it matters:** the two kindest cards in the deck look like bugs.
+- **Recommendation:** a modifier line on the card face ("A King returns to the deck" or "No
+  Stability check this time"). When it applies, a result line ("King of Hearts returns to the
+  deck · 1 of 4"), and the skull un-igniting in reverse.
+- **Effort:** S.
+
+#### CK-02 · S3 · "Success Check", "Salvation" and "Success" name one thing three ways
+
+- **What happens:** the screen title is "SUCCESS CHECK", the Help and the captions say
+  "Salvation", and the HUD says "SUCCESS". Every round's description says "The Ace of Hearts has
+  appeared", which is stale after round one and false in Easy, where the Ace starts revealed.
+  In Easy the "Salvation unlocked" caption never fires, so Easy players are never taught the
+  win condition in play.
+- **Recommendation:** call it Salvation everywhere. Description: "Roll to remove a token. You
+  need 14+." In Easy, fire the Salvation caption on the first Salvation screen.
+- **Effort:** S. `GameScreen.svelte:91-93`, `useRuleCaptions.svelte.js:91`.
+
+#### CK-03 · S3 · With four Aces the success is automatic, but the player still waits on a die
+
+- **What happens:** "REMOVE A TOKEN · AUTOMATIC" still throws a d20 (`lastRoll [15]`) and blocks
+  input for 3–4s, then asks for Continue (`checks/desktop-teach/07-…`, `08-…`).
+- **Recommendation:** no dice. One press shows "−1 token · 4 left" at once.
+- **Effort:** S. `useSuccessCheck.svelte.js:31-60`.
+
+#### CK-04 · S4 · The fatal roll reads like any other roll
+
+- **What happens:** at 2 Stability, rolling 3 shows "Rolled 3 · −2 Stability · 0/20" and a
+  plain CONTINUE (`endings/stability-desktop/02-stability-result.png`).
+- **Recommendation:** "… · 0/20 · nothing left to hold on to", with the button reading "Face the
+  end".
+- **Effort:** S.
+
+### 8. HUD: desktop panels and the phone compact HUD
+
+Evidence: `checks/desktop-teach/10-…` to `17-…` (tiers), `checks/mini/stats-grid.png`,
+`checks/hint/01-hint.png`, `playthrough/sheet-mobile-start.png`.
+
+What works: the phone CompactHUD (one 64px row: Stability n/20, Kings n/4, tokens or lock,
+cards, roll) is clear and should be the model for every width. The Stability tiers read well:
+green 16–20, yellow 11–15, orange 5–10, red at 4 and under, plus a red flash on damage.
+
+#### HD-01 · S2 · On desktop the Kings panel overlaps the Stability panel
+
+- **What happens:** the Kings frame starts 30px inside the Stability frame (Stability x 8–158,
+  Kings x 128–242 at 1280px), and the Stability panel's clipped tab draws a second outline
+  behind it (`checks/hint/01-hint.png`, top-left). Visual-design v2 flagged the stray tab, and
+  it is still there.
+- **Recommendation:** drop the negative overlap and the `--aug-*-extend` tab. Give both panels
+  one frame with an 8px gap.
+- **Effort:** S. `StabilityPanel.svelte`, `FailureCounterPanel.svelte`.
+
+#### HD-02 · S3 · The desktop HUD is three islands, 130px tall
+
+- **What happens:** at 1440px the panels cluster at the left, centre and right with 300px gaps.
+  Labels are 10–11px mono, the panels have six different gradient borders, and "ABILITIES"
+  shows four unlabelled icons (star, shield, mushroom, lightning) for the Aces.
+- **Recommendation (redesign):** use the CompactHUD design at all widths: one centred row, max
+  960px wide, 64px tall, with 12px labels. Replace ABILITIES with "Aces 2/4 · need 14+".
+- **Effort:** M.
+
+#### HD-03 · S3 · The Last Roll panel's modifier note wraps into three tiny lines
+
+- **What happens:** "SURREAL: NEXT ROLL LOW OF 2D20" at 10px across three lines
+  (`checks/desktop-teach/10-…`). It is also the third place that says it (see LS-01).
+- **Recommendation:** a small badge next to the number ("2d20↓" or "2d20↑", with
+  `aria-label`), and the full rule in a tooltip.
+- **Effort:** S.
+
+#### HD-04 · S3 · A global rule breaks every fixed element inside the game
+
+- **What happens:** `Game.svelte:131` sets `position: relative` on every direct child of
+  `.dc-game-container` except the background. That beats the components' own `position: fixed`
+  and `absolute`:
+  - `KeyboardHint` renders as a full-width bar at the bottom edge, 56px tall with 22px visible,
+    instead of a centred toast (`checks/hint/01-hint.png`; probe: `position: relative`, y=778
+    of 800).
+  - `MiniStatusHUD` (meant for top-right, `z-index: 1000`) renders off-screen below the fold
+    (y=816 of 800) on the card, check and journal screens. Dead UI.
+  - The screen-reader live region becomes `relative` (harmless only because it is 1px).
+- **Recommendation:** scope the rule to `.dc-game-container > .game-screen`. Delete
+  `MiniStatusHUD` (the CompactHUD and the panels already cover it).
+- **Effort:** S.
+
+### 9. Rule captions and keyboard hint
+
+Evidence: `lucid/captions-*`, `checks/desktop-teach/`, `checks/hint/`.
+
+What works: one-time captions at the top of the table ("RULE Odd cards test your Stability…"),
+each firing on first contact and gone after 6s, are the right way to teach through play.
+
+#### RC-01 · S2 · The keyboard hint is broken
+
+- **What happens:** see HD-04. "Space or Enter to continue" is a clipped strip under the button
+  in round 1 (`playthrough/sheet-round.png`, frame 1).
+- **Recommendation:** fix HD-04. Better still, drop the toast and show "Space" as a small key-cap
+  inside the primary button on pointer devices: it is always true, and it never covers
+  anything.
+- **Effort:** S.
+
+#### RC-02 · S3 · Captions run their 6 seconds behind the card overlay
+
+- **What happens:** a caption fired as the player taps Draw keeps counting down behind the fog
+  (the Surreal caption was still mounted under the card in `touch-iphone13-lucid`). Two captions
+  in a row (Surreal, then the token rule) take 12s of the top of the table.
+- **Recommendation:** pause the caption timer while an overlay is open, and show at most one
+  caption per screen; queue the rest for the next screen.
+- **Effort:** S. `useRuleCaptions.svelte.js:138-170`.
+
+#### RC-03 · S3 · "Never show instructions again" also silently turns off every caption
+
+- **What happens:** "Skip Always · I know how to play, never show instructions again" sets
+  the same flag that disables in-play captions (`useRuleCaptions.svelte.js:139`). There is no
+  setting to turn captions back on, and no record of past captions.
+- **Recommendation:** a "Rule tips" toggle in Settings, Gameplay. List each caption once seen in
+  the Help modal under "Rules you've met".
 - **Effort:** S.
 
 ## Animation inventory
