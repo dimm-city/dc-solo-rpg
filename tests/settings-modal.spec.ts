@@ -16,10 +16,11 @@ test.describe('Settings Modal', () => {
 		await expect(dialog.getByRole('heading', { level: 2, name: 'Game Settings' })).toBeVisible();
 	});
 
-	test('should display Settings modal content', async ({ page }) => {
+	test('should open with difficulty, play mode and rule tips, and the rest under Advanced', async ({
+		page
+	}) => {
 		const dialog = await openContentModal(page, 'Settings');
 
-		// The settings now live in the modal itself rather than on a separate settings page
 		await expect(dialog.getByRole('heading', { level: 3, name: 'Gameplay' })).toBeVisible();
 		await expect(dialog.getByText('Changes apply the next time a game begins.')).toBeVisible();
 
@@ -27,13 +28,96 @@ test.describe('Settings Modal', () => {
 		await expect(difficulty).toBeVisible();
 		await expect(difficulty.locator('option')).toHaveText(['Game default', 'Normal', 'Easy']);
 
-		// Audio and auto-play sections follow the gameplay section
+		const playMode = dialog.getByRole('radiogroup', { name: 'Play mode' });
+		await expect(playMode).toBeVisible();
+		await expect(playMode.getByRole('radio')).toHaveCount(3);
+		for (const name of ['Manual', 'Read aloud', 'Hands-free']) {
+			await expect(playMode.getByRole('radio', { name })).toBeAttached();
+		}
+		await expect(dialog.getByRole('switch', { name: 'Rule tips' })).toBeVisible();
+
+		// Everything else is folded under Advanced, closed at first
+		const advanced = dialog.locator('details.settings-advanced');
+		await expect(advanced).not.toHaveAttribute('open');
+		await expect(dialog.getByLabel('Voice provider')).toBeHidden();
+		await advanced.locator('summary').click();
+		for (const label of ['Voice provider', 'Read cards', 'Auto-roll dice', 'Journaling']) {
+			await expect(dialog.getByLabel(label)).toBeAttached();
+		}
 		await expect(dialog.getByRole('heading', { level: 3, name: 'Read aloud' })).toBeAttached();
 		await expect(dialog.getByRole('heading', { level: 3, name: 'Auto-play' })).toBeAttached();
-		await expect(dialog.getByRole('heading', { level: 3, name: 'Quick presets' })).toBeAttached();
 
 		await expect(dialog.getByRole('button', { name: 'Done' })).toBeVisible();
 		await expect(dialog.getByRole('button', { name: 'Close Game Settings' })).toBeVisible();
+	});
+
+	test('should show every Gameplay control without scrolling', async ({ page }) => {
+		const dialog = await openContentModal(page, 'Settings');
+
+		const body = await dialog.locator('.content-body-wrapper').boundingBox();
+		const tips = await dialog.getByRole('switch', { name: 'Rule tips' }).boundingBox();
+		expect(tips!.y + tips!.height).toBeLessThanOrEqual(body!.y + body!.height);
+	});
+
+	test('should remember the play mode, and map it onto the settings under Advanced', async ({
+		page
+	}) => {
+		let dialog = await openContentModal(page, 'Settings');
+		await expect(dialog.getByRole('radio', { name: 'Manual' })).toBeChecked();
+
+		await dialog.getByRole('radio', { name: 'Hands-free' }).check();
+		await dialog.locator('details.settings-advanced summary').click();
+		await expect(dialog.getByLabel('Read cards')).toBeChecked();
+		await expect(dialog.getByLabel('Auto-roll dice')).toBeChecked();
+		await expect(dialog.getByLabel('Journaling')).toHaveValue('timed');
+
+		// Changing a single setting makes it a custom mix: no mode selected
+		await dialog.getByLabel('Auto-roll dice').uncheck();
+		for (const name of ['Manual', 'Read aloud', 'Hands-free']) {
+			await expect(dialog.getByRole('radio', { name })).not.toBeChecked();
+		}
+		await expect(dialog.getByText('Custom: your own mix')).toBeVisible();
+
+		await dialog.getByRole('radio', { name: 'Read aloud' }).check();
+		await dialog.getByRole('button', { name: 'Done' }).click();
+
+		await page.reload();
+		await expect(page.getByTestId('home-page')).toBeVisible();
+		dialog = await openContentModal(page, 'Settings');
+		await expect(dialog.getByRole('radio', { name: 'Read aloud' })).toBeChecked();
+	});
+
+	test('should offer only the free voices until a key is added', async ({ page }) => {
+		const dialog = await openContentModal(page, 'Settings');
+		await dialog.locator('details.settings-advanced summary').click();
+
+		const provider = dialog.getByLabel('Voice provider');
+		await expect(provider.locator('option')).toHaveText([
+			'Browser voice (free)',
+			'On-device voice (free, 265 MB)'
+		]);
+
+		await dialog.getByRole('button', { name: 'Add a voice service' }).click();
+		const service = dialog.getByLabel('Service', { exact: true });
+		await expect(service.locator('option')).toHaveText(['DimmCityAI', 'OpenAI', 'ElevenLabs']);
+		await expect(dialog.getByRole('button', { name: 'Save and use' })).toBeDisabled();
+
+		await service.selectOption('openai');
+		await dialog.getByLabel('API key', { exact: true }).fill('sk-test-key');
+		await dialog.getByRole('button', { name: 'Save and use' }).click();
+
+		// The service is now listed, chosen, and no longer offered for adding
+		await expect(provider).toHaveValue('openai');
+		await expect(provider.locator('option')).toHaveText([
+			'Browser voice (free)',
+			'On-device voice (free, 265 MB)',
+			'OpenAI'
+		]);
+		await dialog.getByRole('button', { name: 'Add a voice service' }).click();
+		await expect(dialog.getByLabel('Service', { exact: true }).locator('option')).toHaveText([
+			'DimmCityAI',
+			'ElevenLabs'
+		]);
 	});
 
 	test('should stay on the home page and not offer a separate settings page', async ({ page }) => {

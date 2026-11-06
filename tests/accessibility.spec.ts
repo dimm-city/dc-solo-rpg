@@ -10,16 +10,16 @@ test.describe('Accessibility', () => {
 	});
 
 	test('should have proper ARIA labels on header buttons', async ({ page }) => {
-		// The menu button is icon-only, so it needs an explicit label and state
-		const toggle = page.getByRole('button', { name: 'Toggle menu' });
+		// The phone menu button is icon-only, so it needs an explicit label and state
+		const toggle = page.getByRole('button', { name: 'Toggle menu', includeHidden: true });
 		await expect(toggle).toHaveAttribute('aria-label', 'Toggle menu');
 		await expect(toggle).toHaveAttribute('aria-expanded', 'false');
 
-		// Every menu action has a visible text label that names it
+		// Every header action has a visible text label that names it
 		await openHeaderMenu(page);
-		const items = page.locator('.mobile-menu button');
+		const items = page.locator('.mobile-menu button:visible');
 		const count = await items.count();
-		expect(count).toBeGreaterThanOrEqual(6);
+		expect(count).toBeGreaterThanOrEqual(3);
 		for (let i = 0; i < count; i++) {
 			await expect(items.nth(i)).toHaveAccessibleName(/\S/);
 		}
@@ -29,8 +29,13 @@ test.describe('Accessibility', () => {
 	});
 
 	test('should have accessible names on game card buttons', async ({ page }) => {
-		const startButtons = page.locator('.game-card').getByRole('button', { name: 'Start new game' });
-		expect(await startButtons.count()).toBe(await page.locator('.game-card').count());
+		const playButtons = page.locator('.game-card').getByRole('button', { name: 'Play' });
+		expect(await playButtons.count()).toBe(await page.locator('.game-card').count());
+
+		// Each Play button is described by its game's title
+		for (const button of await playButtons.all()) {
+			await expect(button).toHaveAccessibleDescription(/\S/);
+		}
 	});
 
 	test('should have proper modal ARIA attributes', async ({ page }) => {
@@ -47,17 +52,20 @@ test.describe('Accessibility', () => {
 	});
 
 	test('should have visible focus indicators', async ({ page }) => {
-		// Reach the first Start button by keyboard so :focus-visible applies
-		await page.getByRole('button', { name: 'Toggle menu' }).focus();
+		// Reach the first Play button by keyboard so :focus-visible applies
+		const header = page.locator('.page-header');
+		const toggle = header.getByRole('button', { name: 'Toggle menu' });
+		const last = (await toggle.isVisible())
+			? toggle
+			: header.getByRole('button', { name: 'More', exact: true });
+		await last.focus();
 		await page.keyboard.press('Tab');
 
-		const startButton = page.locator('.game-card').first().getByRole('button', {
-			name: 'Start new game'
-		});
-		await expect(startButton).toBeFocused();
+		const playButton = page.locator('.game-card').first().getByRole('button', { name: 'Play' });
+		await expect(playButton).toBeFocused();
 
-		// Should have a visible focus indicator (3px neon outline from styles.css)
-		const outline = await startButton.evaluate((el) => {
+		// Should have a visible focus indicator (3px neon outline)
+		const outline = await playButton.evaluate((el) => {
 			const style = window.getComputedStyle(el);
 			return { style: style.outlineStyle, width: style.outlineWidth };
 		});
@@ -68,23 +76,25 @@ test.describe('Accessibility', () => {
 	test('should support keyboard navigation through all interactive elements', async ({ page }) => {
 		const cardCount = await page.locator('.game-card').count();
 		const visited: string[] = [];
+		const headerStops =
+			page.viewportSize()!.width >= 900 ? ['Stories', 'Settings', 'Help', 'More'] : ['Toggle menu'];
 
-		// Tab from the top of the page; the sequence should be the menu button, then each Start button
+		// Tab from the top of the page: the header actions, then each Play button
 		await page.locator('body').click({ position: { x: 1, y: 1 } });
-		for (let i = 0; i < cardCount + 1; i++) {
+		for (let i = 0; i < headerStops.length + cardCount; i++) {
 			await page.keyboard.press('Tab');
 			visited.push(
 				await page.evaluate(
 					() =>
 						document.activeElement?.getAttribute('aria-label') ||
-						document.activeElement?.tagName.toLowerCase() ||
+						document.activeElement?.textContent?.trim() ||
 						''
 				)
 			);
 		}
 
-		expect(visited[0]).toBe('Toggle menu');
-		expect(visited.slice(1)).toEqual(Array(cardCount).fill('Start new game'));
+		expect(visited.slice(0, headerStops.length)).toEqual(headerStops);
+		expect(visited.slice(headerStops.length)).toEqual(Array(cardCount).fill('Play'));
 	});
 
 	test('should have proper heading hierarchy', async ({ page }) => {

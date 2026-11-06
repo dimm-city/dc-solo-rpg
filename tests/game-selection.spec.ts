@@ -10,41 +10,61 @@ test.describe('Game Selection Screen', () => {
 	});
 
 	test('should display game selection screen with all elements', async ({ page }) => {
-		// Verify page container
 		await expect(page.locator('[data-testid="home-page"]')).toBeVisible();
-
-		// Verify game selector
 		await expect(page.locator('[data-testid="game-selector"]')).toBeVisible();
-
-		// Verify header is visible
 		await expect(page.locator('.page-header')).toBeVisible();
+
+		// A one-line pitch heads the page
+		await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+			'A solo journaling game. Draw, roll, write.'
+		);
+		await expect(page).toHaveTitle('Dream Console');
 	});
 
-	test('should display games in a grid', async ({ page }) => {
-		// Verify game cards grid exists
-		const grid = page.locator('.game-cards-grid');
-		await expect(grid).toBeVisible();
-
-		// Verify grid has games
-		await expect(page.locator('.game-card').first()).toBeVisible();
-		expect(await page.locator('.game-card').count()).toBeGreaterThan(0);
+	test('should centre the content in a column no wider than 960px', async ({ page }) => {
+		const viewport = page.viewportSize()!;
+		const grid = await page.locator('.game-cards-grid').boundingBox();
+		expect(grid!.width).toBeLessThanOrEqual(960);
+		// Centred: equal space on both sides (within a pixel or two)
+		const left = grid!.x;
+		const right = viewport.width - (grid!.x + grid!.width);
+		expect(Math.abs(left - right)).toBeLessThanOrEqual(2);
 	});
 
-	test('should display game cards with correct information', async ({ page }) => {
-		// Check first game card
-		const firstCard = page.locator('.game-card').first();
+	test('should display game cards with key art, title, subtitle and a time estimate', async ({
+		page
+	}) => {
+		const cards = page.locator('.game-card');
+		expect(await cards.count()).toBeGreaterThan(0);
 
-		// Verify title exists
-		await expect(firstCard.locator('.game-card-title')).toBeVisible();
-		await expect(firstCard.locator('.game-card-title')).not.toBeEmpty();
+		for (let i = 0; i < (await cards.count()); i++) {
+			const card = cards.nth(i);
+			await expect(card.locator('.key-art svg')).toBeVisible();
+			await expect(card.locator('.game-card-title')).not.toBeEmpty();
+			await expect(card.locator('.game-subtitle')).not.toBeEmpty();
+			await expect(card.locator('.game-meta')).toContainText('About 30 min');
+		}
+	});
 
-		// Verify subtitle exists
-		await expect(firstCard.locator('.game-subtitle')).toBeVisible();
-		await expect(firstCard.locator('.game-subtitle')).not.toBeEmpty();
+	test("should take each subtitle from the game's own frontmatter", async ({ page }) => {
+		await expect(page.getByTestId('game-card-future-lost').locator('.game-subtitle')).toHaveText(
+			'A Dimm City Campaign'
+		);
+		await expect(
+			page.getByTestId('game-card-ghost-in-the-machine').locator('.game-subtitle')
+		).toHaveText('Grab and go turned mad dash for the gate');
+		await expect(page.getByText('Begin your adventure')).toHaveCount(0);
+	});
+
+	test('should draw different key art for each game', async ({ page }) => {
+		const art = page.locator('.game-card .key-art svg');
+		expect(await art.count()).toBeGreaterThan(1);
+		const first = await art.nth(0).innerHTML();
+		const second = await art.nth(1).innerHTML();
+		expect(first).not.toBe(second);
 	});
 
 	test('should display each game with data-testid', async ({ page }) => {
-		// Every card carries game-card-{slug}
 		const gameCards = page.locator('[data-testid^="game-card-"]');
 		const count = await gameCards.count();
 		expect(count).toBeGreaterThan(0);
@@ -59,30 +79,51 @@ test.describe('Game Selection Screen', () => {
 	});
 
 	test('should have augmented-ui styling on game cards', async ({ page }) => {
-		// Check first game card has augmented-ui attribute
-		const firstCard = page.locator('.game-card').first();
-		const augmentedAttr = await firstCard.getAttribute('data-augmented-ui');
+		const augmentedAttr = await page
+			.locator('.game-card')
+			.first()
+			.getAttribute('data-augmented-ui');
 
 		expect(augmentedAttr).toBeTruthy();
 		expect(augmentedAttr).toContain('border');
 	});
 
-	test('should show hover effect on the start button', async ({ page }) => {
-		// The card itself is no longer interactive; the Start button is the control that reacts
-		const startButton = page.locator('.game-card').first().getByRole('button', {
-			name: 'Start new game'
-		});
+	test('should label the play button', async ({ page }) => {
+		for (const card of await page.locator('.game-card').all()) {
+			const play = card.getByRole('button', { name: 'Play' });
+			await expect(play).toBeVisible();
+			await expect(play).toHaveText('Play');
+		}
+	});
 
-		const initialTransform = await startButton.evaluate(
-			(el) => window.getComputedStyle(el).transform
-		);
+	test('should show hover feedback on the play button', async ({ page }) => {
+		const play = page.locator('.game-card').first().getByRole('button', { name: 'Play' });
+		const before = await play.evaluate((el) => window.getComputedStyle(el).transform);
 
-		await startButton.hover();
+		await play.hover();
 
-		// The button lifts and scales on hover
 		await expect
-			.poll(() => startButton.evaluate((el) => window.getComputedStyle(el).transform))
-			.not.toBe(initialTransform);
+			.poll(() => play.evaluate((el) => window.getComputedStyle(el).transform))
+			.not.toBe(before);
+	});
+
+	test('should line cards up: equal heights and actions pinned to the bottom', async ({ page }) => {
+		const viewport = page.viewportSize()!;
+		test.skip(viewport.width <= 640, 'one card per row on phones');
+
+		const cards = page.locator('.game-card');
+		const a = await cards.nth(0).boundingBox();
+		const b = await cards.nth(1).boundingBox();
+		expect(Math.abs(a!.height - b!.height)).toBeLessThanOrEqual(1);
+
+		const playA = await cards.nth(0).getByRole('button', { name: 'Play' }).boundingBox();
+		const playB = await cards.nth(1).getByRole('button', { name: 'Play' }).boundingBox();
+		expect(Math.abs(playA!.y - playB!.y)).toBeLessThanOrEqual(1);
+
+		// Subtitles start on the same line, whatever the title length
+		const subA = await cards.nth(0).locator('.game-subtitle').boundingBox();
+		const subB = await cards.nth(1).locator('.game-subtitle').boundingBox();
+		expect(Math.abs(subA!.y - subB!.y)).toBeLessThanOrEqual(1);
 	});
 
 	test('should not select a card or open a confirmation when a card is clicked', async ({
@@ -90,7 +131,6 @@ test.describe('Game Selection Screen', () => {
 	}) => {
 		const firstCard = page.locator('.game-card').first();
 
-		// Click the card body (away from the action buttons)
 		await firstCard.locator('.game-card-title').click();
 
 		await expect(firstCard).not.toHaveClass(/selected/);
@@ -98,29 +138,24 @@ test.describe('Game Selection Screen', () => {
 		await expect(page).toHaveURL(/\/$/);
 	});
 
-	test('should display game cards in 3 columns on desktop', async ({ page }) => {
+	test('should display game cards in 2 columns on desktop', async ({ page }) => {
 		await page.setViewportSize({ width: 1280, height: 720 });
-		const grid = page.locator('.game-cards-grid');
+		const gridColumns = await page
+			.locator('.game-cards-grid')
+			.evaluate((el) => window.getComputedStyle(el).gridTemplateColumns);
 
-		// Get computed grid-template-columns
-		const gridColumns = await grid.evaluate(
-			(el) => window.getComputedStyle(el).gridTemplateColumns
-		);
-
-		// Should have 3 columns (will have 3 values in the string)
-		const columnCount = gridColumns.split(' ').length;
-		expect(columnCount).toBe(3);
+		expect(gridColumns.split(' ').length).toBe(2);
 	});
 
 	test('should have glassmorphism background on game cards', async ({ page }) => {
-		const firstCard = page.locator('.game-card').first();
-
-		// Verify backdrop-filter exists
-		const backdropFilter = await firstCard.evaluate(
-			(el) =>
-				window.getComputedStyle(el).backdropFilter ||
-				window.getComputedStyle(el).getPropertyValue('-webkit-backdrop-filter')
-		);
+		const backdropFilter = await page
+			.locator('.game-card')
+			.first()
+			.evaluate(
+				(el) =>
+					window.getComputedStyle(el).backdropFilter ||
+					window.getComputedStyle(el).getPropertyValue('-webkit-backdrop-filter')
+			);
 
 		expect(backdropFilter).toContain('blur');
 	});
@@ -130,7 +165,6 @@ test.describe('Game Selection Screen', () => {
 		const count = await cards.count();
 		expect(count).toBeGreaterThan(1);
 
-		// Cards cycle through variants game-card-1..5 in order
 		const variants: string[] = [];
 		for (let i = 0; i < Math.min(count, 5); i++) {
 			const cls = (await cards.nth(i).getAttribute('class')) ?? '';
@@ -141,12 +175,18 @@ test.describe('Game Selection Screen', () => {
 	});
 
 	test('should be keyboard navigable', async ({ page }) => {
-		// The Start button is the card's focusable control. Tab from the menu button reaches it.
-		await page.getByRole('button', { name: 'Toggle menu' }).focus();
+		// The last header control (More on desktop, the menu button on phones), then Tab
+		const header = page.locator('.page-header');
+		const toggle = header.getByRole('button', { name: 'Toggle menu' });
+		const last = (await toggle.isVisible())
+			? toggle
+			: header.getByRole('button', { name: 'More', exact: true });
+		await last.focus();
 		await page.keyboard.press('Tab');
 
 		const focused = page.locator(':focus');
 		await expect(focused).toHaveClass(/start-btn/);
+		await expect(focused).toHaveAccessibleName('Play');
 
 		// Enter starts the game
 		await page.keyboard.press('Enter');

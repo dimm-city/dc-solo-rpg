@@ -19,8 +19,10 @@ test.describe('About Modal', () => {
 	test('should display About modal content', async ({ page }) => {
 		const dialog = await openContentModal(page, 'About');
 
-		// Lead paragraph names the app
+		// Lead paragraph names the app; Dimm City is the maker
 		await expect(dialog.locator('.about-lead')).toContainText('Dream Console');
+		await expect(dialog).toContainText('Dream Console is made by Dimm City.');
+		await expect(dialog).not.toContainText('Dimm City Solo RPG');
 
 		// Both sections are present
 		await expect(dialog.getByRole('heading', { level: 3, name: 'How it plays' })).toBeVisible();
@@ -151,8 +153,13 @@ test.describe('About Modal', () => {
 	});
 
 	test('should be keyboard accessible', async ({ page }) => {
-		// Open with the keyboard from the header menu
-		await page.getByRole('button', { name: 'Toggle menu' }).focus();
+		// Open with the keyboard from the header menu (More on desktop, the menu button on phones)
+		const header = page.locator('.page-header');
+		const toggle = header.getByRole('button', { name: 'Toggle menu' });
+		const menuButton = (await toggle.isVisible())
+			? toggle
+			: header.getByRole('button', { name: 'More', exact: true });
+		await menuButton.focus();
 		await page.keyboard.press('Enter');
 		await expect(page.locator('.mobile-menu')).toBeVisible();
 		await page.locator('.mobile-menu').getByRole('button', { name: 'About' }).focus();
@@ -191,5 +198,30 @@ test.describe('About Modal', () => {
 		await page.locator('.mobile-menu').getByRole('button', { name: 'About' }).click();
 		await expect(page.getByRole('dialog')).toBeVisible();
 		await expect(page.locator('.mobile-menu')).toHaveCount(0);
+	});
+});
+
+test.describe('About page', () => {
+	test('should render the About modal content under one name, in a 720px column', async ({
+		page
+	}) => {
+		await page.goto('/about');
+
+		await expect(page).toHaveTitle('About · Dream Console');
+		await expect(page.getByRole('heading', { level: 1, name: 'About' })).toBeVisible();
+		await expect(page.locator('.about-lead')).toContainText('Dream Console');
+		await expect(page.getByRole('heading', { level: 2, name: 'How it plays' })).toBeVisible();
+		await expect(page.getByRole('heading', { level: 2, name: 'Credits' })).toBeVisible();
+		await expect(page.locator('.about-credit')).toContainText('Chris Bissette');
+		await expect(page.locator('body')).not.toContainText('Dimm City Solo RPG');
+
+		const column = await page.locator('.static-column').boundingBox();
+		expect(column!.width).toBeLessThanOrEqual(720);
+	});
+
+	test('should link back to the console', async ({ page }) => {
+		await page.goto('/about');
+		await page.getByRole('link', { name: 'Back to the console' }).click();
+		await expect(page).toHaveURL(/\/$/);
 	});
 });

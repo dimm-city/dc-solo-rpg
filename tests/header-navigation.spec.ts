@@ -1,151 +1,143 @@
 // spec: tests/home-page-test-plan.md
 // seed: tests/seed.spec.ts
 
-import { test, expect } from '@playwright/test';
-import { openHomePage, openHeaderMenu, openContentModal } from './helpers';
+import { test, expect, type Page } from '@playwright/test';
+import { openHomePage, openHeaderMenu, openContentModal, clickMenuItem } from './helpers';
+
+const isDesktop = (page: Page) => page.viewportSize()!.width >= 900;
 
 test.describe('Header and Navigation', () => {
 	test.beforeEach(async ({ page }) => {
 		await openHomePage(page);
 	});
 
-	test('should display header with all elements', async ({ page }) => {
+	test('should display the brand: one product name and the maker line', async ({ page }) => {
 		const header = page.locator('.page-header');
-
-		// Verify header is visible
 		await expect(header).toBeVisible();
-
-		// Verify logo is visible
 		await expect(header.locator('.logo-dice')).toBeVisible();
+		await expect(header.locator('.version-text')).toHaveText('Dream Console');
+		await expect(header.locator('.maker')).toHaveText('Dimm City');
+	});
 
-		// Verify version text (now shows "Dream Console")
-		await expect(header.locator('.version-text')).toContainText('Dream Console');
+	test('should show labelled actions inline at 900px and up, and a menu button below', async ({
+		page
+	}) => {
+		const header = page.locator('.page-header');
+		const toggle = header.getByRole('button', { name: 'Toggle menu' });
 
-		// The header actions are collected in one menu button at every viewport size
-		await expect(header.getByRole('button', { name: 'Toggle menu' })).toBeVisible();
-
-		// ...and the menu lists every action
-		await openHeaderMenu(page);
-		const menu = page.locator('.mobile-menu');
-		for (const name of [
-			'Upload Game',
-			'Story Library',
-			'Settings',
-			'Dice Theme',
-			'About',
-			'Help'
-		]) {
-			await expect(menu.getByRole('button', { name })).toBeVisible();
+		if (isDesktop(page)) {
+			for (const name of ['Stories', 'Settings', 'Help', 'More']) {
+				const button = header.getByRole('button', { name, exact: true });
+				await expect(button).toBeVisible();
+				await expect(button).toHaveText(name);
+			}
+			await expect(toggle).toBeHidden();
+		} else {
+			await expect(toggle).toBeVisible();
+			await expect(header.locator('.header-buttons')).toBeHidden();
 		}
 	});
 
-	test('should keep the inline icon row hidden', async ({ page }) => {
-		// The inline icon buttons are hidden at every size in favour of the menu
-		await expect(page.locator('.header-buttons')).toBeHidden();
-		await expect(page.locator('button[aria-label="About"]')).toBeHidden();
+	test('should list the remaining actions in the menu, each with a label', async ({ page }) => {
+		await openHeaderMenu(page);
+		const menu = page.locator('.mobile-menu');
+
+		// Desktop shows Stories, Settings and Help inline, so the More menu holds the rest
+		const names = isDesktop(page)
+			? ['Upload Game', 'Dice Theme', 'About']
+			: ['Upload Game', 'Story Library', 'Settings', 'Dice Theme', 'About', 'Help'];
+		for (const name of names) {
+			await expect(menu.getByRole('button', { name, exact: true })).toBeVisible();
+		}
+		await expect(menu.getByRole('button')).toHaveCount(names.length);
 	});
 
 	test('should toggle the menu and reflect it in aria-expanded', async ({ page }) => {
-		const toggle = page.getByRole('button', { name: 'Toggle menu' });
-		await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+		const header = page.locator('.page-header');
+		const button = isDesktop(page)
+			? header.getByRole('button', { name: 'More', exact: true })
+			: header.getByRole('button', { name: 'Toggle menu' });
+		await expect(button).toHaveAttribute('aria-expanded', 'false');
 
-		await toggle.click();
-		await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+		await button.click();
+		await expect(button).toHaveAttribute('aria-expanded', 'true');
 		await expect(page.locator('.mobile-menu')).toBeVisible();
 
-		await toggle.click();
-		await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+		await button.click();
+		await expect(button).toHaveAttribute('aria-expanded', 'false');
+		await expect(page.locator('.mobile-menu')).toHaveCount(0);
+	});
+
+	test('should close the menu with Escape and return focus to its button', async ({ page }) => {
+		await openHeaderMenu(page);
+		await page.keyboard.press('Escape');
+		await expect(page.locator('.mobile-menu')).toHaveCount(0);
+		await expect(page.locator(':focus')).toHaveAttribute('aria-expanded', 'false');
+	});
+
+	test('should close the menu when clicking elsewhere', async ({ page }) => {
+		await openHeaderMenu(page);
+		await page.getByRole('heading', { level: 1 }).click();
 		await expect(page.locator('.mobile-menu')).toHaveCount(0);
 	});
 
 	test('should have sticky header', async ({ page }) => {
-		const header = page.locator('.page-header');
-
-		// Get position
-		const position = await header.evaluate((el) => window.getComputedStyle(el).position);
-
+		const position = await page
+			.locator('.page-header')
+			.evaluate((el) => window.getComputedStyle(el).position);
 		expect(position).toBe('sticky');
 	});
 
 	test('should display logo with correct styling', async ({ page }) => {
-		const logo = page.locator('.logo-dice');
-
-		// Verify logo has drop-shadow filter
-		const filter = await logo.evaluate((el) => window.getComputedStyle(el).filter);
+		const filter = await page
+			.locator('.logo-dice')
+			.evaluate((el) => window.getComputedStyle(el).filter);
 		expect(filter).toContain('drop-shadow');
 	});
 
-	test('should display version text with correct styling', async ({ page }) => {
-		const versionText = page.locator('.version-text');
-
-		// Verify version text is uppercase
-		const textTransform = await versionText.evaluate(
-			(el) => window.getComputedStyle(el).textTransform
-		);
-		expect(textTransform).toBe('uppercase');
+	test('should set header labels in Inter, uppercase (not the display face)', async ({ page }) => {
+		const style = await page.locator('.version-text').evaluate((el) => {
+			const cs = window.getComputedStyle(el);
+			return { transform: cs.textTransform, family: cs.fontFamily };
+		});
+		expect(style.transform).toBe('uppercase');
+		expect(style.family).toContain('Inter');
+		expect(style.family).not.toContain('lixdu');
 	});
 
-	test('should have hover effect on the menu button', async ({ page }) => {
-		const toggle = page.getByRole('button', { name: 'Toggle menu' });
-
-		const before = await toggle.evaluate((el) => window.getComputedStyle(el).transform);
-		expect(before).toBe('none');
-
-		// Hover over button
-		await toggle.hover();
-
-		// Button scales up on hover (computed transform is a matrix, so read the x scale)
-		await expect
-			.poll(() =>
-				toggle.evaluate((el) => {
-					const transform = window.getComputedStyle(el).transform;
-					return transform === 'none' ? 1 : new DOMMatrix(transform).a;
-				})
-			)
-			.toBeGreaterThan(1);
-	});
-
-	test('should open About modal when choosing About in the menu', async ({ page }) => {
+	test('should open About modal from the header', async ({ page }) => {
 		const dialog = await openContentModal(page, 'About');
-
 		await expect(dialog).toHaveAccessibleName('About');
 	});
 
-	test('should open Help modal when choosing Help in the menu', async ({ page }) => {
+	test('should open Help modal from the header', async ({ page }) => {
 		const dialog = await openContentModal(page, 'Help');
-
 		await expect(dialog).toHaveAccessibleName('Game Guide');
 	});
 
-	test('should open the Story Library when choosing Story Library in the menu', async ({
-		page
-	}) => {
-		await openHeaderMenu(page);
-		await page.locator('.mobile-menu').getByRole('button', { name: 'Story Library' }).click();
+	test('should open the Story Library from the header', async ({ page }) => {
+		await clickMenuItem(page, 'Story Library');
 
-		// The library replaces the game selection screen
+		// The library replaces the game selection screen, and the tab says so
 		await expect(page.getByTestId('home-page')).toHaveCount(0);
+		await expect(page).toHaveTitle('Story Library · Dream Console');
 	});
 
 	test('should have proper z-index layering', async ({ page }) => {
-		const header = page.locator('.page-header');
-
-		// Get z-index
-		const zIndex = await header.evaluate((el) => window.getComputedStyle(el).zIndex);
-
+		const zIndex = await page
+			.locator('.page-header')
+			.evaluate((el) => window.getComputedStyle(el).zIndex);
 		expect(parseInt(zIndex)).toBeGreaterThan(50);
 	});
 
 	test('should have backdrop blur on header', async ({ page }) => {
-		const header = page.locator('.page-header');
-
-		// Verify backdrop filter
-		const backdropFilter = await header.evaluate(
-			(el) =>
-				window.getComputedStyle(el).backdropFilter ||
-				window.getComputedStyle(el).getPropertyValue('-webkit-backdrop-filter')
-		);
-
+		const backdropFilter = await page
+			.locator('.page-header')
+			.evaluate(
+				(el) =>
+					window.getComputedStyle(el).backdropFilter ||
+					window.getComputedStyle(el).getPropertyValue('-webkit-backdrop-filter')
+			);
 		expect(backdropFilter).toContain('blur');
 	});
 });
