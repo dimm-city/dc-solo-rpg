@@ -35,6 +35,7 @@
 		clearLocalStorageSaves
 	} from '$lib/stores/indexedDBStorage.js';
 	import { resumeGame, deleteSavedGame } from '$lib/stores/gameActions.svelte.js';
+	import { initializeAudioStore } from '$lib/stores/audioStore.svelte.js';
 	import { gameState } from '$lib/stores/gameStore.svelte.js';
 
 	/** @type {import('./$types').PageData} */
@@ -280,6 +281,20 @@
 		}
 	}
 
+	/**
+	 * Settings reads the saved audio and auto-play settings, which the store otherwise only loads
+	 * when a game starts: without this, the home page showed (and on any change, saved) defaults.
+	 * The settings load synchronously; a saved voice service starts up in the background.
+	 */
+	let audioSettingsLoaded = false;
+	function openSettings() {
+		if (!audioSettingsLoaded) {
+			audioSettingsLoaded = true;
+			initializeAudioStore();
+		}
+		showSettingsModal = true;
+	}
+
 	async function handleSignOut() {
 		await signOut({ callbackUrl: '/signin' });
 	}
@@ -369,7 +384,7 @@
 			signedIn={!!data.session?.user}
 			onupload={() => fileInput?.click()}
 			onstories={handleBrowseStories}
-			onsettings={() => (showSettingsModal = true)}
+			onsettings={openSettings}
 			ondice={() => (showDiceThemePicker = true)}
 			onabout={() => (showAboutModal = true)}
 			onhelp={() => (showHelpModal = true)}
