@@ -3,12 +3,15 @@
    Matching dimm.city website aesthetic EXACTLY
    ============================================ */
 
-/* augmented-ui is bundled through Vite (no external CDN dependency).
-   Google Fonts (Orbitron, Inter, Share Tech Mono) load from a <link> in app.html;
-   an @import nested in @layer is ignored by browsers, so it must not live here. */
+/* Everything ships with the app: augmented-ui and the fonts are bundled through Vite from
+   npm packages (no CDN, no Google Fonts). Inter is the variable font (100-900); Share Tech
+   Mono has one weight. */
 @import 'augmented-ui/augmented-ui.min.css';
+@import '@fontsource-variable/inter/wght.css';
+@import '@fontsource-variable/inter/wght-italic.css';
+@import '@fontsource/share-tech-mono/400.css';
 
-/* Load custom display font */
+/* Display font (house face), self-hosted in static/fonts */
 @font-face {
 	font-family: 'lixdu';
 	src: url('/fonts/lixdu.woff') format('woff');
@@ -41,12 +44,17 @@
 
 	/* === TYPOGRAPHY === */
 	/* Font roles:
-	   --font-display (lixdu): titles at 24px and above ONLY. Never for numbers or small
-	     labels, it misreads at small sizes ("TASKS" -> "TASHS", a 4 reads as "Ч").
-	   --font-mono (Share Tech Mono): HUD numbers, labels and IDs (use tabular-nums).
+	   --font-display (lixdu): screen titles of 28px and up ONLY. It misreads at small sizes
+	     (M, K and W blur; "TASKS" reads "TASHS"). Inside controls and small headings it
+	     resolves to the UI face (see "Controls and small titles" below).
+	   --font-ui (Inter 600, uppercase, 0.08em): buttons, labels and titles under 28px.
+	   --font-mono (Share Tech Mono): HUD numbers and IDs (use tabular-nums).
 	   --font-body (Inter): reading text. */
-	--font-display: 'lixdu', 'Orbitron', 'Tomorrow', sans-serif;
-	--font-body: 'Inter', 'Tomorrow', sans-serif;
+	--font-display: 'lixdu', 'Inter Variable', 'Inter', sans-serif;
+	--font-body: 'Inter Variable', 'Inter', system-ui, sans-serif;
+	--font-ui: var(--font-body);
+	--font-ui-weight: 600;
+	--tracking-ui: 0.08em;
 	--font-mono: 'Share Tech Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 
 	/* === SHARED UI TOKENS === */
@@ -266,12 +274,35 @@ h3 {
 	margin-bottom: var(--space-md);
 }
 
-/* h4-h6 render below 24px, so they use the body face (see font roles in :root) */
+/* ============================================
+   CONTROLS AND SMALL TITLES
+   The display face is for screen titles of 28px and up. Buttons, labels and titles below
+   that use the UI face: Inter 600, uppercase, 0.08em. Inside these elements --font-display
+   itself resolves to the UI face, so a small button or heading that asks for the display
+   face still gets a legible one.
+   ============================================ */
+
 h4,
 h5,
 h6 {
-	font-family: var(--font-body);
-	font-weight: 700;
+	font-family: var(--font-ui);
+	font-weight: var(--font-ui-weight);
+	letter-spacing: var(--tracking-ui);
+}
+
+button,
+[role='button'],
+label,
+legend,
+h4,
+h5,
+h6 {
+	--font-display: var(--font-ui);
+}
+
+/* Buttons take the UI face instead of the browser's control font */
+button {
+	font-family: var(--font-ui);
 }
 
 h4 {
