@@ -1,9 +1,9 @@
 <!--
- * SortControls - Sort dropdown for game library
+ * SortControls - Order or filter the Story Library
  *
- * Provides sorting options for completed games list
+ * A compact select sized to its content (it used to stretch across the whole header).
  *
- * @component ⭐ REUSABLE
+ * @component
  * @example
  * <SortControls bind:sortBy={sortBy} />
  -->
@@ -13,56 +13,67 @@
 </script>
 
 <div class="sort-controls">
-	<label for="sort-select">Sort by:</label>
+	<label for="sort-select">Show</label>
 	<select id="sort-select" bind:value={sortBy}>
-		<option value="recent">Most Recent</option>
-		<option value="oldest">Oldest First</option>
-		<option value="won">Victories Only</option>
-		<option value="lost">Defeats Only</option>
+		<option value="recent">Newest first</option>
+		<option value="oldest">Oldest first</option>
+		<option value="won">Escapes only</option>
+		<option value="lost">Losses only</option>
 	</select>
 </div>
 
 <style>
 	.sort-controls {
-		display: flex;
+		display: inline-flex;
 		align-items: center;
-		gap: var(--space-md);
-		font-size: 0.875rem;
-		color: rgba(255, 255, 255, 0.7);
+		gap: 12px;
+		flex: 0 0 auto;
+	}
+
+	/* Overrides the global uppercase label style: this is a control label, not a heading */
+	.sort-controls label {
+		margin: 0;
+		font-family: var(--font-body);
+		font-size: 0.9375rem;
+		font-weight: 600;
+		letter-spacing: 0;
+		text-transform: none;
+		color: #d5dfeb;
 	}
 
 	.sort-controls select {
-		padding: var(--space-sm) var(--space-md);
-		background: rgba(0, 0, 0, 0.4);
-		border: 2px solid rgba(138, 43, 226, 0.4);
+		box-sizing: border-box;
+		width: auto;
+		min-height: 44px;
+		margin: 0;
+		padding: 8px 40px 8px 14px;
+		appearance: none;
+		background-color: #07101a;
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+		background-repeat: no-repeat;
+		background-position: right 14px center;
+		background-size: 14px;
+		border: 1px solid #6a87a3;
 		border-radius: 4px;
-		color: rgba(255, 255, 255, 0.9);
+		box-shadow: none;
+		color: #fff;
 		font-family: var(--font-body);
-		font-size: 0.875rem;
+		font-size: 1rem;
 		cursor: pointer;
-		transition: all var(--transition-base);
 	}
 
-	.sort-controls select:hover,
-	.sort-controls select:focus {
-		border-color: rgba(186, 85, 211, 0.6);
-		background: rgba(0, 0, 0, 0.6);
-		outline: none;
+	.sort-controls select:hover {
+		border-color: #9ab4cc;
 	}
 
-	/* Mobile optimizations */
-	@media (max-width: 640px) {
-		.sort-controls {
-			width: 100%;
-			flex-wrap: wrap;
-			gap: var(--space-sm);
-		}
+	.sort-controls select:focus-visible {
+		outline: 2px solid var(--color-neon-cyan);
+		outline-offset: 2px;
+		border-color: var(--color-neon-cyan);
+	}
 
-		.sort-controls :global(button) {
-			flex: 1;
-			min-width: calc(50% - var(--space-xs));
-			font-size: 0.8125rem;
-			padding: var(--space-xs) var(--space-sm);
-		}
+	.sort-controls option {
+		background: #07101a;
+		color: #fff;
 	}
 </style>

@@ -7,12 +7,13 @@
  *
  * @example
  * const saves = useSavedGames();
- * saves.sortBy = 'won'; // Filter to victories only
+ * saves.sortBy = 'won'; // Filter to escapes only
+ * await saves.deleteGame(game.id); // Delete a story for good
  * const games = saves.sortedGames; // Get sorted/filtered games
  */
 
 import { onMount } from 'svelte';
-import { loadAllSaves } from '$lib/stores/indexedDBStorage.js';
+import { loadAllSaves, deleteCompletedGame } from '$lib/stores/indexedDBStorage.js';
 import { logger } from '$lib/utils/logger.js';
 
 export function useSavedGames() {
@@ -88,10 +89,17 @@ export function useSavedGames() {
 		});
 	}
 
-	function formatDuration(rounds) {
-		if (!rounds) return 'Unknown';
-		if (rounds === 1) return '1 round';
-		return `${rounds} rounds`;
+	/**
+	 * Delete a completed game for good and drop it from the list.
+	 * @param {string} id - Save key (gameSlug:completed:timestamp)
+	 * @returns {Promise<boolean>} Whether it was deleted
+	 */
+	async function deleteGame(id) {
+		const deleted = await deleteCompletedGame(id);
+		if (deleted) {
+			completedGames = completedGames.filter((game) => game.id !== id);
+		}
+		return deleted;
 	}
 
 	return {
@@ -114,7 +122,7 @@ export function useSavedGames() {
 			return sortedGames;
 		},
 		loadCompletedGames,
-		formatDate,
-		formatDuration
+		deleteGame,
+		formatDate
 	};
 }

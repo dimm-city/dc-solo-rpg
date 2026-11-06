@@ -1,269 +1,372 @@
 <!--
- * GameCard - Individual game card for completed games
+ * GameCard - One finished run in the Story Library (an <li> of the library's list)
  *
- * Displays game metadata with outcome badge and view story CTA
+ * Title, how it ended ("Escaped", "Taken by the fourth King", "Stability gave out"), rounds and
+ * date. The whole card opens the story; Delete lives in an overflow menu, away from that tap,
+ * and asks for confirmation (the parent owns the confirmation dialog).
  *
- * @component ⭐ HIGHLY REUSABLE
+ * @component
  * @example
- * <GameCard
- *   {game}
- *   {index}
- *   onSelect={() => viewGame(game)}
- *   {formatDate}
- *   {formatDuration}
- * />
+ * <GameCard {game} {index} onSelect={viewGame} onDelete={askToDelete} {formatDate} />
  -->
 
 <script>
 	import { fly } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 	import { ANIMATION_DURATION } from '$lib/constants/animations.js';
+	import { getStoryOutcome, formatRounds } from '$lib/utils/storyOutcome.js';
 
 	let {
 		game = null,
 		index = 0,
 		onSelect = () => {},
-		formatDate = (d) => d,
-		formatDuration = (r) => r
+		onDelete = () => {},
+		formatDate = (d) => d
 	} = $props();
+
+	const uid = $props.id();
+	const menuId = `story-card-menu-${uid}`;
+
+	let outcome = $derived(getStoryOutcome(game));
+	let title = $derived(game.gameTitle || 'Untitled game');
+
+	let menuOpen = $state(false);
+	let menuButton = $state();
+	let menuElement = $state();
+
+	const reducedMotion = () =>
+		typeof window !== 'undefined' &&
+		window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+
+	function openMenu(focusFirst = false) {
+		menuOpen = true;
+		if (focusFirst) {
+			requestAnimationFrame(() => menuElement?.querySelector('[role="menuitem"]')?.focus());
+		}
+	}
+
+	function closeMenu({ returnFocus = false } = {}) {
+		menuOpen = false;
+		if (returnFocus) menuButton?.focus();
+	}
+
+	function toggleMenu(event) {
+		// A keyboard press (detail 0) moves focus into the menu, as menu buttons do
+		if (menuOpen) closeMenu();
+		else openMenu(event.detail === 0);
+	}
+
+	function handleMenuKeydown(event) {
+		if (event.key === 'Escape') {
+			event.preventDefault();
+			event.stopPropagation();
+			closeMenu({ returnFocus: true });
+		} else if (event.key === 'Tab') {
+			closeMenu();
+		}
+	}
+
+	function handleWindowPointer(event) {
+		if (!menuOpen) return;
+		if (menuElement?.contains(event.target) || menuButton?.contains(event.target)) return;
+		closeMenu();
+	}
+
+	function chooseDelete() {
+		closeMenu();
+		onDelete(game);
+	}
 </script>
 
-<button
-	class="game-card"
-	class:won={game.isWon}
-	onclick={() => onSelect(game)}
-	data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
+<svelte:window onpointerdown={handleWindowPointer} />
+
+<li
+	class="story-card"
+	class:won={outcome.won}
+	data-outcome={outcome.kind}
+	data-testid="story-card"
+	data-augmented-ui="tl-clip br-clip border"
 	in:fly={{
 		y: 20,
-		duration: ANIMATION_DURATION.SLOW,
-		delay: index * 50,
+		duration: reducedMotion() ? 0 : ANIMATION_DURATION.SLOW,
+		delay: reducedMotion() ? 0 : index * 50,
 		easing: quintOut
 	}}
 >
-	<!-- Outcome Badge -->
-	<div class="outcome-indicator" class:won={game.isWon}>
-		{#if game.isWon}
-			<svg
-				xmlns="http://www.w3.org/2000/svg"
-				width="24"
-				height="24"
-				viewBox="0 0 24 24"
-				fill="currentColor"
-			>
-				<path d="M12 2L15 8.5L22 9.5L17 14.5L18 21.5L12 18.5L6 21.5L7 14.5L2 9.5L9 8.5L12 2Z" />
+	<button type="button" class="card-open" onclick={() => onSelect(game)}>
+		<span class="card-title">{title}</span>
+		<span class="card-outcome">
+			{#if outcome.kind === 'escaped'}
+				<svg viewBox="0 0 24 24" aria-hidden="true">
+					<path d="M14 4h5v16h-5" />
+					<path d="M3 12h11" />
+					<path d="M10 8l4 4-4 4" />
+				</svg>
+			{:else if outcome.kind === 'kings'}
+				<svg viewBox="0 0 24 24" aria-hidden="true">
+					<path d="M4 18h16" />
+					<path d="M4 15l-1-9 5 4 4-6 4 6 5-4-1 9z" />
+				</svg>
+			{:else}
+				<svg viewBox="0 0 24 24" aria-hidden="true">
+					<path d="M2 12h5l2-5 3 10 2-5h8" />
+				</svg>
+			{/if}
+			{outcome.label}
+		</span>
+		<span class="card-meta">
+			{formatRounds(game.roundsSurvived)} · {formatDate(game.lastPlayed || game.savedAt)}
+		</span>
+		<span class="card-read" aria-hidden="true">
+			Read story
+			<svg viewBox="0 0 20 20"><path d="M8 4l6 6-6 6" /></svg>
+		</span>
+	</button>
+
+	<div class="card-menu">
+		<button
+			bind:this={menuButton}
+			type="button"
+			class="menu-button"
+			aria-label="More options for {title}"
+			aria-haspopup="menu"
+			aria-expanded={menuOpen}
+			aria-controls={menuOpen ? menuId : undefined}
+			onclick={toggleMenu}
+			onkeydown={handleMenuKeydown}
+		>
+			<svg viewBox="0 0 24 24" aria-hidden="true">
+				<circle cx="5" cy="12" r="1.6" />
+				<circle cx="12" cy="12" r="1.6" />
+				<circle cx="19" cy="12" r="1.6" />
 			</svg>
-		{:else}
-			<svg
-				xmlns="http://www.w3.org/2000/svg"
-				width="24"
-				height="24"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2"
+		</button>
+
+		{#if menuOpen}
+			<div
+				bind:this={menuElement}
+				id={menuId}
+				class="menu"
+				role="menu"
+				tabindex="-1"
+				aria-label="Options for {title}"
+				onkeydown={handleMenuKeydown}
 			>
-				<path d="M18 6L6 18M6 6l12 12" />
-			</svg>
+				<button type="button" class="menu-item danger" role="menuitem" onclick={chooseDelete}>
+					Delete story…
+				</button>
+			</div>
 		{/if}
 	</div>
-
-	<!-- Game Info -->
-	<div class="game-header">
-		<h3 class="game-title">{game.gameTitle || 'Untitled Game'}</h3>
-	</div>
-
-	<div class="game-meta">
-		<div class="meta-row">
-			<span class="meta-label">Player:</span>
-			<span class="meta-value">{game.playerName || 'Anonymous'}</span>
-		</div>
-		<div class="meta-row">
-			<span class="meta-label">Journey:</span>
-			<span class="meta-value">{formatDuration(game.roundsSurvived)}</span>
-		</div>
-		<div class="meta-row">
-			<span class="meta-label">Tower:</span>
-			<span class="meta-value">{game.finalTower ?? 'N/A'}</span>
-		</div>
-		<div class="meta-row">
-			<span class="meta-label">Completed:</span>
-			<span class="meta-value">{formatDate(game.lastPlayed || game.savedAt)}</span>
-		</div>
-	</div>
-
-	<!-- View Story CTA -->
-	<div class="view-story-cta">
-		<span>View Story</span>
-		<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor">
-			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4l6 6-6 6" />
-		</svg>
-	</div>
-</button>
+</li>
 
 <style>
-	.game-card {
+	.story-card {
 		position: relative;
 		display: flex;
-		flex-direction: column;
-		gap: var(--space-lg);
-		padding: var(--space-xl);
-		background: linear-gradient(135deg, rgba(100, 50, 200, 0.15), rgba(50, 150, 255, 0.1));
-		border: 2px solid rgba(138, 43, 226, 0.4);
+		margin: 0;
+		background: linear-gradient(135deg, rgba(100, 50, 200, 0.16), rgba(20, 30, 50, 0.4));
 		backdrop-filter: blur(12px);
 		-webkit-backdrop-filter: blur(12px);
-		cursor: pointer;
-		transition: all var(--transition-base);
-		text-align: left;
-		--aug-border-bg: linear-gradient(135deg, rgba(138, 43, 226, 0.3), rgba(75, 0, 130, 0.2));
-		--aug-border: 2px;
-		--aug-border-fallback-color: rgba(138, 43, 226, 0.4);
+		transition: background-color 150ms ease-out;
+		--aug-tl: 14px;
+		--aug-br: 14px;
+		--aug-border-all: 1px;
+		--aug-border-bg: rgba(186, 85, 211, 0.55);
 	}
 
-	.game-card:hover {
-		background: linear-gradient(135deg, rgba(100, 50, 200, 0.25), rgba(50, 150, 255, 0.2));
-		border-color: rgba(186, 85, 211, 0.6);
-		box-shadow: 0 8px 32px rgba(138, 43, 226, 0.3);
-		transform: translateY(-4px);
+	.story-card.won {
+		background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(20, 30, 50, 0.4));
+		--aug-border-bg: rgba(255, 215, 0, 0.55);
 	}
 
-	.game-card.won {
-		background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 165, 0, 0.05));
-		border-color: rgba(255, 215, 0, 0.4);
-		--aug-border-bg: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 165, 0, 0.1));
-		--aug-border-fallback-color: rgba(255, 215, 0, 0.4);
-	}
-
-	.game-card.won:hover {
-		background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 165, 0, 0.15));
-		border-color: rgba(255, 215, 0, 0.6);
-		box-shadow: 0 8px 32px rgba(255, 215, 0, 0.3);
-	}
-
-	.outcome-indicator {
-		position: absolute;
-		top: var(--space-lg);
-		right: var(--space-lg);
-		width: 48px;
-		height: 48px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background: linear-gradient(135deg, rgba(220, 20, 60, 0.3), rgba(139, 0, 0, 0.4));
-		border: 2px solid rgba(220, 20, 60, 0.6);
-		border-radius: 50%;
-		box-shadow: 0 0 15px rgba(220, 20, 60, 0.4);
-	}
-
-	.outcome-indicator.won {
-		background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 165, 0, 0.4));
-		border-color: rgba(255, 215, 0, 0.6);
-		box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
-	}
-
-	.game-header {
-		padding-right: var(--space-3xl); /* Space for outcome badge */
-	}
-
-	.game-title {
-		font-family: var(--font-display);
-		font-size: 1.25rem;
-		font-weight: 700;
-		color: var(--color-neon-cyan);
-		text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
-		margin: 0;
-		line-height: 1.3;
-		word-break: break-word;
-	}
-
-	.game-card.won .game-title {
-		color: var(--color-brand-yellow);
-		text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-	}
-
-	.game-meta {
+	.card-open {
+		flex: 1;
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-sm);
+		align-items: flex-start;
+		gap: 8px;
+		min-width: 0;
+		/* Room on the right for the overflow button */
+		padding: 20px 64px 20px 24px;
+		background: none;
+		border: 0;
+		color: inherit;
+		font-family: var(--font-body);
+		text-align: left;
+		cursor: pointer;
 	}
 
-	.meta-row {
-		display: grid;
-		grid-template-columns: auto 1fr;
-		gap: var(--space-sm);
+	.story-card:hover {
+		background-color: rgba(138, 43, 226, 0.12);
+	}
+
+	.card-open:focus-visible {
+		outline: 3px solid var(--color-neon-cyan);
+		outline-offset: -6px;
+		box-shadow: none;
+	}
+
+	/* Display face is for titles of 28px and up; card titles use Inter (MN-07) */
+	.card-title {
+		font-size: 1.25rem;
+		font-weight: 700;
+		line-height: 1.3;
+		letter-spacing: 0.02em;
+		color: #fff;
+		overflow-wrap: anywhere;
+	}
+
+	.card-outcome {
+		display: inline-flex;
 		align-items: center;
-		font-size: 0.875rem;
-	}
-
-	.meta-label {
-		color: rgba(255, 255, 255, 0.6);
+		gap: 8px;
+		font-size: 1rem;
 		font-weight: 600;
+		color: #ff8fa3;
 	}
 
-	.meta-value {
-		color: rgba(255, 255, 255, 0.9);
-		text-align: right;
-		font-family: 'Courier New', monospace;
+	.story-card.won .card-outcome {
+		color: var(--color-brand-yellow);
 	}
 
-	.view-story-cta {
-		display: flex;
+	.card-outcome svg {
+		flex-shrink: 0;
+		width: 18px;
+		height: 18px;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 2;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	.card-meta {
+		font-size: 0.9375rem;
+		color: #b8c5d6;
+		font-variant-numeric: tabular-nums;
+	}
+
+	.card-read {
+		display: inline-flex;
 		align-items: center;
-		justify-content: center;
-		gap: var(--space-sm);
-		padding: var(--space-md);
-		background: rgba(0, 0, 0, 0.3);
-		border: 2px solid rgba(138, 43, 226, 0.4);
-		border-radius: 6px;
-		font-family: var(--font-display);
-		font-weight: 600;
+		gap: 4px;
+		margin-top: 8px;
 		font-size: 0.875rem;
-		color: var(--color-cyber-magenta);
+		font-weight: 600;
+		letter-spacing: 0.08em;
 		text-transform: uppercase;
-		letter-spacing: 0.1em;
-		transition: all var(--transition-base);
-	}
-
-	.game-card:hover .view-story-cta {
-		background: rgba(138, 43, 226, 0.2);
-		border-color: rgba(186, 85, 211, 0.6);
 		color: var(--color-neon-cyan);
 	}
 
-	.game-card.won .view-story-cta {
-		border-color: rgba(255, 215, 0, 0.4);
-		color: rgba(255, 215, 0, 0.9);
+	.card-read svg {
+		width: 16px;
+		height: 16px;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 2;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+		transition: transform 150ms ease-out;
 	}
 
-	.game-card.won:hover .view-story-cta {
-		background: rgba(255, 215, 0, 0.2);
-		border-color: rgba(255, 215, 0, 0.6);
+	.card-open:hover .card-read svg {
+		transform: translateX(3px);
 	}
 
-	/* Mobile optimizations */
+	.card-menu {
+		position: absolute;
+		top: 8px;
+		right: 8px;
+	}
+
+	.menu-button {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 44px;
+		height: 44px;
+		min-height: 44px;
+		padding: 0;
+		background: transparent;
+		border: 1px solid transparent;
+		border-radius: 4px;
+		color: #d5dfeb;
+		cursor: pointer;
+	}
+
+	.menu-button svg {
+		flex-shrink: 0;
+		width: 22px;
+		height: 22px;
+		fill: currentColor;
+	}
+
+	.menu-button:hover,
+	.menu-button[aria-expanded='true'] {
+		border-color: rgba(255, 255, 255, 0.35);
+		background: rgba(0, 0, 0, 0.35);
+	}
+
+	/* Opens inside the card: the clipped frame would cut off anything outside it */
+	.menu {
+		position: absolute;
+		top: 48px;
+		right: 0;
+		z-index: 2;
+		min-width: 180px;
+		padding: 4px;
+		background: #0b1622;
+		border: 1px solid rgba(255, 255, 255, 0.25);
+		border-radius: 4px;
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+	}
+
+	.menu-item {
+		display: block;
+		width: 100%;
+		min-height: 44px;
+		padding: 8px 12px;
+		background: none;
+		border: 0;
+		border-radius: 2px;
+		color: #fff;
+		font-family: var(--font-body);
+		font-size: 1rem;
+		font-weight: 600;
+		text-align: left;
+		cursor: pointer;
+	}
+
+	.menu-item.danger {
+		color: #ff8fa3;
+	}
+
+	.menu-item:hover,
+	.menu-item:focus-visible {
+		background: rgba(255, 77, 109, 0.16);
+		outline: none;
+		box-shadow: inset 0 0 0 2px var(--color-danger, #ff4d6d);
+	}
+
 	@media (max-width: 640px) {
-		.game-card {
-			padding: var(--space-md);
+		.card-open {
+			padding: 16px 60px 16px 20px;
 		}
 
-		.game-title {
+		.card-title {
 			font-size: 1.125rem;
 		}
-
-		.game-meta {
-			flex-wrap: wrap;
-			gap: var(--space-xs);
-			font-size: 0.75rem;
-		}
 	}
 
-	/* Extra small screens */
-	@media (max-width: 375px) {
-		.game-card {
-			padding: var(--space-sm);
+	@media (prefers-reduced-motion: reduce) {
+		.story-card,
+		.card-read svg {
+			transition: none;
 		}
 
-		.game-title {
-			font-size: 1rem;
+		.card-open:hover .card-read svg {
+			transform: none;
 		}
 	}
 </style>
