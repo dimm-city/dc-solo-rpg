@@ -4,6 +4,7 @@
 	import { browser } from '$app/environment';
 	import { page } from '$app/stores';
 	import { untrack } from 'svelte';
+	import { animationTokensCss } from '$lib/constants/animations.js';
 	import {
 		initializeDiceBox,
 		diceState,
@@ -11,6 +12,9 @@
 	} from '$lib/stores/diceStore.svelte.js';
 
 	let { children, data } = $props();
+
+	// The motion tokens (--dur-*, --ease-*) as one :root rule, from the same constants JS uses
+	const motionTokens = `<style id="motion-tokens">${animationTokensCss()}</style>`;
 	let diceContainer = $state();
 
 	// Show dice only when on game screens (not home, not about)
@@ -65,6 +69,8 @@
 </script>
 
 <svelte:head>
+	<!-- eslint-disable-next-line svelte/no-at-html-tags -- static tokens built from animations.js -->
+	{@html motionTokens}
 	<link rel="icon" href={data.icon || '/d20-150.png'} />
 </svelte:head>
 <!-- Persistent DiceBox container that never unmounts, but can be hidden -->
@@ -204,35 +210,36 @@
 		height: 100%;
 	}
 
-	/* View Transition API styles for smooth page transitions */
+	/* Page navigation (View Transitions API): the old page fades out, the new one fades in
+	   with an 8px rise, both over the 200ms enter/exit token */
 	:global(::view-transition-old(root)),
 	:global(::view-transition-new(root)) {
-		animation-duration: var(--anim-fast);
+		animation-duration: var(--dur-enter, 200ms);
 	}
 
 	:global(::view-transition-old(root)) {
-		animation-name: fade-out-scale;
+		animation-name: page-fade-out;
+		animation-timing-function: var(--ease-exit, ease-in);
 	}
 
 	:global(::view-transition-new(root)) {
-		animation-name: fade-in-rise;
+		animation-name: page-fade-in-rise;
+		animation-timing-function: var(--ease-enter, ease-out);
 	}
 
-	@keyframes fade-out-scale {
+	@keyframes -global-page-fade-out {
 		from {
 			opacity: 1;
-			transform: scale(1);
 		}
 		to {
 			opacity: 0;
-			transform: scale(0.95);
 		}
 	}
 
-	@keyframes fade-in-rise {
+	@keyframes -global-page-fade-in-rise {
 		from {
 			opacity: 0;
-			transform: translateY(20px);
+			transform: translateY(var(--rise-enter, 8px));
 		}
 		to {
 			opacity: 1;

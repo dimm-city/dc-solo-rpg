@@ -47,6 +47,7 @@
 			{disabled}
 			{testid}
 			class="step-button{busy ? ' busy' : ''}"
+			hint="Space"
 		>
 			<span class="label-stack" aria-hidden="true">
 				{#key label}

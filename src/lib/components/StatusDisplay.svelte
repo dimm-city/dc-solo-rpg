@@ -1,31 +1,22 @@
 <script>
 	/**
-	 * StatusDisplay - Main status display orchestrator
+	 * StatusDisplay - The in-game header and the status HUD
 	 *
-	 * Organizes all game status information using extracted components:
-	 * - PlayerInfoBar: Player info, game title, round, action buttons
-	 * - StatsGrid: Container with all stat panels
-	 * - ProgressTracker: Cards drawn progress
+	 * - PlayerInfoBar: player, game title, round and the header actions
+	 * - StatusHUD: Stability, Kings, Aces, tokens, cards and the last roll in one row
 	 *
-	 * Reduced from 2,006 lines → ~50 lines (97.5% reduction)
+	 * The whole block fades in once with the table (GameScreen); nothing in it slides.
 	 */
 
 	import PlayerInfoBar from './status/PlayerInfoBar.svelte';
-	import StatsGrid from './status/StatsGrid.svelte';
-	import ProgressTracker from './status/ProgressTracker.svelte';
+	import StatusHUD from './status/StatusHUD.svelte';
 
 	let { onHelpClick, onExitClick, onSettingsClick = () => {} } = $props();
 </script>
 
 <div class="status-display-container">
-	<!-- Player and Round Info Bar with Action Buttons -->
 	<PlayerInfoBar {onExitClick} {onHelpClick} {onSettingsClick} />
-
-	<!-- Stats Grid with all panels -->
-	<StatsGrid />
-
-	<!-- Cards Remaining Progress Tracker -->
-	<ProgressTracker />
+	<StatusHUD />
 </div>
 
 <style>
@@ -35,5 +26,16 @@
 		flex-direction: column;
 		gap: 0.5rem;
 		overflow: visible;
+	}
+
+	/* AN-05: the header's own slide-down played under the intro, unseen; the HUD block fades
+	   in as one piece instead. Without that animation Chromium paints the bar's backdrop-filter
+	   outside its clip-path (filled corners), and the blur re-ran under the moving background
+	   every frame anyway (it sits over a near-black table), so the bar drops it. */
+	.status-display-container > :global(.player-round-bar) {
+		animation: none;
+		opacity: 1;
+		backdrop-filter: none;
+		-webkit-backdrop-filter: none;
 	}
 </style>

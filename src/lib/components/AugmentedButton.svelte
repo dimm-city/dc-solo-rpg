@@ -27,6 +27,8 @@
 	// 	type?: 'button' | 'submit' | 'reset';
 	// 	/** Data test ID for testing */
 	// 	testid?: string;
+	// 	/** Keyboard shortcut shown as a key-cap inside the button on pointer devices, e.g. "Space" */
+	// 	hint?: string;
 	// }
 
 	let {
@@ -41,6 +43,7 @@
 		disabled = false,
 		type = 'button',
 		testid = undefined,
+		hint = undefined,
 		children = undefined
 	} = $props();
 </script>
@@ -82,13 +85,18 @@
 			{:else}
 				{text}
 			{/if}
+			{#if hint}
+				<!-- Decorative, pointer devices only. The text comes from CSS (attr), so the button's
+				     text and accessible name stay its label. -->
+				<span class="key-hint" data-hint={hint} aria-hidden="true"></span>
+			{/if}
 		</button>
 	{/if}
 </div>
 
 <style>
 	/* ============================================
-	   WRAPPER - Provides outer glow via drop-shadow
+	   WRAPPER - outer glow that follows the clipped shape (static: no loops)
 	   ============================================ */
 
 	.aug-button-wrapper {
@@ -101,18 +109,11 @@
 
 		/* Drop-shadow follows the clip-path of the child element */
 		filter: var(--glow-cta-secondary);
-		transition: filter var(--transition-base);
-
-		/* Performance optimization */
-		will-change: filter;
+		transition: filter var(--dur-state, 120ms) var(--ease-enter, ease-out);
 	}
 
 	.aug-button-wrapper.primary {
 		filter: var(--glow-cta-primary);
-	}
-
-	.aug-button-wrapper.secondary {
-		filter: var(--glow-cta-secondary);
 	}
 
 	.aug-button-wrapper:hover {
@@ -123,32 +124,20 @@
 		filter: var(--glow-cta-primary-hover);
 	}
 
-	/* Atmospheric glow background - creates volumetric lighting effect */
+	/* Atmospheric glow behind the button: a fixed soft halo, never animated */
 	.aug-button-wrapper::before {
 		content: '';
 		position: absolute;
 		inset: -32px;
 		background: var(--aug-atmosphere-secondary);
+		opacity: 0.5;
 		z-index: -1;
 		pointer-events: none;
-		animation: atmospheric-pulse 3s ease-in-out infinite;
 	}
 
 	.aug-button-wrapper.primary::before {
 		background: var(--aug-atmosphere-primary);
 		inset: -36px;
-	}
-
-	@keyframes atmospheric-pulse {
-		0%,
-		100% {
-			opacity: 0.4;
-			transform: scale(1);
-		}
-		50% {
-			opacity: 0.6;
-			transform: scale(1.03);
-		}
 	}
 
 	/* ============================================
@@ -164,13 +153,18 @@
 		--aug-br: var(--aug-clip-lg);
 		--aug-bl: var(--aug-clip-lg);
 
-		/* Layout & Typography - defaults for secondary */
-		display: inline-block;
+		/* Layout & Typography: the UI face (Inter 600, uppercase, 0.08em) */
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.75em;
 		padding: 0.75rem;
-		font-size: 1.25rem;
-		font-weight: 700;
+		font-family: var(--font-ui, var(--font-body, sans-serif));
+		font-size: 1.125rem;
+		font-weight: var(--font-ui-weight, 600);
+		line-height: 1.2;
 		text-transform: uppercase;
-		letter-spacing: var(--letter-spacing-wider);
+		letter-spacing: var(--tracking-ui, 0.08em);
 		color: var(--color-brand-yellow);
 		text-decoration: none;
 
@@ -180,17 +174,16 @@
 		border: none;
 		cursor: pointer;
 
-		/* Inner glow (box-shadow still useful for layering) */
+		/* Inner glow (static) */
 		box-shadow:
 			inset 0 0 8px rgba(255, 215, 0, 0.05),
 			0 0 8px rgba(0, 255, 255, 0.15);
 
-		/* Transitions */
+		/* State changes (hover, press, focus) use the 120ms token */
 		transition:
-			transform var(--transition-base),
-			box-shadow var(--transition-base),
-			filter var(--transition-base),
-			--aug-border-bg var(--transition-base);
+			transform var(--dur-state, 120ms) var(--ease-enter, ease-out),
+			box-shadow var(--dur-state, 120ms) var(--ease-enter, ease-out),
+			filter var(--dur-state, 120ms) var(--ease-enter, ease-out);
 
 		/* Position relative for stacking context */
 		position: relative;
@@ -211,68 +204,24 @@
 		pointer-events: none;
 	}
 
-	/* Primary variant - Yellow/Magenta animated gradient (color only) */
+	/* Primary variant: a fixed yellow-to-magenta gradient and a static glow */
 	.aug-button.primary {
-		/* Animated gradient background - Yellow to Magenta pulsing */
-		background: linear-gradient(
-			135deg,
-			var(--color-brand-yellow),
-			var(--color-cyber-magenta),
-			var(--color-brand-yellow)
-		);
-		background-size: 200% 200%;
-		animation: gradient-shift 3s ease-in-out infinite;
-
-		/* Enhanced glow animation */
-		animation:
-			gradient-shift 3s ease-in-out infinite,
-			primary-glow-pulse 2s ease-in-out infinite;
-		will-change: background-position, box-shadow;
+		background: linear-gradient(135deg, var(--color-brand-yellow), var(--color-cyber-magenta));
+		box-shadow:
+			inset 0 0 12px rgba(255, 215, 0, 0.2),
+			0 0 16px rgba(255, 215, 0, 0.25),
+			0 0 24px rgba(217, 70, 239, 0.2);
 
 		/* Color override for better contrast on gradient */
 		color: var(--color-bg-primary);
 	}
 
-	/* Gradient animation - smooth shifting background */
-	@keyframes gradient-shift {
-		0%,
-		100% {
-			background-position: 0% 50%;
-		}
-		50% {
-			background-position: 100% 50%;
-		}
-	}
-
-	/* Pulsing glow animation for primary CTA */
-	@keyframes primary-glow-pulse {
-		0%,
-		100% {
-			box-shadow:
-				inset 0 0 10px rgba(255, 215, 0, 0.15),
-				0 0 12px rgba(255, 215, 0, 0.2),
-				0 0 20px rgba(217, 70, 239, 0.15);
-		}
-		50% {
-			box-shadow:
-				inset 0 0 15px rgba(255, 215, 0, 0.25),
-				0 0 20px rgba(255, 215, 0, 0.3),
-				0 0 30px rgba(217, 70, 239, 0.25);
-		}
-	}
-
-	/* Hover state */
+	/* Hover: brighter, with a warmer border */
 	.aug-button:hover {
-		/* Enhance brightness and lift button */
 		filter: brightness(1.08);
-		/* transform: translateY(-3px); */
-
-		/* Enhance inner glow on hover */
 		box-shadow:
 			inset 0 0 12px rgba(255, 215, 0, 0.1),
 			0 0 12px rgba(0, 255, 255, 0.25);
-
-		/* Shift border to yellow-cyan gradient */
 		--aug-border-bg: linear-gradient(135deg, #ffd700, #00ffff);
 	}
 
@@ -280,15 +229,25 @@
 		transform: translateY(-2px);
 	}
 
-	/* Focus state: keyboard focus only. The button is clip-pathed, so an outline would be cut off;
-	   use a thick white augmented-ui border plus a cyan glow on the (unclipped) wrapper instead. */
+	/* Press */
+	.aug-button:active {
+		transform: translateY(1px);
+		filter: brightness(1.12);
+	}
+
+	/* Focus: keyboard focus only. The button is clip-pathed, so an outline would be cut off.
+	   Instead the augmented-ui border turns 3px white and an inner glow lights the inside of
+	   the frame (both inside the clip), with a cyan halo on the unclipped wrapper. */
 	.aug-button:focus {
 		outline: none;
 	}
 
 	.aug-button:focus-visible {
-		--aug-border-all: 6px;
+		--aug-border-all: 3px;
 		--aug-border-bg: #ffffff;
+		box-shadow:
+			inset 0 0 0 2px rgba(255, 255, 255, 0.35),
+			inset 0 0 18px rgba(255, 255, 255, 0.45);
 	}
 
 	.aug-button-wrapper:has(.aug-button:focus-visible),
@@ -296,10 +255,34 @@
 		filter: drop-shadow(0 0 3px var(--color-neon-cyan)) drop-shadow(0 0 12px var(--color-neon-cyan));
 	}
 
-	/* Active state - pressed feeling */
-	.aug-button:active {
-		transform: translateY(-1px);
-		filter: brightness(1.1);
+	/* ============================================
+	   KEY-CAP HINT - "Space" inside the button, pointer devices only
+	   ============================================ */
+
+	.key-hint {
+		display: none;
+		flex: none;
+		padding: 0.15em 0.45em;
+		border: 1px solid currentColor;
+		border-radius: 4px;
+		font-family: var(--font-ui, var(--font-body, sans-serif));
+		font-size: 0.6875rem; /* 11px */
+		font-weight: 600;
+		line-height: 1.2;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		opacity: 0.75;
+		background: rgba(0, 0, 0, 0.18);
+	}
+
+	.key-hint::before {
+		content: attr(data-hint);
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.key-hint {
+			display: inline-block;
+		}
 	}
 
 	/* ============================================
@@ -308,15 +291,13 @@
 
 	@media (max-width: 768px) {
 		.aug-button-wrapper {
-			/* Reduce glow intensity on mobile for battery performance */
+			/* Lighter glow on phones */
 			filter: drop-shadow(0 0 6px rgba(217, 70, 239, 0.3))
 				drop-shadow(0 0 12px rgba(217, 70, 239, 0.2));
 		}
 
 		.aug-button-wrapper::before {
-			/* Reduce atmospheric glow on mobile */
 			inset: -16px;
-			animation: none; /* Disable animation on mobile */
 		}
 
 		.aug-button-wrapper.primary::before {
@@ -329,20 +310,16 @@
 		}
 	}
 
-	/* Reduced motion accessibility */
+	/* Reduced motion: no movement on hover or press */
 	@media (prefers-reduced-motion: reduce) {
 		.aug-button-wrapper,
-		.aug-button-wrapper::before,
-		.aug-button,
-		.aug-button.primary {
-			animation: none !important;
-			transition-duration: 0.01ms !important;
+		.aug-button {
+			transition: none;
 		}
-
-		/* Provide static gradient for primary when animations are disabled */
-		.aug-button.primary {
-			background: linear-gradient(135deg, var(--color-brand-yellow), var(--color-cyber-magenta));
-			background-size: 100% 100%;
+		.aug-button:hover,
+		.aug-button.primary:hover,
+		.aug-button:active {
+			transform: none;
 		}
 	}
 

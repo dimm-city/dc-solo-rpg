@@ -181,7 +181,7 @@ lose-message: Defeat message
 - `GameScreen.svelte` - Main game play screen
 - `IntroScreen.svelte` - Game introduction
 - `CardDeck.svelte` - Card drawing interface
-- `StatusDisplay.svelte` - Game statistics display
+- `StatusDisplay.svelte` - In-game header plus the one-row HUD (`status/StatusHUD.svelte`)
 - `ThreeJSDiceBoxRoller.svelte` - 3D dice rolling (uses @3d-dice/dice-box-threejs)
 
 **Component Pattern:**
@@ -480,32 +480,40 @@ describe('My Feature', () => {
 
 ## Animation Patterns & Best Practices (Phase 2 Learnings)
 
-### Animation Constants System
+### Animation Constants System (the standard)
 
-**Key File:** `src/lib/constants/animations.js`
+**Key File:** `src/lib/constants/animations.js`, the one token set for JS and CSS.
+`animationTokensCss()` renders the same values as custom properties on `:root` (from
+`src/routes/+layout.svelte`); `styles.css` defines no motion numbers of its own.
 
-All animations use centralized constants to ensure consistency:
+| JS (`ANIMATION_DURATION`) | CSS                    | Value   | Use                                 |
+| ------------------------- | ---------------------- | ------- | ----------------------------------- |
+| `STATE` (= `FAST`)        | `--dur-state`          | 120ms   | Hover, press, chip or label change  |
+| `ENTER` (= `NORMAL`)      | `--dur-enter`          | 200ms   | Enter/exit, screen and page swaps   |
+| `OVERLAY` (= `SLOW`)      | `--dur-overlay`        | 300ms   | A dialog or overlay opening         |
+| `BEAT`                    | `--dur-beat`           | 400ms   | A held moment (King ignite, unlock) |
+| `SEQUENCE_MAX`            | `--dur-sequence-max`   | 1.5s    | Longest staged sequence             |
+| `AMBIENT`, `AMBIENT_SLOW` | `--dur-ambient(-slow)` | 4s / 8s | The only ambient loop periods       |
 
 ```javascript
 import { ANIMATION_DURATION, ANIMATION_EASING, Z_INDEX } from '$lib/constants/animations.js';
 
-// In Svelte transitions
-in:fade={{ duration: ANIMATION_DURATION.NORMAL }} // 200ms
-in:scale={{ duration: ANIMATION_DURATION.SLOW, easing: cubicOut }} // 300ms
+in:fade={{ duration: ANIMATION_DURATION.ENTER }} // 200ms
 ```
 
-**29 Constants Available:**
+```css
+transition: transform var(--dur-state) var(--ease-enter); /* 120ms state change */
+```
 
-- **Durations**: FAST (150ms), NORMAL (200ms), SLOW (300ms), CARD_DISMISS (600ms), etc.
-- **Easing**: MECHANICAL, EASE_OUT, CUBIC_OUT, QUINT_OUT, etc.
+- **Easing**: `--ease-enter` (cubic out) for entering, `--ease-exit` (cubic in) for leaving;
+  `ANIMATION_EASING` keeps MECHANICAL, EASE_OUT, CUBIC_OUT, CUBIC_IN, QUINT_OUT
+- **Distance**: an entering element rises at most 8px (`--rise-enter`)
+- **Loops**: at most one ambient loop per screen (the `NeuralBackground` motes), paused under
+  overlays, in hidden tabs and under reduced motion; CTA glows are static. Alert loops (critical
+  Stability, lit Kings) are the only other loops.
+- **Older names** (`FAST`, `NORMAL`, `SLOW`, `CARD_DISMISS`, `DICE_*`, `--transition-*`,
+  `--anim-*`) still work; never rename or remove an export.
 - **Z-Index**: BACKGROUND, CONTENT, STATUS_DISPLAY, FOG_OVERLAY, MODAL, DICE_ROLLING, etc.
-
-**Benefits:**
-
-- No magic numbers
-- Consistent timing across application
-- Easy to adjust globally
-- Self-documenting code
 
 ### Sequential Animation Pattern
 
@@ -628,7 +636,7 @@ const [send, receive] = crossfade({
 
 - ✅ Use: `cubic-bezier(0.4, 0, 0.6, 1)`, `ease-out`, `cubic-out`
 - ❌ Avoid: Bounce, spring, elastic effects
-- ⏱️ Timing: 150-300ms for most transitions, up to 600ms for card dismissal
+- ⏱️ Timing: 120ms state, 200ms enter/exit, 300ms overlay, 400ms beat, 1.5s max sequence
 
 **Performance:**
 
@@ -644,7 +652,8 @@ const [send, receive] = crossfade({
 
 ### Animation Style Guide
 
-**Complete documentation:** `docs/animation-style-guide.md` (1,606 lines)
+**Complete documentation:** `docs/animation-style-guide.md` (the v2 table at the top is the
+standard)
 
 Covers:
 
