@@ -765,12 +765,14 @@
 	}
 
 	/* Auto-play hold: a thin line along the bottom edge, shrinking from the right */
+	/* Inside the frame (the augmented-ui border covers the edge), clear of the clipped corners */
 	.hold-line {
 		position: absolute;
-		left: 0;
-		right: 0;
-		bottom: 0;
+		left: 18px;
+		right: 18px;
+		bottom: 5px;
 		height: 3px;
+		border-radius: 2px;
 		background: var(--card-accent);
 		transform-origin: left center;
 		pointer-events: none;
