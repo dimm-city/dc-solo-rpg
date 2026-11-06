@@ -7,7 +7,7 @@ restart. Branch: `claude/vibrant-curie-w9bn88`.
 ## Status
 
 - Started: 2026-11-06, against `main` at 17b967d (PR #50 merged).
-- Current phase: review complete; fix round in progress (see **Fix round**).
+- Current phase: fix round complete and merged (see **Fix round**); owner decisions pending.
 - Last section completed: Recommendations (all coverage items done).
 
 ## How to resume after a restart
@@ -1261,17 +1261,62 @@ and checked against the captures. "Observed" is from the 10fps sheets (swiftshad
 **Teams.** Each team works on its own branch (`ux/<team>`, local worktrees, merged into
 `claude/vibrant-curie-w9bn88` by the lead):
 
-| Team                                  | Findings                                                                                                                         | Status  |
-| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| T1 Rules, rolls and round flow        | LS-01–07, GS-01–03, RF-01–03, RF-05, CK-01 (result lines), CK-02–04, MN-02, RC-02, AC-03 (tab order), AC-04, AC-05, AN-02, VP-03 | merged  |
-| T2 Card, overlays, journal and ending | AN-01, AN-04, RF-04, CK-01 (card face), AC-01, AC-02, JR-01–04, VP-04, EN-01–04, MN-03, MN-05, VP-01 (card, journal, Game Over)  | merged  |
-| T3 Home, pages, menus and settings    | ST-01–05, MN-01, MN-04, MN-06, HM-01–07, JR-05, RC-03, AN-06 (home and splash)                                                   | running |
-| T4 HUD, layout and visual system      | HD-01–04, VP-01, VP-02, RC-01, AN-03, AN-05, AN-06 (navigation), AC-03 (focus ring), MN-07, animation tokens, self-hosted fonts  | merged  |
-| T5 Story                              | SM-01–05 (merged at 0b17fb6; the beta refusal fallback was removed after review)                                                 | merged  |
+| Team                                  | Findings                                                                                                                         | Status |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| T1 Rules, rolls and round flow        | LS-01–07, GS-01–03, RF-01–03, RF-05, CK-01 (result lines), CK-02–04, MN-02, RC-02, AC-03 (tab order), AC-04, AC-05, AN-02, VP-03 | merged |
+| T2 Card, overlays, journal and ending | AN-01, AN-04, RF-04, CK-01 (card face), AC-01, AC-02, JR-01–04, VP-04, EN-01–04, MN-03, MN-05, VP-01 (card, journal, Game Over)  | merged |
+| T3 Home, pages, menus and settings    | ST-01–05, MN-01, MN-04, MN-06, HM-01–07, JR-05, RC-03, AN-06 (home and splash)                                                   | merged |
+| T4 HUD, layout and visual system      | HD-01–04, VP-01, VP-02, RC-01, AN-03, AN-05, AN-06 (navigation), AC-03 (focus ring), MN-07, animation tokens, self-hosted fonts  | merged |
+| T5 Story                              | SM-01–05 (merged at 0b17fb6; the beta refusal fallback was removed after review)                                                 | merged |
 
-Team worktrees live in `/home/user/dc-solo-rpg-wt/<team>`. They survived one container restart, and
-the teams were resumed. Merged work is on `claude/vibrant-curie-w9bn88`. If a worktree is ever lost,
-re-dispatch any team whose status above is not "merged".
+All five teams are merged. Their worktrees and local branches have been removed.
+
+**Integration fixes by the lead:**
+
+- **Merge conflicts.** `GameScreen` (T1 vs T4) kept T1's flow and dropped the keyboard-hint
+  toast, with T4's "Space" key-cap on the step button instead. `useRuleCaptions` keeps T1's
+  pause-under-overlays and T3's rule-tips switch. The confirmation spec uses T3's copy on T2's
+  dialog.
+- **VP-01.** The landscape button column is now `.step-slot` (T1's persistent slot had broken
+  T4's rule).
+- **Header.** Its backdrop blur is gone (T4's override no longer matched T3's rewritten header;
+  the production build painted filled corners).
+- **Cleanup.** The unused `variant="danger"` prop is dropped, and so is the beta refusal fallback
+  in the story summary.
+
+**Verification on the merged branch:**
+
+- **Static checks.** Vitest 785 passed, 1 skipped. ESLint and Prettier are clean. svelte-check
+  reports 0 errors and 0 warnings. The build passes (publint "All good").
+- **Playwright.** The full suite ran on the three projects: 427 passed, 5 skipped by design, 0
+  failed.
+- **Full games on the production build.** Desktop at 1440x900: 9 journal entries, through the
+  final log to the Story Library, 0 console errors. iPhone 13: 11 journal entries to the Story
+  Library, 1 console error (a SvelteKit navigation fetch that was cut off, mobile only, not yet
+  traced).
+
+**Not done as written:**
+
+- **RF-01, partly.** A round is about 8 inputs before Salvation unlocks and about 10 after (it was
+  about 12). Reaching 8 needs results that move on by themselves; that waits on the owner.
+- **EN-01.** The fourth-King flare is staged on the card's own King pips. The HUD's skulls sit
+  under the card overlay's scrim.
+- **SM-05.** The dialog-title clamp was not applied: phone dialog titles are Inter 18px (MN-07)
+  instead.
+- **SM-02.** The OpenAI default (`gpt-5-mini`) is unverified; openai.com is blocked here. The
+  model is a free-text field, and "Test key" checks it.
+
+**Open decisions for the owner:**
+
+1. **Auto-advance results.** Should Stability and Salvation results move on by themselves after
+   a beat, which would reach 8 inputs?
+2. **2d20 naturals.** Should a 20 or 1 on the dropped die also trigger Lucid or Surreal?
+   Currently only the kept die does.
+3. **Four Aces.** The automatic Salvation throws no die, so it neither uses nor earns a modifier.
+   This is assumed right.
+4. **Story deletion.** The Story Library now has a Delete action, which it never had. Keep it?
+5. **Rule tips.** "Rules you've met" records a tip when it is queued. Tips fire once per game.
+   Should they fire once ever?
 
 ## Recommendations
 
