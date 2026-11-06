@@ -1,116 +1,88 @@
 import { logger } from '../utils/logger.js';
 
 /**
- * useEnrichedRounds - Process saved game data into enriched rounds
+ * useEnrichedRounds - Turn a saved game into the rounds story mode reads
  *
- * Takes a saved game object and transforms it into an array of enriched rounds,
- * merging card log data with journal entries and adding game state snapshots.
+ * Groups the card log by round and attaches the round's journal entry. Each round also gets
+ * the state at its END (`endState`): a card's snapshot is taken when it is drawn, before its
+ * effect, so the end of a round is the first snapshot of the next round, and the end of the
+ * last round is the saved final state. (Using the last card's snapshot showed the final round
+ * one King short and the last Stability loss missing.)
  *
- * @param {Object} savedGame - The complete saved game object
- * @returns {Array} Array of enriched round objects with cards, journal, and game state
- *
- * @example
- * const enrichedRounds = useEnrichedRounds(savedGame);
- * enrichedRounds.forEach(round => {
- *   logger.debug(round.roundNumber, round.cards, round.journalEntry);
- * });
+ * @param {Object} savedGame - A completed save (see indexedDBStorage)
+ * @returns {Array<{
+ *   roundNumber: number,
+ *   cards: Array<Object>,
+ *   journalEntry: {text: string, audio: string|null} | null,
+ *   endState: {tower: number, kingsRevealed: number, acesRevealed: number, tokens: number, aceOfHeartsRevealed: boolean},
+ *   gameOverMessage: string|null,
+ *   isWon: boolean
+ * }>}
  */
 export function useEnrichedRounds(savedGame) {
 	if (!savedGame?.cardLog) return [];
 
-	const cardLog = savedGame.cardLog;
 	const journalEntries = savedGame.journalEntries || [];
 
-	logger.debug('[useEnrichedRounds] Processing saved game:', {
-		totalCards: cardLog.length,
-		totalJournals: journalEntries.length,
-		journalRounds: journalEntries.map((j) => j.round),
-		fullJournalData: journalEntries
-	});
-
-	// Log each journal entry in detail
-	journalEntries.forEach((j, idx) => {
-		logger.debug(`[useEnrichedRounds] Journal ${idx}:`, {
-			round: j.round,
-			hasText: !!j.text,
-			textLength: j.text?.length || 0,
-			textPreview: j.text?.substring(0, 30) || '(empty)',
-			hasAudio: !!j.audioData,
-			dateRecorded: j.dateRecorded
-		});
-	});
-
-	// Filter out non-card entries (like 'initial-damage', 'final-damage')
-	const cardEntries = cardLog.filter(
-		(entry) => entry.type !== 'initial-damage' && entry.type !== 'final-damage'
+	// Cards only: the log also holds roll entries such as the opening 'initial-damage'
+	const cardEntries = savedGame.cardLog.filter(
+		(entry) => entry.card && entry.type !== 'initial-damage' && entry.type !== 'final-damage'
 	);
 
-	// Group cards by round number
 	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- throwaway local, not reactive state
 	const roundsMap = new Map();
-	for (const cardEntry of cardEntries) {
-		const roundNum = cardEntry.round;
-		if (!roundsMap.has(roundNum)) {
-			roundsMap.set(roundNum, []);
-		}
-		roundsMap.get(roundNum).push(cardEntry);
+	for (const entry of cardEntries) {
+		if (!roundsMap.has(entry.round)) roundsMap.set(entry.round, []);
+		roundsMap.get(entry.round).push(entry);
 	}
 
-	// Get win/lose message from game config
 	const winMessage = savedGame.config?.['win-message'] || savedGame.config?.winMessage;
 	const loseMessage = savedGame.config?.['lose-message'] || savedGame.config?.loseMessage;
 	const gameOverMessage = savedGame.isWon ? winMessage : loseMessage;
 
-	// Convert map to array of round objects
-	const rounds = Array.from(roundsMap.entries())
-		.sort((a, b) => a[0] - b[0]) // Sort by round number
-		.map(([roundNum, cards], index, array) => {
-			// Find journal entry for this round
-			const journalEntry = journalEntries.find((j) => j.round === roundNum);
+	const finalState = {
+		tower: savedGame.finalTower ?? savedGame.tower,
+		kingsRevealed: savedGame.kingsRevealed ?? cardEntries.filter((c) => c.card === 'K').length,
+		acesRevealed: savedGame.acesRevealed ?? cardEntries.filter((c) => c.card === 'A').length,
+		tokens: savedGame.tokens,
+		aceOfHeartsRevealed:
+			savedGame.aceOfHeartsRevealed ??
+			cardEntries.some((c) => c.card === 'A' && c.suit === 'hearts')
+	};
 
-			logger.debug(`[useEnrichedRounds] Round ${roundNum}:`, {
-				cardCount: cards.length,
-				hasJournal: !!journalEntry,
-				journalText: journalEntry?.text?.substring(0, 50)
-			});
+	const ordered = Array.from(roundsMap.entries()).sort((a, b) => a[0] - b[0]);
 
-			// Get game state from the last card in the round (most recent state)
-			const lastCard = cards[cards.length - 1];
+	const rounds = ordered.map(([roundNumber, cards], index) => {
+		const entry = journalEntries.find((j) => j.round === roundNumber);
+		const text = entry?.text?.trim() ? entry.text : '';
+		const audio = entry?.audioData || null;
+		const next = ordered[index + 1];
+		const isFinalRound = !next;
 
-			// Check if this is the final round
-			const isFinalRound = index === array.length - 1;
+		return {
+			roundNumber,
+			cards: cards.map((card) => ({
+				card: card.card,
+				suit: card.suit,
+				type: card.type,
+				modifier: card.modifier,
+				description: card.description,
+				story: card.story,
+				diceRoll: card.diceRoll,
+				damageDealt: card.damageDealt
+			})),
+			journalEntry: text || audio ? { text, audio } : null,
+			endState: isFinalRound ? finalState : (next[1][0].gameState ?? null),
+			gameOverMessage: isFinalRound ? gameOverMessage || null : null,
+			isWon: !!savedGame.isWon
+		};
+	});
 
-			return {
-				roundNumber: roundNum,
-				cards: cards.map((cardEntry) => ({
-					card: cardEntry.card,
-					suit: cardEntry.suit,
-					type: cardEntry.type,
-					modifier: cardEntry.modifier,
-					description: cardEntry.description,
-					story: cardEntry.story,
-					damageRoll: cardEntry.damageRoll,
-					damageDealt: cardEntry.damageDealt
-				})),
-				journalEntry: journalEntry
-					? {
-							text: journalEntry.text,
-							audio: journalEntry.audioData
-						}
-					: null,
-				gameState: lastCard.gameState || {
-					tower: 'N/A',
-					tokens: 'N/A',
-					bonus: 0,
-					kingsRevealed: 0,
-					aceOfHeartsRevealed: false
-				},
-				// Add game over message to final round
-				gameOverMessage: isFinalRound ? gameOverMessage : null,
-				isWon: savedGame.isWon
-			};
-		});
-
-	logger.debug('[useEnrichedRounds] Total enriched rounds:', rounds.length);
+	logger.debug(
+		'[useEnrichedRounds] Rounds:',
+		rounds.length,
+		'journal entries:',
+		journalEntries.length
+	);
 	return rounds;
 }

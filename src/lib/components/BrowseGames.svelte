@@ -126,8 +126,10 @@
 	.browse-games {
 		display: flex;
 		flex-direction: column;
-		min-height: 100vh;
-		min-height: 100dvh;
+		/* Its own full-page scroller (the page body does not scroll). Absolute, so the library and
+		   story mode overlap while one fades out and the other in, instead of stacking */
+		position: absolute;
+		inset: 0;
 		background: linear-gradient(
 			180deg,
 			rgba(10, 10, 10, 0.95),
@@ -197,7 +199,7 @@
 		line-height: 1.15;
 		color: var(--color-cyber-magenta);
 		text-shadow: 0 0 20px rgba(217, 70, 239, 0.5);
-		overflow-wrap: anywhere;
+		overflow-wrap: break-word;
 	}
 
 	.subtitle {
@@ -322,14 +324,18 @@
 			gap: var(--space-md);
 		}
 
-		/* Back and title on one row, the sort control under them at its own width */
+		/* Back and the sort control share the top row; the title gets the full width */
 		.browse-header {
 			grid-template-columns: auto minmax(0, 1fr);
 		}
 
 		.browse-header :global(.sort-controls) {
-			grid-column: 1 / -1;
-			justify-self: start;
+			grid-area: 1 / 2;
+			justify-self: end;
+		}
+
+		.title-section {
+			grid-area: 2 / 1 / 3 / 3;
 		}
 
 		.back-button {
