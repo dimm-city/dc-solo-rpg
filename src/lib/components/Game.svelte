@@ -150,8 +150,9 @@
 		}
 	}
 
+	/* Enter: the 200ms token with an ease-out (was 350ms ease-in) */
 	:global(.dc-fade-in) {
-		animation: fadeIn 350ms ease-in;
+		animation: fadeIn var(--dur-enter, 200ms) var(--ease-enter, ease-out);
 	}
 
 	/* Allow overflow on mobile for toolbar elements to appear above toolbar */

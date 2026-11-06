@@ -126,23 +126,10 @@
 	--shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
 	--shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
 
-	/* === TRANSITIONS === */
-	--transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-	--transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
-	--transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
-
-	/* === SCREEN TRANSITION ANIMATION DURATIONS === */
-	--anim-instant: 0.1s;
-	--anim-fast: 0.3s;
-	--anim-normal: 0.5s;
-	--anim-slow: 0.8s;
-	--anim-very-slow: 1.2s;
-
-	/* === EASING FUNCTIONS FOR SCREEN TRANSITIONS === */
-	--ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
-	--ease-smooth: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-	--ease-out: cubic-bezier(0.215, 0.61, 0.355, 1);
-	--ease-in-out: cubic-bezier(0.645, 0.045, 0.355, 1);
+	/* === MOTION ===
+	   Durations and easings (--dur-*, --ease-*, and the older --transition-* and --anim-*
+	   names) come from src/lib/constants/animations.js, rendered on :root by +layout.svelte.
+	   Do not define motion numbers here. */
 
 	/* === AUGMENTED UI SIZES === */
 	--aug-clip-xs: 8px;
@@ -563,18 +550,6 @@ body::before {
 	z-index: 9999;
 }
 
-/* Subtle glow animation for interactive elements */
-@keyframes glow-pulse {
-	0%,
-	100% {
-		box-shadow: 0 0 8px rgba(217, 70, 239, 0.3);
-	}
-
-	50% {
-		box-shadow: 0 0 16px rgba(217, 70, 239, 0.5);
-	}
-}
-
 /* Add subtle glow to form containers */
 .form-container::after {
 	content: '';
@@ -630,54 +605,6 @@ body::before {
 	*::after {
 		animation-duration: 0.01ms !important;
 		animation-iteration-count: 1 !important;
-		transition-duration: 0.01ms !important;
-	}
-}
-
-/* ============================================
-   SCREEN TRANSITIONS
-   Creating breathing room between game states
-   ============================================ */
-
-/* Exit animation - screen fades out and scales down slightly */
-.screen-transition-out {
-	animation: fade-out-scale var(--anim-fast) var(--ease-out) forwards;
-}
-
-@keyframes fade-out-scale {
-	0% {
-		opacity: 1;
-		transform: scale(1);
-	}
-
-	100% {
-		opacity: 0;
-		transform: scale(0.95);
-	}
-}
-
-/* Enter animation - screen fades in and rises up */
-.screen-transition-in {
-	animation: fade-in-rise var(--anim-normal) var(--ease-out) forwards;
-}
-
-@keyframes fade-in-rise {
-	0% {
-		opacity: 0;
-		transform: translateY(20px);
-	}
-
-	100% {
-		opacity: 1;
-		transform: translateY(0);
-	}
-}
-
-/* Respect reduced motion preferences - override all screen transitions */
-@media (prefers-reduced-motion: reduce) {
-	.screen-transition-out,
-	.screen-transition-in {
-		animation: none !important;
 		transition-duration: 0.01ms !important;
 	}
 }

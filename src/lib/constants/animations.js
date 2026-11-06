@@ -1,20 +1,58 @@
 /**
- * Animation duration constants (in milliseconds)
- * All values follow the mechanical/ethereal aesthetic established in Phase 1
+ * The animation standard: one token set for JS and CSS.
  *
- * @see docs/animation-style-guide.md for usage guidelines
+ * `animationTokensCss()` writes the same values as CSS custom properties on :root
+ * (rendered in the head by src/routes/+layout.svelte), so components never define
+ * their own numbers. Use the `--dur-*` and `--ease-*` properties in CSS and these
+ * constants in JS.
+ *
+ * - 120ms state change: hover, press, a chip or a label changing
+ * - 200ms enter or exit: anything appearing or leaving (fade plus at most an 8px move)
+ * - 300ms overlay: a dialog or overlay opening
+ * - 400ms beat: a held moment (a King igniting, Salvation unlocking)
+ * - 1.5s maximum for any staged sequence
+ * - ambient loops at 4s or 8s only, at most one per screen, paused when covered,
+ *   when the tab is hidden and under reduced motion
+ *
+ * Alert loops (critical Stability, lit Kings) are not ambient: their speed carries the
+ * urgency. They stop under reduced motion too.
+ *
+ * @see docs/animation-style-guide.md
  */
 export const ANIMATION_DURATION = {
-	/** Fast transitions (150ms) - Quick interactions, button hovers */
-	FAST: 150,
+	/** State change (120ms): hover, press, chip, label swap */
+	STATE: 120,
 
-	/** Normal transitions (200ms) - Standard modal, fade transitions */
+	/** Enter or exit (200ms): fades, rises, screen swaps */
+	ENTER: 200,
+
+	/** Overlay (300ms): a dialog or overlay opening */
+	OVERLAY: 300,
+
+	/** Beat (400ms): a held moment, e.g. a King igniting */
+	BEAT: 400,
+
+	/** The longest any staged sequence may run (1.5s) */
+	SEQUENCE_MAX: 1500,
+
+	/** Ambient loop period (4s) */
+	AMBIENT: 4000,
+
+	/** Slow ambient loop period (8s) */
+	AMBIENT_SLOW: 8000,
+
+	// Older names, kept for existing callers. Their values follow the standard above.
+
+	/** Fast transitions (120ms, = STATE) */
+	FAST: 120,
+
+	/** Normal transitions (200ms, = ENTER) */
 	NORMAL: 200,
 
-	/** Slow transitions (300ms) - Page transitions, major state changes */
+	/** Slow transitions (300ms, = OVERLAY) */
 	SLOW: 300,
 
-	/** Card dismiss sequence (600ms) - Card fade-out before state change */
+	/** Card dismiss sequence (600ms) - owned by the card; the standard asks for 220ms */
 	CARD_DISMISS: 600,
 
 	/** Dice fade (250ms) - Dice fade-out with scale */
@@ -44,14 +82,22 @@ export const ANIMATION_EASING = {
 	/** Standard ease-in - Smooth acceleration */
 	EASE_IN: 'ease-in',
 
-	/** Linear - Constant speed, no easing */
+	/** Linear - Constant speed, no easing (progress bars only) */
 	LINEAR: 'linear',
 
-	/** Cubic out - Used for modal scale transitions */
+	/** Cubic out - Entering: modal scale, fades and rises */
 	CUBIC_OUT: 'cubic-bezier(0.33, 1, 0.68, 1)',
+
+	/** Cubic in - Leaving: dismissals and exits */
+	CUBIC_IN: 'cubic-bezier(0.32, 0, 0.67, 0)',
 
 	/** Quint out - Smooth deceleration for upward motion */
 	QUINT_OUT: 'cubic-bezier(0.22, 1, 0.36, 1)'
+};
+
+/** Distance for an enter or exit move: a rise of at most 8px */
+export const ANIMATION_DISTANCE = {
+	RISE: 8
 };
 
 /**
@@ -80,3 +126,48 @@ export const Z_INDEX = {
 	/** Dice behind content (after fade) */
 	DICE_HIDDEN: -10
 };
+
+const ms = (value) => `${value}ms`;
+
+/**
+ * The tokens as CSS custom properties. The older `--transition-*` and `--anim-*` names
+ * map onto the same values, so no stylesheet defines a second set of numbers.
+ * @returns {Record<string, string>}
+ */
+export function animationCssVariables() {
+	const d = ANIMATION_DURATION;
+	const e = ANIMATION_EASING;
+	return {
+		'--dur-state': ms(d.STATE),
+		'--dur-enter': ms(d.ENTER),
+		'--dur-overlay': ms(d.OVERLAY),
+		'--dur-beat': ms(d.BEAT),
+		'--dur-sequence-max': ms(d.SEQUENCE_MAX),
+		'--dur-ambient': ms(d.AMBIENT),
+		'--dur-ambient-slow': ms(d.AMBIENT_SLOW),
+		'--ease-enter': e.CUBIC_OUT,
+		'--ease-exit': e.CUBIC_IN,
+		'--ease-mechanical': e.MECHANICAL,
+		'--rise-enter': `${ANIMATION_DISTANCE.RISE}px`,
+		// Older names
+		'--transition-fast': `${ms(d.STATE)} ${e.CUBIC_OUT}`,
+		'--transition-base': `${ms(d.ENTER)} ${e.CUBIC_OUT}`,
+		'--transition-slow': `${ms(d.OVERLAY)} ${e.CUBIC_OUT}`,
+		'--anim-instant': ms(d.STATE),
+		'--anim-fast': ms(d.ENTER),
+		'--anim-normal': ms(d.OVERLAY),
+		'--anim-slow': ms(d.BEAT),
+		'--ease-out': e.CUBIC_OUT
+	};
+}
+
+/**
+ * A `:root { ... }` rule declaring every animation custom property.
+ * @returns {string}
+ */
+export function animationTokensCss() {
+	const body = Object.entries(animationCssVariables())
+		.map(([name, value]) => `${name}:${value}`)
+		.join(';');
+	return `:root{${body}}`;
+}
