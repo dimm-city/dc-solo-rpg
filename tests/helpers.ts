@@ -45,18 +45,32 @@ export async function openContentModal(page: Page, menuItem: string) {
 }
 
 /**
+ * Press the round's step button. The button ignores presses for 400ms after it changes
+ * meaning (it is highlighted meanwhile, with the class `changed`), so wait for that first.
+ */
+export async function pressStep(page: Page, testid: string) {
+	const button = page.getByTestId(testid);
+	await expect(button).toBeEnabled();
+	await expect(page.locator('#step-action')).not.toHaveClass(/changed/);
+	await button.click();
+}
+
+/**
  * From the intro screen of a freshly opened game, click through the intro and the opening
- * instability roll until round 1 is ready to begin. The game autosaves on the way, so this
+ * instability roll until round 1 is ready to roll. The game autosaves on the way, so this
  * leaves an in-progress save behind.
  */
 export async function playToFirstRound(page: Page) {
 	await page.getByTestId('story-continue-button').click();
 
+	// Accessible names: the visible label crossfades, so old and new text overlap briefly
 	const initial = page.getByTestId('initial-damage-button');
-	await expect(initial).toHaveText('Roll for instability');
-	await initial.click();
-	await expect(initial).toHaveText('Continue');
-	await initial.click();
+	await expect(initial).toHaveAccessibleName('Roll for instability');
+	await pressStep(page, 'initial-damage-button');
+	await expect(initial).toHaveAccessibleName('Continue', { timeout: 30000 });
+	await pressStep(page, 'initial-damage-button');
 
-	await expect(page.getByTestId('start-round-button')).toHaveText('Begin Round 1');
+	// There is no Begin Round step: round 1 opens on Roll for Tasks, titled "Round 1"
+	await expect(page.getByTestId('roll-tasks-button')).toHaveAccessibleName('Roll for tasks');
+	await expect(page.getByRole('heading', { name: 'Round 1' })).toBeVisible();
 }
