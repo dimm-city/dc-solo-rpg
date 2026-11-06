@@ -21,10 +21,15 @@ async function openTable(page: Page) {
 
 /** Change the live game state (dev server only) */
 async function setState(page: Page, src: string) {
-	await page.evaluate(async (src) => {
-		const { gameState } = await import('/src/lib/stores/gameStore.svelte.js');
-		new Function('g', src)(gameState);
-	}, src);
+	// The store's dev-server URL, passed in so TypeScript does not try to resolve it
+	const store = '/src/lib/stores/gameStore.svelte.js';
+	await page.evaluate(
+		async ({ src, store }) => {
+			const { gameState } = await import(store);
+			new Function('g', src)(gameState);
+		},
+		{ src, store }
+	);
 }
 
 const CELLS = ['hud-stability', 'hud-kings', 'hud-aces', 'hud-tokens', 'hud-cards', 'hud-roll'];
