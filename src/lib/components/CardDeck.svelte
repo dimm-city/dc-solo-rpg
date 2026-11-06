@@ -1,4 +1,5 @@
 <script>
+	import { untrack } from 'svelte';
 	import { sleep } from '../utils/timing.js';
 	import { logger } from '../utils/logger.js';
 	import { gameState } from '../stores/gameStore.svelte.js';
@@ -122,6 +123,29 @@
 		stopHold();
 	}
 
+	function startAutoPlay(shown) {
+		const audioSettings = getAudioSettings();
+		const gameplaySettings = getGameplaySettings();
+
+		if (audioSettings.autoReadCards) {
+			speak(`${shown.description}. ${shown.story || ''}`).then(() => {
+				if (
+					gameplaySettings.autoContinueAfterReading &&
+					animationStage === 'revealed' &&
+					card === shown
+				) {
+					autoPlayCanceller = autoAdvance({
+						text: null,
+						shouldRead: false,
+						action: () => handleDismiss()
+					});
+				}
+			});
+		} else if (gameplaySettings.autoContinueAfterReading) {
+			startHold(getCardHoldMs(shown));
+		}
+	}
+
 	$effect(() => {
 		if (animationStage === 'revealed' && card) {
 			const cardId = `${card.card}-${card.suit}`;
@@ -130,27 +154,8 @@
 			if (cardId !== lastRevealedCardId) {
 				lastRevealedCardId = cardId;
 
-				const audioSettings = getAudioSettings();
-				const gameplaySettings = getGameplaySettings();
-				const shown = card;
-
-				if (audioSettings.autoReadCards) {
-					speak(`${card.description}. ${card.story || ''}`).then(() => {
-						if (
-							gameplaySettings.autoContinueAfterReading &&
-							animationStage === 'revealed' &&
-							card === shown
-						) {
-							autoPlayCanceller = autoAdvance({
-								text: null,
-								shouldRead: false,
-								action: () => handleDismiss()
-							});
-						}
-					});
-				} else if (gameplaySettings.autoContinueAfterReading) {
-					startHold(getCardHoldMs(card));
-				}
+				// Untracked: a settings change must not cancel this card's hold or re-read it
+				untrack(() => startAutoPlay(card));
 			}
 		} else if (animationStage !== 'revealed') {
 			// Reset when leaving revealed state (allows same card to be shown again later)

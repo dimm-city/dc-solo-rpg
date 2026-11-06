@@ -153,6 +153,7 @@
 <div
 	class="journal-sheet dc-journal-container"
 	class:final={isFinal}
+	class:won={isFinal && gameState.win}
 	class:saving
 	data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
 >
@@ -343,6 +344,10 @@
 	/* The ending: the frame takes the ending's colour */
 	.journal-sheet.final {
 		--aug-border-bg: linear-gradient(135deg, #ff2a6d, var(--color-cyber-magenta, #f0f));
+	}
+
+	.journal-sheet.final.won {
+		--aug-border-bg: linear-gradient(135deg, #ffe400, #00ff64);
 	}
 
 	/* Header */
