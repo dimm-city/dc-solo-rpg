@@ -19,10 +19,23 @@ let containerElement = $state(null);
  * Svelte 5 requires exported state to be objects (not reassigned primitives)
  */
 let diceState = $state({
+	/** Dice are on the table (the container is shown) */
 	isRolling: false,
 	/** The last completed roll ({ rolls, finalValue, isLucid, isSurreal }) so the HUD can show which die counted */
-	lastRoll: null
+	lastRoll: null,
+	/** Reduced motion (or no 3D dice): the roll shown as numbers in a d20 outline, { rolls, kept } */
+	staticRoll: null
 });
+
+/** How long every die must stay at rest before the roll resolves */
+export const SETTLE_HOLD_MS = 150;
+/** Reduced motion: how long the number is shown before the result line */
+export const STATIC_ROLL_MS = 600;
+
+/** The roll in flight: skip() jumps it to its result */
+let activeRoll = null;
+/** Counts rolls, so a finished roll's fade-out never hides the next roll's dice */
+let rollCount = 0;
 
 /**
  * Export diceState for reactive access in components
@@ -178,81 +191,212 @@ export function resetDiceBox() {
 }
 
 /**
+ * The values of every die in a dice-box result. dice-box-threejs returns them per set:
+ * `{ notation, sets: [{ num, type, rolls: [{ value, ... }], total }], modifier, total }`.
+ * @param {object} result - What `diceBox.roll()` resolves with
+ * @returns {number[]}
+ */
+export function readDiceValues(result) {
+	if (!Array.isArray(result?.sets)) return [];
+	return result.sets
+		.flatMap((set) => (set.rolls ?? []).map((die) => die.value))
+		.filter((value) => Number.isFinite(value));
+}
+
+/** The die that counts: the higher when Lucid, the lower when Surreal */
+function keptValue(rolls, { isLucid, isSurreal }) {
+	if (rolls.length === 2 && isLucid) return Math.max(...rolls);
+	if (rolls.length === 2 && isSurreal) return Math.min(...rolls);
+	return rolls[0];
+}
+
+/**
+ * The faces to force: the dice the game already rolled, or, for a bare value, a second die
+ * that keeps the value the kept one.
+ */
+function presetDice(value, { isLucid, isSurreal, dice }) {
+	if (Array.isArray(dice) && dice.length === (isLucid || isSurreal ? 2 : 1)) return dice;
+	if (!value) return null;
+	if (isLucid) return [value, randomInt(1, value)];
+	if (isSurreal) return [value, randomInt(value, 20)];
+	return [value];
+}
+
+function prefersReducedMotion() {
+	return (
+		typeof window !== 'undefined' &&
+		window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true
+	);
+}
+
+/** Every die has stopped (cannon's SLEEPY or SLEEPING: below its speed limit) */
+function diceAtRest(box) {
+	const dice = box.diceList ?? [];
+	return dice.length > 0 && dice.every((die) => die.body && die.body.sleepState >= 1);
+}
+
+/**
+ * Jump a throw to its end: step the physics until every die has landed (as dice-box itself
+ * does, silently), then draw that frame. The faces are the forced ones, so nothing changes
+ * but the time. dice-box's own next frame then finishes the roll.
+ */
+function fastForward(box) {
+	const animstate = box.animstate;
+	box.animstate = 'simulate'; // dice-box plays no collision sounds while simulating
+	try {
+		const limit = (box.iterationLimit ?? 1000) + 1;
+		while (!box.throwFinished() && box.iteration <= limit) {
+			box.world.step(box.framerate);
+			box.iteration += 1;
+		}
+		for (const die of box.diceList) {
+			if (!die.body) continue;
+			die.position.copy(die.body.position);
+			die.quaternion.copy(die.body.quaternion);
+		}
+		box.renderer?.render(box.scene, box.camera);
+	} finally {
+		box.animstate = animstate;
+	}
+}
+
+/**
+ * Throw the 3D dice. Resolves as soon as every die has been at rest for SETTLE_HOLD_MS
+ * (dice-box waits another 0.9s before it calls a die asleep), when dice-box finishes, or
+ * when the player skips. Resolves with the dice-box result, or null if it was not awaited.
+ */
+function throwDice(box, notation) {
+	return new Promise((resolve) => {
+		let done = false;
+		let frame = 0;
+		let restSince = null;
+
+		const finish = (result = null) => {
+			if (done) return;
+			done = true;
+			cancelAnimationFrame(frame);
+			activeRoll = null;
+			resolve(result);
+		};
+
+		activeRoll = {
+			skip() {
+				try {
+					fastForward(box);
+				} catch (error) {
+					logger.warn('[diceStore] Could not fast-forward the dice, clearing them:', error);
+					box.clearDice?.();
+				}
+				finish();
+			}
+		};
+
+		const watch = () => {
+			if (done) return;
+			const now = performance.now();
+			if (diceAtRest(box)) {
+				restSince ??= now;
+				if (now - restSince >= SETTLE_HOLD_MS) return finish();
+			} else {
+				restSince = null;
+			}
+			frame = requestAnimationFrame(watch);
+		};
+		frame = requestAnimationFrame(watch);
+
+		Promise.resolve(box.roll(notation)).then(finish, (error) => {
+			logger.warn('[diceStore] Dice roll failed:', error);
+			finish();
+		});
+	});
+}
+
+/** Reduced motion (or no 3D dice): show the number for STATIC_ROLL_MS, opacity only */
+function showStaticRoll(rolls, kept) {
+	diceState.staticRoll = { rolls, kept };
+	return new Promise((resolve) => {
+		const timer = setTimeout(done, STATIC_ROLL_MS);
+		function done() {
+			clearTimeout(timer);
+			activeRoll = null;
+			resolve();
+		}
+		activeRoll = { skip: done };
+	});
+}
+
+/**
+ * A tap or Space during a roll: jump to the result (the dice snap to their faces).
+ * @returns {boolean} true if a roll was in flight
+ */
+export function skipRoll() {
+	if (!activeRoll) return false;
+	activeRoll.skip();
+	return true;
+}
+
+/** A roll is in flight (it can be skipped) */
+export function isRollInFlight() {
+	return activeRoll !== null;
+}
+
+/**
  * Roll the dice with optional preset value
  * D20 system with Lucid/Surreal support
- * @param {number|null} value - Optional preset dice value (1-20). For 2d20, can be array [val1, val2]
+ * @param {number|null} value - The kept d20 value (1-20) the game already rolled
  * @param {Object} options - Roll options
  * @param {boolean} options.isLucid - Roll with advantage (2d20 keep high)
  * @param {boolean} options.isSurreal - Roll with disadvantage (2d20 keep low)
+ * @param {number[]} [options.dice] - Every die the game rolled, to show those exact faces
  * @returns {Promise<Object>} Object with { total, rolls, finalValue } where finalValue is the kept die
  */
 export async function rollDice(value = null, options = {}) {
-	if (!diceBoxInstance) {
-		throw new Error('DiceBox not initialized. Call initializeDiceBox first.');
-	}
-
 	const { isLucid = false, isSurreal = false } = options;
+	const count = isLucid || isSurreal ? 2 : 1;
+	const preset = presetDice(value, { ...options, isLucid, isSurreal });
+	const reduced = prefersReducedMotion() || !diceBoxInstance;
 
 	// Clear any dice left from the previous roll before throwing again
 	try {
-		diceBoxInstance.clearDice?.();
+		diceBoxInstance?.clearDice?.();
 	} catch (error) {
 		logger.warn('[diceStore] Could not clear previous dice:', error);
 	}
+	diceState.staticRoll = null;
 
 	// Set rolling state to true immediately
 	diceState.isRolling = true;
+	const thisRoll = ++rollCount;
 
-	let rollString;
-	let presetValues = null;
-
-	if (isLucid || isSurreal) {
-		// Roll 2d20 for advantage/disadvantage
-		// If value is provided, it should be the FINAL value after advantage/disadvantage
-		// We need to generate two values where the max/min equals the desired value
-		if (value) {
-			// Generate two dice values that produce the desired result
-			if (isLucid) {
-				// For advantage, one die = value, other die = random <= value
-				const otherDie = randomInt(1, value);
-				presetValues = [value, otherDie];
-			} else {
-				// For disadvantage, one die = value, other die = random >= value
-				const otherDie = randomInt(value, 20);
-				presetValues = [value, otherDie];
-			}
-			rollString = `2d20@${presetValues[0]},${presetValues[1]}`;
-		} else {
-			rollString = '2d20';
-		}
+	let rolls;
+	if (reduced) {
+		rolls = preset ?? Array.from({ length: count }, () => randomInt(1, 20));
+		await showStaticRoll(rolls, keptValue(rolls, { isLucid, isSurreal }));
 	} else {
-		// Normal roll
-		rollString = value ? `1d20@${value}` : '1d20';
+		const notation = preset ? `${count}d20@${preset.join(',')}` : `${count}d20`;
+		const result = await throwDice(diceBoxInstance, notation);
+		const read = readDiceValues(result);
+		rolls = read.length === count ? read : (preset ?? read);
 	}
 
-	const result = await diceBoxInstance.roll(rollString);
+	const finalValue = keptValue(rolls, { isLucid, isSurreal });
 
-	// After roll completes, wait 500ms then trigger fade-out animation
-	setTimeout(() => {
-		diceState.isRolling = false;
-	}, ANIMATION_DURATION.DICE_DELAY);
-
-	// Return detailed result object
-	const rolls = result.rolls?.length ? result.rolls.map((r) => r.value) : [result.total];
-
-	let finalValue = result.total;
-	if (isLucid && rolls.length === 2) {
-		finalValue = Math.max(rolls[0], rolls[1]);
-	} else if (isSurreal && rolls.length === 2) {
-		finalValue = Math.min(rolls[0], rolls[1]);
-	}
+	// Settled dice stay up a moment as evidence, then fade (no hold for the static number)
+	setTimeout(
+		() => {
+			if (thisRoll !== rollCount) return;
+			diceState.isRolling = false;
+			diceState.staticRoll = null;
+		},
+		reduced ? 0 : ANIMATION_DURATION.DICE_DELAY
+	);
 
 	diceState.lastRoll = { rolls, finalValue, isLucid, isSurreal };
 
 	return {
-		total: result.total,
-		rolls: rolls,
-		finalValue: finalValue,
+		total: rolls.reduce((sum, die) => sum + die, 0),
+		rolls,
+		finalValue,
 		isLucid,
 		isSurreal
 	};

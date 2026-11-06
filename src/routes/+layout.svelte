@@ -76,16 +76,38 @@
 	class:rolling={diceRolling}
 ></div>
 
+<!-- Reduced motion (or no 3D dice): the roll as numbers in a d20 outline, shown without motion -->
+{#if showDice && diceState.staticRoll}
+	<div class="static-roll" data-testid="static-roll" aria-hidden="true">
+		{#each diceState.staticRoll.rolls as value, index (index)}
+			<svg
+				class="static-die"
+				class:dropped={diceState.staticRoll.rolls.length > 1 && value !== diceState.staticRoll.kept}
+				viewBox="0 0 100 100"
+				width="96"
+				height="96"
+			>
+				<polygon class="die-outline" points="50,4 90,27 90,73 50,96 10,73 10,27" />
+				<polygon class="die-face" points="50,12 84,70 16,70" />
+				<text x="50" y="54" text-anchor="middle" dominant-baseline="middle">{value}</text>
+			</svg>
+		{/each}
+	</div>
+{/if}
+
 <div class="page-content">
 	{@render children()}
 </div>
 
 <style>
-	/* Persistent DiceBox container. The throw area sits between the HUD and the button bar:
-	   --hud-bottom is published by StatsGrid, the bottom offset leaves room for the button bar. */
+	/* Persistent DiceBox container. The throw area is the lower part of the table, between
+	   44% of the table (the title and result line end at 40%, see ContextBackground) and the
+	   button bar, so a die never comes to rest on the result line. --hud-bottom is published
+	   by StatsGrid. */
 	.dice-container {
+		--dice-table-top: var(--hud-bottom, 2.5rem);
 		position: fixed;
-		top: var(--hud-bottom, 2.5rem);
+		top: calc(var(--dice-table-top) + (100dvh - var(--dice-table-top)) * 0.44);
 		left: 0.25rem;
 		right: 0.25rem;
 		bottom: 6rem;
@@ -125,6 +147,47 @@
 		.dice-container.rolling {
 			transition: none;
 		}
+	}
+
+	/* The static roll sits where the dice would land */
+	.static-roll {
+		--dice-table-top: var(--hud-bottom, 2.5rem);
+		position: fixed;
+		top: calc(var(--dice-table-top) + (100dvh - var(--dice-table-top)) * 0.44);
+		left: 0;
+		right: 0;
+		bottom: 6rem;
+		z-index: 9999;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 1.5rem;
+		pointer-events: none;
+	}
+
+	.static-die .die-outline {
+		fill: rgba(8, 8, 20, 0.9);
+		stroke: var(--color-neon-cyan, #00ffff);
+		stroke-width: 3;
+		stroke-linejoin: round;
+	}
+
+	.static-die .die-face {
+		fill: none;
+		stroke: rgba(0, 255, 255, 0.25);
+		stroke-width: 1.5;
+	}
+
+	.static-die text {
+		fill: #fff;
+		font-family: var(--font-body, 'Inter', sans-serif);
+		font-size: 30px;
+		font-weight: 700;
+	}
+
+	/* The die that did not count, under Lucid or Surreal */
+	.static-die.dropped {
+		opacity: 0.4;
 	}
 
 	/* Canvas from DiceBox should fill the container */
