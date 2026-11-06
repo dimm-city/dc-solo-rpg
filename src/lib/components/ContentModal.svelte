@@ -379,16 +379,17 @@
 		transform: translateY(0);
 	}
 
-	/* Footer actions a dialog passes in (confirmations): a quiet Cancel and an outlined
-	   destructive action. Inter 600 caps, 48px tall. */
+	/* Footer actions a dialog passes in (confirmations), Inter 600 caps, 48px tall.
+	   The safe action (Cancel, Keep it) is quiet; the confirming action carries the weight:
+	   outlined red when it destroys something, the Done button's fill otherwise. */
 	:global(.cm-action) {
 		min-width: 140px;
 		min-height: 48px;
 		padding: var(--space-sm, 0.5rem) var(--space-lg, 1.5rem);
 		background: transparent;
-		border: 1px solid rgba(255, 255, 255, 0.4);
+		border: 1px solid rgba(255, 255, 255, 0.2);
 		border-radius: 4px;
-		color: #fff;
+		color: rgba(255, 255, 255, 0.78);
 		font-family: var(--font-body, 'Inter', sans-serif);
 		font-size: 1rem;
 		font-weight: 600;
@@ -397,22 +398,39 @@
 		cursor: pointer;
 		transition:
 			background-color 120ms ease-out,
-			border-color 120ms ease-out;
+			border-color 120ms ease-out,
+			color 120ms ease-out;
 	}
 
 	:global(.cm-action:hover) {
-		background: rgba(255, 255, 255, 0.08);
-		border-color: rgba(255, 255, 255, 0.7);
+		color: #fff;
+		background: rgba(255, 255, 255, 0.06);
+		border-color: rgba(255, 255, 255, 0.45);
 	}
 
 	:global(.cm-action.danger) {
 		color: #ff8fa3;
+		font-weight: 700;
 		border: 2px solid var(--color-danger, #ff4d6d);
 	}
 
 	:global(.cm-action.danger:hover) {
+		color: #ffb3c1;
 		background: rgba(255, 77, 109, 0.14);
 		border-color: #ff8fa3;
+	}
+
+	:global(.cm-action.primary) {
+		color: var(--color-brand-yellow, #ffd700);
+		font-weight: 700;
+		background: linear-gradient(135deg, #831d98, #6d22c7);
+		border: 1px solid var(--color-cyber-magenta, #d946ef);
+	}
+
+	:global(.cm-action.primary:hover) {
+		color: var(--color-brand-yellow, #ffd700);
+		background: linear-gradient(135deg, #9325ab, #7a2bd6);
+		border-color: var(--color-cyber-magenta, #d946ef);
 	}
 
 	:global(.cm-action:focus-visible) {
@@ -463,10 +481,16 @@
 				calc(var(--space-lg, 1.25rem) + env(safe-area-inset-left, 0px));
 		}
 
-		.done-button,
-		:global(.cm-action) {
-			flex: 1 1 0;
+		.done-button {
 			width: 100%;
+		}
+
+		/* Side by side when the labels fit on one line; otherwise each takes a full row */
+		:global(.cm-action) {
+			flex: 1 1 auto;
+			min-width: 8rem;
+			padding-inline: var(--space-md, 1rem);
+			white-space: nowrap;
 		}
 
 		/* A compact panel keeps its frame and margins on phones */

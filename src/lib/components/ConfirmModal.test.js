@@ -49,13 +49,17 @@ describe('ConfirmModal', () => {
 		expect(onCancel).toHaveBeenCalledTimes(3);
 	});
 
-	it('marks the confirming action destructive unless told otherwise', async () => {
+	it('marks the confirming action destructive unless told otherwise; Cancel stays quiet', async () => {
 		await open();
 		expect(screen.getByRole('button', { name: 'Delete' })).toHaveClass('danger');
+		const cancel = screen.getByRole('button', { name: 'Cancel' });
+		expect(cancel).not.toHaveClass('danger');
+		expect(cancel).not.toHaveClass('primary');
 	});
 
 	it('can confirm without the destructive style', async () => {
 		await open({ destructive: false, confirmText: 'Leave' });
 		expect(screen.getByRole('button', { name: 'Leave' })).not.toHaveClass('danger');
+		expect(screen.getByRole('button', { name: 'Leave' })).toHaveClass('primary');
 	});
 });

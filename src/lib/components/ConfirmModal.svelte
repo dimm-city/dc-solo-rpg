@@ -2,7 +2,8 @@
 	/**
 	 * ConfirmModal - a yes/no question on the shared dialog (ContentModal, compact size):
 	 * the same entrance, frame, 44px close and focus handling as every other dialog.
-	 * The confirming action is an outlined red button when it destroys something.
+	 * Cancel is the quiet, safe action. The confirming action is an outlined red button when it
+	 * destroys something, and the filled primary style otherwise.
 	 */
 	import ContentModal from './ContentModal.svelte';
 
@@ -37,7 +38,13 @@
 		{#if cancelText}
 			<button type="button" class="cm-action" onclick={onCancel}>{cancelText}</button>
 		{/if}
-		<button type="button" class="cm-action" class:danger={destructive} onclick={onConfirm}>
+		<button
+			type="button"
+			class="cm-action"
+			class:danger={destructive}
+			class:primary={!destructive}
+			onclick={onConfirm}
+		>
 			{confirmText}
 		</button>
 	{/snippet}
