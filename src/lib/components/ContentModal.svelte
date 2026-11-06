@@ -1,9 +1,13 @@
 <script>
 	/**
-	 * ContentModal - Base modal for content-heavy screens (settings, help, about)
+	 * ContentModal - the base for every dialog (settings, help, about, dice, confirmations)
 	 *
-	 * Structure: sticky header (title + close) / scrolling body / sticky footer.
-	 * Phones: full-screen sheet. Desktop: centred panel, min(720px, 92vw) x up to 88dvh.
+	 * Structure: sticky header (title + 44px close) / scrolling body / sticky footer.
+	 * The footer is one "Done" button unless the dialog passes its own `footer` snippet
+	 * (a confirmation's Cancel and destructive action).
+	 * Sizes: 'default' is a full-screen sheet on phones and a centred panel up to 720px wide on
+	 * desktop; 'compact' (confirmations) is a small centred panel everywhere.
+	 * Motion: 200ms fade plus an 8px rise, cubicOut; 140ms out. Opacity and transform only.
 	 * Portal-rendered; focus moves in on open, is trapped, and returns on close.
 	 *
 	 * Also owns the shared "cm-*" form/section styles so Settings, Help and About
@@ -21,11 +25,17 @@
 		onClose,
 		showFooter = true,
 		footerButtonText = 'Done',
-		footerButtonIcon = 'check' // 'check', 'close', or 'none'
+		/** Replaces the Done button, e.g. a confirmation's two actions */
+		footer = undefined,
+		/** 'default' | 'compact' */
+		size = 'default'
 	} = $props();
 
 	const uid = $props.id();
 	const titleId = `content-modal-title-${uid}`;
+
+	const IN_MS = ANIMATION_DURATION.NORMAL; // 200
+	const OUT_MS = 140;
 
 	let portalTarget = $state();
 	let modalElement = $state();
@@ -103,15 +113,7 @@
 		}
 	}
 
-	const fadeParams = () => ({
-		duration: prefersReducedMotion() ? 0 : ANIMATION_DURATION.NORMAL,
-		easing: cubicOut
-	});
-	const flyParams = () => ({
-		y: 16,
-		duration: prefersReducedMotion() ? 0 : ANIMATION_DURATION.SLOW,
-		easing: cubicOut
-	});
+	const duration = (ms) => (prefersReducedMotion() ? 0 : ms);
 </script>
 
 {#if isOpen}
@@ -122,12 +124,15 @@
 		onclick={handleBackdropClick}
 		onkeydown={handleKeydown}
 		role="presentation"
-		transition:fade={fadeParams()}
+		in:fade={{ duration: duration(IN_MS) }}
+		out:fade={{ duration: duration(OUT_MS) }}
 	>
 		<div
 			class="content-modal-wrapper"
+			class:compact={size === 'compact'}
 			data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
-			transition:fly={flyParams()}
+			in:fly={{ y: 8, duration: duration(IN_MS), easing: cubicOut }}
+			out:fade={{ duration: duration(OUT_MS) }}
 		>
 			<div
 				bind:this={dialogElement}
@@ -163,42 +168,28 @@
 					</div>
 				</div>
 
-				{#if showFooter}
+				{#if footer}
+					<div class="content-footer">
+						{@render footer()}
+					</div>
+				{:else if showFooter}
 					<div class="content-footer">
 						<button class="done-button" onclick={onClose}>
 							<span>{footerButtonText}</span>
-							{#if footerButtonIcon === 'check'}
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									width="18"
-									height="18"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									stroke-width="2"
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									aria-hidden="true"
-								>
-									<polyline points="20 6 9 17 4 12"></polyline>
-								</svg>
-							{:else if footerButtonIcon === 'close'}
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									width="18"
-									height="18"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									stroke-width="2"
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									aria-hidden="true"
-								>
-									<line x1="18" y1="6" x2="6" y2="18"></line>
-									<line x1="6" y1="6" x2="18" y2="18"></line>
-								</svg>
-							{/if}
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								width="18"
+								height="18"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true"
+							>
+								<polyline points="20 6 9 17 4 12"></polyline>
+							</svg>
 						</button>
 					</div>
 				{/if}
@@ -274,11 +265,26 @@
 	.content-header h2 {
 		margin: 0;
 		font-family: var(--font-display, 'Orbitron', sans-serif);
-		font-size: 1.75rem; /* 28px: display face is for 24px+ only */
+		font-size: 1.75rem; /* 28px: the display face is for 28px and up only */
 		font-weight: 600;
 		line-height: 1.2;
 		letter-spacing: var(--letter-spacing-wide, 0.05em);
+		text-wrap: balance;
 		color: #fff;
+	}
+
+	/* Compact (confirmations): a small title, so Inter 600 caps rather than the display face */
+	.compact .content-header h2 {
+		font-family: var(--font-body, 'Inter', sans-serif);
+		font-size: 1.0625rem;
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		text-shadow: none;
+	}
+
+	.content-modal-wrapper.compact {
+		width: min(480px, calc(100vw - 32px));
 	}
 
 	.close-button {
@@ -333,7 +339,9 @@
 		padding: var(--space-md, 1rem) var(--space-lg, 1.5rem);
 		border-top: 1px solid var(--modal-divider);
 		display: flex;
+		flex-wrap: wrap;
 		justify-content: flex-end;
+		gap: var(--space-sm, 0.5rem);
 		background: var(--modal-bg-raised);
 		flex-shrink: 0;
 	}
@@ -371,9 +379,50 @@
 		transform: translateY(0);
 	}
 
+	/* Footer actions a dialog passes in (confirmations): a quiet Cancel and an outlined
+	   destructive action. Inter 600 caps, 48px tall. */
+	:global(.cm-action) {
+		min-width: 140px;
+		min-height: 48px;
+		padding: var(--space-sm, 0.5rem) var(--space-lg, 1.5rem);
+		background: transparent;
+		border: 1px solid rgba(255, 255, 255, 0.4);
+		border-radius: 4px;
+		color: #fff;
+		font-family: var(--font-body, 'Inter', sans-serif);
+		font-size: 1rem;
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		cursor: pointer;
+		transition:
+			background-color 120ms ease-out,
+			border-color 120ms ease-out;
+	}
+
+	:global(.cm-action:hover) {
+		background: rgba(255, 255, 255, 0.08);
+		border-color: rgba(255, 255, 255, 0.7);
+	}
+
+	:global(.cm-action.danger) {
+		color: #ff8fa3;
+		border: 2px solid var(--color-danger, #ff4d6d);
+	}
+
+	:global(.cm-action.danger:hover) {
+		background: rgba(255, 77, 109, 0.14);
+		border-color: #ff8fa3;
+	}
+
+	:global(.cm-action:focus-visible) {
+		outline: 3px solid var(--color-neon-cyan, #00ffff);
+		outline-offset: 2px;
+	}
+
 	/* Phones: full-screen sheet, no clipped corners, safe-area aware */
 	@media (max-width: 640px) {
-		.content-modal-wrapper {
+		.content-modal-wrapper:not(.compact) {
 			width: 100%;
 			height: 100dvh;
 			max-height: none;
@@ -391,9 +440,14 @@
 			min-height: 64px;
 		}
 
+		/* Below 28px the display face is hard to read: phones get Inter 600 caps, like
+		   the compact titles, so long titles such as Game Settings stay on one line */
 		.content-header h2 {
-			font-size: 1.5rem; /* 24px: the floor for the display face */
-			letter-spacing: 0;
+			font-family: var(--font-body, 'Inter', sans-serif);
+			font-size: 1.125rem;
+			letter-spacing: 0.08em;
+			text-transform: uppercase;
+			text-shadow: none;
 		}
 
 		.content-body {
@@ -409,14 +463,28 @@
 				calc(var(--space-lg, 1.25rem) + env(safe-area-inset-left, 0px));
 		}
 
-		.done-button {
+		.done-button,
+		:global(.cm-action) {
+			flex: 1 1 0;
 			width: 100%;
+		}
+
+		/* A compact panel keeps its frame and margins on phones */
+		.compact .content-header {
+			min-height: 0;
+			padding: var(--space-md, 1rem) var(--space-sm, 0.5rem) var(--space-sm, 0.5rem)
+				var(--space-lg, 1.25rem);
+		}
+
+		.compact .content-footer {
+			padding: var(--space-md, 1rem) var(--space-lg, 1.25rem);
 		}
 	}
 
 	@media (prefers-reduced-motion: reduce) {
 		.close-button,
-		.done-button {
+		.done-button,
+		:global(.cm-action) {
 			transition: none;
 		}
 
