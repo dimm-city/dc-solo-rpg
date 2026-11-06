@@ -7,8 +7,8 @@ restart. Branch: `claude/vibrant-curie-w9bn88`.
 ## Status
 
 - Started: 2026-11-06, against `main` at 17b967d (PR #50 merged).
-- Current phase: broad review (coverage items 2 onward).
-- Last section completed: Reported bug (Lucid/Surreal extra click).
+- Current phase: broad review, next: Game start (coverage item 5).
+- Last section completed: Static pages (items 2-4 done).
 
 ## How to resume after a restart
 
@@ -84,9 +84,9 @@ than on real hardware. Ratios and dead time are still meaningful.
 Tick an item only when its findings are written below.
 
 - [x] Reported bug: an extra confirmation click when the player is Lucid or Surreal
-- [ ] Home: splash, instructions choice, game selector, game cards, saved-game continue and delete
-- [ ] Header and menus (desktop and phone), About, Help, Settings (every control), dice theme picker
-- [ ] Static pages: /about, /how-to, /signin
+- [x] Home: splash, instructions choice, game selector, game cards, saved-game continue and delete
+- [x] Header and menus (desktop and phone), About, Help, Settings (every control), dice theme picker
+- [x] Static pages: /about, /how-to, /signin
 - [ ] Game start: loading, intro, opening instability roll
 - [ ] Round flow: start round, roll for tasks, draw card, card reveal and dismiss
 - [ ] Stability check, Salvation check, Lucid and Surreal, skip-damage and return-king cards
@@ -262,6 +262,219 @@ it is unlikely, but this is the one path no capture here covers.
 - **Recommendation:** when Auto-Play is switched on, arm the current step at once (export a
   `rearmAutoPlay()` from GameScreen, or watch the setting). When it is switched off, cancel the
   pending timer.
+- **Effort:** S.
+
+### 2. Home: splash, instructions choice, game selector, saved games
+
+Evidence: `tour/d1440/` and `tour/iphone13/` (production build), `tour/delete-*/`,
+`tour/sheet-delete-exit.png`.
+
+#### HM-01 · S2 · Home is two small tiles in the corner of an empty page
+
+- **Viewport:** desktop and tablet.
+- **What happens:** at 1440x900 the two game cards sit in the top-left 900x280px. The rest is
+  an empty grid (`tour/d1440/06-home.png`). There is no pitch, no art and no sense of what a
+  session is. This was visual-design v2 F1, and it is still open.
+- **Why it matters:** this is the first screen after the splash, and it says "prototype".
+- **Recommendation (redesign):** a centred column (max 960px) with a one-line pitch ("A solo
+  journaling game. Draw, roll, write."). Under it, a 2-up grid of cards, each with a key-art
+  band (duotone, 16:9), title, the game's own subtitle, "about 30 minutes", and a labelled
+  primary button. Keep the clipped frames.
+- **Effort:** M (art needed: one image per game).
+
+#### HM-02 · S2 · Play, resume and delete are bare icons, and a saved game blocks a new one
+
+- **Viewport:** all.
+- **What happens:**
+  - Each card has a 48px icon-only play button. A saved game shows a yellow play icon plus a
+    red trash can, and nothing else (`tour/delete-d1440/01-home-with-save.png`).
+  - The save's round, Stability and date are never shown, although `getSaveMetadata` is already
+    loaded for each card.
+  - With a save, there is no way to start a fresh game except deleting the save first.
+- **Recommendation (redesign):**
+  - With no save: a text button, "Play".
+  - With a save: a primary "Continue · Round 3 · 2 h ago", a secondary "New game" that confirms
+    the overwrite, and "Delete save" as a small text link.
+- **Effort:** S. `src/routes/+page.svelte:858-930`.
+
+#### HM-03 · S3 · Cards are uneven, and one has a placeholder subtitle
+
+- **What happens:** titles wrap to 2 and 3 lines, so the cards are 240px and 270px tall and the
+  play buttons sit at y=327 and y=358 (`tour/d1440/06-home.png`). "Locked In the Tech District"
+  shows "Begin your adventure": the subtitles come from a hard-coded map
+  (`src/routes/+page.svelte:376`) that only knows retired slugs.
+- **Recommendation:** read the subtitle from the game's frontmatter. Give cards a fixed title
+  block (3 lines) and pin actions to the card bottom (`margin-top: auto`).
+- **Effort:** S.
+
+#### HM-04 · S3 · The splash is long, unskippable, off-brand and overlaps the next screen
+
+- **What happens:**
+  - 2.5s of splash, then an 850ms wait, then a 600ms fade before anything is usable: about 4s
+    on every new browser session (`Splash.svelte:53`, `+page.svelte:272`). No tap or key skips
+    it.
+  - The status line cycles through 13 phrases at 375ms each (`Splash.svelte:36`), too fast to
+    read one.
+  - The splash says "DIMM CITY / Dream Console", the header says "DREAM CONSOLE" and /about
+    says "Dimm City Solo RPG": three names.
+  - The splash's own 800ms `transition:fade` starts only after `isVisible` flips at 850ms, so it
+    is still fading while the choice screen fades in. On iPhone a faint "DIMM" sits behind the
+    first card (`tour/iphone13/05-instructions-choice.png`).
+- **Recommendation (simplify):** 1.2s total. One phrase, then fade out over 300ms, and unmount
+  before the next screen fades in. Any tap or key skips it. Show it once per install
+  (localStorage), not per session. Pick one product name.
+- **Effort:** S.
+
+#### HM-05 · S2 · The first-time choice hides an option and sends beginners to the wrong rules
+
+- **What happens:**
+  - Three 270px-tall cards are stacked vertically. At 1440x900 the third ("Skip Always") is
+    below the fold (`tour/d1440/05-instructions-choice.png`).
+  - The recommended choice, "Learn How to Play", goes to /how-to, which teaches out-of-date
+    rules (ST-01).
+  - The game already teaches through play with rule captions, so the choice is mostly
+    friction.
+- **Recommendation (redesign):** one compact panel.
+  - Primary: "Play. The game teaches you as you go."
+  - Secondary: "Read the rules first", which opens the Game Guide (Help modal).
+  - Text link: "I know how to play: don't show tips."
+- **Effort:** S.
+
+#### HM-06 · S3 · On desktop the whole navigation is one hamburger in the far corner
+
+- **What happens:** the inline header buttons exist but are hard-hidden with
+  `style="display: none;"` (`src/routes/+page.svelte:504`). At 1440px, Story Library, Settings
+  and Help live behind a 24px hamburger at the top-right (`tour/d1440/07-menu-open.png`).
+- **Recommendation:** at 900px and up, show the header actions inline with text labels
+  ("Stories", "Settings", "Help"), and keep the hamburger for phones.
+- **Effort:** S.
+
+#### HM-07 · S3 · Delete confirmation styles the destructive action like a primary CTA
+
+- **What happens:** DELETE uses the same pink-to-orange gradient as other CTAs, the copy repeats
+  itself ("permanently delete… This cannot be undone"), and the "Saved game deleted" banner is
+  inserted above the grid, pushing the cards down (`tour/sheet-delete-exit.png`).
+- **Recommendation:** an outlined red destructive button, and copy that names what is lost:
+  "Delete your Future Lost save (Round 3)? This can't be undone." Show the result as an overlay
+  toast (fixed, bottom-centre, 3s), not an inline banner.
+- **Effort:** S.
+
+### 3. Header, menus and modals
+
+Evidence: `tour/*/07-…` to `24-…`, `lucid/captions-iphone13-1/02-lucid-caption-up.png`.
+
+#### MN-01 · S2 · The Help modal states the Lucid/Surreal rule wrongly
+
+- **What happens:** the Game Guide says "A natural 20 on a Stability check makes you Lucid"
+  (`src/lib/components/HelpModal.svelte:128`). In play, any natural 20 or 1 does it: Roll for
+  Tasks, Salvation and the opening roll too (`gameActions.svelte.js:142-150, 765-770, 941-947`).
+- **Recommendation:** "Any natural 20 makes you Lucid; any natural 1 makes you Surreal."
+- **Effort:** S.
+
+#### MN-02 · S3 · The Exit Game dialog says progress will be lost; it isn't
+
+- **What happens:** "Your current game progress will be lost and you'll return to the options
+  screen" (`GameScreen.svelte:784`). The save is kept (resume works), and there is no options
+  screen. "CONTINUE PLAYING" wraps to two lines at 1280px (`tour/sheet-delete-exit.png`).
+- **Recommendation:** "Leave the game? Your progress is saved. Continue it from the home
+  screen." Buttons: "Keep playing" and "Leave".
+- **Effort:** S.
+
+#### MN-03 · S3 · Four modal families with different footers and close buttons
+
+- **What happens:** Settings and About end in "DONE ✓", Help in "GOT IT ✓", and the dice picker
+  in a pill-shaped "CLOSE" with a different frame, title size and close glyph. The dice picker is
+  its own modal, not `ContentModal`. Its close X is 37x40px on desktop and 26x44px on phone.
+- **Recommendation:** build every modal on `ContentModal`, with one footer button ("Done") and
+  a 44x44px close target.
+- **Effort:** S.
+
+#### MN-04 · S3 · Settings is a 2.5-screen scroll with the presets at the bottom
+
+- **What happens:** 13 controls in 5 sections, 1588px tall on desktop and 1906px on phone. The
+  "Quick presets" (Full auto-play, Audio only, Turn all off) are what most players want, and
+  they come last, below the toggles they overwrite.
+- **Recommendation (simplify):** open with Difficulty and a 3-way segmented "Play mode" (Manual,
+  Read aloud, Hands-free). Fold delay, journaling, voice provider and voice under "Advanced".
+- **Effort:** M.
+
+#### MN-05 · S3 · The dice theme picker shows no dice and lists white twice
+
+- **What happens:** eight text tiles with no preview, and "Default (White)" next to "White"
+  (`DiceThemes.js:11-17`). The title wraps ("SELECT DICE / THEME").
+- **Recommendation:** a 64px static render of a d20 per theme, one white option, title "Dice".
+- **Effort:** M (render the images once).
+
+#### MN-06 · S3 · The in-game header is a row of unlabelled icons
+
+- **What happens:** desktop shows X, ?, gear, then dice, a play triangle and a waveform. Phone
+  shows six icons around "1 ROUND". The play triangle means Auto-Play and the waveform means
+  read-aloud, and on/off is a colour change only. `title` tooltips don't exist on touch. The
+  phone header drops the game's title.
+- **Recommendation:** on desktop, put a 10px label under each icon ("AUTO", "VOICE"), and show
+  the on state as filled plus the label in cyan. On phone, keep X, Help and one "⋯" menu, which
+  holds the rest with labels.
+- **Effort:** S–M.
+
+#### MN-07 · S4 · The display font is used below its legible size
+
+- **What happens:** lixdu (the house display face) is set at 14–20px on modal titles,
+  buttons and labels: "GAME SETTINGS", "SIGN IN WITH GOOGLE", the Story Library's "START A NEW
+  GAME". At those sizes its M, K and W are hard to tell apart. The house rule (display
+  font for titles of 24px and up) is broken.
+- **Recommendation:** Inter 600, uppercase, 0.08em tracking for every button and every title
+  under 28px. Keep lixdu for screen titles only.
+- **Effort:** S.
+
+### 4. Static pages: /about, /how-to, /signin, error pages
+
+Evidence: `tour/*/25-…` to `30-…`, `tour/d1440-sheet-pages.png`.
+
+#### ST-01 · S1 · /how-to teaches the wrong rules, to the wrong audience
+
+- **What happens:** the page is SRD text for game designers, from the d6 era. It says players
+  "earn a success token", calls Stability a "health meter", says "the success cards of the other
+  topics give some bonus" and "this may come with a final roll", and advises that tokens "can be
+  anything physical". It contradicts the in-game Game Guide on every mechanic. It is where
+  "Learn How to Play (Recommended for first-time players)" sends new players.
+- **Recommendation (remove):** replace the page body with the Game Guide. Extract
+  `GameGuide.svelte` from `HelpModal.svelte` and render it in both places, so there is one
+  source of rules.
+- **Effort:** S. `src/routes/how-to/+page.svelte`.
+
+#### ST-02 · S3 · /about contradicts the About modal
+
+- **What happens:** the page calls the product "Dimm City Solo RPG"; the modal calls it "Dream
+  Console". The page uses generic copy ("a thrilling adventure"), with 600px of text in 1110px
+  cards, so the right half of each card is empty.
+- **Recommendation:** render the About modal's content as the page, in a 720px column, under one
+  name.
+- **Effort:** S.
+
+#### ST-03 · S3 · /signin is a dead end while sign-in is off
+
+- **What happens:** with `REQUIRE_SIGN_IN = false` (`src/hooks.server.js:8`), /signin still
+  says "SIGN IN REQUIRED" and offers a Google button with no OAuth client behind it. There is no
+  link back to the games.
+- **Recommendation:** redirect /signin to / while sign-in is off.
+- **Effort:** S.
+
+#### ST-04 · S3 · Error pages are off-theme, and the 404 title overflows on phones
+
+- **What happens:**
+  - The 404 page has a green title, a red "Not Found" and a grey "Error code: 404".
+  - At 390px, "OOPS! SOMETHING WENT WRONG" is clipped at both edges
+    (`tour/iphone13/29-page-nope-404.png`).
+  - The game-not-found page has a flat grey background, says the same thing twice, and uses an
+    off-palette orange gradient button.
+- **Recommendation:** one themed error layout. The title "Signal lost" at
+  `clamp(1.5rem, 8vw, 3rem)`, one sentence, and a "Back to the console" button.
+- **Effort:** S.
+
+#### ST-05 · S4 · Every page has the same tab title
+
+- **What happens:** `<title>` is "Dream Console" on every route, including inside a game.
+- **Recommendation:** "Future Lost · Dream Console", "Story Library · Dream Console", and so on.
 - **Effort:** S.
 
 ## Animation inventory
