@@ -54,9 +54,8 @@
 
 		<div class="card-body">
 			<h3 class="game-card-title" id={titleId}>{game.title}</h3>
-			{#if subtitle}
-				<p class="game-subtitle">{subtitle}</p>
-			{/if}
+			<!-- Always rendered: each part of the card is a row shared with the cards beside it -->
+			<p class="game-subtitle">{subtitle}</p>
 			<p class="game-meta">
 				<span>{SESSION_ESTIMATE}</span>
 				{#if game.isCustom}
@@ -140,16 +139,26 @@
 </article>
 
 <style>
+	/*
+	 * Line cards up with subgrid: each card spans five rows of the page grid (art, title,
+	 * subtitle, meta, actions), so a row is as tall as its tallest card and every subtitle and
+	 * button sits on the same line, whatever the title length. Without subgrid support the
+	 * cards simply stack their parts.
+	 */
 	.game-card-wrapper {
 		position: relative;
-		display: flex;
+		display: grid;
+		grid-row: span 5;
+		grid-template-rows: subgrid;
+		row-gap: 0;
 		min-width: 0;
 	}
 
 	.game-card {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
+		grid-row: 1 / -1;
+		display: grid;
+		grid-template-rows: subgrid;
+		row-gap: 0;
 		min-width: 0;
 		background: linear-gradient(160deg, rgba(10, 14, 26, 0.82), rgba(14, 12, 28, 0.74));
 		backdrop-filter: blur(12px);
@@ -194,6 +203,7 @@
 
 	/* 16:9 key-art band, full bleed under the clipped frame */
 	.key-art {
+		grid-row: 1;
 		aspect-ratio: 16 / 9;
 		overflow: hidden;
 		border-bottom: 1px solid rgba(255, 255, 255, 0.12);
@@ -201,17 +211,16 @@
 	}
 
 	.card-body {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-sm);
+		grid-row: 2 / -1;
+		display: grid;
+		grid-template-rows: subgrid;
+		row-gap: var(--space-sm);
 		padding: var(--space-lg);
 	}
 
-	/* Display face at 28px. Side by side, the block holds three lines so subtitles line up */
+	/* Display face at 28px */
 	.game-card-title {
 		margin: 0;
-		min-height: calc(3 * 1.15em);
 		font-family: var(--font-display);
 		font-size: 1.75rem;
 		font-weight: 700;
@@ -254,9 +263,9 @@
 		color: #f0abfc;
 	}
 
-	/* Actions sit at the bottom whatever the title and subtitle length */
+	/* Actions sit at the bottom of their row */
 	.card-actions {
-		margin-top: auto;
+		align-self: end;
 		padding-top: var(--space-md);
 		display: flex;
 		flex-direction: column;
@@ -368,13 +377,6 @@
 
 	.remove-custom-btn:hover {
 		background: rgba(255, 77, 109, 0.2);
-	}
-
-	/* One card per row: nothing to line up with */
-	@media (max-width: 640px) {
-		.game-card-title {
-			min-height: 0;
-		}
 	}
 
 	@media (max-width: 600px) {
