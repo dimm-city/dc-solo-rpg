@@ -2,13 +2,15 @@
 	/**
 	 * StoryGenerationPanel - the optional AI summary of a finished run.
 	 *
-	 * Renders a small "Summarise with AI" button (it sits in the story mode header) and the
-	 * dialogs behind it: the summary itself, and the AI settings when no provider is set up.
-	 * Only one dialog shows at a time; closing the settings brings the summary back.
+	 * Renders a small "Summarise with AI" button (it sits in the story mode header) and one
+	 * dialog behind it with two views: the summary, and the AI settings. Closing the settings
+	 * (Done, Escape or ×) saves them and goes back to the summary; one dialog means focus never
+	 * leaves it while the view changes.
 	 */
+	import { tick } from 'svelte';
 	import ContentModal from './ContentModal.svelte';
 	import GeneratedStory from './story/GeneratedStory.svelte';
-	import AISettings from './AISettings.svelte';
+	import AISettingsForm from './story/AISettingsForm.svelte';
 	import { useStoryGeneration } from '$lib/composables/useStoryGeneration.svelte.js';
 
 	let {
@@ -19,13 +21,39 @@
 	const storyGen = useStoryGeneration(savedGame, saveKey);
 
 	let open = $state(false);
+	/** 'summary' or 'settings' */
+	let view = $state('summary');
+	let form = $state();
+	let body = $state();
 	let buttonLabel = $derived(storyGen.hasStory ? 'Read AI summary' : 'Summarise with AI');
+
+	async function showView(next) {
+		view = next;
+		await tick();
+		// The button that switched views is gone; put focus on the first control of the new view
+		body?.querySelector('select, input, button:not([disabled])')?.focus();
+	}
+
+	async function handleClose() {
+		if (view === 'settings') {
+			await form?.save();
+			await storyGen.closeSettings(); // re-checks whether a provider is set up
+			showView('summary');
+			return;
+		}
+		open = false;
+	}
+
+	function openDialog() {
+		view = 'summary';
+		open = true;
+	}
 </script>
 
 <button
 	type="button"
 	class="summary-trigger"
-	onclick={() => (open = true)}
+	onclick={openDialog}
 	aria-haspopup="dialog"
 	data-testid="ai-summary-button"
 >
@@ -47,68 +75,74 @@
 </button>
 
 <ContentModal
-	isOpen={open && !storyGen.showSettings}
-	title="AI summary"
-	onClose={() => (open = false)}
-	footerButtonText="Close"
-	footerButtonIcon="none"
+	isOpen={open}
+	title={view === 'settings' ? 'AI settings' : 'AI summary'}
+	onClose={handleClose}
+	footerButtonText={view === 'settings' ? 'Done' : 'Close'}
+	footerButtonIcon={view === 'settings' ? 'check' : 'none'}
 >
-	{#if storyGen.hasStory}
-		<GeneratedStory
-			story={storyGen.story}
-			isGenerating={storyGen.isGenerating}
-			onRegenerate={storyGen.regenerateStory}
-		/>
-		{#if storyGen.errorMessage}
-			<p class="cm-error" role="alert">{storyGen.errorMessage}</p>
-		{/if}
-	{:else}
-		<p class="summary-intro">
-			An AI can read your journal and the cards you drew, and retell this run as one short story of
-			about 500 words. It uses your own API key, so nothing is sent until you ask.
-		</p>
-
-		{#if !storyGen.aiConfigured}
-			<div class="cm-btn-group">
-				<button type="button" class="cm-btn" onclick={storyGen.openSettings}>Set up AI</button>
-			</div>
-		{:else}
-			{#if storyGen.ttsAvailable}
-				<label class="cm-label read-aloud">
-					<input
-						type="checkbox"
-						class="cm-switch"
-						bind:checked={storyGen.generateAudio}
-						disabled={storyGen.isGenerating}
-					/>
-					<span>Also record it as narration</span>
-				</label>
-			{/if}
-
-			<div class="cm-btn-group">
-				<button
-					type="button"
-					class="cm-btn primary"
-					onclick={storyGen.generateStory}
-					disabled={storyGen.isGenerating}
-				>
-					{storyGen.isGenerating ? 'Writing…' : 'Write the summary'}
-				</button>
-				<button type="button" class="cm-btn" onclick={storyGen.openSettings}>AI settings</button>
-			</div>
-
-			<p class="progress" role="status" aria-live="polite">
-				{storyGen.isGenerating ? storyGen.progressMessage : ''}
-			</p>
-
+	<div bind:this={body}>
+		{#if view === 'settings'}
+			<AISettingsForm bind:this={form} />
+		{:else if storyGen.hasStory}
+			<GeneratedStory
+				story={storyGen.story}
+				isGenerating={storyGen.isGenerating}
+				onRegenerate={storyGen.regenerateStory}
+			/>
 			{#if storyGen.errorMessage}
 				<p class="cm-error" role="alert">{storyGen.errorMessage}</p>
 			{/if}
-		{/if}
-	{/if}
-</ContentModal>
+		{:else}
+			<p class="summary-intro">
+				An AI can read your journal and the cards you drew, and retell this run as one short story
+				of about 500 words. It uses your own API key, so nothing is sent until you ask.
+			</p>
 
-<AISettings isOpen={open && storyGen.showSettings} onClose={storyGen.closeSettings} />
+			{#if !storyGen.aiConfigured}
+				<div class="cm-btn-group">
+					<button type="button" class="cm-btn" onclick={() => showView('settings')}
+						>Set up AI</button
+					>
+				</div>
+			{:else}
+				{#if storyGen.ttsAvailable}
+					<label class="cm-label read-aloud">
+						<input
+							type="checkbox"
+							class="cm-switch"
+							bind:checked={storyGen.generateAudio}
+							disabled={storyGen.isGenerating}
+						/>
+						<span>Also record it as narration</span>
+					</label>
+				{/if}
+
+				<div class="cm-btn-group">
+					<button
+						type="button"
+						class="cm-btn primary"
+						onclick={storyGen.generateStory}
+						disabled={storyGen.isGenerating}
+					>
+						{storyGen.isGenerating ? 'Writing…' : 'Write the summary'}
+					</button>
+					<button type="button" class="cm-btn" onclick={() => showView('settings')}
+						>AI settings</button
+					>
+				</div>
+
+				<p class="progress" role="status" aria-live="polite">
+					{storyGen.isGenerating ? storyGen.progressMessage : ''}
+				</p>
+
+				{#if storyGen.errorMessage}
+					<p class="cm-error" role="alert">{storyGen.errorMessage}</p>
+				{/if}
+			{/if}
+		{/if}
+	</div>
+</ContentModal>
 
 <style>
 	.summary-trigger {
