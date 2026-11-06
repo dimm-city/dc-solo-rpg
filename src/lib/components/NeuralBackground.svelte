@@ -153,7 +153,8 @@
 		width: 100%;
 		height: 100%;
 		pointer-events: none;
-		z-index: 10;
+		/* The host decides the layer: the game puts it behind every screen (-1) */
+		z-index: var(--neural-z, 10);
 	}
 
 	/* ============================================
