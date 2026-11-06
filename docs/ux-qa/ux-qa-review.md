@@ -7,8 +7,8 @@ restart. Branch: `claude/vibrant-curie-w9bn88`.
 ## Status
 
 - Started: 2026-11-06, against `main` at 17b967d (PR #50 merged).
-- Current phase: broad review, next: Animation inventory (coverage item 14).
-- Last section completed: Auto-play, keyboard, screen reader, reduced motion (item 13 done).
+- Current phase: broad review, next: Viewports (coverage item 15), then Recommendations.
+- Last section completed: Animations and inventory (item 14 done).
 
 ## How to resume after a restart
 
@@ -96,7 +96,7 @@ Tick an item only when its findings are written below.
 - [x] Endings: win, loss by Kings, loss by Stability, final log, epitaph, run recap
 - [x] Story Library and story mode (browse, read, navigate, generated story)
 - [x] Auto-play, keyboard-only play, screen reader announcements, reduced motion
-- [ ] Every animation and transition (timing, easing, jank, layering, consistency)
+- [x] Every animation and transition (timing, easing, jank, layering, consistency)
 - [ ] Viewports: 1440x900, 1280x720, tablet, iPhone 13, small phone (360x640), landscape phone
 
 ## Findings
@@ -957,10 +957,204 @@ names and a 3px cyan focus ring.
   line.
 - **Effort:** S.
 
+### 14. Animations and transitions
+
+Evidence: 10fps contact sheets in `playthrough/pt-desktop/animations/` (50 sheets, production
+build, cut by `animations.py` from the full-game video), `endings/kings-beat-sheet.png`,
+`lucid/dbl-desktop-lucid/sheet-lucid-roll.png`, `dice-timing/`, and rAF probes
+(`step-swap.cjs`, `stale-result.cjs`). The full inventory, with a verdict for each animation, is
+in the **Animation inventory** section below. The findings here are the ones that need work.
+
+Caveats: swiftshader renders WebGL and filters in software, so durations measured from video run
+long. In the playthrough sheets the logged action time comes before Playwright's actionability
+wait, so offsets can be 0.3–0.5s early. Durations below are from code, and the sheets are used
+for order, gaps and layering.
+
+**The standard itself:**
+
+- It defines time twice. `animations.js` has FAST 150, NORMAL 200 and SLOW 300ms, while
+  `styles.css:135-139` has `--anim-fast` 0.3s, `--anim-normal` 0.5s and `--anim-slow` 0.8s.
+  "Fast" means 150ms in JS and 300ms in CSS, and components use both.
+- It has no tokens for ambient loops, so every component invents its own (2s, 2.4s, 3s, 4s, 5s,
+  6s, 10s, 12s).
+- Its 600ms card dismissal is too long for a 30px move.
+- It is silent on the two things that cost this game the most time: dice duration, and holds
+  between beats.
+
+**Recommended standard:** one token set, exported to CSS custom properties from
+`animations.js`:
+
+- 120ms for state changes (hover, press, chip);
+- 200ms for enter and exit;
+- 300ms for an overlay;
+- 400ms for a beat (a held moment);
+- 1.5s maximum for any staged sequence;
+- ambient loops at 4s or 8s only, paused when covered and under reduced motion.
+
+#### AN-01 · S2 · Drawing a card takes about 3 seconds, a third of it blank
+
+- **What happens** (`pt-desktop/animations/07-drawcard-tap-revealed-card.png`, card to card):
+  - the dismiss (600ms, up 30px, scale 0.95);
+  - about 200ms of empty fog;
+  - the hatched card back for about 600ms (250ms anticipation, then a wait for the card);
+  - a blank card face for about 500ms (the glitch shake, two steps of 200ms);
+  - then header, title, body and footer fade in one by one at 150, 300, 450 and 600ms, 300ms
+    each;
+  - then "Click to continue" pulses from +1s.
+
+  The code budget is 1.85s, and the observed sequence is about 3s. A round has 1–6 of these.
+
+- **Recommendation (redesign):**
+  - Dismiss in 220ms (opacity plus 12px up, ease-in).
+  - A card back is only worth showing if it turns over: either flip it (rotateY, 300ms,
+    `backface-visibility`), or drop it and let the face rise in 250ms with all text present.
+  - No blank face, no glitch.
+  - Target 600ms card to card.
+- **Effort:** M. `card/CardDisplay.svelte:376-600`, `CardDeck.svelte:98-143`.
+
+#### AN-02 · S3 · The step button vanishes for about 300ms on every step
+
+- **What happens:** pressing Continue removes the old step at once, and the new button fades in
+  under two stacked effects: Svelte `transition:fade` (200ms) and `.dc-fade-in` (350ms ease-in,
+  `Game.svelte:187`). rAF probe: opacity 0.00 at 57ms, 0.06 at 291ms, 0.72 at 462ms, 1.00 at
+  566ms (`step-swap.cjs`). The primary control blinks out between every pair of steps, more than
+  ten times a round.
+- **Recommendation (simplify):** mount the button slot once, outside `{#key currentScreen}`, and
+  change only its label (a 120ms crossfade on the text). Remove `.dc-fade-in` from
+  `ContinueButton`.
+- **Effort:** S.
+
+#### AN-03 · S3 · Ambient loops never stop, and some animate paint-heavy properties
+
+- **What happens:**
+  - Every `AugmentedButton` runs `atmospheric-pulse` (3s, infinite) under a permanent
+    `filter: drop-shadow` with `will-change: filter`. Primary buttons also loop
+    `background-position` (gradient-shift, 3s) and `box-shadow` (primary-glow-pulse, 2s), both
+    repaints.
+  - The card loops two 4s `bio-pulse` rings behind its text, plus a 2.4s hint pulse.
+  - `NeuralBackground` redraws up to 50 canvas particles with `shadowBlur: 10` every frame, and
+    reassigns a `$state` array each frame. It never pauses: not under overlays, and not under
+    reduced motion.
+  - The Success panel loops token-glow (5s), Game Over loops a scan line (10s), and the splash
+    loops flicker (3s) and scan (12s).
+- **Why it matters:** the screen never rests, so nothing urgent can stand out. On phones it costs
+  battery and frame rate (the earlier review saw multi-second stalls).
+- **Recommendation:** keep at most one ambient loop per screen: the background grid at 8s,
+  opacity only. Make the CTA glow static. Pause `NeuralBackground` when an overlay is open, when
+  the tab is hidden, and under reduced motion. Keep `particles` in a plain array, and drop
+  `shadowBlur` for a pre-rendered glow sprite.
+- **Effort:** S–M.
+
+#### AN-04 · S3 · Modal entrances follow three different patterns
+
+- **What happens:**
+  - `ContentModal` (Settings, Help, About): fade 200ms plus 16px fly, 300ms, cubicOut. Good.
+  - `ConfirmModal` (Exit, Delete): flies in from 500px above at full opacity over 400ms
+    (`ConfirmModal.svelte:75`). It is the heaviest movement in the app, used for the least
+    dramatic dialog.
+  - `OverlayModal` (card, journal): fog plus 0.95 scale, 200ms. Its fog is driven by a JS
+    `tick` that writes `style.transform` on three cloud layers every frame, over three SVG
+    `feTurbulence` filters.
+  - The dice theme picker has its own `fadeIn` and `slideIn` keyframes.
+- **Recommendation:** one entrance for every dialog: 200ms fade plus 8px rise, cubicOut, and
+  140ms out. Replace the turbulence fog with a pre-rendered blurred PNG and animate its opacity
+  only.
+- **Effort:** S.
+
+#### AN-05 · S3 · The HUD's entrance plays while it is hidden; its loops run all game
+
+- **What happens:** the HUD panels slide down with `linear` easing over 0.6–0.85s, staggered by
+  0.15–0.45s. They mount under the intro, which hides the table, so the slide plays unseen
+  (`pt-desktop/animations/01-…`: the HUD is already in place at the first frame after the
+  intro). `linear` is on the style guide's own list of anti-patterns.
+- **Recommendation (remove):** drop the slide-downs. Fade the whole HUD in once, 200ms, as the
+  table appears.
+- **Effort:** S.
+
+#### AN-06 · S3 · Screen-level fades are slow and inconsistent
+
+- **What happens:** home's instructions-to-games swap fades 600ms, and the splash fades 800ms
+  (twice, see HM-04). Page navigation uses the View Transitions API at `--anim-fast` = 300ms
+  with a 20px rise. The intro-to-table hand-off is 300ms out, then 300ms in (good: no black
+  frame).
+- **Recommendation:** 200ms for every screen swap. Keep the View Transition but make the rise
+  8px.
+- **Effort:** S.
+
 ## Animation inventory
 
-_Every animation in the app: where, trigger, duration and easing, verdict (keep, tune, simplify,
-redesign, remove) and why._
+Every animation and transition, from code (`grep` of `@keyframes`, `transition:`, `in:`/`out:`)
+and checked against the captures. "Observed" is from the 10fps sheets (swiftshader, see section
+14 caveats). Verdicts: keep, tune, simplify, redesign, remove.
+
+**Global and screen level**
+
+| Animation                      | Where, trigger                               | Duration, easing                               | Observed                                     | Verdict  | Change                                          |
+| ------------------------------ | -------------------------------------------- | ---------------------------------------------- | -------------------------------------------- | -------- | ----------------------------------------------- |
+| Splash letters, subtitle, fade | `Splash.svelte`, first visit per session     | slideIn 0.9s staggered to 1.15s; fade 800ms x2 | about 4s before the next screen; overlaps it | simplify | 1.2s total, one 300ms fade, skippable (HM-04)   |
+| Splash flicker and scan        | same                                         | 3s and 12s, infinite                           | flicker reads as a fault                     | remove   | none                                            |
+| Home screen swaps              | `+page.svelte` choice to games               | fade 600ms                                     | sluggish                                     | tune     | 200ms                                           |
+| Home logo float, card fade-in  | `+page.svelte`                               | float 6s infinite; cardFadeIn 0.6s, delay 0.3s | fine                                         | tune     | 250ms card fade, no delay; stop the float       |
+| Page navigation                | `+layout.svelte` View Transitions            | 300ms fade-out-scale / fade-in-rise 20px       | smooth                                       | tune     | 200ms, 8px                                      |
+| Neural background              | `NeuralBackground.svelte`, always            | rAF particle canvas plus grid-pulse 4s         | constant motion behind everything            | simplify | pause under overlays and reduced motion (AN-03) |
+| Intro to table                 | `GameScreen.svelte`                          | intro out 300ms, table in 300ms after 300ms    | no black gap, good                           | keep     | none                                            |
+| Step screens                   | `GameScreen.svelte` `{#key}` + `.dc-fade-in` | fade 200ms plus 350ms ease-in                  | button invisible for about 300ms (AN-02)     | simplify | persistent button slot, 120ms label swap        |
+| Context title and result line  | `ContextBackground.svelte`                   | out 150ms, then in 150ms after 150ms           | clean, sequenced                             | keep     | none                                            |
+
+**Dice**
+
+| Animation          | Where, trigger              | Duration, easing                             | Observed                                                  | Verdict  | Change                                                      |
+| ------------------ | --------------------------- | -------------------------------------------- | --------------------------------------------------------- | -------- | ----------------------------------------------------------- |
+| Dice container in  | `+layout.svelte` `.rolling` | 150ms opacity plus scale 0.95 to 1           | fine                                                      | keep     | none                                                        |
+| 3D throw           | `diceStore.rollDice`        | physics, 3.0–5.5s here                       | dice still 0.7–1.8s before the button wakes (LS-05)       | redesign | resolve at rest, tap to skip, reduced-motion number (AC-04) |
+| Dice container out | `+layout.svelte`            | hold 500ms, then 250ms fade, z-index delayed | dice sit on the result line (RF-02) and over the card fog | tune     | confine to the lower table; fade before the result line     |
+
+**Cards and overlays**
+
+| Animation                 | Where, trigger                     | Duration, easing                           | Observed                               | Verdict  | Change                                     |
+| ------------------------- | ---------------------------------- | ------------------------------------------ | -------------------------------------- | -------- | ------------------------------------------ |
+| Card overlay fog          | `OverlayModal.svelte`              | 200ms JS tick over 3 SVG turbulence layers | heavy on phones                        | simplify | static blurred image, opacity only (AN-04) |
+| Card back and appear      | `CardDisplay.svelte` anticipating  | card-appear 250ms ease-out                 | back shown about 600ms                 | redesign | flip, or drop the back (AN-01)             |
+| Glitch shake              | `CardDisplay.svelte` materializing | 200ms steps(2) x2                          | blank face shaking                     | remove   | none                                       |
+| Face text stagger         | `.reveal`                          | 300ms each, 150/300/450/600ms              | text arrives piece by piece over 900ms | simplify | all at once, or one 120ms step             |
+| Bio-pulse rings           | behind the card text               | 4s infinite x2, scale 1 to 3               | ring behind body copy                  | remove   | none                                       |
+| "Click to continue" pulse | card footer                        | 2.4s infinite after 1s                     | fine as a cue                          | tune     | pulse twice, then stay                     |
+| Card dismiss              | `byte-dismiss`                     | 600ms, cubic-bezier(.4,0,.6,1)             | long for a 30px move                   | tune     | 220ms ease-in, 12px                        |
+| Journal sheet in          | `OverlayModal` stage               | 200ms scale 0.95 plus fade                 | fine                                   | keep     | none                                       |
+| "Entry saved" beat        | `JournalEntry.svelte`              | 150ms fade, 800ms hold                     | too faint to notice (JR-02)            | redesign | in-slot confirmation                       |
+| Auto-journal bar          | `AutoJournalTimer.svelte`          | width, every 100ms                         | animates layout                        | tune     | `scaleX`                                   |
+| Epitaph                   | `JournalEntry.svelte`              | fade 300ms                                 | fine                                   | keep     | none                                       |
+
+**HUD**
+
+| Animation             | Where, trigger                            | Duration, easing                                 | Observed                              | Verdict | Change                |
+| --------------------- | ----------------------------------------- | ------------------------------------------------ | ------------------------------------- | ------- | --------------------- |
+| HUD slide-downs       | status panels and header, game start      | 0.6–0.85s **linear**, staggered                  | plays under the intro, unseen (AN-05) | remove  | one 200ms fade        |
+| Stability hit         | `StabilityPanel.svelte`                   | flash 300ms ease-out plus 2px shake 300ms linear | readable                              | keep    | ease-out on the shake |
+| Critical pulse        | Stability 4 or less, panel and CompactHUD | 1.6s infinite                                    | right signal                          | keep    | none                  |
+| King ignite and pulse | `FailureCounterPanel.svelte`              | 0.6s ignite; pulse speeds up per King            | good escalation                       | keep    | none                  |
+| Ace flash, ring, star | `SuccessTokensPanel.svelte`               | 0.6s, 1.2s, 0.3s                                 | fine                                  | keep    | none                  |
+| Token glow            | Success panel                             | 5s infinite                                      | ambient noise                         | remove  | none                  |
+
+**Endings, modals and the rest**
+
+| Animation                   | Where, trigger                          | Duration, easing                               | Observed                                 | Verdict  | Change                                    |
+| --------------------------- | --------------------------------------- | ---------------------------------------------- | ---------------------------------------- | -------- | ----------------------------------------- |
+| Game Over beat              | `GameOver.svelte`                       | 1.5s: skulls 250ms stagger, or Stability drain | black and empty frames around it (EN-01) | redesign | stage it on the card and HUD              |
+| Game Over title             | letter dropIn                           | 0.9s each, 100ms stagger, default ease, -80px  | about 1.9s to read "GAME OVER"           | simplify | whole word, 400ms fade plus 8px           |
+| Game Over message and recap | fadeIn                                  | 0.6s at 0.8 / 1.1 / 1.4 / 1.7s                 | button usable about 2.3s after the title | tune     | 200ms each, 100ms stagger                 |
+| Game Over scan line         | `GameOver.svelte`                       | 10s linear infinite                            | fine                                     | keep     | pause under reduced motion (already done) |
+| Content modals              | `ContentModal.svelte`                   | fade 200ms plus fly 16px 300ms cubicOut        | good                                     | keep     | the model for every dialog                |
+| Confirm modals              | `ConfirmModal.svelte`                   | fly y -500px, 400ms, full opacity              | heavy drop                               | redesign | ContentModal entrance (AN-04)             |
+| Dice theme picker           | `DiceThemePicker.svelte`                | own fadeIn and slideIn keyframes               | inconsistent                             | simplify | ContentModal                              |
+| Rule caption                | `RuleCaption.svelte`                    | fade 200ms, reduced-motion 0                   | good                                     | keep     | pause while covered (RC-02)               |
+| Keyboard hint               | `KeyboardHint.svelte`                   | fade-in-out 5s                                 | broken layout (HD-04)                    | remove   | key-cap in the button                     |
+| CTA glow and gradient       | `AugmentedButton.svelte`                | 3s, 3s and 2s infinite; box-shadow, background | constant shimmer, repaints               | simplify | static glow, 120ms hover (AN-03)          |
+| Button bar resize           | `ButtonBar.svelte`                      | height and width 0.3s                          | animates layout                          | remove   | none                                      |
+| Story mode open, rounds     | `StoryMode.svelte`                      | scale 250ms; crossfade 300ms                   | blank content mid-swap (SM-05)           | tune     | directional slide                         |
+| Story library and cards     | `BrowseGames.svelte`, `GameCard.svelte` | fly 20px, 250ms quintOut                       | fine                                     | keep     | none                                      |
+| Loading ring                | `LoadScreen.svelte`                     | 1.6s pulse                                     | fine                                     | keep     | none                                      |
+| Recorder and player         | `AudioRecorder`, `AudioPlayer`          | pulse, wave                                    | fine                                     | keep     | none                                      |
 
 ## Recommendations
 
