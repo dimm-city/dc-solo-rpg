@@ -618,12 +618,19 @@ body::before {
 	}
 }
 
+/* Phones: text buttons get a 44px touch target and room around their label. Icon-only
+   buttons (a lone SVG) size themselves: 16px of side padding inside a 36-40px button left
+   their icon 0-4px wide. Icons never shrink inside a button. */
 @media (max-width: 450px) {
-	button {
+	button:not(:has(> svg:only-child)) {
 		padding: var(--space-sm) var(--space-md);
 		font-size: var(--text-sm);
 		min-height: 44px;
 	}
+}
+
+button > svg {
+	flex-shrink: 0;
 }
 
 /* ============================================

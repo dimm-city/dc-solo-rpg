@@ -64,7 +64,7 @@ export const ANIMATION_DURATION = {
 	/** Story mode transitions (250ms) - Story library and save animations */
 	STORY_MODE: 250,
 
-	/** Round crossfade (300ms) - Story mode round-to-round transitions */
+	/** Round crossfade (300ms) - kept for compatibility; story mode's round swap now uses STATE */
 	ROUND_TRANSITION: 300
 };
 
