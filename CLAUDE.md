@@ -243,8 +243,9 @@ The game uses a **D20 dice system** inspired by Wretched and Alone mechanics but
 ### D20 Rolling Mechanics
 
 - **Standard Roll**: 1d20 for all checks
-- **Lucid State (Advantage)**: Roll 2d20, keep highest. Triggered by natural 20 on Stability checks.
-- **Surreal State (Disadvantage)**: Roll 2d20, keep lowest. Triggered by natural 1 on Stability checks.
+- **Lucid State (Advantage)**: Roll 2d20, keep highest. Triggered by a natural 20 on any d20 roll (the opening instability roll, Roll for Tasks, a Stability check or Salvation).
+- **Surreal State (Disadvantage)**: Roll 2d20, keep lowest. Triggered by a natural 1 on any d20 roll.
+- The modifier applies to, and is used up by, the next roll, whichever roll that is. The two never stack, and a new game starts with neither.
 
 ### Salvation System (Win Condition)
 

@@ -137,7 +137,7 @@ const roll = rollDie(20);
 LUCID = Advantage
 Roll 2d20, keep highest
 
-Trigger: Natural 20 on any Stability check
+Trigger: Natural 20 on any d20 roll (opening roll, Roll for Tasks, Stability check, Salvation)
 Duration: Next roll only (consumed on use)
 ```
 
@@ -162,7 +162,7 @@ const result = Math.max(roll1, roll2); // 15
 SURREAL = Disadvantage
 Roll 2d20, keep lowest
 
-Trigger: Natural 1 on any Stability check
+Trigger: Natural 1 on any d20 roll (opening roll, Roll for Tasks, Stability check, Salvation)
 Duration: Next roll only (consumed on use)
 ```
 
