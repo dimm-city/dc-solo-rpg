@@ -1,10 +1,12 @@
 <!--
  * TTSSection - Text-to-Speech configuration section
  *
- * Provides UI for configuring TTS provider settings
- * Now uses audioStore as single source of truth
+ * The voice list offers what works now: the browser voice, the on-device Supertonic voice,
+ * and each cloud service only once its API key is saved (or while it is the chosen one).
+ * "Add a voice service" opens the key fields for the others. Uses audioStore as the single
+ * source of truth.
  *
- * @component ⭐ REUSABLE
+ * @component
  * @example
  * <TTSSection />
  -->
@@ -16,107 +18,117 @@
 		getAvailableVoices
 	} from '../../stores/audioStore.svelte.js';
 	import { onMount } from 'svelte';
+	import {
+		CLOUD_PROVIDERS,
+		listedCloudProviders,
+		addableCloudProviders
+	} from '../../utils/voiceProviders.js';
 
 	let availableVoices = $state([]);
 	let providerError = $state(null);
-	let providerAvailability = $state({
-		browser: true,
-		supertonic: false, // Will check on mount
-		dimmcityai: true,
-		openai: true,
-		elevenlabs: true
-	});
+	/** Set while a provider is starting up (Supertonic downloads its models the first time) */
+	let switchingTo = $state(null);
+
+	// "Add a voice service" form
+	let adding = $state(false);
+	let newService = $state('');
+	let newKey = $state('');
 
 	onMount(async () => {
 		availableVoices = await getAvailableVoices();
-
-		// Check if Supertonic models are available
-		await checkSupertonicAvailability();
 	});
 
-	async function checkSupertonicAvailability() {
+	let provider = $derived(getAudioSettings().ttsProvider);
+	let isCloud = $derived(provider in CLOUD_PROVIDERS);
+	/** Cloud services listed as voices (key saved, or the current choice) */
+	let listedCloud = $derived(listedCloudProviders(getAudioSettings()));
+	/** Cloud services that still need a key */
+	let addableCloud = $derived(addableCloudProviders(getAudioSettings()));
+
+	function describeError(value, error) {
+		if (value === 'supertonic') return `The on-device voice could not start: ${error.message}`;
+		if (value in CLOUD_PROVIDERS) {
+			return `${CLOUD_PROVIDERS[value]} could not start. Check the API key and settings.`;
+		}
+		return `Could not switch to ${value}: ${error.message}`;
+	}
+
+	async function switchProvider(value, extra = {}) {
+		providerError = null;
+		switchingTo = value;
 		try {
-			// Check if ONNX models are available from Hugging Face CDN
-			const response = await fetch(
-				'https://huggingface.co/Supertone/supertonic/resolve/main/onnx/tts.json'
-			);
-			providerAvailability.supertonic = response.ok;
-		} catch {
-			providerAvailability.supertonic = false;
+			await updateAudioSettings({ ttsProvider: value, ...extra });
+			availableVoices = await getAvailableVoices();
+		} catch (error) {
+			providerError = describeError(value, error);
+		} finally {
+			switchingTo = null;
 		}
 	}
 
 	async function handleTTSSettingChange(key, value) {
-		// Clear previous errors
-		if (key === 'ttsProvider') {
-			providerError = null;
-		}
-
 		try {
 			await updateAudioSettings({ [key]: value });
-
-			// Reload voices when provider changes or API key is set
-			if (key === 'ttsProvider') {
-				await loadVoices();
-			} else if (key === 'ttsApiKey' || key === 'ttsApiEndpoint') {
-				// Reload voices when API key or endpoint changes (for API-based providers)
-				const currentProvider = getAudioSettings().ttsProvider;
-				if (
-					currentProvider === 'elevenlabs' ||
-					currentProvider === 'openai' ||
-					currentProvider === 'dimmcityai'
-				) {
-					await loadVoices();
-				}
+			// Reload voices when the key or endpoint of a cloud provider changes
+			if ((key === 'ttsApiKey' || key === 'ttsApiEndpoint') && isCloud) {
+				availableVoices = await getAvailableVoices();
 			}
 		} catch (error) {
-			// Show user-friendly error message
-			if (key === 'ttsProvider') {
-				if (value === 'supertonic') {
-					providerError = `Supertonic TTS initialization failed: ${error.message}`;
-				} else if (value === 'dimmcityai' || value === 'openai' || value === 'elevenlabs') {
-					providerError = `Failed to initialize ${value} TTS. Please check your API key and settings.`;
-				} else {
-					providerError = `Failed to switch to ${value} provider: ${error.message}`;
-				}
-			}
+			providerError = describeError(provider, error);
 		}
 	}
 
-	async function loadVoices() {
-		availableVoices = await getAvailableVoices();
+	function openAddService() {
+		adding = true;
+		newService = addableCloud[0] ?? '';
+		newKey = '';
 	}
 
-	const PROVIDER_NAMES = { dimmcityai: 'DimmCityAI', openai: 'OpenAI', elevenlabs: 'ElevenLabs' };
-	let provider = $derived(getAudioSettings().ttsProvider);
-	let isCloud = $derived(provider in PROVIDER_NAMES);
+	async function saveService(event) {
+		event.preventDefault();
+		const key = newKey.trim();
+		if (!newService || !key) return;
+		await switchProvider(newService, { ttsApiKey: key });
+		if (!providerError) {
+			adding = false;
+			newKey = '';
+		}
+	}
 </script>
 
 <section class="cm-section" aria-labelledby="narration-heading">
 	<h3 class="cm-section-title" id="narration-heading">Narration</h3>
 	<p class="cm-section-desc">
-		Hear your story read aloud. Browser voices are free; the other providers need an API key.
+		The voice that reads your story aloud. The browser voice is free; the on-device voice is free
+		after a one-time download.
 	</p>
 
 	<div class="cm-rows">
 		<div class="cm-row">
-			<label class="cm-label" for="tts-provider">Voice provider</label>
+			<div>
+				<label class="cm-label" for="tts-provider">Voice provider</label>
+				{#if switchingTo === 'supertonic'}
+					<p class="cm-help" role="status">
+						Loading the on-device voice (about 265 MB the first time)…
+					</p>
+				{:else if switchingTo}
+					<p class="cm-help" role="status">
+						Starting {CLOUD_PROVIDERS[switchingTo] ?? 'the voice'}…
+					</p>
+				{/if}
+			</div>
 			<select
 				id="tts-provider"
 				class="cm-control"
 				value={provider}
-				onchange={(e) => handleTTSSettingChange('ttsProvider', e.target.value)}
+				disabled={switchingTo !== null}
+				onchange={(e) => switchProvider(e.target.value)}
 			>
-				<option value="browser">Browser (free)</option>
-				<option value="dimmcityai">DimmCityAI</option>
-				<option value="openai">OpenAI</option>
-				<option value="elevenlabs">ElevenLabs</option>
-				<!-- Supertonic Neural TTS temporarily disabled for testing -->
-				<!-- <option value="supertonic" disabled={!providerAvailability.supertonic}>
-					Supertonic Neural TTS {providerAvailability.supertonic
-						? '(Free, Downloads from HF)'
-						: '(HF Unavailable)'}
-				</option> -->
+				<option value="browser">Browser voice (free)</option>
+				<option value="supertonic">On-device voice (free, 265 MB)</option>
+				{#each listedCloud as id (id)}
+					<option value={id}>{CLOUD_PROVIDERS[id]}</option>
+				{/each}
 			</select>
 		</div>
 
@@ -241,15 +253,57 @@
 
 	{#if provider === 'supertonic'}
 		<p class="cm-note">
-			<strong>Note:</strong> Supertonic downloads about 265MB of neural voice models on first use, then
-			runs on your device. No API key, and no data leaves your browser.
+			The on-device voice downloads about 265 MB of voice models the first time, then runs in this
+			browser. No API key, and no text leaves your device.
 		</p>
+	{/if}
+
+	{#if addableCloud.length > 0}
+		{#if adding}
+			<form class="add-service" onsubmit={saveService} aria-labelledby="add-service-heading">
+				<p class="cm-label" id="add-service-heading">Add a voice service</p>
+				<p class="cm-help">
+					Use your own API key for a cloud voice. The key is stored in this browser only.
+				</p>
+				<div class="cm-rows">
+					<div class="cm-row">
+						<label class="cm-label" for="new-tts-service">Service</label>
+						<select id="new-tts-service" class="cm-control" bind:value={newService}>
+							{#each addableCloud as id (id)}
+								<option value={id}>{CLOUD_PROVIDERS[id]}</option>
+							{/each}
+						</select>
+					</div>
+					<div class="cm-row">
+						<label class="cm-label" for="new-tts-key">API key</label>
+						<input
+							id="new-tts-key"
+							class="cm-control"
+							type="password"
+							autocomplete="off"
+							bind:value={newKey}
+							placeholder="Paste your key"
+						/>
+					</div>
+				</div>
+				<div class="add-service-actions">
+					<button type="button" class="cm-btn" onclick={() => (adding = false)}>Cancel</button>
+					<button type="submit" class="cm-btn" disabled={!newKey.trim() || switchingTo !== null}>
+						Save and use
+					</button>
+				</div>
+			</form>
+		{:else}
+			<button type="button" class="add-service-link" onclick={openAddService}>
+				Add a voice service
+			</button>
+		{/if}
 	{/if}
 
 	{#if isCloud}
 		<details class="cm-advanced">
 			<summary>
-				<span>Advanced: API key and model</span>
+				<span>{CLOUD_PROVIDERS[provider]} key and model</span>
 				<span class="cm-advanced-status">
 					{getAudioSettings().ttsApiKey ? 'Key saved' : 'Key needed'}
 				</span>
@@ -257,7 +311,7 @@
 			<div class="cm-rows">
 				<div class="cm-row">
 					<div>
-						<label class="cm-label" for="tts-api-key">{PROVIDER_NAMES[provider]} API key</label>
+						<label class="cm-label" for="tts-api-key">{CLOUD_PROVIDERS[provider]} API key</label>
 						<p class="cm-help" id="tts-api-key-help">Stored in this browser only.</p>
 					</div>
 					<input
@@ -317,3 +371,51 @@
 		</details>
 	{/if}
 </section>
+
+<style>
+	.add-service-link {
+		display: inline-flex;
+		align-items: center;
+		min-height: 44px;
+		margin-top: 4px;
+		padding: 0;
+		background: none;
+		border: none;
+		font-family: var(--font-body, 'Inter', sans-serif);
+		font-size: 0.9375rem;
+		font-weight: 600;
+		color: var(--color-neon-cyan, #00ffff);
+		text-decoration: underline;
+		text-underline-offset: 3px;
+		cursor: pointer;
+	}
+
+	.add-service-link:focus-visible {
+		outline: 3px solid var(--color-neon-cyan, #00ffff);
+		outline-offset: 2px;
+	}
+
+	.add-service {
+		margin-top: 8px;
+		padding: 16px;
+		border: 1px solid rgba(0, 255, 255, 0.3);
+		border-radius: 4px;
+		background: rgba(0, 255, 255, 0.04);
+	}
+
+	.add-service .cm-help {
+		margin-bottom: 4px;
+	}
+
+	.add-service-actions {
+		display: flex;
+		justify-content: flex-end;
+		gap: 8px;
+		margin-top: 8px;
+	}
+
+	.add-service-actions button:disabled {
+		opacity: 0.45;
+		cursor: not-allowed;
+	}
+</style>
