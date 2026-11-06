@@ -1,413 +1,153 @@
 <script>
-	import { onMount, onDestroy } from 'svelte';
+	/**
+	 * DiceThemePicker - "Dice": pick how the dice look, from a small render of a d20 per theme.
+	 * Built on ContentModal like every other dialog. Choosing a theme applies it at once.
+	 * The previews in /dice/previews were rendered once with the app's own dice-box.
+	 */
+	import { untrack } from 'svelte';
+	import ContentModal from './ContentModal.svelte';
 	import { getAllDiceThemes } from '../configuration/DiceThemes.js';
 	import { gameState } from '../stores/gameStore.svelte.js';
-	import { updateSettings } from '../stores/settingsStore.svelte.js';
+	import {
+		getDiceTheme as getSavedDiceKey,
+		updateSettings
+	} from '../stores/settingsStore.svelte.js';
 	import { updateDiceTheme } from '../stores/diceStore.svelte.js';
-	import AugmentedButton from './AugmentedButton.svelte';
 
 	let { isOpen = $bindable(false) } = $props();
 
-	const availableThemes = getAllDiceThemes();
+	// 'default' is dice-box's white set, so the separate 'white' entry would be a duplicate
+	const themes = getAllDiceThemes().filter((theme) => theme.key !== 'white');
+	const nameOf = (theme) => (theme.key === 'default' ? 'White' : theme.name);
+	const sameKey = (key) => (key === 'white' ? 'default' : key);
 
-	// Get current theme from gameState
-	let selectedTheme = $state(gameState.config?.options?.dice || availableThemes[0]);
+	const currentKey = () =>
+		sameKey(gameState.config?.options?.dice?.key ?? getSavedDiceKey() ?? themes[0].key);
+	let selectedKey = $state(currentKey());
 
-	let portalTarget;
-	let modalElement;
-
-	onMount(() => {
-		// Create a portal container at the body level
-		portalTarget = document.createElement('div');
-		portalTarget.className = 'dice-theme-picker-portal';
-		document.body.appendChild(portalTarget);
-	});
-
-	onDestroy(() => {
-		// Clean up portal when component is destroyed
-		if (portalTarget && portalTarget.parentNode) {
-			portalTarget.parentNode.removeChild(portalTarget);
-		}
-	});
-
-	// Use $effect to move the modal element to the portal when it's created
+	// The theme may have changed elsewhere (Settings) since the picker was last open
 	$effect(() => {
-		if (isOpen && modalElement && portalTarget) {
-			// Move the modal to the portal
-			portalTarget.appendChild(modalElement);
-		}
-
-		// Cleanup function
-		return () => {
-			if (modalElement && portalTarget && portalTarget.contains(modalElement)) {
-				portalTarget.removeChild(modalElement);
-			}
-		};
+		if (isOpen) selectedKey = untrack(currentKey);
 	});
 
 	function selectTheme(theme) {
-		selectedTheme = theme;
+		selectedKey = theme.key;
 
-		// Update game config
+		// Update game config, the saved settings and the live dice box
 		if (gameState.config) {
-			gameState.config.options = {
-				...gameState.config.options,
-				dice: theme
-			};
+			gameState.config.options = { ...gameState.config.options, dice: theme };
 		}
-
-		// Update settings store for persistence
 		updateSettings({ diceTheme: theme.key });
-
-		// Update dice box theme immediately
 		updateDiceTheme(theme);
-
-		// Close the picker
-		isOpen = false;
-	}
-
-	function handleBackdropClick(event) {
-		if (event.target === event.currentTarget) {
-			isOpen = false;
-		}
-	}
-
-	function handleKeydown(event) {
-		if (event.key === 'Escape') {
-			isOpen = false;
-		}
 	}
 </script>
 
-{#if isOpen}
-	<div
-		bind:this={modalElement}
-		class="dice-theme-picker-backdrop"
-		onclick={handleBackdropClick}
-		onkeydown={handleKeydown}
-		role="button"
-		tabindex="0"
-	>
-		<!-- Augmented UI wrapper (non-scrollable) -->
-		<div
-			class="dice-theme-picker-wrapper"
-			data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
-		>
-			<!-- Modal container (flex structure) -->
-			<div class="dice-theme-picker-modal">
-				<div class="modal-header">
-					<h2>Select Dice Theme</h2>
-					<button
-						class="close-button"
-						onclick={() => (isOpen = false)}
-						aria-label="Close dice theme picker"
-					>
-						×
-					</button>
-				</div>
-
-				<!-- Scrollable body -->
-				<div class="modal-body-scrollable">
-					<div class="themes-grid">
-						{#each availableThemes as theme (theme.key)}
-							<button
-								class="theme-card"
-								class:selected={selectedTheme?.key === theme.key}
-								onclick={() => selectTheme(theme)}
-								data-augmented-ui="tl-clip-x br-clip border"
-							>
-								<div class="theme-name">{theme.name}</div>
-								<div class="theme-category">{theme.category}</div>
-								<div class="theme-description">{theme.description}</div>
-								{#if selectedTheme?.key === theme.key}
-									<div class="selected-indicator">✓</div>
-								{/if}
-							</button>
-						{/each}
-					</div>
-				</div>
-
-				<div class="modal-footer">
-					<AugmentedButton
-						text="Close"
-						onclick={() => (isOpen = false)}
-						class="close-footer-button"
-					/>
-				</div>
-			</div>
-		</div>
+<ContentModal {isOpen} title="Dice" onClose={() => (isOpen = false)}>
+	<div class="themes-grid" role="radiogroup" aria-label="Dice theme">
+		{#each themes as theme (theme.key)}
+			<button
+				type="button"
+				class="theme-card"
+				role="radio"
+				aria-checked={selectedKey === theme.key}
+				onclick={() => selectTheme(theme)}
+				data-testid="dice-theme-{theme.key}"
+			>
+				<img
+					class="preview"
+					src="/dice/previews/{theme.key}.webp"
+					alt=""
+					width="64"
+					height="64"
+					loading="lazy"
+					decoding="async"
+				/>
+				<span class="theme-name">{nameOf(theme)}</span>
+			</button>
+		{/each}
 	</div>
-{/if}
+</ContentModal>
 
 <style>
-	/* Portal container at body level */
-	:global(.dice-theme-picker-portal) {
-		position: fixed;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		pointer-events: none;
-		z-index: 10000;
-	}
-
-	.dice-theme-picker-backdrop {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background: rgba(0, 0, 0, 0.85);
-		backdrop-filter: blur(8px);
-		-webkit-backdrop-filter: blur(8px);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: var(--space-md);
-		animation: fadeIn 0.2s ease-out;
-		pointer-events: all;
-		z-index: 1;
-	}
-
-	@keyframes fadeIn {
-		from {
-			opacity: 0;
-		}
-		to {
-			opacity: 1;
-		}
-	}
-
-	/* Wrapper with augmented UI (non-scrollable) */
-	.dice-theme-picker-wrapper {
-		max-width: 800px;
-		width: 100%;
-		max-height: 90vh;
-		display: flex;
-		position: relative;
-
-		--aug-border-all: 2px;
-		--aug-border-bg: linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta));
-		--aug-tl: 16px;
-		--aug-tr: 16px;
-		--aug-br: 16px;
-		--aug-bl: 16px;
-
-		box-shadow:
-			0 0 40px rgba(0, 255, 255, 0.3),
-			0 0 80px rgba(0, 255, 255, 0.15),
-			inset 0 0 40px rgba(0, 255, 255, 0.05);
-
-		animation: slideIn 0.3s ease-out;
-	}
-
-	/* Modal container (flex structure, non-scrollable) */
-	.dice-theme-picker-modal {
-		background: linear-gradient(135deg, rgba(0, 20, 40, 0.95), rgba(10, 10, 30, 0.98));
-		width: 100%;
-		display: flex;
-		flex-direction: column;
-		position: relative;
-		overflow: hidden;
-	}
-
-	@keyframes slideIn {
-		from {
-			transform: translateY(-20px);
-			opacity: 0;
-		}
-		to {
-			transform: translateY(0);
-			opacity: 1;
-		}
-	}
-
-	.modal-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		padding: var(--space-xl) var(--space-xl) var(--space-lg);
-		border-bottom: 2px solid rgba(0, 255, 255, 0.2);
-		flex-shrink: 0; /* Don't shrink header */
-	}
-
-	/* Scrollable body wrapper */
-	.modal-body-scrollable {
-		flex: 1;
-		overflow-y: auto;
-		overflow-x: hidden;
-		min-height: 0; /* Important for flex scrolling */
-		padding: var(--space-md) var(--space-xl);
-	}
-
-	h2 {
-		margin: 0;
-		font-size: clamp(1.5rem, 4vw, 2rem);
-		letter-spacing: var(--letter-spacing-widest);
-		color: var(--color-brand-yellow);
-		text-shadow: var(--text-glow-yellow);
-		font-family: var(--font-display);
-	}
-
-	.close-button {
-		background: none;
-		border: none;
-		color: var(--color-neon-cyan);
-		font-size: 2.5rem;
-		line-height: 1;
-		cursor: pointer;
-		padding: 0;
-		width: 40px;
-		height: 40px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		transition: all 0.2s ease;
-	}
-
-	.close-button:hover {
-		color: var(--color-cyber-magenta);
-		transform: scale(1.1);
-		text-shadow: 0 0 12px var(--color-cyber-magenta);
-	}
-
 	.themes-grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-		gap: var(--space-lg);
+		grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+		gap: var(--space-sm, 0.5rem);
 	}
 
 	.theme-card {
 		position: relative;
-		background: linear-gradient(135deg, rgba(0, 30, 60, 0.4), rgba(15, 15, 40, 0.6));
-		backdrop-filter: blur(4px);
-		-webkit-backdrop-filter: blur(4px);
-		padding: var(--space-lg);
-		cursor: pointer;
-		border: none;
-		text-align: left;
-		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
-		--aug-border-all: 2px;
-		--aug-border-bg: linear-gradient(135deg, rgba(0, 255, 255, 0.3), rgba(255, 0, 255, 0.3));
-		--aug-tl: 8px;
-		--aug-br: 8px;
-
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-sm);
+		align-items: center;
+		gap: var(--space-xs, 0.25rem);
+		min-height: 44px;
+		padding: var(--space-sm, 0.5rem) var(--space-xs, 0.25rem) var(--space-sm, 0.5rem);
+		background: rgba(255, 255, 255, 0.03);
+		border: 1px solid rgba(255, 255, 255, 0.14);
+		border-radius: 6px;
+		color: #fff;
+		cursor: pointer;
+		transition:
+			background-color 120ms ease-out,
+			border-color 120ms ease-out;
 	}
 
 	.theme-card:hover {
-		transform: translateY(-4px);
-		--aug-border-all: 3px;
-		box-shadow:
-			0 0 20px rgba(0, 255, 255, 0.4),
-			0 0 40px rgba(0, 255, 255, 0.2);
+		background: rgba(0, 255, 255, 0.06);
+		border-color: rgba(0, 255, 255, 0.5);
 	}
 
-	.theme-card.selected {
-		--aug-border-bg: linear-gradient(135deg, var(--color-brand-yellow), var(--color-cyber-magenta));
-		background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 0, 255, 0.1));
-		box-shadow:
-			0 0 30px rgba(255, 215, 0, 0.3),
-			0 0 60px rgba(255, 215, 0, 0.15);
+	.theme-card:focus-visible {
+		outline: 3px solid var(--color-neon-cyan, #00ffff);
+		outline-offset: 2px;
+	}
+
+	.theme-card[aria-checked='true'] {
+		background: rgba(255, 215, 0, 0.08);
+		border: 2px solid var(--color-brand-yellow, #ffd700);
+	}
+
+	/* Selected: a check in the corner, as well as the gold frame */
+	.theme-card[aria-checked='true']::after {
+		content: '';
+		position: absolute;
+		top: 6px;
+		right: 8px;
+		width: 6px;
+		height: 11px;
+		border-right: 2px solid var(--color-brand-yellow, #ffd700);
+		border-bottom: 2px solid var(--color-brand-yellow, #ffd700);
+		transform: rotate(45deg);
+	}
+
+	.preview {
+		width: 64px;
+		height: 64px;
 	}
 
 	.theme-name {
-		font-family: var(--font-display);
-		font-size: var(--text-lg);
-		font-weight: 700;
-		color: var(--color-neon-cyan);
-		text-transform: uppercase;
-		letter-spacing: var(--letter-spacing-wide);
-	}
-
-	.theme-card.selected .theme-name {
-		color: var(--color-brand-yellow);
-		text-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
-	}
-
-	.theme-category {
-		font-size: var(--text-xs);
-		color: var(--color-cyber-magenta);
-		text-transform: uppercase;
-		letter-spacing: var(--letter-spacing-wider);
+		font-family: var(--font-body, 'Inter', sans-serif);
+		font-size: 0.8125rem;
 		font-weight: 600;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		text-align: center;
+		color: rgba(255, 255, 255, 0.9);
 	}
 
-	.theme-description {
-		font-size: var(--text-sm);
-		color: var(--color-text-secondary);
-		line-height: 1.4;
+	.theme-card[aria-checked='true'] .theme-name {
+		color: var(--color-brand-yellow, #ffd700);
 	}
 
-	.selected-indicator {
-		position: absolute;
-		top: var(--space-sm);
-		right: var(--space-sm);
-		font-size: 1.5rem;
-		color: var(--color-brand-yellow);
-		text-shadow: 0 0 12px rgba(255, 215, 0, 0.8);
-	}
-
-	.modal-footer {
-		display: flex;
-		justify-content: center;
-		padding: var(--space-lg) var(--space-xl) var(--space-xl);
-		border-top: 2px solid rgba(0, 255, 255, 0.2);
-		flex-shrink: 0; /* Don't shrink footer */
-	}
-
-	.modal-footer :global(.aug-button) {
-		min-width: 180px;
-	}
-
-	/* Responsive */
-	@media (max-width: 768px) {
-		.dice-theme-picker-wrapper {
-			max-height: 95vh;
-		}
-
-		.modal-header,
-		.modal-body-scrollable,
-		.modal-footer {
-			padding-left: var(--space-lg);
-			padding-right: var(--space-lg);
-		}
-
+	@media (max-width: 640px) {
 		.themes-grid {
-			grid-template-columns: 1fr;
-		}
-
-		h2 {
-			font-size: var(--text-xl);
+			grid-template-columns: repeat(3, minmax(0, 1fr));
 		}
 	}
 
-	@media (max-width: 480px) {
-		.dice-theme-picker-backdrop {
-			padding: var(--space-sm);
-		}
-
-		.modal-header,
-		.modal-body-scrollable,
-		.modal-footer {
-			padding-left: var(--space-md);
-			padding-right: var(--space-md);
-		}
-
-		.theme-card {
-			padding: var(--space-md);
-		}
-	}
-
-	/* Accessibility */
 	@media (prefers-reduced-motion: reduce) {
-		.dice-theme-picker-backdrop,
-		.dice-theme-picker-modal,
 		.theme-card {
-			animation: none;
 			transition: none;
 		}
 	}
