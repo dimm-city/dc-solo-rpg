@@ -8,8 +8,7 @@
 	import { getAudioSettings, getGameplaySettings, speak } from '../stores/audioStore.svelte.js';
 	import VoiceNote from './journal/VoiceNote.svelte';
 	import AutoJournalTimer from './journal/AutoJournalTimer.svelte';
-	import { getEndingCause, getStatusLine } from '../utils/endingSummary.js';
-	import { getJournalPrompts, getFinalPrompts } from '../configuration/journalPrompts.js';
+	import { getStatusLine } from '../utils/endingSummary.js';
 
 	// How long "Saved to your log" shows before the game moves on
 	const SAVED_BEAT = 800;
@@ -33,11 +32,6 @@
 	// The final log belongs to the ending: it covers the whole run
 	const isFinal = $derived(gameState.gameOver);
 	const statusLine = $derived(getStatusLine(gameState));
-	const prompts = $derived(
-		isFinal
-			? getFinalPrompts(getEndingCause(gameState), gameState.win)
-			: getJournalPrompts(currentEvents)
-	);
 	const sheetLabel = $derived(
 		isFinal
 			? `Round ${gameState.round}`
@@ -69,11 +63,6 @@
 	$effect(() => {
 		if (journalSaved && isFinal) tick().then(() => epitaphEl?.focus({ preventScroll: true }));
 	});
-
-	function usePrompt(prompt) {
-		cancelAutoJournalTimer();
-		journalText = journalText ? `${journalText.trimEnd()}\n\n${prompt}\n` : `${prompt}\n`;
-	}
 
 	// Auto-journal timer state
 	let autoJournalTimer = $state(null);
@@ -221,25 +210,14 @@
 				</p>
 			</div>
 		{:else}
-			<!-- 3. Prompts -->
-			<div class="prompt-chips" role="group" aria-label="Prompts to reflect on">
-				{#each prompts as prompt (prompt)}
-					<button
-						type="button"
-						class="chip"
-						disabled={saving || journalSaved}
-						onclick={() => usePrompt(prompt)}>{prompt}</button
-					>
-				{/each}
-			</div>
-
-			<!-- 4. Writing: the main element -->
+			<!-- 3. Writing: the main element. No prompts (owner decision): the round's cards above
+			     are the material, and the page is the player's own. -->
 			<section class="writing">
 				<h3 id="writing-label" class="section-label">Your entry</h3>
 				<textarea
 					bind:value={journalText}
 					aria-labelledby="writing-label"
-					placeholder={prompts[0] ?? 'Write your journal entry here...'}
+					placeholder={isFinal ? 'Write your final entry' : 'Write about this round'}
 					disabled={saving || journalSaved}
 					data-autofocus={autofocusWriting ? '' : undefined}
 					oninput={() => cancelAutoJournalTimer()}
@@ -248,7 +226,7 @@
 		{/if}
 	</div>
 
-	<!-- 5. Actions, pinned to the bottom of the sheet: voice note left, Record Entry right -->
+	<!-- 4. Actions, pinned to the bottom of the sheet: voice note left, Record Entry right -->
 	<footer class="sheet-actions">
 		<AutoJournalTimer
 			timeRemaining={autoJournalTimeRemaining}
@@ -443,7 +421,8 @@
 		margin-bottom: var(--space-xs);
 	}
 
-	/* What happened this round: compact, scrolls inside itself when long */
+	/* What happened this round: every card of the round, with no scroller of its own (owner
+	   decision). A typical round (up to 6 cards) fits; past that the sheet body scrolls. */
 	.round-log {
 		flex: none;
 	}
@@ -452,11 +431,6 @@
 		list-style: none;
 		margin: 0;
 		padding: 0;
-		max-height: min(22dvh, 11rem);
-		overflow-y: auto;
-		overscroll-behavior: contain;
-		scrollbar-width: thin;
-		scrollbar-color: rgba(0, 255, 255, 0.5) transparent;
 		border: 1px solid rgba(255, 255, 255, 0.12);
 		background: rgba(255, 255, 255, 0.03);
 	}
@@ -513,47 +487,10 @@
 		justify-content: center;
 	}
 
-	/* Prompts: chips wrap, on every screen */
-	.prompt-chips {
-		flex: none;
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--space-sm);
-	}
-
-	.chip {
-		min-height: 44px;
-		max-width: 100%;
-		padding: var(--space-sm) var(--space-md);
-		font-family: var(--font-body, 'Inter', sans-serif);
-		font-size: 0.9375rem;
-		line-height: 1.3;
-		text-align: left;
-		color: var(--color-neon-cyan, #0ff);
-		background: transparent;
-		border: 1px solid rgba(0, 255, 255, 0.45);
-		border-radius: 22px;
-		cursor: pointer;
-		transition:
-			background 120ms ease-out,
-			border-color 120ms ease-out;
-	}
-
-	.chip:hover:not(:disabled),
-	.chip:focus-visible {
-		background: rgba(0, 255, 255, 0.12);
-		border-color: var(--color-neon-cyan, #0ff);
-	}
-
-	.chip:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
-
-	/* Writing: takes every pixel the other sections leave */
+	/* Writing: takes every pixel the round list leaves, never under about four lines */
 	.writing {
 		flex: 1 1 0;
-		min-height: 10rem;
+		min-height: 11rem;
 		display: flex;
 		flex-direction: column;
 	}
@@ -746,8 +683,7 @@
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		textarea,
-		.chip {
+		textarea {
 			transition: none;
 		}
 	}
@@ -772,10 +708,6 @@
 
 		.sheet-title {
 			font-size: 1.75rem;
-		}
-
-		.round-list {
-			max-height: 16dvh;
 		}
 
 		textarea {
@@ -824,7 +756,7 @@
 			font-size: 1.75rem;
 		}
 
-		/* Landscape phones: the writing area comes first; labels go, the lists shrink to a row */
+		/* Landscape phones: labels go and the list rows tighten; the writing keeps its room */
 		.section-label {
 			display: none;
 		}
@@ -833,33 +765,13 @@
 			gap: var(--space-sm);
 		}
 
-		.round-list {
-			max-height: 2.75rem;
-		}
-
 		.round-list li {
 			padding-block: var(--space-xs);
-		}
-
-		.prompt-chips {
-			flex-wrap: nowrap;
-			overflow-x: auto;
-			scrollbar-width: none;
-		}
-
-		.chip {
-			flex: none;
-			white-space: nowrap;
 		}
 
 		/* The Game Over screen just showed the recap: here the writing gets the room */
 		.journal-sheet.final .recap {
 			display: none;
-		}
-
-		.chip {
-			min-height: 36px;
-			padding: 0.25rem var(--space-md);
 		}
 
 		.writing {
