@@ -494,6 +494,7 @@ describe('My Feature', () => {
 | `BEAT`                    | `--dur-beat`           | 400ms   | A held moment (King ignite, unlock) |
 | `SEQUENCE_MAX`            | `--dur-sequence-max`   | 1.5s    | Longest staged sequence             |
 | `AMBIENT`, `AMBIENT_SLOW` | `--dur-ambient(-slow)` | 4s / 8s | The only ambient loop periods       |
+| `RESULT_HOLD`             | (none)                 | 2s      | A result holds, then moves on       |
 
 ```javascript
 import { ANIMATION_DURATION, ANIMATION_EASING, Z_INDEX } from '$lib/constants/animations.js';

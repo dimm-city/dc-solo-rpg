@@ -20,6 +20,7 @@ never disagree. `styles.css` defines no motion numbers of its own; a unit test c
 | `ANIMATION_DURATION.BEAT`         | `--dur-beat`           | 400ms     | A held moment: a King igniting, Salvation unlock |
 | `ANIMATION_DURATION.SEQUENCE_MAX` | `--dur-sequence-max`   | 1.5s      | The longest any staged sequence may run          |
 | `AMBIENT` / `AMBIENT_SLOW`        | `--dur-ambient(-slow)` | 4s / 8s   | The only periods allowed for ambient loops       |
+| `ANIMATION_DURATION.RESULT_HOLD`  | (none)                 | 2s        | A roll's result holds, then the game moves on    |
 | `ANIMATION_EASING.CUBIC_OUT`      | `--ease-enter`         | cubic out | Entering, state changes                          |
 | `ANIMATION_EASING.CUBIC_IN`       | `--ease-exit`          | cubic in  | Leaving                                          |
 | `ANIMATION_DISTANCE.RISE`         | `--rise-enter`         | 8px       | The most an entering element moves               |
@@ -38,6 +39,10 @@ The older names still work and follow the standard: `FAST` = 120, `NORMAL` = 200
   urgency. They stop under reduced motion.
 - **Sequences** (the fourth King, the Salvation unlock) stay under 1.5s, built from beats and
   staggers, with no blank frames.
+- **The result hold** is a reading pause, not an animation: a roll's result line stays 2s, then
+  the game moves on by itself (a press moves on at once; an ending waits). A 2px line on the
+  step button runs out over the hold, read from the hold's own clock, in quarters under reduced
+  motion. It pauses under dialogs and in a hidden tab.
 - **Never animate layout** (`width`, `height`, `background-size`, `top`) or run `box-shadow`,
   `background-position` or `filter` loops; animate `transform` and `opacity`.
 - **Reduced motion:** movement goes; a colour change or a static highlight stays.
