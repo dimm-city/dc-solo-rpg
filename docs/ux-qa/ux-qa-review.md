@@ -7,7 +7,7 @@ restart. Branch: `claude/vibrant-curie-w9bn88`.
 ## Status
 
 - Started: 2026-11-06, against `main` at 17b967d (PR #50 merged).
-- Current phase: done. The fix round, the verification pass and the final round are merged into PR #51 (see **Final round**).
+- Current phase: done. The fix round, the verification pass, the final round and the owner playtest round are merged into PR #51.
 - Last section completed: Recommendations (all coverage items done).
 
 ## How to resume after a restart
@@ -1669,6 +1669,41 @@ SvelteKit was still starting up. The fixed driver logged 0 console errors on bot
 
 **Inputs per round:** about 7, down from about 12 before the fix round. Before Salvation it is
 about 6.9, and about 7.9 once Salvation is unlocked.
+
+## Owner playtest round (2026-11-07)
+
+Fixes from the owner's own phone testing (Android, Vivaldi, about 393px wide) and three more
+markups, all merged into PR #51.
+
+**Rules.** A missed Salvation roll adds no token (a natural 1 included; it still makes the
+player Surreal), so tokens only ever fall. The fourth Ace ends the game: survive its Stability
+check and the player escapes; drop to 0 and they fall. A **Hard** difficulty keeps the old
+rules (misses add tokens, four Aces make Salvation automatic after a Stability check) to stay
+under the SRD's 1%. Simulated win rates: Hard 0.33%, Normal 46.8%, Easy 55.3%.
+
+**Dice rolling in a corner: root cause found.** It was never the canvas size. dice-box 0.0.12
+spawns each die inside the table wall (0.9 of the half-size, walls at 0.93, die radius 100)
+and spins it with a non-unit quaternion that inflates the collision shape on the first step,
+so the wall's friction swallows the throw and the die drops where it spawned, usually top-left.
+About 1 throw in 7 on a phone. The store now wraps the library's throw: dice start clear of
+the walls, the spin is normalised, and near-centre throws get enough speed. Short throws went
+from 13–15% to 0–1% in replayed physics, and a `Short throw` warning logs any recurrence.
+
+**HUD.** Every tile's bottom row (bars, skulls, suit pips, roll modifiers) sits on one line.
+Lucid/Surreal are two always-present arrows under the LED roll, dim until active. The Tokens
+"above the start" state stays for Hard.
+
+**Board.** The screen title is lixdu at every width (an owner override of the 28px rule, sized
+to fit "INSTABILITY" at 360px). The card fills most of the viewport (90dvh on phones, an 85dvh
+portrait card on desktop); only the story scrolls. The journal has no prompt chips or prompt
+placeholder, and the round's card list takes the room.
+
+**Story mode.** Rounds could not be turned on the owner's phone: the reader sized itself to
+`100vh`, which on Android is the height with the browser bars hidden, so the Previous/Next bar
+sat under the bars. It is now sized to the visible viewport, and so are `body`, `main` and the
+game layout (`100dvh`, with `100vh` as the fallback).
+
+**Touch.** No browser tap highlight on any button or link.
 
 ## Recommendations
 
