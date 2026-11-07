@@ -1,0 +1,14 @@
+## Capture notes (facts measured while capturing, for the reviewers)
+
+- **Reduced motion: the static roll is off-screen.** `--hud-bottom` (published by StatusHUD on mount, refreshed only by a ResizeObserver size change or a window resize) reads 980px at iphone-13 and 1040px at desktop on the board, while the HUD ends at ~128/132px. The same stale value appears after the real Home > Play path, not only on a direct load. `.static-roll` is placed at `--hud-bottom + 44%` of the rest, so its top lands at ~920px (below an 844px viewport) and the d20 number never shows: see `rm-static-roll` (only "Rolling…" on the button). After a 1px window resize the variable becomes 136/140px and the number shows in the lower table: `rm-static-roll-after-resize`.
+- **Rule captions show late in a real game.** The scripted Normal game (tips on) met the King, the Ace of Hearts, a natural 20, a natural 1 (Lucid 2d20, both dice 1) and the Ace of Diamonds all in round 1. Where each caption first showed (iphone-13; the same at every viewport): odd on round 1's first Stability check; King on round 1's Salvation (not on the Ace of Hearts' Stability check that came first); Ace on round 2's Roll for Tasks; Lucid on round 2's Stability check; Surreal on round 2's Salvation; "Salvation unlocked" only on round 3's Roll for Tasks. Each caption was dismissed (tapped) after its shot so the next could show; in the app a caption starts at most once per screen and, by the code, only when the screen type differs from the one the last caption started on. Each `caption-*` row says where it appeared.
+- **Easy, fourth Ace with no odd card seen yet:** if the "odd" caption has not been shown before, it takes the Final Stability Check and the "fourth Ace" caption never shows (the game ends on that check). The capture now shows the odd caption first (caption-easy-odd), then the fourth-Ace one (caption-easy-fourth-ace).
+- **iPhone 13 sizes** are the full screen (390x844 / 844x390). With Safari's bars the visible area is about 390x664 / 750x342, which these captures do not cover.
+- The 3D dice are skipped to their result (a press during a roll does the same in the app), so no shot shows dice at rest except `stability-rolling` (mid-throw, best effort under swiftshader).
+
+## Not scripted this round (reachable, but not captured)
+
+- The opening instability roll's natural 1 and natural 20 results (one result, a roll of 8, is captured; the Lucid/Surreal hints are shown on Round start, the Stability check and Salvation instead).
+- On Easy, a fourth Ace that carries skip-damage (wins on the card, no final check).
+- /game/ghost-in-the-machine (every state uses future-lost; the board layout is the same, only the card and intro copy differ).
+- The board with the 3D dice at rest on top (they are skipped; see `stability-rolling` for dice in the air).
