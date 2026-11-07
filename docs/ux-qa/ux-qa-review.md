@@ -7,7 +7,7 @@ restart. Branch: `claude/vibrant-curie-w9bn88`.
 ## Status
 
 - Started: 2026-11-06, against `main` at 17b967d (PR #50 merged).
-- Current phase: fix round complete and merged (see **Fix round**); owner decisions pending.
+- Current phase: done. The fix round, the verification pass and the final round are merged into PR #51 (see **Final round**).
 - Last section completed: Recommendations (all coverage items done).
 
 ## How to resume after a restart
@@ -1621,6 +1621,54 @@ It is not at the award-winning bar yet, for three reasons:
 
 Fix NV-01 to NV-03 before this merges, all three are S effort. Then do NV-04 and NV-05 with the
 HUD redesign. After that, the remaining gap is polish rather than defects.
+
+## Final round (2026-11-07)
+
+**The owner's answers to the open decisions:**
+
+1. **Auto-advance: yes.** Results move on by themselves after `RESULT_HOLD` (2s). A press
+   moves on at once, and a line on the step button runs out over the hold. Results that end
+   the game wait for the player. The deal and the opening roll share the same hold.
+2. **2d20 naturals: no change.** Only the kept die counts. The Guide and the docs now say so.
+3. **Four Aces:** automatic Salvation now takes one Stability check, with Lucid or Surreal
+   applied. The token comes off if Stability is still above 0. Win rate: Normal goes from
+   0.69% to 0.40% (still under the SRD's 1%), and Easy from 1.72% to 1.01%.
+4. **Story deletion:** kept.
+5. **Rule tips:** they fire once per game, and Settings › Gameplay › Rule tips turns them off.
+   An e2e test plays a real game to check it.
+
+**The owner's HUD markup (phone screenshot):**
+
+- **The HUD is mirrored:** Stability, Kings | Roll, Cards | Aces, Tokens.
+  - Aces get suit pips, with the Ace of Hearts in gold.
+  - Cards and Tokens get Stability-style meters. Tokens past the start show a striped bar.
+  - The Roll is an LED seven-segment number (DSEG7, OFL, one 5KB woff2).
+- **The header** is one mirrored grid: the controls sit on the frame's centre line, the
+  padding is the same on both sides, and the title is truly centred.
+- **Dice** are thrown across the whole screen on top of the UI. After one beat they sink beneath
+  the board (the z-index drops, then 350ms down, shrink and darken), and the result line shows
+  in front of them.
+- **CK-01:** a returned King's HUD skull un-ignites.
+
+**The verification issues: all fixed.**
+
+- **NV-01:** the landscape intro scrolls.
+- **NV-02:** captions, the card line, the title and the result sit in one column, so they never
+  overlap.
+- **NV-03:** the game's global CSS is scoped to the game, so the home page scrolls after a game.
+- **NV-04:** steps reset when they are left.
+- **NV-05:** titles are Inter below 28px.
+- **NV-06:** a modifier notice lasts one step.
+- **NV-07:** the microphone shows three distinct errors.
+- **NV-08:** leaving before the opening roll is saved.
+- **MN-03:** every dialog footer says "Done".
+- **MN-07:** the intro headings are Inter.
+
+**The mobile console error** came from the test driver, not the app. It navigated away while
+SvelteKit was still starting up. The fixed driver logged 0 console errors on both platforms.
+
+**Inputs per round:** about 7, down from about 12 before the fix round. Before Salvation it is
+about 6.9, and about 7.9 once Salvation is unlocked.
 
 ## Recommendations
 
