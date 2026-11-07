@@ -153,6 +153,27 @@ test.describe('Round flow', () => {
 		expect((await gameStateOf(page)).isLucid).toBe(false);
 	});
 
+	test('NV-03: after leaving a game, the home page still scrolls to every game', async ({
+		page
+	}) => {
+		await openGame(page);
+		await playToFirstRound(page);
+		await page.getByRole('button', { name: 'Exit game' }).click();
+		await page.getByRole('button', { name: 'Leave' }).click();
+		await expect(page.getByTestId('home-page')).toBeVisible();
+
+		// The game's page rules are gone: the home's scroller scrolls again
+		const main = page.locator('body > main');
+		await expect(main).toHaveCSS('overflow-y', 'auto');
+		const cards = page.locator('[data-testid="game-selector"] .card-actions');
+		const last = cards.last().getByRole('button').first();
+		await last.scrollIntoViewIfNeeded();
+		const box = await last.boundingBox();
+		const viewport = page.viewportSize()!;
+		expect(box!.y).toBeGreaterThanOrEqual(0);
+		expect(box!.y + box!.height).toBeLessThanOrEqual(viewport.height);
+	});
+
 	test('the Exit dialog says the game is saved', async ({ page }) => {
 		await openGame(page);
 		await playToFirstRound(page);
