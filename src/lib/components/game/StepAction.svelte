@@ -117,8 +117,8 @@
 		gap: 0.125rem;
 	}
 
-	/* A two-line label splits evenly ("Roll for Stability · / Salvation is assured"), never
-	   leaving one word on a line of its own */
+	/* A two-line label splits evenly ("Roll for Stability · / survive this and you escape"),
+	   never leaving one word on a line of its own */
 	.label-main {
 		text-wrap: balance;
 	}

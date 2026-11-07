@@ -2,7 +2,8 @@
  * useRuleCaptions - one-time rule captions taught through play
  *
  * Watches gameState and queues a short caption the first time each rule shows up
- * in a game (odd card, King, Ace of Hearts, other Aces, Lucid, Surreal, failed Salvation).
+ * in a game (odd card, King, Ace of Hearts, other Aces, the fourth Ace, Lucid, Surreal, and
+ * on Hard a failed Salvation adding a token).
  * The "seen" set lives in memory and resets with every new game; each id is also recorded
  * once (markRuleTipSeen) for the Help modal's "Rules you've met". Nothing is queued while
  * rule tips are off (Settings › Gameplay › Rule tips).
@@ -12,6 +13,7 @@
  */
 import { gameState } from '../stores/gameStore.svelte.js';
 import { getSalvationThreshold } from '../services/d20Mechanics.js';
+import { isHardGame } from '../constants/difficulty.js';
 import { areRuleTipsEnabled, markRuleTipSeen } from '../utils/instructionsStorage.js';
 
 const ODD_RANKS = ['A', '3', '5', '7', '9'];
@@ -19,6 +21,21 @@ const SALVATION_CAPTION =
 	'Salvation unlocked. At the end of each round, roll to remove a token. Clear them all to win.';
 const RESET_STATES = ['loadGame', 'showIntro'];
 const tipsOff = () => !areRuleTipsEnabled();
+
+/**
+ * What another Ace does to Salvation, once the Ace of Hearts is out. On Normal the third Ace
+ * also points at the fourth, which ends the game; on Hard four Aces leave only a Stability check.
+ */
+function aceCaption(aces, hard) {
+	const need = getSalvationThreshold(aces);
+	if (need === 0) {
+		return 'Each Ace makes salvation easier. With all four, only a Stability check stands in the way.';
+	}
+	const easier = `Each Ace makes salvation easier. You now need ${need}+.`;
+	return aces === 3 && !hard
+		? `${easier} One more Ace and you escape, if you survive its check.`
+		: easier;
+}
 
 /** Pick the fields we compare between observations. */
 function snapshot(g) {
@@ -30,6 +47,7 @@ function snapshot(g) {
 		aces: g.acesRevealed,
 		heartsAce: g.aceOfHeartsRevealed,
 		tokens: g.tokens,
+		hard: isHardGame(g),
 		lucid: g.isLucid,
 		surreal: g.isSurreal,
 		lastCard: last ? last.card : null,
@@ -94,16 +112,13 @@ export function createRuleCaptions({ isDisabled = () => false, onSeen = markRule
 		}
 
 		if (next.aces > before.aces) {
-			if (next.heartsAce && !before.heartsAce) {
+			if (next.aces >= 4 && !next.hard) {
+				// The fourth Ace ends the game: its Stability check (if it has one) is the last roll
+				fire('fourth-ace', 'The fourth Ace. Survive its Stability check and you escape.');
+			} else if (next.heartsAce && !before.heartsAce) {
 				fire('salvation', SALVATION_CAPTION);
 			} else if (next.heartsAce) {
-				const need = getSalvationThreshold(next.aces);
-				fire(
-					'ace',
-					need > 0
-						? `Each Ace makes salvation easier. You now need ${need}+.`
-						: 'Each Ace makes salvation easier. With all four, only a Stability check stands in the way.'
-				);
+				fire('ace', aceCaption(next.aces, next.hard));
 			}
 		}
 
@@ -119,6 +134,7 @@ export function createRuleCaptions({ isDisabled = () => false, onSeen = markRule
 			fire('salvation', SALVATION_CAPTION);
 		}
 
+		// Only Hard adds tokens (a failed Salvation roll); on Normal they only ever fall
 		if (next.tokens > before.tokens && next.heartsAce) {
 			fire('token', 'A failed salvation roll adds a token. Hope costs.');
 		}

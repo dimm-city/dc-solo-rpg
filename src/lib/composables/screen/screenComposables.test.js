@@ -48,6 +48,7 @@ beforeEach(() => {
 		isLucid: false,
 		isSurreal: false,
 		gameOver: false,
+		win: false,
 		config: { labels: {} },
 		log: []
 	});
@@ -126,6 +127,105 @@ describe('useFailureCheck', () => {
 	});
 });
 
+describe("useFailureCheck on the fourth Ace's check (the final roll)", () => {
+	const FINAL = 'Roll for Stability · survive this and you escape';
+
+	beforeEach(() => {
+		gameState.state = 'failureCheck';
+		gameState.acesRevealed = 4;
+		gameState.tower = 9;
+		gameState.tokens = 6;
+	});
+
+	it('says what is at stake, wins when Stability holds, and waits for the player', async () => {
+		vi.useFakeTimers();
+		const check = useFailureCheck();
+		expect(check.buttonText).toBe(FINAL);
+		mockDieRoll(13);
+
+		await check.handleFailureCheck();
+		expect(gameState.tower).toBe(9);
+		expect(gameState.tokens).toBe(6);
+		expect(gameState.win).toBe(true);
+		expect(gameState.gameOver).toBe(true);
+		expect(check.resultLine).toBe('Rolled 13 · no Stability lost · 9/20 · you escape');
+		expect(check.buttonText).toBe('Escape');
+		// No result hold: the ending waits for the player
+		expect(check.hold.active).toBe(false);
+		await vi.advanceTimersByTimeAsync(RESULT_HOLD_MS * 2);
+		expect(gameState.state).toBe('failureCheck');
+
+		await check.handleFailureCheck();
+		expect(gameState.state).toBe('gameOver');
+	});
+
+	it('loses when that check takes the last Stability, and waits', async () => {
+		vi.useFakeTimers();
+		gameState.tower = 2;
+		const check = useFailureCheck();
+		mockDieRoll(4);
+
+		await check.handleFailureCheck();
+		expect(gameState.tower).toBe(0);
+		expect(gameState.win).toBe(false);
+		expect(gameState.gameOver).toBe(true);
+		expect(check.resultLine).toBe('Rolled 4 · −2 Stability · 0/20 · nothing left to hold on to');
+		expect(check.buttonText).toBe('Face the end');
+		expect(check.hold.active).toBe(false);
+		await vi.advanceTimersByTimeAsync(RESULT_HOLD_MS * 2);
+		expect(gameState.state).toBe('failureCheck');
+
+		await check.handleFailureCheck();
+		expect(gameState.state).toBe('gameOver');
+	});
+
+	it('applies and uses up a Lucid modifier like any roll', async () => {
+		gameState.isLucid = true;
+		const check = useFailureCheck();
+		expect(check.buttonHint).toBe('Lucid: 2 dice, keep high');
+		mockDieRollSequence([3, 14]);
+
+		await check.handleFailureCheck();
+		expect(rollDice).toHaveBeenCalledWith(14, { isLucid: true, isSurreal: false, dice: [3, 14] });
+		expect(gameState.isLucid).toBe(false);
+		expect(check.resultLine).toBe(
+			'Rolled 14 (high of 3, 14) · no Stability lost · 9/20 · you escape'
+		);
+		expect(gameState.win).toBe(true);
+	});
+
+	it('applies and uses up a Surreal modifier, which can make it the fatal roll', async () => {
+		gameState.isSurreal = true;
+		gameState.tower = 2;
+		const check = useFailureCheck();
+		expect(check.buttonHint).toBe('Surreal: 2 dice, keep low');
+		mockDieRollSequence([15, 3]);
+
+		await check.handleFailureCheck();
+		expect(gameState.isSurreal).toBe(false);
+		expect(check.resultLine).toBe(
+			'Rolled 3 (low of 15, 3) · −2 Stability · 0/20 · nothing left to hold on to'
+		);
+		expect(gameState.win).toBe(false);
+		expect(gameState.gameOver).toBe(true);
+	});
+
+	it('is an ordinary check on Hard, where the fourth Ace ends nothing', async () => {
+		gameState.config = { labels: {}, options: { difficulty: 2 } };
+		gameState.cardsToDraw = 0;
+		const check = useFailureCheck();
+		expect(check.buttonText).toBe('Roll for damage');
+		mockDieRoll(13);
+
+		await check.handleFailureCheck();
+		expect(gameState.gameOver).toBe(false);
+		expect(check.resultLine).toBe('Rolled 13 · no Stability lost · 9/20');
+		expect(check.buttonText).toBe('Continue');
+		expect(check.hold.active).toBe(true);
+		check.resetState();
+	});
+});
+
 describe('useInitialDamage', () => {
 	it('rolls a d20 through the random service and reads the d20 damage table', async () => {
 		gameState.state = 'initialDamageRoll';
@@ -165,24 +265,37 @@ describe('useInitialDamage', () => {
 });
 
 describe('useSuccessCheck', () => {
-	it('shows the target before rolling and the outcome after', async () => {
+	it('shows the target before rolling and the outcome after (a miss loses no token)', async () => {
 		gameState.state = 'successCheck';
 		const check = useSuccessCheck();
 		expect(check.buttonText).toBe('Roll to remove a token · need 14+');
 		mockDieRoll(2);
 
 		await check.handleSuccessCheck();
-		expect(gameState.tokens).toBe(11);
+		expect(gameState.tokens).toBe(10);
 		expect(gameState.state).toBe('successCheck');
-		expect(check.resultLine).toBe('Rolled 2 · needed 14+ · +1 token · 11 left');
+		expect(check.resultLine).toBe('Rolled 2 · needed 14+ · no token lost');
 		expect(check.buttonText).toBe('Continue');
 
 		await check.handleSuccessCheck();
 		expect(gameState.state).toBe('log');
 	});
 
-	it('with four Aces the roll is a Stability check, and the token comes off', async () => {
+	it('on Hard a miss adds a token, and the line says so', async () => {
 		gameState.state = 'successCheck';
+		gameState.config = { labels: {}, options: { difficulty: 2 } };
+		const check = useSuccessCheck();
+		mockDieRoll(2);
+
+		await check.handleSuccessCheck();
+		expect(gameState.tokens).toBe(11);
+		expect(check.resultLine).toBe('Rolled 2 · needed 14+ · +1 token · 11 left');
+		check.resetState();
+	});
+
+	it('with four Aces (Hard) the roll is a Stability check, and the token comes off', async () => {
+		gameState.state = 'successCheck';
+		gameState.config = { labels: {}, options: { difficulty: 2 } };
 		gameState.acesRevealed = 4;
 		gameState.tower = 16;
 		gameState.isLucid = true;
@@ -201,8 +314,9 @@ describe('useSuccessCheck', () => {
 		check.resetState();
 	});
 
-	it('with four Aces a loss of Stability is named', async () => {
+	it('with four Aces (Hard) a loss of Stability is named', async () => {
 		gameState.state = 'successCheck';
+		gameState.config = { labels: {}, options: { difficulty: 2 } };
 		gameState.acesRevealed = 4;
 		gameState.tower = 16;
 		const check = useSuccessCheck();
@@ -215,9 +329,10 @@ describe('useSuccessCheck', () => {
 		check.resetState();
 	});
 
-	it('with four Aces a roll that takes the last Stability ends the game and waits', async () => {
+	it('with four Aces (Hard) a roll that takes the last Stability ends the game and waits', async () => {
 		vi.useFakeTimers();
 		gameState.state = 'successCheck';
+		gameState.config = { labels: {}, options: { difficulty: 2 } };
 		gameState.acesRevealed = 4;
 		gameState.tower = 1;
 		const check = useSuccessCheck();
@@ -245,6 +360,19 @@ describe('useSuccessCheck', () => {
 		check.resumePending();
 		expect(gameState.tokens).toBe(9);
 		expect(check.resultLine).toBe('Rolled 16 · −1 token · 9 left');
+		expect(check.buttonText).toBe('Continue');
+		expect(rollDice).not.toHaveBeenCalled();
+	});
+
+	it('resumes a missed roll saved in flight too (its pending change is 0, not null)', () => {
+		gameState.state = 'successCheck';
+		gameState.pendingUpdates.diceRoll = 7;
+		gameState.pendingUpdates.tokenChange = 0;
+		const check = useSuccessCheck();
+		check.resetState();
+		check.resumePending();
+		expect(gameState.tokens).toBe(10);
+		expect(check.resultLine).toBe('Rolled 7 · needed 14+ · no token lost');
 		expect(check.buttonText).toBe('Continue');
 		expect(rollDice).not.toHaveBeenCalled();
 	});

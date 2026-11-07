@@ -155,9 +155,63 @@ describe('Lucid and Surreal on every d20 roll', () => {
 		expect(gameState.isLucid).toBe(false);
 	});
 
-	describe('Salvation with four Aces (a Stability check, then the token)', () => {
+	describe("the fourth Ace's Stability check (Normal: the last roll of the game)", () => {
 		beforeEach(() => {
 			gameState.acesRevealed = 4;
+		});
+
+		it('uses up a Lucid modifier: two dice, the higher kept, and the game is won', async () => {
+			gameState.isLucid = true;
+			mockDieRollSequence([3, 8]);
+			const thrown = await ROLLS.stability();
+			expect(thrown.dice).toEqual([3, 8]);
+			expect(thrown.roll).toBe(8);
+			expect(gameState.isLucid).toBe(false);
+			expect(gameState.tower).toBe(14); // 6-10 costs 1
+			expect(gameState.win).toBe(true);
+			expect(gameState.gameOver).toBe(true);
+			expect(gameState.tokens).toBe(10); // whatever tokens remain
+		});
+
+		it('uses up a Surreal modifier: two dice, the lower kept, which can be the fatal roll', async () => {
+			gameState.isSurreal = true;
+			gameState.tower = 2;
+			mockDieRollSequence([12, 4]);
+			const thrown = await ROLLS.stability();
+			expect(thrown.roll).toBe(4);
+			expect(gameState.isSurreal).toBe(false);
+			expect(gameState.tower).toBe(0);
+			expect(gameState.win).toBe(false);
+			expect(gameState.gameOver).toBe(true);
+		});
+
+		it('a natural 1 that leaves Stability still wins; one that takes the last loses', async () => {
+			mockDieRoll(1);
+			await ROLLS.stability();
+			expect(gameState.tower).toBe(12);
+			expect(gameState.win).toBe(true);
+
+			gameState.gameOver = false;
+			gameState.win = false;
+			gameState.tower = 3;
+			mockDieRollSequence([1, 1]); // Surreal: both dice are 1
+			await ROLLS.stability();
+			expect(gameState.tower).toBe(0);
+			expect(gameState.win).toBe(false);
+			expect(gameState.gameOver).toBe(true);
+		});
+	});
+
+	describe('Salvation with four Aces on Hard (a Stability check, then the token)', () => {
+		beforeEach(() => {
+			gameState.acesRevealed = 4;
+			gameState.config = { labels: {}, options: { difficulty: 2 } };
+		});
+
+		it('is not the final check: the fourth Ace ends nothing on Hard', async () => {
+			mockDieRoll(13);
+			await ROLLS.stability();
+			expect(gameState.gameOver).toBe(false);
 		});
 
 		it('uses up a Lucid modifier: two dice, the higher kept, read on the Stability table', async () => {

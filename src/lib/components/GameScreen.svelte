@@ -43,7 +43,8 @@
 		recordRound,
 		restartGame,
 		exitGame,
-		getCurrentSalvationThreshold
+		getCurrentSalvationThreshold,
+		isFinalStabilityCheck
 	} from '../stores/gameActions.svelte.js';
 
 	let {
@@ -104,9 +105,17 @@
 
 	function salvationDescription() {
 		const need = getCurrentSalvationThreshold();
+		// No target with four Aces (Hard only: on Normal the fourth Ace ends the game)
 		return need === 0
 			? 'All four Aces are out. No target to beat now: survive one Stability check and a token comes off.'
 			: `Roll to remove a token. You need ${need}+.`;
+	}
+
+	/** The fourth Ace's check is the last roll of the game: say what is at stake */
+	function stabilityCheckDescription() {
+		return isFinalStabilityCheck()
+			? 'The fourth Ace is out. Survive this one Stability check and you escape. If it takes your last Stability, you fall.'
+			: 'An odd card demands a price. Roll to see how much Stability you lose.';
 	}
 
 	// Contextual background text for each screen
@@ -126,9 +135,9 @@
 				};
 			case 'failureCheck':
 				return {
-					title: 'Stability Check',
+					title: isFinalStabilityCheck() ? 'Final Stability Check' : 'Stability Check',
 					eyebrow: cardLine(gameState.lastCard),
-					description: 'An odd card demands a price. Roll to see how much Stability you lose.',
+					description: stabilityCheckDescription(),
 					notice: modifierNotice
 				};
 			case 'successCheck':
@@ -717,9 +726,7 @@
 			case 'failureCheck':
 				// Auto-read prompt first if enabled and not yet rolled
 				if (audioSettings.autoReadPrompts && failureCheck.result === undefined) {
-					const promptText =
-						'An odd card demands a price. Roll to see how much Stability you lose.';
-					speak(promptText);
+					speak(stabilityCheckDescription());
 				}
 
 				// Auto-roll if enabled and not yet rolled
@@ -732,7 +739,7 @@
 						failureCheck.handleFailureCheck(triggerAutoPlayForCurrentScreen)
 					);
 				}
-				// Auto-continue after a result that does not move on by itself (the fatal roll)
+				// Auto-continue after a result that does not move on by itself (an ending)
 				else if (
 					gameplaySettings.autoContinueAfterReading &&
 					failureCheck.result !== undefined &&

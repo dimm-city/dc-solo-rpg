@@ -17,7 +17,8 @@ const SECTION_TITLES = [
 	'Stability checks',
 	'Lucid and Surreal',
 	'Salvation',
-	'How it ends'
+	'How it ends',
+	'Difficulty'
 ];
 
 async function renderModal(props = {}) {

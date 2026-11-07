@@ -3,6 +3,7 @@ import { gameState } from './gameStore.svelte.js';
 import { initializeGame } from './gameInit.js';
 import { startGame } from './gameActions.svelte.js';
 import { getSettings, updateSettings, resetSettings } from './settingsStore.svelte.js';
+import { isHardGame, DIFFICULTY } from '../constants/difficulty.js';
 
 const player = { name: 'Tester' };
 
@@ -26,6 +27,15 @@ function expectEasy() {
 function expectNormal() {
 	expect(hasAceOfHearts()).toBe(true);
 	expect(gameState.acesRevealed).toBe(0);
+	expect(isHardGame(gameState)).toBe(false);
+}
+
+/** Hard keeps the full deck like Normal; only the Salvation rules differ (see gameActions) */
+function expectHard() {
+	expect(hasAceOfHearts()).toBe(true);
+	expect(gameState.acesRevealed).toBe(0);
+	expect(gameState.config.options.difficulty).toBe(DIFFICULTY.HARD);
+	expect(isHardGame(gameState)).toBe(true);
 }
 
 describe('Difficulty precedence', () => {
@@ -56,6 +66,21 @@ describe('Difficulty precedence', () => {
 		expectEasy();
 	});
 
+	it('author Hard with no player setting is Hard', () => {
+		initializeGame(makeConfig({ difficulty: 2 }), player);
+		expectHard();
+	});
+
+	it('author Hard with player Normal is Normal, and author Easy with player Hard is Hard', () => {
+		updateSettings({ difficulty: 1 });
+		initializeGame(makeConfig({ difficulty: 2 }), player);
+		expectNormal();
+
+		updateSettings({ difficulty: 2 });
+		initializeGame(makeConfig({ difficulty: 0 }), player);
+		expectHard();
+	});
+
 	it('explicit options.difficulty beats author and player', () => {
 		updateSettings({ difficulty: 0 });
 		initializeGame(makeConfig({ difficulty: 0 }), player, { difficulty: 1 });
@@ -64,6 +89,10 @@ describe('Difficulty precedence', () => {
 		updateSettings({ difficulty: 1 });
 		initializeGame(makeConfig({ difficulty: 1 }), player, { difficulty: 0 });
 		expectEasy();
+
+		updateSettings({ difficulty: 0 });
+		initializeGame(makeConfig({ difficulty: 1 }), player, { difficulty: 2 });
+		expectHard();
 	});
 
 	it('restart re-reads the player setting', () => {
@@ -104,6 +133,7 @@ describe('settingsStore difficulty', () => {
 
 		expect((await load({ diceTheme: 'default', difficulty: 0 })).difficulty).toBe(0);
 		expect((await load({ diceTheme: 'default', difficulty: 1 })).difficulty).toBe(1);
+		expect((await load({ diceTheme: 'default', difficulty: 2 })).difficulty).toBe(2);
 		expect((await load({ diceTheme: 'default', difficulty: 7 })).difficulty).toBeNull();
 		expect((await load({ diceTheme: 'default', difficulty: 'easy' })).difficulty).toBeNull();
 		expect((await load({ diceTheme: 'default' })).difficulty).toBeNull();

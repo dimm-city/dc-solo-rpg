@@ -14,6 +14,7 @@ import {
 	calculateSalvationResult,
 	calculateAutomaticSalvation
 } from '../services/d20Mechanics.js';
+import { isHardGame } from '../constants/difficulty.js';
 
 // Re-export D20 mechanics for backwards compatibility
 export {
@@ -339,6 +340,27 @@ export function drawCard() {
 /** Per Wretched & Alone SRD: A, 3, 5, 7, 9 are odd-ranked and trigger a Stability check */
 const ODD_RANKS = ['A', '3', '5', '7', '9'];
 
+/**
+ * On Normal (and Easy) the fourth Ace ends the game. Being odd, it calls for a Stability check
+ * like any Ace, and that check is the last roll of the game: survive it and the game is won,
+ * whatever tokens remain; lose the last Stability to it and the game is lost. No such state
+ * outlives that check, so on the Stability check screen the Aces count alone says it is the
+ * final one. On Hard the fourth Ace ends nothing: Salvation goes on, as a Stability check per
+ * token (see getSalvationCheckRoll).
+ * @returns {boolean}
+ */
+export function isFinalStabilityCheck() {
+	return gameState.acesRevealed >= 4 && !isHardGame(gameState);
+}
+
+/** The game is won: the status line is the author's win message */
+function winGame() {
+	gameState.win = true;
+	gameState.gameOver = true;
+	gameState.status =
+		gameState.config.labels?.successCheckWin ?? 'Victory! Against all odds, you escaped.';
+}
+
 const cap = (word) => word.charAt(0).toUpperCase() + word.slice(1);
 
 /**
@@ -374,9 +396,10 @@ function returnKingToDeck(card) {
  * Flow:
  * 1. Apply pending Ace changes (increments acesRevealed for Salvation threshold)
  * 2. Apply pending King changes (tracks which Kings revealed for game over)
- * 3. Check for game over conditions (4 Kings = instant loss)
+ * 3. Check for game over conditions (4 Kings = instant loss; a fourth Ace that skips its
+ *    Stability check = instant win, see isFinalStabilityCheck)
  * 4. Determine next state:
- *    - Odd rank (A,3,5,7,9) → failureCheck
+ *    - Odd rank (A,3,5,7,9) → failureCheck (the fourth Ace's check decides the game)
  *    - More cards to draw → drawCard
  *    - Ace of Hearts revealed + tokens > 0 → successCheck
  *    - Otherwise → log (journal entry)
@@ -442,6 +465,16 @@ export function confirmCard() {
 		transitionTo('gameOver');
 		saveGame(gameState);
 		return; // Exit early, game is over
+	}
+
+	// The fourth Ace ends the game. Its Stability check decides it (applyPendingDiceRoll); a
+	// fourth Ace that skips its check, as skip-damage promises, frees the player outright.
+	if (card?.card === 'A' && card.modifier === 'skip-damage' && isFinalStabilityCheck()) {
+		winGame();
+		logger.info('[confirmCard] VICTORY - the fourth Ace, with no Stability check to survive');
+		transitionTo('gameOver');
+		saveGame(gameState);
+		return;
 	}
 
 	// Clear the current card
@@ -565,14 +598,15 @@ export function applyFailureCheckResult(result) {
  * - Lucid State: Advantage on next roll (2d20 keep high)
  * - Surreal State: Disadvantage on next roll (2d20 keep low)
  * - Game Over: Stability ≤ 0 triggers instant loss
+ * - The fourth Ace's check (isFinalStabilityCheck): Stability holds → the game is won
  *
  * State Flow:
  * 1. Apply pending dice roll to gameState.diceRoll
  * 2. Update last log entry with roll and damage
  * 3. Apply stability gain (if natural 20)
  * 4. Apply stability loss (if any)
- * 5. Apply Lucid/Surreal states
- * 6. Check for stability collapse (game over)
+ * 5. Check for stability collapse (game over), or the win on the fourth Ace's check
+ * 6. Apply Lucid/Surreal states
  * 7. Transition to next state or success check
  * 8. Auto-save game state
  *
@@ -616,6 +650,12 @@ export function applyPendingDiceRoll({ advance = true } = {}) {
 	// Apply the Stability gain (natural 20) and loss; at 0 the game is lost
 	applyPendingStability();
 
+	// The fourth Ace's check is the last roll of the game: Stability held, so it is won
+	if (!gameState.gameOver && isFinalStabilityCheck()) {
+		winGame();
+		logger.info("[applyPendingDiceRoll] VICTORY - the fourth Ace's Stability check held");
+	}
+
 	// Apply pending modifier state changes (after animation)
 	applyPendingModifier();
 
@@ -629,8 +669,8 @@ export function applyPendingDiceRoll({ advance = true } = {}) {
 
 /**
  * Apply a Stability check's pending result: the gain first (natural 20, capped at 20 Stability),
- * then the loss. Stability at 0 ends the game. Shared by the Stability check and the automatic
- * Salvation (four Aces), whose token only comes off if Stability holds.
+ * then the loss. Stability at 0 ends the game. Shared by the Stability check and the four-Aces
+ * Salvation on Hard, whose token only comes off if Stability holds.
  */
 function applyPendingStability() {
 	const loss = gameState.pendingUpdates.towerDamage || 0;
@@ -763,7 +803,7 @@ export async function recordRound(journalEntry) {
  * @returns {Object} Roll results and calculations
  * @returns {number} roll - D20 roll result (1-20)
  * @returns {number} threshold - Success threshold based on Aces revealed
- * @returns {number} tokenChange - Token change (+2, +1, -1, or -2)
+ * @returns {number} tokenChange - Token change (-2, -1 or 0; a miss adds +1 or +2 on Hard)
  * @returns {boolean} wasLucid - True if Lucid state was active
  * @returns {boolean} wasSurreal - True if Surreal state was active
  * @returns {boolean} gainedLucid - True if natural 20 (grants Lucid)
@@ -778,7 +818,8 @@ export async function recordRound(journalEntry) {
 /**
  * The roll Salvation needs right now. Salvation only opens with the Ace of Hearts, which
  * counts as the first Ace, so the button and the roll always agree on one threshold.
- * @returns {number} 17, 14 or 11, or 0 when there is no target (all four Aces)
+ * @returns {number} 17, 14 or 11, or 0 when there is no target (four Aces: Hard only, since
+ *   on Normal the fourth Ace ends the game)
  */
 export function getCurrentSalvationThreshold() {
 	return getSalvationThreshold(Math.max(1, gameState.acesRevealed));
@@ -791,8 +832,8 @@ export function getSalvationCheckRoll() {
 	// Roll d20 with Lucid/Surreal modifiers
 	const { roll, dice, wasLucid, wasSurreal } = gameState.rollWithModifiers();
 
-	// Four Aces: no target to beat, but the token only comes off after one Stability check.
-	// The roll is read on the Stability table; at 0 Stability the game is lost instead.
+	// Four Aces (Hard): no target to beat, but the token only comes off after one Stability
+	// check. The roll is read on the Stability table; at 0 Stability the game is lost instead.
 	if (threshold === 0) {
 		const outcome = calculateAutomaticSalvation(roll, gameState.tower);
 		gameState.pendingUpdates.diceRoll = roll;
@@ -818,8 +859,10 @@ export function getSalvationCheckRoll() {
 		};
 	}
 
-	// Calculate token change using salvation table
-	const { tokenChange, gainedLucid, gainedSurreal } = calculateSalvationResult(roll, threshold);
+	// Calculate token change using salvation table (a miss adds tokens on Hard only)
+	const { tokenChange, gainedLucid, gainedSurreal } = calculateSalvationResult(roll, threshold, {
+		hard: isHardGame(gameState)
+	});
 
 	// Store pending updates (to be applied after dice animation)
 	gameState.pendingUpdates.diceRoll = roll;
@@ -861,13 +904,13 @@ export function successCheck() {
  * Applies token changes based on success/failure, handles Lucid/Surreal states,
  * and checks for victory condition. Must be called AFTER dice animation.
  *
- * D20 System - Graduated Token Changes:
+ * D20 System:
  * - Critical Success (Natural 20): -2 tokens + Lucid state
  * - Success (≥ threshold): -1 token
- * - Failure (2 to threshold-1): +1 token
- * - Critical Failure (Natural 1): +2 tokens + Surreal state
- * - Four Aces (no threshold): the roll is a Stability check; -1 token if Stability holds,
- *   otherwise the game is lost by Stability
+ * - Miss (below threshold): no change on Normal, +1 token on Hard
+ * - Natural 1: Surreal state; no change on Normal, +2 tokens on Hard
+ * - Four Aces (Hard only, no threshold): the roll is a Stability check; -1 token if Stability
+ *   holds, otherwise the game is lost by Stability
  *
  * Victory Condition:
  * - Tokens reach 0 → Instant victory (game over, win = true)
@@ -875,7 +918,7 @@ export function successCheck() {
  * State Flow:
  * 1. Apply pending dice roll
  * 2. Four Aces: apply the Stability gain or loss (Stability at 0 ends the game)
- * 3. Apply token change (+2 to -2), floored at 0
+ * 3. Apply token change (-2 to +2), floored at 0
  * 4. Apply Lucid/Surreal states
  * 5. Check for victory (tokens = 0)
  * 6. Transition to game over or journal entry
@@ -903,8 +946,8 @@ export function applyPendingSuccessCheck({ advance = true } = {}) {
 		gameState.diceRoll = gameState.pendingUpdates.diceRoll;
 	}
 
-	// Four Aces: the Stability check comes first. If it takes the last Stability, the game is lost
-	// and the token stays (its pending change is 0).
+	// Four Aces (Hard): the Stability check comes first. If it takes the last Stability, the game
+	// is lost and the token stays (its pending change is 0).
 	if (
 		gameState.pendingUpdates.towerDamage !== null ||
 		gameState.pendingUpdates.towerGain !== null
@@ -912,12 +955,8 @@ export function applyPendingSuccessCheck({ advance = true } = {}) {
 		applyPendingStability();
 	}
 
-	// Apply token change (can be negative for success, positive for failure)
-	if (
-		!gameState.gameOver &&
-		gameState.pendingUpdates.tokenChange !== null &&
-		gameState.pendingUpdates.tokenChange !== 0
-	) {
+	// Apply token change (a miss on Normal is 0: nothing changes)
+	if (!gameState.gameOver && gameState.pendingUpdates.tokenChange) {
 		gameState.tokens += gameState.pendingUpdates.tokenChange;
 
 		// Ensure tokens don't go below 0
@@ -938,10 +977,7 @@ export function applyPendingSuccessCheck({ advance = true } = {}) {
 
 	if (gameState.tokens === 0 && !gameState.gameOver) {
 		// D20 System: Victory when tokens reach 0 (no final damage roll)
-		gameState.win = true;
-		gameState.gameOver = true;
-		gameState.status =
-			gameState.config.labels?.successCheckWin ?? 'Victory! Against all odds, you escaped.';
+		winGame();
 		logger.info('[applyPendingSuccessCheck] VICTORY - All tokens removed');
 	}
 

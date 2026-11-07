@@ -6,8 +6,11 @@
  * 2. The game moves on by itself after the result hold (next card, Salvation or the journal).
  *    A press moves on at once.
  *
- * The fatal roll (Stability reaches 0) does not move on by itself: the button reads
- * "Face the end" and waits for the player.
+ * A result that ends the game does not move on by itself: the button reads "Face the end"
+ * (the fatal roll: Stability reaches 0) or "Escape" (the fourth Ace's check held) and waits.
+ *
+ * The fourth Ace's check is the last roll of the game (isFinalStabilityCheck): the roll button
+ * says what is at stake, and the result line ends in "you escape" when Stability holds.
  *
  * @param {Function} onCompleted - Callback when the check is completed (after it moves on)
  * @returns {Object} Failure check state and actions
@@ -17,14 +20,16 @@ import {
 	getFailureCheckRoll,
 	applyFailureCheckResult,
 	applyPendingDiceRoll,
-	advanceAfterFailureCheck
+	advanceAfterFailureCheck,
+	isFinalStabilityCheck
 } from '../../stores/gameActions.svelte.js';
 import { rollDice, skipRoll } from '../../stores/diceStore.svelte.js';
 import { gameState } from '../../stores/gameStore.svelte.js';
 import {
 	formatStabilityResult,
 	formatModifierHint,
-	ROLLING_LABEL
+	ROLLING_LABEL,
+	FINAL_CHECK_LABEL
 } from '../../utils/rollResult.js';
 import { createResultHold } from './resultHold.svelte.js';
 
@@ -56,6 +61,7 @@ export function useFailureCheck(onCompleted = () => {}) {
 		if (!failureCheckResult) {
 			failureCheckRolling = true;
 			try {
+				const final = isFinalStabilityCheck();
 				const thrown = getFailureCheckRoll();
 				failureCheckResult = thrown.roll;
 				const towerBefore = gameState.tower;
@@ -74,7 +80,8 @@ export function useFailureCheck(onCompleted = () => {}) {
 					towerBefore,
 					gameState.tower,
 					20,
-					thrown
+					thrown,
+					{ final }
 				);
 				if (!gameState.gameOver) hold.start(advance);
 			} finally {
@@ -99,15 +106,19 @@ export function useFailureCheck(onCompleted = () => {}) {
 		failureCheckRolling = false;
 	}
 
-	// Reactive button text
+	// Reactive button text: the fourth Ace's check says what is at stake; an ending is named
 	const buttonText = $derived(
 		failureCheckRolling
 			? ROLLING_LABEL
 			: failureCheckResult
 				? gameState.gameOver
-					? 'Face the end'
+					? gameState.win
+						? 'Escape'
+						: 'Face the end'
 					: 'Continue'
-				: 'Roll for damage'
+				: isFinalStabilityCheck()
+					? FINAL_CHECK_LABEL
+					: 'Roll for damage'
 	);
 	// The modifier the roll will use, shown on the roll button only
 	const buttonHint = $derived(

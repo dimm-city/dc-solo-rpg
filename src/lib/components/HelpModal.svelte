@@ -16,9 +16,10 @@
 		salvation:
 			'The Ace of Hearts unlocks Salvation: at the end of each round, roll to remove a Token.',
 		ace: 'Every Ace you reveal makes Salvation easier.',
+		'fourth-ace': 'The fourth Ace ends the game: survive its Stability check and you escape.',
 		lucid: 'Lucid: your next roll uses two dice and keeps the higher.',
 		surreal: 'Surreal: your next roll uses two dice and keeps the lower.',
-		token: 'A failed Salvation roll adds a Token.'
+		token: 'On Hard, a failed Salvation roll adds a Token.'
 	};
 
 	const MET_ID = 'help-rules-met';

@@ -36,7 +36,7 @@
 		{ aces: '1 Ace', target: 'Roll 17 or higher' },
 		{ aces: '2 Aces', target: 'Roll 14 or higher' },
 		{ aces: '3 Aces', target: 'Roll 11 or higher' },
-		{ aces: '4 Aces', target: 'No target: a Stability check' }
+		{ aces: '4 Aces', target: 'No target: the fourth Ace ends the game' }
 	];
 
 	const sections = [
@@ -45,7 +45,8 @@
 		{ id: 'stability', label: 'Stability checks' },
 		{ id: 'states', label: 'Lucid and Surreal' },
 		{ id: 'salvation', label: 'Salvation' },
-		{ id: 'end', label: 'How it ends' }
+		{ id: 'end', label: 'How it ends' },
+		{ id: 'difficulty', label: 'Difficulty' }
 	];
 
 	const sectionId = (id) => `guide-${uid}-${id}`;
@@ -109,8 +110,9 @@
 		</svelte:element>
 		<p>
 			You start with <strong>20 Stability</strong> (your grip on yourself) and
-			<strong>10 Tokens</strong> (what keeps you trapped). Remove every Token to escape. If Stability
-			hits 0, or all 4 Kings are revealed, you lose.
+			<strong>10 Tokens</strong> (what keeps you trapped). Remove every Token, or reveal the fourth Ace
+			and survive its Stability check, to escape. If Stability hits 0, or all 4 Kings are revealed, you
+			lose.
 		</p>
 		<p>The game teaches the rest as you play. This guide is here whenever you want a reminder.</p>
 	</section>
@@ -203,15 +205,16 @@
 			</tbody>
 		</table>
 		<p>
-			Meeting the target removes 1 Token; missing it adds 1. A natural 20 removes 2 Tokens, and a
-			natural 1 adds 2.
+			Meeting the target removes 1 Token, and a natural 20 removes 2. Missing it changes nothing: a
+			natural 1 is a miss too (and makes you Surreal). Tokens only ever fall.
 		</p>
 		<p>
-			With all four Aces there is no target. The roll is a Stability check instead, read on the
-			Stability table: if you still have Stability after it, 1 Token comes off. If it takes your
-			last Stability, you fall.
+			<strong>The fourth Ace ends the game.</strong> Like every Ace it calls for a Stability check, and
+			that check is the last roll you make: if you still have Stability after it, you escape, whatever
+			Tokens remain. If it takes your last Stability, you fall. A fourth Ace that skips its check frees
+			you outright.
 		</p>
-		<p>On Easy, the Ace of Hearts starts revealed, so Salvation is open from the first round.</p>
+		<p>Hard plays Salvation differently; see Difficulty below.</p>
 	</section>
 
 	<section class="guide-section">
@@ -219,12 +222,47 @@
 			How it ends
 		</svelte:element>
 		<ul>
-			<li><strong>You escape</strong> when your last Token is removed.</li>
+			<li>
+				<strong>You escape</strong> when your last Token is removed, or when the fourth Ace is revealed
+				and you survive its Stability check.
+			</li>
 			<li><strong>You fall</strong> when Stability reaches 0.</li>
 			<li><strong>You are taken</strong> when the fourth King is revealed.</li>
 			<li><strong>You are lost</strong> if the deck runs out first.</li>
 		</ul>
 		<p>Whatever the ending, your journal keeps the story you wrote.</p>
+	</section>
+
+	<section class="guide-section">
+		<svelte:element
+			this={headingTag}
+			id={sectionId('difficulty')}
+			class="guide-title"
+			tabindex="-1"
+		>
+			Difficulty
+		</svelte:element>
+		<p>
+			Each game has a default difficulty; you can choose your own in Settings, and it applies the
+			next time a game begins.
+		</p>
+		<ul>
+			<li>
+				<strong>Easy</strong> plays by the Normal rules, with the Ace of Hearts already revealed, so
+				Salvation is open from the first round.
+			</li>
+			<li>
+				<strong>Normal</strong> is everything above: Tokens only ever fall, and the fourth Ace ends the
+				game.
+			</li>
+			<li>
+				<strong>Hard</strong> changes two things. A missed Salvation roll adds 1 Token (a natural 1 adds
+				2), so Tokens can rise above where they started. And the fourth Ace does not end the game: with
+				all four Aces there is no target, but each Salvation roll is a Stability check, read on the Stability
+				table, and 1 Token comes off only if you still have Stability after it. Winning on Hard means
+				removing every Token.
+			</li>
+		</ul>
 	</section>
 
 	{@render children?.()}

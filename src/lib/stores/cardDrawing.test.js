@@ -10,6 +10,14 @@ import {
 	applyPendingSuccessCheck
 } from './gameActions.svelte.js';
 
+/** The difficulty the game plays by (the config carries it, as initializeGame leaves it) */
+const setDifficulty = (level) => {
+	gameState.config = {
+		...(gameState.config ?? {}),
+		options: { ...(gameState.config?.options ?? {}), difficulty: level }
+	};
+};
+
 /**
  * Test suite for card drawing and failure check flow
  *
@@ -593,6 +601,7 @@ describe('Card Drawing and Failure Check Flow', () => {
 		describe('successCheck() - With 1 Ace Revealed', () => {
 			beforeEach(() => {
 				gameState.acesRevealed = 1; // Threshold = 17
+				setDifficulty(1);
 			});
 
 			test('should remove 2 tokens on natural 20 and set Lucid', () => {
@@ -637,9 +646,30 @@ describe('Card Drawing and Failure Check Flow', () => {
 				gameState.rollWithModifiers = originalRoll;
 			});
 
-			test('should add 1 token on failure (2-16)', () => {
-				// Per spec: ALL rolls below threshold (17) should give +1 token (failure)
-				// No "near-miss" range exists
+			test('a miss (2-16) loses no token on Normal', () => {
+				// ALL rolls below the threshold (17) are a miss: no "near-miss" range exists
+				const originalRoll = gameState.rollWithModifiers;
+
+				for (let roll = 2; roll <= 16; roll++) {
+					gameState.rollWithModifiers = vi.fn(() => ({
+						roll,
+						wasLucid: false,
+						wasSurreal: false
+					}));
+
+					successCheck();
+
+					expect(gameState.pendingUpdates.tokenChange).toBe(0);
+
+					// Clear for next test
+					gameState.pendingUpdates.tokenChange = null;
+				}
+
+				gameState.rollWithModifiers = originalRoll;
+			});
+
+			test('on Hard, a miss (2-16) adds 1 token', () => {
+				setDifficulty(2);
 				const originalRoll = gameState.rollWithModifiers;
 
 				for (let roll = 2; roll <= 16; roll++) {
@@ -660,28 +690,24 @@ describe('Card Drawing and Failure Check Flow', () => {
 				gameState.rollWithModifiers = originalRoll;
 			});
 
-			test('should add 1 token on failure (2-5)', () => {
+			test('a natural 1 is a miss (no token on Normal) and sets Surreal', () => {
 				const originalRoll = gameState.rollWithModifiers;
+				gameState.rollWithModifiers = vi.fn(() => ({
+					roll: 1,
+					wasLucid: false,
+					wasSurreal: false
+				}));
 
-				for (let roll = 2; roll <= 5; roll++) {
-					gameState.rollWithModifiers = vi.fn(() => ({
-						roll,
-						wasLucid: false,
-						wasSurreal: false
-					}));
+				successCheck();
 
-					successCheck();
-
-					expect(gameState.pendingUpdates.tokenChange).toBe(1);
-
-					// Clear for next test
-					gameState.pendingUpdates.tokenChange = null;
-				}
+				expect(gameState.pendingUpdates.tokenChange).toBe(0);
+				expect(gameState.pendingUpdates.isSurreal).toBe(true);
 
 				gameState.rollWithModifiers = originalRoll;
 			});
 
-			test('should add 2 tokens on natural 1 and set Surreal', () => {
+			test('on Hard, a natural 1 adds 2 tokens and sets Surreal', () => {
+				setDifficulty(2);
 				const originalRoll = gameState.rollWithModifiers;
 				gameState.rollWithModifiers = vi.fn(() => ({
 					roll: 1,
@@ -699,6 +725,8 @@ describe('Card Drawing and Failure Check Flow', () => {
 		});
 
 		describe('successCheck() - With Multiple Aces', () => {
+			beforeEach(() => setDifficulty(1));
+
 			test('should use threshold 14 with 2 Aces (35% success)', () => {
 				gameState.acesRevealed = 2;
 				const originalRoll = gameState.rollWithModifiers;
@@ -712,7 +740,7 @@ describe('Card Drawing and Failure Check Flow', () => {
 				successCheck();
 				expect(gameState.pendingUpdates.tokenChange).toBe(-1);
 
-				// Clear and test just below threshold (13 should be failure +1)
+				// Clear and test just below threshold (13 is a miss: no token on Normal)
 				gameState.pendingUpdates.tokenChange = null;
 				gameState.rollWithModifiers = vi.fn(() => ({
 					roll: 13,
@@ -720,7 +748,7 @@ describe('Card Drawing and Failure Check Flow', () => {
 					wasSurreal: false
 				}));
 				successCheck();
-				expect(gameState.pendingUpdates.tokenChange).toBe(1);
+				expect(gameState.pendingUpdates.tokenChange).toBe(0);
 
 				gameState.rollWithModifiers = originalRoll;
 			});
@@ -738,7 +766,7 @@ describe('Card Drawing and Failure Check Flow', () => {
 				successCheck();
 				expect(gameState.pendingUpdates.tokenChange).toBe(-1);
 
-				// Clear and test just below threshold (10 should be failure +1)
+				// Clear and test just below threshold (10 is a miss: no token on Normal)
 				gameState.pendingUpdates.tokenChange = null;
 				gameState.rollWithModifiers = vi.fn(() => ({
 					roll: 10,
@@ -746,12 +774,13 @@ describe('Card Drawing and Failure Check Flow', () => {
 					wasSurreal: false
 				}));
 				successCheck();
-				expect(gameState.pendingUpdates.tokenChange).toBe(1);
+				expect(gameState.pendingUpdates.tokenChange).toBe(0);
 
 				gameState.rollWithModifiers = originalRoll;
 			});
 
-			test('with 4 Aces, removes a token on any roll while Stability holds', () => {
+			test('with 4 Aces on Hard, removes a token on any roll while Stability holds', () => {
+				setDifficulty(2);
 				gameState.acesRevealed = 4;
 				gameState.tower = 20;
 				const originalRoll = gameState.rollWithModifiers;
@@ -790,7 +819,7 @@ describe('Card Drawing and Failure Check Flow', () => {
 				};
 			});
 
-			test('should apply positive token change (failure adds tokens)', () => {
+			test('should apply positive token change (a miss adds tokens on Hard)', () => {
 				gameState.tokens = 5;
 				gameState.pendingUpdates.diceRoll = 3;
 				gameState.pendingUpdates.tokenChange = 1;
@@ -830,7 +859,7 @@ describe('Card Drawing and Failure Check Flow', () => {
 				expect(gameState.tokens).toBe(3);
 			});
 
-			test('should apply +2 token change on natural 1', () => {
+			test('should apply +2 token change on natural 1 (Hard)', () => {
 				gameState.tokens = 5;
 				gameState.pendingUpdates.diceRoll = 1;
 				gameState.pendingUpdates.tokenChange = 2;

@@ -84,16 +84,20 @@ export function calculateStabilityLoss(roll) {
 
 /**
  * Get salvation success threshold based on number of Aces revealed
- * Per Dimm City D20 Module specification
  *
- * @param {number} acesRevealed - Number of Aces revealed (0-4)
- * @returns {number} Minimum roll needed for success (1-20, or 0 for no target: four Aces)
+ * Salvation is rolled with one to three Aces. On Normal (and Easy) the fourth Ace ends the
+ * game instead (see isFinalStabilityCheck in gameActions), so four Aces never reach a
+ * Salvation roll. On Hard they do: there is then no target (0), and each Salvation is a
+ * Stability check followed by the token (see calculateAutomaticSalvation).
+ *
+ * @param {number} acesRevealed - Number of Aces revealed (1-4)
+ * @returns {number} Minimum roll needed for success (17, 14 or 11), or 0 for no target (four Aces)
  *
  * @example
  * getSalvationThreshold(1) // => 17 (Success on 17-20, ~20% chance)
  * getSalvationThreshold(2) // => 14 (Success on 14-20, ~35% chance)
  * getSalvationThreshold(3) // => 11 (Success on 11-20, ~50% chance)
- * getSalvationThreshold(4) // => 0 (no target: see calculateAutomaticSalvation)
+ * getSalvationThreshold(4) // => 0 (no target: Hard only, see calculateAutomaticSalvation)
  */
 export function getSalvationThreshold(acesRevealed) {
 	switch (acesRevealed) {
@@ -104,7 +108,7 @@ export function getSalvationThreshold(acesRevealed) {
 		case 3:
 			return 11; // Success on 11-20 (~50% chance)
 		case 4:
-			return 0; // No target to beat: one Stability check, then the token comes off
+			return 0; // No target to beat: one Stability check, then the token comes off (Hard)
 		default:
 			logger.error(`[getSalvationThreshold] Invalid Aces count: ${acesRevealed}`);
 			return 20; // Impossible if no Aces
@@ -113,12 +117,18 @@ export function getSalvationThreshold(acesRevealed) {
 
 /**
  * Calculate salvation check results based on d20 roll and Ace threshold
- * Per Dimm City D20 Module specification
+ *
+ * Meeting the target removes one token and a natural 20 removes two. A miss adds none on
+ * Normal (tokens only ever fall there); on Hard it adds one, and a natural 1 adds two. A
+ * natural 1 is a miss on every difficulty, and still makes the player Surreal, as a natural
+ * 20 makes them Lucid.
  *
  * @param {number} roll - D20 roll result (1-20)
- * @param {number} threshold - Success threshold from getSalvationThreshold
+ * @param {number} threshold - Success threshold from getSalvationThreshold (17, 14 or 11;
+ *   0 means four Aces: see calculateAutomaticSalvation, which decides the token)
+ * @param {{ hard?: boolean }} [rules] - hard: the Hard rules (a miss adds tokens)
  * @returns {Object} Salvation check result
- * @returns {number} result.tokenChange - Change in tokens (-2 to +2)
+ * @returns {number} result.tokenChange - Change in tokens (-2 to 0, or up to +2 on Hard)
  * @returns {boolean} result.gainedLucid - Whether player gained Lucid state (advantage)
  * @returns {boolean} result.gainedSurreal - Whether player gained Surreal state (disadvantage)
  *
@@ -129,68 +139,41 @@ export function getSalvationThreshold(acesRevealed) {
  * // Success: Remove 1 token
  * calculateSalvationResult(18, 17) // => { tokenChange: -1, gainedLucid: false, gainedSurreal: false }
  *
- * // Critical failure: Add 2 tokens + Surreal
- * calculateSalvationResult(1, 17) // => { tokenChange: 2, gainedLucid: false, gainedSurreal: true }
+ * // Miss: no change on Normal, +1 token on Hard
+ * calculateSalvationResult(9, 17) // => { tokenChange: 0, ... }
+ * calculateSalvationResult(9, 17, { hard: true }) // => { tokenChange: 1, ... }
+ *
+ * // Natural 1: a miss, plus Surreal (+2 tokens on Hard)
+ * calculateSalvationResult(1, 17) // => { tokenChange: 0, gainedLucid: false, gainedSurreal: true }
  */
-export function calculateSalvationResult(roll, threshold) {
+export function calculateSalvationResult(roll, threshold, { hard = false } = {}) {
 	// 4 Aces (threshold 0): no target, so the token comes off, provided Stability survives the
 	// roll (see calculateAutomaticSalvation). A natural 20 or 1 still makes the player Lucid or Surreal.
 	if (threshold === 0) {
-		return {
-			tokenChange: -1,
-			gainedLucid: roll === 20,
-			gainedSurreal: roll === 1
-		};
+		return { tokenChange: -1, gainedLucid: roll === 20, gainedSurreal: roll === 1 };
 	}
 
 	// Natural 20: Remove 2 tokens + Lucid (critical success)
 	if (roll === 20) {
-		return {
-			tokenChange: -2,
-			gainedLucid: true,
-			gainedSurreal: false
-		};
+		return { tokenChange: -2, gainedLucid: true, gainedSurreal: false };
 	}
 
-	// Critical failure (1): Add 2 tokens + Surreal
+	// Natural 1: a miss (two tokens on Hard, none otherwise) + Surreal
 	if (roll === 1) {
-		return {
-			tokenChange: 2,
-			gainedLucid: false,
-			gainedSurreal: true
-		};
+		return { tokenChange: hard ? 2 : 0, gainedLucid: false, gainedSurreal: true };
 	}
 
-	// Success (at or above threshold): Remove 1 token
-	if (roll >= threshold && roll <= 19) {
-		return {
-			tokenChange: -1,
-			gainedLucid: false,
-			gainedSurreal: false
-		};
-	}
-
-	// Failure (below threshold): Add 1 token
-	// Per CLAUDE.md: "Below threshold: +1 token (failure)"
-	// This includes ALL rolls below threshold (not just 2-5)
-	if (roll >= 2 && roll < threshold) {
-		return {
-			tokenChange: 1,
-			gainedLucid: false,
-			gainedSurreal: false
-		};
-	}
-
-	// Fallback
-	logger.error(`[calculateSalvationResult] Unexpected roll: ${roll}, threshold: ${threshold}`);
-	return { tokenChange: 0, gainedLucid: false, gainedSurreal: false };
+	// At or above the target: remove 1 token. Below it: one token on Hard, nothing otherwise.
+	const tokenChange = roll >= threshold ? -1 : hard ? 1 : 0;
+	return { tokenChange, gainedLucid: false, gainedSurreal: false };
 }
 
 /**
- * Salvation with all four Aces: there is no target to beat, but the token only comes off
- * after one Stability check. The roll is read on the Stability table (natural 1: -3 and
- * Surreal; 2-5: -2; 6-10: -1; 11-19: no loss; natural 20: +1, max 20, and Lucid). If Stability
- * is still above 0 afterwards, one token comes off; if the roll takes it to 0, the game is lost.
+ * Salvation with all four Aces (Hard only; on Normal the fourth Ace ends the game): there is
+ * no target to beat, but the token only comes off after one Stability check. The roll is read
+ * on the Stability table (natural 1: -3 and Surreal; 2-5: -2; 6-10: -1; 11-19: no loss;
+ * natural 20: +1, max 20, and Lucid). If Stability is still above 0 afterwards, one token
+ * comes off; if the roll takes it to 0, the game is lost.
  *
  * @param {number} roll - Kept d20 value (1-20)
  * @param {number} stability - Stability before the roll

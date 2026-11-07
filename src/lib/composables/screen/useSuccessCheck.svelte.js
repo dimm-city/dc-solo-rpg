@@ -3,12 +3,13 @@
  *
  * 1. Roll: dice animate ("Rolling…"; a press skips to the result), the tokens update and a
  *    result line stays on screen. The button becomes "Continue".
- *    With all four Aces there is no target, but the roll is a Stability check: the token comes
- *    off only if Stability holds.
+ *    On Normal tokens only ever fall: a miss loses none, and the line says so. On Hard a miss
+ *    adds tokens, and with all four Aces there is no target but the roll is a Stability check:
+ *    the token comes off only if Stability holds.
  * 2. The game moves on to the journal by itself after the result hold. A press moves on at once.
  *
- * A result that ends the game (the last token, or Stability lost to the four-Aces check)
- * does not move on by itself: the button reads "Escape" or "Face the end" and waits.
+ * A result that ends the game (the last token, or Stability lost to the four-Aces check on
+ * Hard) does not move on by itself: the button reads "Escape" or "Face the end" and waits.
  *
  * The roll button shows the target before rolling ("need 14+").
  *
@@ -23,6 +24,7 @@ import {
 } from '../../stores/gameActions.svelte.js';
 import { rollDice, skipRoll } from '../../stores/diceStore.svelte.js';
 import { gameState } from '../../stores/gameStore.svelte.js';
+import { isHardGame } from '../../constants/difficulty.js';
 import {
 	formatSalvationResult,
 	formatSalvationButton,
@@ -47,8 +49,10 @@ export function useSuccessCheck() {
 	/** Apply the rolled (or resumed) result, show its line and start the hold */
 	function settle(roll, threshold, thrown) {
 		const stabilityBefore = gameState.tower;
+		const hard = isHardGame(gameState);
 		applyPendingSuccessCheck({ advance: false });
 		successCheckResultLine = formatSalvationResult(roll, threshold, gameState.tokens, thrown, {
+			hard,
 			stabilityBefore
 		});
 		if (!gameState.gameOver) hold.start(advance);

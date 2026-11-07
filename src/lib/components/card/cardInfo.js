@@ -4,6 +4,7 @@
  * They take plain objects so they are easy to test.
  */
 import { getSalvationThreshold } from '../../services/d20Mechanics.js';
+import { isHardGame } from '../../constants/difficulty.js';
 
 /** Per the Wretched and Alone SRD: odd ranks call for a Stability check */
 const ODD_RANKS = ['A', '3', '5', '7', '9'];
@@ -49,6 +50,15 @@ export function isFinalKing(card, state) {
 }
 
 /**
+ * @returns {boolean} whether this is the fourth Ace on Normal (or Easy), where it ends the game:
+ *   survive its Stability check (if it has one) and the player escapes. (On Hard the fourth Ace
+ *   only makes Salvation a Stability check per token; state is the live game, for its difficulty.)
+ */
+export function isFourthAce(card, state) {
+	return card?.card === 'A' && (snapshot(card, state).acesRevealed ?? 0) >= 3 && !isHardGame(state);
+}
+
+/**
  * What a Salvation check needs once this Ace is counted, e.g. "Salvation now needs 14+".
  * Every Ace counts, but checks only start once the Ace of Hearts is out.
  */
@@ -62,7 +72,7 @@ function salvationNote(card, state) {
 			: `Salvation unlocked · needs ${threshold}+`;
 	}
 	const unlocked = !!before.aceOfHeartsRevealed;
-	// Four Aces: no target, only a Stability check stands between the player and the token
+	// Four Aces on Hard: no target, only a Stability check stands between the player and the token
 	if (threshold === 0) return unlocked ? 'Salvation is now assured' : 'Salvation will be assured';
 	return unlocked ? `Salvation now needs ${threshold}+` : `Salvation will need ${threshold}+`;
 }
@@ -75,6 +85,12 @@ function salvationNote(card, state) {
 export function getMechanicNote(card, state) {
 	if (!card) return '';
 	if (card.card === 'K') return `King · ${getKingNumber(card, state)} of 4`;
+	// The fourth Ace ends the game; only its own Stability check stands in the way
+	if (isFourthAce(card, state)) {
+		return triggersStabilityCheck(card)
+			? 'The fourth Ace · survive its Stability check and you escape'
+			: 'The fourth Ace · you escape';
+	}
 
 	const parts = [];
 	if (card.card === 'A') {

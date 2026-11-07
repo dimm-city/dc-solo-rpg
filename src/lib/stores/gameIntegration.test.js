@@ -142,9 +142,10 @@ describe('Game Integration Tests - Based on Documentation', () => {
 			// Rolls 11-20 succeed (10 out of 20 = 50%)
 		});
 
-		it('should remove a token after a Stability check with 4 Aces', () => {
-			// From CLAUDE.md: "4 Aces: Automatic success, after one Stability check"
+		it('should remove a token after a Stability check with 4 Aces (Hard)', () => {
+			// From CLAUDE.md: on Hard, "4 Aces: Automatic success, after one Stability check"
 			gameState.state = 'successCheck';
+			gameState.config = { ...gameState.config, options: { difficulty: 2 } };
 			gameState.aceOfHeartsRevealed = true;
 			gameState.acesRevealed = 4;
 			gameState.tokens = 10;
@@ -161,26 +162,36 @@ describe('Game Integration Tests - Based on Documentation', () => {
 		});
 
 		it('should apply graduated token changes correctly', () => {
-			// From CLAUDE.md:
-			// - Natural 1: +2 tokens (critical failure)
-			// - Below threshold: +1 token (failure)
+			// From CLAUDE.md (Normal):
+			// - Natural 1: no change (a miss), Surreal
+			// - Below threshold: no change (a miss)
 			// - At/above threshold: -1 token (success)
 			// - Natural 20: -2 tokens (critical success)
+			// Hard: natural 1 +2 tokens, below threshold +1 token
 
 			gameState.state = 'successCheck';
 			gameState.aceOfHeartsRevealed = true;
 			gameState.acesRevealed = 1; // Threshold 17
 			gameState.tokens = 10;
 
-			// Test natural 1 (critical failure)
+			// Test natural 1 (a miss, Surreal)
 			mockDieRoll(1);
 			let result = getSalvationCheckRoll();
-			expect(result.tokenChange).toBe(2); // +2 tokens
+			expect(result.tokenChange).toBe(0);
+			expect(result.gainedSurreal).toBe(true);
 
-			// Test below threshold (failure)
+			// Test below threshold (a miss)
 			mockDieRoll(10);
 			result = getSalvationCheckRoll();
-			expect(result.tokenChange).toBe(1); // +1 token
+			expect(result.tokenChange).toBe(0);
+
+			// The same misses on Hard
+			gameState.config = { ...gameState.config, options: { difficulty: 2 } };
+			mockDieRoll(1);
+			expect(getSalvationCheckRoll().tokenChange).toBe(2); // +2 tokens
+			mockDieRoll(10);
+			expect(getSalvationCheckRoll().tokenChange).toBe(1); // +1 token
+			gameState.config = { ...gameState.config, options: { difficulty: 1 } };
 
 			// Test at threshold (success)
 			mockDieRoll(17);
@@ -488,7 +499,7 @@ describe('Game Integration Tests - Based on Documentation', () => {
 			({ threshold } = getSalvationCheckRoll());
 			expect(threshold).toBe(11);
 
-			// 4 Aces: no target (a Stability check instead)
+			// 4 Aces: no target (a Stability check instead; reached on Hard only)
 			gameState.acesRevealed = 4;
 			({ threshold } = getSalvationCheckRoll());
 			expect(threshold).toBe(0);
@@ -716,10 +727,11 @@ describe('Game Integration Tests - Based on Documentation', () => {
 			gameState.aceOfHeartsRevealed = true;
 			gameState.acesRevealed = 4;
 			gameState.config = {
-				labels: { successCheckWin: 'Win!' }
+				labels: { successCheckWin: 'Win!' },
+				options: { difficulty: 2 }
 			};
 
-			// 4 Aces: the Stability check holds (13 costs nothing), so the last token comes off
+			// 4 Aces (Hard): the Stability check holds (13 costs nothing), so the last token comes off
 			gameState.tower = 10;
 			mockDieRoll(13);
 			getSalvationCheckRoll();

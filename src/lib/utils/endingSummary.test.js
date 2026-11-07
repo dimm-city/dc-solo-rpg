@@ -56,6 +56,17 @@ describe('getEndingText', () => {
 		expect(text.afterword).toBe('');
 	});
 
+	it('names the fourth Ace on a win it brought (tokens still left), not on a tokens win', () => {
+		const fourthAce = { win: true, tower: 7, kingsRevealed: 2, acesRevealed: 4, tokens: 6 };
+		expect(getEndingText(fourthAce, labels).causeLine).toBe('The fourth Ace was revealed.');
+		expect(getEndingText(fourthAce, { ...labels, acesCauseLine: 'Four Aces.' }).causeLine).toBe(
+			'Four Aces.'
+		);
+		// Hard: four Aces, then the last token (no cause line, the message says it)
+		expect(getEndingText({ ...fourthAce, tokens: 0 }, labels).causeLine).toBe('');
+		expect(getEndingText({ ...fourthAce, acesRevealed: 3, tokens: 0 }, labels).causeLine).toBe('');
+	});
+
 	it('lets authors override the cause lines and afterword', () => {
 		const text = getEndingText(
 			{ kingsRevealed: 4, tower: 3 },

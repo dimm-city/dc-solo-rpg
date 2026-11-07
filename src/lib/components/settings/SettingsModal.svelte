@@ -14,11 +14,17 @@
 	} from '../../stores/audioStore.svelte.js';
 	import { PLAY_MODES, playModeSettings, detectPlayMode } from '../../utils/playMode.js';
 	import { areRuleTipsEnabled, setRuleTipsEnabled } from '../../utils/instructionsStorage.js';
+	import { DIFFICULTY } from '../../constants/difficulty.js';
 
 	let { isOpen = $bindable(false), onClose } = $props();
 
-	// Select values are strings; settings store null (game default), 0 (Easy) or 1 (Normal)
-	const DIFFICULTY_VALUES = { default: null, normal: 1, easy: 0 };
+	// Select values are strings; settings store null (game default) or a difficulty level
+	const DIFFICULTY_VALUES = {
+		default: null,
+		normal: DIFFICULTY.NORMAL,
+		easy: DIFFICULTY.EASY,
+		hard: DIFFICULTY.HARD
+	};
 
 	let difficultyValue = $derived(
 		Object.keys(DIFFICULTY_VALUES).find(
@@ -58,7 +64,9 @@
 				<div>
 					<label class="cm-label" for="difficulty">Difficulty</label>
 					<p class="cm-help" id="difficulty-help">
-						Easy starts with the Ace of Hearts already revealed. Changes apply the next time a game
+						Easy: the Ace of Hearts starts revealed. Normal: Tokens only ever fall, and the fourth
+						Ace wins the game if you survive its Stability check. Hard: failed Salvation rolls add
+						Tokens, and four Aces only make Salvation automatic. Changes apply the next time a game
 						begins.
 					</p>
 				</div>
@@ -72,6 +80,7 @@
 					<option value="default">Game default</option>
 					<option value="normal">Normal</option>
 					<option value="easy">Easy</option>
+					<option value="hard">Hard</option>
 				</select>
 			</div>
 

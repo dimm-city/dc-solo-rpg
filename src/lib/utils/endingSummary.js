@@ -8,6 +8,7 @@ export const MAX_STABILITY = 20;
 
 const DEFAULT_KINGS_CAUSE = 'The fourth King was revealed.';
 const DEFAULT_STABILITY_CAUSE = 'Your Stability reached 0.';
+const DEFAULT_ACES_CAUSE = 'The fourth Ace was revealed.';
 const DEFAULT_AFTERWORD = 'Winning was never likely. What you wrote along the way is the story.';
 
 /**
@@ -24,8 +25,10 @@ export function getEndingCause(state) {
 
 /**
  * Text for the ending screen: the author's main line, a game-written cause line
- * and (on a loss) the afterword.
- * @param {{kingsRevealed?: number, tower?: number, win?: boolean, status?: string}} state
+ * and (on a loss) the afterword. A win through the fourth Ace (tokens still left) names it;
+ * a win through the last token needs no cause line, the message says it.
+ * @param {{kingsRevealed?: number, tower?: number, win?: boolean, status?: string,
+ *   acesRevealed?: number, tokens?: number}} state
  * @param {object} [labels] - game labels from the game config
  */
 export function getEndingText(state, labels = {}) {
@@ -34,7 +37,10 @@ export function getEndingText(state, labels = {}) {
 		return {
 			cause,
 			message: labels.successCheckWin ?? state.status ?? '',
-			causeLine: '',
+			causeLine:
+				(state.acesRevealed ?? 0) >= 4 && (state.tokens ?? 0) > 0
+					? (labels.acesCauseLine ?? DEFAULT_ACES_CAUSE)
+					: '',
 			afterword: ''
 		};
 	}
