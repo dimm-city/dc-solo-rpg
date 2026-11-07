@@ -1,7 +1,7 @@
 /**
- * Pure helpers for the ending screens: why the game ended, a recap of the run,
- * and the key moments and status line shown in the final log.
- * They take plain state objects so they are easy to test.
+ * Pure helpers for the ending screens: why the game ended, a recap of the run, and the
+ * journal's status line. They take plain state objects so they are easy to test.
+ * (The final log's timeline is built in gameTimeline.js.)
  */
 
 export const MAX_STABILITY = 20;
@@ -87,17 +87,6 @@ export function getRunRecap(state) {
 		recap.push({ key: 'tokens', label: 'Tokens left', value: state.tokens ?? 0 });
 	}
 	return recap;
-}
-
-/** Kings and Aces drawn across the run, in order, for the final log. */
-export function getKeyMoments(log = []) {
-	return drawnCards(log)
-		.filter((entry) => entry.card === 'K' || entry.card === 'A')
-		.map((entry) => ({
-			round: entry.round,
-			isKing: entry.card === 'K',
-			label: `${entry.card === 'K' ? 'King' : 'Ace'} of ${entry.suit}`
-		}));
 }
 
 /** One-line status, e.g. "Stability 9/20 · 3 of 4 Kings · 11 tokens left". */

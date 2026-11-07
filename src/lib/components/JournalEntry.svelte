@@ -1,7 +1,7 @@
 <script>
 	import { gameState } from '../stores/gameStore.svelte.js';
 	import ContinueButton from './ContinueButton.svelte';
-	import RunRecap from './RunRecap.svelte';
+	import GameTimeline from './journal/GameTimeline.svelte';
 	import { onMount, tick } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { ANIMATION_DURATION } from '$lib/constants/animations.js';
@@ -9,6 +9,7 @@
 	import VoiceNote from './journal/VoiceNote.svelte';
 	import AutoJournalTimer from './journal/AutoJournalTimer.svelte';
 	import { getStatusLine } from '../utils/endingSummary.js';
+	import { cardShort } from './story/storyCards.js';
 
 	// How long "Saved to your log" shows before the game moves on
 	const SAVED_BEAT = 800;
@@ -27,7 +28,10 @@
 		journalSaved = false
 	} = $props();
 
-	const currentEvents = $derived(gameState.log.filter((l) => l.round === gameState.round));
+	// This round's cards (the log also holds roll entries)
+	const currentEvents = $derived(
+		gameState.log.filter((l) => l.card && l.round === gameState.round)
+	);
 
 	// The final log belongs to the ending: it covers the whole run
 	const isFinal = $derived(gameState.gameOver);
@@ -51,12 +55,14 @@
 
 	let voiceNote = $state();
 
-	const SUIT_GLYPHS = { hearts: '♥', diamonds: '♦', clubs: '♣', spades: '♠' };
-	const cardLabel = (event) => `${event.card}${SUIT_GLYPHS[event.suit] ?? ''}`;
+	// The final log on a phone: the timeline and the writing take turns (a switch at the top of
+	// the sheet); from 768px up they sit side by side and the switch is not shown
+	let view = $state('entry');
 
-	// Touch devices would open the keyboard over the sheet, so only focus the page on pointer devices
+	// Desktop only: a touch device would open its keyboard over the sheet (owner decision), so the
+	// page is focused only where a mouse or trackpad drives it
 	const autofocusWriting =
-		typeof matchMedia !== 'undefined' && !matchMedia('(pointer: coarse)').matches;
+		typeof matchMedia !== 'undefined' && matchMedia('(hover: hover) and (pointer: fine)').matches;
 
 	// When the entry is saved on the final log the epitaph replaces the textarea: keep focus inside the dialog
 	let epitaphEl = $state();
@@ -155,6 +161,8 @@
 	class:final={isFinal}
 	class:won={isFinal && gameState.win}
 	class:saving
+	class:saved={journalSaved}
+	class:show-timeline={isFinal && !journalSaved && view === 'timeline'}
 	data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
 >
 	<!-- 1. Header: what this is, and where you stand -->
@@ -163,76 +171,112 @@
 			<p class="sheet-label">{sheetLabel}</p>
 			<h2 class="sheet-title">{sheetTitle}</h2>
 		</div>
-		{#if !isFinal}
-			<p class="status-line" data-testid="journal-status-line">{statusLine}</p>
-		{/if}
+		<p class="status-line" data-testid="journal-status-line">{statusLine}</p>
 	</header>
 
-	<div class="sheet-body">
-		<!-- 2. What happened -->
-		{#if isFinal}
-			<section class="recap" aria-labelledby="recap-label">
-				<h3 id="recap-label" class="section-label">Your run</h3>
-				<div class="recap-scroll">
-					<RunRecap compact showMoments />
-				</div>
-			</section>
-		{:else if currentEvents.length > 0}
-			<section class="round-log" aria-labelledby="round-log-label">
-				<h3 id="round-log-label" class="section-label">This round</h3>
-				<ul class="round-list">
-					{#each currentEvents as event (event.id)}
-						<li data-type={event.type}>
-							<span class="round-card" aria-hidden="true">{cardLabel(event)}</span>
-							<span class="round-text">{event.description}</span>
-						</li>
-					{/each}
-				</ul>
-			</section>
-		{/if}
-
-		{#if journalSaved && isFinal}
-			<!-- Epitaph: the saved entry, shown back -->
-			<div
-				class="epitaph"
-				data-testid="journal-epitaph"
-				tabindex="-1"
-				bind:this={epitaphEl}
-				in:fade={{ duration: ANIMATION_DURATION.SLOW }}
+	<!-- Phones: the final log is two views, the run's timeline and the writing -->
+	{#if isFinal && !journalSaved}
+		<div class="view-switch" role="group" aria-label="Show">
+			<button
+				type="button"
+				class="view-tab"
+				aria-pressed={view === 'timeline'}
+				onclick={() => (view = 'timeline')}
+				data-testid="journal-view-timeline"
 			>
-				{#if epitaphText}
-					<blockquote>{epitaphText}</blockquote>
-				{:else}
-					<blockquote class="empty">You left no words. The silence is a record too.</blockquote>
-				{/if}
-				<p class="epitaph-by">
-					{gameState.player?.name ?? ''}, round {gameState.round}
-				</p>
-			</div>
-		{:else}
-			<!-- 3. Writing: the main element. No prompts (owner decision): the round's cards above
-			     are the material, and the page is the player's own. -->
-			<section class="writing">
-				<h3 id="writing-label" class="section-label">Your entry</h3>
-				<textarea
-					bind:value={journalText}
-					aria-labelledby="writing-label"
-					placeholder={isFinal ? 'Write your final entry' : 'Write about this round'}
-					disabled={saving || journalSaved}
-					data-autofocus={autofocusWriting ? '' : undefined}
-					oninput={() => cancelAutoJournalTimer()}
-				></textarea>
-			</section>
-		{/if}
-	</div>
+				Timeline
+			</button>
+			<button
+				type="button"
+				class="view-tab"
+				aria-pressed={view === 'entry'}
+				onclick={() => (view = 'entry')}
+				data-testid="journal-view-entry"
+			>
+				Your entry
+			</button>
+		</div>
+	{/if}
 
-	<!-- 4. Actions, pinned to the bottom of the sheet: voice note left, Record Entry right -->
-	<footer class="sheet-actions">
+	<!-- 2. What happened: the whole run on the final log, this round's cards otherwise -->
+	{#if isFinal}
+		<section class="timeline-pane" aria-labelledby="timeline-label">
+			<h3 id="timeline-label" class="section-label">Timeline</h3>
+			<div class="timeline-scroll">
+				<GameTimeline />
+			</div>
+		</section>
+	{:else if currentEvents.length > 0}
+		<section class="round-log" aria-labelledby="round-log-label">
+			<h3 id="round-log-label" class="section-label">This round</h3>
+			<ul class="round-list">
+				{#each currentEvents as event (event.id)}
+					<li data-type={event.type}>
+						<span class="round-card" aria-hidden="true">{cardShort(event)}</span>
+						<span class="round-text">{event.description}</span>
+					</li>
+				{/each}
+			</ul>
+		</section>
+	{/if}
+
+	<!-- 3. Voice note. Before the writing in the DOM, so the tab order runs voice note, entry,
+	     Record Entry (Shift+Tab from the entry reaches it); the grid shows it on the footer row. -->
+	{#if !journalSaved}
+		<div class="voice-slot">
+			<VoiceNote
+				bind:this={voiceNote}
+				bind:audioData
+				disabled={saving}
+				onstart={cancelAutoJournalTimer}
+			/>
+		</div>
+	{/if}
+
+	{#if journalSaved && isFinal}
+		<!-- Epitaph: the saved entry, shown back -->
+		<div
+			class="epitaph"
+			data-testid="journal-epitaph"
+			tabindex="-1"
+			bind:this={epitaphEl}
+			in:fade={{ duration: ANIMATION_DURATION.SLOW }}
+		>
+			{#if epitaphText}
+				<blockquote>{epitaphText}</blockquote>
+			{:else}
+				<blockquote class="empty">You left no words. The silence is a record too.</blockquote>
+			{/if}
+			<p class="epitaph-by">
+				{gameState.player?.name ?? ''}, round {gameState.round}
+			</p>
+		</div>
+	{:else}
+		<!-- 4. Writing: the main element. No prompts (owner decision): the round's cards above
+		     are the material, and the page is the player's own. -->
+		<section class="writing">
+			<h3 id="writing-label" class="section-label">Your entry</h3>
+			<textarea
+				bind:value={journalText}
+				aria-labelledby="writing-label"
+				placeholder={isFinal ? 'Write your final entry' : 'Write about this round'}
+				disabled={saving || journalSaved}
+				data-autofocus={autofocusWriting ? '' : undefined}
+				oninput={() => cancelAutoJournalTimer()}
+			></textarea>
+		</section>
+	{/if}
+
+	<!-- 5. Footer, pinned: the rule (and the auto-journal countdown) across the sheet, then the
+	     voice note (above) on the left and Record Entry on the right -->
+	<div class="timer-slot">
 		<AutoJournalTimer
 			timeRemaining={autoJournalTimeRemaining}
 			totalTime={getGameplaySettings().journalPauseTime}
 		/>
+	</div>
 
+	<div class="sheet-actions">
 		{#if journalSaved && isFinal}
 			<div class="final-actions">
 				<ContinueButton
@@ -261,60 +305,64 @@
 				</div>
 			</div>
 		{:else}
-			<div class="action-row">
-				{#if !journalSaved}
-					<VoiceNote
-						bind:this={voiceNote}
-						bind:audioData
-						disabled={saving}
-						onstart={cancelAutoJournalTimer}
+			<!-- One slot: the button, then the saved beat in its place -->
+			<div class="save-slot">
+				{#if saving}
+					<p
+						class="saved-beat"
+						role="status"
+						data-testid="journal-saved"
+						in:fade={{ duration: ANIMATION_DURATION.FAST }}
+					>
+						<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+							<path d="M20 6 9 17l-5-5" />
+						</svg>
+						Saved to your log
+					</p>
+				{:else}
+					<ContinueButton
+						class="record-entry"
+						variant="primary"
+						text={isFinal
+							? 'Record final log'
+							: (gameState.config?.labels?.journalEntrySaveButtonText ?? 'Record Entry')}
+						onclick={recordEntry}
+						testid="journal-save-button"
 					/>
 				{/if}
-				<!-- One slot: the button, then the saved beat in its place -->
-				<div class="save-slot">
-					{#if saving}
-						<p
-							class="saved-beat"
-							role="status"
-							data-testid="journal-saved"
-							in:fade={{ duration: ANIMATION_DURATION.FAST }}
-						>
-							<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-								<path d="M20 6 9 17l-5-5" />
-							</svg>
-							Saved to your log
-						</p>
-					{:else}
-						<ContinueButton
-							class="record-entry"
-							variant="primary"
-							text={gameState.config?.labels?.journalEntrySaveButtonText ?? 'Record Entry'}
-							onclick={recordEntry}
-							testid="journal-save-button"
-						/>
-					{/if}
-				</div>
 			</div>
 		{/if}
-	</footer>
+	</div>
 </div>
 
 <style>
 	/* ============================================
 	   JOURNAL SHEET
-	   Full-screen sheet on phones, large centred panel on desktop.
-	   Rows: header / body (flexes) / actions. The panel itself never scrolls.
+	   Full-screen sheet on phones, a 46rem reading column on desktop.
+	   Grid rows: header / (final log on phones: the view switch) / the round's cards / the
+	   writing (flexes) / footer rule / footer row. The footer row is two cells, the voice note
+	   and Record Entry: the voice note comes before the writing in the DOM (tab order), the grid
+	   puts it on the footer row. Only a pane ever scrolls, never the sheet.
+	   The final log from 768px up: see .journal-sheet.final below.
 	   ============================================ */
 
 	.journal-sheet {
-		display: flex;
-		flex-direction: column;
-		width: min(880px, 92vw);
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
+		grid-template-areas:
+			'header header'
+			'switch switch'
+			'log log'
+			'main main'
+			'timer timer'
+			'voice actions';
+		column-gap: var(--space-md);
+		/* 46rem of content plus 32px sides (8px grid: 32px sides, 24px top/bottom) */
+		width: min(calc(46rem + 2 * var(--space-xl)), 92vw);
 		height: min(88dvh, 100%);
 		box-sizing: border-box;
-		/* 8px grid: 32px sides, 24px top/bottom */
 		padding: var(--space-lg) var(--space-xl);
-		gap: var(--space-md);
 		overflow: hidden;
 		background: rgba(8, 10, 18, 0.97);
 
@@ -340,20 +388,14 @@
 	}
 
 	/* Header */
-	.sheet-header,
-	.sheet-actions {
-		width: 100%;
-		max-width: 46rem;
-		margin-inline: auto;
-	}
-
 	.sheet-header {
-		flex: none;
+		grid-area: header;
 		display: flex;
 		flex-wrap: wrap;
 		align-items: flex-end;
 		justify-content: space-between;
 		gap: var(--space-xs) var(--space-md);
+		margin-bottom: var(--space-md);
 		padding-bottom: var(--space-md);
 		border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 	}
@@ -402,29 +444,56 @@
 		color: rgba(255, 255, 255, 0.8);
 	}
 
-	/* Body: sections stacked on a 16px rhythm, centred in a readable column */
-	.sheet-body {
-		flex: 1 1 auto;
-		min-height: 0;
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-md);
-		width: 100%;
-		max-width: 46rem;
-		margin: 0 auto;
-		/* Safety valve for very short viewports only; normally nothing here scrolls */
-		overflow-y: auto;
-		overscroll-behavior: contain;
-	}
-
 	.section-label {
 		margin-bottom: var(--space-xs);
 	}
 
+	/* Phones, final log: a two-way switch, Timeline / Your entry, each view the whole sheet */
+	.view-switch {
+		grid-area: switch;
+		display: flex;
+		margin-bottom: var(--space-md);
+		border: 1px solid rgba(255, 255, 255, 0.35);
+		border-radius: 4px;
+	}
+
+	.view-tab {
+		flex: 1 1 0;
+		min-height: 44px;
+		padding: 0 var(--space-sm);
+		font-family: var(--font-body, 'Inter', sans-serif);
+		font-size: 0.875rem;
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: rgba(255, 255, 255, 0.82);
+		background: transparent;
+		border: none;
+		cursor: pointer;
+		transition:
+			color var(--dur-state, 120ms) ease-out,
+			background-color var(--dur-state, 120ms) ease-out;
+	}
+
+	.view-tab + .view-tab {
+		border-left: 1px solid rgba(255, 255, 255, 0.35);
+	}
+
+	.view-tab[aria-pressed='true'] {
+		color: var(--color-neon-cyan, #0ff);
+		background: rgba(0, 255, 255, 0.12);
+	}
+
+	.view-tab:focus-visible {
+		outline: 2px solid var(--color-neon-cyan, #0ff);
+		outline-offset: -2px;
+	}
+
 	/* What happened this round: every card of the round, with no scroller of its own (owner
-	   decision). A typical round (up to 6 cards) fits; past that the sheet body scrolls. */
+	   decision). A typical round (up to 6 cards) fits; past that the list scrolls. */
 	.round-log {
-		flex: none;
+		grid-area: log;
+		margin-bottom: var(--space-md);
 	}
 
 	.round-list {
@@ -474,22 +543,34 @@
 		color: var(--round-accent, rgba(255, 255, 255, 0.7));
 	}
 
-	/* The final log shows the whole run; it scrolls inside itself if long */
-	.recap {
-		flex: none;
+	/* The final log's timeline: the whole run, scrolling inside its pane. On phones it is the
+	   other view of the writing's slot (the switch shows one at a time). */
+	.timeline-pane {
+		grid-area: main;
+		display: none;
+		flex-direction: column;
+		min-height: 0;
 	}
 
-	.recap-scroll {
-		max-height: min(34dvh, 18rem);
+	.journal-sheet.show-timeline .timeline-pane {
+		display: flex;
+	}
+
+	.journal-sheet.show-timeline .writing {
+		display: none;
+	}
+
+	.timeline-scroll {
+		flex: 1 1 auto;
+		min-height: 0;
 		overflow-y: auto;
 		overscroll-behavior: contain;
-		display: flex;
-		justify-content: center;
+		padding-right: var(--space-xs);
 	}
 
 	/* Writing: takes every pixel the round list leaves, never under about four lines */
 	.writing {
-		flex: 1 1 0;
+		grid-area: main;
 		min-height: 11rem;
 		display: flex;
 		flex-direction: column;
@@ -549,7 +630,7 @@
 
 	/* Epitaph: the saved entry, shown back */
 	.epitaph {
-		flex: 1 1 0;
+		grid-area: main;
 		min-height: 0;
 		overflow-y: auto;
 		overscroll-behavior: contain;
@@ -588,29 +669,44 @@
 		color: rgba(255, 255, 255, 0.72);
 	}
 
-	/* Actions: pinned, voice note on the left, Record Entry on the right */
-	.sheet-actions {
-		flex: none;
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-sm);
+	/* Footer: the rule (and the auto-journal countdown) across the sheet, then one row with the
+	   voice note on the left and Record Entry on the right */
+	.timer-slot {
+		grid-area: timer;
+		margin-top: var(--space-md);
 		padding-top: var(--space-md);
 		border-top: 1px solid rgba(255, 255, 255, 0.12);
 	}
 
-	.action-row {
+	.timer-slot:has(:global(.auto-journal-timer)) {
+		padding-bottom: var(--space-sm);
+	}
+
+	.voice-slot {
+		grid-area: voice;
 		display: flex;
 		align-items: center;
-		gap: var(--space-md);
 		min-height: 52px;
+	}
+
+	.sheet-actions {
+		grid-area: actions;
+		display: flex;
+		align-items: center;
+		min-height: 52px;
+	}
+
+	/* Once the final entry is saved there is no voice note: the actions take the whole row */
+	.journal-sheet.saved .sheet-actions {
+		grid-column: 1 / -1;
 	}
 
 	.save-slot {
 		display: flex;
 		align-items: center;
 		justify-content: flex-end;
+		width: 100%;
 		min-height: 52px;
-		margin-left: auto;
 	}
 
 	.save-slot :global(.aug-button-wrapper.record-entry) {
@@ -683,8 +779,46 @@
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		textarea {
+		textarea,
+		.view-tab {
 			transition: none;
+		}
+	}
+
+	/* The final log from 768px up (tablets and desktop): the timeline beside the writing, both
+	   on screen at once; the timeline scrolls inside itself. The footer row runs under both. */
+	@media (min-width: 768px) {
+		.journal-sheet.final {
+			grid-template-columns: minmax(15rem, 2fr) minmax(0, 3fr);
+			grid-template-rows: auto minmax(0, 1fr) auto auto;
+			grid-template-areas:
+				'header header'
+				'timeline main'
+				'timer timer'
+				'voice actions';
+			column-gap: var(--space-lg);
+			width: min(calc(66rem + 2 * var(--space-xl)), 92vw);
+		}
+
+		.journal-sheet.final .timeline-pane {
+			grid-area: timeline;
+			display: flex;
+		}
+
+		.journal-sheet.final .writing {
+			display: flex;
+		}
+
+		.view-switch {
+			display: none;
+		}
+	}
+
+	/* Phones, final log: the switch names the views, so the panes need no labels */
+	@media (max-width: 767.98px) {
+		.journal-sheet.final .timeline-pane .section-label,
+		.journal-sheet.final .writing .section-label {
+			display: none;
 		}
 	}
 
@@ -709,7 +843,6 @@
 			width: 100%;
 			height: 100%;
 			padding: var(--space-md);
-			gap: var(--space-sm);
 			--aug-tl: 0px;
 			--aug-tr: 0px;
 			--aug-br: 0px;
@@ -718,6 +851,7 @@
 		}
 
 		.sheet-header {
+			margin-bottom: var(--space-sm);
 			padding-bottom: var(--space-sm);
 		}
 
@@ -730,17 +864,17 @@
 			padding: var(--space-md);
 		}
 
-		.sheet-actions {
+		/* One row: the 44px mic, then Record Entry filling the rest */
+		.journal-sheet {
+			column-gap: var(--space-sm);
+		}
+
+		.timer-slot {
+			margin-top: var(--space-sm);
 			padding-top: var(--space-sm);
 		}
 
-		/* One row: the 44px mic, then Record Entry filling the rest */
-		.action-row {
-			gap: var(--space-sm);
-		}
-
 		.save-slot {
-			flex: 1;
 			justify-content: center;
 		}
 
@@ -760,10 +894,10 @@
 	@media (max-height: 500px) {
 		.journal-sheet {
 			padding: var(--space-sm) var(--space-md);
-			gap: var(--space-sm);
 		}
 
 		.sheet-header {
+			margin-bottom: var(--space-sm);
 			padding-bottom: var(--space-xs);
 		}
 
@@ -776,10 +910,6 @@
 			display: none;
 		}
 
-		.sheet-body {
-			gap: var(--space-sm);
-		}
-
 		.round-list {
 			max-height: min(30dvh, 10rem);
 			overflow-y: auto;
@@ -790,20 +920,17 @@
 			padding-block: var(--space-xs);
 		}
 
-		/* The Game Over screen just showed the recap: here the writing gets the room */
-		.journal-sheet.final .recap {
-			display: none;
-		}
-
 		.writing {
 			min-height: 5rem;
 		}
 
-		.sheet-actions {
+		.timer-slot {
+			margin-top: var(--space-xs);
 			padding-top: var(--space-xs);
 		}
 
-		.action-row,
+		.voice-slot,
+		.sheet-actions,
 		.save-slot {
 			min-height: 44px;
 		}

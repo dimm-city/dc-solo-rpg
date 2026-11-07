@@ -48,7 +48,7 @@
 	let gameTitle = $derived(savedGame?.gameTitle || 'Untitled game');
 	let playerName = $derived(savedGame?.playerName || '');
 	let outcome = $derived(getStoryOutcome(savedGame ?? {}));
-	let written = $derived(enrichedRounds.map((round) => !!round.journalEntry));
+	let written = $derived(enrichedRounds.map((round) => !!round.journalEntry || !!round.finalEntry));
 	let finishedOn = $derived.by(() => {
 		const when = savedGame?.lastPlayed || savedGame?.savedAt;
 		return when

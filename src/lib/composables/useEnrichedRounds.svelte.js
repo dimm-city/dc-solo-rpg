@@ -9,11 +9,16 @@ import { logger } from '../utils/logger.js';
  * last round is the saved final state. (Using the last card's snapshot showed the final round
  * one King short and the last Stability loss missing.)
  *
+ * The final log, written after the ending, is the last round's second entry (marked `final`
+ * by recordRound). It closes the story as the last round's `finalEntry`, apart from the round's
+ * own entry. An older save without one reads as before.
+ *
  * @param {Object} savedGame - A completed save (see indexedDBStorage)
  * @returns {Array<{
  *   roundNumber: number,
  *   cards: Array<Object>,
  *   journalEntry: {text: string, audio: string|null} | null,
+ *   finalEntry: {text: string, audio: string|null} | null,
  *   endState: {tower: number, kingsRevealed: number, acesRevealed: number, tokens: number, aceOfHeartsRevealed: boolean},
  *   gameOverMessage: string|null,
  *   isWon: boolean
@@ -23,6 +28,14 @@ export function useEnrichedRounds(savedGame) {
 	if (!savedGame?.cardLog) return [];
 
 	const journalEntries = savedGame.journalEntries || [];
+
+	/** A blank entry is no entry; a voice note alone is one */
+	const toEntry = (entry) => {
+		const text = entry?.text?.trim() ? entry.text : '';
+		const audio = entry?.audioData || null;
+		return text || audio ? { text, audio } : null;
+	};
+	const finalEntry = toEntry(journalEntries.find((entry) => entry.final));
 
 	// Cards only: the log also holds roll entries such as the opening 'initial-damage'
 	const cardEntries = savedGame.cardLog.filter(
@@ -53,9 +66,7 @@ export function useEnrichedRounds(savedGame) {
 	const ordered = Array.from(roundsMap.entries()).sort((a, b) => a[0] - b[0]);
 
 	const rounds = ordered.map(([roundNumber, cards], index) => {
-		const entry = journalEntries.find((j) => j.round === roundNumber);
-		const text = entry?.text?.trim() ? entry.text : '';
-		const audio = entry?.audioData || null;
+		const entry = journalEntries.find((j) => j.round === roundNumber && !j.final);
 		const next = ordered[index + 1];
 		const isFinalRound = !next;
 
@@ -71,7 +82,8 @@ export function useEnrichedRounds(savedGame) {
 				diceRoll: card.diceRoll,
 				damageDealt: card.damageDealt
 			})),
-			journalEntry: text || audio ? { text, audio } : null,
+			journalEntry: toEntry(entry),
+			finalEntry: isFinalRound ? finalEntry : null,
 			endState: isFinalRound ? finalState : (next[1][0].gameState ?? null),
 			gameOverMessage: isFinalRound ? gameOverMessage || null : null,
 			isWon: !!savedGame.isWon

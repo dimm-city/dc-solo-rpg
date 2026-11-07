@@ -1,19 +1,16 @@
 <script>
 	/**
-	 * RunRecap - the whole run in a few numbers, from real game state.
-	 * The same tile grid on the Game Over screen and (compact) in the final log:
-	 * one row on wider screens, three per row on phones.
+	 * RunRecap - the whole run in a few numbers, from real game state, on the Game Over
+	 * screen: one row of tiles on wider screens, three per row on phones. (The final log
+	 * shows the run as a timeline instead: journal/GameTimeline.)
 	 */
 	import { gameState } from '../stores/gameStore.svelte.js';
-	import { getRunRecap, getKeyMoments } from '../utils/endingSummary.js';
-
-	let { compact = false, showMoments = false } = $props();
+	import { getRunRecap } from '../utils/endingSummary.js';
 
 	const recap = $derived(getRunRecap(gameState));
-	const moments = $derived(getKeyMoments(gameState.log));
 </script>
 
-<div class="run-recap" class:compact data-testid="run-recap">
+<div class="run-recap" data-testid="run-recap">
 	<dl>
 		{#each recap as item (item.key)}
 			<div class="stat" data-testid="recap-{item.key}">
@@ -22,17 +19,6 @@
 			</div>
 		{/each}
 	</dl>
-
-	{#if showMoments && moments.length > 0}
-		<ul class="moments" aria-label="Key moments">
-			{#each moments as moment, i (i)}
-				<li class:king={moment.isKing}>
-					<span class="round">R{moment.round}</span>
-					{moment.label}
-				</li>
-			{/each}
-		</ul>
-	{/if}
 </div>
 
 <style>
@@ -86,15 +72,6 @@
 		color: var(--color-danger, #ff4d6d);
 	}
 
-	/* Final log: the same tiles, a step smaller */
-	.compact .stat {
-		padding: 0.375rem var(--space-xs, 0.25rem);
-	}
-
-	.compact dd {
-		font-size: 1.125rem;
-	}
-
 	@media (max-width: 600px) {
 		dl {
 			flex-wrap: wrap;
@@ -108,34 +85,5 @@
 		dd {
 			font-size: 1.125rem;
 		}
-	}
-
-	.moments {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: center;
-		gap: var(--space-xs, 0.25rem) var(--space-sm, 0.5rem);
-		list-style: none;
-		margin: var(--space-sm, 0.5rem) 0 0;
-		padding: 0;
-		font-family: var(--font-body, 'Inter', sans-serif);
-		font-size: 0.8125rem;
-		color: rgba(255, 255, 255, 0.85);
-	}
-
-	.moments li {
-		padding: 0.1rem 0.5rem;
-		border: 1px solid rgba(255, 255, 255, 0.2);
-	}
-
-	.moments li.king {
-		border-color: var(--color-danger, #ff4d6d);
-		color: var(--color-danger, #ff4d6d);
-	}
-
-	.round {
-		opacity: 0.7;
-		margin-right: 0.25em;
-		font-variant-numeric: tabular-nums;
 	}
 </style>

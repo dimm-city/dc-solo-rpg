@@ -731,7 +731,8 @@ export async function failureCheck() {
 }
 
 /**
- * Record round in journal
+ * Record round in journal. After the ending this records the final log: the last round's
+ * second entry, marked `final` so the story can tell it from the round's own entry.
  * @param {object} journalEntry - Journal entry
  * @param {string} [journalEntry.text] - Entry text (optional)
  * @param {string} [journalEntry.audioData] - Base64 encoded audio data (optional)
@@ -741,8 +742,12 @@ export async function recordRound(journalEntry) {
 		throw new Error('Journal entry object is required');
 	}
 
+	const isFinal = gameState.gameOver;
+
 	// Check if a journal entry already exists for this round
-	const existingEntry = gameState.journalEntries.find((entry) => entry.round === gameState.round);
+	const existingEntry = gameState.journalEntries.find(
+		(entry) => entry.round === gameState.round && !!entry.final === isFinal
+	);
 	if (existingEntry) {
 		logger.warn(
 			`[recordRound] WARNING: Journal entry already exists for round ${gameState.round}. Preventing duplicate.`,
@@ -760,6 +765,7 @@ export async function recordRound(journalEntry) {
 	// Create a new object to avoid mutating the passed reference
 	const newEntry = {
 		round: gameState.round,
+		...(isFinal && { final: true }),
 		text: journalEntry.text || '',
 		audioData: journalEntry.audioData || null,
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- timestamp string only, not reactive state
@@ -769,6 +775,7 @@ export async function recordRound(journalEntry) {
 	gameState.journalEntries.push(newEntry);
 	logger.debug(`[recordRound] Saved journal for round ${gameState.round}:`, {
 		round: newEntry.round,
+		final: isFinal,
 		hasText: !!newEntry.text,
 		hasAudio: !!newEntry.audioData,
 		totalEntries: gameState.journalEntries.length
@@ -945,6 +952,7 @@ export function applyPendingSuccessCheck({ advance = true } = {}) {
 	if (gameState.pendingUpdates.diceRoll !== null) {
 		gameState.diceRoll = gameState.pendingUpdates.diceRoll;
 	}
+	const before = { tower: gameState.tower, tokens: gameState.tokens };
 
 	// Four Aces (Hard): the Stability check comes first. If it takes the last Stability, the game
 	// is lost and the token stays (its pending change is 0).
@@ -974,6 +982,22 @@ export function applyPendingSuccessCheck({ advance = true } = {}) {
 		'[applyPendingSuccessCheck] Applied pending success check, tokens now:',
 		gameState.tokens
 	);
+
+	// Log the roll and what it did (cards log themselves when drawn): the final log's timeline
+	// reads it. Every reader of the log picks cards by their `card` field, so a roll entry is
+	// passed over wherever cards are listed.
+	gameState.log.push({
+		type: 'salvation',
+		id: `${gameState.round}.salvation`,
+		round: gameState.round,
+		roll: gameState.diceRoll,
+		threshold: getCurrentSalvationThreshold(),
+		tokenChange: gameState.tokens - before.tokens,
+		tokens: gameState.tokens,
+		stabilityChange: gameState.tower - before.tower,
+		tower: gameState.tower,
+		timestamp: Date.now()
+	});
 
 	if (gameState.tokens === 0 && !gameState.gameOver) {
 		// D20 System: Victory when tokens reach 0 (no final damage roll)

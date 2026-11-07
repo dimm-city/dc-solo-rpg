@@ -35,7 +35,8 @@ const savedGame = {
 	journalEntries: [
 		{ round: 1, text: 'First night.' },
 		{ round: 2, text: '   ', audioData: null },
-		{ round: 3, text: '', audioData: 'data:audio/wav;base64,AAAA' }
+		{ round: 3, text: '', audioData: 'data:audio/wav;base64,AAAA' },
+		{ round: 3, final: true, text: 'They are all here. I am not.' }
 	]
 };
 
@@ -67,6 +68,34 @@ describe('useEnrichedRounds', () => {
 	it('puts the ending on the last round only', () => {
 		expect(rounds[2].gameOverMessage).toBe('The machine is silent.');
 		expect(rounds[0].gameOverMessage).toBeNull();
+	});
+
+	it('closes the last round with the final log, apart from its own entry', () => {
+		expect(rounds[2].finalEntry).toEqual({ text: 'They are all here. I am not.', audio: null });
+		expect(rounds[2].journalEntry).toEqual({ text: '', audio: 'data:audio/wav;base64,AAAA' });
+		expect(rounds[0].finalEntry).toBeNull();
+	});
+
+	it('reads an older save with no final log as before', () => {
+		const older = { ...savedGame, journalEntries: savedGame.journalEntries.slice(0, 3) };
+		const last = useEnrichedRounds(older).at(-1);
+		expect(last.finalEntry).toBeNull();
+		expect(last.journalEntry).toEqual({ text: '', audio: 'data:audio/wav;base64,AAAA' });
+	});
+
+	it('keeps a final voice note, and drops a blank final log', () => {
+		const voice = {
+			...savedGame,
+			journalEntries: [
+				{ round: 3, final: true, text: ' ', audioData: 'data:audio/wav;base64,BBBB' }
+			]
+		};
+		expect(useEnrichedRounds(voice).at(-1).finalEntry).toEqual({
+			text: '',
+			audio: 'data:audio/wav;base64,BBBB'
+		});
+		const blank = { ...savedGame, journalEntries: [{ round: 3, final: true, text: '  ' }] };
+		expect(useEnrichedRounds(blank).at(-1).finalEntry).toBeNull();
 	});
 
 	it('counts Aces from the log when an older save has no count', () => {
