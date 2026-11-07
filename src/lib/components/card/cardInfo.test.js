@@ -4,6 +4,7 @@ import {
 	getModifierNote,
 	getKingNumber,
 	isFinalKing,
+	endsGameOnConfirm,
 	triggersStabilityCheck,
 	getCardName,
 	getRoundProgress,
@@ -128,6 +129,23 @@ describe('Kings', () => {
 		expect(getKingNumber(card('K', 'hearts', {}, { kingsRevealed: 1 }))).toBe(2);
 		expect(isFinalKing(card('K', 'hearts', {}, { kingsRevealed: 2 }))).toBe(false);
 		expect(isFinalKing(card('K', 'hearts', {}, { kingsRevealed: 3 }))).toBe(true);
+	});
+});
+
+describe('endsGameOnConfirm', () => {
+	it('is the fourth King, and on Easy a fourth Ace that skips its Stability check', () => {
+		const easy = { config: { options: { difficulty: 0 } } };
+		const normal = { config: { options: { difficulty: 1 } } };
+		expect(endsGameOnConfirm(card('K', 'spades', {}, { kingsRevealed: 3 }), normal)).toBe(true);
+		expect(endsGameOnConfirm(card('K', 'spades', {}, { kingsRevealed: 2 }), normal)).toBe(false);
+
+		const freed = card('A', 'spades', { modifier: 'skip-damage' }, { acesRevealed: 3 });
+		expect(endsGameOnConfirm(freed, easy)).toBe(true);
+		expect(endsGameOnConfirm(freed, normal)).toBe(false);
+		// With a check to survive, that check decides, not the card
+		expect(endsGameOnConfirm(card('A', 'spades', {}, { acesRevealed: 3 }), easy)).toBe(false);
+		expect(endsGameOnConfirm(card('7'), normal)).toBe(false);
+		expect(endsGameOnConfirm(null, normal)).toBe(false);
 	});
 });
 

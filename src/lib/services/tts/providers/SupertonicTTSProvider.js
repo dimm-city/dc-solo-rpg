@@ -322,6 +322,8 @@ export class SupertonicTTSProvider extends BaseTTSProvider {
 		this.isInitialized = false;
 		this.isPlaying = false;
 		this.isPaused = false;
+		/** Bumped by stop(): a synthesis still running for an older speak() then plays nothing */
+		this.speakId = 0;
 		this.config = {
 			speed: 1.05,
 			maxChunkLength: 300,
@@ -440,6 +442,7 @@ export class SupertonicTTSProvider extends BaseTTSProvider {
 
 		// Stop any current speech
 		this.stop();
+		const id = this.speakId;
 		this.isPlaying = true;
 
 		// Sanitize text
@@ -461,6 +464,12 @@ export class SupertonicTTSProvider extends BaseTTSProvider {
 				speed,
 				this.config.silenceDuration
 			);
+
+			// Stopped while synthesizing (the player moved on, or read-aloud went off): play nothing
+			if (id !== this.speakId) {
+				logger.debug('[SupertonicTTS] Stopped during synthesis, skipping playback');
+				return;
+			}
 
 			// Play audio
 			await this._playAudio(new Float32Array(wav), this.sampleRate);
@@ -522,6 +531,7 @@ export class SupertonicTTSProvider extends BaseTTSProvider {
 	}
 
 	stop() {
+		this.speakId++;
 		if (this.currentSource) {
 			try {
 				this.currentSource.stop();

@@ -61,6 +61,15 @@ export function isFourthAce(card, state) {
 }
 
 /**
+ * @returns {boolean} whether continuing past this card ends the game at once: the fourth King,
+ *   or on Easy a fourth Ace that skips its Stability check (see confirmCard). A fourth Ace with
+ *   a check ends it on that check's result, not on the card.
+ */
+export function endsGameOnConfirm(card, state) {
+	return isFinalKing(card, state) || (isFourthAce(card, state) && card?.modifier === 'skip-damage');
+}
+
+/**
  * What a Salvation check needs once this Ace is counted, e.g. "Salvation now needs 14+".
  * Every Ace counts, but checks only start once the Ace of Hearts is out.
  */
