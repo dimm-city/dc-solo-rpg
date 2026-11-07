@@ -122,8 +122,19 @@ describe('dice canvas size', () => {
 		expect(order).toEqual(['size', 'roll']);
 	});
 
-	it('leaves a canvas that already fits alone', async () => {
+	it('resizes when the canvas fits but the dice world is still the old size', async () => {
 		box.renderer.domElement = { width: 1280, height: 800 };
+		box.display = { containerWidth: 300, containerHeight: 150 };
+		setContainerSize(1280, 800);
+
+		await rollDice(12);
+
+		expect(box.setDimensions).toHaveBeenCalledWith({ x: 1280, y: 800 });
+	});
+
+	it('leaves dice that already fit alone', async () => {
+		box.renderer.domElement = { width: 1280, height: 800 };
+		box.display = { containerWidth: 1280, containerHeight: 800 };
 		setContainerSize(1280, 800);
 
 		await rollDice(12);
