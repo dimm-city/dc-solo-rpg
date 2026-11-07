@@ -3,9 +3,15 @@
 	 * PlayerInfoBar - the in-game header: exit, help, the game's title and round, and the
 	 * settings, dice theme, auto-play and read-aloud controls.
 	 *
-	 * Above 600px every control is an icon with a small label under it (EXIT, HELP, SETTINGS,
-	 * DICE, AUTO, VOICE); the two toggles fill and say ON when on. On phones the bar keeps
-	 * Exit and Help and puts the rest, with labels, in one "⋯" menu.
+	 * One grid, mirrored around the title: the same number of equal tracks on each side, so
+	 * the title is centred on the bar whatever sits beside it, and a long one ends in "…".
+	 * Above 720px every control is an icon with a small label under it (EXIT, HELP, SETTINGS |
+	 * PLAYER | title | ROUND | DICE, AUTO, VOICE); the two toggles fill and say ON when on. On
+	 * phones the bar keeps Exit and Help, the round and one "⋯" menu for the rest.
+	 *
+	 * The frame is cut so that its two side points sit on the bar's centre line (the top steps
+	 * are half the height of the bottom bevels), and every control and label is centred on that
+	 * line, the same inset (--hdr-inset) in from either end.
 	 *
 	 * The AUTO toggle writes the same gameplay settings as before (playMode.js AUTO_PLAY_ON/OFF);
 	 * GameScreen watches them to arm auto-play.
@@ -323,16 +329,26 @@
 			--frame-border,
 			linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta))
 		);
-		--aug-tl: 14px;
-		--aug-tr: 14px;
-		--aug-br: 14px;
-		--aug-bl: 14px;
+		/* Two 9px top steps (18px) mirror the 18px bottom bevels: the side points sit on the
+		   centre line, where the controls are */
+		--aug-tl: 9px;
+		--aug-tr: 9px;
+		--aug-br: 18px;
+		--aug-bl: 18px;
+		/* The inset from either end, a button track and an info track (PLAYER, ROUND) */
+		--hdr-inset: var(--space-md);
+		--hdr-btn: 64px;
+		--hdr-seg: 112px;
 
 		display: grid;
-		grid-template-columns: auto minmax(0, 1fr) auto;
+		grid-template-columns:
+			repeat(3, var(--hdr-btn)) var(--hdr-seg) minmax(0, 1fr) var(--hdr-seg)
+			repeat(3, var(--hdr-btn));
 		align-items: center;
-		gap: var(--space-sm);
-		padding: 4px var(--space-md);
+		column-gap: var(--space-xs);
+		min-height: 52px;
+		padding: 4px var(--hdr-inset);
+		box-sizing: border-box;
 		position: relative;
 
 		background: linear-gradient(
@@ -348,30 +364,23 @@
 			inset 0 0 30px rgba(255, 0, 255, 0.2);
 	}
 
-	.bar-group {
-		display: flex;
-		align-items: center;
-		gap: 2px;
-	}
-
+	/* The groups only order the controls; every control is a track of the bar's grid */
+	.bar-group,
 	.bar-info {
-		display: grid;
-		grid-template-columns: minmax(0, 0.5fr) minmax(0, 1fr) minmax(0, 0.5fr);
-		align-items: center;
-		gap: var(--space-sm);
-		min-width: 0;
+		display: contents;
 	}
 
-	/* Icon over a 10px label; at least 44x44 */
+	/* Icon over a 10px label; the whole track wide and at least 44px tall */
 	.status-bar-button {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: 2px;
-		min-width: 52px;
+		gap: 3px;
+		width: 100%;
+		min-width: 0;
 		min-height: 44px;
-		padding: 4px 6px;
+		padding: 4px 2px;
 		background: transparent;
 		border: 1px solid transparent;
 		border-radius: 4px;
@@ -433,7 +442,7 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 0;
+		gap: 2px;
 		min-width: 0;
 		text-transform: uppercase;
 	}
@@ -442,7 +451,9 @@
 		font-family: var(--font-body);
 		font-size: 0.625rem;
 		font-weight: 600;
+		line-height: 1;
 		letter-spacing: 0.1em;
+		white-space: nowrap;
 		color: #00ffff;
 	}
 
@@ -454,17 +465,21 @@
 		font-family: var(--font-body);
 		font-size: 0.9375rem;
 		font-weight: 700;
+		line-height: 1.15;
 		color: #fff;
 	}
 
+	/* Centred on the bar: the middle track of a mirrored grid */
 	.game-title {
 		margin: 0;
+		min-width: 0;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 		font-family: var(--font-body);
 		font-size: 1rem;
 		font-weight: 600;
+		line-height: 1.25;
 		letter-spacing: 0.02em;
 		text-transform: none;
 		color: #fff;
@@ -530,11 +545,24 @@
 		color: #04121a;
 	}
 
-	/* Phones: Exit, Help, the title and round, and one menu for the rest */
-	@media (max-width: 600px) {
+	/* Tablets and landscape phones: narrower tracks */
+	@media (max-width: 1023px) {
 		.player-round-bar {
-			padding: 2px var(--space-xs);
-			gap: 2px;
+			--hdr-btn: 60px;
+			--hdr-seg: 80px;
+		}
+	}
+
+	/* Phones: Exit and Help | the title | the round and one menu for the rest */
+	@media (max-width: 720px) {
+		.player-round-bar {
+			--hdr-inset: var(--space-sm);
+			--hdr-btn: 44px;
+			grid-template-columns:
+				var(--hdr-btn) var(--hdr-btn) minmax(0, 1fr) var(--hdr-btn)
+				var(--hdr-btn);
+			min-height: 48px;
+			padding-block: 2px;
 		}
 
 		.wide-only {
@@ -549,10 +577,6 @@
 			display: none;
 		}
 
-		.status-bar-button {
-			min-width: 44px;
-		}
-
 		.status-bar-button svg {
 			width: 22px;
 			height: 22px;
@@ -563,18 +587,13 @@
 			border-color: rgba(0, 255, 255, 0.5);
 		}
 
-		.bar-info {
-			grid-template-columns: minmax(0, 1fr) auto;
-		}
-
 		.game-title {
-			font-size: 0.875rem;
-			text-align: left;
-			padding-left: 4px;
+			font-size: 0.9375rem;
 		}
 
+		/* The round's label may be a little wider than its track; it stays centred on it */
 		.round-segment {
-			padding-right: 4px;
+			justify-self: center;
 		}
 	}
 
