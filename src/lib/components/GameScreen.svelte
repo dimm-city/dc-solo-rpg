@@ -80,19 +80,27 @@
 
 	const SUIT_SYMBOLS = { hearts: '♥', diamonds: '♦', clubs: '♣', spades: '♠' };
 
+	/** "7♠" */
+	const cardName = (card) => `${card.card}${SUIT_SYMBOLS[card.suit] ?? ''}`;
+
 	/** "7♠ · Caught in a toxic gas leak" */
 	function cardLine(card) {
 		if (!card) return null;
-		const name = `${card.card}${SUIT_SYMBOLS[card.suit] ?? ''}`;
+		const name = cardName(card);
 		return card.description ? `${name} · ${card.description}` : name;
 	}
 
-	/** What a modifier card confirmed this round did, while the table shows it */
-	const modifierNotice = $derived(
-		gameState.lastCard?.round === gameState.round
-			? (gameState.lastCard?.modifierResult ?? null)
-			: null
-	);
+	/**
+	 * What a modifier card just did, on the first table screen after it (NV-06): its own
+	 * Stability check, or Salvation when it was the round's last card. Once that step is done
+	 * the notice is gone, so a later screen never reads as if it were the one affected.
+	 */
+	let noticeDoneFor = $state(null);
+	const modifierNotice = $derived.by(() => {
+		const card = gameState.lastCard;
+		if (!card?.modifierResult || card.round !== gameState.round) return null;
+		return card.id !== undefined && card.id === noticeDoneFor ? null : card.modifierResult;
+	});
 
 	function salvationDescription() {
 		const need = getCurrentSalvationThreshold();
@@ -124,10 +132,11 @@
 					notice: modifierNotice
 				};
 			case 'successCheck':
+				// Name the card: the notice is about it, not about this roll
 				return {
 					title: 'Salvation',
 					description: salvationDescription(),
-					notice: modifierNotice
+					notice: modifierNotice ? `${cardName(gameState.lastCard)} · ${modifierNotice}` : null
 				};
 			default:
 				return null; // Card, journal and ending screens have no background text
@@ -545,14 +554,22 @@
 	$effect(() => {
 		// Only run when screen actually changes
 		if (currentScreen !== lastScreen) {
+			const left = lastScreen;
 			lastScreen = currentScreen;
 			const screen = currentScreen;
 
 			untrack(() => {
 				// Cancel previous screen's auto-play
 				cancelAutoPlay();
-				// Reset the step's roll state at once, so the button never shows the last visit's label
-				resetStep(screen);
+				// NV-04: clear the step just left, so its next visit starts clean. Reset on entry
+				// came after the first render, which showed (and announced) the last visit's result.
+				resetStep(left);
+				// NV-06: a modifier's notice belongs to the first table screen after its card
+				if ((left === 'failureCheck' || left === 'successCheck') && modifierNotice) {
+					noticeDoneFor = gameState.lastCard?.id;
+				}
+				// A game saved mid-roll resumes on that roll's result
+				if (screen === 'successCheck') successCheck.resumePending();
 			});
 
 			// Handle screen-specific entry logic (delay to next tick)
@@ -575,8 +592,6 @@
 				break;
 			case 'successCheck':
 				successCheck.resetState();
-				// A game saved mid-roll resumes on that roll's result
-				successCheck.resumePending();
 				break;
 		}
 	}

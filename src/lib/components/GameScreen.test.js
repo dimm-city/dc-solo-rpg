@@ -39,6 +39,24 @@ vi.hoisted(() => {
 	});
 });
 
+// Every message handed to the live region's announcer, in order
+const announcements = vi.hoisted(() => []);
+vi.mock('../utils/liveAnnouncer.js', async (importOriginal) => {
+	const actual = await importOriginal();
+	return {
+		createAnnouncer: (deliver, options) => {
+			const announcer = actual.createAnnouncer(deliver, options);
+			return {
+				...announcer,
+				announce(message, opts) {
+					announcements.push(message);
+					announcer.announce(message, opts);
+				}
+			};
+		}
+	};
+});
+
 vi.mock('$app/navigation', () => ({ goto: vi.fn(async () => {}) }));
 vi.mock('$app/paths', () => ({ resolve: (path) => path }));
 vi.mock('../stores/indexedDBStorage.js', () => ({
@@ -274,5 +292,80 @@ describe('GameScreen result hold', { timeout: 15000 }, () => {
 		updateGameplaySettings({ autoContinueAfterReading: true, autoAdvanceDelay: 300 });
 		await settle(600);
 		expect(gameState.state).toBe('gameOver');
+	});
+});
+
+describe('GameScreen: each visit to a step starts clean', () => {
+	it('NV-04: the next round opens on "Roll for tasks", with nothing stale shown or announced', async () => {
+		setUp('rollForTasks');
+		gameState.deck = [
+			{ card: '8', suit: 'clubs' },
+			{ card: '4', suit: 'hearts' }
+		];
+		const { getByTestId, queryByTestId } = render(GameScreen);
+		announcements.length = 0;
+		await settle(GUARD_MS);
+		mockDieRoll(3);
+		await fireEvent.click(getByTestId('roll-tasks-button'));
+		await settle(50);
+		expect(getByTestId('result-line').textContent).toBe('Rolled 3 · Draw 2 cards');
+		gameState.state = 'drawCard'; // the deal
+		await settle(1100);
+
+		// Round 2 opens: from its first render the button and the table are clean
+		const labels = [];
+		const observer = new MutationObserver(() =>
+			labels.push(document.querySelector('#step-action button')?.getAttribute('aria-label'))
+		);
+		observer.observe(document.body, { subtree: true, childList: true, attributes: true });
+		Object.assign(gameState, { state: 'rollForTasks', round: 2, cardsToDraw: 0 });
+		await settle(50);
+		observer.disconnect();
+		expect(labels.filter((label) => label && label !== 'Roll for tasks')).toEqual([]);
+		expect(getByTestId('roll-tasks-button').getAttribute('aria-label')).toBe('Roll for tasks');
+		expect(queryByTestId('result-line')).toBeNull();
+		await settle(1100);
+		// Round 1's roll was announced once, when it was made, and not again
+		expect(announcements.filter((m) => m === 'Rolled 3 · Draw 2 cards')).toHaveLength(1);
+	});
+
+	it('NV-06: a modifier notice shows on the first table screen after its card, then goes', async () => {
+		setUp('failureCheck');
+		gameState.lastCard = {
+			id: '1.1',
+			round: 1,
+			card: 'A',
+			suit: 'clubs',
+			modifierResult: 'King of Hearts returns to the deck · 2 of 4'
+		};
+		Object.assign(gameState, { aceOfHeartsRevealed: true, tokens: 5, acesRevealed: 2 });
+		const { getByTestId, queryByTestId } = render(GameScreen);
+		await settle(GUARD_MS);
+		expect(getByTestId('context-notice').textContent).toBe(
+			'King of Hearts returns to the deck · 2 of 4'
+		);
+
+		mockDieRoll(13);
+		await fireEvent.click(getByTestId('failure-check-button'));
+		await settle(GUARD_MS);
+		await fireEvent.click(getByTestId('failure-check-button')); // on to Salvation
+		await settle(GUARD_MS);
+		expect(gameState.state).toBe('successCheck');
+		expect(queryByTestId('context-notice')).toBeNull();
+	});
+
+	it('NV-06: on Salvation the notice names its card', async () => {
+		setUp('successCheck');
+		gameState.lastCard = {
+			id: '1.1',
+			round: 1,
+			card: 'A',
+			suit: 'clubs',
+			modifierResult: 'No Stability check this time'
+		};
+		Object.assign(gameState, { aceOfHeartsRevealed: true, tokens: 5, acesRevealed: 2 });
+		const { getByTestId } = render(GameScreen);
+		await settle(GUARD_MS);
+		expect(getByTestId('context-notice').textContent).toBe('A♣ · No Stability check this time');
 	});
 });
