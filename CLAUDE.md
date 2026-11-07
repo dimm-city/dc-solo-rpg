@@ -237,7 +237,7 @@ The game uses a **D20 dice system** inspired by Wretched and Alone mechanics but
 
 - **Stability**: 20 points (your life). Reaches 0 = instant loss.
 - **Tokens**: Start with 10. Remove all to win. On Normal they only ever fall.
-- **Aces Revealed**: 0-4. Determines Salvation success threshold; on Normal the fourth Ace ends the game.
+- **Aces Revealed**: 0-4. Determines Salvation success threshold; on Easy the fourth Ace ends the game.
 
 ### D20 Rolling Mechanics
 
@@ -254,7 +254,7 @@ Drawing the Ace of Hearts unlocks Salvation checks. Each subsequent Ace improves
 - **1 Ace**: Roll ≥17 to remove 1 token (20% success)
 - **2 Aces**: Roll ≥14 to remove 1 token (35% success)
 - **3 Aces**: Roll ≥11 to remove 1 token (50% success)
-- **4 Aces**: On Normal (and Easy) there is no Salvation roll: **the fourth Ace ends the game**. Being odd it calls for a Stability check like any Ace, and that check is the last roll of the game (`isFinalStabilityCheck`): any Lucid or Surreal applies and is used up; if Stability is still above 0 afterwards the game is won, whatever tokens remain; if it reaches 0 the game is lost by Stability. A fourth Ace with `skip-damage` skips the check and wins outright. On Hard, Salvation goes on: there is no target, each check is a Stability check and the token comes off if Stability holds (`calculateAutomaticSalvation`).
+- **4 Aces**: No target. Each Salvation check is a Stability check (read on the Stability table, any Lucid or Surreal applied and used up), and the token comes off if Stability holds; if the roll takes Stability to 0 the game is lost instead (`calculateAutomaticSalvation`). The game is still won only by the last token. On Easy there is no Salvation roll with four Aces: **the fourth Ace ends the game**. Being odd it calls for a Stability check like any Ace, and that check is the last roll of the game (`isFinalStabilityCheck`, gated by `fourthAceWins`): if Stability is still above 0 afterwards the game is won, whatever tokens remain; if it reaches 0 the game is lost by Stability. A fourth Ace with `skip-damage` skips the check and wins outright (on Easy only).
 
 **Token Changes** (1 to 3 Aces; `calculateSalvationResult(roll, threshold, { hard })`):
 
@@ -267,13 +267,13 @@ So on Normal tokens only ever fall and can never rise above the starting count.
 
 ### Difficulty
 
-`difficulty` is 0 = Easy, 1 = Normal, 2 = Hard (`src/lib/constants/difficulty.js`; `isHardGame(gameState)` gates the Hard rules).
+`difficulty` is 0 = Easy, 1 = Normal, 2 = Hard (`src/lib/constants/difficulty.js`; `fourthAceWins(gameState)` gates the Easy rule and `isHardGame(gameState)` the Hard one). The one place that decides whether the fourth Ace ends the game is `fourthAceWins`: the actions, the card note, the HUD and the rule captions all read it.
 
-- **Easy**: the Normal rules, with the Ace of Hearts revealed (and out of the deck) from the start.
-- **Normal**: tokens only ever fall, and the fourth Ace ends the game (see above).
-- **Hard**: a missed Salvation roll adds tokens (+1, or +2 on a natural 1), and the fourth Ace does not end the game: with four Aces each Salvation is a Stability check, then -1 token if Stability holds. Winning means clearing every token.
+- **Easy**: the Normal rules, with the Ace of Hearts revealed (and out of the deck) from the start, and the fourth Ace ends the game (see above).
+- **Normal**: tokens only ever fall, and the game is won by clearing every token. The fourth Ace does not end the game: with four Aces each Salvation is a Stability check, then -1 token if Stability holds.
+- **Hard**: Normal, except that a missed Salvation roll adds tokens (+1, or +2 on a natural 1).
 
-Win rates (Monte Carlo through the real actions, see `docs/d20-mechanics-guide.md` 7.3): Normal and Easy are well above the SRD's <1%; Hard is the <1% ruleset.
+Win rates (Monte Carlo through the real actions, see `docs/d20-mechanics-guide.md` 7.3): Easy 54.9% (95% CI 54.2-55.6%, 20,000 games), Normal 1.28% (1.17-1.39%, 40,000), Hard 0.30% (0.25-0.36%, 40,000). Hard is the SRD's <1% ruleset and Normal sits just above it; Easy is the level where escape is likely. On Normal and Hard the Kings end about 83% of games and Stability about 16%; on Easy the fourth Ace wins 54% and the Kings take 42%.
 
 ### Card Types
 
@@ -290,7 +290,7 @@ Win rates (Monte Carlo through the real actions, see `docs/d20-mechanics-guide.m
    - Reflective moments, emotional beats
    - Each Ace improves Salvation threshold
    - Aces are odd ranks, so every Ace (Ace of Hearts included) triggers a Stability check, unless a Narrative card carries `skip-damage`
-   - The fourth Ace (whichever suit comes last) ends the game on Normal and Easy: survive its Stability check and the game is won (the ending's cause line reads "The fourth Ace was revealed."); on Hard it only removes the Salvation target
+   - The fourth Ace (whichever suit comes last) ends the game on Easy: survive its Stability check and the game is won (the ending's cause line reads "The fourth Ace was revealed."); on Normal and Hard it only removes the Salvation target
    - Optional special modifiers (skip-damage, return-king)
 
 4. **Challenge** - Ranks 3, 5, 7, 9 - 16 cards
