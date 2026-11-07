@@ -41,6 +41,15 @@ export const DICE_HOLD_MS = ANIMATION_DURATION.BEAT - SETTLE_HOLD_MS;
 /** Reduced motion: how long the number is shown before the result line */
 export const STATIC_ROLL_MS = 600;
 
+/** dice-box stands its walls this far out from the centre, as a fraction of the half-size */
+const WALL = 0.93;
+/** A die starts at least this far (world units; 1 unit = half a CSS px) inside the walls */
+export const SPAWN_MARGIN = 8;
+/** The throw's target is at least this many times the shorter half-size out from the centre */
+export const MIN_THROW = 1.5;
+/** A throw whose dice covered less than this fraction of the table, each way, is logged */
+export const SHORT_THROW = 0.2;
+
 /** The roll in flight: skip() jumps it to its result */
 let activeRoll = null;
 /** Counts rolls, so a finished roll never sinks the next roll's dice */
@@ -141,6 +150,9 @@ export async function initializeDiceBox(container) {
 		logger.debug('[diceStore] DiceBox initialized successfully');
 		isInitialized = true;
 
+		if (!installThrow(diceBoxInstance)) {
+			logger.warn('[diceStore] Could not take over the throw; dice-box throws its own way');
+		}
 		syncDiceBoxSize('start');
 		sizeObserver?.disconnect();
 		if (typeof ResizeObserver !== 'undefined') {
@@ -215,6 +227,97 @@ export function resetDiceBox() {
 	diceBoxInstance = null;
 	isInitialized = false;
 	containerElement = null;
+}
+
+/** The last throw made by throwVectors, for the short-throw diagnostic */
+let lastThrow = null;
+
+/** A d20's bounding sphere radius: its geometry's if one has been made, else baseScale (the d20 scale is 1) */
+function dieRadius(box) {
+	const made = box.DiceFactory?.geometries?.d20?.cannon_shape?.boundingSphereRadius;
+	return Number.isFinite(made) ? made : (box.baseScale ?? 100);
+}
+
+/**
+ * The throw: where each die starts and how it is thrown, as dice-box's own getNotationVectors
+ * makes them, but from a target that is never too close and with every start clear of the walls.
+ *
+ * dice-box-threejs 0.0.12 starts each die inside its own walls, twice over:
+ * - getNotationVectors (dist/dice-box-threejs.es.js:16896) starts a die 0.9 of the half-size out
+ *   from the centre, and makeWorldBox (:16799) stands the walls at 0.93. That 3% gap is 12
+ *   world units on a 400px-wide phone, while a d20's bounding sphere is 100 units (baseScale).
+ * - Its spin axis is { x, y, z: Math.random() } (:16913), not a unit vector, and spawnDice
+ *   (:17013) hands it to setFromAxisAngle as it is. The body's quaternion is then not a unit
+ *   quaternion until cannon normalises it after the first step, and rotating the collision
+ *   shape by it scales the shape by |q|², up to 3x. For that first step the die is up to 300
+ *   units across.
+ * So the die's first physics step finds it deep in a wall (two at a corner). Cannon pushes it
+ * out, and the contact's friction swallows the throw: the die drops where it started and rolls
+ * only in that corner (one throw in ten on a phone, measured; at a corner the whole throw can
+ * stay within a 60x150px patch). The library's target is also the old click position,
+ * (random * 2 - 0.5) of each half-size, so a target near the centre means a throw with almost
+ * no speed.
+ *
+ * Replaces startClickThrow (:17108), which roll() and add() call. The target keeps the library's
+ * bias (most throws come in from the top left) but is at least MIN_THROW of the shorter
+ * half-size out; every start is clamped inside the walls by the die's radius plus a margin; and
+ * every spin axis is a unit vector, so the die is its own size from its first step.
+ *
+ * @param {object} box - the DiceBox
+ * @param {string} notation - e.g. "2d20@19,5"
+ * @returns {object} the notation vectors dice-box throws from
+ */
+export function throwVectors(box, notation) {
+	const { currentWidth: hw, currentHeight: hh, containerWidth, containerHeight } = box.display;
+	let target = { x: (Math.random() * 2 - 0.5) * hw, y: -(Math.random() * 2 - 0.5) * hh };
+	const least = MIN_THROW * Math.min(hw, hh);
+	const length = Math.hypot(target.x, target.y);
+	if (length < least) {
+		const angle = length ? Math.atan2(target.y, target.x) : Math.random() * 2 * Math.PI;
+		target = { x: Math.cos(angle) * least, y: Math.sin(angle) * least };
+	}
+	const distance = Math.hypot(target.x, target.y) + 100;
+	const magnitude = (Math.random() + 3) * distance * box.strength;
+	const vectors = box.getNotationVectors(notation, target, magnitude, distance);
+	const inset = dieRadius(box) + SPAWN_MARGIN;
+	const maxX = containerWidth * WALL - inset;
+	const maxY = containerHeight * WALL - inset;
+	for (const vector of vectors?.vectors ?? []) {
+		vector.pos.x = Math.max(-maxX, Math.min(maxX, vector.pos.x));
+		vector.pos.y = Math.max(-maxY, Math.min(maxY, vector.pos.y));
+		const axis = vector.axis;
+		if (!axis) continue;
+		const size = Math.hypot(axis.x, axis.y, axis.z);
+		if (size > 0) {
+			axis.x /= size;
+			axis.y /= size;
+			axis.z /= size;
+		} else {
+			axis.z = 1;
+		}
+	}
+	lastThrow = {
+		target: [Math.round(target.x), Math.round(target.y)],
+		speed: Math.round(magnitude),
+		starts: (vectors?.vectors ?? []).map((v) => [Math.round(v.pos.x), Math.round(v.pos.y)])
+	};
+	return vectors;
+}
+
+/**
+ * Make the box throw with throwVectors. Returns false (and leaves the box alone) if it is not
+ * a dice-box with getNotationVectors and a display, so a changed library falls back to its own.
+ */
+export function installThrow(box) {
+	if (typeof box?.getNotationVectors !== 'function' || !box.display) return false;
+	box.startClickThrow = function (notation) {
+		if (this.rolling) {
+			this.clearDice();
+			this.rolling = false;
+		}
+		return throwVectors(this, notation);
+	};
+	return true;
 }
 
 /**
@@ -310,6 +413,26 @@ export function diceScreenCentre(box) {
 }
 
 /**
+ * Log a throw whose dice covered less than SHORT_THROW of the table each way (the owner's
+ * "rolled only in the top-left corner"), with the throw that did it, so it can be diagnosed.
+ * @param {object} box - the DiceBox
+ * @param {{minX: number, minY: number, maxX: number, maxY: number}} path - world units
+ */
+export function reportShortThrow(box, path) {
+	const table = box?.display;
+	if (!table?.containerWidth || !Number.isFinite(path.minX)) return;
+	const width = (path.maxX - path.minX) / (2 * table.containerWidth);
+	const height = (path.maxY - path.minY) / (2 * table.containerHeight);
+	if (width >= SHORT_THROW || height >= SHORT_THROW) return;
+	logger.warn(
+		`[diceStore] Short throw: the dice covered ${Math.round(width * 100)}% x ` +
+			`${Math.round(height * 100)}% of the table (from x ${Math.round(path.minX)}..` +
+			`${Math.round(path.maxX)}, y ${Math.round(path.minY)}..${Math.round(path.maxY)} of ` +
+			`±${table.containerWidth} x ±${table.containerHeight}); throw ${JSON.stringify(lastThrow)}`
+	);
+}
+
+/**
  * Throw the 3D dice. Resolves as soon as every die has been at rest for SETTLE_HOLD_MS
  * (dice-box waits another 0.9s before it calls a die asleep), when dice-box finishes, or
  * when the player skips. Resolves with the dice-box result, or null if it was not awaited.
@@ -319,13 +442,27 @@ function throwDice(box, notation) {
 		let done = false;
 		let frame = 0;
 		let restSince = null;
+		const path = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
 
 		const finish = (result = null) => {
 			if (done) return;
 			done = true;
 			cancelAnimationFrame(frame);
 			activeRoll = null;
+			reportShortThrow(box, path);
 			resolve(result);
+		};
+
+		/** Where the dice have been, so a throw that stayed in one corner can be reported */
+		const track = () => {
+			for (const die of box.diceList ?? []) {
+				const p = die.body?.position;
+				if (!p) continue;
+				if (p.x < path.minX) path.minX = p.x;
+				if (p.x > path.maxX) path.maxX = p.x;
+				if (p.y < path.minY) path.minY = p.y;
+				if (p.y > path.maxY) path.maxY = p.y;
+			}
 		};
 
 		activeRoll = {
@@ -342,6 +479,7 @@ function throwDice(box, notation) {
 
 		const watch = () => {
 			if (done) return;
+			track();
 			const now = performance.now();
 			if (diceAtRest(box)) {
 				restSince ??= now;
