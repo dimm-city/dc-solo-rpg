@@ -13,6 +13,8 @@ type Plan = {
 	slug: string;
 	outcome: 'kings' | 'win' | 'stability';
 	rounds: { cards: string[]; journal?: string; audio?: boolean }[];
+	/** The final log, written after the ending (recordRound marks it `final`) */
+	finalLog?: string;
 };
 
 const KINGS: Plan = {
@@ -23,7 +25,8 @@ const KINGS: Plan = {
 		{ cards: ['K:spades', '4'] },
 		{ cards: ['K:hearts', 'K:clubs'], journal: 'Three crowns now.' },
 		{ cards: ['K:diamonds'], journal: 'They are all here.' }
-	]
+	],
+	finalLog: 'The crowns have the city now. I leave this for whoever finds the machine.'
 };
 
 const WIN: Plan = {
@@ -106,6 +109,14 @@ async function writeSave(page: Page, plan: Plan) {
 				journal.push({ round, text: r.journal, dateRecorded: new Date().toISOString() });
 			}
 		});
+		if (plan.finalLog) {
+			journal.push({
+				round: plan.rounds.length,
+				final: true,
+				text: plan.finalLog,
+				dateRecorded: new Date().toISOString()
+			});
+		}
 		Object.assign(g, {
 			log,
 			journalEntries: journal,
@@ -249,7 +260,9 @@ test.describe('Story mode', () => {
 		await expect(round).toContainText("You didn't write this round. The cards said:");
 	});
 
-	test('the last round ends on the outcome with all four Kings counted', async ({ page }) => {
+	test('the last round ends on the outcome with all four Kings counted, then the final log', async ({
+		page
+	}) => {
 		await openKingsStory(page);
 		// Round markers are hidden on phones; Next works everywhere
 		for (let i = 0; i < 3; i++) await page.getByRole('button', { name: 'Next round' }).click();
@@ -257,6 +270,33 @@ test.describe('Story mode', () => {
 		const round = currentRound(page);
 		await expect(round).toContainText('The end');
 		await expect(round).toContainText('4 of 4');
+
+		// The final log closes the story: its own section after the ending, apart from the
+		// round's own entry
+		const finalLog = round.getByTestId('story-final-log');
+		await expect(finalLog.getByRole('heading', { name: 'Final log' })).toBeVisible();
+		await expect(finalLog).toContainText(
+			'The crowns have the city now. I leave this for whoever finds the machine.'
+		);
+		await expect(round.locator('.journal')).toContainText('They are all here.');
+		await expect(round.locator('.journal')).not.toContainText('The crowns have the city now.');
+		const order = await round.evaluate((el) => {
+			const ending = el.querySelector('.ending')!;
+			const log = el.querySelector('[data-testid="story-final-log"]')!;
+			return !!(ending.compareDocumentPosition(log) & Node.DOCUMENT_POSITION_FOLLOWING);
+		});
+		expect(order).toBe(true);
+		await finalLog.scrollIntoViewIfNeeded();
+		await expect(finalLog).toBeInViewport();
+	});
+
+	test('a story without a final log reads as before', async ({ page }) => {
+		await openLibrary(page, [WIN]);
+		await openStory(page, 'Escaped');
+		await page.getByRole('button', { name: 'Next round' }).click();
+		const round = currentRound(page);
+		await expect(round).toContainText('The end');
+		await expect(round.getByTestId('story-final-log')).toHaveCount(0);
 	});
 
 	test('arrow keys turn the page; reduced motion swaps rounds at once', async ({ page }) => {

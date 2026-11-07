@@ -5,10 +5,12 @@
 	 * The round's cards sit as a single line of chips ("J♣ · 4♦ · K♠"), each expandable to the
 	 * card's text and roll. Below them the journal entry, in a reading face (Inter about 18px,
 	 * 640px measure), or the voice note. A round with no entry shows the card prompts instead,
-	 * so it still reads. The last round closes with how the run ended.
+	 * so it still reads. The last round closes with how the run ended, then the final log the
+	 * player wrote after it.
 	 */
 
 	import AudioPlayer from './AudioPlayer.svelte';
+	import FinalLog from './story/FinalLog.svelte';
 	import GameOverMessage from './story/GameOverMessage.svelte';
 	import RoundStats from './story/RoundStats.svelte';
 	import { sanitizeHtml } from '../utils/sanitizeHtml.js';
@@ -133,6 +135,10 @@
 
 		{#if outcome || round.gameOverMessage}
 			<GameOverMessage {outcome} message={round.gameOverMessage} isWon={round.isWon} />
+		{/if}
+
+		{#if round.finalEntry}
+			<FinalLog entry={round.finalEntry} />
 		{/if}
 
 		{#if showStats}

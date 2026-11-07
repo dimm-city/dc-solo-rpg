@@ -731,7 +731,8 @@ export async function failureCheck() {
 }
 
 /**
- * Record round in journal
+ * Record round in journal. After the ending this records the final log: the last round's
+ * second entry, marked `final` so the story can tell it from the round's own entry.
  * @param {object} journalEntry - Journal entry
  * @param {string} [journalEntry.text] - Entry text (optional)
  * @param {string} [journalEntry.audioData] - Base64 encoded audio data (optional)
@@ -741,8 +742,12 @@ export async function recordRound(journalEntry) {
 		throw new Error('Journal entry object is required');
 	}
 
+	const isFinal = gameState.gameOver;
+
 	// Check if a journal entry already exists for this round
-	const existingEntry = gameState.journalEntries.find((entry) => entry.round === gameState.round);
+	const existingEntry = gameState.journalEntries.find(
+		(entry) => entry.round === gameState.round && !!entry.final === isFinal
+	);
 	if (existingEntry) {
 		logger.warn(
 			`[recordRound] WARNING: Journal entry already exists for round ${gameState.round}. Preventing duplicate.`,
@@ -760,6 +765,7 @@ export async function recordRound(journalEntry) {
 	// Create a new object to avoid mutating the passed reference
 	const newEntry = {
 		round: gameState.round,
+		...(isFinal && { final: true }),
 		text: journalEntry.text || '',
 		audioData: journalEntry.audioData || null,
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- timestamp string only, not reactive state
@@ -769,6 +775,7 @@ export async function recordRound(journalEntry) {
 	gameState.journalEntries.push(newEntry);
 	logger.debug(`[recordRound] Saved journal for round ${gameState.round}:`, {
 		round: newEntry.round,
+		final: isFinal,
 		hasText: !!newEntry.text,
 		hasAudio: !!newEntry.audioData,
 		totalEntries: gameState.journalEntries.length

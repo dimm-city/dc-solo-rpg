@@ -110,6 +110,37 @@ async function blobToBase64(blob) {
 }
 
 /**
+ * Where a journal entry's voice note is kept in the audio record: by round, and the final log
+ * (written after the ending, in the last round) under its own key
+ * @param {{round: number, final?: boolean}} entry
+ * @returns {string|number}
+ */
+const audioKey = (entry) => (entry.final ? 'final' : entry.round);
+
+/**
+ * The completed record this run is saved under. The ending saves the game as completed, then
+ * the final log is recorded and saved again: the second save must update the same record, not
+ * add a second story to the library. A run is known by its log, which nothing adds to after the
+ * ending, and which no two runs share.
+ */
+let lastCompleted = null;
+
+/**
+ * @param {string} gameSlug
+ * @param {object} saveData - The serializable state (its cardLog names the run)
+ * @returns {string} "slug:completed:timestamp", the same for every save of one run
+ */
+function completedSaveKey(gameSlug, saveData) {
+	const run = `${gameSlug}|${JSON.stringify(saveData.cardLog)}`;
+	if (lastCompleted?.run !== run) {
+		// A later run always gets a later key, even within the same millisecond
+		const stamp = Math.max(Date.now(), (lastCompleted?.stamp ?? 0) + 1);
+		lastCompleted = { run, stamp, key: `${gameSlug}:completed:${stamp}` };
+	}
+	return lastCompleted.key;
+}
+
+/**
  * Get the serializable portion of game state
  * @param {object} gameState - Current game state
  * @returns {object} Serializable state (without audio data)
@@ -225,7 +256,8 @@ export async function saveGame(gameState) {
 			'failureCheck',
 			'log',
 			'successCheck',
-			'gameOver' // Include to save completed games
+			'gameOver', // Include to save completed games
+			'finalLog' // The final log, recorded into the completed game
 		];
 
 		if (!validStatesForSaving.includes(gameState.state)) {
@@ -251,9 +283,8 @@ export async function saveGame(gameState) {
 		// Determine save key based on game completion status
 		let saveKey;
 		if (gameState.gameOver && gameState.win !== undefined) {
-			// Game is completed - save as completed with timestamp
-			const timestamp = Date.now();
-			saveKey = `${gameSlug}:completed:${timestamp}`;
+			// Game is completed - save as completed with timestamp (one record per run)
+			saveKey = completedSaveKey(gameSlug, cleanedSaveData);
 
 			// Also clear the active save since game is now completed
 			try {
@@ -270,14 +301,12 @@ export async function saveGame(gameState) {
 
 		await db.put(SAVE_STORE, cleanedSaveData, saveKey);
 
-		// Save audio data separately as Blobs (keyed by round number)
+		// Save audio data separately as Blobs (keyed by round number, the final log by 'final')
 		const audioData = {};
 		for (const entry of gameState.journalEntries) {
 			if (entry.audioData) {
 				// Convert base64 to Blob for efficient storage
-				const audioBlob = await base64ToBlob(entry.audioData);
-				// Use round number as key (more reliable than id)
-				audioData[entry.round] = audioBlob;
+				audioData[audioKey(entry)] = await base64ToBlob(entry.audioData);
 			}
 		}
 
@@ -327,9 +356,9 @@ export async function loadGame(gameSlug) {
 		if (saveData.journalEntries) {
 			saveData.journalEntries = await Promise.all(
 				saveData.journalEntries.map(async (entry) => {
-					if (entry.hasAudio && audioData[entry.round]) {
+					if (entry.hasAudio && audioData[audioKey(entry)]) {
 						// Convert Blob back to base64 for compatibility with current component
-						const base64 = await blobToBase64(audioData[entry.round]);
+						const base64 = await blobToBase64(audioData[audioKey(entry)]);
 						return { ...entry, audioData: base64 };
 					}
 					return entry;
@@ -419,9 +448,9 @@ export async function loadAllSaves() {
 				// Reattach audio data to journal entries
 				if (audioData && saveData.journalEntries) {
 					for (const entry of saveData.journalEntries) {
-						if (entry.hasAudio && audioData[entry.round]) {
+						if (entry.hasAudio && audioData[audioKey(entry)]) {
 							// Convert Blob back to base64 for audio player
-							entry.audioData = await blobToBase64(audioData[entry.round]);
+							entry.audioData = await blobToBase64(audioData[audioKey(entry)]);
 						}
 					}
 				}
