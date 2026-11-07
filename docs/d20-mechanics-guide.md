@@ -94,6 +94,7 @@ Unlocked by: Drawing Ace of Hearts (Salvation)
   - Below threshold: +1 token (failure)
   - At/above threshold: -1 token (success)
   - Natural 20: -2 tokens (critical success)
+  - Four Aces: -1 token after a Stability check, if Stability holds (see 4.2)
 - Reaches 0 with Stability > 0 → Victory
 
 ### 2.3 Aces Revealed (Abilities)
@@ -112,7 +113,7 @@ Each Ace improves Salvation success rate
   - 1 Ace: Threshold 17 (20% success rate)
   - 2 Aces: Threshold 14 (35% success rate)
   - 3 Aces: Threshold 11 (50% success rate)
-  - 4 Aces: Threshold 0 (100% success rate - auto-win)
+  - 4 Aces: Threshold 0 (no target: one Stability check, then -1 token if Stability holds)
 
 ---
 
@@ -129,7 +130,7 @@ const roll = rollDie(20);
 
 - Round start (determines cards to draw)
 - Stability checks (Challenge cards)
-- Salvation checks (token removal attempts)
+- Salvation checks (token removal attempts; with four Aces, a Stability check)
 
 ### 3.2 Lucid State (Advantage)
 
@@ -138,6 +139,7 @@ LUCID = Advantage
 Roll 2d20, keep highest
 
 Trigger: Natural 20 on any d20 roll (opening roll, Roll for Tasks, Stability check, Salvation)
+         On 2d20, only the kept die counts
 Duration: Next roll only (consumed on use)
 ```
 
@@ -163,6 +165,7 @@ SURREAL = Disadvantage
 Roll 2d20, keep lowest
 
 Trigger: Natural 1 on any d20 roll (opening roll, Roll for Tasks, Stability check, Salvation)
+         On 2d20, only the kept die counts
 Duration: Next roll only (consumed on use)
 ```
 
@@ -202,6 +205,7 @@ if (isLucid) {
 
 - If Lucid and you roll natural 1 → Lose Lucid, gain Surreal
 - If Surreal and you roll natural 20 → Lose Surreal, gain Lucid
+- On 2d20, only the kept die counts: Lucid rolling 1 and 14 keeps 14, so it is not a natural 1
 - States do NOT stack (can't have Lucid + Surreal)
 
 ---
@@ -229,8 +233,14 @@ Aces | Threshold | Success on | Win Rate | Probability
   1  |    17     | 17-20      |   20%    | Very Hard
   2  |    14     | 14-20      |   35%    | Hard
   3  |    11     | 11-20      |   50%    | Medium
-  4  |     0     | Any roll   |  100%    | Auto-win
+  4  |     0     | Any roll*  |  100%*   | Stability check
 ```
+
+\* With four Aces there is no target, but the token only comes off after one Stability check.
+The roll (with any Lucid or Surreal, which it uses up) is read on the Stability table: natural 1
+is -3 Stability and Surreal, 2-5 is -2, 6-10 is -1, 11-19 is no loss, natural 20 is +1 (max 20)
+and Lucid. If Stability is still above 0, the token comes off (-1). If the roll takes Stability
+to 0, the game is lost by Stability instead. See `calculateAutomaticSalvation()`.
 
 **Calculation:**
 
@@ -330,7 +340,7 @@ Event             | 2,4,6,8,10,J,Q| 28    | 53%
 1st Ace (A♥): Hope emerges → Salvation unlocked (17 threshold)
 2nd Ace:      Growing strength → Threshold improves to 14
 3rd Ace:      Mastery → Threshold improves to 11
-4th Ace:      Transcendence → Auto-win Salvation checks
+4th Ace:      Transcendence → No target: each Salvation is a Stability check, then -1 token
 ```
 
 ### 5.4 Failure Counter (Kings)
@@ -524,6 +534,7 @@ const cards = deck.splice(0, cardsToDraw);
 Loss Condition 1: Stability ≤ 0
 - Failed too many Stability checks
 - Rolled low on too many Stability checks
+- Includes the Stability check a four-Aces Salvation takes
 
 Loss Condition 2: 4 Kings Revealed
 - All Failure Counter cards revealed
@@ -538,31 +549,34 @@ Loss Condition 3: Deck Exhaustion (rare)
 
 **Design target:** a win rate under 1%, matching standard Wretched & Alone. The SRD says the Ace of Hearts salvation "offers a <1% win rate" and that "it is more common to lose the game than it is to win. This is intentional". Winning should feel possible but almost never happen; the game is about building tension, not winning.
 
-Monte Carlo simulation that drives the real game actions (`startGame`, `rollForTasks`, `drawCard`, `confirmCard`, `failureCheck`, `successCheck`, `recordRound`, and the `applyPending*` functions) through a full game loop with the live RNG. Sample: 40,000 Normal and 20,000 Easy games. The deck is the standard 52 cards with no `skip-damage` or `return-king` modifiers, and every Salvation check is taken.
+Monte Carlo simulation that drives the real game actions (`startGame`, `rollForTasks`, `drawCard`, `confirmCard`, `failureCheck`, `successCheck`, `recordRound`, and the `applyPending*` functions) through a full game loop with the live RNG. Sample: 40,000 Normal and 20,000 Easy games. The deck is the standard 52 cards with no `skip-damage` or `return-king` modifiers, and every Salvation check is taken. Run with the four-Aces Stability check (4.2).
 
 ```
                           Normal (difficulty 1)    Easy (difficulty 0)
-Win rate:                 0.69% (275 / 40000)      1.72% (343 / 20000)
-  95% confidence:         0.61% - 0.77%            1.54% - 1.89%
-Loss, 4 Kings revealed:   90.3% (36130 / 40000)    91.2% (18247 / 20000)
-Loss, Stability depleted: 9.0%  (3595 / 40000)     7.1%  (1410 / 20000)
+Win rate:                 0.40% (158 / 40000)      1.01% (202 / 20000)
+  95% confidence:         0.33% - 0.46%            0.87% - 1.15%
+Loss, 4 Kings revealed:   83.5% (33395 / 40000)    83.5% (16697 / 20000)
+Loss, Stability depleted: 16.1% (6447 / 40000)     15.5% (3101 / 20000)
+  of which on Salvation:  5.2%  (2072 / 40000)     6.0%  (1195 / 20000)
 Loss, deck exhaustion:    0 observed               0 observed
-Average length:           12.3 rounds              12.1 rounds
-Stability checks / game:  15.8                     15.0
-Salvation checks / game:  4.9                      11.2
+Average length:           12.2 rounds              12.0 rounds
+Stability checks / game:  15.7 (+1.2 on Salvation) 14.9 (+1.6 on Salvation)
+Salvation checks / game:  4.8                      11.0
 ```
 
-Every win came after all 4 Aces were revealed, apart from 6 Normal and 6 Easy wins (out of 275 and 343) that had fewer Aces.
+Every win came after all 4 Aces were revealed, apart from 1 Normal and 10 Easy wins (out of 158 and 202) that had fewer Aces.
+
+Before the four-Aces Stability check (an automatic Salvation that threw no die), the same simulation gave 0.69% Normal (0.61-0.77%) and 1.72% Easy (1.54-1.89%), with 9.0% and 7.1% of games lost by Stability.
 
 **Comparison with standard Wretched & Alone** (simulated, 2,000,000 games each, with the block tower never falling, so these are upper bounds):
 
 ```
 SRD core rules (10 tokens, remove one on a 6):            ~0.0001% (1 win in 2,000,000)
 Common house rule (each other Ace widens success by 1):   0.43%
-This game, Normal:                                        0.69%
+This game, Normal:                                        0.40%
 ```
 
-Normal, which is what every `.game.md` game plays, sits within the SRD's <1% target. That puts it alongside the standard system, where the salvation track usually cannot finish before the fourth King. Easy (Ace of Hearts revealed at the start) is above 1%, and it can be enabled by the game author (`difficulty: easy` in the `.game.md` frontmatter) or by the player (Difficulty in the settings menu).
+Normal, which is what every `.game.md` game plays, sits within the SRD's <1% target. That puts it alongside the standard system, where the salvation track usually cannot finish before the fourth King. Easy (Ace of Hearts revealed at the start) is at about 1%, and it can be enabled by the game author (`difficulty: easy` in the `.game.md` frontmatter) or by the player (Difficulty in the settings menu).
 
 ---
 
@@ -596,14 +610,15 @@ Each odd-ranked card (A, 3, 5, 7, 9; 20 cards in the deck) triggers one check, a
 1 Ace  (threshold 17): +0.6 tokens per check
 2 Aces (threshold 14): +0.3 tokens per check
 3 Aces (threshold 11):  0.0 tokens per check
-4 Aces (auto-success): -1.0 token per check (about 10 checks to clear 10 tokens)
+4 Aces (no target):    -1.0 token per check while Stability holds (about 10 checks to clear
+                       10 tokens), each check also costing 0.8 Stability on average
 ```
 
 **Simulation Results (40,000 Normal and 20,000 Easy games, same method as 7.3):** wins by Aces revealed when the game ended
 
 ```
-Normal: 0-2 Aces: 0 wins in 9,030 games  | 3 Aces: 6 wins in 12,136 games (0.05%)  | 4 Aces: 269 wins in 18,834 games (1.4%)
-Easy:   1 Ace: 0 wins in 582 games       | 2 Aces: 1 win in 2,406 games (0.04%)    | 3 Aces: 5 wins in 5,892 games (0.08%) | 4 Aces: 337 wins in 11,120 games (3.0%)
+Normal: 0-2 Aces: 0 wins in 9,085 games  | 3 Aces: 1 win in 11,781 games (0.01%)   | 4 Aces: 157 wins in 19,134 games (0.8%)
+Easy:   1 Ace: 0 wins in 580 games       | 2 Aces: 2 wins in 2,299 games (0.09%)   | 3 Aces: 8 wins in 6,063 games (0.13%) | 4 Aces: 192 wins in 11,058 games (1.7%)
 ```
 
 **Strategic Takeaway:** Only the fourth Ace produces net token removal on average, so winning in practice requires all 4 Aces, and most games end first (see 7.3).
@@ -611,14 +626,14 @@ Easy:   1 Ace: 0 wins in 582 games       | 2 Aces: 1 win in 2,406 games (0.04%) 
 ### 8.4 King Threat
 
 ```
-Probability the fourth King ends the game: ~90% (90.3% of Normal games in the 7.3 simulation)
+Probability the fourth King ends the game: ~84% (83.5% of Normal games in the 7.3 simulation)
 
 Average Kings revealed by game end:
 - Short game (15 cards): 1.2
 - Medium game (30 cards): 2.3
 - Long game (45 cards): 3.5
 
-King limit losses: ~91% of total defeats (Stability depletion is the other ~9%)
+King limit losses: ~84% of total defeats (Stability depletion is the other ~16%)
 ```
 
 ---
@@ -721,7 +736,7 @@ KINGS:     0 → 4 (lose if 4)
 1 Ace: ≥17 (20%)
 2 Aces: ≥14 (35%)
 3 Aces: ≥11 (50%)
-4 Aces: Auto-win (100%)
+4 Aces: No target: a Stability check, then -1 token
 ```
 
 ### Critical Roll Effects
@@ -734,6 +749,9 @@ STABILITY CHECK:
 SALVATION CHECK:
 - Natural 20: -2 tokens
 - Natural 1:  +2 tokens
+- Four Aces: read on the Stability table, then -1 token if Stability holds
+
+On 2d20 (Lucid or Surreal), only the kept die counts as a natural.
 ```
 
 ### Card Types Quick Ref

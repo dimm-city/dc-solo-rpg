@@ -245,6 +245,7 @@ The game uses a **D20 dice system** inspired by Wretched and Alone mechanics but
 - **Standard Roll**: 1d20 for all checks
 - **Lucid State (Advantage)**: Roll 2d20, keep highest. Triggered by a natural 20 on any d20 roll (the opening instability roll, Roll for Tasks, a Stability check or Salvation).
 - **Surreal State (Disadvantage)**: Roll 2d20, keep lowest. Triggered by a natural 1 on any d20 roll.
+- On 2d20, only the kept die counts as a natural 20 or 1.
 - The modifier applies to, and is used up by, the next roll, whichever roll that is. The two never stack, and a new game starts with neither.
 
 ### Salvation System (Win Condition)
@@ -254,9 +255,9 @@ Drawing the Ace of Hearts unlocks Salvation checks. Each subsequent Ace improves
 - **1 Ace**: Roll ≥17 to remove 1 token (20% success, 5% chance)
 - **2 Aces**: Roll ≥14 to remove 1 token (35% success)
 - **3 Aces**: Roll ≥11 to remove 1 token (50% success)
-- **4 Aces**: Automatic success (100% success)
+- **4 Aces**: Automatic success after one Stability check. The roll (any Lucid or Surreal applies and is used up) is read on the Stability table; if Stability is still above 0 the token comes off (−1), and if it reaches 0 the game is lost by Stability (`calculateAutomaticSalvation`)
 
-**Graduated Token Changes:**
+**Graduated Token Changes** (1 to 3 Aces):
 
 - Natural 1: +2 tokens (critical failure)
 - Below threshold: +1 token (failure)

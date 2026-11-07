@@ -175,7 +175,8 @@
 		</p>
 		<p>
 			Lucid: your next roll uses two d20s and keeps the higher. Surreal: your next roll uses two
-			d20s and keeps the lower.
+			d20s and keeps the lower. Only the die you keep counts, so only it can make you Lucid or
+			Surreal.
 		</p>
 		<p>
 			The state is used up by your next roll, whichever roll that is. You are only ever one of the
