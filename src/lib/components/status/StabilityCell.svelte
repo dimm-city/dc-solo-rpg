@@ -1,6 +1,6 @@
 <script>
 	/**
-	 * StabilityCell - Stability n/20 with a thin bar
+	 * StabilityCell - Stability n/20 over a thin bar (outer left; Tokens mirrors it)
 	 *
 	 * Four tiers colour the number and bar: steady 16-20, caution 11-15, danger 5-10 and
 	 * critical at 4 or less, which also pulses (an alert loop). Damage washes the cell red
@@ -53,6 +53,8 @@
 	.stability {
 		--tier-color: #00ff88;
 		--tier-glow: rgba(0, 255, 136, 0.45);
+		--bar-color: var(--tier-color);
+		--bar-glow: var(--tier-glow);
 	}
 	.tier-caution {
 		--tier-color: var(--color-brand-yellow, #ffd700);
@@ -74,28 +76,6 @@
 	.stability .current {
 		color: var(--tier-color);
 		text-shadow: 0 0 10px var(--tier-glow);
-	}
-
-	/* A fixed track; only the fill's transform changes */
-	.bar {
-		position: relative;
-		flex: none;
-		width: 56px;
-		height: 4px;
-		overflow: hidden;
-		border-radius: 2px;
-		background: rgba(255, 255, 255, 0.14);
-	}
-
-	.fill {
-		position: absolute;
-		inset: 0;
-		transform-origin: left center;
-		background: var(--tier-color);
-		box-shadow: 0 0 6px var(--tier-glow);
-		transition:
-			transform var(--dur-overlay, 300ms) var(--ease-enter, ease-out),
-			background-color var(--dur-overlay, 300ms) var(--ease-enter, ease-out);
 	}
 
 	/* Critical: the value and the bar pulse (an alert loop, not ambient) */
@@ -157,17 +137,7 @@
 		}
 	}
 
-	@media (max-width: 600px) {
-		.bar {
-			width: 44px;
-			height: 3px;
-		}
-	}
-
 	@media (prefers-reduced-motion: reduce) {
-		.fill {
-			transition: none;
-		}
 		.tier-critical .current,
 		.tier-critical .fill,
 		.hit .hud-readout {

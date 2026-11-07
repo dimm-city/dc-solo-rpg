@@ -1,7 +1,8 @@
 /**
- * HUD tests: one row at every width with Stability n/20 and its tiers, Kings n/4 with the
- * ignite and the fourth-King finale, "Aces n/4 · need 14+", tokens locked until the Ace of
- * Hearts, cards left, and the last roll with its 2d20 badge.
+ * HUD tests: one row, mirrored around the middle (Stability, Kings, Roll, Cards, Aces,
+ * Tokens). Stability n/20 and its tiers, Kings n/4 with the ignite and the fourth-King finale,
+ * the last roll on a seven-segment display with its 2d20 badge, cards left over a meter, Aces
+ * n/4 with a pip per suit, and Tokens n/N over a bar, locked until the Ace of Hearts.
  */
 import { flushSync } from 'svelte';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
@@ -10,13 +11,21 @@ import { render } from '@testing-library/svelte';
 import { gameState } from '../../stores/gameStore.svelte.js';
 import { diceState } from '../../stores/diceStore.svelte.js';
 import { ANIMATION_DURATION } from '../../constants/animations.js';
-import { stabilityTier, describeTwoDiceRoll, acesSummary, rollBadge } from './hudTiers.js';
+import {
+	stabilityTier,
+	describeTwoDiceRoll,
+	acesSummary,
+	aceSuits,
+	tokenMeter,
+	rollBadge
+} from './hudTiers.js';
 import StatusHUD from './StatusHUD.svelte';
 import StabilityCell from './StabilityCell.svelte';
 import KingsCell from './KingsCell.svelte';
 import AcesCell from './AcesCell.svelte';
 import TokensCell from './TokensCell.svelte';
 import RollCell from './RollCell.svelte';
+import CardsCell from './CardsCell.svelte';
 
 const text = (el) => el.textContent.replace(/\s+/g, ' ').trim();
 const visible = (el) =>
@@ -36,8 +45,13 @@ beforeEach(() => {
 	gameState.pendingUpdates.kingsChange = null;
 	gameState.pendingUpdates.aceChange = null;
 	gameState.deck = new Array(52).fill({});
+	gameState.log = [];
+	gameState.config = null;
 	diceState.lastRoll = null;
 });
+
+const ace = (suit) => ({ card: 'A', suit });
+const lit = (cell) => [...cell.querySelectorAll('.pip.lit')].map((pip) => pip.dataset.suit);
 
 afterEach(() => {
 	vi.useRealTimers();
@@ -74,6 +88,41 @@ describe('hudTiers', () => {
 		expect(acesSummary(7).count).toBe(4);
 	});
 
+	it('lights the Aces by suit, the Ace of Hearts first, and always agrees with the count', () => {
+		expect(aceSuits({ count: 0 }).map((pip) => pip.suit)).toEqual([
+			'hearts',
+			'spades',
+			'diamonds',
+			'clubs'
+		]);
+		expect(aceSuits({ count: 0 }).some((pip) => pip.lit)).toBe(false);
+		// From the cards drawn (the log includes a card still on screen)
+		const drawn = aceSuits({
+			count: 2,
+			log: [ace('clubs'), { card: '7', suit: 'hearts' }, ace('spades')]
+		});
+		expect(drawn.filter((pip) => pip.lit).map((pip) => pip.suit)).toEqual(['spades', 'clubs']);
+		// Easy mode takes the Ace of Hearts out of the deck and counts it as found
+		const easy = aceSuits({ count: 1, aceOfHeartsRevealed: true, log: [] });
+		expect(easy.filter((pip) => pip.lit).map((pip) => pip.suit)).toEqual(['hearts']);
+		// A state that knows only the count lights the other suits in order
+		const forced = aceSuits({ count: 3, aceOfHeartsRevealed: true });
+		expect(forced.filter((pip) => pip.lit).map((pip) => pip.suit)).toEqual([
+			'hearts',
+			'spades',
+			'diamonds'
+		]);
+	});
+
+	it('reads the token bar as tokens left out of the start, full and over past it', () => {
+		expect(tokenMeter(10, 10)).toEqual({ fraction: 1, over: 0 });
+		expect(tokenMeter(7, 10)).toEqual({ fraction: 0.7, over: 0 });
+		expect(tokenMeter(0, 10)).toEqual({ fraction: 0, over: 0 });
+		expect(tokenMeter(12, 10)).toEqual({ fraction: 1, over: 2 });
+		expect(tokenMeter(-1, 10).fraction).toBe(0);
+		expect(tokenMeter(5, 0).fraction).toBe(0.5); // no start: the default 10
+	});
+
 	it('gives a 2d20 badge only while Lucid or Surreal', () => {
 		expect(rollBadge({ isLucid: false, isSurreal: false })).toBeNull();
 		expect(rollBadge({ isLucid: true }).text).toBe('2d20↑');
@@ -84,18 +133,23 @@ describe('hudTiers', () => {
 });
 
 describe('StatusHUD', () => {
-	it('is one labelled row of six cells', () => {
+	it('is one labelled row of six cells, mirrored around the roll and the deck', () => {
 		const { getByTestId, getByRole } = render(StatusHUD);
 		expect(getByRole('group', { name: 'Game status' })).toBe(getByTestId('hud'));
 		const cells = getByTestId('hud').querySelectorAll(':scope > .hud-cell');
 		expect([...cells].map((c) => c.dataset.testid)).toEqual([
 			'hud-stability',
 			'hud-kings',
-			'hud-aces',
-			'hud-tokens',
+			'hud-roll',
 			'hud-cards',
-			'hud-roll'
+			'hud-aces',
+			'hud-tokens'
 		]);
+		// The outer pair are meters, the next pair count four icons
+		const [stability, kings, , , aces, tokens] = cells;
+		for (const meter of [stability, tokens]) expect(meter.querySelector('.bar .fill')).toBeTruthy();
+		for (const counter of [kings, aces])
+			expect(counter.querySelectorAll('.hud-icons > *, .skulls > *').length).toBe(4);
 	});
 
 	it('shows the key numbers', () => {
@@ -103,27 +157,32 @@ describe('StatusHUD', () => {
 		gameState.kingsRevealed = 1;
 		gameState.acesRevealed = 2;
 		gameState.aceOfHeartsRevealed = true;
+		gameState.log = [ace('hearts'), ace('diamonds')];
 		gameState.tokens = 9;
 		gameState.diceRoll = 8;
 		gameState.deck = new Array(38).fill({});
 		const { getByTestId } = render(StatusHUD);
 		expect(visible(getByTestId('hud-stability'))).toContain('12/20');
 		expect(visible(getByTestId('hud-kings'))).toContain('1/4');
-		expect(visible(getByTestId('hud-aces'))).toContain('2/4need14+');
-		expect(visible(getByTestId('hud-tokens'))).toContain('9left');
+		expect(visible(getByTestId('hud-aces'))).toContain('2/4');
+		expect(lit(getByTestId('hud-aces'))).toEqual(['hearts', 'diamonds']);
+		expect(visible(getByTestId('hud-tokens'))).toContain('9/10');
 		expect(visible(getByTestId('hud-cards'))).toContain('38');
-		expect(getByTestId('hud-roll').textContent).toContain('8');
+		expect(getByTestId('hud-roll').querySelector('.led-on').textContent).toBe('8');
 	});
 
 	it('speaks each cell as a sentence', () => {
 		gameState.tower = 14;
 		gameState.kingsRevealed = 2;
 		gameState.acesRevealed = 2;
+		gameState.log = [ace('spades'), ace('clubs')];
+		gameState.deck = new Array(30).fill({});
 		const { getByTestId } = render(StatusHUD);
 		expect(text(getByTestId('hud-stability').querySelector('.sr-only'))).toBe('Stability 14 of 20');
 		expect(text(getByTestId('hud-kings').querySelector('.sr-only'))).toBe('Kings: 2 of 4 revealed');
+		expect(text(getByTestId('hud-cards').querySelector('.sr-only'))).toBe('30 of 52 cards left');
 		expect(text(getByTestId('hud-aces').querySelector('.sr-only'))).toBe(
-			'Aces 2 of 4, Salvation needs 14 or more'
+			'Aces 2 of 4 (spades, clubs), Salvation needs 14 or more'
 		);
 		expect(text(getByTestId('hud-tokens').querySelector('.sr-only'))).toBe(
 			'Tokens locked: find the Ace of Hearts'
@@ -253,47 +312,113 @@ describe('KingsCell', () => {
 });
 
 describe('AcesCell', () => {
-	it('shows no Salvation need before the first Ace', () => {
-		const { getByTestId, queryByTestId } = render(AcesCell);
-		expect(visible(getByTestId('hud-aces'))).toContain('0/4');
-		expect(queryByTestId('aces-need')).toBeNull();
+	it('shows 0/4, four dark suits and no Salvation need before the first Ace', () => {
+		const { getByTestId } = render(AcesCell);
+		const cell = getByTestId('hud-aces');
+		expect(visible(cell)).toBe('0/4');
+		expect([...cell.querySelectorAll('.pip')].map((pip) => pip.dataset.suit)).toEqual([
+			'hearts',
+			'spades',
+			'diamonds',
+			'clubs'
+		]);
+		expect(lit(cell)).toEqual([]);
+		expect(cell.dataset.need).toBe('');
+		expect(text(cell.querySelector('.sr-only'))).toBe('Aces 0 of 4, no Salvation roll yet');
 	});
 
-	it('shows "need 14+" at two Aces and "auto" at four', () => {
+	it('keeps what Salvation needs in the tooltip and the spoken text: 14+ at two, auto at four', () => {
 		gameState.acesRevealed = 2;
+		gameState.aceOfHeartsRevealed = true;
+		gameState.log = [ace('hearts'), ace('spades')];
 		const first = render(AcesCell);
-		expect(first.getByTestId('aces-need').textContent).toBe('need 14+');
+		let cell = first.getByTestId('hud-aces');
+		expect(cell.getAttribute('title')).toBe('Salvation needs 14+');
+		expect(text(cell.querySelector('.sr-only'))).toContain('Salvation needs 14 or more');
+		expect(lit(cell)).toEqual(['hearts', 'spades']);
 		first.unmount();
 		gameState.acesRevealed = 4;
+		gameState.log = ['hearts', 'spades', 'diamonds', 'clubs'].map(ace);
 		const second = render(AcesCell);
-		expect(second.getByTestId('aces-need').textContent).toBe('auto');
+		cell = second.getByTestId('hud-aces');
+		expect(cell.getAttribute('title')).toBe('All four Aces: Salvation is automatic');
+		expect(text(cell.querySelector('.sr-only'))).toContain('Salvation succeeds automatically');
+		expect(lit(cell)).toEqual(['hearts', 'spades', 'diamonds', 'clubs']);
 	});
 
-	it('counts an Ace that is on screen but not yet confirmed, and pops', () => {
+	it('counts an Ace that is on screen but not yet confirmed: pops and ignites its suit', () => {
+		vi.useFakeTimers();
 		const { getByTestId } = render(AcesCell);
 		flushSync();
+		gameState.log = [ace('diamonds')];
 		gameState.pendingUpdates.aceChange = 1;
 		flushSync();
 		const cell = getByTestId('hud-aces');
-		expect(visible(cell)).toContain('1/4need17+');
+		expect(visible(cell)).toBe('1/4');
+		expect(lit(cell)).toEqual(['diamonds']);
+		expect(cell.getAttribute('title')).toBe('Salvation needs 17+');
 		expect(cell.classList.contains('gained')).toBe(true);
+		expect(cell.querySelector('.pip.igniting').dataset.suit).toBe('diamonds');
+		vi.advanceTimersByTime(ANIMATION_DURATION.BEAT);
+		flushSync();
+		expect(cell.classList.contains('gained')).toBe(false);
+		expect(cell.querySelector('.pip.igniting')).toBeNull();
+	});
+
+	it('shows the Ace of Hearts as the key, gold even before it is found', () => {
+		const { getByTestId } = render(AcesCell);
+		const heart = getByTestId('hud-aces').querySelector('.pip[data-suit="hearts"]');
+		expect(heart.classList.contains('hearts')).toBe(true);
+		expect(heart.classList.contains('lit')).toBe(false);
+	});
+});
+
+describe('CardsCell', () => {
+	it('shows the cards left over a meter of the 52-card deck', () => {
+		const { getByTestId } = render(CardsCell, { count: 39 });
+		const cell = getByTestId('hud-cards');
+		expect(visible(cell)).toBe('39');
+		expect(cell.querySelector('.fill').getAttribute('style')).toContain('scaleX(0.75)');
+		expect(text(cell.querySelector('.sr-only'))).toBe('39 of 52 cards left');
 	});
 });
 
 describe('TokensCell', () => {
-	it('is locked before the Ace of Hearts and says how to unlock it', () => {
+	it('is locked before the Ace of Hearts: the same n/N and bar, dimmed, with a lock', () => {
 		const { getByTestId } = render(TokensCell);
 		const cell = getByTestId('hud-tokens');
 		expect(cell.classList.contains('locked')).toBe(true);
-		expect(cell.querySelector('.lock')).toBeTruthy();
-		expect(cell.textContent).toContain('find A♥');
+		expect(cell.querySelector('.hud-label .lock')).toBeTruthy();
+		expect(visible(cell)).toContain('10/10');
+		expect(cell.querySelector('.fill').getAttribute('style')).toContain('scaleX(1)');
+		expect(cell.getAttribute('title')).toBe('Find the Ace of Hearts to unlock Salvation');
+		expect(text(cell.querySelector('.sr-only'))).toBe('Tokens locked: find the Ace of Hearts');
 	});
 
-	it('shows tokens left once the Ace of Hearts is revealed, past 10 too', () => {
+	it('shows tokens left out of the start over a bar once the Ace of Hearts is revealed', () => {
+		gameState.aceOfHeartsRevealed = true;
+		gameState.tokens = 6;
+		gameState.config = { options: { startingTokens: 8 } };
+		const { getByTestId } = render(TokensCell);
+		const cell = getByTestId('hud-tokens');
+		expect(cell.classList.contains('locked')).toBe(false);
+		expect(cell.querySelector('.lock')).toBeNull();
+		expect(visible(cell)).toContain('6/8');
+		expect(cell.querySelector('.fill').getAttribute('style')).toContain('scaleX(0.75)');
+		expect(text(cell.querySelector('.sr-only'))).toBe('6 of 8 Tokens left');
+	});
+
+	it('keeps the bar full and marks it when tokens pass the start', () => {
 		gameState.aceOfHeartsRevealed = true;
 		gameState.tokens = 12;
 		const { getByTestId } = render(TokensCell);
-		expect(visible(getByTestId('hud-tokens'))).toContain('12left');
+		const cell = getByTestId('hud-tokens');
+		expect(visible(cell)).toContain('12/10');
+		expect(cell.classList.contains('over')).toBe(true);
+		expect(cell.querySelector('.fill').getAttribute('style')).toContain('scaleX(1)');
+		expect(text(cell.querySelector('.sr-only'))).toBe(
+			'12 of 10 Tokens left, 2 more than at the start'
+		);
 	});
 
 	it('plays the Salvation moment once when it unlocks', () => {
@@ -311,13 +436,21 @@ describe('TokensCell', () => {
 });
 
 describe('RollCell', () => {
-	it('shows the number, or -- before the first roll', () => {
+	it('shows the number on two seven-segment digits, or -- before the first roll', () => {
 		const first = render(RollCell);
-		expect(first.getByTestId('hud-roll').querySelector('.hud-value').textContent).toBe('--');
+		const idle = first.getByTestId('hud-roll');
+		expect(idle.querySelector('.led-on').textContent).toBe('--');
+		expect(idle.classList.contains('idle')).toBe(true);
+		// The unlit segments of both digits sit behind the number
+		expect(idle.querySelector('.led-off').textContent).toBe('88');
 		first.unmount();
 		gameState.diceRoll = 13;
 		const second = render(RollCell);
-		expect(second.getByTestId('hud-roll').querySelector('.hud-value').textContent).toBe('13');
+		expect(second.getByTestId('hud-roll').querySelector('.led-on').textContent).toBe('13');
+		second.unmount();
+		gameState.diceRoll = 4;
+		const third = render(RollCell);
+		expect(third.getByTestId('hud-roll').querySelector('.led-on').textContent).toBe('4');
 	});
 
 	it('shows a 2d20 badge with an accessible name while Lucid or Surreal', () => {
@@ -339,7 +472,7 @@ describe('RollCell', () => {
 		diceState.lastRoll = { rolls: [15, 6], finalValue: 15, isLucid: true, isSurreal: false };
 		const { getByTestId } = render(RollCell);
 		const cell = getByTestId('hud-roll');
-		expect(cell.querySelector('.hud-value').getAttribute('title')).toBe('Two dice: high of 15, 6');
+		expect(cell.querySelector('.led').getAttribute('title')).toBe('Two dice: high of 15, 6');
 		expect(text(cell.querySelector('.sr-only'))).toBe('Last roll 15 (high of 15, 6)');
 	});
 });

@@ -1,16 +1,18 @@
 <script>
 	/**
-	 * StatusHUD - The game status in one row, at every width
+	 * StatusHUD - The game status in one row, at every width, mirrored around the middle:
 	 *
-	 *   Stability n/20 | Kings n/4 | Aces n/4 · need 14+ | Tokens | Cards | Roll
+	 *   Stability n/20 + bar | Kings n/4 + skulls | Roll | Cards + bar | Aces n/4 + suits | Tokens n/N + bar
 	 *
-	 * One centred row, at most 960px wide and 64px tall (52px on landscape phones). Each
-	 * cell owns its feedback: the Stability tiers and damage flash, the King ignite and its
-	 * escalating pulse, the Salvation unlock. The row stays mounted for the whole game,
-	 * under the card and journal overlays too, so no cell misses the change it reacts to.
+	 * The outer pair are meters (a number over its bar), the next pair count four icons, and
+	 * the dice and the deck sit in the middle. One centred row, at most 960px wide and 64px
+	 * tall (52px on landscape phones). Each cell owns its feedback: the Stability tiers and
+	 * damage flash, the King ignite and its escalating pulse, an Ace lighting its suit, the
+	 * Salvation unlock. The row stays mounted for the whole game, under the card and journal
+	 * overlays too, so no cell misses the change it reacts to.
 	 *
-	 * Publishes --hud-bottom on :root (the row's bottom edge plus 8px) so the dice throw
-	 * area, and anything else that must clear the HUD, can start below it.
+	 * Publishes --hud-bottom on :root (the row's bottom edge plus 8px) for anything that must
+	 * clear the HUD (the reduced-motion roll in +layout.svelte).
 	 *
 	 * @component
 	 */
@@ -18,13 +20,12 @@
 	import { resizeDiceBox } from '../../stores/diceStore.svelte.js';
 	import StabilityCell from './StabilityCell.svelte';
 	import KingsCell from './KingsCell.svelte';
+	import RollCell from './RollCell.svelte';
+	import CardsCell from './CardsCell.svelte';
 	import AcesCell from './AcesCell.svelte';
 	import TokensCell from './TokensCell.svelte';
-	import RollCell from './RollCell.svelte';
 
-	const cardsLeft = $derived(gameState.deck?.length || 0);
-
-	// Publish where the HUD ends so the dice throw area starts below it (see +layout.svelte)
+	// Publish where the HUD ends (see +layout.svelte)
 	let hud = $state();
 	$effect(() => {
 		if (!hud || typeof ResizeObserver === 'undefined') return;
@@ -59,17 +60,10 @@
 >
 	<StabilityCell />
 	<KingsCell />
+	<RollCell />
+	<CardsCell count={gameState.deck?.length || 0} />
 	<AcesCell />
 	<TokensCell />
-	<div class="hud-cell cards" data-testid="hud-cards">
-		<span class="hud-label">Cards</span>
-		<span class="hud-readout" aria-hidden="true">
-			<span class="hud-value">{cardsLeft}</span>
-			<span class="hud-meta">left</span>
-		</span>
-		<span class="sr-only">{cardsLeft} cards left</span>
-	</div>
-	<RollCell />
 </div>
 
 <style>
@@ -88,7 +82,11 @@
 		--hud-height: 64px;
 
 		display: grid;
-		grid-template-columns: 1.35fr 1.3fr 1.15fr 1.1fr 0.9fr 1fr;
+		/* Mirrored: the meters outside, the icon counts next, the dice and the deck in the
+		   middle. No column is narrower than its content. */
+		grid-template-columns:
+			minmax(min-content, 1.3fr) minmax(min-content, 1.25fr) minmax(min-content, 1fr)
+			minmax(min-content, 1fr) minmax(min-content, 1.25fr) minmax(min-content, 1.3fr);
 		align-items: stretch;
 		width: 100%;
 		max-width: 960px;
@@ -104,7 +102,7 @@
 
 	/* ============================================
 	   SHARED CELL ANATOMY (used by every cell component)
-	   label on top, then the readout: the value and its meta (bar, skulls, need, badge).
+	   label on top, then the readout: the value and its meta (a bar, four icons, a badge).
 	   Written as plain two-class rules so each cell can colour its own label and value
 	   with a more specific selector.
 	   ============================================ */
@@ -134,9 +132,11 @@
 
 	/* Labels: the UI face at 12px (Inter 600, uppercase, 0.08em) */
 	:global(.status-hud .hud-label) {
+		display: flex;
+		align-items: center;
+		gap: 3px;
 		max-width: 100%;
 		overflow: hidden;
-		text-overflow: ellipsis;
 		white-space: nowrap;
 		font-family: var(--font-ui, var(--font-body, sans-serif));
 		font-size: 0.75rem;
@@ -147,7 +147,7 @@
 		color: rgba(255, 255, 255, 0.72);
 	}
 
-	/* Every readout is one value line tall, so a lock or a badge never shifts its label */
+	/* Every readout is as tall as the roll's digits, so all six labels share one line */
 	:global(.status-hud .hud-readout) {
 		display: flex;
 		align-items: center;
@@ -155,7 +155,7 @@
 		gap: 0.5rem;
 		min-width: 0;
 		max-width: 100%;
-		min-height: 1.5rem;
+		min-height: 1.75rem;
 	}
 
 	:global(.status-hud .hud-value) {
@@ -172,14 +172,33 @@
 		color: rgba(255, 255, 255, 0.6);
 	}
 
-	:global(.status-hud .hud-meta) {
-		font-family: var(--font-ui, var(--font-body, sans-serif));
-		font-size: 0.75rem;
-		font-weight: var(--font-ui-weight, 600);
-		line-height: 1.15;
-		letter-spacing: 0.04em;
-		white-space: nowrap;
-		color: rgba(255, 255, 255, 0.72);
+	/* The meter beside (or, on phones, under) a number: Stability, Cards and Tokens share it.
+	   A fixed track; only the fill's transform changes. Each cell sets --bar-color/--bar-glow. */
+	:global(.status-hud .bar) {
+		position: relative;
+		flex: none;
+		width: 56px;
+		height: 4px;
+		overflow: hidden;
+		border-radius: 2px;
+		background: rgba(255, 255, 255, 0.14);
+	}
+
+	:global(.status-hud .fill) {
+		position: absolute;
+		inset: 0;
+		transform-origin: left center;
+		background: var(--bar-color, rgba(255, 255, 255, 0.8));
+		box-shadow: 0 0 6px var(--bar-glow, transparent);
+		transition:
+			transform var(--dur-overlay, 300ms) var(--ease-enter, ease-out),
+			background-color var(--dur-overlay, 300ms) var(--ease-enter, ease-out);
+	}
+
+	/* Four icons after a count: the Kings' skulls and the Aces' suits */
+	:global(.status-hud .hud-icons) {
+		display: flex;
+		gap: 3px;
 	}
 
 	:global(.status-hud .sr-only) {
@@ -200,7 +219,9 @@
 		.status-hud {
 			--aug-tl: 8px;
 			--aug-br: 8px;
-			grid-template-columns: 1.4fr 1.2fr 1fr 1.05fr 0.95fr 1fr;
+			grid-template-columns:
+				minmax(min-content, 1.3fr) minmax(min-content, 1.15fr) minmax(min-content, 1fr)
+				minmax(min-content, 0.9fr) minmax(min-content, 1.15fr) minmax(min-content, 1.15fr);
 			padding: 0 0.125rem;
 		}
 
@@ -218,7 +239,7 @@
 
 		:global(.status-hud .hud-readout) {
 			flex-direction: column;
-			gap: 3px;
+			gap: 4px;
 			min-height: 0;
 		}
 
@@ -230,14 +251,13 @@
 			font-size: 0.75rem;
 		}
 
-		:global(.status-hud .hud-meta) {
-			font-size: 0.6875rem;
-			letter-spacing: 0.02em;
+		:global(.status-hud .bar) {
+			width: 40px;
+			height: 3px;
 		}
 
-		/* "left" under the card count says nothing a phone has room for */
-		.cards .hud-meta {
-			display: none;
+		:global(.status-hud .hud-icons) {
+			gap: 2px;
 		}
 	}
 
@@ -259,11 +279,21 @@
 		}
 
 		:global(.status-hud .hud-readout) {
-			min-height: 1.25rem;
+			min-height: 1.375rem;
 		}
 
 		:global(.status-hud .hud-value) {
 			font-size: 1.25rem;
+		}
+
+		:global(.status-hud .bar) {
+			width: 44px;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		:global(.status-hud .fill) {
+			transition: none;
 		}
 	}
 </style>
