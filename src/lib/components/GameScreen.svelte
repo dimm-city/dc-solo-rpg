@@ -811,8 +811,10 @@
 			<!-- svelte-ignore a11y_click_events_have_key_events -->
 			<!-- svelte-ignore a11y_no_static_element_interactions -->
 			<div class="main-screen-area dc-table-bg" onclick={handleScreenClick}>
-				<!-- Background contextual text -->
-				<ContextBackground {contextText} {resultLine} />
+				<!-- Background contextual text, with the rule caption above it in the same column -->
+				<ContextBackground {contextText} {resultLine}>
+					<RuleCaption {captions} />
+				</ContextBackground>
 
 				{#key currentScreen}
 					{#if currentScreen == 'drawCard'}
@@ -859,7 +861,6 @@
 						/>
 					</div>
 				{/if}
-				<RuleCaption {captions} />
 			</div>
 		</div>
 
@@ -1085,16 +1086,24 @@
 			0 0 40px rgba(0, 255, 255, 0.3);
 	}
 
+	/* MN-07: section headings under 28px are the UI face (Inter 600, uppercase), not the
+	   display face, which misreads at small sizes */
+	.intro-story-container .content :global(:is(h2, h3)) {
+		font-family: var(--font-ui, var(--font-body));
+		font-weight: var(--font-ui-weight, 600);
+		letter-spacing: var(--tracking-ui, 0.08em);
+		text-transform: uppercase;
+		margin-bottom: var(--space-xs);
+	}
+
 	.intro-story-container .content :global(h2) {
 		font-size: var(--text-xl);
 		margin-top: var(--space-lg);
-		margin-bottom: var(--space-xs);
 	}
 
 	.intro-story-container .content :global(h3) {
 		font-size: var(--text-lg);
 		margin-top: var(--space-md);
-		margin-bottom: var(--space-xs);
 	}
 
 	.intro-story-container .content :global(p) {
@@ -1226,8 +1235,9 @@
 			padding-inline: 0.5rem;
 		}
 
+		/* 28px and up: the display face's floor (NV-05) */
 		.main-screen-area :global(.context-title) {
-			font-size: clamp(1.25rem, 8vh, 2.25rem);
+			font-size: clamp(1.75rem, 8vh, 2.25rem);
 			margin-bottom: 0.375rem;
 		}
 
@@ -1246,6 +1256,13 @@
 		.intro-story-container {
 			flex-direction: row;
 			align-items: center;
+		}
+
+		/* NV-01: the text takes the full height and scrolls; only the button is centred. Centred
+		   itself, a text area taller than the screen overflowed above it, out of reach. (The
+		   column inside still centres with margin-block: auto, which never pushes it off.) */
+		.intro-scroll-area {
+			align-self: stretch;
 		}
 
 		.intro-story-container > :global(.button-bar) {
