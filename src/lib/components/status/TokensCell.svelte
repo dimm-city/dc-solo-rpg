@@ -4,8 +4,8 @@
 	 *
 	 * N is the tokens the game started with, and the bar is the tokens left out of N: the
 	 * same reading as Stability's, so the number and the bar always agree. Removing the last
-	 * token wins, so here an emptying bar is good news. Failed Salvation rolls can add tokens
-	 * past the start ("12/10"): the bar stays full and turns striped.
+	 * token wins, so here an emptying bar is good news. On Hard, failed Salvation rolls add
+	 * tokens past the start ("12/10"): the bar stays full and turns striped.
 	 *
 	 * Wretched & Alone: the tokens arrive with the Ace of Hearts. Until then the same layout
 	 * is dimmed, with a lock by the label. When it unlocks, the Salvation moment plays once:
@@ -78,7 +78,9 @@
 		<span class="hud-value"
 			><span class="current">{tokens}</span><span class="hud-max">/{start}</span></span
 		>
-		<span class="bar"><span class="fill" style="transform: scaleX({meter.fraction})"></span></span>
+		<span class="hud-foot bar"
+			><span class="fill" style="transform: scaleX({meter.fraction})"></span></span
+		>
 	</span>
 	<span class="sr-only">{spoken}</span>
 </div>
@@ -126,7 +128,7 @@
 		height: 0.9em;
 	}
 
-	/* More tokens than at the start: the bar is full and striped */
+	/* More tokens than at the start (Hard): the bar is full and striped */
 	.over .fill {
 		background: repeating-linear-gradient(
 			-60deg,

@@ -3,8 +3,10 @@ import { INSTRUCTIONS_SEEN_KEY } from './helpers';
 
 /**
  * The in-game HUD: one row at every width (HD-02), mirrored around the middle (Stability,
- * Kings, Roll, Cards, Aces, Tokens), the 2d20 badge (HD-03), the landscape layout (VP-01) and
- * the step button's keyboard focus (AC-03).
+ * Kings, Roll, Cards, Aces, Tokens), every cell the same three rows so the labels, the values
+ * and the foot (the bars, skulls, pips and roll modifiers) each sit on one line, the Lucid and
+ * Surreal icons (HD-03), the landscape layout (VP-01) and the step button's keyboard focus
+ * (AC-03).
  */
 
 /** Open a game and get past the intro to the opening roll, where the HUD and table show */
@@ -34,6 +36,76 @@ async function setState(page: Page, src: string) {
 }
 
 const CELLS = ['hud-stability', 'hud-kings', 'hud-roll', 'hud-cards', 'hud-aces', 'hud-tokens'];
+
+/** The four Aces, so the HUD shows 4/4 */
+const FOUR_ACES = "['hearts','spades','diamonds','clubs'].map((suit) => ({ card: 'A', suit }))";
+
+/**
+ * The three lines of the HUD, measured in one frame once the fonts are in and every one-off
+ * animation in the row (the unlock strike, a flash, a bar's transition) has ended: each cell's
+ * label top, value centre (the LED for the roll) and foot bottom (its bar, skulls, pips or
+ * modifier icons), relative to the row's top, plus the row's height.
+ */
+async function lines(page: Page) {
+	const hud = page.getByTestId('hud');
+	await hud.evaluate(() => document.fonts.ready);
+	await expect
+		.poll(() =>
+			hud.evaluate(
+				(el) =>
+					el.getAnimations({ subtree: true }).filter((a) => {
+						const timing = a.effect?.getComputedTiming();
+						return timing && Number.isFinite(timing.iterations) && a.playState !== 'finished';
+					}).length
+			)
+		)
+		.toBe(0);
+	return hud.evaluate((hud, ids) => {
+		const top = hud.getBoundingClientRect().top;
+		const cells = ids.map((id) => {
+			const cell = hud.querySelector(`[data-testid="${id}"]`)!;
+			const label = cell.querySelector('.hud-label')!.getBoundingClientRect();
+			const value = (cell.querySelector('.led') ?? cell.querySelector('.hud-value'))!;
+			const v = value.getBoundingClientRect();
+			const foot = cell.querySelector('.hud-foot')!.getBoundingClientRect();
+			return {
+				labelTop: label.top - top,
+				valueMid: (v.top + v.bottom) / 2 - top,
+				footBottom: foot.bottom - top
+			};
+		});
+		return { height: hud.getBoundingClientRect().height, cells };
+	}, CELLS);
+}
+
+/** Every cell's labels, values and feet sit on one line each, the feet at the row's bottom */
+function expectOneLineEach(
+	{ height, cells }: Awaited<ReturnType<typeof lines>>,
+	previous?: Awaited<ReturnType<typeof lines>>
+) {
+	const spread = (key: 'labelTop' | 'valueMid' | 'footBottom') => {
+		const values = cells.map((c) => c[key]);
+		return Math.max(...values) - Math.min(...values);
+	};
+	expect(spread('labelTop'), 'label tops').toBeLessThanOrEqual(1);
+	expect(spread('valueMid'), 'value centres').toBeLessThanOrEqual(1);
+	expect(spread('footBottom'), 'foot bottoms').toBeLessThanOrEqual(1);
+	// The foot is at the bottom of the tile: within 8px of the row's bottom edge, under its
+	// 2px frame, and under the value
+	for (const [i, cell] of cells.entries()) {
+		expect(cell.footBottom, `${CELLS[i]} foot`).toBeGreaterThanOrEqual(height - 8);
+		expect(cell.footBottom, `${CELLS[i]} foot`).toBeLessThanOrEqual(height - 3);
+		expect(cell.footBottom, `${CELLS[i]} foot under the value`).toBeGreaterThan(cell.valueMid + 8);
+	}
+	// A shorter value (a "7" beside a "2/20") never moves the lines
+	if (previous) {
+		for (const [i, cell] of cells.entries()) {
+			expect(cell.footBottom, `${CELLS[i]} foot`).toBeCloseTo(previous.cells[i].footBottom, 0);
+			expect(cell.valueMid, `${CELLS[i]} value`).toBeCloseTo(previous.cells[i].valueMid, 0);
+			expect(cell.labelTop, `${CELLS[i]} label`).toBeCloseTo(previous.cells[i].labelTop, 0);
+		}
+	}
+}
 
 test.describe('Game HUD', () => {
 	test('is one row of six cells, at most 960px wide and about 64px tall', async ({ page }) => {
@@ -71,12 +143,21 @@ test.describe('Game HUD', () => {
 		}
 		expect(new Set(tops).size).toBe(1);
 
-		// Every label sits on one line
-		const labelTops = await page
-			.getByTestId('hud')
-			.locator('.hud-label')
-			.evaluateAll((labels) => labels.map((l) => Math.round(l.getBoundingClientRect().top)));
-		expect(Math.max(...labelTops) - Math.min(...labelTops)).toBeLessThanOrEqual(1);
+		// The labels, the values and the foot each sit on one line, before the first roll and
+		// mid-game with the owner's numbers (2/20, 2/4, a 2 on the LED, 7, 4/4, 3/10)
+		const first = await lines(page);
+		expectOneLineEach(first);
+		await setState(
+			page,
+			`g.tower = 2; g.kingsRevealed = 2; g.diceRoll = 2; g.deck = g.deck.slice(0, 7); g.acesRevealed = 4; g.aceOfHeartsRevealed = true; g.log = ${FOUR_ACES}; g.tokens = 3;`
+		);
+		await expect(page.getByTestId('hud-cards')).toContainText('7');
+		await expect(page.getByTestId('hud-roll').locator('.led-on')).toHaveText('2');
+		expectOneLineEach(await lines(page), first);
+		await setState(
+			page,
+			'g.tower = 20; g.kingsRevealed = 0; g.diceRoll = 0; g.acesRevealed = 0; g.aceOfHeartsRevealed = false; g.log = []; g.tokens = 10;'
+		);
 
 		// No label is cut off
 		const clipped = await page
@@ -122,11 +203,30 @@ test.describe('Game HUD', () => {
 		await expect(tokens.locator('.lock')).toHaveCount(0);
 		await expect(tokens.locator('.fill')).toHaveAttribute('style', /scaleX\(0\.9\)/);
 
-		// Failed Salvations can push tokens past the start: the bar stays full
+		// On Hard, failed Salvations push tokens past the start: the bar stays full, striped
 		await setState(page, 'g.tokens = 12;');
 		await expect(tokens).toContainText('12/10');
 		await expect(tokens).toHaveClass(/over/);
 		await expect(tokens.locator('.fill')).toHaveAttribute('style', /scaleX\(1\)/);
+
+		// All four Aces: the final Stability check on Easy and Normal, automatic Salvation on Hard
+		await setState(
+			page,
+			`g.acesRevealed = 4; g.log = ${FOUR_ACES}; g.config.options.difficulty = 1;`
+		);
+		await expect(aces).toContainText('4/4');
+		await expect(aces).toHaveAttribute(
+			'title',
+			'All four Aces: survive the final Stability check and you escape'
+		);
+		await expect(aces.locator('.sr-only')).toHaveText(
+			'Aces 4 of 4 (hearts, spades, diamonds, clubs), survive the final Stability check and you escape'
+		);
+		await setState(page, 'g.config.options.difficulty = 2;');
+		await expect(aces).toHaveAttribute(
+			'title',
+			'All four Aces: Salvation is automatic after a Stability check'
+		);
 	});
 
 	test('shows the cards left over a meter and the roll on a seven-segment display', async ({
@@ -159,18 +259,43 @@ test.describe('Game HUD', () => {
 		expect(led.size).toBeGreaterThan(led.otherSize);
 	});
 
-	test('tiers, Kings and the 2d20 badge follow the game state', async ({ page }) => {
+	test('tiers, Kings and the Lucid and Surreal icons follow the game state', async ({ page }) => {
 		await openTable(page);
-		await setState(page, 'g.tower = 3; g.kingsRevealed = 3; g.isLucid = true;');
+		const lucid = page.getByTestId('roll-lucid');
+		const surreal = page.getByTestId('roll-surreal');
+		// Both icons are there before any modifier, dim and said to be off
+		await expect(lucid).toBeVisible();
+		await expect(surreal).toBeVisible();
+		await expect(lucid).toHaveAttribute('aria-label', /^Lucid \(off\): a natural 20/);
+		await expect(surreal).toHaveAttribute('aria-label', /^Surreal \(off\): a natural 1/);
+		const dim = await lucid.evaluate((el) => parseFloat(getComputedStyle(el).opacity));
+		expect(dim).toBeGreaterThan(0.2);
+		expect(dim).toBeLessThan(0.4);
 
+		await setState(page, 'g.tower = 3; g.kingsRevealed = 3; g.isLucid = true;');
 		await expect(page.getByTestId('hud-stability')).toHaveClass(/tier-critical/);
 		await expect(page.getByTestId('hud-kings')).toHaveClass(/urgent/);
 		await expect(page.getByTestId('hud-kings').locator('.skull.lit')).toHaveCount(3);
-		const badge = page.getByRole('img', { name: /Lucid: your next roll uses two d20/ });
-		await expect(badge).toHaveText('2d20↑');
+		await expect(
+			page.getByRole('img', { name: 'Lucid: next roll keeps the higher of two dice' })
+		).toHaveClass(/\bon\b/);
+		await expect(lucid).toHaveAttribute('title', 'Lucid: next roll keeps the higher of two dice');
+		await expect(surreal).not.toHaveClass(/\bon\b/);
+		// Lit: its own colour, fully opaque
+		await expect
+			.poll(() => lucid.evaluate((el) => parseFloat(getComputedStyle(el).opacity)))
+			.toBe(1);
+		const lit = await lucid.evaluate((el) => getComputedStyle(el).color);
+		expect(lit).toBe('rgb(0, 255, 170)');
 
 		await setState(page, 'g.isLucid = false; g.isSurreal = true;');
-		await expect(page.getByTestId('roll-badge')).toHaveText('2d20↓');
+		await expect(
+			page.getByRole('img', { name: 'Surreal: next roll keeps the lower of two dice' })
+		).toHaveClass(/\bon\b/);
+		await expect(lucid).not.toHaveClass(/\bon\b/);
+		await expect(lucid).toHaveAttribute('aria-label', /\(off\)/);
+		// Both icons stay on the HUD's bottom line
+		expectOneLineEach(await lines(page));
 	});
 
 	test('a landscape phone gets the short HUD and the step button beside the table', async ({
@@ -182,6 +307,8 @@ test.describe('Game HUD', () => {
 
 		const hud = await page.getByTestId('hud').boundingBox();
 		expect(hud!.height).toBeLessThanOrEqual(54);
+		// The same three lines in the short row
+		expectOneLineEach(await lines(page));
 
 		const table = await page.locator('.main-screen-area').boundingBox();
 		const button = await page.getByTestId('initial-damage-button').boundingBox();

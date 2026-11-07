@@ -1,8 +1,9 @@
 /**
  * HUD tests: one row, mirrored around the middle (Stability, Kings, Roll, Cards, Aces,
- * Tokens). Stability n/20 and its tiers, Kings n/4 with the ignite and the fourth-King finale,
- * the last roll on a seven-segment display with its 2d20 badge, cards left over a meter, Aces
- * n/4 with a pip per suit, and Tokens n/N over a bar, locked until the Ace of Hearts.
+ * Tokens), every cell the same three rows (label, value, foot). Stability n/20 and its tiers,
+ * Kings n/4 with the ignite and the fourth-King finale, the last roll on a seven-segment
+ * display with the Lucid and Surreal icons under it, cards left over a meter, Aces n/4 with a
+ * pip per suit, and Tokens n/N over a bar, locked until the Ace of Hearts.
  */
 import { flushSync } from 'svelte';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
@@ -16,8 +17,9 @@ import {
 	describeTwoDiceRoll,
 	acesSummary,
 	aceSuits,
+	fourAcesRule,
 	tokenMeter,
-	rollBadge
+	rollModifiers
 } from './hudTiers.js';
 import StatusHUD from './StatusHUD.svelte';
 import StabilityCell from './StabilityCell.svelte';
@@ -84,8 +86,18 @@ describe('hudTiers', () => {
 		expect(acesSummary(1)).toEqual({ count: 1, need: '17+' });
 		expect(acesSummary(2)).toEqual({ count: 2, need: '14+' });
 		expect(acesSummary(3)).toEqual({ count: 3, need: '11+' });
-		expect(acesSummary(4)).toEqual({ count: 4, need: 'auto' });
+		expect(acesSummary(4)).toEqual({ count: 4, need: 'all' });
 		expect(acesSummary(7).count).toBe(4);
+	});
+
+	it('says what all four Aces mean by difficulty: the final check, or automatic Salvation on Hard', () => {
+		const final = 'survive the final Stability check and you escape';
+		expect(fourAcesRule(0)).toBe(final);
+		expect(fourAcesRule(1)).toBe(final);
+		expect(fourAcesRule(2)).toBe('Salvation is automatic after a Stability check');
+		// Anything else reads as Normal
+		expect(fourAcesRule(undefined)).toBe(final);
+		expect(fourAcesRule(7)).toBe(final);
 	});
 
 	it('lights the Aces by suit, the Ace of Hearts first, and always agrees with the count', () => {
@@ -114,7 +126,7 @@ describe('hudTiers', () => {
 		]);
 	});
 
-	it('reads the token bar as tokens left out of the start, full and over past it', () => {
+	it('reads the token bar as tokens left out of the start, full and over past it (Hard)', () => {
 		expect(tokenMeter(10, 10)).toEqual({ fraction: 1, over: 0 });
 		expect(tokenMeter(7, 10)).toEqual({ fraction: 0.7, over: 0 });
 		expect(tokenMeter(0, 10)).toEqual({ fraction: 0, over: 0 });
@@ -123,12 +135,35 @@ describe('hudTiers', () => {
 		expect(tokenMeter(5, 0).fraction).toBe(0.5); // no start: the default 10
 	});
 
-	it('gives a 2d20 badge only while Lucid or Surreal', () => {
-		expect(rollBadge({ isLucid: false, isSurreal: false })).toBeNull();
-		expect(rollBadge({ isLucid: true }).text).toBe('2d20↑');
-		expect(rollBadge({ isSurreal: true }).text).toBe('2d20↓');
-		expect(rollBadge({ isLucid: true }).label).toMatch(/next roll .*higher/);
-		expect(rollBadge({ isSurreal: true }).label).toMatch(/next roll .*lower/);
+	it('always gives both roll modifiers, each on or off, with the state in its label', () => {
+		const off = rollModifiers({ isLucid: false, isSurreal: false });
+		expect(off.map((m) => [m.kind, m.on])).toEqual([
+			['lucid', false],
+			['surreal', false]
+		]);
+		expect(off[0].label).toBe(
+			'Lucid (off): a natural 20 makes the next roll keep the higher of two dice'
+		);
+		expect(off[1].label).toBe(
+			'Surreal (off): a natural 1 makes the next roll keep the lower of two dice'
+		);
+		const lucid = rollModifiers({ isLucid: true });
+		expect(lucid[0]).toEqual({
+			kind: 'lucid',
+			on: true,
+			label: 'Lucid: next roll keeps the higher of two dice'
+		});
+		expect(lucid[1].on).toBe(false);
+		const surreal = rollModifiers({ isSurreal: true });
+		expect(surreal[1]).toEqual({
+			kind: 'surreal',
+			on: true,
+			label: 'Surreal: next roll keeps the lower of two dice'
+		});
+		expect(surreal[0].on).toBe(false);
+		// The two never stack: Lucid wins if a state somehow has both
+		const both = rollModifiers({ isLucid: true, isSurreal: true });
+		expect(both.map((m) => m.on)).toEqual([true, false]);
 	});
 });
 
@@ -150,6 +185,16 @@ describe('StatusHUD', () => {
 		for (const meter of [stability, tokens]) expect(meter.querySelector('.bar .fill')).toBeTruthy();
 		for (const counter of [kings, aces])
 			expect(counter.querySelectorAll('.hud-icons > *, .skulls > *').length).toBe(4);
+		// Every cell is the same three rows: the label, then a readout of the value over the
+		// foot (the bar, the icons, the modifiers), so the foot is pinned to one bottom line
+		for (const cell of cells) {
+			const readout = cell.querySelector(':scope > .hud-readout');
+			expect(readout, cell.dataset.testid).toBeTruthy();
+			const rows = [...readout.children];
+			expect(rows.length, cell.dataset.testid).toBe(2);
+			expect(rows[0].matches('.hud-value, .led'), cell.dataset.testid).toBe(true);
+			expect(rows[1].classList.contains('hud-foot'), cell.dataset.testid).toBe(true);
+		}
 	});
 
 	it('shows the key numbers', () => {
@@ -355,7 +400,7 @@ describe('AcesCell', () => {
 		expect(text(cell.querySelector('.sr-only'))).toBe('Aces 0 of 4, no Salvation roll yet');
 	});
 
-	it('keeps what Salvation needs in the tooltip and the spoken text: 14+ at two, auto at four', () => {
+	it('keeps what Salvation needs in the tooltip and the spoken text: 14+ at two, the final check at four', () => {
 		gameState.acesRevealed = 2;
 		gameState.aceOfHeartsRevealed = true;
 		gameState.log = [ace('hearts'), ace('spades')];
@@ -370,12 +415,33 @@ describe('AcesCell', () => {
 		const second = render(AcesCell);
 		cell = second.getByTestId('hud-aces');
 		expect(cell.getAttribute('title')).toBe(
-			'All four Aces: Salvation needs only a Stability check'
+			'All four Aces: survive the final Stability check and you escape'
 		);
-		expect(text(cell.querySelector('.sr-only'))).toContain(
-			'Salvation needs only a Stability check'
+		expect(text(cell.querySelector('.sr-only'))).toBe(
+			'Aces 4 of 4 (hearts, spades, diamonds, clubs), survive the final Stability check and you escape'
 		);
 		expect(lit(cell)).toEqual(['hearts', 'spades', 'diamonds', 'clubs']);
+	});
+
+	it('on Hard, four Aces mean automatic Salvation after a Stability check, not the end', () => {
+		gameState.acesRevealed = 4;
+		gameState.aceOfHeartsRevealed = true;
+		gameState.log = ['hearts', 'spades', 'diamonds', 'clubs'].map(ace);
+		gameState.config = { options: { difficulty: 2 } };
+		const { getByTestId } = render(AcesCell);
+		const cell = getByTestId('hud-aces');
+		expect(cell.getAttribute('title')).toBe(
+			'All four Aces: Salvation is automatic after a Stability check'
+		);
+		expect(text(cell.querySelector('.sr-only'))).toContain(
+			'Salvation is automatic after a Stability check'
+		);
+		// The difficulty is live: the text follows it
+		gameState.config = { options: { difficulty: 1 } };
+		flushSync();
+		expect(cell.getAttribute('title')).toBe(
+			'All four Aces: survive the final Stability check and you escape'
+		);
 	});
 
 	it('counts an Ace that is on screen but not yet confirmed: pops and ignites its suit', () => {
@@ -440,7 +506,7 @@ describe('TokensCell', () => {
 		expect(text(cell.querySelector('.sr-only'))).toBe('6 of 8 Tokens left');
 	});
 
-	it('keeps the bar full and marks it when tokens pass the start', () => {
+	it('keeps the bar full and marks it when tokens pass the start (a failed Salvation on Hard)', () => {
 		gameState.aceOfHeartsRevealed = true;
 		gameState.tokens = 12;
 		const { getByTestId } = render(TokensCell);
@@ -485,18 +551,72 @@ describe('RollCell', () => {
 		expect(third.getByTestId('hud-roll').querySelector('.led-on').textContent).toBe('4');
 	});
 
-	it('shows a 2d20 badge with an accessible name while Lucid or Surreal', () => {
-		gameState.isSurreal = true;
-		const { getByRole } = render(RollCell);
-		const badge = getByRole('img', { name: /Surreal: your next roll uses two d20/ });
-		expect(badge.textContent).toBe('2d20↓');
-		expect(badge.getAttribute('title')).toBe(badge.getAttribute('aria-label'));
+	it('always shows both modifier icons under the number, off (dim, and said so) on a plain roll', () => {
+		gameState.diceRoll = 9;
+		const { getByTestId, getByRole } = render(RollCell);
+		const cell = getByTestId('hud-roll');
+		const icons = [...cell.querySelectorAll('.hud-foot .mod')];
+		expect(icons.map((icon) => icon.dataset.testid)).toEqual(['roll-lucid', 'roll-surreal']);
+		expect(icons.some((icon) => icon.classList.contains('on'))).toBe(false);
+		const lucid = getByRole('img', {
+			name: 'Lucid (off): a natural 20 makes the next roll keep the higher of two dice'
+		});
+		expect(lucid).toBe(getByTestId('roll-lucid'));
+		expect(lucid.getAttribute('title')).toBe(lucid.getAttribute('aria-label'));
+		expect(
+			getByRole('img', {
+				name: 'Surreal (off): a natural 1 makes the next roll keep the lower of two dice'
+			})
+		).toBe(getByTestId('roll-surreal'));
+		// The icons are drawn, not spoken: the names carry everything
+		for (const icon of icons)
+			expect(icon.querySelector('svg').getAttribute('aria-hidden')).toBe('true');
 	});
 
-	it('has no badge on a plain roll', () => {
-		gameState.diceRoll = 9;
-		const { queryByTestId } = render(RollCell);
-		expect(queryByTestId('roll-badge')).toBeNull();
+	it('lights the modifier that is on, with its name and the same tooltip', () => {
+		gameState.isSurreal = true;
+		const { getByRole, getByTestId } = render(RollCell);
+		const surreal = getByRole('img', { name: 'Surreal: next roll keeps the lower of two dice' });
+		expect(surreal).toBe(getByTestId('roll-surreal'));
+		expect(surreal.classList.contains('on')).toBe(true);
+		expect(surreal.getAttribute('title')).toBe(surreal.getAttribute('aria-label'));
+		expect(getByTestId('roll-lucid').classList.contains('on')).toBe(false);
+		expect(getByTestId('roll-lucid').getAttribute('aria-label')).toContain('(off)');
+	});
+
+	it('ignites a modifier for one beat when it comes on, and only dims it when it is used up', () => {
+		vi.useFakeTimers();
+		const { getByTestId } = render(RollCell);
+		const lucid = getByTestId('roll-lucid');
+		flushSync();
+		expect(lucid.classList.contains('igniting')).toBe(false);
+		gameState.isLucid = true;
+		flushSync();
+		expect(lucid.classList.contains('on')).toBe(true);
+		expect(lucid.classList.contains('igniting')).toBe(true);
+		expect(getByTestId('roll-surreal').classList.contains('igniting')).toBe(false);
+		vi.advanceTimersByTime(ANIMATION_DURATION.BEAT);
+		flushSync();
+		expect(lucid.classList.contains('on')).toBe(true);
+		expect(lucid.classList.contains('igniting')).toBe(false);
+		// Used up by the next roll: off again, no flare
+		gameState.isLucid = false;
+		flushSync();
+		expect(lucid.classList.contains('on')).toBe(false);
+		expect(lucid.classList.contains('igniting')).toBe(false);
+		// A natural 1 on that roll: Surreal ignites in its turn
+		gameState.isSurreal = true;
+		flushSync();
+		expect(getByTestId('roll-surreal').classList.contains('igniting')).toBe(true);
+	});
+
+	it('does not ignite a modifier that is already on when the HUD mounts (a resumed game)', () => {
+		gameState.isLucid = true;
+		const { getByTestId } = render(RollCell);
+		flushSync();
+		const lucid = getByTestId('roll-lucid');
+		expect(lucid.classList.contains('on')).toBe(true);
+		expect(lucid.classList.contains('igniting')).toBe(false);
 	});
 
 	it('says which die counted when the last roll was 2d20', () => {

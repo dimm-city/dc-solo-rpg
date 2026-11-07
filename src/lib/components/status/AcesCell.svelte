@@ -4,17 +4,19 @@
 	 *
 	 * The pips read ♥ ♠ ♦ ♣ and light as each Ace is drawn. The Ace of Hearts is the gold one:
 	 * it unlocks Salvation (the Tokens cell beside it). Every Ace lowers the Salvation roll:
-	 * 17+ with one, 14+ with two, 11+ with three, and no target with all four (a Stability check,
-	 * then the token comes off). That threshold is in the cell's tooltip and its spoken text. The
-	 * count includes an Ace that is on screen but not yet confirmed; a new Ace pops the count and
-	 * ignites its pip for one beat.
+	 * 17+ with one, 14+ with two, 11+ with three. What all four mean depends on the difficulty
+	 * (fourAcesRule): on Easy and Normal the fourth Ace ends the game after its own Stability
+	 * check, on Hard Salvation is automatic after a Stability check. The threshold (or that
+	 * rule) is in the cell's tooltip and its spoken text. The count includes an Ace that is
+	 * on screen but not yet confirmed; a new Ace pops the count and ignites its pip for one
+	 * beat.
 	 *
 	 * @component
 	 */
 	import { untrack } from 'svelte';
 	import { gameState } from '../../stores/gameStore.svelte.js';
 	import { ANIMATION_DURATION } from '../../constants/animations.js';
-	import { acesSummary, aceSuits } from './hudTiers.js';
+	import { acesSummary, aceSuits, fourAcesRule } from './hudTiers.js';
 
 	// Includes an Ace that is on screen but not yet confirmed
 	const aces = $derived(
@@ -28,9 +30,10 @@
 		})
 	);
 	const litSuits = $derived(suits.filter((pip) => pip.lit).map((pip) => pip.suit));
+	const allFour = $derived(fourAcesRule(gameState.config?.options?.difficulty));
 	const need = $derived(
-		aces.need === 'auto'
-			? 'Salvation needs only a Stability check'
+		aces.need === 'all'
+			? allFour
 			: aces.need
 				? `Salvation needs ${aces.need.replace('+', '')} or more`
 				: 'no Salvation roll yet'
@@ -39,8 +42,8 @@
 		`Aces ${aces.count} of 4${litSuits.length ? ` (${litSuits.join(', ')})` : ''}, ${need}`
 	);
 	const tooltip = $derived(
-		aces.need === 'auto'
-			? 'All four Aces: Salvation needs only a Stability check'
+		aces.need === 'all'
+			? `All four Aces: ${allFour}`
 			: aces.need
 				? `Salvation needs ${aces.need}`
 				: 'Each Ace makes Salvation easier'
@@ -84,7 +87,7 @@
 		<span class="hud-value"
 			><span class="current">{aces.count}</span><span class="hud-max">/4</span></span
 		>
-		<span class="hud-icons">
+		<span class="hud-foot hud-icons">
 			{#each suits as pip (pip.suit)}
 				<svg
 					class="pip {pip.suit}"
@@ -139,12 +142,12 @@
 		animation: acePop var(--hud-beat) var(--ease-enter, ease-out);
 	}
 
-	/* The same footprint as the Kings' skulls; dim until its Ace is drawn */
+	/* The same footprint as the Kings' skulls (the foot row); dim until its Ace is drawn */
 	.pip {
 		display: block;
 		flex: none;
-		width: 18px;
-		height: 18px;
+		width: var(--hud-foot, 18px);
+		height: var(--hud-foot, 18px);
 		color: rgba(255, 255, 255, 0.2);
 	}
 
@@ -192,20 +195,6 @@
 		100% {
 			transform: scale(1);
 			opacity: 1;
-		}
-	}
-
-	@media (max-width: 600px) {
-		.pip {
-			width: 12px;
-			height: 12px;
-		}
-	}
-
-	@media (max-height: 500px) and (min-width: 601px) {
-		.pip {
-			width: 15px;
-			height: 15px;
 		}
 	}
 
