@@ -42,8 +42,29 @@ describe('SettingsModal', () => {
 		await fireEvent.change(select, { target: { value: 'normal' } });
 		expect(getSettings().difficulty).toBe(1);
 
+		await fireEvent.change(select, { target: { value: 'hard' } });
+		expect(getSettings().difficulty).toBe(2);
+
 		await fireEvent.change(select, { target: { value: 'default' } });
 		expect(getSettings().difficulty).toBeNull();
+	});
+
+	it('offers Game default, Normal, Easy and Hard, and says what each changes', async () => {
+		await openSettings();
+
+		const select = screen.getByLabelText('Difficulty');
+		expect([...select.options].map((o) => o.textContent)).toEqual([
+			'Game default',
+			'Normal',
+			'Easy',
+			'Hard'
+		]);
+		const help = document.getElementById('difficulty-help').textContent.replace(/\s+/g, ' ');
+		expect(help).toContain('Easy: the Ace of Hearts starts revealed.');
+		expect(help).toContain('Normal: Tokens only ever fall');
+		expect(help).toContain(
+			'Hard: failed Salvation rolls add Tokens, and four Aces only make Salvation automatic.'
+		);
 	});
 
 	it('opens on Manual play mode with default settings', async () => {

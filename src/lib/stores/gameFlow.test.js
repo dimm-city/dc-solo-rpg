@@ -444,7 +444,7 @@ describe('WAAStore', () => {
 			gameState.rollWithModifiers = originalRoll;
 		});
 
-		test('should add token on failure (D20 system)', async () => {
+		test('a miss keeps the tokens on Normal, and adds one on Hard (D20 system)', async () => {
 			// Mock rollWithModifiers for D20 system
 			const originalRoll = gameState.rollWithModifiers;
 			gameState.rollWithModifiers = vi.fn(() => ({ roll: 4, wasLucid: false, wasSurreal: false }));
@@ -456,8 +456,8 @@ describe('WAAStore', () => {
 			gameState.gameOver = false;
 			gameState.aceOfHeartsRevealed = true; // Required for success check
 			gameState.config = {
-				difficulty: 1,
 				slug: 'test-game',
+				options: { difficulty: 1 },
 				labels: {}
 			};
 
@@ -471,7 +471,14 @@ describe('WAAStore', () => {
 			const { applyPendingSuccessCheck } = await import('./gameActions.svelte.js');
 			applyPendingSuccessCheck();
 
-			// Roll 4 (range 2-5) → +1 token
+			// Roll 4 is a miss: on Normal tokens only ever fall
+			expect(gameState.tokens).toBe(5);
+
+			// On Hard the same miss adds a token
+			gameState.state = 'successCheck';
+			gameState.config.options.difficulty = 2;
+			successCheck();
+			applyPendingSuccessCheck();
 			expect(gameState.tokens).toBe(6);
 			expect(gameState.win).toBe(false);
 			expect(gameState.gameOver).toBe(false);

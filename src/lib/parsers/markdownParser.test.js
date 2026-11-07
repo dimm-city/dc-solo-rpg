@@ -1177,14 +1177,19 @@ describe('Markdown Parser - difficulty frontmatter', () => {
 		expect(parseGameFile(withDifficulty('difficulty: Normal')).options).toEqual({ difficulty: 1 });
 	});
 
+	it('should parse difficulty: hard as 2', () => {
+		expect(parseGameFile(withDifficulty('difficulty: hard')).options).toEqual({ difficulty: 2 });
+		expect(parseGameFile(withDifficulty('difficulty: HARD')).options).toEqual({ difficulty: 2 });
+	});
+
 	it('should default to Normal when difficulty is absent', () => {
 		expect(parseGameFile(base).options).toEqual({ difficulty: 1 });
 	});
 
 	it('should throw ValidationError for an invalid difficulty', () => {
-		const markdown = withDifficulty('difficulty: hard');
+		const markdown = withDifficulty('difficulty: brutal');
 		expect(() => parseGameFile(markdown)).toThrow(ValidationError);
-		expect(() => parseGameFile(markdown)).toThrow(/easy, normal/);
+		expect(() => parseGameFile(markdown)).toThrow(/easy, normal, hard/);
 	});
 
 	it('should reject object-prototype keys as difficulty', () => {

@@ -292,6 +292,45 @@ describe('GameScreen result hold', { timeout: 15000 }, () => {
 		await settle(600);
 		expect(gameState.state).toBe('gameOver');
 	});
+
+	it("the fourth Ace's check says what is at stake, and the win waits for the player", async () => {
+		setUp('failureCheck');
+		Object.assign(gameState, {
+			acesRevealed: 4,
+			aceOfHeartsRevealed: true,
+			tokens: 6,
+			tower: 9,
+			lastCard: { id: '1.1', round: 1, card: 'A', suit: 'spades', description: 'The last Ace' }
+		});
+		const { getByTestId, queryByTestId, container } = render(GameScreen);
+		await settle(GUARD_MS);
+		expect(container.querySelector('[data-testid="context-title"]').textContent).toBe(
+			'Final Stability Check'
+		);
+		expect(container.querySelector('.context-description').textContent).toBe(
+			'The fourth Ace is out. Survive this one Stability check and you escape. If it takes your last Stability, you fall.'
+		);
+		const button = getByTestId('failure-check-button');
+		expect(button.getAttribute('aria-label')).toBe(
+			'Roll for Stability · survive this and you escape'
+		);
+
+		mockDieRoll(13);
+		await fireEvent.click(button);
+		await settle(HOLD_MS + 200);
+		// No hold: the ending waits
+		expect(gameState.state).toBe('failureCheck');
+		expect(gameState.win).toBe(true);
+		expect(getByTestId('result-line').textContent).toBe(
+			'Rolled 13 · no Stability lost · 9/20 · you escape'
+		);
+		expect(button.getAttribute('aria-label')).toBe('Escape');
+		expect(queryByTestId('step-advance')).toBeNull();
+
+		await fireEvent.click(button);
+		await settle(GUARD_MS);
+		expect(gameState.state).toBe('gameOver');
+	});
 });
 
 describe('GameScreen: each visit to a step starts clean', () => {

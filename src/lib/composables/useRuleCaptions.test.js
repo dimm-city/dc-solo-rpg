@@ -63,6 +63,45 @@ describe('createRuleCaptions', () => {
 		expect(items[1].text).toContain('14+');
 	});
 
+	it('the third Ace points at the fourth on Normal, not on Hard', () => {
+		c.observe(base({ acesRevealed: 2, aceOfHeartsRevealed: true }));
+		drain(c);
+		c.observe(base({ acesRevealed: 3, aceOfHeartsRevealed: true }));
+		expect(c.next().text).toBe(
+			'Each Ace makes salvation easier. You now need 11+. One more Ace and you escape, if you survive its check.'
+		);
+
+		const hard = createRuleCaptions({ isDisabled: () => false });
+		const onHard = (over) => base({ config: { options: { difficulty: 2 } }, ...over });
+		hard.observe(onHard({ acesRevealed: 2, aceOfHeartsRevealed: true }));
+		drain(hard);
+		hard.observe(onHard({ acesRevealed: 3, aceOfHeartsRevealed: true }));
+		expect(hard.next().text).toBe('Each Ace makes salvation easier. You now need 11+.');
+	});
+
+	it('the fourth Ace has its own caption on Normal; on Hard it is one more Ace', () => {
+		c.observe(base({ acesRevealed: 1, aceOfHeartsRevealed: true }));
+		c.observe(base({ acesRevealed: 2, aceOfHeartsRevealed: true }));
+		drain(c); // salvation, ace
+		c.observe(base({ acesRevealed: 4, aceOfHeartsRevealed: true }));
+		const fourth = c.next();
+		expect(fourth.id).toBe('fourth-ace');
+		expect(fourth.text).toBe('The fourth Ace. Survive its Stability check and you escape.');
+
+		const hard = createRuleCaptions({ isDisabled: () => false });
+		const onHard = (over) => base({ config: { options: { difficulty: 2 } }, ...over });
+		hard.observe(onHard({ acesRevealed: 3, aceOfHeartsRevealed: true }));
+		drain(hard);
+		hard.observe(onHard({ acesRevealed: 4, aceOfHeartsRevealed: true }));
+		const items = [];
+		let n;
+		while ((n = hard.next())) items.push(n);
+		expect(items.map((i) => i.id)).toEqual(['ace']);
+		expect(items[0].text).toBe(
+			'Each Ace makes salvation easier. With all four, only a Stability check stands in the way.'
+		);
+	});
+
 	it('a non-heart Ace before the Ace of Hearts says nothing', () => {
 		c.observe(base({ acesRevealed: 1 }));
 		expect(drain(c)).toEqual([]);
@@ -76,13 +115,18 @@ describe('createRuleCaptions', () => {
 		expect(drain(c)).toEqual(['lucid', 'surreal']);
 	});
 
-	it('fires the failed-salvation caption only when a token is added after the Ace of Hearts', () => {
+	it('fires the failed-salvation caption only when a token is added after the Ace of Hearts (Hard)', () => {
 		c.observe(base({ tokens: 11 }));
 		expect(drain(c)).toEqual([]);
 		c.observe(base({ tokens: 10, aceOfHeartsRevealed: true, acesRevealed: 1 }));
 		drain(c);
+		// A miss on Normal changes nothing, so nothing fires
+		c.observe(base({ tokens: 10, aceOfHeartsRevealed: true, acesRevealed: 1, state: 'log' }));
+		expect(drain(c)).toEqual([]);
 		c.observe(base({ tokens: 11, aceOfHeartsRevealed: true, acesRevealed: 1 }));
-		expect(drain(c)).toEqual(['token']);
+		const token = c.next();
+		expect(token.id).toBe('token');
+		expect(token.text).toBe('A failed salvation roll adds a token. Hope costs.');
 	});
 
 	it('keeps queue order when several fire at once', () => {

@@ -26,7 +26,12 @@ test.describe('Settings Modal', () => {
 
 		const difficulty = dialog.getByLabel('Difficulty');
 		await expect(difficulty).toBeVisible();
-		await expect(difficulty.locator('option')).toHaveText(['Game default', 'Normal', 'Easy']);
+		await expect(difficulty.locator('option')).toHaveText([
+			'Game default',
+			'Normal',
+			'Easy',
+			'Hard'
+		]);
 
 		const playMode = dialog.getByRole('radiogroup', { name: 'Play mode' });
 		await expect(playMode).toBeVisible();

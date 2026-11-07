@@ -272,6 +272,11 @@
 		color: var(--color-danger, #ff4d6d);
 	}
 
+	/* A win has a cause line too (the fourth Ace): in the victory accent, not the loss red */
+	.game-over.victory .game-over-message .cause {
+		color: var(--ending-accent);
+	}
+
 	.afterword {
 		margin: 0;
 		max-width: 34rem;
