@@ -13,6 +13,11 @@
 
 	// How long "Saved to your log" shows before the game moves on
 	const SAVED_BEAT = 800;
+	// A result moves on by itself, and on a phone Record Entry opens where the step button was:
+	// a press in the sheet's first 400ms was meant for that button (the same guard it has when
+	// it changes meaning), so Record Entry ignores it rather than saving an empty entry.
+	const OPEN_GUARD_MS = 400;
+	const openedAt = typeof performance === 'undefined' ? 0 : performance.now();
 
 	let {
 		journalText = $bindable(''),
@@ -137,6 +142,12 @@
 			autoJournalInterval = null;
 		}
 		autoJournalTimeRemaining = 0;
+	}
+
+	/** Record Entry, unless the sheet has only just opened (see OPEN_GUARD_MS) */
+	function recordEntry() {
+		if (performance.now() - openedAt < OPEN_GUARD_MS) return;
+		handleSave();
 	}
 
 	// Stops any recording, shows "Saved to your log" for a beat, then saves
@@ -300,7 +311,7 @@
 							class="record-entry"
 							variant="primary"
 							text={gameState.config?.labels?.journalEntrySaveButtonText ?? 'Record Entry'}
-							onclick={() => handleSave()}
+							onclick={recordEntry}
 							testid="journal-save-button"
 						/>
 					{/if}

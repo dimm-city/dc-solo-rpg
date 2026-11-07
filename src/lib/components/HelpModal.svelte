@@ -27,7 +27,7 @@
 	let metRules = $derived(isOpen ? getSeenRuleTips().filter((id) => id in RULE_TIP_SUMMARIES) : []);
 </script>
 
-<ContentModal {isOpen} title="Game Guide" {onClose} footerButtonText="Got it">
+<ContentModal {isOpen} title="Game Guide" {onClose}>
 	<GameGuide extraContents={metRules.length ? [{ id: MET_ID, label: "Rules you've met" }] : []}>
 		{#if metRules.length}
 			<section class="guide-section" aria-labelledby={MET_ID}>

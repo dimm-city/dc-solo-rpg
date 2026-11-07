@@ -1,6 +1,7 @@
 <script>
 	/**
-	 * RuleCaption - shows the current one-time rule caption at the top of the table.
+	 * RuleCaption - shows the current one-time rule caption above the table's title, in the same
+	 * column (GameScreen renders it inside ContextBackground).
 	 *
 	 * `captions` is the useRuleCaptions() instance owned by GameScreen, which also announces
 	 * each caption through the game's single live region (after the result line), so this
@@ -43,19 +44,18 @@
 </div>
 
 <style>
+	/* In the table's context column, above the card line and title (see ContextBackground):
+	   it pushes them rather than covering them (NV-02) */
 	.rule-caption-region {
-		position: absolute;
-		top: var(--space-sm, 8px);
-		left: 0;
-		right: 0;
 		display: flex;
 		justify-content: center;
-		padding-inline: 16px;
+		width: 100%;
 		pointer-events: none;
-		z-index: 5;
 	}
 
 	.rule-caption {
+		margin-bottom: 0.75rem;
+		text-align: left;
 		pointer-events: auto;
 		cursor: pointer;
 		box-sizing: border-box;

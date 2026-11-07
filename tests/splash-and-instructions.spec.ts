@@ -112,7 +112,7 @@ test.describe('Splash and first-time choice', () => {
 		await expect(dialog).toHaveAccessibleName('Game Guide');
 		await expect(dialog.getByRole('heading', { name: 'Lucid and Surreal' })).toBeAttached();
 
-		await dialog.getByRole('button', { name: 'Got it' }).click();
+		await dialog.getByRole('button', { name: 'Done' }).click();
 		await expect(page.getByTestId('home-page')).toBeVisible();
 		expect(await page.evaluate((key) => localStorage.getItem(key), RULE_TIPS_KEY)).toBe('true');
 	});

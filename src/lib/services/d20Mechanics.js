@@ -87,13 +87,13 @@ export function calculateStabilityLoss(roll) {
  * Per Dimm City D20 Module specification
  *
  * @param {number} acesRevealed - Number of Aces revealed (0-4)
- * @returns {number} Minimum roll needed for success (1-20, or 0 for auto-success)
+ * @returns {number} Minimum roll needed for success (1-20, or 0 for no target: four Aces)
  *
  * @example
  * getSalvationThreshold(1) // => 17 (Success on 17-20, ~20% chance)
  * getSalvationThreshold(2) // => 14 (Success on 14-20, ~35% chance)
  * getSalvationThreshold(3) // => 11 (Success on 11-20, ~50% chance)
- * getSalvationThreshold(4) // => 0 (Automatic success)
+ * getSalvationThreshold(4) // => 0 (no target: see calculateAutomaticSalvation)
  */
 export function getSalvationThreshold(acesRevealed) {
 	switch (acesRevealed) {
@@ -104,7 +104,7 @@ export function getSalvationThreshold(acesRevealed) {
 		case 3:
 			return 11; // Success on 11-20 (~50% chance)
 		case 4:
-			return 0; // Automatic success
+			return 0; // No target to beat: one Stability check, then the token comes off
 		default:
 			logger.error(`[getSalvationThreshold] Invalid Aces count: ${acesRevealed}`);
 			return 20; // Impossible if no Aces
@@ -133,12 +133,13 @@ export function getSalvationThreshold(acesRevealed) {
  * calculateSalvationResult(1, 17) // => { tokenChange: 2, gainedLucid: false, gainedSurreal: true }
  */
 export function calculateSalvationResult(roll, threshold) {
-	// Auto-success if 4 Aces (threshold = 0)
+	// 4 Aces (threshold 0): no target, so the token comes off, provided Stability survives the
+	// roll (see calculateAutomaticSalvation). A natural 20 or 1 still makes the player Lucid or Surreal.
 	if (threshold === 0) {
 		return {
 			tokenChange: -1,
-			gainedLucid: false,
-			gainedSurreal: false
+			gainedLucid: roll === 20,
+			gainedSurreal: roll === 1
 		};
 	}
 
@@ -183,4 +184,34 @@ export function calculateSalvationResult(roll, threshold) {
 	// Fallback
 	logger.error(`[calculateSalvationResult] Unexpected roll: ${roll}, threshold: ${threshold}`);
 	return { tokenChange: 0, gainedLucid: false, gainedSurreal: false };
+}
+
+/**
+ * Salvation with all four Aces: there is no target to beat, but the token only comes off
+ * after one Stability check. The roll is read on the Stability table (natural 1: -3 and
+ * Surreal; 2-5: -2; 6-10: -1; 11-19: no loss; natural 20: +1, max 20, and Lucid). If Stability
+ * is still above 0 afterwards, one token comes off; if the roll takes it to 0, the game is lost.
+ *
+ * @param {number} roll - Kept d20 value (1-20)
+ * @param {number} stability - Stability before the roll
+ * @param {number} [max=20] - Stability cap
+ * @returns {{ stabilityLoss: number, stabilityGain: number, stabilityAfter: number,
+ *   tokenChange: number, gainedLucid: boolean, gainedSurreal: boolean }}
+ *   tokenChange is -1, or 0 when Stability collapses
+ *
+ * @example
+ * calculateAutomaticSalvation(14, 12) // => { stabilityLoss: 0, stabilityAfter: 12, tokenChange: -1, ... }
+ * calculateAutomaticSalvation(3, 2)   // => { stabilityLoss: 2, stabilityAfter: 0, tokenChange: 0, ... }
+ */
+export function calculateAutomaticSalvation(roll, stability, max = 20) {
+	const { loss, optionalGain, gainedLucid, gainedSurreal } = calculateStabilityLoss(roll);
+	const stabilityAfter = Math.max(0, Math.min(stability + optionalGain, max) - loss);
+	return {
+		stabilityLoss: loss,
+		stabilityGain: optionalGain,
+		stabilityAfter,
+		tokenChange: stabilityAfter > 0 ? -1 : 0,
+		gainedLucid,
+		gainedSurreal
+	};
 }

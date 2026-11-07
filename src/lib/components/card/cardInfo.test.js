@@ -60,7 +60,7 @@ describe('getMechanicNote', () => {
 		);
 		expect(
 			getMechanicNote(card('A', 'spades', {}, { acesRevealed: 3, aceOfHeartsRevealed: true }))
-		).toBe('Ace · Salvation is now automatic · a Stability check follows');
+		).toBe('Ace · Salvation is now assured · a Stability check follows');
 	});
 
 	it('drops the Stability check for a skip-damage card', () => {

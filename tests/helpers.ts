@@ -97,8 +97,8 @@ export async function playToFirstRound(page: Page) {
 	const initial = page.getByTestId('initial-damage-button');
 	await expect(initial).toHaveAccessibleName('Roll for instability');
 	await pressStep(page, 'initial-damage-button');
-	await expect(initial).toHaveAccessibleName('Continue', { timeout: 30000 });
-	await pressStep(page, 'initial-damage-button');
+	// The result holds for a beat, then round 1 opens by itself (no press: a late one would roll)
+	await expect(page.getByTestId('roll-tasks-button')).toBeVisible({ timeout: 30000 });
 
 	// There is no Begin Round step: round 1 opens on Roll for Tasks, titled "Round 1".
 	// A natural 20 or 1 on the opening roll puts its modifier on this roll button.

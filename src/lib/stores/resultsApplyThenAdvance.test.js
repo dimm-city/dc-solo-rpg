@@ -1,6 +1,7 @@
 /**
- * A check's result is applied after the dice animation (so the HUD updates), but the
- * game only moves on when the player continues.
+ * A check's result is applied after the dice animation (so the HUD updates), and the game
+ * moves on separately: when the result hold runs out, or at once on a press (see the step
+ * composables). An ending reached this way is shown first, then the ending screen.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { gameState } from './gameStore.svelte.js';
@@ -42,7 +43,7 @@ describe('Stability check', () => {
 		expect(gameState.state).toBe('failureCheck');
 	});
 
-	it('moves to the next card only on continue', () => {
+	it('moves to the next card only when advanced', () => {
 		applyPendingDiceRoll({ advance: false });
 		advanceAfterFailureCheck();
 		expect(gameState.state).toBe('drawCard');
@@ -57,7 +58,7 @@ describe('Stability check', () => {
 		expect(gameState.state).toBe('successCheck');
 	});
 
-	it('shows 0 Stability first and ends the game only on continue', () => {
+	it('shows 0 Stability first and ends the game only when advanced', () => {
 		gameState.tower = 2;
 		applyPendingDiceRoll({ advance: false });
 		expect(gameState.tower).toBe(0);
@@ -87,7 +88,7 @@ describe('Salvation check', () => {
 		expect(gameState.state).toBe('log');
 	});
 
-	it('shows the last token gone first, then the ending on continue', () => {
+	it('shows the last token gone first, then the ending when advanced', () => {
 		gameState.tokens = 1;
 		applyPendingSuccessCheck({ advance: false });
 		expect(gameState.tokens).toBe(0);
@@ -99,7 +100,7 @@ describe('Salvation check', () => {
 });
 
 describe('Initial instability roll', () => {
-	it('applies the loss, then starts round 1 on continue', () => {
+	it('applies the loss, then starts round 1 when advanced', () => {
 		resetPending();
 		gameState.state = 'initialDamageRoll';
 		gameState.tower = 20;

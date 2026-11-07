@@ -1,13 +1,15 @@
 /**
  * useFailureCheck - Stability check screen logic composable
  *
- * Two steps on one button:
  * 1. Roll: dice animate ("Rolling…"; a press skips to the result), the result is applied
- *    (the HUD updates) and a result line stays on screen. The button becomes "Continue",
- *    or "Face the end" when the roll took the last of the Stability.
- * 2. Continue: only now does the game move on (next card, Salvation, the journal or the end).
+ *    (the HUD updates) and a result line stays on screen. The button becomes "Continue".
+ * 2. The game moves on by itself after the result hold (next card, Salvation or the journal).
+ *    A press moves on at once.
  *
- * @param {Function} onCompleted - Callback when the check is completed (after Continue)
+ * The fatal roll (Stability reaches 0) does not move on by itself: the button reads
+ * "Face the end" and waits for the player.
+ *
+ * @param {Function} onCompleted - Callback when the check is completed (after it moves on)
  * @returns {Object} Failure check state and actions
  */
 
@@ -24,14 +26,24 @@ import {
 	formatModifierHint,
 	ROLLING_LABEL
 } from '../../utils/rollResult.js';
+import { createResultHold } from './resultHold.svelte.js';
 
 export function useFailureCheck(onCompleted = () => {}) {
 	let failureCheckRolling = $state(false);
 	let failureCheckResult = $state();
 	let failureCheckResultLine = $state('');
+	const hold = createResultHold();
+
+	/** Leave the check (once, and only from this screen) */
+	function advance() {
+		hold.cancel();
+		if (gameState.state !== 'failureCheck' || !failureCheckResult) return;
+		advanceAfterFailureCheck();
+		onCompleted(gameState.state);
+	}
 
 	/**
-	 * Roll the check, skip a roll in flight, or (once rolled) continue to the next step
+	 * Roll the check, skip a roll in flight, or (once rolled) move on now
 	 */
 	async function handleFailureCheck(triggerAutoPlay) {
 		const currentScreen = gameState.state;
@@ -55,7 +67,7 @@ export function useFailureCheck(onCompleted = () => {}) {
 					isSurreal: thrown.wasSurreal,
 					dice: thrown.dice
 				});
-				// Apply the result after the animation, but stay here until the player continues
+				// Apply the result after the animation; the game moves on after the hold
 				applyPendingDiceRoll({ advance: false });
 				failureCheckResultLine = formatStabilityResult(
 					thrown.roll,
@@ -64,6 +76,7 @@ export function useFailureCheck(onCompleted = () => {}) {
 					20,
 					thrown
 				);
+				if (!gameState.gameOver) hold.start(advance);
 			} finally {
 				failureCheckRolling = false;
 			}
@@ -72,8 +85,7 @@ export function useFailureCheck(onCompleted = () => {}) {
 				setTimeout(() => triggerAutoPlay(), 0);
 			}
 		} else {
-			advanceAfterFailureCheck();
-			onCompleted(gameState.state);
+			advance();
 		}
 	}
 
@@ -81,6 +93,7 @@ export function useFailureCheck(onCompleted = () => {}) {
 	 * Reset state when entering screen
 	 */
 	function resetState() {
+		hold.cancel();
 		failureCheckResult = undefined;
 		failureCheckResultLine = '';
 		failureCheckRolling = false;
@@ -118,6 +131,8 @@ export function useFailureCheck(onCompleted = () => {}) {
 		get buttonHint() {
 			return buttonHint;
 		},
+		/** The wait before the game moves on (see createResultHold) */
+		hold,
 
 		// Actions
 		handleFailureCheck,

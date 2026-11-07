@@ -35,6 +35,16 @@ export const ANIMATION_DURATION = {
 	/** The longest any staged sequence may run (1.5s) */
 	SEQUENCE_MAX: 1500,
 
+	/**
+	 * Result hold (2s): how long a roll's result line stays up before the game moves on by
+	 * itself (the deal after Roll for Tasks, a Stability check, Salvation). A reading pause, not
+	 * an animation, so the 1.5s sequence cap does not apply. It is long enough to read the
+	 * longest everyday line ("Rolled 2 · needed 14+ · +1 token · 11 left", 8 words: about 1.6s at
+	 * 300 words a minute, once the eye leaves the dice) and for a screen reader to speak it, and it
+	 * matches auto-play's default delay, so a result holds as long with auto-play on or off.
+	 */
+	RESULT_HOLD: 2000,
+
 	/** Ambient loop period (4s) */
 	AMBIENT: 4000,
 

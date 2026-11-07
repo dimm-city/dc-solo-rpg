@@ -64,15 +64,48 @@ describe('formatSalvationResult', () => {
 		);
 	});
 
-	it('is automatic with four Aces', () => {
-		expect(formatSalvationResult(7, 0, 9)).toBe('Automatic · −1 token · 9 left');
+	describe('with four Aces: a Stability check, then the token', () => {
+		const at = (stabilityBefore) => ({ stabilityBefore });
+
+		it('names what the roll did to Stability, then the token', () => {
+			expect(formatSalvationResult(14, 0, 3, undefined, at(16))).toBe(
+				'Rolled 14 · no Stability lost · −1 token · 3 left'
+			);
+			expect(formatSalvationResult(7, 0, 3, undefined, at(16))).toBe(
+				'Rolled 7 · −1 Stability · −1 token · 3 left'
+			);
+		});
+
+		it('handles natural 20 and natural 1', () => {
+			expect(formatSalvationResult(20, 0, 3, undefined, at(16))).toBe(
+				'Natural 20 · +1 Stability · −1 token · 3 left · Lucid: your next roll keeps the higher of two dice'
+			);
+			expect(formatSalvationResult(20, 0, 3, undefined, at(20))).toBe(
+				'Natural 20 · Stability already full · −1 token · 3 left · Lucid: your next roll keeps the higher of two dice'
+			);
+			expect(formatSalvationResult(1, 0, 3, undefined, at(16))).toBe(
+				'Natural 1 · −3 Stability · −1 token · 3 left · Surreal: your next roll keeps the lower of two dice'
+			);
+		});
+
+		it('names both dice of a two-dice roll', () => {
+			expect(formatSalvationResult(9, 0, 3, { dice: [9, 4], wasLucid: true }, at(16))).toBe(
+				'Rolled 9 (high of 9, 4) · −1 Stability · −1 token · 3 left'
+			);
+		});
+
+		it('the fatal roll keeps the token and says so', () => {
+			expect(formatSalvationResult(3, 0, 4, undefined, at(2))).toBe(
+				'Rolled 3 · −2 Stability · 0/20 · nothing left to hold on to'
+			);
+		});
 	});
 });
 
 describe('formatSalvationButton', () => {
 	it('shows the target before rolling', () => {
 		expect(formatSalvationButton(14)).toBe('Roll to remove a token · need 14+');
-		expect(formatSalvationButton(0)).toBe('Remove a token · automatic');
+		expect(formatSalvationButton(0)).toBe('Roll for Stability · Salvation is assured');
 	});
 });
 

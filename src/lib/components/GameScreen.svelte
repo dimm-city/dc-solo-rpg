@@ -80,24 +80,32 @@
 
 	const SUIT_SYMBOLS = { hearts: '♥', diamonds: '♦', clubs: '♣', spades: '♠' };
 
+	/** "7♠" */
+	const cardName = (card) => `${card.card}${SUIT_SYMBOLS[card.suit] ?? ''}`;
+
 	/** "7♠ · Caught in a toxic gas leak" */
 	function cardLine(card) {
 		if (!card) return null;
-		const name = `${card.card}${SUIT_SYMBOLS[card.suit] ?? ''}`;
+		const name = cardName(card);
 		return card.description ? `${name} · ${card.description}` : name;
 	}
 
-	/** What a modifier card confirmed this round did, while the table shows it */
-	const modifierNotice = $derived(
-		gameState.lastCard?.round === gameState.round
-			? (gameState.lastCard?.modifierResult ?? null)
-			: null
-	);
+	/**
+	 * What a modifier card just did, on the first table screen after it (NV-06): its own
+	 * Stability check, or Salvation when it was the round's last card. Once that step is done
+	 * the notice is gone, so a later screen never reads as if it were the one affected.
+	 */
+	let noticeDoneFor = $state(null);
+	const modifierNotice = $derived.by(() => {
+		const card = gameState.lastCard;
+		if (!card?.modifierResult || card.round !== gameState.round) return null;
+		return card.id !== undefined && card.id === noticeDoneFor ? null : card.modifierResult;
+	});
 
 	function salvationDescription() {
 		const need = getCurrentSalvationThreshold();
 		return need === 0
-			? 'All four Aces are out. Salvation is automatic: one token comes off.'
+			? 'All four Aces are out. No target to beat now: survive one Stability check and a token comes off.'
 			: `Roll to remove a token. You need ${need}+.`;
 	}
 
@@ -124,10 +132,11 @@
 					notice: modifierNotice
 				};
 			case 'successCheck':
+				// Name the card: the notice is about it, not about this roll
 				return {
 					title: 'Salvation',
 					description: salvationDescription(),
-					notice: modifierNotice
+					notice: modifierNotice ? `${cardName(gameState.lastCard)} · ${modifierNotice}` : null
 				};
 			default:
 				return null; // Card, journal and ending screens have no background text
@@ -197,10 +206,33 @@
 			hint: s.composable.buttonHint,
 			busy: s.composable.rolling,
 			disabled: s.disabled ?? false,
+			hold: s.composable.hold,
 			testid: s.testid,
 			run: s.run
 		};
 	});
+
+	// A result moves on by itself after a beat (the result hold). While a dialog covers the
+	// table, or the tab is hidden, the hold waits, so nothing moves on unseen.
+	const stepComposables = [initialDamage, rollForTasks, failureCheck, successCheck];
+	let pageHidden = $state(false);
+	const holdPaused = $derived(showExitModal || showSettingsModal || showHelpModal || pageHidden);
+	$effect(() => {
+		const paused = holdPaused;
+		untrack(() => {
+			for (const composable of stepComposables) {
+				if (paused) composable.hold.pause();
+				else composable.hold.resume();
+			}
+		});
+	});
+	function onVisibilityChange() {
+		pageHidden = document.hidden;
+	}
+
+	function cancelHolds() {
+		for (const composable of stepComposables) composable.hold.cancel();
+	}
 
 	// LS-06: when the button changes meaning (Roll → Rolling… → Continue), hold presses off
 	// briefly and highlight it, so a press meant for the old button never lands on the new one
@@ -349,7 +381,7 @@
 		showExitModal = false;
 		leaving = true;
 		cancelAutoPlay();
-		rollForTasks.cancelDeal();
+		cancelHolds();
 
 		const current = stepFor(currentScreen);
 		if (current?.composable.rolling) {
@@ -470,12 +502,14 @@
 
 	onMount(() => {
 		window.addEventListener('keydown', handleKeyPress);
+		document.addEventListener('visibilitychange', onVisibilityChange);
 
 		return () => {
 			window.removeEventListener('keydown', handleKeyPress);
+			document.removeEventListener('visibilitychange', onVisibilityChange);
 			leaving = true;
 			cancelAutoPlay();
-			rollForTasks.cancelDeal();
+			cancelHolds();
 			announcer.clear();
 			clearTimeout(drawTimer);
 			clearTimeout(stepChangedTimer);
@@ -520,14 +554,22 @@
 	$effect(() => {
 		// Only run when screen actually changes
 		if (currentScreen !== lastScreen) {
+			const left = lastScreen;
 			lastScreen = currentScreen;
 			const screen = currentScreen;
 
 			untrack(() => {
 				// Cancel previous screen's auto-play
 				cancelAutoPlay();
-				// Reset the step's roll state at once, so the button never shows the last visit's label
-				resetStep(screen);
+				// NV-04: clear the step just left, so its next visit starts clean. Reset on entry
+				// came after the first render, which showed (and announced) the last visit's result.
+				resetStep(left);
+				// NV-06: a modifier's notice belongs to the first table screen after its card
+				if ((left === 'failureCheck' || left === 'successCheck') && modifierNotice) {
+					noticeDoneFor = gameState.lastCard?.id;
+				}
+				// A game saved mid-roll resumes on that roll's result
+				if (screen === 'successCheck') successCheck.resumePending();
 			});
 
 			// Handle screen-specific entry logic (delay to next tick)
@@ -550,8 +592,6 @@
 				break;
 			case 'successCheck':
 				successCheck.resetState();
-				// A game saved mid-roll resumes on that roll's result
-				successCheck.resumePending();
 				break;
 		}
 	}
@@ -642,11 +682,12 @@
 						initialDamage.handleInitialDamageRoll(triggerAutoPlayForCurrentScreen)
 					);
 				}
-				// Auto-continue after result if enabled
+				// Auto-continue after a result that does not move on by itself
 				else if (
 					gameplaySettings.autoContinueAfterReading &&
 					initialDamage.result !== undefined &&
-					!initialDamage.rolling
+					!initialDamage.rolling &&
+					!initialDamage.hold.active
 				) {
 					autoPlayCanceller = autoAdvance({
 						text: null,
@@ -691,11 +732,12 @@
 						failureCheck.handleFailureCheck(triggerAutoPlayForCurrentScreen)
 					);
 				}
-				// Auto-continue after result if enabled
+				// Auto-continue after a result that does not move on by itself (the fatal roll)
 				else if (
 					gameplaySettings.autoContinueAfterReading &&
 					failureCheck.result !== undefined &&
-					!failureCheck.rolling
+					!failureCheck.rolling &&
+					!failureCheck.hold.active
 				) {
 					autoPlayCanceller = autoAdvance({
 						text: null,
@@ -721,11 +763,12 @@
 						successCheck.handleSuccessCheck(triggerAutoPlayForCurrentScreen)
 					);
 				}
-				// Auto-continue after result if enabled
+				// Auto-continue after a result that does not move on by itself (an ending)
 				else if (
 					gameplaySettings.autoContinueAfterReading &&
 					successCheck.result !== undefined &&
-					!successCheck.rolling
+					!successCheck.rolling &&
+					!successCheck.hold.active
 				) {
 					autoPlayCanceller = autoAdvance({
 						text: null,
@@ -783,8 +826,10 @@
 			<!-- svelte-ignore a11y_click_events_have_key_events -->
 			<!-- svelte-ignore a11y_no_static_element_interactions -->
 			<div class="main-screen-area dc-table-bg" onclick={handleScreenClick}>
-				<!-- Background contextual text -->
-				<ContextBackground {contextText} {resultLine} />
+				<!-- Background contextual text, with the rule caption above it in the same column -->
+				<ContextBackground {contextText} {resultLine}>
+					<RuleCaption {captions} />
+				</ContextBackground>
 
 				{#key currentScreen}
 					{#if currentScreen == 'drawCard'}
@@ -823,12 +868,14 @@
 							busy={step.busy}
 							disabled={step.disabled}
 							changed={stepChanged}
+							advancing={step.hold.active}
+							advanceProgress={step.hold.progress}
+							advancePaused={step.hold.paused}
 							testid={step.testid}
 							onclick={runStep}
 						/>
 					</div>
 				{/if}
-				<RuleCaption {captions} />
 			</div>
 		</div>
 
@@ -1054,16 +1101,24 @@
 			0 0 40px rgba(0, 255, 255, 0.3);
 	}
 
+	/* MN-07: section headings under 28px are the UI face (Inter 600, uppercase), not the
+	   display face, which misreads at small sizes */
+	.intro-story-container .content :global(:is(h2, h3)) {
+		font-family: var(--font-ui, var(--font-body));
+		font-weight: var(--font-ui-weight, 600);
+		letter-spacing: var(--tracking-ui, 0.08em);
+		text-transform: uppercase;
+		margin-bottom: var(--space-xs);
+	}
+
 	.intro-story-container .content :global(h2) {
 		font-size: var(--text-xl);
 		margin-top: var(--space-lg);
-		margin-bottom: var(--space-xs);
 	}
 
 	.intro-story-container .content :global(h3) {
 		font-size: var(--text-lg);
 		margin-top: var(--space-md);
-		margin-bottom: var(--space-xs);
 	}
 
 	.intro-story-container .content :global(p) {
@@ -1195,8 +1250,9 @@
 			padding-inline: 0.5rem;
 		}
 
+		/* 28px and up: the display face's floor (NV-05) */
 		.main-screen-area :global(.context-title) {
-			font-size: clamp(1.25rem, 8vh, 2.25rem);
+			font-size: clamp(1.75rem, 8vh, 2.25rem);
 			margin-bottom: 0.375rem;
 		}
 
@@ -1215,6 +1271,13 @@
 		.intro-story-container {
 			flex-direction: row;
 			align-items: center;
+		}
+
+		/* NV-01: the text takes the full height and scrolls; only the button is centred. Centred
+		   itself, a text area taller than the screen overflowed above it, out of reach. (The
+		   column inside still centres with margin-block: auto, which never pushes it off.) */
+		.intro-scroll-area {
+			align-self: stretch;
 		}
 
 		.intro-story-container > :global(.button-bar) {

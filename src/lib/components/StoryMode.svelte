@@ -23,9 +23,9 @@
 	import { ANIMATION_DURATION } from '$lib/constants/animations.js';
 
 	/** Incoming round: slide 16px from its side */
-	const ROUND_ENTER_MS = ANIMATION_DURATION.NORMAL;
-	/** Outgoing round: a quicker fade, so the two never read as a blank swap (SM-05) */
-	const ROUND_EXIT_MS = 120;
+	const ROUND_ENTER_MS = ANIMATION_DURATION.ENTER;
+	/** Outgoing round: a quicker fade (a 120ms state change), so the two never read as a blank swap (SM-05) */
+	const ROUND_EXIT_MS = ANIMATION_DURATION.STATE;
 	const ROUND_SHIFT_PX = 16;
 
 	let {

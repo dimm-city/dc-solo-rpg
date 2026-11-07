@@ -1,10 +1,10 @@
 /**
  * useInitialDamage - Initial instability roll composable
  *
- * Two steps on one button:
  * 1. Roll: dice animate ("Rolling…"; a press skips to the result), Stability updates and a
  *    result line stays on screen. The button becomes "Continue".
- * 2. Continue: only now does the first round start.
+ * 2. The first round starts by itself after the result hold, like every other roll's result.
+ *    A press starts it at once.
  *
  * @returns {Object} Initial damage state and actions
  */
@@ -21,14 +21,23 @@ import {
 	formatModifierHint,
 	ROLLING_LABEL
 } from '../../utils/rollResult.js';
+import { createResultHold } from './resultHold.svelte.js';
 
 export function useInitialDamage() {
 	let initialDamageRolling = $state(false);
 	let initialDamageResult = $state();
 	let initialDamageResultLine = $state('');
+	const hold = createResultHold();
+
+	/** Start round 1 (once, and only from this screen) */
+	function advance() {
+		hold.cancel();
+		if (gameState.state !== 'initialDamageRoll' || initialDamageResult === undefined) return;
+		advanceAfterInitialDamage();
+	}
 
 	/**
-	 * Roll the initial instability, skip a roll in flight, or (once rolled) continue to round 1
+	 * Roll the initial instability, skip a roll in flight, or (once rolled) start round 1 now
 	 */
 	async function handleInitialDamageRoll(triggerAutoPlay) {
 		if (gameState.state !== 'initialDamageRoll') return;
@@ -38,7 +47,7 @@ export function useInitialDamage() {
 		}
 
 		if (initialDamageResult !== undefined) {
-			advanceAfterInitialDamage();
+			advance();
 			return;
 		}
 
@@ -53,7 +62,7 @@ export function useInitialDamage() {
 				isSurreal: thrown.wasSurreal,
 				dice: thrown.dice
 			});
-			// Apply after animation, but stay here until the player continues
+			// Apply after animation; round 1 starts after the hold
 			applyPendingInitialDamageRoll({ advance: false });
 			initialDamageResultLine = formatStabilityResult(
 				thrown.roll,
@@ -62,6 +71,7 @@ export function useInitialDamage() {
 				20,
 				thrown
 			);
+			if (!gameState.gameOver) hold.start(advance);
 		} finally {
 			initialDamageRolling = false;
 		}
@@ -75,6 +85,7 @@ export function useInitialDamage() {
 	 * Reset state when entering screen
 	 */
 	function resetState() {
+		hold.cancel();
 		initialDamageResult = undefined;
 		initialDamageResultLine = '';
 		initialDamageRolling = false;
@@ -112,6 +123,8 @@ export function useInitialDamage() {
 		get buttonHint() {
 			return buttonHint;
 		},
+		/** The wait before round 1 starts (see createResultHold) */
+		hold,
 
 		// Actions
 		handleInitialDamageRoll,

@@ -36,7 +36,7 @@
 		{ aces: '1 Ace', target: 'Roll 17 or higher' },
 		{ aces: '2 Aces', target: 'Roll 14 or higher' },
 		{ aces: '3 Aces', target: 'Roll 11 or higher' },
-		{ aces: '4 Aces', target: 'Automatic success' }
+		{ aces: '4 Aces', target: 'No target: a Stability check' }
 	];
 
 	const sections = [
@@ -175,7 +175,8 @@
 		</p>
 		<p>
 			Lucid: your next roll uses two d20s and keeps the higher. Surreal: your next roll uses two
-			d20s and keeps the lower.
+			d20s and keeps the lower. Only the die you keep counts, so only it can make you Lucid or
+			Surreal.
 		</p>
 		<p>
 			The state is used up by your next roll, whichever roll that is. You are only ever one of the
@@ -204,6 +205,11 @@
 		<p>
 			Meeting the target removes 1 Token; missing it adds 1. A natural 20 removes 2 Tokens, and a
 			natural 1 adds 2.
+		</p>
+		<p>
+			With all four Aces there is no target. The roll is a Stability check instead, read on the
+			Stability table: if you still have Stability after it, 1 Token comes off. If it takes your
+			last Stability, you fall.
 		</p>
 		<p>On Easy, the Ace of Hearts starts revealed, so Salvation is open from the first round.</p>
 	</section>

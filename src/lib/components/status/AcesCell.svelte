@@ -4,9 +4,10 @@
 	 *
 	 * The pips read ♥ ♠ ♦ ♣ and light as each Ace is drawn. The Ace of Hearts is the gold one:
 	 * it unlocks Salvation (the Tokens cell beside it). Every Ace lowers the Salvation roll:
-	 * 17+ with one, 14+ with two, 11+ with three, and automatic with all four. That threshold
-	 * is in the cell's tooltip and its spoken text. The count includes an Ace that is on
-	 * screen but not yet confirmed; a new Ace pops the count and ignites its pip for one beat.
+	 * 17+ with one, 14+ with two, 11+ with three, and no target with all four (a Stability check,
+	 * then the token comes off). That threshold is in the cell's tooltip and its spoken text. The
+	 * count includes an Ace that is on screen but not yet confirmed; a new Ace pops the count and
+	 * ignites its pip for one beat.
 	 *
 	 * @component
 	 */
@@ -29,7 +30,7 @@
 	const litSuits = $derived(suits.filter((pip) => pip.lit).map((pip) => pip.suit));
 	const need = $derived(
 		aces.need === 'auto'
-			? 'Salvation succeeds automatically'
+			? 'Salvation needs only a Stability check'
 			: aces.need
 				? `Salvation needs ${aces.need.replace('+', '')} or more`
 				: 'no Salvation roll yet'
@@ -39,7 +40,7 @@
 	);
 	const tooltip = $derived(
 		aces.need === 'auto'
-			? 'All four Aces: Salvation is automatic'
+			? 'All four Aces: Salvation needs only a Stability check'
 			: aces.need
 				? `Salvation needs ${aces.need}`
 				: 'Each Ace makes Salvation easier'

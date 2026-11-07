@@ -102,7 +102,7 @@ export function createRuleCaptions({ isDisabled = () => false, onSeen = markRule
 					'ace',
 					need > 0
 						? `Each Ace makes salvation easier. You now need ${need}+.`
-						: 'Each Ace makes salvation easier. With all four, it is automatic.'
+						: 'Each Ace makes salvation easier. With all four, only a Stability check stands in the way.'
 				);
 			}
 		}

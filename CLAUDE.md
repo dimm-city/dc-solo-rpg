@@ -178,11 +178,10 @@ lose-message: Defeat message
 
 - `Game.svelte` - Root game component, handles lifecycle
 - `GameSelector.svelte` - Game selection interface
-- `GameScreen.svelte` - Main game play screen
-- `IntroScreen.svelte` - Game introduction
-- `CardDeck.svelte` - Card drawing interface
+- `GameScreen.svelte` - Main game play screen: the intro, the table and the one step button (`game/StepAction.svelte`)
+- `CardDeck.svelte` - Card drawing interface (the card itself is `card/CardDisplay.svelte`)
 - `StatusDisplay.svelte` - In-game header plus the one-row HUD (`status/StatusHUD.svelte`)
-- `ThreeJSDiceBoxRoller.svelte` - 3D dice rolling (uses @3d-dice/dice-box-threejs)
+- 3D dice: `stores/diceStore.svelte.js` (uses @3d-dice/dice-box-threejs), shown in the dice container in `src/routes/+layout.svelte`
 
 **Component Pattern:**
 
@@ -245,6 +244,7 @@ The game uses a **D20 dice system** inspired by Wretched and Alone mechanics but
 - **Standard Roll**: 1d20 for all checks
 - **Lucid State (Advantage)**: Roll 2d20, keep highest. Triggered by a natural 20 on any d20 roll (the opening instability roll, Roll for Tasks, a Stability check or Salvation).
 - **Surreal State (Disadvantage)**: Roll 2d20, keep lowest. Triggered by a natural 1 on any d20 roll.
+- On 2d20, only the kept die counts as a natural 20 or 1.
 - The modifier applies to, and is used up by, the next roll, whichever roll that is. The two never stack, and a new game starts with neither.
 
 ### Salvation System (Win Condition)
@@ -254,9 +254,9 @@ Drawing the Ace of Hearts unlocks Salvation checks. Each subsequent Ace improves
 - **1 Ace**: Roll ≥17 to remove 1 token (20% success, 5% chance)
 - **2 Aces**: Roll ≥14 to remove 1 token (35% success)
 - **3 Aces**: Roll ≥11 to remove 1 token (50% success)
-- **4 Aces**: Automatic success (100% success)
+- **4 Aces**: Automatic success after one Stability check. The roll (any Lucid or Surreal applies and is used up) is read on the Stability table; if Stability is still above 0 the token comes off (−1), and if it reaches 0 the game is lost by Stability (`calculateAutomaticSalvation`)
 
-**Graduated Token Changes:**
+**Graduated Token Changes** (1 to 3 Aces):
 
 - Natural 1: +2 tokens (critical failure)
 - Below threshold: +1 token (failure)
@@ -494,6 +494,7 @@ describe('My Feature', () => {
 | `BEAT`                    | `--dur-beat`           | 400ms   | A held moment (King ignite, unlock) |
 | `SEQUENCE_MAX`            | `--dur-sequence-max`   | 1.5s    | Longest staged sequence             |
 | `AMBIENT`, `AMBIENT_SLOW` | `--dur-ambient(-slow)` | 4s / 8s | The only ambient loop periods       |
+| `RESULT_HOLD`             | (none)                 | 2s      | A result holds, then moves on       |
 
 ```javascript
 import { ANIMATION_DURATION, ANIMATION_EASING, Z_INDEX } from '$lib/constants/animations.js';
@@ -521,27 +522,25 @@ transition: transform var(--dur-state) var(--ease-enter); /* 120ms state change 
 **Solution:** Async/await pattern for smooth sequencing
 
 ```javascript
-async function onDismiss() {
+async function handleDismiss() {
 	if (animationStage !== 'revealed') return;
 
-	// 1. Start dismiss animation (600ms)
+	// 1. The card lifts away (220ms; instant under reduced motion)
 	animationStage = 'dismissing';
-	await sleep(ANIMATION_DURATION.CARD_DISMISS);
+	await sleep(reducedMotion() ? 0 : DISMISS_MS);
 
-	// 2. Reset card state FIRST
+	// 2. Notify the parent (the state transition), then reset the card
+	onconfirmcard();
 	animationStage = 'idle';
-	particles = [];
 	card = null;
 
-	// 3. Small pause for visual clarity (100ms)
-	await sleep(100);
-
-	// 4. NOW notify parent - triggers state transition
-	onconfirmcard();
+	// 3. More cards this round: the next one is drawn 100ms later (card to card in ~600ms)
+	triggerAutoDrawIfNeeded();
 }
 ```
 
-**Key Principle:** Complete visual animation → Reset state → Brief pause → Trigger next state
+**Key Principle:** Complete visual animation → Trigger next state → Reset → Brief pause before the next item.
+`ANIMATION_DURATION.CARD_DISMISS` (600ms) is an older name the card no longer uses.
 
 **Applies to:**
 
@@ -602,33 +601,33 @@ Standard 200ms modal with fog overlay, used project-wide:
 
 **Performance:** Modal opening went from feeling sluggish to instant (4.83/5 → 5.0/5 rating)
 
-### Crossfade Transition Pattern
+### Directional Slide Pattern
 
 **File:** `src/lib/components/StoryMode.svelte`
 
-Smooth navigation between rounds using Svelte's crossfade:
+Moving between rounds, the incoming round slides 16px in from the side it comes from (200ms,
+`ANIMATION_DURATION.ENTER`, cubic out) while the outgoing one fades in 120ms (`STATE`), so the
+swap never reads as a blank. Under reduced motion both are instant.
 
 ```javascript
-import { crossfade } from 'svelte/transition';
-import { cubicOut } from 'svelte/easing';
-
-const [send, receive] = crossfade({
-	duration: ANIMATION_DURATION.ROUND_TRANSITION, // 300ms
-	easing: cubicOut
-});
+function roundIn(_node, { direction }) {
+	if (reducedMotion()) return { duration: 0 };
+	return {
+		duration: ANIMATION_DURATION.ENTER,
+		easing: cubicOut,
+		css: (t, u) => `opacity: ${t}; transform: translateX(${u * 16 * direction}px);`
+	};
+}
 ```
 
 ```svelte
-<div
-	class="round-wrapper"
-	in:receive={{ key: currentRoundIndex }}
-	out:send={{ key: currentRoundIndex }}
->
-	<!-- Round content -->
-</div>
+{#key nav.currentRoundIndex}
+	<div in:roundIn={{ direction: nav.direction }} out:roundOut><!-- Round content --></div>
+{/key}
 ```
 
-**Key Principle:** Use crossfade for navigating between similar content items (rounds, tabs, etc.)
+**Key Principle:** Direction tells the reader where they are going; keep the exit shorter than the
+entrance. (`ANIMATION_DURATION.ROUND_TRANSITION` is an older name, kept for compatibility.)
 
 ### Animation Design Principles
 
