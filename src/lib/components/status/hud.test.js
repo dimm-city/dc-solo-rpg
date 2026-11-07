@@ -369,8 +369,12 @@ describe('AcesCell', () => {
 		gameState.log = ['hearts', 'spades', 'diamonds', 'clubs'].map(ace);
 		const second = render(AcesCell);
 		cell = second.getByTestId('hud-aces');
-		expect(cell.getAttribute('title')).toBe('All four Aces: Salvation is automatic');
-		expect(text(cell.querySelector('.sr-only'))).toContain('Salvation succeeds automatically');
+		expect(cell.getAttribute('title')).toBe(
+			'All four Aces: Salvation needs only a Stability check'
+		);
+		expect(text(cell.querySelector('.sr-only'))).toContain(
+			'Salvation needs only a Stability check'
+		);
 		expect(lit(cell)).toEqual(['hearts', 'spades', 'diamonds', 'clubs']);
 	});
 

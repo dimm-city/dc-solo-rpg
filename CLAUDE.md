@@ -548,31 +548,34 @@ async function handleDismiss() {
 - Modal transitions
 - State changes requiring smooth hand-off
 
-### Z-Index Choreography Pattern
+### Z-Index Choreography Pattern (dice)
 
-**Problem:** Dice fade-out causing visual "popping"
-**Solution:** Delayed z-index transition
+**Goal:** dice are thrown on top of everything, then sink beneath the board once they land.
 
 ```css
-.dice-container:not(.rolling):not(.hidden) {
-	z-index: 9999; /* Keep high during fade */
+.dice-container.rolling {
+	z-index: 1000; /* above the header, HUD, title and button; dialogs and menus stay above */
+}
+.dice-container {
+	z-index: -10; /* behind the page content the moment the sink starts */
 	opacity: 0;
-	transform: scale(0.9);
-	filter: brightness(1) blur(0px);
+	transform: translateY(var(--rise-enter)) scale(0.9);
+	filter: brightness(0.3);
+	/* No z-index in the transition list: it drops at once, then the dice sink and darken */
 	transition:
-		opacity 250ms ease-out,
-		transform 250ms ease-out,
-		filter 250ms ease-out,
-		z-index 0s 250ms; /* Delay z-index drop until after fade */
+		transform var(--dur-dice-sink) ease-in,
+		filter var(--dur-dice-sink) ease-in,
+		opacity var(--dur-dice-sink) var(--ease-exit);
 }
 ```
 
-**Key Principle:** `transition: z-index 0s <duration>` delays z-index change until visual animation completes
+**Key Principle:** drop the z-index first, then animate. The HUD, title, button and result line
+are in front of the dice for the whole sink, so the result line is never covered. Under reduced
+motion there is no throw (the number shows in a d20 outline) and the sink is a plain fade.
 
 **Applies to:**
 
-- Dice fade-out (+layout.svelte)
-- Any layered element that needs to fade while maintaining z-order
+- Dice (`src/routes/+layout.svelte`, `diceStore.rollDice`)
 
 ### OverlayModal Reusable Pattern
 
