@@ -236,8 +236,8 @@ The game uses a **D20 dice system** inspired by Wretched and Alone mechanics but
 ### Core Resources
 
 - **Stability**: 20 points (your life). Reaches 0 = instant loss.
-- **Tokens**: Start with 10. Remove all to win.
-- **Aces Revealed**: 0-4. Determines Salvation success threshold.
+- **Tokens**: Start with 10. Remove all to win. On Normal they only ever fall.
+- **Aces Revealed**: 0-4. Determines Salvation success threshold; on Normal the fourth Ace ends the game.
 
 ### D20 Rolling Mechanics
 
@@ -251,17 +251,29 @@ The game uses a **D20 dice system** inspired by Wretched and Alone mechanics but
 
 Drawing the Ace of Hearts unlocks Salvation checks. Each subsequent Ace improves success rate:
 
-- **1 Ace**: Roll ≥17 to remove 1 token (20% success, 5% chance)
+- **1 Ace**: Roll ≥17 to remove 1 token (20% success)
 - **2 Aces**: Roll ≥14 to remove 1 token (35% success)
 - **3 Aces**: Roll ≥11 to remove 1 token (50% success)
-- **4 Aces**: Automatic success after one Stability check. The roll (any Lucid or Surreal applies and is used up) is read on the Stability table; if Stability is still above 0 the token comes off (−1), and if it reaches 0 the game is lost by Stability (`calculateAutomaticSalvation`)
+- **4 Aces**: On Normal (and Easy) there is no Salvation roll: **the fourth Ace ends the game**. Being odd it calls for a Stability check like any Ace, and that check is the last roll of the game (`isFinalStabilityCheck`): any Lucid or Surreal applies and is used up; if Stability is still above 0 afterwards the game is won, whatever tokens remain; if it reaches 0 the game is lost by Stability. A fourth Ace with `skip-damage` skips the check and wins outright. On Hard, Salvation goes on: there is no target, each check is a Stability check and the token comes off if Stability holds (`calculateAutomaticSalvation`).
 
-**Graduated Token Changes** (1 to 3 Aces):
+**Token Changes** (1 to 3 Aces; `calculateSalvationResult(roll, threshold, { hard })`):
 
-- Natural 1: +2 tokens (critical failure)
-- Below threshold: +1 token (failure)
+- Natural 20: -2 tokens (critical success), Lucid
 - At/above threshold: -1 token (success)
-- Natural 20: -2 tokens (critical success)
+- Below threshold: no change on Normal; +1 token on Hard
+- Natural 1: a miss, Surreal; no change on Normal; +2 tokens on Hard
+
+So on Normal tokens only ever fall and can never rise above the starting count.
+
+### Difficulty
+
+`difficulty` is 0 = Easy, 1 = Normal, 2 = Hard (`src/lib/constants/difficulty.js`; `isHardGame(gameState)` gates the Hard rules).
+
+- **Easy**: the Normal rules, with the Ace of Hearts revealed (and out of the deck) from the start.
+- **Normal**: tokens only ever fall, and the fourth Ace ends the game (see above).
+- **Hard**: a missed Salvation roll adds tokens (+1, or +2 on a natural 1), and the fourth Ace does not end the game: with four Aces each Salvation is a Stability check, then -1 token if Stability holds. Winning means clearing every token.
+
+Win rates (Monte Carlo through the real actions, see `docs/d20-mechanics-guide.md` 7.3): Normal and Easy are well above the SRD's <1%; Hard is the <1% ruleset.
 
 ### Card Types
 
@@ -278,6 +290,7 @@ Drawing the Ace of Hearts unlocks Salvation checks. Each subsequent Ace improves
    - Reflective moments, emotional beats
    - Each Ace improves Salvation threshold
    - Aces are odd ranks, so every Ace (Ace of Hearts included) triggers a Stability check, unless a Narrative card carries `skip-damage`
+   - The fourth Ace (whichever suit comes last) ends the game on Normal and Easy: survive its Stability check and the game is won (the ending's cause line reads "The fourth Ace was revealed."); on Hard it only removes the Salvation target
    - Optional special modifiers (skip-damage, return-king)
 
 4. **Challenge** - Ranks 3, 5, 7, 9 - 16 cards
@@ -336,14 +349,14 @@ resetRNG();
   introduction: { /* markdown sections */ },
   deck: [ /* 52 card objects */ ],
   options: {
-    difficulty: 0, // 0 = easy (Ace of Hearts pre-revealed), 1 = normal; author default (frontmatter), overridable by the player
+    difficulty: 0, // 0 = easy (Ace of Hearts pre-revealed), 1 = normal, 2 = hard; author default (frontmatter), overridable by the player
     startingTokens: 10, // Number of tokens to start with
     diceTheme: "pinkdreams"  // Dice theme (user can change in settings)
   }
 }
 ```
 
-**Note:** Difficulty has an author default (`difficulty: easy|normal` in the `.game.md` frontmatter, Normal if absent) and a player override ("Game default", "Normal" or "Easy" in the settings modal). Precedence: frontmatter < player setting < explicit `options` passed to `startGame`. Users can also change dice theme.
+**Note:** Difficulty has an author default (`difficulty: easy|normal|hard` in the `.game.md` frontmatter, Normal if absent) and a player override ("Game default", "Normal", "Easy" or "Hard" in the settings modal). Precedence: frontmatter < player setting < explicit `options` passed to `startGame`. Users can also change dice theme.
 
 **Card Object:**
 
