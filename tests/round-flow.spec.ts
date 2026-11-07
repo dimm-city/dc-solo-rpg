@@ -159,7 +159,7 @@ test.describe('Round flow', () => {
 		await openGame(page);
 		await playToFirstRound(page);
 		await page.getByRole('button', { name: 'Exit game' }).click();
-		await page.getByRole('button', { name: 'Leave' }).click();
+		await page.getByRole('button', { name: 'Leave', exact: true }).click();
 		await expect(page.getByTestId('home-page')).toBeVisible();
 
 		// The game's page rules are gone: the home's scroller scrolls again
