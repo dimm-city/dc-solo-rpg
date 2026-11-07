@@ -1,6 +1,6 @@
 // The card overlay: a drawn card fills most of the viewport, says what it does, can be read
 // by a screen reader and continued from the keyboard; the journal lists the round's cards with
-// no prompts and keeps its voice note on the footer row.
+// no prompts, keeps its voice note on the footer row and tabs voice note, entry, Record Entry.
 //
 // The deck is stacked through the app's own store module (dev server), so each test draws a
 // known card without playing rounds to reach it.
@@ -162,16 +162,57 @@ test.describe('Card overlay', () => {
 		await expect(page.getByTestId('screen-failureCheck')).toBeVisible();
 	});
 
+	test('the journal focuses the entry on desktop only, and tabs voice note, entry, Record Entry', async ({
+		page,
+		hasTouch
+	}) => {
+		const card = await dealCards(page, ['4:hearts'], 'g.aceOfHeartsRevealed = false;');
+		await card.press('Enter');
+		const sheet = page.locator('.journal-sheet');
+		const entry = sheet.locator('textarea');
+		await expect(entry).toBeVisible();
+
+		// Desktop: the page is ready to write on. Touch devices: no focus, so the on-screen
+		// keyboard does not open by itself over the sheet (owner decision).
+		if (hasTouch) {
+			await expect(entry).not.toBeFocused();
+			await expect(page.getByRole('dialog', { name: 'Journal entry' })).toBeFocused();
+		} else {
+			await expect(entry).toBeFocused();
+		}
+
+		// Tab order on every device: Voice note, the entry, Record Entry (DOM order, no tabindex)
+		await entry.focus();
+		await page.keyboard.press('Tab');
+		await expect(sheet.getByTestId('journal-save-button')).toBeFocused();
+		await entry.focus();
+		await page.keyboard.press('Shift+Tab');
+		await expect(sheet.getByTestId('journal-voice-toggle')).toBeFocused();
+		await expect(sheet.locator('[tabindex]:not([tabindex="-1"])')).toHaveCount(0);
+	});
+
 	test('the journal keeps the voice note on its footer row, beside Record Entry', async ({
 		page
 	}) => {
 		const card = await dealCards(page, ['4:hearts'], 'g.aceOfHeartsRevealed = false;');
 		await card.press('Enter');
 
-		const footer = page.locator('.sheet-actions');
-		await expect(footer.getByTestId('journal-voice-toggle')).toBeVisible();
-		await expect(footer.getByTestId('journal-save-button')).toBeVisible();
-		await expect(page.locator('.sheet-body').getByTestId('voice-note')).toHaveCount(0);
+		const sheet = page.locator('.journal-sheet');
+		const voice = sheet.getByTestId('journal-voice-toggle');
+		const save = sheet.getByTestId('journal-save-button');
+		await expect(voice).toBeVisible();
+		await expect(save).toBeVisible();
+
+		// One row under the entry: the voice note on the left, Record Entry on the right
+		const [voiceBox, saveBox, entryBox] = await Promise.all(
+			[voice, save, sheet.locator('textarea')].map((l) => l.boundingBox())
+		);
+		expect(voiceBox!.y).toBeGreaterThanOrEqual(entryBox!.y + entryBox!.height);
+		expect(
+			Math.abs(voiceBox!.y + voiceBox!.height / 2 - (saveBox!.y + saveBox!.height / 2))
+		).toBeLessThan(8);
+		expect(voiceBox!.x + voiceBox!.width).toBeLessThanOrEqual(saveBox!.x);
+		await expect(sheet.locator('.voice-slot')).toHaveCount(1);
 	});
 
 	test('the journal lists every card of the round, with no prompts; on phones a long list scrolls inside itself', async ({
@@ -206,11 +247,17 @@ test.describe('Card overlay', () => {
 			expect(list.scroll).toBeLessThanOrEqual(list.client + 1);
 			for (const item of await items.all()) await expect(item).toBeInViewport();
 		}
-		// The sheet body itself has no reason to scroll
-		const body = await sheet
-			.locator('.sheet-body')
-			.evaluate((el) => el.scrollHeight - el.clientHeight);
-		expect(body).toBeLessThanOrEqual(1);
+		// The sheet itself never scrolls: every part of it sits inside its box
+		const overflow = await sheet.evaluate((el) => {
+			const box = el.getBoundingClientRect();
+			const pad = parseFloat(getComputedStyle(el).paddingBottom);
+			return Math.max(
+				...[...el.children].map(
+					(child) => child.getBoundingClientRect().bottom - (box.bottom - pad)
+				)
+			);
+		});
+		expect(overflow).toBeLessThanOrEqual(1);
 
 		// The writing keeps at least four lines, and Record Entry stays on screen
 		const lines = await sheet.locator('textarea').evaluate((el) => {
