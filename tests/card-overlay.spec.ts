@@ -174,7 +174,7 @@ test.describe('Card overlay', () => {
 		await expect(page.locator('.sheet-body').getByTestId('voice-note')).toHaveCount(0);
 	});
 
-	test('the journal lists every card of the round, with no prompts and no inner scroller', async ({
+	test('the journal lists every card of the round, with no prompts; on phones a long list scrolls inside itself', async ({
 		page
 	}) => {
 		const sheet = await openJournal(page, ['7', '4', 'K', 'J', '9', '2']);
@@ -187,14 +187,30 @@ test.describe('Card overlay', () => {
 			'Write about this round'
 		);
 
-		// All six cards, in a list as tall as its cards, every one of them on screen
+		// All six cards. On small screens (phones, and windows up to 760px tall) the list is capped
+		// and scrolls inside itself, so the writing keeps its room; on larger screens it is as tall
+		// as its cards and every one is on screen.
 		const items = sheet.locator('.round-list li');
 		await expect(items).toHaveCount(6);
-		const list = await sheet
-			.locator('.round-list')
-			.evaluate((el) => ({ scroll: el.scrollHeight, client: el.clientHeight }));
-		expect(list.scroll).toBeLessThanOrEqual(list.client + 1);
-		for (const item of await items.all()) await expect(item).toBeInViewport();
+		const list = await sheet.locator('.round-list').evaluate((el) => ({
+			scroll: el.scrollHeight,
+			client: el.clientHeight,
+			overflowY: getComputedStyle(el).overflowY
+		}));
+		if (list.overflowY === 'auto') {
+			expect(list.overflowY).toBe('auto');
+			expect(list.scroll).toBeGreaterThan(list.client + 1);
+			await items.last().scrollIntoViewIfNeeded();
+			await expect(items.last()).toBeInViewport();
+		} else {
+			expect(list.scroll).toBeLessThanOrEqual(list.client + 1);
+			for (const item of await items.all()) await expect(item).toBeInViewport();
+		}
+		// The sheet body itself has no reason to scroll
+		const body = await sheet
+			.locator('.sheet-body')
+			.evaluate((el) => el.scrollHeight - el.clientHeight);
+		expect(body).toBeLessThanOrEqual(1);
 
 		// The writing keeps at least four lines, and Record Entry stays on screen
 		const lines = await sheet.locator('textarea').evaluate((el) => {

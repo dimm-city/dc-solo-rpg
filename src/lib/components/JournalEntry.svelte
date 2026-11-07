@@ -689,6 +689,21 @@
 	}
 
 	/* Phones: a full-screen sheet; the stage already insets it for notches */
+	/* Small screens (phones, and short windows): a long round's list scrolls inside itself, so
+	   the writing keeps its room and Record Entry stays on screen (owner decision) */
+	@media (max-width: 600px), (max-height: 760px) {
+		.round-list {
+			max-height: min(28dvh, 16rem);
+			overflow-y: auto;
+			overscroll-behavior: contain;
+		}
+
+		/* Still four lines of writing under its label */
+		.writing {
+			min-height: 9.5rem;
+		}
+	}
+
 	@media (max-width: 600px) {
 		.journal-sheet {
 			width: 100%;
@@ -763,6 +778,12 @@
 
 		.sheet-body {
 			gap: var(--space-sm);
+		}
+
+		.round-list {
+			max-height: min(30dvh, 10rem);
+			overflow-y: auto;
+			overscroll-behavior: contain;
 		}
 
 		.round-list li {
