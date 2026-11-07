@@ -299,15 +299,43 @@ describe('KingsCell', () => {
 		expect(cell.classList.contains('finale')).toBe(false);
 	});
 
-	it('does not flare when a King goes back into the deck', () => {
+	it('un-ignites the skull of a King sent back into the deck, for one beat', () => {
+		vi.useFakeTimers();
 		gameState.kingsRevealed = 2;
 		const { getByTestId } = render(KingsCell);
 		const cell = getByTestId('hud-kings');
 		flushSync();
 		gameState.kingsRevealed = 1;
 		flushSync();
-		expect(cell.querySelector('.skull.igniting')).toBeNull();
+		// The count drops at once, and the skull that went dark runs the ignite in reverse
+		expect(visible(cell)).toContain('1/4');
+		const skulls = cell.querySelectorAll('.skull');
 		expect(cell.querySelectorAll('.skull.lit').length).toBe(1);
+		expect(cell.querySelector('.skull.igniting')).toBeNull();
+		expect([...skulls].map((skull) => skull.classList.contains('dimming'))).toEqual([
+			false,
+			true,
+			false,
+			false
+		]);
+		vi.advanceTimersByTime(ANIMATION_DURATION.BEAT);
+		flushSync();
+		expect(cell.querySelector('.skull.dimming')).toBeNull();
+		expect(cell.querySelectorAll('.skull.lit').length).toBe(1);
+	});
+
+	it('stops an un-ignite when a King is drawn again during it', () => {
+		vi.useFakeTimers();
+		gameState.kingsRevealed = 2;
+		const { getByTestId } = render(KingsCell);
+		const cell = getByTestId('hud-kings');
+		flushSync();
+		gameState.kingsRevealed = 1;
+		flushSync();
+		gameState.pendingUpdates.kingsChange = 1;
+		flushSync();
+		expect(cell.querySelector('.skull.dimming')).toBeNull();
+		expect(cell.querySelectorAll('.skull')[1].classList.contains('igniting')).toBe(true);
 	});
 });
 
