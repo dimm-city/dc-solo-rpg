@@ -85,10 +85,10 @@ export function calculateStabilityLoss(roll) {
 /**
  * Get salvation success threshold based on number of Aces revealed
  *
- * Salvation is rolled with one to three Aces. On Normal (and Easy) the fourth Ace ends the
- * game instead (see isFinalStabilityCheck in gameActions), so four Aces never reach a
- * Salvation roll. On Hard they do: there is then no target (0), and each Salvation is a
- * Stability check followed by the token (see calculateAutomaticSalvation).
+ * Salvation is rolled against a target with one to three Aces. With four there is no target
+ * (0): each Salvation is a Stability check followed by the token (see
+ * calculateAutomaticSalvation). On Easy the fourth Ace ends the game instead (see
+ * isFinalStabilityCheck in gameActions), so there four Aces never reach a Salvation roll.
  *
  * @param {number} acesRevealed - Number of Aces revealed (1-4)
  * @returns {number} Minimum roll needed for success (17, 14 or 11), or 0 for no target (four Aces)
@@ -97,7 +97,7 @@ export function calculateStabilityLoss(roll) {
  * getSalvationThreshold(1) // => 17 (Success on 17-20, ~20% chance)
  * getSalvationThreshold(2) // => 14 (Success on 14-20, ~35% chance)
  * getSalvationThreshold(3) // => 11 (Success on 11-20, ~50% chance)
- * getSalvationThreshold(4) // => 0 (no target: Hard only, see calculateAutomaticSalvation)
+ * getSalvationThreshold(4) // => 0 (no target: see calculateAutomaticSalvation)
  */
 export function getSalvationThreshold(acesRevealed) {
 	switch (acesRevealed) {
@@ -108,7 +108,7 @@ export function getSalvationThreshold(acesRevealed) {
 		case 3:
 			return 11; // Success on 11-20 (~50% chance)
 		case 4:
-			return 0; // No target to beat: one Stability check, then the token comes off (Hard)
+			return 0; // No target to beat: one Stability check, then the token comes off
 		default:
 			logger.error(`[getSalvationThreshold] Invalid Aces count: ${acesRevealed}`);
 			return 20; // Impossible if no Aces
@@ -169,8 +169,8 @@ export function calculateSalvationResult(roll, threshold, { hard = false } = {})
 }
 
 /**
- * Salvation with all four Aces (Hard only; on Normal the fourth Ace ends the game): there is
- * no target to beat, but the token only comes off after one Stability check. The roll is read
+ * Salvation with all four Aces (Normal and Hard; on Easy the fourth Ace ends the game first):
+ * there is no target to beat, but the token only comes off after one Stability check. The roll is read
  * on the Stability table (natural 1: -3 and Surreal; 2-5: -2; 6-10: -1; 11-19: no loss;
  * natural 20: +1, max 20, and Lucid). If Stability is still above 0 afterwards, one token
  * comes off; if the roll takes it to 0, the game is lost.

@@ -2,7 +2,7 @@
 
 ## Digital Implementation Reference
 
-**Version:** 3.1 (D20 System, three difficulties)
+**Version:** 3.2 (D20 System, three difficulties; the fourth Ace ends the game on Easy only)
 **Date:** 2026-11-07
 **Purpose:** Complete D20 mechanics specification for implementation and testing
 **System:** D20-based tactical solo journaling RPG inspired by Wretched and Alone
@@ -30,9 +30,9 @@
 The D20 Solo RPG System is a **tactical solo journaling RPG** that combines:
 
 - **Strategic Depth**: Lucid/Surreal states create meaningful tactical choices
-- **Three Difficulties**: Easy and Normal can be won; Hard keeps the SRD's "almost never" win rate (see 7.3)
+- **Three Difficulties**: Easy can be won often; Normal is a long shot; Hard keeps the SRD's "almost never" win rate (see 7.3)
 - **Narrative Emergence**: Story emerges through card prompts and journaling
-- **Fair Challenge**: on Normal the fourth Ace is a real way out; on Hard winning is under 1%
+- **Fair Challenge**: on Normal tokens only ever fall, so every Salvation roll is progress; on Easy the fourth Ace is a real way out; on Hard winning is under 1%
 - **Dual-Phase Structure**: Action phase + reflection phase
 
 ### 1.2 Key Differences from d6 System
@@ -44,7 +44,7 @@ The D20 Solo RPG System is a **tactical solo journaling RPG** that combines:
 - Graduated token changes (-2 to 0 on Normal; -2 to +2 on Hard) instead of binary success/failure
 - Lucid (advantage) and Surreal (disadvantage) states
 - Ace-dependent Salvation thresholds
-- No final damage roll (victory when tokens = 0, or on Normal when the fourth Ace's Stability check is survived)
+- No final damage roll (victory when tokens = 0, or on Easy when the fourth Ace's Stability check is survived)
 
 ### 1.3 Play Time
 
@@ -94,7 +94,7 @@ Unlocked by: Drawing Ace of Hearts (Salvation)
   - At/above threshold: -1 token (success)
   - Below threshold: no change (Hard: +1 token)
   - Natural 1: no change, and Surreal (Hard: +2 tokens)
-  - Four Aces, Hard only: -1 token after a Stability check, if Stability holds (see 4.2)
+  - Four Aces: -1 token after a Stability check, if Stability holds (see 4.2)
 - On Normal tokens only ever fall: they can never rise above the start
 - Reaches 0 with Stability > 0 → Victory
 
@@ -114,7 +114,7 @@ Each Ace improves Salvation success rate
   - 1 Ace: Threshold 17 (20% success rate)
   - 2 Aces: Threshold 14 (35% success rate)
   - 3 Aces: Threshold 11 (50% success rate)
-  - 4 Aces: Normal: no Salvation roll, the fourth Ace ends the game (see 4.4). Hard: threshold 0 (no target: one Stability check, then -1 token if Stability holds)
+  - 4 Aces: threshold 0 (no target: one Stability check, then -1 token if Stability holds). Easy: no Salvation roll, the fourth Ace ends the game first (see 4.4)
 
 ---
 
@@ -130,8 +130,8 @@ const roll = rollDie(20);
 **Used for:**
 
 - Round start (determines cards to draw)
-- Stability checks (Challenge cards and Aces; on Normal the fourth Ace's check decides the game, see 4.4)
-- Salvation checks (token removal attempts; with four Aces on Hard, a Stability check)
+- Stability checks (Challenge cards and Aces; on Easy the fourth Ace's check decides the game, see 4.4)
+- Salvation checks (token removal attempts; with four Aces, a Stability check)
 
 ### 3.2 Lucid State (Advantage)
 
@@ -234,15 +234,16 @@ Aces | Threshold | Success on | Win Rate | Probability
   1  |    17     | 17-20      |   20%    | Very Hard
   2  |    14     | 14-20      |   35%    | Hard
   3  |    11     | 11-20      |   50%    | Medium
-  4  |  (none)   | see below  |    -     | Normal: the fourth Ace ends the game (4.4); Hard: a Stability check*
+  4  |  (none)   | see below  |    -     | A Stability check, then the token* (Easy: the fourth Ace ends the game first, 4.4)
 ```
 
-\* On Hard, with four Aces there is no target, but the token only comes off after one Stability
-check. The roll (with any Lucid or Surreal, which it uses up) is read on the Stability table:
-natural 1 is -3 Stability and Surreal, 2-5 is -2, 6-10 is -1, 11-19 is no loss, natural 20 is +1
-(max 20) and Lucid. If Stability is still above 0, the token comes off (-1). If the roll takes
-Stability to 0, the game is lost by Stability instead. See `calculateAutomaticSalvation()`. On
-Normal and Easy this step is never reached: the fourth Ace ends the game first.
+\* With four Aces there is no target, but the token only comes off after one Stability check.
+The roll (with any Lucid or Surreal, which it uses up) is read on the Stability table: natural 1
+is -3 Stability and Surreal, 2-5 is -2, 6-10 is -1, 11-19 is no loss, natural 20 is +1 (max 20)
+and Lucid. If Stability is still above 0, the token comes off (-1). If the roll takes Stability
+to 0, the game is lost by Stability instead. See `calculateAutomaticSalvation()`. This is how
+Normal and Hard play with four Aces; on Easy this step is never reached, because the fourth Ace
+ends the game first.
 
 **Calculation:**
 
@@ -294,11 +295,13 @@ function resolveSalvationCheck(roll, threshold, hard) {
 - Natural 20s provide crucial acceleration
 - Creates meaningful tension in every Salvation roll
 
-### 4.4 The Fourth Ace (Normal and Easy)
+### 4.4 The Fourth Ace (Easy only)
 
-On Normal and Easy the fourth Ace ends the game. Being odd, it calls for a Stability check like
-every Ace, and that check is the last roll of the game (`isFinalStabilityCheck()` in
-`gameActions.svelte.js`: four Aces revealed, and not Hard):
+On Easy the fourth Ace ends the game. Being odd, it calls for a Stability check like every Ace,
+and that check is the last roll of the game (`isFinalStabilityCheck()` in
+`gameActions.svelte.js`: four Aces revealed, and `fourthAceWins(gameState)`, the one helper in
+`src/lib/constants/difficulty.js` that says whether the fourth Ace ends the game; the card
+note, the HUD and the rule captions read the same helper):
 
 - Any Lucid or Surreal applies to the roll and is used up by it, like any roll. The roll is read
   on the normal Stability table (5.5).
@@ -310,7 +313,8 @@ every Ace, and that check is the last roll of the game (`isFinalStabilityCheck()
   outright (`confirmCard()`).
 - The result never moves on by itself: the button reads "Escape" (or "Face the end") and waits.
 
-On Hard the fourth Ace ends nothing: Salvation goes on as a Stability check per token (4.2).
+On Normal and Hard the fourth Ace ends nothing: Salvation goes on as a Stability check per
+token (4.2), and the game is won only by the last token.
 
 ---
 
@@ -362,8 +366,8 @@ Event             | 2,4,6,8,10,J,Q| 28    | 53%
 1st Ace (A♥): Hope emerges → Salvation unlocked (17 threshold)
 2nd Ace:      Growing strength → Threshold improves to 14
 3rd Ace:      Mastery → Threshold improves to 11
-4th Ace:      Transcendence → Normal: the game ends; survive its Stability check and you escape (4.4)
-                              Hard: no target, each Salvation is a Stability check, then -1 token
+4th Ace:      Transcendence → no target: each Salvation is a Stability check, then -1 token (4.2)
+                              Easy: the game ends; survive its Stability check and you escape (4.4)
 ```
 
 ### 5.4 Failure Counter (Kings)
@@ -462,7 +466,7 @@ flowchart TB
     Nat1 -->|No| CheckDead{Stability ≤ 0?}
 
     CheckDead -->|Yes| Lose[GAME OVER]
-    CheckDead -->|No| Fourth{Fourth Ace<br/>on Normal?}
+    CheckDead -->|No| Fourth{Fourth Ace<br/>on Easy?}
     Fourth -->|Yes| Win
     Fourth -->|No| Safe
 
@@ -482,7 +486,7 @@ flowchart TB
     SalvationActive -->|No| NextRound
     SalvationActive -->|Yes| SalvRoll[Roll for Salvation]
 
-    SalvRoll --> UpdateTokens[Update tokens<br/>-2 to 0, Hard: to +2]
+    SalvRoll --> UpdateTokens[Update tokens<br/>-2 to 0, Hard: to +2<br/>4 Aces: Stability check, then -1]
     UpdateTokens --> TokenCheck{Tokens = 0?}
 
     TokenCheck -->|Yes| Win[VICTORY!]
@@ -518,13 +522,15 @@ flowchart TB
 - acesRevealed starts at 1
 - Ace of Hearts removed from deck
 - Salvation starts unlocked with 17 threshold (the Ace of Hearts is the first Ace)
+- The fourth Ace ends the game (4.4); `fourthAceWins(gameState)` in
+  `src/lib/constants/difficulty.js` gates it
 - Otherwise the Normal rules
 
 **Hard Mode (difficulty 2):**
 
-- A missed Salvation roll adds tokens (4.3)
-- The fourth Ace does not end the game; four Aces make each Salvation a Stability check (4.2)
-- `isHardGame(gameState)` in `src/lib/constants/difficulty.js` gates both
+- A missed Salvation roll adds tokens (4.3); `isHardGame(gameState)` gates it
+- Otherwise the Normal rules: the fourth Ace does not end the game, and four Aces make each
+  Salvation a Stability check (4.2)
 
 ### 6.3 Card Drawing
 
@@ -558,8 +564,8 @@ const cards = deck.splice(0, cardsToDraw);
 3. ✅ Tokens reduced to 0 through Salvation checks
 4. ✅ Stability > 0
 
-**Or, on Normal and Easy:** reveal the fourth Ace and survive its Stability check (4.4). In
-practice this is how almost every Normal game is won (7.3).
+**Or, on Easy only:** reveal the fourth Ace and survive its Stability check (4.4). In practice
+this is how almost every Easy game is won (7.3).
 
 **No final damage roll** - Victory is immediate when tokens reach 0 with Stability > 0.
 
@@ -569,7 +575,7 @@ practice this is how almost every Normal game is won (7.3).
 Loss Condition 1: Stability ≤ 0
 - Failed too many Stability checks
 - Rolled low on too many Stability checks
-- Includes the fourth Ace's check (Normal) and the Stability check a four-Aces Salvation takes (Hard)
+- Includes the fourth Ace's check (Easy) and the Stability check a four-Aces Salvation takes (Normal and Hard)
 
 Loss Condition 2: 4 Kings Revealed
 - All Failure Counter cards revealed
@@ -584,9 +590,10 @@ Loss Condition 3: Deck Exhaustion (rare)
 
 **Design targets.** Standard Wretched & Alone aims at an almost-never win: the SRD says the Ace of
 Hearts salvation "offers a <1% win rate" and that "it is more common to lose the game than it is to
-win. This is intentional". That is the target for **Hard**. On **Normal** (and Easy) the owner's
-rules make the fourth Ace a way out (4.4) and let tokens only ever fall (4.3), so winning is meant
-to be a real possibility; the rate below is what those rules produce, not a tuned target.
+win. This is intentional". That is the target for **Hard**, and **Normal** sits just above it: the
+owner's rules let tokens only ever fall there (4.3), so every Salvation roll is progress, but the
+game is still won only by the last token. On **Easy** the fourth Ace is a way out (4.4), so winning
+is meant to be a real possibility. The rates below are what those rules produce, not tuned targets.
 
 Monte Carlo simulation that drives the real game actions (`startGame`, `rollForTasks`, `drawCard`,
 `confirmCard`, `failureCheck`, `successCheck`, `recordRound`, and the `applyPending*` functions)
@@ -596,44 +603,51 @@ modifiers, and every Salvation check is taken.
 
 ```
                                     Normal (difficulty 1)     Easy (difficulty 0)       Hard (difficulty 2)
-Win rate:                           46.79% (18716 / 40000)    55.34% (11067 / 20000)    0.33% (131 / 40000)
-  95% confidence:                   46.30% - 47.28%           54.65% - 56.02%           0.28% - 0.39%
-  by the fourth Ace:                46.6% (18656 / 40000)     54.5% (10903 / 20000)     0.0% (0 / 40000)
-  by the last token:                0.15% (60 / 40000)        0.82% (164 / 20000)       0.33% (131 / 40000)
-Loss, 4 Kings revealed:             47.7% (19068 / 40000)     41.2% (8237 / 20000)      83.9% (33561 / 40000)
-Loss, Stability depleted:           5.5% (2216 / 40000)       3.5% (696 / 20000)        15.8% (6308 / 40000)
-  of which on the 4th Ace's check:  0.9% (379 / 40000)        0.8% (163 / 20000)        0.0% (0 / 40000)
-  of which on Salvation (Hard):     0.0% (0 / 40000)          0.0% (0 / 20000)          5.3% (2121 / 40000)
+Win rate:                           1.28% (513 / 40000)       54.87% (10974 / 20000)    0.30% (121 / 40000)
+  95% confidence:                   1.17% - 1.39%             54.18% - 55.56%           0.25% - 0.36%
+  by the fourth Ace:                (not a win condition)     54.1% (10810 / 20000)     (not a win condition)
+  by the last token:                1.28% (513 / 40000)       0.82% (164 / 20000)       0.30% (121 / 40000)
+Loss, 4 Kings revealed:             83.0% (33207 / 40000)     41.7% (8330 / 20000)      83.5% (33417 / 40000)
+Loss, Stability depleted:           15.7% (6280 / 40000)      3.5% (696 / 20000)        16.2% (6462 / 40000)
+  of which on the 4th Ace's check:  (none)                    0.8% (151 / 20000)        (none)
+  of which on a 4-Aces Salvation:   5.2% (2061 / 40000)       (none)                    5.1% (2055 / 40000)
 Loss, deck exhaustion:              0 observed                0 observed                0 observed
-Average length:                     11.2 rounds               10.4 rounds               12.2 rounds
-Stability checks / game:            14.5                      13.1                      15.7 (+1.1 on Salvation)
-Salvation checks / game:            3.7                       9.4                       4.8
+Average length:                     12.2 rounds               10.4 rounds               12.2 rounds
+Stability checks / game:            15.7 (+1.1 on Salvation)  13.1                      15.7 (+1.1 on Salvation)
+Salvation checks / game:            4.8                       9.4                       4.8
 ```
 
-Hard is under the 1% target: 0.33%, with a 95% interval of
-0.28% - 0.39%. The same ruleset measured 0.40% (0.33% - 0.46%) when it was the only one,
-before Normal diverged from it; the two runs agree within their intervals.
+Hard is under the 1% target: 0.30%, with a 95% interval of 0.25% - 0.36%, in line with the 0.33%
+(0.28% - 0.39%) and 0.40% (0.33% - 0.46%) measured for the same ruleset in earlier runs. Normal is
+about four times that, 1.28% (1.17% - 1.39%): its Salvation rules are the same except that a miss
+adds no token, so a run that reaches four Aces with tokens to spare can finish. It is still a long
+shot. The Kings end 83% of games on both levels, and the ten Stability checks it takes to clear ten
+tokens with four Aces cost about 8 Stability on average, so a third of the runs that get that far
+fall to Stability instead. On Normal 89% of the wins come with all four Aces out (the roll is then a
+Stability check per token); the rest cleared their tokens with three.
 
-On Normal, 99.7% of the wins come from the fourth Ace: with tokens only ever falling, a run
-that reveals the Ace of Hearts early and rolls well can still clear its tokens, but the fourth Ace
-arrives first almost every time. The fourth Ace and the fourth King are equally likely, so about
-half of the games that survive Stability are won; Stability takes the rest.
+On Easy, 98.5% of the wins come from the fourth Ace: with tokens only ever falling, a run that rolls
+well can still clear its tokens, but the fourth Ace arrives first almost every time. The fourth Ace
+and the fourth King are equally likely, so about half of the games that survive Stability are won;
+Stability takes the rest.
 
 **Comparison with standard Wretched & Alone** (simulated, 2,000,000 games each, with the block tower never falling, so these are upper bounds):
 
 ```
 SRD core rules (10 tokens, remove one on a 6):            ~0.0001% (1 win in 2,000,000)
 Common house rule (each other Ace widens success by 1):   0.43%
-This game, Hard:                                          0.33%
-This game, Normal:                                        46.79%
+This game, Hard:                                          0.30%
+This game, Normal:                                        1.28%
+This game, Easy:                                          54.87%
 ```
 
 Hard sits within the SRD's <1% target, alongside the standard system, where the salvation track
 usually cannot finish before the fourth King. Normal, which is what a `.game.md` game plays unless
-its frontmatter or the player says otherwise, is a different promise: hope, once given, is not
-taken back. Easy adds the pre-revealed Ace of Hearts on top of the Normal rules; Hard can be chosen
-by the game author (`difficulty: hard` in the `.game.md` frontmatter) or by the player (Difficulty
-in the settings menu).
+its frontmatter or the player says otherwise, is one step kinder: hope, once given, is not taken
+back, but it must still be carried all the way to the last token. Easy, with the Ace of Hearts
+pre-revealed and the fourth Ace as a way out, is the level where escape is likely. Easy or Hard can
+be chosen by the game author (`difficulty: easy|hard` in the `.game.md` frontmatter) or by the
+player (Difficulty in the settings menu).
 
 ---
 
@@ -668,32 +682,33 @@ Each odd-ranked card (A, 3, 5, 7, 9; 20 cards in the deck) triggers one check, a
 1 Ace  (threshold 17): -0.25     +0.60
 2 Aces (threshold 14): -0.40     +0.30
 3 Aces (threshold 11): -0.55     +0.00
-4 Aces:                (the game is over: 4.4)   -1.00 per check while Stability holds (about 10 checks to
-                                                 clear 10 tokens), each check also costing 0.8 Stability on average
+4 Aces:                -1.00 per check while Stability holds (about 10 checks to clear 10 tokens),
+                       each check also costing 0.8 Stability on average (Easy: the game is over, 4.4)
 ```
 
 On Normal every Salvation roll removes tokens on average, so a long enough run is always moving
-towards the exit; on Hard only the fourth Ace produces net token removal, and by then the fourth
-King is usually close.
+towards the exit; on Hard only the fourth Ace produces net token removal. On both, by the time the
+fourth Ace is out the fourth King is usually close.
 
 **Simulation Results (same runs as 7.3):** wins by Aces revealed when the game ended
 
 ```
-Normal: 0 Aces: 0 wins in 561 games (0.0%) | 1 Ace: 0 wins in 2,327 games (0.0%) | 2 Aces: 4 wins in 6,067 games (0.1%) | 3 Aces: 56 wins in 12,010 games (0.5%) | 4 Aces: 18656 wins in 19,035 games (98.0%)
-Easy:   1 Ace: 0 wins in 582 games (0.0%) | 2 Aces: 11 wins in 2,358 games (0.5%) | 3 Aces: 153 wins in 5,994 games (2.6%) | 4 Aces: 10903 wins in 11,066 games (98.5%)
-Hard:   0 Aces: 0 wins in 615 games (0.0%) | 1 Ace: 0 wins in 2,301 games (0.0%) | 2 Aces: 0 wins in 6,108 games (0.0%) | 3 Aces: 3 wins in 12,008 games (0.0%) | 4 Aces: 128 wins in 18,968 games (0.7%)
+Normal: 0 Aces: 0 wins in 538 games (0.0%) | 1 Ace: 0 wins in 2,346 games (0.0%) | 2 Aces: 7 wins in 6,077 games (0.1%) | 3 Aces: 49 wins in 11,919 games (0.4%) | 4 Aces: 457 wins in 19,120 games (2.4%)
+Easy:   1 Ace: 0 wins in 587 games (0.0%) | 2 Aces: 11 wins in 2,423 games (0.5%) | 3 Aces: 153 wins in 6,029 games (2.5%) | 4 Aces: 10810 wins in 10,961 games (98.6%)
+Hard:   0 Aces: 0 wins in 578 games (0.0%) | 1 Ace: 0 wins in 2,364 games (0.0%) | 2 Aces: 0 wins in 6,162 games (0.0%) | 3 Aces: 2 wins in 11,990 games (0.0%) | 4 Aces: 119 wins in 18,906 games (0.6%)
 ```
 
-**Strategic Takeaway:** On Normal the fourth Ace is the exit, and surviving its Stability check is
-the last test; the tokens matter only in the rare run that clears them first. On Hard winning in
-practice requires all 4 Aces and then ten Stability checks, and most games end first (see 7.3).
+**Strategic Takeaway:** On Easy the fourth Ace is the exit, and surviving its Stability check is
+the last test; the tokens matter only in the rare run that clears them first. On Normal and Hard
+winning in practice requires all 4 Aces and then ten Stability checks, and most games end first
+(see 7.3); Normal's edge over Hard is that the tokens never climb while the Aces are being found.
 
 ### 8.4 King Threat
 
 ```
 Probability the fourth King ends the game (7.3 simulation):
-Normal  ~48% of games end on the fourth King; Stability depletion takes ~6%
-Easy    ~41% of games end on the fourth King; Stability depletion takes ~3%
+Normal  ~83% of games end on the fourth King; Stability depletion takes ~16%
+Easy    ~42% of games end on the fourth King; Stability depletion takes ~3%
 Hard    ~84% of games end on the fourth King; Stability depletion takes ~16%
 
 Average Kings revealed by game end:
@@ -702,8 +717,8 @@ Average Kings revealed by game end:
 - Long game (45 cards): 3.5
 ```
 
-On Normal the race is between the fourth King and the fourth Ace, which are equally likely; on
-Hard the Kings almost always win it, because Salvation needs many more rounds.
+On Easy the race is between the fourth King and the fourth Ace, which are equally likely; on
+Normal and Hard the Kings almost always win it, because Salvation needs many more rounds.
 
 ---
 
@@ -807,8 +822,8 @@ KINGS:     0 → 4 (lose if 4)
 1 Ace: ≥17 (20%)
 2 Aces: ≥14 (35%)
 3 Aces: ≥11 (50%)
-4 Aces: Normal: the fourth Ace ends the game (survive its check and you escape)
-        Hard: no target, a Stability check, then -1 token
+4 Aces: no target, a Stability check, then -1 token
+        Easy: the fourth Ace ends the game first (survive its check and you escape)
 ```
 
 ### Critical Roll Effects
@@ -822,9 +837,9 @@ SALVATION CHECK:
 - Natural 20: -2 tokens + Lucid
 - Natural 1:  Surreal; no token change (Hard: +2 tokens)
 - A miss:     no token change (Hard: +1 token)
-- Four Aces (Hard): read on the Stability table, then -1 token if Stability holds
+- Four Aces: read on the Stability table, then -1 token if Stability holds
 
-THE FOURTH ACE'S CHECK (Normal): the last roll. Stability > 0 wins, 0 loses.
+THE FOURTH ACE'S CHECK (Easy): the last roll. Stability > 0 wins, 0 loses.
 
 On 2d20 (Lucid or Surreal), only the kept die counts as a natural.
 ```
@@ -859,7 +874,8 @@ A,3,5,7,9:  Stability check (loss set by roll: 1=-3, 2-5=-2, 6-10=-1, else 0)
 
 **Balanced Challenge:**
 
-- Normal gives the fourth Ace real weight: about half of all games end in an escape (7.3)
+- Easy gives the fourth Ace real weight: about half of all games end in an escape (7.3)
+- Normal is a long shot that is always moving towards the exit: tokens only ever fall
 - Hard keeps the Wretched and Alone promise: winning is almost unheard of
 - Luck plays a role but isn't everything
 

@@ -22,7 +22,7 @@ test.describe('Settings Modal', () => {
 		const dialog = await openContentModal(page, 'Settings');
 
 		await expect(dialog.getByRole('heading', { level: 3, name: 'Gameplay' })).toBeVisible();
-		await expect(dialog.getByText('Changes apply the next time a game begins.')).toBeVisible();
+		await expect(dialog.getByText('Applies next game.')).toBeVisible();
 
 		const difficulty = dialog.getByLabel('Difficulty');
 		await expect(difficulty).toBeVisible();

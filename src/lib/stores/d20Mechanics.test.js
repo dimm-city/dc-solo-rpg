@@ -238,7 +238,7 @@ describe('D20 Mechanics', () => {
 			expect(getSalvationThreshold(3)).toBe(11);
 		});
 
-		it('should return threshold 0 for 4 Aces (no target: a Stability check, reached on Hard only)', () => {
+		it('should return threshold 0 for 4 Aces (no target: a Stability check; Easy never reaches it)', () => {
 			expect(getSalvationThreshold(4)).toBe(0);
 		});
 
@@ -337,7 +337,7 @@ describe('D20 Mechanics', () => {
 			});
 		});
 
-		describe('With 4 Aces (no target: Hard only, since on Normal the fourth Ace ends the game)', () => {
+		describe('With 4 Aces (no target; on Easy the fourth Ace ends the game first)', () => {
 			const threshold = 0;
 
 			it('removes 1 token whatever the roll, if Stability holds', () => {
@@ -356,7 +356,7 @@ describe('D20 Mechanics', () => {
 			});
 		});
 
-		describe('calculateAutomaticSalvation (4 Aces on Hard: one Stability check first)', () => {
+		describe('calculateAutomaticSalvation (4 Aces: one Stability check first)', () => {
 			it('reads the roll on the Stability table and removes the token', () => {
 				expect(calculateAutomaticSalvation(14, 12)).toEqual({
 					stabilityLoss: 0,
@@ -443,7 +443,7 @@ describe('D20 Mechanics', () => {
 			expect(probability).toBe(0.5); // 50%
 		});
 
-		it('removes a token on every roll with 4 Aces (Hard), unless Stability runs out', () => {
+		it('removes a token on every roll with 4 Aces, unless Stability runs out', () => {
 			const threshold = getSalvationThreshold(4);
 			expect(threshold).toBe(0);
 

@@ -105,13 +105,13 @@
 
 	function salvationDescription() {
 		const need = getCurrentSalvationThreshold();
-		// No target with four Aces (Hard only: on Normal the fourth Ace ends the game)
+		// No target with four Aces (Normal and Hard; on Easy the fourth Ace ends the game first)
 		return need === 0
 			? 'All four Aces are out. No target to beat now: survive one Stability check and a token comes off.'
 			: `Roll to remove a token. You need ${need}+.`;
 	}
 
-	/** The fourth Ace's check is the last roll of the game: say what is at stake */
+	/** On Easy the fourth Ace's check is the last roll of the game: say what is at stake */
 	function stabilityCheckDescription() {
 		return isFinalStabilityCheck()
 			? 'The fourth Ace is out. Survive this one Stability check and you escape. If it takes your last Stability, you fall.'

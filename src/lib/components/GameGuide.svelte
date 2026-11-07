@@ -36,7 +36,7 @@
 		{ aces: '1 Ace', target: 'Roll 17 or higher' },
 		{ aces: '2 Aces', target: 'Roll 14 or higher' },
 		{ aces: '3 Aces', target: 'Roll 11 or higher' },
-		{ aces: '4 Aces', target: 'No target: the fourth Ace ends the game' }
+		{ aces: '4 Aces', target: 'No target: a Stability check, then 1 Token comes off' }
 	];
 
 	const sections = [
@@ -110,9 +110,8 @@
 		</svelte:element>
 		<p>
 			You start with <strong>20 Stability</strong> (your grip on yourself) and
-			<strong>10 Tokens</strong> (what keeps you trapped). Remove every Token, or reveal the fourth Ace
-			and survive its Stability check, to escape. If Stability hits 0, or all 4 Kings are revealed, you
-			lose.
+			<strong>10 Tokens</strong> (what keeps you trapped). Remove every Token to escape. If Stability
+			hits 0, or all 4 Kings are revealed, you lose.
 		</p>
 		<p>The game teaches the rest as you play. This guide is here whenever you want a reminder.</p>
 	</section>
@@ -209,12 +208,11 @@
 			natural 1 is a miss too (and makes you Surreal). Tokens only ever fall.
 		</p>
 		<p>
-			<strong>The fourth Ace ends the game.</strong> Like every Ace it calls for a Stability check, and
-			that check is the last roll you make: if you still have Stability after it, you escape, whatever
-			Tokens remain. If it takes your last Stability, you fall. A fourth Ace that skips its check frees
-			you outright.
+			<strong>With all four Aces there is no target.</strong> Each Salvation roll is then a Stability
+			check, read on the Stability table, and 1 Token comes off if you still have Stability after it.
+			If it takes your last Stability, you fall.
 		</p>
-		<p>Hard plays Salvation differently; see Difficulty below.</p>
+		<p>Easy and Hard each change Salvation; see Difficulty below.</p>
 	</section>
 
 	<section class="guide-section">
@@ -223,8 +221,8 @@
 		</svelte:element>
 		<ul>
 			<li>
-				<strong>You escape</strong> when your last Token is removed, or when the fourth Ace is revealed
-				and you survive its Stability check.
+				<strong>You escape</strong> when your last Token is removed (on Easy, also when the fourth Ace
+				is revealed and you survive its Stability check).
 			</li>
 			<li><strong>You fall</strong> when Stability reaches 0.</li>
 			<li><strong>You are taken</strong> when the fourth King is revealed.</li>
@@ -248,19 +246,19 @@
 		</p>
 		<ul>
 			<li>
-				<strong>Easy</strong> plays by the Normal rules, with the Ace of Hearts already revealed, so
-				Salvation is open from the first round.
+				<strong>Easy</strong> plays by the Normal rules with two gifts. The Ace of Hearts is already
+				revealed, so Salvation is open from the first round. And the fourth Ace ends the game: like every
+				Ace it calls for a Stability check, and that check is the last roll you make. If you still have
+				Stability after it, you escape, whatever Tokens remain; if it takes your last Stability, you
+				fall. A fourth Ace that skips its check frees you outright.
 			</li>
 			<li>
-				<strong>Normal</strong> is everything above: Tokens only ever fall, and the fourth Ace ends the
-				game.
+				<strong>Normal</strong> is everything above: Tokens only ever fall, and you escape by removing
+				every one of them.
 			</li>
 			<li>
-				<strong>Hard</strong> changes two things. A missed Salvation roll adds 1 Token (a natural 1 adds
-				2), so Tokens can rise above where they started. And the fourth Ace does not end the game: with
-				all four Aces there is no target, but each Salvation roll is a Stability check, read on the Stability
-				table, and 1 Token comes off only if you still have Stability after it. Winning on Hard means
-				removing every Token.
+				<strong>Hard</strong> changes one thing: a missed Salvation roll adds 1 Token (a natural 1 adds
+				2), so Tokens can rise above where they started.
 			</li>
 		</ul>
 	</section>

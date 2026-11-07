@@ -1,9 +1,9 @@
 // Round flow: Round N opens on Roll for Tasks, the cards are dealt on their own, every roll
 // button reads "Rolling…" while the dice roll, and Lucid/Surreal shows on the roll button only.
 // Stability and Salvation results move on by themselves after a beat, except an ending.
-// A missed Salvation roll loses no token, and the fourth Ace ends the game (its Stability
-// check is the last roll); on Hard a miss adds a token and four Aces make Salvation a
-// Stability check per token. Rule tips follow the Settings switch.
+// A missed Salvation roll loses no token, and four Aces make Salvation a Stability check per
+// token; on Hard a miss adds a token; on Easy the fourth Ace ends the game (its Stability
+// check is the last roll). Rule tips follow the Settings switch.
 // The dice are forced through the app's own random service (dev server modules).
 //
 // These run under reduced motion: each roll is the 600ms number instead of a 3D throw, which
@@ -61,7 +61,8 @@ async function openGame(page: Page, { ruleTips = false } = {}) {
 
 /**
  * Put cards of these ranks on top of the deck, drawn in this order. "A:plain" is an Ace with
- * no modifier and "A:skip-damage" one that skips its Stability check (the game data has both).
+ * no modifier and "A:skip-damage" one that skips its Stability check (the game data has both);
+ * "A:plain:diamonds" pins the suit too (the plain Aces here are hearts and diamonds).
  */
 async function stackDeck(page: Page, ranks: string[]) {
 	await store(
@@ -69,12 +70,13 @@ async function stackDeck(page: Page, ranks: string[]) {
 		`const deck = gs.gameState.deck;
 		const ranks = ${JSON.stringify(ranks)};
 		for (const [moved, spec] of [...ranks].reverse().entries()) {
-			const [rank, modifier] = spec.split(':');
+			const [rank, modifier, suit] = spec.split(':');
 			const wanted = modifier === 'plain' ? null : modifier;
 			const i = deck.findIndex(
 				(c, index) =>
 					c.card === rank &&
 					(modifier === undefined || (c.modifier ?? null) === wanted) &&
+					(suit === undefined || c.suit === suit) &&
 					index < deck.length - moved
 			);
 			if (i === -1) throw new Error('no such card in the deck: ' + spec);
@@ -311,7 +313,7 @@ test.describe('Results move on by themselves', () => {
 		await expect(page.getByTestId('hud-tokens')).toContainText('6');
 	});
 
-	test("the fourth Ace's Stability check is the last roll: survive it and you escape", async ({
+	test("on Easy, the fourth Ace's Stability check is the last roll: survive it and you escape", async ({
 		page
 	}) => {
 		await openGame(page);
@@ -319,7 +321,7 @@ test.describe('Results move on by themselves', () => {
 		await playRound(
 			page,
 			['A:plain', '6'],
-			'Object.assign(gs.gameState, { acesRevealed: 3, aceOfHeartsRevealed: true, tokens: 6, tower: 9 })'
+			'Object.assign(gs.gameState, { acesRevealed: 3, aceOfHeartsRevealed: true, tokens: 6, tower: 9 }); gs.gameState.config.options.difficulty = 0'
 		);
 		// The card says what it means
 		await expect(page.getByTestId('card')).toHaveClass(/revealed/, { timeout: 30000 });
@@ -353,13 +355,15 @@ test.describe('Results move on by themselves', () => {
 		await expect(page.getByTestId('game-over-cause')).toHaveText('The fourth Ace was revealed.');
 	});
 
-	test("the fourth Ace's check that takes the last Stability loses the game", async ({ page }) => {
+	test("on Easy, the fourth Ace's check that takes the last Stability loses the game", async ({
+		page
+	}) => {
 		await openGame(page);
 		await playToFirstRound(page);
 		await playRound(
 			page,
 			['A:plain', '6'],
-			'Object.assign(gs.gameState, { acesRevealed: 3, aceOfHeartsRevealed: true, tokens: 6, tower: 2 })'
+			'Object.assign(gs.gameState, { acesRevealed: 3, aceOfHeartsRevealed: true, tokens: 6, tower: 2 }); gs.gameState.config.options.difficulty = 0'
 		);
 		await dismissCard(page);
 		await store(page, 'rnd.mockDieRoll(4)');
@@ -374,13 +378,15 @@ test.describe('Results move on by themselves', () => {
 		await expect(page.getByText('Your Stability reached 0.')).toBeVisible();
 	});
 
-	test('a fourth Ace that skips its Stability check frees you outright', async ({ page }) => {
+	test('on Easy, a fourth Ace that skips its Stability check frees you outright', async ({
+		page
+	}) => {
 		await openGame(page);
 		await playToFirstRound(page);
 		await playRound(
 			page,
 			['A:skip-damage', '6'],
-			'Object.assign(gs.gameState, { acesRevealed: 3, aceOfHeartsRevealed: true, tokens: 6, tower: 9 })'
+			'Object.assign(gs.gameState, { acesRevealed: 3, aceOfHeartsRevealed: true, tokens: 6, tower: 9 }); gs.gameState.config.options.difficulty = 0'
 		);
 		await expect(page.getByTestId('card')).toHaveClass(/revealed/, { timeout: 30000 });
 		await expect(page.getByTestId('card-mechanic')).toHaveText('The fourth Ace · you escape');
@@ -389,6 +395,76 @@ test.describe('Results move on by themselves', () => {
 		await expect(page.getByTestId('screen-gameOver')).toBeVisible({ timeout: 10000 });
 		await expect(page.getByRole('heading', { name: 'Victory' })).toBeVisible();
 		await expect(page.getByTestId('game-over-cause')).toHaveText('The fourth Ace was revealed.');
+	});
+
+	test('on Normal, the fourth Ace ends nothing: an ordinary check, then Salvation with no target', async ({
+		page
+	}) => {
+		await openGame(page);
+		await playToFirstRound(page);
+		await playRound(
+			page,
+			['A:plain:diamonds', '6'],
+			'Object.assign(gs.gameState, { acesRevealed: 3, aceOfHeartsRevealed: true, tokens: 3, tower: 16 })'
+		);
+		// The card says what it means: the target goes, the check stays
+		await expect(page.getByTestId('card')).toHaveClass(/revealed/, { timeout: 30000 });
+		await expect(page.getByTestId('card-mechanic')).toHaveText(
+			'Ace · Salvation is now assured · a Stability check follows'
+		);
+		await page.getByTestId('card').click();
+
+		await expect(page.getByRole('heading', { name: 'Stability Check', exact: true })).toBeVisible();
+		await expect(page.getByTestId('hud-aces')).toHaveAttribute(
+			'title',
+			'All four Aces: Salvation is automatic after a Stability check'
+		);
+		const check = page.getByTestId('failure-check-button');
+		await expect(check).toHaveAccessibleName('Roll for damage');
+		await store(page, 'rnd.mockDieRoll(13)');
+		await pressStep(page, 'failure-check-button');
+		await expect(page.getByTestId('result-line')).toHaveText(
+			'Rolled 13 · no Stability lost · 16/20',
+			{ timeout: 30000 }
+		);
+
+		// The round goes on: the second card, then Salvation, which is now a Stability check
+		await dismissCard(page);
+		const salvation = page.getByTestId('success-check-button');
+		await expect(salvation).toHaveAccessibleName('Roll for Stability · Salvation is assured');
+		await expect(page.locator('.context-description')).toHaveText(
+			'All four Aces are out. No target to beat now: survive one Stability check and a token comes off.'
+		);
+		await store(page, 'rnd.mockDieRoll(4)');
+		await pressStep(page, 'success-check-button');
+		await expect(page.getByTestId('result-line')).toHaveText(
+			'Rolled 4 · −2 Stability · −1 token · 2 left',
+			{ timeout: 30000 }
+		);
+		await expect(page.getByTestId('hud-stability')).toContainText('14');
+		await expect(page.getByTestId('hud-tokens')).toContainText('2');
+		await expect(page.getByRole('dialog', { name: 'Journal entry' })).toBeVisible({
+			timeout: 5000
+		});
+	});
+
+	test('on Normal, a skip-damage fourth Ace only skips its check', async ({ page }) => {
+		await openGame(page);
+		await playToFirstRound(page);
+		await playRound(
+			page,
+			['A:skip-damage', '6'],
+			'Object.assign(gs.gameState, { acesRevealed: 3, aceOfHeartsRevealed: true, tokens: 6, tower: 9 })'
+		);
+		await expect(page.getByTestId('card')).toHaveClass(/revealed/, { timeout: 30000 });
+		await expect(page.getByTestId('card-mechanic')).toHaveText('Ace · Salvation is now assured');
+		await page.getByTestId('card').click();
+
+		// No check and no ending: the second card comes
+		await dismissCard(page);
+		await expect(page.getByTestId('success-check-button')).toHaveAccessibleName(
+			'Roll for Stability · Salvation is assured'
+		);
 	});
 
 	test('on Hard, with four Aces, Salvation takes a Stability check, then the token comes off', async ({

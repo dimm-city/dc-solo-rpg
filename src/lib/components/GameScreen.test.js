@@ -293,8 +293,9 @@ describe('GameScreen result hold', { timeout: 15000 }, () => {
 		expect(gameState.state).toBe('gameOver');
 	});
 
-	it("the fourth Ace's check says what is at stake, and the win waits for the player", async () => {
+	it("on Easy, the fourth Ace's check says what is at stake, and the win waits for the player", async () => {
 		setUp('failureCheck');
+		gameState.config.options.difficulty = 0;
 		Object.assign(gameState, {
 			acesRevealed: 4,
 			aceOfHeartsRevealed: true,
@@ -331,6 +332,55 @@ describe('GameScreen result hold', { timeout: 15000 }, () => {
 		await settle(GUARD_MS);
 		expect(gameState.state).toBe('gameOver');
 	});
+
+	it.each([
+		['Normal', 1],
+		['Hard', 2]
+	])(
+		"on %s, the fourth Ace's check is an ordinary one, and Salvation then has no target",
+		async (_, difficulty) => {
+			setUp('failureCheck');
+			gameState.config.options.difficulty = difficulty;
+			Object.assign(gameState, {
+				acesRevealed: 4,
+				aceOfHeartsRevealed: true,
+				tokens: 6,
+				tower: 9,
+				lastCard: { id: '1.1', round: 1, card: 'A', suit: 'spades', description: 'The last Ace' }
+			});
+			const { getByTestId, container } = render(GameScreen);
+			await settle(GUARD_MS);
+			expect(container.querySelector('[data-testid="context-title"]').textContent).toBe(
+				'Stability Check'
+			);
+			expect(container.querySelector('.context-description').textContent).toBe(
+				'An odd card demands a price. Roll to see how much Stability you lose.'
+			);
+			const button = getByTestId('failure-check-button');
+			expect(button.getAttribute('aria-label')).toBe('Roll for damage');
+
+			mockDieRoll(13);
+			await fireEvent.click(button);
+			await settle(GUARD_MS);
+			expect(gameState.win).toBe(false);
+			expect(gameState.gameOver).toBe(false);
+			expect(getByTestId('result-line').textContent).toBe('Rolled 13 · no Stability lost · 9/20');
+
+			// The round goes on: no cards left, so Salvation, with no target to beat
+			await fireEvent.click(button);
+			await settle(GUARD_MS);
+			expect(gameState.state).toBe('successCheck');
+			expect(container.querySelector('[data-testid="context-title"]').textContent).toBe(
+				'Salvation'
+			);
+			expect(container.querySelector('.context-description').textContent).toBe(
+				'All four Aces are out. No target to beat now: survive one Stability check and a token comes off.'
+			);
+			expect(getByTestId('success-check-button').getAttribute('aria-label')).toBe(
+				'Roll for Stability · Salvation is assured'
+			);
+		}
+	);
 });
 
 describe('GameScreen: each visit to a step starts clean', () => {

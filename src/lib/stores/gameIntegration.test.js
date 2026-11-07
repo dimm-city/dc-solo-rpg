@@ -142,10 +142,11 @@ describe('Game Integration Tests - Based on Documentation', () => {
 			// Rolls 11-20 succeed (10 out of 20 = 50%)
 		});
 
-		it('should remove a token after a Stability check with 4 Aces (Hard)', () => {
-			// From CLAUDE.md: on Hard, "4 Aces: Automatic success, after one Stability check"
+		it('should remove a token after a Stability check with 4 Aces (Normal, and Hard alike)', () => {
+			// From CLAUDE.md: "4 Aces: No target. Each Salvation check is a Stability check, and the
+			// token comes off if Stability holds" (on Easy the fourth Ace ends the game first)
 			gameState.state = 'successCheck';
-			gameState.config = { ...gameState.config, options: { difficulty: 2 } };
+			gameState.config = { ...gameState.config, options: { difficulty: 1 } };
 			gameState.aceOfHeartsRevealed = true;
 			gameState.acesRevealed = 4;
 			gameState.tokens = 10;
@@ -499,7 +500,7 @@ describe('Game Integration Tests - Based on Documentation', () => {
 			({ threshold } = getSalvationCheckRoll());
 			expect(threshold).toBe(11);
 
-			// 4 Aces: no target (a Stability check instead; reached on Hard only)
+			// 4 Aces: no target (a Stability check instead; on Easy the fourth Ace ends the game first)
 			gameState.acesRevealed = 4;
 			({ threshold } = getSalvationCheckRoll());
 			expect(threshold).toBe(0);
@@ -731,7 +732,7 @@ describe('Game Integration Tests - Based on Documentation', () => {
 				options: { difficulty: 2 }
 			};
 
-			// 4 Aces (Hard): the Stability check holds (13 costs nothing), so the last token comes off
+			// 4 Aces: the Stability check holds (13 costs nothing), so the last token comes off
 			gameState.tower = 10;
 			mockDieRoll(13);
 			getSalvationCheckRoll();

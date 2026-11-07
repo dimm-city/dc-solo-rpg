@@ -4,12 +4,13 @@
  * 1. Roll: dice animate ("Rolling…"; a press skips to the result), the tokens update and a
  *    result line stays on screen. The button becomes "Continue".
  *    On Normal tokens only ever fall: a miss loses none, and the line says so. On Hard a miss
- *    adds tokens, and with all four Aces there is no target but the roll is a Stability check:
- *    the token comes off only if Stability holds.
+ *    adds tokens. With all four Aces (Normal and Hard; on Easy the fourth Ace ends the game
+ *    first) there is no target but the roll is a Stability check: the token comes off only if
+ *    Stability holds.
  * 2. The game moves on to the journal by itself after the result hold. A press moves on at once.
  *
- * A result that ends the game (the last token, or Stability lost to the four-Aces check on
- * Hard) does not move on by itself: the button reads "Escape" or "Face the end" and waits.
+ * A result that ends the game (the last token, or Stability lost to the four-Aces check) does
+ * not move on by itself: the button reads "Escape" or "Face the end" and waits.
  *
  * The roll button shows the target before rolling ("need 14+").
  *

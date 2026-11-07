@@ -127,11 +127,12 @@ describe('useFailureCheck', () => {
 	});
 });
 
-describe("useFailureCheck on the fourth Ace's check (the final roll)", () => {
+describe("useFailureCheck on the fourth Ace's check (Easy: the final roll)", () => {
 	const FINAL = 'Roll for Stability · survive this and you escape';
 
 	beforeEach(() => {
 		gameState.state = 'failureCheck';
+		gameState.config = { labels: {}, options: { difficulty: 0 } };
 		gameState.acesRevealed = 4;
 		gameState.tower = 9;
 		gameState.tokens = 6;
@@ -210,8 +211,11 @@ describe("useFailureCheck on the fourth Ace's check (the final roll)", () => {
 		expect(gameState.gameOver).toBe(true);
 	});
 
-	it('is an ordinary check on Hard, where the fourth Ace ends nothing', async () => {
-		gameState.config = { labels: {}, options: { difficulty: 2 } };
+	it.each([
+		['Normal', 1],
+		['Hard', 2]
+	])('is an ordinary check on %s, where the fourth Ace ends nothing', async (_, difficulty) => {
+		gameState.config = { labels: {}, options: { difficulty } };
 		gameState.cardsToDraw = 0;
 		const check = useFailureCheck();
 		expect(check.buttonText).toBe('Roll for damage');
@@ -219,6 +223,7 @@ describe("useFailureCheck on the fourth Ace's check (the final roll)", () => {
 
 		await check.handleFailureCheck();
 		expect(gameState.gameOver).toBe(false);
+		expect(gameState.tokens).toBe(6);
 		expect(check.resultLine).toBe('Rolled 13 · no Stability lost · 9/20');
 		expect(check.buttonText).toBe('Continue');
 		expect(check.hold.active).toBe(true);
@@ -293,9 +298,9 @@ describe('useSuccessCheck', () => {
 		check.resetState();
 	});
 
-	it('with four Aces (Hard) the roll is a Stability check, and the token comes off', async () => {
+	it('with four Aces (Normal) the roll is a Stability check, and the token comes off', async () => {
 		gameState.state = 'successCheck';
-		gameState.config = { labels: {}, options: { difficulty: 2 } };
+		gameState.config = { labels: {}, options: { difficulty: 1 } };
 		gameState.acesRevealed = 4;
 		gameState.tower = 16;
 		gameState.isLucid = true;
@@ -314,7 +319,7 @@ describe('useSuccessCheck', () => {
 		check.resetState();
 	});
 
-	it('with four Aces (Hard) a loss of Stability is named', async () => {
+	it('with four Aces (Hard) a loss of Stability is named, and the token still comes off', async () => {
 		gameState.state = 'successCheck';
 		gameState.config = { labels: {}, options: { difficulty: 2 } };
 		gameState.acesRevealed = 4;
@@ -329,10 +334,10 @@ describe('useSuccessCheck', () => {
 		check.resetState();
 	});
 
-	it('with four Aces (Hard) a roll that takes the last Stability ends the game and waits', async () => {
+	it('with four Aces (Normal) a roll that takes the last Stability ends the game and waits', async () => {
 		vi.useFakeTimers();
 		gameState.state = 'successCheck';
-		gameState.config = { labels: {}, options: { difficulty: 2 } };
+		gameState.config = { labels: {}, options: { difficulty: 1 } };
 		gameState.acesRevealed = 4;
 		gameState.tower = 1;
 		const check = useSuccessCheck();

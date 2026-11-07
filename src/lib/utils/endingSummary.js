@@ -25,8 +25,8 @@ export function getEndingCause(state) {
 
 /**
  * Text for the ending screen: the author's main line, a game-written cause line
- * and (on a loss) the afterword. A win through the fourth Ace (tokens still left) names it;
- * a win through the last token needs no cause line, the message says it.
+ * and (on a loss) the afterword. A win through the fourth Ace (Easy: tokens still left) names
+ * it; a win through the last token needs no cause line, the message says it.
  * @param {{kingsRevealed?: number, tower?: number, win?: boolean, status?: string,
  *   acesRevealed?: number, tokens?: number}} state
  * @param {object} [labels] - game labels from the game config

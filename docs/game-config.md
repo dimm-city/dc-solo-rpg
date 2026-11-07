@@ -206,7 +206,7 @@ difficulty: normal # Optional: easy, normal or hard (default normal)
 
 **Only 5 fields total** - simple and focused
 
-`difficulty` sets the game's default. `easy` starts with the Ace of Hearts already revealed; `normal` (or omitting the field) plays the full deck, where tokens only ever fall and the fourth Ace ends the game; `hard` makes a missed Salvation roll add tokens and keeps the game going past the fourth Ace (see `d20-mechanics-guide.md`). Values are case-insensitive and anything else is an error. Players can override it in the settings menu.
+`difficulty` sets the game's default. `easy` starts with the Ace of Hearts already revealed, and the fourth Ace ends the game (survive its Stability check and the player escapes); `normal` (or omitting the field) plays the full deck, where tokens only ever fall and the game is won by clearing every token (with four Aces each Salvation roll is a Stability check, then a token comes off); `hard` also makes a missed Salvation roll add tokens (see `d20-mechanics-guide.md`). Values are case-insensitive and anything else is an error. Players can override it in the settings menu.
 
 ### 2. Introduction Sections (Required)
 

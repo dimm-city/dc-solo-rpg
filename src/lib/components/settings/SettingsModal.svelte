@@ -64,10 +64,10 @@
 				<div>
 					<label class="cm-label" for="difficulty">Difficulty</label>
 					<p class="cm-help" id="difficulty-help">
-						Easy: the Ace of Hearts starts revealed. Normal: Tokens only ever fall, and the fourth
-						Ace wins the game if you survive its Stability check. Hard: failed Salvation rolls add
-						Tokens, and four Aces only make Salvation automatic. Changes apply the next time a game
-						begins.
+						Easy: the Ace of Hearts starts revealed, and the fourth Ace wins the game if you survive
+						its Stability check. Normal: missed Salvation rolls add no Tokens; four Aces make
+						Salvation automatic after a Stability check. Hard: missed Salvation rolls add Tokens.
+						Applies next game.
 					</p>
 				</div>
 				<select

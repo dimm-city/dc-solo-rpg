@@ -60,24 +60,27 @@ describe('getMechanicNote', () => {
 		);
 	});
 
-	it('the fourth Ace ends the game on Normal; on Hard it only makes Salvation assured', () => {
+	it('the fourth Ace makes Salvation assured on Normal and Hard; on Easy it ends the game', () => {
 		const fourth = card('A', 'spades', {}, { acesRevealed: 3, aceOfHeartsRevealed: true });
-		expect(getMechanicNote(fourth)).toBe(
-			'The fourth Ace · survive its Stability check and you escape'
-		);
 		const freed = card(
 			'A',
 			'spades',
 			{ modifier: 'skip-damage' },
 			{ acesRevealed: 3, aceOfHeartsRevealed: true }
 		);
-		expect(getMechanicNote(freed)).toBe('The fourth Ace · you escape');
-		// The live state carries the difficulty (the card's snapshot has the counts)
+		// The live state carries the difficulty (the card's snapshot has the counts); none is Normal
+		const assured = 'Ace · Salvation is now assured · a Stability check follows';
+		expect(getMechanicNote(fourth)).toBe(assured);
+		expect(getMechanicNote(freed)).toBe('Ace · Salvation is now assured');
 		const hard = { config: { options: { difficulty: 2 } } };
-		expect(getMechanicNote(fourth, hard)).toBe(
-			'Ace · Salvation is now assured · a Stability check follows'
-		);
+		expect(getMechanicNote(fourth, hard)).toBe(assured);
 		expect(getMechanicNote(freed, hard)).toBe('Ace · Salvation is now assured');
+
+		const easy = { config: { options: { difficulty: 0 } } };
+		expect(getMechanicNote(fourth, easy)).toBe(
+			'The fourth Ace · survive its Stability check and you escape'
+		);
+		expect(getMechanicNote(freed, easy)).toBe('The fourth Ace · you escape');
 	});
 
 	it('drops the Stability check for a skip-damage card', () => {

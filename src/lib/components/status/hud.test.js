@@ -90,14 +90,16 @@ describe('hudTiers', () => {
 		expect(acesSummary(7).count).toBe(4);
 	});
 
-	it('says what all four Aces mean by difficulty: the final check, or automatic Salvation on Hard', () => {
-		const final = 'survive the final Stability check and you escape';
-		expect(fourAcesRule(0)).toBe(final);
-		expect(fourAcesRule(1)).toBe(final);
-		expect(fourAcesRule(2)).toBe('Salvation is automatic after a Stability check');
+	it('says what all four Aces mean by difficulty: the final check on Easy, else automatic Salvation', () => {
+		const at = (difficulty) => ({ config: { options: { difficulty } } });
+		const automatic = 'Salvation is automatic after a Stability check';
+		expect(fourAcesRule(at(0))).toBe('survive the final Stability check and you escape');
+		expect(fourAcesRule(at(1))).toBe(automatic);
+		expect(fourAcesRule(at(2))).toBe(automatic);
 		// Anything else reads as Normal
-		expect(fourAcesRule(undefined)).toBe(final);
-		expect(fourAcesRule(7)).toBe(final);
+		expect(fourAcesRule(at(undefined))).toBe(automatic);
+		expect(fourAcesRule(at(7))).toBe(automatic);
+		expect(fourAcesRule(null)).toBe(automatic);
 	});
 
 	it('lights the Aces by suit, the Ace of Hearts first, and always agrees with the count', () => {
@@ -400,7 +402,7 @@ describe('AcesCell', () => {
 		expect(text(cell.querySelector('.sr-only'))).toBe('Aces 0 of 4, no Salvation roll yet');
 	});
 
-	it('keeps what Salvation needs in the tooltip and the spoken text: 14+ at two, the final check at four', () => {
+	it('keeps what Salvation needs in the tooltip and the spoken text: 14+ at two, automatic at four', () => {
 		gameState.acesRevealed = 2;
 		gameState.aceOfHeartsRevealed = true;
 		gameState.log = [ace('hearts'), ace('spades')];
@@ -415,33 +417,35 @@ describe('AcesCell', () => {
 		const second = render(AcesCell);
 		cell = second.getByTestId('hud-aces');
 		expect(cell.getAttribute('title')).toBe(
-			'All four Aces: survive the final Stability check and you escape'
+			'All four Aces: Salvation is automatic after a Stability check'
 		);
 		expect(text(cell.querySelector('.sr-only'))).toBe(
-			'Aces 4 of 4 (hearts, spades, diamonds, clubs), survive the final Stability check and you escape'
+			'Aces 4 of 4 (hearts, spades, diamonds, clubs), Salvation is automatic after a Stability check'
 		);
 		expect(lit(cell)).toEqual(['hearts', 'spades', 'diamonds', 'clubs']);
 	});
 
-	it('on Hard, four Aces mean automatic Salvation after a Stability check, not the end', () => {
+	it('on Easy, four Aces mean the final Stability check; on Normal and Hard, automatic Salvation', () => {
 		gameState.acesRevealed = 4;
 		gameState.aceOfHeartsRevealed = true;
 		gameState.log = ['hearts', 'spades', 'diamonds', 'clubs'].map(ace);
-		gameState.config = { options: { difficulty: 2 } };
+		gameState.config = { options: { difficulty: 0 } };
 		const { getByTestId } = render(AcesCell);
 		const cell = getByTestId('hud-aces');
 		expect(cell.getAttribute('title')).toBe(
-			'All four Aces: Salvation is automatic after a Stability check'
-		);
-		expect(text(cell.querySelector('.sr-only'))).toContain(
-			'Salvation is automatic after a Stability check'
-		);
-		// The difficulty is live: the text follows it
-		gameState.config = { options: { difficulty: 1 } };
-		flushSync();
-		expect(cell.getAttribute('title')).toBe(
 			'All four Aces: survive the final Stability check and you escape'
 		);
+		expect(text(cell.querySelector('.sr-only'))).toContain(
+			'survive the final Stability check and you escape'
+		);
+		// The difficulty is live: the text follows it
+		for (const difficulty of [1, 2]) {
+			gameState.config = { options: { difficulty } };
+			flushSync();
+			expect(cell.getAttribute('title')).toBe(
+				'All four Aces: Salvation is automatic after a Stability check'
+			);
+		}
 	});
 
 	it('counts an Ace that is on screen but not yet confirmed: pops and ignites its suit', () => {
