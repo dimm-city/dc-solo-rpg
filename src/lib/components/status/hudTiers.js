@@ -3,6 +3,8 @@
  * and the roll modifiers and caption. Pure functions, so the HUD cells and their tests agree.
  */
 
+import { fourthAceWins } from '../../constants/difficulty.js';
+
 export const MAX_STABILITY = 20;
 
 /** Cards in a full deck (the Oracle) */
@@ -52,17 +54,18 @@ export function acesSummary(aces) {
 }
 
 /**
- * What all four Aces mean, by difficulty (config.options.difficulty: 0 easy, 1 normal, 2 hard;
- * anything else reads as Normal). On Easy and Normal the fourth Ace ends the game: after its
- * own Stability check the player escapes if Stability is still above 0, and is lost if it
- * reaches 0. On Hard the game goes on: Salvation is automatic after a Stability check.
- * @param {number|undefined} difficulty
+ * What all four Aces mean, by difficulty (fourthAceWins reads config.options.difficulty;
+ * anything but Easy reads as Normal). On Easy the fourth Ace ends the game: after its own
+ * Stability check the player escapes if Stability is still above 0, and is lost if it reaches
+ * 0. On Normal and Hard the game goes on: Salvation is automatic after a Stability check.
+ * @param {{ config?: { options?: { difficulty?: number } } } | null} [state] gameState, or
+ *   anything carrying the game's config
  * @returns {string} A clause that follows "All four Aces: "
  */
-export function fourAcesRule(difficulty) {
-	return difficulty === 2
-		? 'Salvation is automatic after a Stability check'
-		: 'survive the final Stability check and you escape';
+export function fourAcesRule(state) {
+	return fourthAceWins(state)
+		? 'survive the final Stability check and you escape'
+		: 'Salvation is automatic after a Stability check';
 }
 
 /** The Ace pips, in order: the Ace of Hearts (it unlocks Salvation) first, red and black alternating */

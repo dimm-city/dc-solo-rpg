@@ -9,8 +9,8 @@
  * A result that ends the game does not move on by itself: the button reads "Face the end"
  * (the fatal roll: Stability reaches 0) or "Escape" (the fourth Ace's check held) and waits.
  *
- * The fourth Ace's check is the last roll of the game (isFinalStabilityCheck): the roll button
- * says what is at stake, and the result line ends in "you escape" when Stability holds.
+ * On Easy the fourth Ace's check is the last roll of the game (isFinalStabilityCheck): the roll
+ * button says what is at stake, and the result line ends in "you escape" when Stability holds.
  *
  * @param {Function} onCompleted - Callback when the check is completed (after it moves on)
  * @returns {Object} Failure check state and actions
@@ -106,7 +106,7 @@ export function useFailureCheck(onCompleted = () => {}) {
 		failureCheckRolling = false;
 	}
 
-	// Reactive button text: the fourth Ace's check says what is at stake; an ending is named
+	// Reactive button text: the final check (Easy) says what is at stake; an ending is named
 	const buttonText = $derived(
 		failureCheckRolling
 			? ROLLING_LABEL

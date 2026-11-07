@@ -60,11 +60,13 @@ describe('SettingsModal', () => {
 			'Hard'
 		]);
 		const help = document.getElementById('difficulty-help').textContent.replace(/\s+/g, ' ');
-		expect(help).toContain('Easy: the Ace of Hearts starts revealed.');
-		expect(help).toContain('Normal: Tokens only ever fall');
 		expect(help).toContain(
-			'Hard: failed Salvation rolls add Tokens, and four Aces only make Salvation automatic.'
+			'Easy: the Ace of Hearts starts revealed, and the fourth Ace wins the game if you survive its Stability check.'
 		);
+		expect(help).toContain(
+			'Normal: missed Salvation rolls add no Tokens; four Aces make Salvation automatic after a Stability check.'
+		);
+		expect(help).toContain('Hard: missed Salvation rolls add Tokens.');
 	});
 
 	it('opens on Manual play mode with default settings', async () => {

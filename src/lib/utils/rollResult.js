@@ -10,7 +10,7 @@
  *               "Natural 20 · +1 Stability · Lucid: your next roll keeps the higher of two dice"
  *               "Natural 1 · −3 Stability · Surreal: your next roll keeps the lower of two dice"
  *               "Rolled 3 · −2 Stability · 0/20 · nothing left to hold on to" (the fatal roll)
- *   The fourth Ace's check (the final roll: no modifier note, the game is over either way):
+ *   The fourth Ace's check on Easy (the final roll: no modifier note, the game is over either way):
  *               "Rolled 13 · no Stability lost · 16/20 · you escape"
  *               "Rolled 3 · −2 Stability · 0/20 · nothing left to hold on to" (the fatal roll)
  *   Tasks       "Rolled 17 · Draw 5 cards"
@@ -20,7 +20,7 @@
  *   Salvation on Hard, where a miss adds a token:
  *               "Rolled 9 · needed 14+ · +1 token · 11 left"
  *               "Natural 1 · +2 tokens · 12 left · Surreal: your next roll keeps the lower of two dice"
- *   Salvation with four Aces (Hard only: a Stability check, then the token comes off):
+ *   Salvation with four Aces (Normal and Hard: a Stability check, then the token comes off):
  *               "Rolled 14 · no Stability lost · −1 token · 3 left"
  *               "Rolled 3 · −2 Stability · 0/20 · nothing left to hold on to" (the fatal roll)
  *
@@ -40,11 +40,11 @@ export const SURREAL_NOTE = 'Surreal: your next roll keeps the lower of two dice
 export const LUCID_HINT = 'Lucid: 2 dice, keep high';
 export const SURREAL_HINT = 'Surreal: 2 dice, keep low';
 export const FATAL_NOTE = 'nothing left to hold on to';
-/** The fourth Ace's Stability check held: the game is won */
+/** The fourth Ace's Stability check held (Easy): the game is won */
 export const ESCAPE_NOTE = 'you escape';
 /** The step button's label while the dice are on the table, on every step */
 export const ROLLING_LABEL = 'Rolling…';
-/** The roll button on the fourth Ace's Stability check, the last roll of the game */
+/** The roll button on the fourth Ace's Stability check (Easy), the last roll of the game */
 export const FINAL_CHECK_LABEL = 'Roll for Stability · survive this and you escape';
 
 const SEP = ' · ';
@@ -92,8 +92,8 @@ function stabilityChange({ stabilityLoss, stabilityGain, stabilityBefore, max })
  * @param {number} towerAfter - Stability after the result was applied
  * @param {number} [max=20] - Stability cap
  * @param {Throw} [thrown] - The dice, for a two-dice roll
- * @param {{ final?: boolean }} [options] - final: the fourth Ace's check, which the player
- *   has survived if any Stability is left (the game is over, so no modifier note)
+ * @param {{ final?: boolean }} [options] - final: the fourth Ace's check on Easy, which the
+ *   player has survived if any Stability is left (the game is over, so no modifier note)
  */
 export function formatStabilityResult(
 	roll,
@@ -116,7 +116,7 @@ export function formatStabilityResult(
 		// The fatal roll: no modifier note, the game is over
 		parts.push(`${MINUS}${loss} Stability`, `0/${max}`, FATAL_NOTE);
 	} else if (final) {
-		// The fourth Ace's check held: the game is won
+		// The fourth Ace's check held (Easy): the game is won
 		parts.push(change, `${towerAfter}/${max}`, ESCAPE_NOTE);
 	} else if (gainedLucid) {
 		parts.push(change, LUCID_NOTE);
@@ -145,8 +145,8 @@ export function formatTaskResult(roll, cards, thrown) {
  * Result line for a Salvation check. On Normal tokens only ever fall: a miss (a natural 1
  * included) loses none, and the line says so instead of a count. On Hard a miss adds tokens.
  * @param {number} roll - Kept d20 value
- * @param {number} threshold - From getSalvationThreshold (17, 14 or 11; 0 = four Aces on
- *   Hard: a Stability check, then the token)
+ * @param {number} threshold - From getSalvationThreshold (17, 14 or 11; 0 = four Aces: a
+ *   Stability check, then the token)
  * @param {number} tokensAfter - Tokens left after the result was applied
  * @param {Throw} [thrown] - The dice, for a two-dice roll
  * @param {{ hard?: boolean, stabilityBefore?: number, max?: number }} [rules] - hard: the Hard
@@ -180,7 +180,7 @@ export function formatSalvationResult(
 	return parts.join(SEP);
 }
 
-/** Four Aces (Hard): the Stability check first, then the token (unless Stability ran out) */
+/** Four Aces: the Stability check first, then the token (unless Stability ran out) */
 function formatAutomaticSalvation(roll, tokensAfter, thrown, stabilityBefore, max) {
 	const outcome = calculateAutomaticSalvation(roll, stabilityBefore, max);
 	const parts = [rolled(roll, thrown)];
@@ -202,7 +202,7 @@ function formatAutomaticSalvation(roll, tokensAfter, thrown, stabilityBefore, ma
 
 /**
  * Label for the Salvation button: shows the target before the player rolls. With four Aces
- * (Hard) there is none: the roll is a Stability check, and the token comes off if Stability holds.
+ * there is none: the roll is a Stability check, and the token comes off if Stability holds.
  * @param {number} threshold - From getSalvationThreshold (0 = four Aces)
  */
 export function formatSalvationButton(threshold) {

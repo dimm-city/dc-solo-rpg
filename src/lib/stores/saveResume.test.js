@@ -26,7 +26,7 @@ const { saveGame, loadGame, restoreGameState, normalizeSave } = await import(
 );
 const { isFinalStabilityCheck, applyFailureCheckResult, applyPendingDiceRoll, successCheck } =
 	await import('./gameActions.svelte.js');
-const { isHardGame } = await import('../constants/difficulty.js');
+const { isHardGame, fourthAceWins } = await import('../constants/difficulty.js');
 
 const SLUG = 'test-game';
 const config = { slug: SLUG, title: 'Test Game', labels: {}, options: {} };
@@ -85,9 +85,10 @@ describe('save and resume', () => {
 		expect(gameState.lastCard.card).toBe('7');
 	});
 
-	it("keeps the difficulty, and a game left on the fourth Ace's check resumes on it", async () => {
+	it("keeps Easy, and a game left on the fourth Ace's check resumes on it", async () => {
 		Object.assign(gameState, {
 			state: 'failureCheck',
+			config: { ...config, options: { difficulty: 0 } },
 			tower: 9,
 			tokens: 6,
 			aceOfHeartsRevealed: true,
@@ -101,6 +102,7 @@ describe('save and resume', () => {
 		Object.assign(gameState, createRunState(), { config: null });
 		restoreGameState(gameState, await loadGame(SLUG));
 		expect(gameState.state).toBe('failureCheck');
+		expect(fourthAceWins(gameState)).toBe(true);
 		expect(isHardGame(gameState)).toBe(false);
 		expect(isFinalStabilityCheck()).toBe(true);
 
@@ -111,29 +113,37 @@ describe('save and resume', () => {
 		expect(gameState.state).toBe('gameOver');
 	});
 
-	it('keeps Hard, where the fourth Ace ends nothing and Salvation has no target', async () => {
-		Object.assign(gameState, {
-			state: 'failureCheck',
-			config: { ...config, options: { difficulty: 2 } },
-			tower: 9,
-			tokens: 6,
-			aceOfHeartsRevealed: true,
-			acesRevealed: 4,
-			cardsToDraw: 0
-		});
-		expect(await saveGame(gameState)).toBe(true);
+	it.each([
+		['Normal', {}],
+		['Hard', { difficulty: 2 }]
+	])(
+		'keeps %s, where the fourth Ace ends nothing and Salvation has no target',
+		async (_, options) => {
+			Object.assign(gameState, {
+				state: 'failureCheck',
+				config: { ...config, options },
+				tower: 9,
+				tokens: 6,
+				aceOfHeartsRevealed: true,
+				acesRevealed: 4,
+				cardsToDraw: 0
+			});
+			expect(isFinalStabilityCheck()).toBe(false);
+			expect(await saveGame(gameState)).toBe(true);
 
-		Object.assign(gameState, createRunState(), { config: null });
-		restoreGameState(gameState, await loadGame(SLUG));
-		expect(isHardGame(gameState)).toBe(true);
-		expect(isFinalStabilityCheck()).toBe(false);
+			Object.assign(gameState, createRunState(), { config: null });
+			restoreGameState(gameState, await loadGame(SLUG));
+			expect(fourthAceWins(gameState)).toBe(false);
+			expect(isHardGame(gameState)).toBe(options.difficulty === 2);
+			expect(isFinalStabilityCheck()).toBe(false);
 
-		applyFailureCheckResult(13);
-		applyPendingDiceRoll();
-		expect(gameState.gameOver).toBe(false);
-		expect(gameState.state).toBe('successCheck');
-		expect(successCheck().automatic).toBe(true);
-	});
+			applyFailureCheckResult(13);
+			applyPendingDiceRoll();
+			expect(gameState.gameOver).toBe(false);
+			expect(gameState.state).toBe('successCheck');
+			expect(successCheck().automatic).toBe(true);
+		}
+	);
 
 	it('NV-08: keeps a game left before the opening roll, and resumes on that roll', async () => {
 		Object.assign(gameState, { state: 'initialDamageRoll', round: 1, tower: 20 });

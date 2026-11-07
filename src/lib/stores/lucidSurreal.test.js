@@ -155,9 +155,10 @@ describe('Lucid and Surreal on every d20 roll', () => {
 		expect(gameState.isLucid).toBe(false);
 	});
 
-	describe("the fourth Ace's Stability check (Normal: the last roll of the game)", () => {
+	describe("the fourth Ace's Stability check (Easy: the last roll of the game)", () => {
 		beforeEach(() => {
 			gameState.acesRevealed = 4;
+			gameState.config = { labels: {}, options: { difficulty: 0 } };
 		});
 
 		it('uses up a Lucid modifier: two dice, the higher kept, and the game is won', async () => {
@@ -202,16 +203,20 @@ describe('Lucid and Surreal on every d20 roll', () => {
 		});
 	});
 
-	describe('Salvation with four Aces on Hard (a Stability check, then the token)', () => {
+	describe.each([
+		['Normal', 1],
+		['Hard', 2]
+	])('Salvation with four Aces on %s (a Stability check, then the token)', (_, difficulty) => {
 		beforeEach(() => {
 			gameState.acesRevealed = 4;
-			gameState.config = { labels: {}, options: { difficulty: 2 } };
+			gameState.config = { labels: {}, options: { difficulty } };
 		});
 
-		it('is not the final check: the fourth Ace ends nothing on Hard', async () => {
+		it("is not the final check: the fourth Ace's own check ends nothing here", async () => {
 			mockDieRoll(13);
 			await ROLLS.stability();
 			expect(gameState.gameOver).toBe(false);
+			expect(gameState.tokens).toBe(10);
 		});
 
 		it('uses up a Lucid modifier: two dice, the higher kept, read on the Stability table', async () => {

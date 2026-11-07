@@ -15,8 +15,9 @@
 		king: 'Kings are the threat. The fourth one ends the game.',
 		salvation:
 			'The Ace of Hearts unlocks Salvation: at the end of each round, roll to remove a Token.',
-		ace: 'Every Ace you reveal makes Salvation easier.',
-		'fourth-ace': 'The fourth Ace ends the game: survive its Stability check and you escape.',
+		ace: 'Every Ace you reveal makes Salvation easier; with all four it is automatic after a Stability check.',
+		'fourth-ace':
+			'On Easy, the fourth Ace ends the game: survive its Stability check and you escape.',
 		lucid: 'Lucid: your next roll uses two dice and keeps the higher.',
 		surreal: 'Surreal: your next roll uses two dice and keeps the lower.',
 		token: 'On Hard, a failed Salvation roll adds a Token.'

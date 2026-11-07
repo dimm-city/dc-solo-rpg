@@ -3,7 +3,7 @@ import { gameState } from './gameStore.svelte.js';
 import { initializeGame } from './gameInit.js';
 import { startGame } from './gameActions.svelte.js';
 import { getSettings, updateSettings, resetSettings } from './settingsStore.svelte.js';
-import { isHardGame, DIFFICULTY } from '../constants/difficulty.js';
+import { isHardGame, fourthAceWins, DIFFICULTY } from '../constants/difficulty.js';
 
 const player = { name: 'Tester' };
 
@@ -19,22 +19,27 @@ function makeConfig(options) {
 
 const hasAceOfHearts = () => gameState.deck.some((c) => c.card === 'A' && c.suit === 'hearts');
 
+/** Easy: the Ace of Hearts starts revealed, and the fourth Ace ends the game */
 function expectEasy() {
 	expect(hasAceOfHearts()).toBe(false);
 	expect(gameState.acesRevealed).toBe(1);
+	expect(fourthAceWins(gameState)).toBe(true);
+	expect(isHardGame(gameState)).toBe(false);
 }
 
 function expectNormal() {
 	expect(hasAceOfHearts()).toBe(true);
 	expect(gameState.acesRevealed).toBe(0);
+	expect(fourthAceWins(gameState)).toBe(false);
 	expect(isHardGame(gameState)).toBe(false);
 }
 
-/** Hard keeps the full deck like Normal; only the Salvation rules differ (see gameActions) */
+/** Hard keeps the full deck like Normal; only a missed Salvation roll differs (see gameActions) */
 function expectHard() {
 	expect(hasAceOfHearts()).toBe(true);
 	expect(gameState.acesRevealed).toBe(0);
 	expect(gameState.config.options.difficulty).toBe(DIFFICULTY.HARD);
+	expect(fourthAceWins(gameState)).toBe(false);
 	expect(isHardGame(gameState)).toBe(true);
 }
 

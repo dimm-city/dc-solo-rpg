@@ -84,8 +84,8 @@ describe('formatSalvationResult', () => {
 		});
 	});
 
-	describe('with four Aces (Hard): a Stability check, then the token', () => {
-		const at = (stabilityBefore) => ({ hard: true, stabilityBefore });
+	describe('with four Aces (Normal and Hard): a Stability check, then the token', () => {
+		const at = (stabilityBefore) => ({ stabilityBefore });
 
 		it('names what the roll did to Stability, then the token', () => {
 			expect(formatSalvationResult(14, 0, 3, undefined, at(16))).toBe(
@@ -122,7 +122,7 @@ describe('formatSalvationResult', () => {
 	});
 });
 
-describe("the fourth Ace's Stability check (the final roll)", () => {
+describe("the fourth Ace's Stability check (Easy: the final roll)", () => {
 	const final = { final: true };
 
 	it('ends in "you escape" when Stability holds, with no modifier note', () => {

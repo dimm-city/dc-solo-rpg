@@ -63,43 +63,65 @@ describe('createRuleCaptions', () => {
 		expect(items[1].text).toContain('14+');
 	});
 
-	it('the third Ace points at the fourth on Normal, not on Hard', () => {
+	it('the third Ace points at the fourth on Easy, where it ends the game, not on Normal or Hard', () => {
+		// No config reads as Normal
 		c.observe(base({ acesRevealed: 2, aceOfHeartsRevealed: true }));
 		drain(c);
 		c.observe(base({ acesRevealed: 3, aceOfHeartsRevealed: true }));
-		expect(c.next().text).toBe(
+		expect(c.next().text).toBe('Each Ace makes salvation easier. You now need 11+.');
+
+		for (const difficulty of [1, 2]) {
+			const level = createRuleCaptions({ isDisabled: () => false });
+			const on = (over) => base({ config: { options: { difficulty } }, ...over });
+			level.observe(on({ acesRevealed: 2, aceOfHeartsRevealed: true }));
+			drain(level);
+			level.observe(on({ acesRevealed: 3, aceOfHeartsRevealed: true }));
+			expect(level.next().text).toBe('Each Ace makes salvation easier. You now need 11+.');
+		}
+
+		const easy = createRuleCaptions({ isDisabled: () => false });
+		const onEasy = (over) => base({ config: { options: { difficulty: 0 } }, ...over });
+		easy.observe(onEasy({ acesRevealed: 2, aceOfHeartsRevealed: true }));
+		drain(easy);
+		easy.observe(onEasy({ acesRevealed: 3, aceOfHeartsRevealed: true }));
+		expect(easy.next().text).toBe(
 			'Each Ace makes salvation easier. You now need 11+. One more Ace and you escape, if you survive its check.'
 		);
-
-		const hard = createRuleCaptions({ isDisabled: () => false });
-		const onHard = (over) => base({ config: { options: { difficulty: 2 } }, ...over });
-		hard.observe(onHard({ acesRevealed: 2, aceOfHeartsRevealed: true }));
-		drain(hard);
-		hard.observe(onHard({ acesRevealed: 3, aceOfHeartsRevealed: true }));
-		expect(hard.next().text).toBe('Each Ace makes salvation easier. You now need 11+.');
 	});
 
-	it('the fourth Ace has its own caption on Normal; on Hard it is one more Ace', () => {
-		c.observe(base({ acesRevealed: 1, aceOfHeartsRevealed: true }));
-		c.observe(base({ acesRevealed: 2, aceOfHeartsRevealed: true }));
-		drain(c); // salvation, ace
+	it('the fourth Ace has its own caption on Easy; on Normal and Hard it is one more Ace', () => {
+		for (const difficulty of [undefined, 1, 2]) {
+			const level = createRuleCaptions({ isDisabled: () => false });
+			const on = (over) =>
+				base(difficulty === undefined ? over : { config: { options: { difficulty } }, ...over });
+			level.observe(on({ acesRevealed: 1, aceOfHeartsRevealed: true }));
+			level.observe(on({ acesRevealed: 2, aceOfHeartsRevealed: true }));
+			drain(level); // salvation, ace
+			level.observe(on({ acesRevealed: 4, aceOfHeartsRevealed: true }));
+			const items = [];
+			let n;
+			while ((n = level.next())) items.push(n);
+			expect(items.map((i) => i.id)).toEqual([]); // 'ace' was already shown
+		}
+
+		// With the all-four text when it is the first Ace after the Ace of Hearts
+		c.observe(base({ acesRevealed: 3, aceOfHeartsRevealed: true }));
+		drain(c);
 		c.observe(base({ acesRevealed: 4, aceOfHeartsRevealed: true }));
-		const fourth = c.next();
+		expect(c.next()).toEqual({
+			id: 'ace',
+			text: 'Each Ace makes salvation easier. With all four, only a Stability check stands in the way.'
+		});
+
+		const easy = createRuleCaptions({ isDisabled: () => false });
+		const onEasy = (over) => base({ config: { options: { difficulty: 0 } }, ...over });
+		easy.observe(onEasy({ acesRevealed: 1, aceOfHeartsRevealed: true }));
+		easy.observe(onEasy({ acesRevealed: 2, aceOfHeartsRevealed: true }));
+		drain(easy); // salvation, ace
+		easy.observe(onEasy({ acesRevealed: 4, aceOfHeartsRevealed: true }));
+		const fourth = easy.next();
 		expect(fourth.id).toBe('fourth-ace');
 		expect(fourth.text).toBe('The fourth Ace. Survive its Stability check and you escape.');
-
-		const hard = createRuleCaptions({ isDisabled: () => false });
-		const onHard = (over) => base({ config: { options: { difficulty: 2 } }, ...over });
-		hard.observe(onHard({ acesRevealed: 3, aceOfHeartsRevealed: true }));
-		drain(hard);
-		hard.observe(onHard({ acesRevealed: 4, aceOfHeartsRevealed: true }));
-		const items = [];
-		let n;
-		while ((n = hard.next())) items.push(n);
-		expect(items.map((i) => i.id)).toEqual(['ace']);
-		expect(items[0].text).toBe(
-			'Each Ace makes salvation easier. With all four, only a Stability check stands in the way.'
-		);
 	});
 
 	it('a non-heart Ace before the Ace of Hearts says nothing', () => {

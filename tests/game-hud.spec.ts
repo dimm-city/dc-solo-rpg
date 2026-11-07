@@ -209,7 +209,7 @@ test.describe('Game HUD', () => {
 		await expect(tokens).toHaveClass(/over/);
 		await expect(tokens.locator('.fill')).toHaveAttribute('style', /scaleX\(1\)/);
 
-		// All four Aces: the final Stability check on Easy and Normal, automatic Salvation on Hard
+		// All four Aces: automatic Salvation on Normal and Hard, the final Stability check on Easy
 		await setState(
 			page,
 			`g.acesRevealed = 4; g.log = ${FOUR_ACES}; g.config.options.difficulty = 1;`
@@ -217,15 +217,20 @@ test.describe('Game HUD', () => {
 		await expect(aces).toContainText('4/4');
 		await expect(aces).toHaveAttribute(
 			'title',
-			'All four Aces: survive the final Stability check and you escape'
+			'All four Aces: Salvation is automatic after a Stability check'
 		);
 		await expect(aces.locator('.sr-only')).toHaveText(
-			'Aces 4 of 4 (hearts, spades, diamonds, clubs), survive the final Stability check and you escape'
+			'Aces 4 of 4 (hearts, spades, diamonds, clubs), Salvation is automatic after a Stability check'
 		);
 		await setState(page, 'g.config.options.difficulty = 2;');
 		await expect(aces).toHaveAttribute(
 			'title',
 			'All four Aces: Salvation is automatic after a Stability check'
+		);
+		await setState(page, 'g.config.options.difficulty = 0;');
+		await expect(aces).toHaveAttribute(
+			'title',
+			'All four Aces: survive the final Stability check and you escape'
 		);
 	});
 

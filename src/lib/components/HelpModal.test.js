@@ -71,6 +71,18 @@ describe('HelpModal', () => {
 		expect(text).not.toContain('on a Stability check makes you');
 	});
 
+	it('states the four-Aces rule, and the Easy exception where the fourth Ace ends the game', async () => {
+		await renderModal();
+
+		const text = document.body.textContent.replace(/\s+/g, ' ');
+		expect(text).toContain('Remove every Token to escape.');
+		expect(text).toContain('No target: a Stability check, then 1 Token comes off');
+		expect(text).toContain('With all four Aces there is no target.');
+		expect(text).toContain('And the fourth Ace ends the game');
+		expect(text).toContain('Hard changes one thing: a missed Salvation roll adds 1 Token');
+		expect(text).not.toContain('The fourth Ace ends the game.');
+	});
+
 	it('lists no "Rules you\'ve met" before any rule tip has been shown', async () => {
 		await renderModal();
 

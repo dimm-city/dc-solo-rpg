@@ -5,8 +5,8 @@
 	 * The pips read ♥ ♠ ♦ ♣ and light as each Ace is drawn. The Ace of Hearts is the gold one:
 	 * it unlocks Salvation (the Tokens cell beside it). Every Ace lowers the Salvation roll:
 	 * 17+ with one, 14+ with two, 11+ with three. What all four mean depends on the difficulty
-	 * (fourAcesRule): on Easy and Normal the fourth Ace ends the game after its own Stability
-	 * check, on Hard Salvation is automatic after a Stability check. The threshold (or that
+	 * (fourAcesRule): on Easy the fourth Ace ends the game after its own Stability check, on
+	 * Normal and Hard Salvation is automatic after a Stability check. The threshold (or that
 	 * rule) is in the cell's tooltip and its spoken text. The count includes an Ace that is
 	 * on screen but not yet confirmed; a new Ace pops the count and ignites its pip for one
 	 * beat.
@@ -30,7 +30,7 @@
 		})
 	);
 	const litSuits = $derived(suits.filter((pip) => pip.lit).map((pip) => pip.suit));
-	const allFour = $derived(fourAcesRule(gameState.config?.options?.difficulty));
+	const allFour = $derived(fourAcesRule(gameState));
 	const need = $derived(
 		aces.need === 'all'
 			? allFour

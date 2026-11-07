@@ -14,7 +14,7 @@ import {
 	calculateSalvationResult,
 	calculateAutomaticSalvation
 } from '../services/d20Mechanics.js';
-import { isHardGame } from '../constants/difficulty.js';
+import { isHardGame, fourthAceWins } from '../constants/difficulty.js';
 
 // Re-export D20 mechanics for backwards compatibility
 export {
@@ -341,16 +341,16 @@ export function drawCard() {
 const ODD_RANKS = ['A', '3', '5', '7', '9'];
 
 /**
- * On Normal (and Easy) the fourth Ace ends the game. Being odd, it calls for a Stability check
- * like any Ace, and that check is the last roll of the game: survive it and the game is won,
- * whatever tokens remain; lose the last Stability to it and the game is lost. No such state
- * outlives that check, so on the Stability check screen the Aces count alone says it is the
- * final one. On Hard the fourth Ace ends nothing: Salvation goes on, as a Stability check per
- * token (see getSalvationCheckRoll).
+ * On Easy the fourth Ace ends the game (fourthAceWins). Being odd, it calls for a Stability
+ * check like any Ace, and that check is the last roll of the game: survive it and the game is
+ * won, whatever tokens remain; lose the last Stability to it and the game is lost. No such
+ * state outlives that check, so on the Stability check screen the Aces count alone says it is
+ * the final one. On Normal and Hard the fourth Ace ends nothing: Salvation goes on, as a
+ * Stability check per token (see getSalvationCheckRoll).
  * @returns {boolean}
  */
 export function isFinalStabilityCheck() {
-	return gameState.acesRevealed >= 4 && !isHardGame(gameState);
+	return gameState.acesRevealed >= 4 && fourthAceWins(gameState);
 }
 
 /** The game is won: the status line is the author's win message */
@@ -396,10 +396,10 @@ function returnKingToDeck(card) {
  * Flow:
  * 1. Apply pending Ace changes (increments acesRevealed for Salvation threshold)
  * 2. Apply pending King changes (tracks which Kings revealed for game over)
- * 3. Check for game over conditions (4 Kings = instant loss; a fourth Ace that skips its
- *    Stability check = instant win, see isFinalStabilityCheck)
+ * 3. Check for game over conditions (4 Kings = instant loss; on Easy a fourth Ace that skips
+ *    its Stability check = instant win, see isFinalStabilityCheck)
  * 4. Determine next state:
- *    - Odd rank (A,3,5,7,9) → failureCheck (the fourth Ace's check decides the game)
+ *    - Odd rank (A,3,5,7,9) → failureCheck (on Easy the fourth Ace's check decides the game)
  *    - More cards to draw → drawCard
  *    - Ace of Hearts revealed + tokens > 0 → successCheck
  *    - Otherwise → log (journal entry)
@@ -467,8 +467,8 @@ export function confirmCard() {
 		return; // Exit early, game is over
 	}
 
-	// The fourth Ace ends the game. Its Stability check decides it (applyPendingDiceRoll); a
-	// fourth Ace that skips its check, as skip-damage promises, frees the player outright.
+	// On Easy the fourth Ace ends the game. Its Stability check decides it (applyPendingDiceRoll);
+	// a fourth Ace that skips its check, as skip-damage promises, frees the player outright.
 	if (card?.card === 'A' && card.modifier === 'skip-damage' && isFinalStabilityCheck()) {
 		winGame();
 		logger.info('[confirmCard] VICTORY - the fourth Ace, with no Stability check to survive');
@@ -598,14 +598,14 @@ export function applyFailureCheckResult(result) {
  * - Lucid State: Advantage on next roll (2d20 keep high)
  * - Surreal State: Disadvantage on next roll (2d20 keep low)
  * - Game Over: Stability ≤ 0 triggers instant loss
- * - The fourth Ace's check (isFinalStabilityCheck): Stability holds → the game is won
+ * - The fourth Ace's check on Easy (isFinalStabilityCheck): Stability holds → the game is won
  *
  * State Flow:
  * 1. Apply pending dice roll to gameState.diceRoll
  * 2. Update last log entry with roll and damage
  * 3. Apply stability gain (if natural 20)
  * 4. Apply stability loss (if any)
- * 5. Check for stability collapse (game over), or the win on the fourth Ace's check
+ * 5. Check for stability collapse (game over), or (Easy) the win on the fourth Ace's check
  * 6. Apply Lucid/Surreal states
  * 7. Transition to next state or success check
  * 8. Auto-save game state
@@ -650,7 +650,7 @@ export function applyPendingDiceRoll({ advance = true } = {}) {
 	// Apply the Stability gain (natural 20) and loss; at 0 the game is lost
 	applyPendingStability();
 
-	// The fourth Ace's check is the last roll of the game: Stability held, so it is won
+	// On Easy the fourth Ace's check is the last roll of the game: Stability held, so it is won
 	if (!gameState.gameOver && isFinalStabilityCheck()) {
 		winGame();
 		logger.info("[applyPendingDiceRoll] VICTORY - the fourth Ace's Stability check held");
@@ -670,7 +670,7 @@ export function applyPendingDiceRoll({ advance = true } = {}) {
 /**
  * Apply a Stability check's pending result: the gain first (natural 20, capped at 20 Stability),
  * then the loss. Stability at 0 ends the game. Shared by the Stability check and the four-Aces
- * Salvation on Hard, whose token only comes off if Stability holds.
+ * Salvation (Normal and Hard), whose token only comes off if Stability holds.
  */
 function applyPendingStability() {
 	const loss = gameState.pendingUpdates.towerDamage || 0;
@@ -818,8 +818,8 @@ export async function recordRound(journalEntry) {
 /**
  * The roll Salvation needs right now. Salvation only opens with the Ace of Hearts, which
  * counts as the first Ace, so the button and the roll always agree on one threshold.
- * @returns {number} 17, 14 or 11, or 0 when there is no target (four Aces: Hard only, since
- *   on Normal the fourth Ace ends the game)
+ * @returns {number} 17, 14 or 11, or 0 when there is no target (four Aces on Normal and Hard;
+ *   on Easy the fourth Ace ends the game first)
  */
 export function getCurrentSalvationThreshold() {
 	return getSalvationThreshold(Math.max(1, gameState.acesRevealed));
@@ -832,8 +832,8 @@ export function getSalvationCheckRoll() {
 	// Roll d20 with Lucid/Surreal modifiers
 	const { roll, dice, wasLucid, wasSurreal } = gameState.rollWithModifiers();
 
-	// Four Aces (Hard): no target to beat, but the token only comes off after one Stability
-	// check. The roll is read on the Stability table; at 0 Stability the game is lost instead.
+	// Four Aces (Normal and Hard): no target to beat, but the token only comes off after one
+	// Stability check. The roll is read on the Stability table; at 0 Stability the game is lost.
 	if (threshold === 0) {
 		const outcome = calculateAutomaticSalvation(roll, gameState.tower);
 		gameState.pendingUpdates.diceRoll = roll;
