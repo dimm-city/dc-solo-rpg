@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Locator, type Page } from '@playwright/test';
 import { INSTRUCTIONS_SEEN_KEY } from './helpers';
 
 /**
@@ -6,12 +6,12 @@ import { INSTRUCTIONS_SEEN_KEY } from './helpers';
  *
  * Completed games are written straight into IndexedDB through the live store modules (the dev
  * server serves /src), the same way the UX review seeded them: one loss by Kings with written,
- * empty and voice-note rounds, and one escape.
+ * empty and voice-note rounds, one escape, and a six-round loss to Stability for page turning.
  */
 
 type Plan = {
 	slug: string;
-	outcome: 'kings' | 'win';
+	outcome: 'kings' | 'win' | 'stability';
 	rounds: { cards: string[]; journal?: string; audio?: boolean }[];
 };
 
@@ -32,6 +32,20 @@ const WIN: Plan = {
 	rounds: [
 		{ cards: ['A:hearts', '2'], journal: 'The code remembered me.' },
 		{ cards: ['A:spades', '6'] }
+	]
+};
+
+/** Six rounds, written and unwritten, until Stability gives out */
+const LONG: Plan = {
+	slug: 'future-lost',
+	outcome: 'stability',
+	rounds: [
+		{ cards: ['7', 'Q'], journal: 'The rain came through the roof again.' },
+		{ cards: ['K:spades', '4'] },
+		{ cards: ['J', '2'], journal: 'The code remembered me.' },
+		{ cards: ['9', 'K:hearts'] },
+		{ cards: ['K:clubs', '6'], journal: 'Three crowns now.' },
+		{ cards: ['3', '8'], journal: 'Nothing left to hold on to.' }
 	]
 };
 
@@ -100,7 +114,7 @@ async function writeSave(page: Page, plan: Plan) {
 			acesRevealed: aces,
 			aceOfHeartsRevealed: aces > 0,
 			tokens: plan.outcome === 'win' ? 0 : 10,
-			tower: 18,
+			tower: plan.outcome === 'stability' ? 0 : 18,
 			gameOver: true,
 			win: plan.outcome === 'win',
 			state: 'gameOver'
@@ -109,30 +123,32 @@ async function writeSave(page: Page, plan: Plan) {
 	}, plan);
 }
 
-async function openLibrary(page: Page) {
+async function openLibrary(page: Page, plans: Plan[] = [WIN, KINGS]) {
 	await page.goto('/');
 	await page.evaluate((key) => {
 		sessionStorage.setItem('splashShown', 'true');
 		localStorage.setItem(key, 'true');
 	}, INSTRUCTIONS_SEEN_KEY);
-	await seed(page, WIN);
-	await seed(page, KINGS);
+	for (const plan of plans) await seed(page, plan);
 	await page.goto('/?story=1');
 	await expect(page.getByRole('heading', { level: 1, name: 'Story Library' })).toBeVisible();
-	await expect(page.getByTestId('story-card')).toHaveCount(2);
+	await expect(page.getByTestId('story-card')).toHaveCount(plans.length);
 }
 
 /** The round on screen. While rounds swap, Svelte marks the outgoing one inert. */
 const currentRound = (page: Page) => page.locator('[data-testid="story-round"]:not([inert])');
 
+/** Open a story from the library: a tap on touch projects, a click elsewhere */
+async function openStory(page: Page, hasText: string, touch = false) {
+	const open = page.getByTestId('story-card').filter({ hasText }).locator('.card-open');
+	if (touch) await open.tap();
+	else await open.click();
+	await expect(page.getByTestId('story-mode')).toBeVisible();
+}
+
 async function openKingsStory(page: Page) {
 	await openLibrary(page);
-	await page
-		.getByTestId('story-card')
-		.filter({ hasText: 'fourth King' })
-		.locator('.card-open')
-		.click();
-	await expect(page.getByTestId('story-mode')).toBeVisible();
+	await openStory(page, 'fourth King');
 }
 
 test.describe('Story Library', () => {
@@ -252,6 +268,45 @@ test.describe('Story mode', () => {
 		await expect(currentRound(page).getByRole('heading')).toContainText('Round 2');
 		await page.keyboard.press('ArrowLeft');
 		await expect(currentRound(page).getByRole('heading')).toContainText('Round 1');
+	});
+
+	/**
+	 * Android Chromium sizes 100vh to the viewport with the browser bars hidden, so body and
+	 * main (height: 100vh) run on under the address bar and, in Vivaldi, the bottom toolbar
+	 * whenever those are shown, and a nested scroller never hides them. Playwright has no
+	 * browser bars, so this models them: 104px of page below the visible viewport.
+	 */
+	const ANDROID_BROWSER_BARS = 'body, main { height: calc(100vh + 104px) !important; }';
+
+	test('rounds turn under Android browser bars: by tap on phones, by key on desktop', async ({
+		page,
+		hasTouch
+	}) => {
+		await openLibrary(page, [LONG]);
+		await page.addStyleTag({ content: ANDROID_BROWSER_BARS });
+		await openStory(page, 'Stability gave out', hasTouch);
+		await expect(page.getByTestId('story-mode')).toContainText('6 rounds');
+
+		// Previous / Next are pinned to the bottom of the story, which must be the visible
+		// bottom of the screen: on a phone they are the only way to turn the page
+		const next = page.getByRole('button', { name: 'Next round' });
+		const previous = page.getByRole('button', { name: 'Previous round' });
+		await expect(next).toBeInViewport({ ratio: 1 });
+		await expect(previous).toBeInViewport({ ratio: 1 });
+
+		const turn = async (button: Locator, key: string) => {
+			if (hasTouch) await button.tap();
+			else await page.keyboard.press(key);
+		};
+		await turn(next, 'ArrowRight');
+		await expect(currentRound(page).getByRole('heading')).toContainText('Round 2');
+		await expect(currentRound(page)).toContainText("You didn't write this round.");
+		for (let i = 0; i < 4; i++) await turn(next, 'ArrowRight');
+		await expect(currentRound(page).getByRole('heading')).toContainText('Round 6');
+		await expect(currentRound(page)).toContainText('Nothing left to hold on to.');
+		await expect(next).toBeDisabled();
+		await turn(previous, 'ArrowLeft');
+		await expect(currentRound(page).getByRole('heading')).toContainText('Round 5');
 	});
 
 	test('Escape in the AI settings closes only the dialog (SM-03)', async ({ page }) => {
