@@ -15,6 +15,10 @@ let isInitialized = $state(false);
 let containerElement = $state(null);
 /** Re-measures the dice whenever their container changes size (see syncDiceBoxSize) */
 let sizeObserver = null;
+/** Our window resize listener, in place of dice-box's own anonymous one (see ownResize) */
+let resizeHandler = null;
+/** The theme the box shows, as dice-box settings (JSON), so the same theme is never reloaded */
+let appliedTheme = null;
 
 /**
  * Dice rolling state - wrapped in object to allow export
@@ -61,8 +65,13 @@ let rollCount = 0;
 export { diceState };
 
 /**
- * Initialize the DiceBox instance
- * Should be called once when the game starts
+ * Initialize the DiceBox instance, or reuse it.
+ *
+ * The one box (one renderer, one WebGL context) lives as long as the page: its container never
+ * unmounts. Called again for the next game, or on returning to the game screens, it keeps the
+ * box, re-measures it and applies that game's theme. A box that cannot be reused (its canvas
+ * is gone, or another container) is destroyed first, so no renderer is ever left behind: a
+ * browser drops the oldest WebGL contexts once a page holds 8 to 16, which blanks the dice.
  */
 export async function initializeDiceBox(container) {
 	if (!container) {
@@ -70,22 +79,19 @@ export async function initializeDiceBox(container) {
 		return null;
 	}
 
-	// Check if we need to reinitialize
 	const hasCanvas = container.querySelector('canvas') !== null;
 	const containerChanged = containerElement !== container;
 
 	if (isInitialized && diceBoxInstance && !containerChanged && hasCanvas) {
-		// Already initialized with same container and canvas exists, just resize
-		logger.debug('[diceStore] DiceBox already initialized, triggering resize');
-		setTimeout(() => {
-			window.dispatchEvent(new Event('resize'));
-		}, 500);
+		logger.debug('[diceStore] DiceBox already initialized, reusing it');
+		await applyThemeIfChanged();
+		syncDiceBoxSize('reuse');
 		return diceBoxInstance;
 	}
 
-	// If there's an old canvas and we're reinitializing, clear it
-	// But only if we're actually reinitializing (not first time)
-	if (isInitialized || hasCanvas) {
+	if (diceBoxInstance) destroyDiceBox();
+	// Anything else left in the container (a canvas from a reloaded module) goes too
+	if (hasCanvas) {
 		logger.debug('[diceStore] Clearing stale canvas elements');
 		while (container.firstChild) {
 			container.removeChild(container.firstChild);
@@ -102,21 +108,8 @@ export async function initializeDiceBox(container) {
 		volume: 100,
 		baseScale: 100,
 		strength: 1.5,
-		theme_colorset: 'pinkdreams' // Default theme is pink dreams
+		...themeSettings(gameState.config?.options?.dice)
 	};
-
-	// Apply dice theme from game config if provided
-	if (gameState.config?.options?.dice?.key) {
-		// If key is 'default', use white dice
-		if (gameState.config.options.dice.key === 'default') {
-			delete config.theme_colorset; // Use dice-box built-in default (white)
-		} else {
-			config.theme_colorset = gameState.config.options.dice.key;
-		}
-	} else if (gameState.config?.options?.dice) {
-		config.theme_customColorset = gameState.config.options.dice;
-		delete config.theme_colorset; // Custom colorset overrides theme
-	}
 
 	// Verify the container is properly attached to the DOM
 	if (!document.body.contains(container)) {
@@ -146,9 +139,11 @@ export async function initializeDiceBox(container) {
 	try {
 		// DiceBox expects a CSS selector string, not a DOM element
 		diceBoxInstance = new DiceBox('#dice-roller-container', config);
+		ownResize(diceBoxInstance);
 		await diceBoxInstance.initialize();
 		logger.debug('[diceStore] DiceBox initialized successfully');
 		isInitialized = true;
+		appliedTheme = JSON.stringify(themeSettings(gameState.config?.options?.dice));
 
 		if (!installThrow(diceBoxInstance)) {
 			logger.warn('[diceStore] Could not take over the throw; dice-box throws its own way');
@@ -164,8 +159,8 @@ export async function initializeDiceBox(container) {
 	} catch (error) {
 		logger.error('[diceStore] Failed to initialize DiceBox:', error);
 		logger.warn('[diceStore] Game will continue without 3D dice animations');
-		diceBoxInstance = null;
-		isInitialized = false;
+		// initialize() makes the renderer before it loads the theme: release what it made
+		destroyDiceBox();
 		// Don't re-throw - allow game to continue without 3D dice
 		return null;
 	}
@@ -207,26 +202,169 @@ function syncDiceBoxSize(reason) {
 }
 
 /**
- * Reset the DiceBox instance
- * Call this when exiting a game to ensure clean reinitialization
+ * dice-box's theme settings for a game's dice option: a built-in colorset by key ('default'
+ * is the library's own white set, so no colorset is named), a custom colorset object, or the
+ * app's default, Pink Dreams.
+ * @param {object|undefined} dice - gameState.config.options.dice
+ * @returns {{theme_colorset?: string, theme_customColorset?: object}}
+ */
+export function themeSettings(dice) {
+	if (!dice) return { theme_colorset: 'pinkdreams' };
+	if (!dice.key) return { theme_customColorset: dice };
+	return dice.key === 'default' ? {} : { theme_colorset: dice.key };
+}
+
+/**
+ * Give the box a theme without rebuilding it. dice-box's own loadTheme (what its initialize()
+ * uses) sets the colorset the next throw's dice are made with, so a theme applied between
+ * rolls shows on the next roll. The hit sounds follow the theme's material (plastic, metal or
+ * wood); only sets not loaded yet are fetched. If the theme cannot be loaded the box is
+ * rebuilt from the game's config, the old renderer destroyed.
+ * @param {object} settings - from themeSettings()
+ */
+async function applyTheme(settings) {
+	const box = diceBoxInstance;
+	const container = containerElement;
+	try {
+		box.theme_customColorset = settings.theme_customColorset ?? null;
+		box.theme_colorset = settings.theme_colorset ?? 'white';
+		await box.loadTheme({
+			colorset: box.theme_colorset,
+			texture: box.theme_texture,
+			material: box.theme_material
+		});
+		appliedTheme = JSON.stringify(settings);
+	} catch (error) {
+		logger.warn('[diceStore] Could not load the dice theme; rebuilding the dice:', error);
+		destroyDiceBox();
+		await initializeDiceBox(container);
+		return;
+	}
+	try {
+		if (box.sounds) await box.loadSounds?.();
+	} catch (error) {
+		logger.warn('[diceStore] Could not load the dice sounds for the theme:', error);
+	}
+}
+
+/** Apply the current game's dice theme to the box, unless it is the one the box shows */
+async function applyThemeIfChanged() {
+	const settings = themeSettings(gameState.config?.options?.dice);
+	if (JSON.stringify(settings) === appliedTheme) return;
+	await applyTheme(settings);
+}
+
+/**
+ * dice-box's resizeWorld() puts an anonymous, debounced resize listener on the window that
+ * nothing can remove, so every box ever made would keep re-measuring. Replaced, before
+ * initialize() calls it, with a listener the store holds (destroyDiceBox removes it) that does
+ * the same work: re-measure the dice when the window changes size.
+ * @param {object} box - a DiceBox, before initialize()
+ */
+function ownResize(box) {
+	box.resizeWorld = () => {
+		if (resizeHandler) window.removeEventListener('resize', resizeHandler);
+		resizeHandler = () => syncDiceBoxSize('window resize');
+		window.addEventListener('resize', resizeHandler);
+	};
+}
+
+/** No roll is up: the dice sink (if they were up) and the static number goes */
+function resetRollState() {
+	diceState.isRolling = false;
+	diceState.staticRoll = null;
+	diceState.sinkOrigin = null;
+}
+
+/**
+ * Reset the dice for a new game: the dice of the last roll are cleared, and the roll state
+ * with them, but the box is kept, renderer and WebGL context included. The dice container
+ * never unmounts, so the next game reuses the box (initializeDiceBox re-measures it and
+ * applies that game's theme). Use destroyDiceBox when the renderer itself must go.
  */
 export function resetDiceBox() {
-	logger.debug('[diceStore] Resetting DiceBox');
-
-	// Clear any existing canvas from the container
-	if (containerElement) {
-		while (containerElement.firstChild) {
-			containerElement.removeChild(containerElement.firstChild);
-		}
+	logger.debug('[diceStore] Resetting the dice');
+	skipRoll();
+	try {
+		diceBoxInstance?.clearDice?.();
+	} catch (error) {
+		logger.warn('[diceStore] Could not clear the dice:', error);
 	}
+	resetRollState();
+	diceState.lastRoll = null;
+}
 
+/** Dispose a three.js material, or an array of them, and every texture it holds */
+function disposeMaterial(material) {
+	if (!material) return;
+	if (Array.isArray(material)) {
+		material.forEach(disposeMaterial);
+		return;
+	}
+	for (const value of Object.values(material)) {
+		if (value?.isTexture) value.dispose?.();
+	}
+	material.dispose?.();
+}
+
+/**
+ * Destroy the box, for when the renderer itself must go: a box that failed to initialize, a
+ * theme that would not load, a reloaded module, a container that is gone. dice-box has no
+ * dispose, so this undoes initialize(): a roll in flight is ended; the dice and their bodies
+ * are removed (which also stops the throw loop); every geometry, material and texture in the
+ * scene, and the dice material cache, are disposed; the renderer is disposed and its WebGL
+ * context released at once rather than when the browser gets to it; the canvas is removed;
+ * the sound buffers are dropped; and the resize listener is removed. The next
+ * initializeDiceBox makes a new box.
+ */
+export function destroyDiceBox() {
+	const box = diceBoxInstance;
+	skipRoll();
 	sizeObserver?.disconnect();
 	sizeObserver = null;
-
-	// Reset the references - DiceBox will be recreated on next init
+	if (resizeHandler) {
+		window.removeEventListener('resize', resizeHandler);
+		resizeHandler = null;
+	}
+	if (box) {
+		logger.debug('[diceStore] Destroying the DiceBox');
+		try {
+			box.running = false;
+			box.rolling = false;
+			// The dice included, while they are still in the scene
+			box.scene?.traverse?.((object) => {
+				object.geometry?.dispose?.();
+				disposeMaterial(object.material);
+				object.dispose?.(); // a light's shadow map
+			});
+			for (const die of box.diceList ?? []) {
+				box.scene?.remove?.(die);
+				if (die.body) box.world?.removeBody?.(die.body);
+			}
+			if (box.diceList) box.diceList.length = 0;
+			const factory = box.DiceFactory;
+			for (const entry of Object.values(factory?.materials_cache ?? {})) {
+				entry?.composite?.dispose?.();
+				entry?.bump?.dispose?.();
+			}
+			for (const geometry of Object.values(factory?.geometries ?? {})) {
+				geometry?.dispose?.();
+			}
+			if (factory) factory.materials_cache = {};
+			box.renderer?.dispose?.();
+			box.renderer?.forceContextLoss?.();
+			box.renderer?.domElement?.remove?.();
+			box.sounds_table = {};
+			box.sounds_dice = [];
+		} catch (error) {
+			logger.warn('[diceStore] Error while destroying the DiceBox:', error);
+		}
+	}
 	diceBoxInstance = null;
 	isInitialized = false;
 	containerElement = null;
+	appliedTheme = null;
+	resetRollState();
 }
 
 /** The last throw made by throwVectors, for the short-throw diagnostic */
@@ -602,7 +740,9 @@ export async function rollDice(value = null, options = {}) {
 }
 
 /**
- * Update the dice theme and reinitialize DiceBox
+ * Change the dice theme. The box is kept: the theme is loaded into it (see applyTheme), so the
+ * next throw's dice wear it and no renderer or WebGL context is made. Without a box (no game
+ * screen yet) only the config changes, and initializeDiceBox applies it.
  * @param {Object} theme - The new theme object with key, name, category, description
  */
 export async function updateDiceTheme(theme) {
@@ -613,7 +753,6 @@ export async function updateDiceTheme(theme) {
 
 	logger.debug('[diceStore] Updating dice theme to:', theme.key);
 
-	// Update gameState config
 	if (gameState.config) {
 		gameState.config.options = {
 			...gameState.config.options,
@@ -621,37 +760,11 @@ export async function updateDiceTheme(theme) {
 		};
 	}
 
-	// If DiceBox is initialized, we need to reinitialize it with the new theme
-	if (diceBoxInstance && containerElement) {
-		const savedContainer = containerElement;
-
-		logger.debug('[diceStore] Cleaning up DiceBox for theme change');
-
-		// Call DiceBox's clear method to properly dispose of resources
-		try {
-			if (typeof diceBoxInstance.clear === 'function') {
-				diceBoxInstance.clear();
-			}
-		} catch (error) {
-			logger.warn('[diceStore] Error calling diceBox.clear():', error);
-		}
-
-		// Clear the container manually (don't use resetDiceBox to keep state intact)
-		logger.debug('[diceStore] Clearing container DOM');
-		while (savedContainer.firstChild) {
-			savedContainer.removeChild(savedContainer.firstChild);
-		}
-
-		// Wait for DOM cleanup and WebGL context release
-		await new Promise((resolve) => setTimeout(resolve, 200));
-
-		// Reset instance references but keep containerElement
-		diceBoxInstance = null;
-		isInitialized = false;
-
-		// Reinitialize with new theme
-		await initializeDiceBox(savedContainer);
-
-		logger.debug('[diceStore] Dice theme updated successfully');
-	}
+	if (!diceBoxInstance) return;
+	const settings = themeSettings(theme);
+	if (JSON.stringify(settings) === appliedTheme) return;
+	await applyTheme(settings);
 }
+
+// A reloaded module (dev HMR) would otherwise leave the old box, renderer and context behind
+if (import.meta.hot) import.meta.hot.dispose(() => destroyDiceBox());

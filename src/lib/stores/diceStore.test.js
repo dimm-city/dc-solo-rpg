@@ -69,7 +69,7 @@ describe('DiceStore - Theme Configuration', () => {
 
 	describe('DiceBox Initialization - Theme Handling', () => {
 		let initializeDiceBox;
-		let resetDiceBox;
+		let destroyDiceBox;
 		let gameState;
 
 		beforeAll(async () => {
@@ -92,7 +92,7 @@ describe('DiceStore - Theme Configuration', () => {
 			// Import after mocking
 			const diceStoreModule = await import('./diceStore.svelte.js');
 			initializeDiceBox = diceStoreModule.initializeDiceBox;
-			resetDiceBox = diceStoreModule.resetDiceBox;
+			destroyDiceBox = diceStoreModule.destroyDiceBox;
 
 			// Get reference to mocked gameState
 			const gameStoreModule = await import('./gameStore.svelte.js');
@@ -115,7 +115,9 @@ describe('DiceStore - Theme Configuration', () => {
 			};
 
 			global.window = {
-				dispatchEvent: vi.fn()
+				dispatchEvent: vi.fn(),
+				addEventListener: vi.fn(),
+				removeEventListener: vi.fn()
 			};
 
 			global.setTimeout = vi.fn((fn) => fn());
@@ -177,10 +179,10 @@ describe('DiceStore - Theme Configuration', () => {
 					}
 				};
 
-				// Reset the initialized flag via the store's own reset. (Re-importing the module
-				// per theme with a cache-busting query forced a fresh transform of the Svelte
-				// module each time, which made this test take ~4s.)
-				resetDiceBox();
+				// Drop the box so the next call builds one from this theme. (resetDiceBox keeps the
+				// box; re-importing the module per theme with a cache-busting query forced a fresh
+				// transform of the Svelte module each time, which made this test take ~4s.)
+				destroyDiceBox();
 
 				await initializeDiceBox(global.mockContainer);
 

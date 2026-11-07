@@ -6,11 +6,7 @@
 	import { untrack } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { animationTokensCss, ANIMATION_DURATION } from '$lib/constants/animations.js';
-	import {
-		initializeDiceBox,
-		diceState,
-		isDiceBoxInitialized
-	} from '$lib/stores/diceStore.svelte.js';
+	import { initializeDiceBox, resetDiceBox, diceState } from '$lib/stores/diceStore.svelte.js';
 
 	let { children, data } = $props();
 
@@ -40,31 +36,25 @@
 		});
 	});
 
-	// ✅ FIXED: Improved DiceBox initialization with proper state tracking
-	// Only react when showDice changes from false -> true
+	// The one DiceBox lives as long as the page. Entering the game screens initializes it, or
+	// from the second game on reuses it (re-measured, in that game's theme); leaving them
+	// clears the dice and keeps the renderer, so no game adds a WebGL context. The store's own
+	// state is read untracked, so the effect only follows the route.
 	$effect(() => {
-		// Only initialize when transitioning from not showing to showing
 		if (showDice && !lastShowDiceValue && diceContainer) {
 			lastShowDiceValue = true;
-
-			// Check initialization WITHOUT reactive dependency using untrack
-			// This prevents the effect from re-running when isInitialized changes
-			const alreadyInitialized = untrack(() => isDiceBoxInitialized());
-
-			if (!alreadyInitialized) {
-				// Initialize DiceBox with error handling
+			untrack(() =>
 				initializeDiceBox(diceContainer).catch((error) => {
 					console.warn(
 						'[Layout] Failed to initialize DiceBox, dice animations disabled:',
 						error.message
 					);
 					// Game remains functional without 3D dice
-				});
-			}
-		} else if (!showDice) {
-			// Reset tracking when leaving game screens
-			// This allows re-initialization if user navigates back
+				})
+			);
+		} else if (!showDice && lastShowDiceValue) {
 			lastShowDiceValue = false;
+			untrack(resetDiceBox);
 		}
 	});
 </script>
