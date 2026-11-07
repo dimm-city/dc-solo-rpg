@@ -27,6 +27,7 @@
 		padding: 0;
 		margin: 0;
 		height: 100vh;
+		height: 100dvh; /* the visible viewport, under Android's browser bars (see styles.css) */
 		overflow: hidden;
 	}
 

@@ -225,7 +225,10 @@ body {
 	margin: 0;
 	padding: 0;
 	overflow: hidden;
+	/* The visible viewport: on Android, 100vh is the height with the browser bars hidden, so the
+	   bottom of the page sat under them while they showed. dvh follows the bars; vh is the fallback. */
 	height: 100vh;
+	height: 100dvh;
 	/* Mobile viewport fixes */
 	position: fixed;
 	width: 100%;
@@ -358,7 +361,9 @@ main {
 	padding: 0;
 	max-width: 100%;
 	min-height: 100vh;
+	min-height: 100dvh;
 	height: 100vh;
+	height: 100dvh;
 }
 
 .main {
