@@ -1318,6 +1318,310 @@ All five teams are merged. Their worktrees and local branches have been removed.
 5. **Rule tips.** "Rules you've met" records a tip when it is queued. Tips fire once per game.
    Should they fire once ever?
 
+## Verification pass (2026-11-07)
+
+A check of every finding on the PR head (#51, 8fde2f5), plus a hunt for problems the fixes or
+the merge caused. The review lists 74 finding IDs (not 75).
+
+**Method.** Worktree `ux/verify`. Production build on port 4192 for look and timing, dev server
+on 5192 for forcing states. Fonts are now bundled, so every capture renders Inter, Share Tech
+Mono and lixdu. The evidence root (not committed) is
+`/tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/ux-verify/`,
+and the notes below cite files relative to it. The scripts there:
+
+- `flow.cjs <vp>`: one forced round at each of 1440x900, 1280x720, iPad, iPhone 13, 360x640,
+  844x390 and 750x342. It covers a natural 20 on the opening roll, a 2d20 task roll, an odd
+  card, its Stability check, an even card, the journal and Round 2. It logs a probe per step
+  (`flow/<vp>/probes.json`): labels, result line, live region, font audit, off-screen controls
+  and HUD height.
+- `tour.cjs <vp>` (production): first run and splash, home, menus, every home dialog, the Story
+  Library, static and error pages, then a saved game (Continue, New game, Delete save and
+  toast).
+- `special.cjs`, `persist.cjs`, `a11y.cjs` (keyboard only, focus, names, reduced motion, phone
+  menu), `autoplay.cjs`, `ending.cjs kings|stability|win` (recorded), `story.cjs`,
+  `journal.cjs` (fake microphone, and none), `easy.cjs`, `stale-probe.cjs` (a mutation log of
+  the step label, result line and live region) and `dice-timing.cjs` (production, red marker
+  frame, frame diff of the dice area).
+- `playthrough.cjs` plus `animations.py` at 10fps: a full production game at 1440x900 (15
+  rounds, lost to the fourth King, 0 console errors, 29 sheets in
+  `playthrough/pt-desktop/animations/`).
+
+**Not verified here, by instruction.**
+
+- **Being changed elsewhere:** RF-01 (auto-advance), CK-03 (automatic Salvation with a
+  modifier), the rule-tips toggle (RC-03) and the mobile "Failed to fetch" console error.
+- **Being redesigned:** the HUD row (HD-02, HD-03), the in-game header layout (MN-06), dice
+  staging (RF-02) and the dice rows of the animation inventory.
+
+For these, the notes say what the current build does, but give no verdict.
+
+### Status of every finding
+
+| ID    | Status            | Note (evidence)                                                                                                                                                                                                                                                                                          |
+| ----- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| LS-01 | Fixed             | The modifier is part of the roll button's label only ("Roll for tasks · Lucid: 2 dice, keep high"). Continue and Draw carry nothing; the HUD keeps a 2d20↑ badge (`flow/d1440/04-…`, `05-round1-lucid.png`).                                                                                             |
+| LS-02 | Fixed             | Lucid, then Leave, then the other game: `lucid: false`, and "Roll for instability" has no hint (`persist/desktop/03-new-game-instability.png`).                                                                                                                                                          |
+| LS-03 | Fixed             | "Rolled 3 (high of 3, 2) · Draw 2 cards", with `lastRoll [3,2]` (`flow/d1440/07-round1-result.png`). The reduced-motion static dice show both, the dropped one dimmed.                                                                                                                                   |
+| LS-04 | Fixed             | Saved with Lucid and 2 Aces, reloaded and resumed: Lucid kept, 2 Aces, "need 14+" on the button and in the description (`persist/desktop/05-resumed.png`, `06-resumed-salvation.png`).                                                                                                                   |
+| LS-05 | Fixed             | Production, 1d20: the button woke 0.0–0.4s after the dice stopped (it was 0.7–1.1s) (`dice-timing/results.json`, `dice-timing/f25/`). A press during "Rolling…" skips to the result (sheets 03 and 06).                                                                                                  |
+| LS-06 | Fixed             | 400ms guard plus a highlight when the button changes meaning (`GameScreen.svelte:205-226`). Keyboard-only play had no dead or misdirected presses (`a11y/desktop`).                                                                                                                                      |
+| LS-07 | Fixed             | Switched on at the opening roll, it rolled by itself 2.9s later (the auto-roll delay). Switched off, play stops at the next step (`autoplay/desktop`).                                                                                                                                                   |
+| HM-01 | Fixed             | A centred 960px column, the pitch, generated key art per game (owner decision 4), subtitle, "About 30 min" and a labelled Play (`tour/d1440/01-home.png`).                                                                                                                                               |
+| HM-02 | Fixed             | "Continue · Round 1 · just now", New game (confirms the overwrite) and a "Delete save" link (`tour/d1440/18-home-with-save.png`, `19-new-game-confirm.png`). But see NV-03.                                                                                                                              |
+| HM-03 | Fixed             | Equal cards (533px), buttons level at y=673, subtitles from the frontmatter.                                                                                                                                                                                                                             |
+| HM-04 | Fixed             | About 1.2s of splash, one name. A tap on the splash brings up the panel in 0.33s. Once per install: a reload shows no splash (`tour/d1440/first-run/`).                                                                                                                                                  |
+| HM-05 | Fixed             | One panel: Play, "Read the rules first" (opens the Game Guide), and a "don't show tips" link (`tour/d1440/first-run/04-…`, `05-…`).                                                                                                                                                                      |
+| HM-06 | Fixed             | Stories, Settings, Help and More sit inline from 900px; the hamburger is for phones only.                                                                                                                                                                                                                |
+| HM-07 | Fixed             | Outlined red destructive button, and copy that names the save. "Save deleted" toast at the bottom centre; the grid does not move (`tour/d1440/20-…`, `21-…`).                                                                                                                                            |
+| MN-01 | Fixed             | The Game Guide: "Any natural 20 makes you Lucid; any natural 1 makes you Surreal… every roll in the game".                                                                                                                                                                                               |
+| MN-02 | Fixed             | "Leave the game? Your progress is saved…", with Keep playing and Leave (`tour/d1440/17-exit-dialog.png`). There is one gap before the opening roll (NV-08).                                                                                                                                              |
+| MN-03 | Partly fixed      | Every dialog is now ContentModal: same frame and entrance, and a 44x44 close. The footer labels still differ: Done (Settings, About, Dice), Got it (Help), Close (AI summary).                                                                                                                           |
+| MN-04 | Fixed             | Opens with Difficulty, a Play mode switch (Manual, Read aloud, Hands-free) and Rule tips; the rest folds under Advanced. 667px, no scroll at 1440x900.                                                                                                                                                   |
+| MN-05 | Fixed             | A d20 render per theme, one White, title "Dice" (`tour/d1440/m-dialogs.png`).                                                                                                                                                                                                                            |
+| MN-06 | Being changed     | Header layout is being redesigned. The behaviour holds: labels under the desktop icons, "Auto on" and "Voice on" states, and on phones X, Help and a ⋯ menu with labelled toggles; Escape returns focus (`a11y/iphone13/06-phone-menu.png`).                                                             |
+| MN-07 | Partly fixed      | Buttons, labels and titles under 28px are Inter 600 (font audit clean on home, dialogs, story and endings). Still in lixdu: the intro's section headings at 20px on every viewport, and the screen title on phones (NV-05).                                                                              |
+| ST-01 | Fixed             | /how-to renders the Game Guide (`tour/d1440/13-page-how-to.png`).                                                                                                                                                                                                                                        |
+| ST-02 | Fixed             | /about renders the About content in a 720px column, under one name.                                                                                                                                                                                                                                      |
+| ST-03 | Fixed             | /signin redirects to /.                                                                                                                                                                                                                                                                                  |
+| ST-04 | Fixed             | "Signal lost", one sentence, "Back to the console". No overflow at 360 or 390 (`tour/*/…-page-nope-404.png`).                                                                                                                                                                                            |
+| ST-05 | Fixed             | "Future Lost · Dream Console", "Story Library · …", "About · …", "How to play · …", "Signal lost · …".                                                                                                                                                                                                   |
+| GS-01 | Fixed             | No Begin Round; "Round N" titles the roll screen.                                                                                                                                                                                                                                                        |
+| GS-02 | Partly fixed      | Desktop and iPad: the column is centred and ends on the goal line. Portrait phones: a fade mask and a scroll cue. Landscape phones: the top of the intro is cut off and cannot be scrolled to (NV-01).                                                                                                   |
+| GS-03 | Fixed             | "Rolling…" on every roll step (`flow/*/03-…`, `06-…`, `10-…`).                                                                                                                                                                                                                                           |
+| RF-01 | Being changed     | Auto-advance of results is being implemented elsewhere.                                                                                                                                                                                                                                                  |
+| RF-02 | Being changed     | Dice staging is being redesigned. Now: the dice land below the result line on desktop and phones (result 306–366px, dice area 430–704px at 1280x800), but a die can come to rest half off the left or right edge (`special/desktop/08-…`).                                                               |
+| RF-03 | Fixed             | "7♠ · You're caught in a toxic gas leak" above the Stability check title (`flow/d1440/09-stability-check.png`). On short tables the rule caption covers it (NV-02).                                                                                                                                     |
+| RF-04 | Fixed             | The card sizes to its content (520x420 on desktop, 344x420 at 360). Mechanic footer ("Odd · a Stability check follows", "King · 3 of 4" with pips, "Ace · Salvation will need 14+"); no BYTE IDs.                                                                                                        |
+| RF-05 | Fixed             | The title stays "Round 1" after the roll; the result line carries the count.                                                                                                                                                                                                                             |
+| CK-01 | Partly fixed      | Card lines "A King returns to the deck" and "No Stability check this time"; notice "King of Hearts returns to the deck · 2 of 4"; Kings 3→2. Not done: the skull goes dark with no un-ignite (`KingsCell.svelte:48-51`). See NV-06.                                                                      |
+| CK-02 | Fixed             | "Salvation" title, "Roll to remove a token. You need 14+.", HUD "need 14+". On Easy the Salvation tip fires on the first Salvation screen (`easy/desktop/04-easy-first-salvation.png`).                                                                                                                  |
+| CK-03 | Being changed     | Automatic Salvation is being changed elsewhere.                                                                                                                                                                                                                                                          |
+| CK-04 | Fixed             | "Rolled 3 · −2 Stability · 0/20 · nothing left to hold on to", and the button reads "Face the end" (`ending/stability-desktop/01-fatal-result.png`).                                                                                                                                                     |
+| HD-01 | Fixed             | One HUD row with no overlap at any of the seven viewports.                                                                                                                                                                                                                                               |
+| HD-02 | Being changed     | The HUD row is being redesigned. Now: one centred row, 124px with the header on desktop and iPad, 120px on phones, 112px in landscape.                                                                                                                                                                   |
+| HD-03 | Being changed     | Being redesigned. Now: a "2d20↑" or "2d20↓" badge in the Roll cell, with an accessible label.                                                                                                                                                                                                            |
+| HD-04 | Fixed             | The global rule is gone (`Game.svelte:105-111` uses `isolation`); MiniStatusHUD and the keyboard-hint toast are deleted.                                                                                                                                                                                 |
+| RC-01 | Fixed             | A "Space" key-cap inside the step button on pointer devices, none on touch.                                                                                                                                                                                                                              |
+| RC-02 | Fixed             | Captions pause under the card and the journal, one at a time. A side effect: a paused caption resumes on the next table screen (the odd-card tip on Round 2's roll, `flow/iphone13/15-round2.png`).                                                                                                      |
+| RC-03 | Being changed     | The rule-tips toggle is being changed elsewhere. "Rules you've met" is in the Help modal (`HelpModal.svelte:31-34`).                                                                                                                                                                                     |
+| JR-01 | Fixed             | The voice note lives on the footer row: Record, then "Stop 0:02", then "Play 0:02 · Delete", all on screen at 360x640 (`journal/small/02-recorded.png`). Error copy: NV-07.                                                                                                                              |
+| JR-02 | Fixed             | The entry dims, and a cyan "✓ Saved to your log" takes the button's slot (`flow/d1440/14-journal-saved-250ms.png`).                                                                                                                                                                                      |
+| JR-03 | Fixed             | Inter 13px "Continuing in Ns · type to stay", with a `scaleX` bar (`AutoJournalTimer.svelte:19-36`; checked in code).                                                                                                                                                                                    |
+| JR-04 | Fixed             | The chips wrap; "Round 1" is the title in the display face, with "Journal" as a small label (`flow/iphone13/13-journal.png`).                                                                                                                                                                            |
+| JR-05 | Fixed             | Browser voice and the on-device voice (265 MB) are listed; key-based services sit behind "Add a voice service" (`story/iphone13/09-ai-settings.png`).                                                                                                                                                    |
+| EN-01 | Fixed differently | The pips light on the card itself, which holds 700ms on a magenta backdrop; then GAME OVER fades in as one word. About 1.2s from tap to title, and about 1.8s to the button; no black or empty frames (`ending/kings-beat-sheet.png`). The HUD skulls aren't used (they're under the scrim). Acceptable. |
+| EN-02 | Fixed             | The final log keeps the magenta or green ending backdrop and shows the recap as tiles. "Read your story" is primary; Play again and Home are text buttons (`ending/m-final.png`).                                                                                                                        |
+| EN-03 | Fixed             | 5 tiles (a loss) or 6 (a win) in one row at 1280; the message is Inter 18px.                                                                                                                                                                                                                             |
+| EN-04 | Fixed             | No `console.log`; no "DBG" in the console on any ending.                                                                                                                                                                                                                                                 |
+| SM-01 | Fixed             | Each round leads with the outcome line, card chips and the entry (640px measure, Inter 16px rather than 18). "Summarise with AI" is a header button (`story/desktop/03-story-top.png`).                                                                                                                  |
+| SM-02 | Fixed             | Claude Sonnet, Opus and Haiku 5.5, a single default and "Test key". The OpenAI default is still unverified (lead's note).                                                                                                                                                                                |
+| SM-03 | Fixed             | Escape closes the AI dialog (settings view, then summary view) and stays in story mode.                                                                                                                                                                                                                  |
+| SM-04 | Fixed             | "Taken by the fourth King · 5 rounds · date", "Delete story…" in an overflow menu, the back chevron renders, and "Tower" is gone.                                                                                                                                                                        |
+| SM-05 | Fixed differently | No blank frame at 60, 120 or 200ms after a page turn (`story/desktop/04-…` to `07-…`). Phone dialog titles are Inter 18px rather than the clamp, and they fit.                                                                                                                                           |
+| AC-01 | Fixed             | The hold is 1.5s plus 60ms a word, pauses under the pointer, and draws a shrinking line (`autoplay/desktop/03-card-hold-1500ms.png`).                                                                                                                                                                    |
+| AC-02 | Fixed differently | The card's name comes from its content ("7 of Spades, Challenge: …"), and its description includes "Press Enter to continue". Focus announces the card instead of the live region. Acceptable.                                                                                                           |
+| AC-03 | Fixed             | "Skip to action" is the first tab stop; the step button has a white inset ring (`a11y/desktop/m-focus.png`).                                                                                                                                                                                             |
+| AC-04 | Fixed             | Reduced motion shows static d20 outlines for 600ms, then the result. No canvas throw, and the motes are cleared (`a11y/reduced-roll-desktop/01-static-120ms.png`).                                                                                                                                       |
+| AC-05 | Fixed             | One live region: the result goes first, a caption about 1s later. But see NV-04 (stale messages).                                                                                                                                                                                                        |
+| AN-01 | Fixed             | The face rises in about 250ms with all its text: no back, no blank face, no glitch. The dismiss is about 220ms, with no black frame to the next screen (`playthrough/pt-desktop/animations/07-…`).                                                                                                       |
+| AN-02 | Fixed             | The step button never blinks out; only its label crossfades. But see NV-04 (a stale label crossfades out).                                                                                                                                                                                               |
+| AN-03 | Fixed             | No loops on AugmentedButton. The motes pause under dialogs and overlays (0 changed pixels) and are cleared under reduced motion; the token glow is gone.                                                                                                                                                 |
+| AN-04 | Fixed             | ContentModal, ConfirmModal and the Dice picker share one entrance (200ms fade plus an 8px rise). The overlay uses a static scrim (`OverlayModal.svelte`).                                                                                                                                                |
+| AN-05 | Fixed             | No slide-downs. The HUD arrives with the table, and the header fades in over 200ms (`playthrough/…/animations/01-…`).                                                                                                                                                                                    |
+| AN-06 | Fixed             | Home swaps are 200ms; page View Transitions are 200ms with an 8px rise; the splash fades in 300ms.                                                                                                                                                                                                       |
+| VP-01 | Partly fixed      | Landscape phones now play: a 112px HUD, the button in a right-hand column, a 690x278 card, a journal that fits, and no control off screen at 750x342 or 844x390. Left: the intro top (NV-01) and the caption overlap (NV-02).                                                                            |
+| VP-02 | Fixed             | iPad portrait: a one-row 124px HUD and a centred intro (`flow/m-ipad.png`).                                                                                                                                                                                                                              |
+| VP-03 | Fixed             | Whole words wrap ("Stability / Check"); titles are short ("Instability", "Salvation"). But at 23–27px in lixdu (NV-05).                                                                                                                                                                                  |
+| VP-04 | Fixed             | One row: a 44px microphone button, then Record Entry (`flow/iphone13/13-journal.png`, `flow/small/13-journal.png`).                                                                                                                                                                                      |
+
+**Counts:** 59 fixed, 3 fixed differently (all acceptable), 5 partly fixed, 0 not fixed, 0
+regressed, and 7 being changed.
+
+**The animation inventory.** Every verdict outside the dice rows was applied, checked in code
+and on the 10fps sheets:
+
+- **Splash.** It plays about 1.2s with one fade; the flicker and scan loops are gone.
+- **Home.** Swaps take 200ms; the cards fade in over 250ms with no delay, and the float is gone.
+- **Steps and the card.** The step slot is persistent. The card back, the glitch, the text
+  stagger and the bio-pulse rings are gone. The "Click to continue" pulse runs twice, and the
+  dismiss is 220ms.
+- **Journal.** The saved beat is in the button's slot, and the auto-journal bar uses `scaleX`.
+- **HUD.** The slide-downs and the token glow are gone, and the shake eases out.
+- **Endings.** The GAME OVER title fades in as one word.
+- **Dialogs.** One entrance for every dialog.
+- **Other.** The keyboard-hint toast and the button-bar resize are gone.
+
+The dice rows are being redesigned.
+
+### New issues
+
+#### NV-01 · S2 · On landscape phones the top of the intro is cut off and cannot be reached
+
+- **Surface, viewport:** the game intro; 844x390 and 750x342.
+- **What happens:**
+  - In landscape, `.intro-story-container` is a row with `align-items: center`. The text area
+    is taller than the screen (575px of 390, 601px of 342), so it is centred and overflows the
+    top and bottom.
+  - Its own scroller is as tall as its content (scrollHeight equals clientHeight), so it never
+    scrolls and the scroll cue never shows.
+  - The player lands mid-paragraph ("…discover you.") with no game title and no "Who you are"
+    heading. The column top is at −77px and −113px.
+- **Evidence:** `flow/land844/01-intro.png`, `flow/landscape/01-intro.png`,
+  `flow/m-landscape-intro.png`, and the parent chain from `intro-land.cjs` (the scroll area is
+  575px inside a 390px container).
+- **Recommendation:** in the landscape rule, let the text area take the column's height
+  (`align-self: stretch; min-height: 0` on `.intro-scroll-area`), so `.content` scrolls and the
+  cue appears. Keep the button centred in its own column.
+- **Effort:** S. `src/lib/components/GameScreen.svelte:1214` (the landscape
+  `.intro-story-container` rule).
+
+#### NV-02 · S2 · The rule caption covers the card line, the title and the result line on short tables
+
+- **Surface, viewport:** Stability check and round screens; 1280x720, 1280x800, 360x640,
+  844x390, 750x342.
+- **What happens:** the caption sits at the top of the table. The context block grows upwards
+  from 40% of the table, and is now taller: RF-03's card line, VP-03's two-line titles and the
+  modifier notice. On short tables the two collide:
+  - **1280x720:** the caption hides the card line and the top of "STABILITY".
+  - **1280x800 (return-king check):** the caption's text prints over the card line.
+  - **360x640:** the card line is cut by the caption's border.
+  - **Landscape:** the caption hides "ROUND 1" and the top of the result line ("Rolled 3 (high
+    of 3, 2) · Draw 2 cards").
+
+  Only 1440x900 and taller are clear.
+
+- **Evidence:** `flow/m-check-overlap.png` (crops from `flow/d1280x720/09-…`,
+  `special/desktop/03-…`, `flow/d1440/09-…`), `flow/m-small.png` (09),
+  `flow/m-landscape-intro.png` (05, 07).
+- **Recommendation:** put the caption in the same flow as the context block (caption, card line,
+  title, result, in one column anchored at the top of the table, with the dice below), so they
+  push each other instead of overlapping. If that is too big a change, hide the caption while the
+  context block would reach it.
+- **Effort:** S–M. `src/lib/components/RuleCaption.svelte:47-55` (absolute, top 8px),
+  `src/lib/components/game/ContextBackground.svelte:56` (`bottom: 60%`).
+
+#### NV-03 · S2 · After leaving a game, the home screen cannot scroll
+
+- **Surface, viewport:** home after Leave (or any client-side route back from a game); iPhone 13,
+  844x390, 1280x720, and any viewport where the cards overflow.
+- **What happens:**
+  - The game layout's global rules (`body > main` set to `overflow: hidden`, or `visible` at
+    450px wide or 600px tall and less) stay loaded after client-side navigation. `html` is
+    `overflow: hidden`, so nothing scrolls.
+  - **iPhone 13:** the second game's Play sits at y=1005 and cannot be reached.
+  - **844x390:** the saved game's Continue, New game and Delete save are below the fold and
+    cannot be reached.
+  - **1280x720:** the Play buttons sit at the bottom edge.
+  - A fresh load scrolls fine (`main` is `overflow-y: auto`).
+  - The rule predates the PR. HM-01's taller cards (400–530px) are what made it matter.
+- **Evidence:** `home-after-game.cjs` output, `home-after-game/<vp>/01-fresh-load.png` against
+  `02-after-game.png`, and `newgame-land.cjs` (the button stays at y=665 after
+  `scrollIntoView`).
+- **Recommendation:** scope those rules to `.game-layout` (or toggle a class on `body` from the
+  game layout with an effect that removes it on leave). Give the home page its own scroller.
+- **Effort:** S. `src/routes/game/+layout.svelte:22-36`.
+
+#### NV-04 · S3 · A step's last result carries into its next visit: a stale label and a stale announcement every round
+
+- **Surface, viewport:** start of every round, and every second Stability check in a round; all
+  viewports. Most noticeable with a screen reader.
+- **What happens:**
+  - The roll composables are reset on screen entry, after GameScreen has already derived the
+    button label and the result line from the previous visit.
+  - **Entering Round 2:** the button crossfades from "Draw 0 Cards" to "Roll for tasks", and the
+    live region announces Round 1's "Rolled 8 · Draw 3 cards".
+  - **Entering a second Stability check:** the label crossfades out of a stale "Continue".
+  - The visual ghost lasts about 120ms under the fading overlay; the iPad run caught "DRAW 0
+    CARDS ROLL FOR TASKS" in the button.
+  - The wrong announcement is heard at the start of every round.
+- **Evidence:** `stale/desktop/rec.txt` (the lines at 11345ms and 18705–18846ms),
+  `flow-ipad.log` (journal-saved-250ms), and `round2 live` in every `flow/<vp>/probes.json`.
+- **Recommendation:** reset a step's state when its screen is left (or key it by round and visit),
+  so nothing stale is derived on entry. Announce a result line only when it changes on the current
+  screen.
+- **Effort:** S. `src/lib/components/GameScreen.svelte:232-236` (announcer effect), `519-555`
+  (reset on entry).
+
+#### NV-05 · S3 · On phones the screen title is in the display face below 28px
+
+- **Surface, viewport:** Instability, Round N, Stability check, Salvation; 360x640 (23px), iPhone
+  13 (25px), 750x342 (27px).
+- **What happens:**
+  - VP-03's `clamp(1.25rem, 6.5vw, 3.5rem)` keeps lixdu at 23–27px.
+  - The house rule (`src/styles.css:47`, CLAUDE.md) puts the display face at 28px and up only.
+  - The component's own comment says 20px.
+  - The intro's section headings are lixdu at 20px on every viewport (MN-07).
+- **Evidence:** `fonts` in `flow/iphone13/probes.json`, `flow/small/probes.json` and
+  `flow/landscape/probes.json`, and `flow/m-small.png`.
+- **Recommendation:** below 28px, set the title in the UI face (Inter 700, uppercase): lixdu at
+  28px does not fit "INSTABILITY" in 328px. Do the same for intro headings under 28px, and fix the
+  comment.
+- **Effort:** S. `src/lib/components/game/ContextBackground.svelte:84-86`,
+  `GameScreen.svelte:1057-1067`.
+
+#### NV-06 · S3 · A card modifier's notice outlives its moment
+
+- **Surface, viewport:** the Salvation screen after a skip-damage Ace; all viewports.
+- **What happens:**
+  - The modifier notice shows on every table screen for the rest of the round.
+  - When a skip-damage Ace is the round's last card, Salvation reads "Salvation / Roll to remove
+    a token. You need 14+. / No Stability check this time". That reads as if this roll were
+    skipped.
+  - The notice stays under the Salvation result too.
+- **Evidence:** `special/desktop/07-salvation.png`, `08-salvation-nat1-at-result.png` (the
+  skip-damage Ace confirmed last, then Salvation).
+- **Recommendation:** show the notice only on the first screen after the card, or name the card
+  in it ("A♣ · No Stability check this time").
+- **Effort:** S. `src/lib/components/GameScreen.svelte:91-95, 124, 130`.
+
+#### NV-07 · S4 · The voice note blames a "blocked" microphone for every failure
+
+- **Surface, viewport:** journal, Voice note; all.
+- **What happens:** with no microphone (NotFoundError), the sheet still says "The microphone is
+  blocked. Allow it in your browser to record." Every `getUserMedia` error gets this line.
+- **Evidence:** `journal/desktop-nomic/01-recording.png`, `journal/m-voice.png`.
+- **Recommendation:** NotAllowedError gets the blocked line. NotFoundError gets "No microphone
+  found." Anything else gets "Couldn't start recording."
+- **Effort:** S. `src/lib/components/journal/VoiceNote.svelte:64-68`.
+
+#### NV-08 · S4 · "Your progress is saved" is not true before the opening roll
+
+- **Surface, viewport:** Exit on the Instability screen before rolling; all.
+- **What happens:** `saveGame` skips the `initialDamageRoll` state, so leaving there keeps no
+  save. The home card shows Play, not Continue. Little is lost (the intro), but the dialog
+  promises otherwise.
+- **Evidence:** `newgame-land.cjs` first run (Play after Leave), `indexedDBStorage.js:219-229`.
+- **Recommendation:** save at `initialDamageRoll` too (resume onto the opening roll), or word the
+  dialog for that step.
+- **Effort:** S.
+
+### Overall verdict
+
+The fix round landed, and it shows:
+
+- **Rules.** The game now tells the truth about its rules: Lucid and Surreal behave the same on
+  every roll, survive a save, reset per game and say which die counted.
+- **The card.** A card reads in about 250ms, says what it does, and leaves in 220ms.
+- **The ending.** It is staged without dead frames.
+- **Home, story mode and dialogs.** These look designed rather than assembled.
+- **Accessibility.** Keyboard-only play, focus rings, the skip link, card names, one live region
+  and static dice under reduced motion are at a level few hobby games reach.
+
+The first-time path is also good now: a 1.2s splash, one choice, and a home with art.
+
+It is not at the award-winning bar yet, for three reasons:
+
+1. **Layout on common screens.** The table still loses to the screen on short and landscape
+   viewports. The caption covers the card line and the title at 1280x720 and 1280x800 (NV-02),
+   and the landscape intro hides its own title (NV-01).
+2. **The home after a game.** Leaving a game breaks scrolling on the home screen on phones
+   (NV-03).
+3. **Unfinished work.** Pace (RF-01, about 10 inputs a round) and the HUD and dice staging are
+   still mid-change.
+
+Fix NV-01 to NV-03 before this merges, all three are S effort. Then do NV-04 and NV-05 with the
+HUD redesign. After that, the remaining gap is polish rather than defects.
+
 ## Recommendations
 
 ### Earlier reviews: what is fixed, open, or fixed badly
