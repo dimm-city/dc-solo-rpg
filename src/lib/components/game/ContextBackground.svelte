@@ -114,15 +114,19 @@
 		text-shadow: 0 1px 8px rgba(0, 0, 0, 0.9);
 	}
 
-	/* The display face is for 28px and up only (styles.css); below that, phones get the UI face
-	   (NV-05). Whole words wrap, never mid-word. */
+	/* Owner override of the "display face at 28px and up only" rule (styles.css, NV-05): the
+	   screen title is the board's one large word and is set in lixdu at every width, phones and
+	   landscape included. Below 431px wide 6.5vw is under 28px, so the clamp goes down to 22px
+	   to keep "INSTABILITY" on one line: in lixdu it is about 13 times the font size wide, so
+	   at 6.5vw it takes 85vw of the column's 92% (305px of 316px on a 360px phone). Whole
+	   words wrap, never mid-word. */
 	.context-title {
-		font-size: clamp(1.75rem, 6.5vw, 3.5rem);
+		font-size: clamp(1.375rem, 6.5vw, 3.5rem);
 		font-weight: 700;
 		color: var(--color-neon-cyan);
 		text-transform: uppercase;
-		letter-spacing: 0.06em;
-		line-height: 1.2;
+		letter-spacing: 0.04em;
+		line-height: 1.15;
 		margin: 0 0 0.75rem 0;
 		font-family: var(--font-display, 'lixdu', 'Courier New', monospace);
 		overflow-wrap: normal;
@@ -131,16 +135,6 @@
 		text-wrap: balance;
 		opacity: 0.6;
 		text-shadow: 0 0 10px var(--yellow);
-	}
-
-	/* Under 431px wide, 6.5vw is under 28px: Inter, uppercase. (The display face at 28px does
-	   not fit "INSTABILITY" in a 360px phone's 328px column.) */
-	@media (max-width: 430px) {
-		.context-title {
-			font-family: var(--font-ui, var(--font-body, 'Inter', sans-serif));
-			font-size: clamp(1.25rem, 6.5vw, 1.75rem);
-			letter-spacing: var(--tracking-ui, 0.08em);
-		}
 	}
 
 	/* #b3b3b3 on the dark table is above 4.5:1 */
