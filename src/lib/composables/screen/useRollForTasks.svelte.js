@@ -31,13 +31,9 @@ export function useRollForTasks({ dealDelay = DEAL_DELAY_MS } = {}) {
 	let rollTasksResultLine = $state('');
 	const hold = createResultHold();
 
-	function cancelDeal() {
-		hold.cancel();
-	}
-
 	/** Deal the cards (once, and only from this screen) */
 	async function deal() {
-		cancelDeal();
+		hold.cancel();
 		if (rollTasksConfirming || gameState.state !== 'rollForTasks') return;
 		rollTasksConfirming = true;
 		try {
@@ -90,7 +86,7 @@ export function useRollForTasks({ dealDelay = DEAL_DELAY_MS } = {}) {
 	 * Reset state when entering screen
 	 */
 	function resetState() {
-		cancelDeal();
+		hold.cancel();
 		rollTasksRolled = false;
 		rollTasksRolling = false;
 		rollTasksConfirming = false;
@@ -142,7 +138,6 @@ export function useRollForTasks({ dealDelay = DEAL_DELAY_MS } = {}) {
 
 		// Actions
 		handleRollForTasks,
-		resetState,
-		cancelDeal
+		resetState
 	};
 }
