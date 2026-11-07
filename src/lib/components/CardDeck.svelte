@@ -3,10 +3,17 @@
 	import { sleep } from '../utils/timing.js';
 	import { logger } from '../utils/logger.js';
 	import { gameState } from '../stores/gameStore.svelte.js';
-	import { getAudioSettings, getGameplaySettings, speak } from '../stores/audioStore.svelte.js';
+	import {
+		getAudioSettings,
+		getGameplaySettings,
+		speak,
+		awaitNarration,
+		stopNarration
+	} from '../stores/audioStore.svelte.js';
 	import { autoAdvance } from '../utils/autoPlay.js';
 	import CardDisplay from './card/CardDisplay.svelte';
 	import {
+		endsGameOnConfirm,
 		getCardHoldMs,
 		getKingNumber,
 		getMechanicNote,
@@ -77,10 +84,12 @@
 	}
 
 	// ===== AUTO-PLAY =====
-	// With read-aloud on, the card is read and then auto-advance waits its usual delay.
+	// With read-aloud on, the card is read and then auto-advance waits its usual delay: nothing
+	// moves on under the voice (so an ending never shows while its card is still being read).
 	// With read-aloud off, the card holds long enough to read it (see getCardHoldMs),
 	// pausing while the player is reading, with a thin progress line on the card.
 	let autoPlayCanceller = null; // plain variables: no need to be reactive
+	let narrationWait = null; // the wait for the voice to finish this card (awaitNarration)
 	let holdTimer = null;
 	let holdFrame = null;
 	let lastRevealedCardId = '';
@@ -120,6 +129,8 @@
 	function cancelAutoPlay() {
 		autoPlayCanceller?.cancel();
 		autoPlayCanceller = null;
+		narrationWait?.cancel();
+		narrationWait = null;
 		stopHold();
 	}
 
@@ -128,12 +139,13 @@
 		const gameplaySettings = getGameplaySettings();
 
 		if (audioSettings.autoReadCards) {
-			speak(`${shown.description}. ${shown.story || ''}`).then(() => {
-				if (
-					gameplaySettings.autoContinueAfterReading &&
-					animationStage === 'revealed' &&
-					card === shown
-				) {
+			speak(`${shown.description}. ${shown.story || ''}`);
+			// Only once the voice has finished the card (or was switched off) may it move on
+			narrationWait = awaitNarration();
+			narrationWait.promise.then((ended) => {
+				narrationWait = null;
+				if (!ended || animationStage !== 'revealed' || card !== shown) return;
+				if (gameplaySettings.autoContinueAfterReading) {
 					autoPlayCanceller = autoAdvance({
 						text: null,
 						shouldRead: false,
@@ -172,6 +184,10 @@
 	async function handleDismiss() {
 		if (animationStage !== 'revealed') return;
 		cancelAutoPlay();
+
+		// The ending follows this card: a voice still reading it stops here, so the staging
+		// and the ending never play under it (the next card's reading replaces it otherwise)
+		if (endsGameOnConfirm(card, gameState)) stopNarration();
 
 		if (isFinalKing(card, gameState) && !reducedMotion()) {
 			animationStage = 'doom';

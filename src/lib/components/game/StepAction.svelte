@@ -11,7 +11,9 @@
 	 * presses for that moment, so a press meant for the old button never lands on the new one).
 	 * `advancing` means the game is about to move on by itself (a result hold): a thin line along
 	 * the bottom of the button runs out as `advanceProgress()` goes from 0 to 1. It follows the
-	 * hold's own clock, so it stops while the hold is paused and never drifts from it.
+	 * hold's own clock, so it stops while the hold is paused and never drifts from it. While the
+	 * hold waits for the voice to finish reading the result (`advanceWaiting`), the line is full
+	 * and dimmed: the countdown has not started.
 	 *
 	 * @component
 	 */
@@ -31,6 +33,7 @@
 		advancing = false,
 		advanceProgress = () => 0,
 		advancePaused = false,
+		advanceWaiting = false,
 		testid,
 		id = undefined
 	} = $props();
@@ -88,6 +91,7 @@
 				<span
 					class="advance-line"
 					class:paused={advancePaused}
+					class:waiting={advanceWaiting}
 					style:transform="scaleX({remaining})"
 					data-testid="step-advance"
 					aria-hidden="true"
@@ -159,5 +163,10 @@
 		opacity: 0.7;
 		transform-origin: left center;
 		pointer-events: none;
+	}
+
+	/* Waiting for the voice: the line is full and dim, so it never reads as a countdown */
+	.advance-line.waiting {
+		opacity: 0.3;
 	}
 </style>

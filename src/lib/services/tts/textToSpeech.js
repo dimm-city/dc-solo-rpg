@@ -18,6 +18,8 @@ class TTSService {
 	constructor() {
 		this.provider = null;
 		this.currentProviderName = null;
+		/** Bumped by stop(): a speak() still setting up its provider then speaks nothing */
+		this.stopCount = 0;
 		this.settings = {
 			provider: 'browser',
 			voice: null,
@@ -76,7 +78,13 @@ class TTSService {
 	 * @returns {Promise<void>}
 	 */
 	async speak(text, options = {}) {
-		await this._ensureProvider();
+		// Only the first call waits for a provider: with one in place the utterance starts in
+		// this same tick, so a stop() right after speak() reaches it
+		if (!this.provider) {
+			const stops = this.stopCount;
+			await this._ensureProvider();
+			if (stops !== this.stopCount) return;
+		}
 
 		// Merge settings with options
 		const speakOptions = {
@@ -92,6 +100,7 @@ class TTSService {
 	 * Stop current speech
 	 */
 	stop() {
+		this.stopCount++;
 		if (this.provider) {
 			this.provider.stop();
 		}

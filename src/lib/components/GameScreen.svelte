@@ -712,14 +712,12 @@
 					speak(`Round ${gameState.round}. Roll to see how many cards you draw this round.`);
 				}
 
-				// Auto-roll if enabled and not yet rolled (the cards are dealt on their own after the roll)
+				// Auto-roll if enabled and not yet rolled. The composable reads the result out
+				// ("Announce dice rolls") and deals once the voice has finished.
 				if (gameplaySettings.autoRollDice && !rollForTasks.rolled && !rollForTasks.rolling) {
 					autoPlayCanceller = autoRoll(() =>
 						rollForTasks.handleRollForTasks(triggerAutoPlayForCurrentScreen)
 					);
-				} else if (rollForTasks.rolled && audioSettings.autoAnnounceRolls) {
-					const resultText = `You rolled a ${gameState.diceRoll}. Draw ${gameState.cardsToDraw} card${gameState.cardsToDraw !== 1 ? 's' : ''}.`;
-					speak(resultText);
 				}
 				break;
 
@@ -878,6 +876,7 @@
 							advancing={step.hold.active}
 							advanceProgress={step.hold.progress}
 							advancePaused={step.hold.paused}
+							advanceWaiting={step.hold.waiting}
 							testid={step.testid}
 							onclick={runStep}
 						/>
