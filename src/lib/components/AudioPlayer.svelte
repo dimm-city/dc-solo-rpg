@@ -14,6 +14,9 @@
 	let isPlaying = $state(false);
 	let currentTime = $state(0);
 	let audioURL = $state(null);
+	// Read from the element's events: audioElement.duration itself is not reactive, so the total
+	// used to stay at 0:00
+	let mediaDuration = $state(0);
 
 	// Convert base64 to blob URL when audioData changes
 	$effect(() => {
@@ -34,6 +37,8 @@
 	});
 
 	function formatTime(seconds) {
+		// Recorded webm reports Infinity until it has played once
+		if (!Number.isFinite(seconds)) return '–:––';
 		const mins = Math.floor(seconds / 60);
 		const secs = Math.floor(seconds % 60);
 		return `${mins}:${secs.toString().padStart(2, '0')}`;
@@ -57,6 +62,10 @@
 		isPlaying = false;
 	}
 
+	function handleDuration() {
+		mediaDuration = audioElement?.duration ?? 0;
+	}
+
 	function handleTimeUpdate() {
 		if (audioElement) {
 			currentTime = audioElement.currentTime;
@@ -76,12 +85,13 @@
 		const rect = event.currentTarget.getBoundingClientRect();
 		const x = event.clientX - rect.left;
 		const percentage = x / rect.width;
+		if (!Number.isFinite(audioElement.duration)) return;
 		audioElement.currentTime = percentage * audioElement.duration;
 	}
 
 	// Get progress percentage
 	let progress = $derived(
-		audioElement && audioElement.duration > 0 ? (currentTime / audioElement.duration) * 100 : 0
+		Number.isFinite(mediaDuration) && mediaDuration > 0 ? (currentTime / mediaDuration) * 100 : 0
 	);
 </script>
 
@@ -94,6 +104,8 @@
 			onplay={handlePlay}
 			onpause={handlePause}
 			ontimeupdate={handleTimeUpdate}
+			onloadedmetadata={handleDuration}
+			ondurationchange={handleDuration}
 			onended={handleEnded}
 		></audio>
 
@@ -130,7 +142,7 @@
 					<span class="current-time">{formatTime(currentTime)}</span>
 					<span class="separator">/</span>
 					<span class="total-time">
-						{formatTime(audioElement?.duration || duration)}
+						{formatTime(mediaDuration || duration)}
 					</span>
 				</div>
 			</div>
@@ -152,24 +164,16 @@
 	.audio-player {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-md);
-		padding: var(--space-lg);
-		background: linear-gradient(135deg, rgba(138, 43, 226, 0.15), rgba(75, 0, 130, 0.2));
-		border: 2px solid rgba(138, 43, 226, 0.4);
-		border-radius: 8px;
-		backdrop-filter: blur(8px);
-		-webkit-backdrop-filter: blur(8px);
-		transition: all var(--transition-base);
-	}
-
-	.audio-player:hover {
-		border-color: rgba(186, 85, 211, 0.6);
-		box-shadow: 0 0 20px rgba(138, 43, 226, 0.3);
+		gap: var(--space-sm);
+		padding: 12px 16px;
+		background: rgba(7, 16, 26, 0.7);
+		border: 1px solid rgba(255, 255, 255, 0.18);
+		border-radius: 6px;
 	}
 
 	.audio-player.compact {
-		padding: var(--space-md);
-		gap: var(--space-sm);
+		padding: var(--space-sm);
+		gap: var(--space-xs);
 	}
 
 	.player-controls {
@@ -181,38 +185,37 @@
 
 	.play-button {
 		flex-shrink: 0;
-		width: 48px;
-		height: 48px;
+		width: 44px;
+		height: 44px;
+		min-height: 44px;
+		/* No padding: the global phone button padding squeezed the icon to nothing */
+		padding: 0;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: linear-gradient(135deg, rgba(0, 255, 127, 0.2), rgba(0, 139, 69, 0.3));
-		border: 2px solid rgba(0, 255, 127, 0.5);
+		background: rgba(0, 255, 255, 0.12);
+		border: 1px solid rgba(0, 255, 255, 0.6);
 		border-radius: 50%;
-		color: rgba(0, 255, 127, 1);
+		color: var(--color-neon-cyan);
 		cursor: pointer;
-		transition: all var(--transition-base);
-		position: relative;
-		overflow: hidden;
+		transition:
+			background-color 150ms ease-out,
+			border-color 150ms ease-out;
+	}
+
+	.play-button svg {
+		flex-shrink: 0;
 	}
 
 	.play-button:hover {
-		background: linear-gradient(135deg, rgba(0, 255, 127, 0.3), rgba(0, 139, 69, 0.4));
-		border-color: rgba(0, 255, 127, 0.8);
-		box-shadow: 0 0 20px rgba(0, 255, 127, 0.4);
-		transform: scale(1.05);
+		background: rgba(0, 255, 255, 0.22);
+		border-color: var(--color-neon-cyan);
 	}
 
 	.play-button.playing {
-		background: linear-gradient(135deg, rgba(220, 20, 60, 0.2), rgba(139, 0, 0, 0.3));
-		border-color: rgba(220, 20, 60, 0.5);
-		color: rgba(255, 69, 96, 1);
-	}
-
-	.play-button.playing:hover {
-		background: linear-gradient(135deg, rgba(220, 20, 60, 0.3), rgba(139, 0, 0, 0.4));
-		border-color: rgba(220, 20, 60, 0.8);
-		box-shadow: 0 0 20px rgba(220, 20, 60, 0.4);
+		background: rgba(217, 70, 239, 0.16);
+		border-color: rgba(217, 70, 239, 0.7);
+		color: #f3d9fb;
 	}
 
 	.compact .play-button {
@@ -230,10 +233,11 @@
 	.progress-bar {
 		width: 100%;
 		height: 32px;
+		min-height: 32px;
 		background: transparent;
 		border: none;
 		cursor: pointer;
-		padding: var(--space-sm) 0;
+		padding: 0;
 		display: flex;
 		align-items: center;
 	}
@@ -280,15 +284,14 @@
 		display: flex;
 		align-items: center;
 		gap: var(--space-xs);
-		font-family: 'Courier New', monospace;
+		font-family: var(--font-body);
+		font-variant-numeric: tabular-nums;
 		font-size: 0.875rem;
-		color: rgba(255, 255, 255, 0.7);
-		letter-spacing: 0.05em;
+		color: #aebbcc;
 	}
 
 	.current-time {
-		color: var(--color-neon-cyan);
-		text-shadow: 0 0 8px rgba(0, 255, 255, 0.6);
+		color: #fff;
 	}
 
 	.separator {
@@ -328,6 +331,18 @@
 		animation-delay: 0.4s;
 	}
 
+	@media (prefers-reduced-motion: reduce) {
+		.wave-bar {
+			animation: none;
+		}
+
+		.play-button,
+		.progress-fill,
+		.progress-handle {
+			transition: none;
+		}
+	}
+
 	@keyframes wave-animation {
 		0%,
 		100% {
@@ -341,12 +356,7 @@
 	/* Mobile optimizations */
 	@media (max-width: 640px) {
 		.audio-player {
-			padding: var(--space-md);
-		}
-
-		.play-button {
-			width: 40px;
-			height: 40px;
+			padding: 10px 12px;
 		}
 
 		.time-display {

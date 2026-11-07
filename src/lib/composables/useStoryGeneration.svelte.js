@@ -62,7 +62,7 @@ export function useStoryGeneration(savedGame, saveKey) {
 
 		isGenerating = true;
 		errorMessage = '';
-		progressMessage = 'Generating story with AI...';
+		progressMessage = 'Writing your story…';
 
 		try {
 			// Build game data for story generation
@@ -84,21 +84,21 @@ export function useStoryGeneration(savedGame, saveKey) {
 			// Generate audio if requested
 			let audioBlob = null;
 			if (generateAudio && ttsAvailable) {
-				progressMessage = 'Generating audio narration...';
+				progressMessage = 'Recording the narration…';
 				isGeneratingAudio = true;
 
 				try {
 					audioBlob = await generateAudioNarration(generatedStory.text);
 				} catch (audioError) {
 					logger.error('Audio generation failed:', audioError);
-					errorMessage = `Story generated, but audio failed: ${audioError.message}`;
+					errorMessage = `The story is written, but the narration failed: ${audioError.message}`;
 				} finally {
 					isGeneratingAudio = false;
 				}
 			}
 
 			// Save to IndexedDB
-			progressMessage = 'Saving story...';
+			progressMessage = 'Saving…';
 			await saveAIStory(saveKey, generatedStory, audioBlob);
 
 			// Reload story to get audio data
@@ -111,7 +111,7 @@ export function useStoryGeneration(savedGame, saveKey) {
 			progressMessage = '';
 		} catch (error) {
 			logger.error('Story generation failed:', error);
-			errorMessage = error.message || 'Failed to generate story';
+			errorMessage = error.message || 'The summary could not be written. Try again.';
 			progressMessage = '';
 		} finally {
 			isGenerating = false;

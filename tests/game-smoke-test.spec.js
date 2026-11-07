@@ -14,10 +14,10 @@ import { clickMenuItem, openHeaderMenu } from './helpers';
  * - Takes screenshots at each step (written to the git-ignored tests/screenshots/)
  */
 
-/** Click "Skip Once" on the first-visit choice screen and wait for the game selection screen */
+/** Choose Play on the first-time panel and wait for the game selection screen */
 async function skipToGameSelection(page) {
 	await page.goto('/');
-	await page.locator('.choice-card').filter({ hasText: 'Skip Once' }).click();
+	await page.getByRole('button', { name: /^Play/ }).click();
 	await expect(page.getByTestId('game-selector')).toBeVisible();
 }
 
@@ -69,12 +69,14 @@ test.describe('DC Solo RPG - Smoke Test', () => {
 		});
 
 		// All three choices are offered
-		await expect(page.getByRole('button', { name: /Learn How to Play/ })).toBeVisible();
-		await expect(page.getByRole('button', { name: /Skip Once/ })).toBeVisible();
-		await expect(page.getByRole('button', { name: /Skip Always/ })).toBeVisible();
+		await expect(page.getByRole('button', { name: /^Play/ })).toBeVisible();
+		await expect(page.getByRole('button', { name: 'Read the rules first' })).toBeVisible();
+		await expect(
+			page.getByRole('button', { name: "I know how to play: don't show tips." })
+		).toBeVisible();
 
-		// "Skip Once" proceeds to game selection
-		await page.getByRole('button', { name: /Skip Once/ }).click();
+		// "Play" proceeds to game selection
+		await page.getByRole('button', { name: /^Play/ }).click();
 		await expect(page.getByTestId('game-selector')).toBeVisible();
 	});
 
@@ -86,22 +88,18 @@ test.describe('DC Solo RPG - Smoke Test', () => {
 			fullPage: true
 		});
 
-		// Header: logo, title and the menu that holds every action
+		// Header: logo, title and every action (inline or in the menu)
 		await expect(page.locator('.logo-dice')).toBeVisible();
 		await expect(page.locator('.version-text')).toHaveText('Dream Console');
 		await openHeaderMenu(page);
-		for (const name of [
-			'Upload Game',
-			'Story Library',
-			'Settings',
-			'Dice Theme',
-			'About',
-			'Help'
-		]) {
+		for (const name of ['Upload Game', 'Dice Theme', 'About']) {
 			await expect(page.locator('.mobile-menu').getByRole('button', { name })).toBeVisible();
 		}
+		for (const name of [/^(Stories|Story Library)$/, /^Settings$/, /^Help$/]) {
+			await expect(page.locator('.page-header').getByRole('button', { name })).toBeVisible();
+		}
 
-		// Every game card has a title, a subtitle and a Start button
+		// Every game card has a title, a subtitle and a Play button
 		const gameCards = page.locator('.game-card');
 		const count = await gameCards.count();
 		expect(count).toBeGreaterThan(0);

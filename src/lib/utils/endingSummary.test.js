@@ -1,12 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-	getEndingCause,
-	getEndingText,
-	getRunRecap,
-	getKeyMoments,
-	getStatusLine
-} from './endingSummary.js';
-import { getJournalPrompts, getFinalPrompts } from '../configuration/journalPrompts.js';
+import { getEndingCause, getEndingText, getRunRecap, getStatusLine } from './endingSummary.js';
 
 const labels = {
 	failureCheckLoss: 'The tower fell.',
@@ -56,6 +49,17 @@ describe('getEndingText', () => {
 		expect(text.afterword).toBe('');
 	});
 
+	it('names the fourth Ace on a win it brought (Easy: tokens still left), not on a tokens win', () => {
+		const fourthAce = { win: true, tower: 7, kingsRevealed: 2, acesRevealed: 4, tokens: 6 };
+		expect(getEndingText(fourthAce, labels).causeLine).toBe('The fourth Ace was revealed.');
+		expect(getEndingText(fourthAce, { ...labels, acesCauseLine: 'Four Aces.' }).causeLine).toBe(
+			'Four Aces.'
+		);
+		// Normal and Hard: four Aces, then the last token (no cause line, the message says it)
+		expect(getEndingText({ ...fourthAce, tokens: 0 }, labels).causeLine).toBe('');
+		expect(getEndingText({ ...fourthAce, acesRevealed: 3, tokens: 0 }, labels).causeLine).toBe('');
+	});
+
 	it('lets authors override the cause lines and afterword', () => {
 		const text = getEndingText(
 			{ kingsRevealed: 4, tower: 3 },
@@ -94,39 +98,12 @@ describe('getRunRecap', () => {
 	});
 });
 
-describe('getKeyMoments and getStatusLine', () => {
-	it('lists Kings and Aces in order', () => {
-		expect(getKeyMoments(log).map((m) => m.label)).toEqual(['King of spades', 'Ace of hearts']);
-	});
-
+describe('getStatusLine', () => {
 	it('builds the status line, with tokens only after Salvation unlocks', () => {
 		const base = { tower: 9, kingsRevealed: 3, tokens: 11 };
 		expect(getStatusLine(base)).toBe('Stability 9/20 · 3 of 4 Kings');
 		expect(getStatusLine({ ...base, aceOfHeartsRevealed: true })).toBe(
 			'Stability 9/20 · 3 of 4 Kings · 11 tokens left'
 		);
-	});
-});
-
-describe('journal prompts', () => {
-	it('puts King and Ace prompts first, at most two', () => {
-		const prompts = getJournalPrompts([{ card: '7' }, { card: 'K' }, { card: 'A' }]);
-		expect(prompts).toEqual(['What is slipping away?', 'Where does hope come from?']);
-	});
-
-	it('uses a challenge prompt for odd ranks and an event prompt for even', () => {
-		expect(getJournalPrompts([{ card: '7' }])[0]).toBe('What did this cost you?');
-		expect(getJournalPrompts([{ card: '4' }])[0]).toBe(
-			"What do you notice that you didn't before?"
-		);
-	});
-
-	it('falls back when the round has no cards, and offers a second prompt', () => {
-		expect(getJournalPrompts([])).toHaveLength(2);
-	});
-
-	it('has final prompts for each ending', () => {
-		expect(getFinalPrompts('kings')).not.toEqual(getFinalPrompts('stability'));
-		expect(getFinalPrompts(null, true)).toHaveLength(2);
 	});
 });

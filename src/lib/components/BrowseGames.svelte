@@ -1,12 +1,14 @@
 <script>
 	/**
-	 * BrowseGames - Library view for completed games
-	 * Displays a polished gallery of completed games with metadata
+	 * BrowseGames - The Story Library: every finished run, newest first.
+	 * Each card says how the run ended; Delete sits in the card's overflow menu and asks first.
 	 */
 
 	import SortControls from './browse/SortControls.svelte';
 	import GameCard from './browse/GameCard.svelte';
+	import ConfirmModal from './ConfirmModal.svelte';
 	import { useSavedGames } from '$lib/composables/useSavedGames.svelte.js';
+	import { getStoryOutcome } from '$lib/utils/storyOutcome.js';
 	import { fade, fly } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 	import { ANIMATION_DURATION } from '$lib/constants/animations.js';
@@ -16,174 +18,218 @@
 		onBack = () => {} // Callback to return to main menu
 	} = $props();
 
-	// Use saved games composable
 	const saves = useSavedGames();
+
+	const reducedMotion = () =>
+		typeof window !== 'undefined' &&
+		window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+	const duration = (ms) => (reducedMotion() ? 0 : ms);
+
+	/** The game waiting for delete confirmation */
+	let pendingDelete = $state(null);
+	let notice = $state('');
+
+	let deleteMessage = $derived(
+		pendingDelete
+			? `“${pendingDelete.gameTitle || 'Untitled game'}” (${getStoryOutcome(pendingDelete).label}, ${saves.formatDate(pendingDelete.lastPlayed || pendingDelete.savedAt)}) and its journal will be deleted for good. This can't be undone.`
+			: ''
+	);
+
+	async function confirmDelete() {
+		const game = pendingDelete;
+		pendingDelete = null;
+		const deleted = await saves.deleteGame(game.id);
+		notice = deleted
+			? `Deleted ${game.gameTitle || 'the story'}.`
+			: "That story couldn't be deleted. Please try again.";
+	}
 </script>
 
 <div
 	class="browse-games"
-	in:fly={{ y: 20, duration: ANIMATION_DURATION.STORY_MODE, easing: quintOut }}
-	out:fade={{ duration: ANIMATION_DURATION.STORY_MODE }}
+	in:fly={{ y: 20, duration: duration(ANIMATION_DURATION.STORY_MODE), easing: quintOut }}
+	out:fade={{ duration: duration(ANIMATION_DURATION.STORY_MODE) }}
 >
-	<!-- Header -->
-	<div class="browse-header" data-augmented-ui="tl-clip tr-clip border">
-		<div class="header-content">
-			<button class="back-button" onclick={onBack} aria-label="Back to menu">
-				<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M15 19l-7-7 7-7"
-					/>
-				</svg>
-			</button>
+	<header class="browse-header">
+		<button class="back-button" onclick={onBack} aria-label="Back to menu">
+			<svg viewBox="0 0 24 24" aria-hidden="true">
+				<path d="M15 19l-7-7 7-7" />
+			</svg>
+		</button>
 
-			<div class="title-section">
-				<h1 class="page-title">Story Library</h1>
-				<p class="subtitle">Relive your completed adventures</p>
-			</div>
+		<div class="title-section">
+			<h1 class="page-title">Story Library</h1>
+			<p class="subtitle">Your finished runs, in your own words.</p>
 		</div>
 
-		<SortControls bind:sortBy={saves.sortBy} />
-	</div>
+		{#if !saves.isLoading && saves.completedGames.length > 0}
+			<SortControls bind:sortBy={saves.sortBy} />
+		{/if}
+	</header>
 
-	<!-- Content -->
+	<p class="notice" role="status" aria-live="polite">{notice}</p>
+
 	<div class="browse-content">
 		{#if saves.isLoading}
-			<div class="loading-state" transition:fade={{ duration: ANIMATION_DURATION.NORMAL }}>
+			<div class="loading-state" in:fade={{ duration: duration(ANIMATION_DURATION.NORMAL) }}>
 				<div class="loading-spinner"></div>
-				<p>Loading your stories...</p>
+				<p>Loading your stories…</p>
 			</div>
 		{:else if saves.error}
-			<div class="error-state" transition:fade={{ duration: ANIMATION_DURATION.NORMAL }}>
-				<div class="error-icon">⚠️</div>
+			<div class="error-state" in:fade={{ duration: duration(ANIMATION_DURATION.NORMAL) }}>
 				<p class="error-message">{saves.error}</p>
-				<button class="retry-button" onclick={saves.loadCompletedGames}>Try Again</button>
+				<button class="text-button" onclick={saves.loadCompletedGames}>Try again</button>
 			</div>
 		{:else if saves.sortedGames.length === 0}
-			<div class="empty-state" transition:fade={{ duration: ANIMATION_DURATION.NORMAL }}>
-				<div class="empty-icon">
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						width="64"
-						height="64"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-					>
-						<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-						<path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-					</svg>
-				</div>
-				<h2>No Completed Games</h2>
-				<p>Complete a game to view it here in story mode!</p>
-				<button class="start-button" onclick={onBack}>Start a New Game</button>
+			<div class="empty-state" in:fade={{ duration: duration(ANIMATION_DURATION.NORMAL) }}>
+				<svg class="empty-icon" viewBox="0 0 24 24" aria-hidden="true">
+					<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+					<path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+				</svg>
+				{#if saves.completedGames.length === 0}
+					<h2>No completed games yet</h2>
+					<p>Finish a game, win or lose, and its story is kept here to read again.</p>
+					<button class="text-button" onclick={onBack}>Choose a game</button>
+				{:else}
+					<h2>Nothing to show</h2>
+					<p>No stories match this filter.</p>
+					<button class="text-button" onclick={() => (saves.sortBy = 'recent')}>Show all</button>
+				{/if}
 			</div>
 		{:else}
-			<div class="games-grid">
+			<ul class="games-grid">
 				{#each saves.sortedGames as game, index (game.id)}
 					<GameCard
 						{game}
 						{index}
 						onSelect={onSelectGame}
+						onDelete={(g) => (pendingDelete = g)}
 						formatDate={saves.formatDate}
-						formatDuration={saves.formatDuration}
 					/>
 				{/each}
-			</div>
+			</ul>
 		{/if}
 	</div>
 </div>
+
+<ConfirmModal
+	isOpen={!!pendingDelete}
+	title="Delete this story?"
+	message={deleteMessage}
+	confirmText="Delete"
+	cancelText="Keep it"
+	onConfirm={confirmDelete}
+	onCancel={() => (pendingDelete = null)}
+/>
 
 <style>
 	.browse-games {
 		display: flex;
 		flex-direction: column;
-		min-height: 100vh;
+		/* Its own full-page scroller (the page body does not scroll). Absolute, so the library and
+		   story mode overlap while one fades out and the other in, instead of stacking */
+		position: absolute;
+		inset: 0;
 		background: linear-gradient(
 			180deg,
 			rgba(10, 10, 10, 0.95),
 			rgba(26, 26, 26, 0.95),
 			rgba(10, 10, 10, 0.95)
 		);
-		padding: var(--space-lg);
-		gap: var(--space-xl);
+		padding: var(--space-xl) var(--space-xl) var(--space-2xl);
+		gap: var(--space-lg);
 		overflow-y: auto;
 	}
 
-	/* Header */
+	/* Header: back, title, and the sort control at its own size */
 	.browse-header {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-lg);
-		padding: var(--space-xl);
-		background: linear-gradient(135deg, rgba(0, 0, 0, 0.6), rgba(26, 26, 26, 0.6));
-		border: 2px solid rgba(138, 43, 226, 0.3);
-		backdrop-filter: blur(12px);
-		-webkit-backdrop-filter: blur(12px);
-		--aug-border-bg: linear-gradient(135deg, rgba(138, 43, 226, 0.2), rgba(75, 0, 130, 0.1));
-		--aug-border: 2px;
-		--aug-border-fallback-color: rgba(138, 43, 226, 0.3);
-	}
-
-	.header-content {
-		display: flex;
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr) auto;
 		align-items: center;
-		gap: var(--space-lg);
+		gap: var(--space-md) var(--space-lg);
+		width: 100%;
+		max-width: 1200px;
+		margin: 0 auto;
 	}
 
 	.back-button {
-		flex-shrink: 0;
-		width: 48px;
-		height: 48px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: linear-gradient(135deg, rgba(138, 43, 226, 0.2), rgba(75, 0, 130, 0.3));
-		border: 2px solid rgba(138, 43, 226, 0.5);
+		width: 48px;
+		height: 48px;
+		min-height: 48px;
+		/* No padding: the global phone button padding squeezed the chevron to nothing (SM-04) */
+		padding: 0;
+		background: rgba(138, 43, 226, 0.2);
+		border: 1px solid rgba(217, 70, 239, 0.6);
 		border-radius: 50%;
-		color: var(--color-cyber-magenta);
+		color: #f3d9fb;
 		cursor: pointer;
-		transition: all var(--transition-base);
+		transition:
+			background-color 150ms ease-out,
+			border-color 150ms ease-out;
+	}
+
+	.back-button svg {
+		flex-shrink: 0;
+		width: 24px;
+		height: 24px;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 2.25;
+		stroke-linecap: round;
+		stroke-linejoin: round;
 	}
 
 	.back-button:hover {
-		background: linear-gradient(135deg, rgba(138, 43, 226, 0.3), rgba(75, 0, 130, 0.4));
-		border-color: rgba(186, 85, 211, 0.8);
-		box-shadow: 0 0 20px rgba(138, 43, 226, 0.5);
-		transform: scale(1.05);
+		background: rgba(138, 43, 226, 0.35);
+		border-color: var(--color-cyber-magenta);
 	}
 
 	.title-section {
-		flex: 1;
+		min-width: 0;
 	}
 
 	.page-title {
-		font-family: var(--font-display);
-		font-size: 2.5rem;
-		font-weight: 700;
-		color: var(--color-cyber-magenta);
-		text-shadow: 0 0 20px rgba(217, 70, 239, 0.6);
 		margin: 0;
-		line-height: 1.2;
+		font-family: var(--font-display);
+		font-size: clamp(1.75rem, 6vw, 2.5rem);
+		font-weight: 700;
+		line-height: 1.15;
+		color: var(--color-cyber-magenta);
+		text-shadow: 0 0 20px rgba(217, 70, 239, 0.5);
+		overflow-wrap: break-word;
 	}
 
 	.subtitle {
+		margin: var(--space-xs) 0 0;
 		font-size: 1rem;
-		color: rgba(255, 255, 255, 0.6);
-		margin: var(--space-xs) 0 0 0;
+		color: #b8c5d6;
 	}
 
-	/* Content */
+	.notice {
+		width: 100%;
+		max-width: 1200px;
+		margin: 0 auto;
+		min-height: 0;
+		font-size: 0.9375rem;
+		color: #b8c5d6;
+	}
+
+	.notice:empty {
+		display: none;
+	}
+
 	.browse-content {
 		flex: 1;
 		display: flex;
 		flex-direction: column;
+		width: 100%;
+		max-width: 1200px;
+		margin: 0 auto;
 	}
 
-	/* Loading/Error/Empty States */
 	.loading-state,
 	.error-state,
 	.empty-state {
@@ -192,15 +238,15 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: var(--space-lg);
-		padding: var(--space-3xl);
+		gap: var(--space-md);
+		padding: var(--space-3xl) var(--space-lg);
 		text-align: center;
 	}
 
 	.loading-spinner {
-		width: 64px;
-		height: 64px;
-		border: 4px solid rgba(255, 255, 255, 0.1);
+		width: 48px;
+		height: 48px;
+		border: 3px solid rgba(255, 255, 255, 0.1);
 		border-top-color: var(--color-cyber-magenta);
 		border-radius: 50%;
 		animation: spin 1s linear infinite;
@@ -213,99 +259,93 @@
 	}
 
 	.loading-state p,
-	.error-message {
-		font-size: 1.125rem;
-		color: rgba(255, 255, 255, 0.7);
-	}
-
-	.error-icon,
-	.empty-icon {
-		color: var(--color-cyber-magenta);
-		filter: drop-shadow(0 0 20px rgba(217, 70, 239, 0.6));
-	}
-
-	.empty-state h2 {
-		font-family: var(--font-display);
-		font-size: 1.5rem;
-		color: rgba(255, 255, 255, 0.9);
-		margin: 0;
-	}
-
+	.error-message,
 	.empty-state p {
-		color: rgba(255, 255, 255, 0.6);
-		max-width: 400px;
+		max-width: 420px;
+		margin: 0;
+		font-size: 1rem;
+		line-height: 1.5;
+		color: #b8c5d6;
 	}
 
-	.retry-button,
-	.start-button {
-		padding: var(--space-md) var(--space-xl);
-		background: linear-gradient(135deg, var(--color-cyber-magenta), rgba(75, 0, 130, 0.8));
-		border: 2px solid rgba(186, 85, 211, 0.6);
-		border-radius: 6px;
-		color: rgba(255, 255, 255, 0.95);
-		font-family: var(--font-display);
+	.empty-icon {
+		width: 56px;
+		height: 56px;
+		fill: none;
+		stroke: var(--color-cyber-magenta);
+		stroke-width: 1.5;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	/* Below 28px the display face is hard to read: Inter for small headings (MN-07) */
+	.empty-state h2 {
+		margin: 0;
+		font-family: var(--font-body);
+		font-size: 1.25rem;
+		font-weight: 700;
+		letter-spacing: 0.02em;
+		text-transform: none;
+		text-shadow: none;
+		color: #fff;
+	}
+
+	.text-button {
+		min-height: 44px;
+		margin-top: var(--space-sm);
+		padding: 8px 20px;
+		background: transparent;
+		border: 1px solid var(--color-neon-cyan);
+		border-radius: 4px;
+		color: #fff;
+		font-family: var(--font-body);
 		font-size: 1rem;
 		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
 		cursor: pointer;
-		transition: all var(--transition-base);
+		transition: background-color 150ms ease-out;
 	}
 
-	.retry-button:hover,
-	.start-button:hover {
-		background: linear-gradient(135deg, rgba(217, 70, 239, 0.9), rgba(138, 43, 226, 0.9));
-		border-color: rgba(217, 70, 239, 0.8);
-		box-shadow: 0 0 25px rgba(217, 70, 239, 0.5);
-		transform: translateY(-2px);
+	.text-button:hover {
+		background: rgba(0, 255, 255, 0.14);
 	}
 
-	/* Games Grid */
 	.games-grid {
+		margin: 0;
+		padding: 0;
+		list-style: none;
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-		gap: var(--space-xl);
-		padding: var(--space-lg);
+		grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+		gap: var(--space-lg);
 	}
 
-	/* Mobile optimizations */
 	@media (max-width: 640px) {
 		.browse-games {
-			padding: var(--space-sm);
+			padding: var(--space-md) var(--space-md) var(--space-xl);
 			gap: var(--space-md);
 		}
 
+		/* Back and the sort control share the top row; the title gets the full width */
 		.browse-header {
-			padding: var(--space-md);
-			position: relative;
+			grid-template-columns: auto minmax(0, 1fr);
 		}
 
-		.page-title {
-			font-size: 1.5rem;
-			line-height: 1.3;
-		}
-
-		.subtitle {
-			font-size: 0.875rem;
-		}
-
-		.header-content {
-			flex-direction: column;
-			align-items: flex-start;
-			gap: var(--space-md);
-		}
-
-		.back-button {
-			position: absolute;
-			top: var(--space-md);
-			left: var(--space-md);
-			width: 40px;
-			height: 40px;
+		.browse-header :global(.sort-controls) {
+			grid-area: 1 / 2;
+			justify-self: end;
 		}
 
 		.title-section {
-			padding-top: var(--space-2xl);
-			width: 100%;
+			grid-area: 2 / 1 / 3 / 3;
+		}
+
+		.back-button {
+			width: 44px;
+			height: 44px;
+			min-height: 44px;
+		}
+
+		.subtitle {
+			font-size: 0.9375rem;
 		}
 
 		.games-grid {
@@ -314,31 +354,14 @@
 		}
 	}
 
-	/* Extra small screens */
-	@media (max-width: 375px) {
-		.browse-games {
-			padding: var(--space-xs);
-		}
-
-		.browse-header {
-			padding: var(--space-sm);
-		}
-
-		.page-title {
-			font-size: 1.25rem;
-		}
-
-		.back-button {
-			width: 36px;
-			height: 36px;
-		}
-	}
-
-	/* Accessibility - Reduced motion */
 	@media (prefers-reduced-motion: reduce) {
-		.browse-games {
-			animation: none !important;
-			transition: opacity 0.1s linear !important;
+		.back-button,
+		.text-button {
+			transition: none;
+		}
+
+		.loading-spinner {
+			animation: none;
 		}
 	}
 </style>

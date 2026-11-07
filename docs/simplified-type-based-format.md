@@ -1045,7 +1045,7 @@ title: Your Game Title
 subtitle: Your Game Subtitle
 win-message: Your victory message
 lose-message: Your defeat message
-difficulty: normal # Optional: easy or normal (default normal)
+difficulty: normal # Optional: easy, normal or hard (default normal)
 ---
 
 # Introduction

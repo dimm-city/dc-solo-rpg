@@ -50,13 +50,10 @@
 		min-width: 120px;
 	}
 
-	/* Ensure buttons fill their wrappers */
+	/* Ensure buttons fill their wrappers (size changes are never animated) */
 	.button-bar > :global(.aug-button-wrapper .aug-button) {
 		width: 100%;
 		height: 100%;
-		transition:
-			height 0.3s ease,
-			width 0.3s ease;
 	}
 
 	/* Direct children (non-wrapped buttons) also get flex treatment */
@@ -75,13 +72,6 @@
 		.button-bar > :global(*) {
 			flex: 1 1 100%;
 			width: 100%;
-		}
-	}
-
-	/* Accessibility - Reduced motion */
-	@media (prefers-reduced-motion: reduce) {
-		.button-bar {
-			transition: none !important;
 		}
 	}
 </style>

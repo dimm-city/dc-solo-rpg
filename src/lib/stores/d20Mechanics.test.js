@@ -13,7 +13,8 @@ import {
 	convertD20ToCardCount,
 	calculateStabilityLoss,
 	getSalvationThreshold,
-	calculateSalvationResult
+	calculateSalvationResult,
+	calculateAutomaticSalvation
 } from './gameActions.svelte.js';
 
 describe('D20 Mechanics', () => {
@@ -237,7 +238,7 @@ describe('D20 Mechanics', () => {
 			expect(getSalvationThreshold(3)).toBe(11);
 		});
 
-		it('should return threshold 0 for 4 Aces (auto-success)', () => {
+		it('should return threshold 0 for 4 Aces (no target: a Stability check; Easy never reaches it)', () => {
 			expect(getSalvationThreshold(4)).toBe(0);
 		});
 
@@ -247,6 +248,8 @@ describe('D20 Mechanics', () => {
 	});
 
 	describe('Salvation Results', () => {
+		const hard = { hard: true };
+
 		describe('With 1 Ace (threshold 17)', () => {
 			const threshold = 17;
 
@@ -256,6 +259,7 @@ describe('D20 Mechanics', () => {
 				expect(result.tokenChange).toBe(-2);
 				expect(result.gainedLucid).toBe(true);
 				expect(result.gainedSurreal).toBe(false);
+				expect(calculateSalvationResult(20, threshold, hard).tokenChange).toBe(-2);
 			});
 
 			it('should remove 1 token on rolls 17-19', () => {
@@ -265,27 +269,33 @@ describe('D20 Mechanics', () => {
 					expect(result.tokenChange).toBe(-1);
 					expect(result.gainedLucid).toBe(false);
 					expect(result.gainedSurreal).toBe(false);
+					expect(calculateSalvationResult(roll, threshold, hard).tokenChange).toBe(-1);
 				}
 			});
 
-			it('should add 1 token on failure (2-16)', () => {
-				// Per spec: ALL rolls below threshold should give +1 token (failure)
-				// No "near-miss" range exists
+			it('a miss (2-16) loses no token on Normal, and adds 1 on Hard', () => {
+				// Every roll below the threshold is a miss: there is no "near-miss" range
 				for (let roll = 2; roll <= 16; roll++) {
 					const result = calculateSalvationResult(roll, threshold);
 
-					expect(result.tokenChange).toBe(1);
+					expect(result.tokenChange).toBe(0);
 					expect(result.gainedLucid).toBe(false);
 					expect(result.gainedSurreal).toBe(false);
+					expect(calculateSalvationResult(roll, threshold, hard).tokenChange).toBe(1);
 				}
 			});
 
-			it('should add 2 tokens on critical failure (1)', () => {
+			it('a natural 1 is a miss and makes the player Surreal: no token on Normal, +2 on Hard', () => {
 				const result = calculateSalvationResult(1, threshold);
 
-				expect(result.tokenChange).toBe(2);
+				expect(result.tokenChange).toBe(0);
 				expect(result.gainedLucid).toBe(false);
 				expect(result.gainedSurreal).toBe(true);
+				expect(calculateSalvationResult(1, threshold, hard)).toEqual({
+					tokenChange: 2,
+					gainedLucid: false,
+					gainedSurreal: true
+				});
 			});
 		});
 
@@ -300,12 +310,10 @@ describe('D20 Mechanics', () => {
 				}
 			});
 
-			it('should add 1 token on failure (2-13)', () => {
-				// Per spec: ALL rolls below threshold should give +1 token (failure)
+			it('a miss (2-13) loses no token on Normal, and adds 1 on Hard', () => {
 				for (let roll = 2; roll <= 13; roll++) {
-					const result = calculateSalvationResult(roll, threshold);
-
-					expect(result.tokenChange).toBe(1);
+					expect(calculateSalvationResult(roll, threshold).tokenChange).toBe(0);
+					expect(calculateSalvationResult(roll, threshold, hard).tokenChange).toBe(1);
 				}
 			});
 		});
@@ -321,30 +329,82 @@ describe('D20 Mechanics', () => {
 				}
 			});
 
-			it('should add 1 token on failure (2-10)', () => {
-				// Per spec: ALL rolls below threshold should give +1 token (failure)
+			it('a miss (2-10) loses no token on Normal, and adds 1 on Hard', () => {
 				for (let roll = 2; roll <= 10; roll++) {
-					const result = calculateSalvationResult(roll, threshold);
-
-					expect(result.tokenChange).toBe(1);
+					expect(calculateSalvationResult(roll, threshold).tokenChange).toBe(0);
+					expect(calculateSalvationResult(roll, threshold, hard).tokenChange).toBe(1);
 				}
 			});
 		});
 
-		describe('With 4 Aces (auto-success)', () => {
+		describe('With 4 Aces (no target; on Easy the fourth Ace ends the game first)', () => {
 			const threshold = 0;
 
-			it('should always remove 1 token regardless of roll', () => {
-				// Test a few random rolls
-				const rolls = [1, 5, 10, 15, 20];
+			it('removes 1 token whatever the roll, if Stability holds', () => {
+				for (const roll of [1, 5, 10, 15, 20]) {
+					expect(calculateSalvationResult(roll, threshold).tokenChange).toBe(-1);
+				}
+			});
 
-				rolls.forEach((roll) => {
-					const result = calculateSalvationResult(roll, threshold);
-
-					expect(result.tokenChange).toBe(-1);
-					expect(result.gainedLucid).toBe(false);
-					expect(result.gainedSurreal).toBe(false);
+			it('a natural 20 or 1 still makes the player Lucid or Surreal', () => {
+				expect(calculateSalvationResult(20, threshold)).toMatchObject({ gainedLucid: true });
+				expect(calculateSalvationResult(1, threshold)).toMatchObject({ gainedSurreal: true });
+				expect(calculateSalvationResult(12, threshold)).toMatchObject({
+					gainedLucid: false,
+					gainedSurreal: false
 				});
+			});
+		});
+
+		describe('calculateAutomaticSalvation (4 Aces: one Stability check first)', () => {
+			it('reads the roll on the Stability table and removes the token', () => {
+				expect(calculateAutomaticSalvation(14, 12)).toEqual({
+					stabilityLoss: 0,
+					stabilityGain: 0,
+					stabilityAfter: 12,
+					tokenChange: -1,
+					gainedLucid: false,
+					gainedSurreal: false
+				});
+				expect(calculateAutomaticSalvation(7, 12)).toMatchObject({
+					stabilityLoss: 1,
+					stabilityAfter: 11,
+					tokenChange: -1
+				});
+				expect(calculateAutomaticSalvation(4, 12)).toMatchObject({
+					stabilityLoss: 2,
+					stabilityAfter: 10,
+					tokenChange: -1
+				});
+			});
+
+			it('a natural 1 costs 3 Stability and makes the player Surreal', () => {
+				expect(calculateAutomaticSalvation(1, 12)).toMatchObject({
+					stabilityLoss: 3,
+					stabilityAfter: 9,
+					tokenChange: -1,
+					gainedSurreal: true
+				});
+			});
+
+			it('a natural 20 restores 1 Stability (max 20) and makes the player Lucid', () => {
+				expect(calculateAutomaticSalvation(20, 12)).toMatchObject({
+					stabilityGain: 1,
+					stabilityAfter: 13,
+					tokenChange: -1,
+					gainedLucid: true
+				});
+				expect(calculateAutomaticSalvation(20, 20).stabilityAfter).toBe(20);
+			});
+
+			it('a roll that takes the last Stability keeps the token: the game is lost', () => {
+				expect(calculateAutomaticSalvation(3, 2)).toMatchObject({
+					stabilityLoss: 2,
+					stabilityAfter: 0,
+					tokenChange: 0
+				});
+				expect(calculateAutomaticSalvation(1, 3).tokenChange).toBe(0);
+				expect(calculateAutomaticSalvation(1, 4).tokenChange).toBe(-1);
 			});
 		});
 	});
@@ -383,11 +443,14 @@ describe('D20 Mechanics', () => {
 			expect(probability).toBe(0.5); // 50%
 		});
 
-		it('should have 100% success rate with 4 Aces', () => {
+		it('removes a token on every roll with 4 Aces, unless Stability runs out', () => {
 			const threshold = getSalvationThreshold(4);
 			expect(threshold).toBe(0);
 
-			// Auto-success means probability = 1.0
+			// At 4 Stability or more no roll can reach 0 (the worst loss is 3)
+			for (let roll = 1; roll <= 20; roll++) {
+				expect(calculateAutomaticSalvation(roll, 4).tokenChange).toBe(-1);
+			}
 		});
 	});
 });

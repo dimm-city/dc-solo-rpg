@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createRuleCaptions } from './useRuleCaptions.svelte.js';
+import { getSeenRuleTips } from '../utils/instructionsStorage.js';
 
 function base(over = {}) {
 	return {
@@ -62,6 +63,67 @@ describe('createRuleCaptions', () => {
 		expect(items[1].text).toContain('14+');
 	});
 
+	it('the third Ace points at the fourth on Easy, where it ends the game, not on Normal or Hard', () => {
+		// No config reads as Normal
+		c.observe(base({ acesRevealed: 2, aceOfHeartsRevealed: true }));
+		drain(c);
+		c.observe(base({ acesRevealed: 3, aceOfHeartsRevealed: true }));
+		expect(c.next().text).toBe('Each Ace makes salvation easier. You now need 11+.');
+
+		for (const difficulty of [1, 2]) {
+			const level = createRuleCaptions({ isDisabled: () => false });
+			const on = (over) => base({ config: { options: { difficulty } }, ...over });
+			level.observe(on({ acesRevealed: 2, aceOfHeartsRevealed: true }));
+			drain(level);
+			level.observe(on({ acesRevealed: 3, aceOfHeartsRevealed: true }));
+			expect(level.next().text).toBe('Each Ace makes salvation easier. You now need 11+.');
+		}
+
+		const easy = createRuleCaptions({ isDisabled: () => false });
+		const onEasy = (over) => base({ config: { options: { difficulty: 0 } }, ...over });
+		easy.observe(onEasy({ acesRevealed: 2, aceOfHeartsRevealed: true }));
+		drain(easy);
+		easy.observe(onEasy({ acesRevealed: 3, aceOfHeartsRevealed: true }));
+		expect(easy.next().text).toBe(
+			'Each Ace makes salvation easier. You now need 11+. One more Ace and you escape, if you survive its check.'
+		);
+	});
+
+	it('the fourth Ace has its own caption on Easy; on Normal and Hard it is one more Ace', () => {
+		for (const difficulty of [undefined, 1, 2]) {
+			const level = createRuleCaptions({ isDisabled: () => false });
+			const on = (over) =>
+				base(difficulty === undefined ? over : { config: { options: { difficulty } }, ...over });
+			level.observe(on({ acesRevealed: 1, aceOfHeartsRevealed: true }));
+			level.observe(on({ acesRevealed: 2, aceOfHeartsRevealed: true }));
+			drain(level); // salvation, ace
+			level.observe(on({ acesRevealed: 4, aceOfHeartsRevealed: true }));
+			const items = [];
+			let n;
+			while ((n = level.next())) items.push(n);
+			expect(items.map((i) => i.id)).toEqual([]); // 'ace' was already shown
+		}
+
+		// With the all-four text when it is the first Ace after the Ace of Hearts
+		c.observe(base({ acesRevealed: 3, aceOfHeartsRevealed: true }));
+		drain(c);
+		c.observe(base({ acesRevealed: 4, aceOfHeartsRevealed: true }));
+		expect(c.next()).toEqual({
+			id: 'ace',
+			text: 'Each Ace makes salvation easier. With all four, only a Stability check stands in the way.'
+		});
+
+		const easy = createRuleCaptions({ isDisabled: () => false });
+		const onEasy = (over) => base({ config: { options: { difficulty: 0 } }, ...over });
+		easy.observe(onEasy({ acesRevealed: 1, aceOfHeartsRevealed: true }));
+		easy.observe(onEasy({ acesRevealed: 2, aceOfHeartsRevealed: true }));
+		drain(easy); // salvation, ace
+		easy.observe(onEasy({ acesRevealed: 4, aceOfHeartsRevealed: true }));
+		const fourth = easy.next();
+		expect(fourth.id).toBe('fourth-ace');
+		expect(fourth.text).toBe('The fourth Ace. Survive its Stability check and you escape.');
+	});
+
 	it('a non-heart Ace before the Ace of Hearts says nothing', () => {
 		c.observe(base({ acesRevealed: 1 }));
 		expect(drain(c)).toEqual([]);
@@ -75,13 +137,18 @@ describe('createRuleCaptions', () => {
 		expect(drain(c)).toEqual(['lucid', 'surreal']);
 	});
 
-	it('fires the failed-salvation caption only when a token is added after the Ace of Hearts', () => {
+	it('fires the failed-salvation caption only when a token is added after the Ace of Hearts (Hard)', () => {
 		c.observe(base({ tokens: 11 }));
 		expect(drain(c)).toEqual([]);
 		c.observe(base({ tokens: 10, aceOfHeartsRevealed: true, acesRevealed: 1 }));
 		drain(c);
+		// A miss on Normal changes nothing, so nothing fires
+		c.observe(base({ tokens: 10, aceOfHeartsRevealed: true, acesRevealed: 1, state: 'log' }));
+		expect(drain(c)).toEqual([]);
 		c.observe(base({ tokens: 11, aceOfHeartsRevealed: true, acesRevealed: 1 }));
-		expect(drain(c)).toEqual(['token']);
+		const token = c.next();
+		expect(token.id).toBe('token');
+		expect(token.text).toBe('A failed salvation roll adds a token. Hope costs.');
 	});
 
 	it('keeps queue order when several fire at once', () => {
@@ -121,5 +188,41 @@ describe('createRuleCaptions', () => {
 		c.observe(base({ kingsRevealed: 1 }));
 		c.observe(base({ kingsRevealed: 1, gameOver: true }));
 		expect(c.pending).toBe(0);
+	});
+
+	it('records each caption it shows for "Rules you\'ve met", once per id', () => {
+		const shown = [];
+		const t = createRuleCaptions({ onSeen: (id) => shown.push(id) });
+		t.observe(base());
+		t.observe(base({ kingsRevealed: 1 }));
+		t.observe(base({ kingsRevealed: 2, isLucid: true }));
+		expect(shown).toEqual(['king', 'lucid']);
+	});
+
+	it('persists shown captions to storage by default', () => {
+		localStorage.clear();
+		const t = createRuleCaptions();
+		t.observe(base());
+		t.observe(base({ isSurreal: true }));
+		expect(getSeenRuleTips()).toEqual(['surreal']);
+	});
+});
+
+describe('createRuleCaptions: Salvation on Easy', () => {
+	it('teaches Salvation on the first Salvation screen when the Ace of Hearts starts revealed', () => {
+		const c = createRuleCaptions();
+		c.observe(base({ state: 'rollForTasks', aceOfHeartsRevealed: true, acesRevealed: 1 }));
+		c.observe(base({ state: 'successCheck', aceOfHeartsRevealed: true, acesRevealed: 1 }));
+		c.observe(base({ state: 'log', aceOfHeartsRevealed: true, acesRevealed: 1 }));
+		c.observe(base({ state: 'successCheck', aceOfHeartsRevealed: true, acesRevealed: 1 }));
+		expect(drain(c)).toEqual(['salvation']);
+	});
+
+	it('does not repeat it in a normal game, where the Ace of Hearts already taught it', () => {
+		const c = createRuleCaptions();
+		c.observe(base());
+		c.observe(base({ state: 'drawCard', acesRevealed: 1, aceOfHeartsRevealed: true }));
+		c.observe(base({ state: 'successCheck', acesRevealed: 1, aceOfHeartsRevealed: true }));
+		expect(drain(c)).toEqual(['salvation']);
 	});
 });

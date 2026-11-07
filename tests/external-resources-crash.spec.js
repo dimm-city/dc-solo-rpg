@@ -4,14 +4,14 @@ import { test, expect } from '@playwright/test';
  * TEST: External resource failures must not break the app
  *
  * HISTORY: the app used to crash when external CDN resources (augmented-ui from unpkg.com,
- * Google Fonts) failed to load. The app now bundles augmented-ui and its fonts, and the only
- * remaining external resource is the Google Fonts stylesheet in src/app.html, which loads
- * non-blocking and drops itself (with a console warning) if it fails.
+ * Google Fonts) failed to load. The app now bundles augmented-ui and self-hosts its fonts
+ * (Inter and Share Tech Mono from @fontsource, lixdu from static/fonts), so it requests
+ * nothing from a CDN at all.
  *
  * EXPECTED BEHAVIOUR:
  * - Whether or not the external hosts are reachable, the page loads and stays responsive
  * - The home page content renders without any external CDN
- * - A failed font stylesheet falls back to system fonts instead of breaking the page
+ * - The fonts load from the app itself, never from Google Fonts
  *
  * The tests block the external hosts themselves, so they do not depend on the network the
  * suite happens to run on.
@@ -24,9 +24,9 @@ async function expectPageFunctional(page) {
 	const content = await page.content();
 	expect(content.length).toBeGreaterThan(100);
 
-	// The splash plays, then the first-visit choice screen appears
+	// The splash plays, then the first-time panel appears
 	await expect(page.locator('.instructions-choice-container')).toBeVisible();
-	await expect(page.locator('.choice-card')).toHaveCount(3);
+	await expect(page.locator('.instructions-choice-container button')).toHaveCount(3);
 }
 
 test.describe('External Resource Loading Issues', () => {
@@ -56,21 +56,32 @@ test.describe('External Resource Loading Issues', () => {
 		expect(ownFailures).toEqual([]);
 	});
 
-	test('should handle missing Google Fonts gracefully', async ({ page }) => {
-		const warnings = [];
-		page.on('console', (msg) => {
-			if (msg.type() === 'warning') warnings.push(msg.text());
+	test('should load its fonts from the app, not Google Fonts', async ({ page }) => {
+		const fontHosts = [];
+		page.on('request', (request) => {
+			if (/fonts\.(googleapis|gstatic)\.com/.test(request.url())) fontHosts.push(request.url());
 		});
 
-		// Block Google Fonts
-		await page.route('https://fonts.googleapis.com/**', (route) => route.abort());
+		// Block Google Fonts, as some networks do
+		await page.route(/fonts\.(googleapis|gstatic)\.com/, (route) => route.abort());
 
 		await page.goto('/', { waitUntil: 'domcontentloaded' });
 		await expectPageFunctional(page);
 
-		// The font stylesheet removes itself and says so; the page uses fallback fonts
+		// No stylesheet link to Google Fonts, and no request to it
 		await expect(page.locator('link[href*="fonts.googleapis.com"]')).toHaveCount(0);
-		expect(warnings.some((w) => w.includes('Failed to load Google Fonts'))).toBe(true);
+		expect(fontHosts).toEqual([]);
+
+		// The text faces load from the app itself
+		const loaded = await page.evaluate(async () => {
+			await Promise.all([
+				document.fonts.load('600 16px "Inter Variable"'),
+				document.fonts.load('16px "Share Tech Mono"'),
+				document.fonts.load('900 32px lixdu')
+			]);
+			return [...document.fonts].filter((f) => f.status === 'loaded').map((f) => f.family);
+		});
+		expect(loaded).toEqual(expect.arrayContaining(['Inter Variable', 'Share Tech Mono', 'lixdu']));
 	});
 
 	test('should handle missing augmented-ui CSS gracefully', async ({ page }) => {
@@ -104,7 +115,7 @@ test.describe('External Resource Loading Issues', () => {
 		expect(screenshot.length).toBeGreaterThan(0);
 
 		// ...and the game can still be reached and started with no CDN at all
-		await page.locator('.choice-card').filter({ hasText: 'Skip Once' }).click();
+		await page.getByRole('button', { name: /^Play/ }).click();
 		await expect(page.getByTestId('home-page')).toBeVisible();
 		await page.locator('.start-btn').first().click();
 		await expect(page).toHaveURL(/\/game\/[a-z0-9-]+$/);

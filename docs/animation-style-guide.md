@@ -1,8 +1,60 @@
 # Animation Style Guide
 
-**Version:** 1.0
-**Last Updated:** November 2025
+**Version:** 2.0
+**Last Updated:** November 2026
 **Status:** Active Standard
+
+---
+
+## The Standard (v2) — read this first
+
+One token set lives in `src/lib/constants/animations.js`. `animationTokensCss()` renders the same
+values as CSS custom properties on `:root` (from `src/routes/+layout.svelte`), so JS and CSS can
+never disagree. `styles.css` defines no motion numbers of its own; a unit test checks that.
+
+| Token (JS)                        | CSS                    | Value     | Use                                              |
+| --------------------------------- | ---------------------- | --------- | ------------------------------------------------ |
+| `ANIMATION_DURATION.STATE`        | `--dur-state`          | 120ms     | Hover, press, a chip or label changing           |
+| `ANIMATION_DURATION.ENTER`        | `--dur-enter`          | 200ms     | Anything entering or leaving; screen swaps       |
+| `ANIMATION_DURATION.OVERLAY`      | `--dur-overlay`        | 300ms     | A dialog or overlay opening                      |
+| `ANIMATION_DURATION.BEAT`         | `--dur-beat`           | 400ms     | A held moment: a King igniting, Salvation unlock |
+| `ANIMATION_DURATION.SEQUENCE_MAX` | `--dur-sequence-max`   | 1.5s      | The longest any staged sequence may run          |
+| `AMBIENT` / `AMBIENT_SLOW`        | `--dur-ambient(-slow)` | 4s / 8s   | The only periods allowed for ambient loops       |
+| `ANIMATION_DURATION.RESULT_HOLD`  | (none)                 | 2s        | A roll's result holds, then the game moves on    |
+| `ANIMATION_EASING.CUBIC_OUT`      | `--ease-enter`         | cubic out | Entering, state changes                          |
+| `ANIMATION_EASING.CUBIC_IN`       | `--ease-exit`          | cubic in  | Leaving                                          |
+| `ANIMATION_DISTANCE.RISE`         | `--rise-enter`         | 8px       | The most an entering element moves               |
+| `ANIMATION_DURATION.DICE_SINK`    | `--dur-dice-sink`      | 350ms     | Landed dice sinking beneath the board (ease-in)  |
+
+The older names still work and follow the standard: `FAST` = 120, `NORMAL` = 200, `SLOW` = 300;
+`--transition-fast/base/slow` = 120/200/300ms; `--anim-fast` = 200ms. `CARD_DISMISS` (600ms),
+`DICE_*`, `STORY_MODE` and `ROUND_TRANSITION` keep their values until their owners retime them
+(the review asks for a 220ms card dismiss).
+
+**Rules**
+
+- **Ambient loops:** at most one per screen (in the game, the `NeuralBackground` motes, 8s each),
+  4s or 8s only, and paused while an overlay covers the screen, while the tab is hidden and under
+  reduced motion. Calls to action glow statically; hover and press use the 120ms token.
+- **Alert loops** (critical Stability, lit Kings) are not ambient: their speed carries the
+  urgency. They stop under reduced motion.
+- **Sequences** (the fourth King, the Salvation unlock) stay under 1.5s, built from beats and
+  staggers, with no blank frames.
+- **Dice** (`+layout.svelte`, `diceStore.rollDice`): thrown across the whole screen on top of
+  everything in the game (dialogs and the menu stay above). Landed dice rest for one beat, then
+  sink: the z-index drops behind the page content at once, and over `--dur-dice-sink` they drop
+  8px, shrink 10% in place and darken out, ease-in. The roll resolves in that same moment, so
+  the result line appears in front of them. Under reduced motion there is no throw: the number
+  shows, then fades. This replaces the `DICE_DELAY` + `DICE_FADE` pattern further down.
+- **The result hold** is a reading pause, not an animation: a roll's result line stays 2s, then
+  the game moves on by itself (a press moves on at once; an ending waits). A 2px line on the
+  step button runs out over the hold, read from the hold's own clock, in quarters under reduced
+  motion. It pauses under dialogs and in a hidden tab.
+- **Never animate layout** (`width`, `height`, `background-size`, `top`) or run `box-shadow`,
+  `background-position` or `filter` loops; animate `transform` and `opacity`.
+- **Reduced motion:** movement goes; a colour change or a static highlight stays.
+
+The sections below predate v2. Where a number there disagrees with this table, this table wins.
 
 ---
 
@@ -82,16 +134,16 @@ Bouncy animations break this immersion by:
 - Drawing attention away from content
 - Feeling too lighthearted for the tone
 
-### Timing Standards (150-300ms)
+### Timing Standards (120-400ms)
 
-All standard animations fall within **150-300ms** to maintain:
+All standard animations fall within **120-400ms** (see the v2 table) to maintain:
 
 1. **Responsiveness** - Fast enough to feel immediate
 2. **Clarity** - Slow enough to perceive what changed
 3. **Performance** - Short enough to hit 60fps consistently
 4. **Polish** - Long enough to feel intentional, not abrupt
 
-**Exception:** Card dismiss animations (600ms) are intentionally longer to allow players to absorb narrative content before screen transitions.
+**Exception:** staged sequences (up to 1.5s), built from 400ms beats.
 
 ### Easing Functions Philosophy
 
@@ -108,11 +160,14 @@ export const ANIMATION_EASING = {
 	/** Standard ease-in - Smooth acceleration */
 	EASE_IN: 'ease-in',
 
-	/** Linear - Constant speed, no easing */
+	/** Linear - Constant speed, no easing (progress bars only) */
 	LINEAR: 'linear',
 
-	/** Cubic out - Used for modal scale transitions */
+	/** Cubic out - Entering: modal scale, fades and rises */
 	CUBIC_OUT: 'cubic-bezier(0.33, 1, 0.68, 1)',
+
+	/** Cubic in - Leaving: dismissals and exits */
+	CUBIC_IN: 'cubic-bezier(0.32, 0, 0.67, 0)',
 
 	/** Quint out - Smooth deceleration for upward motion */
 	QUINT_OUT: 'cubic-bezier(0.22, 1, 0.36, 1)'
@@ -126,7 +181,7 @@ export const ANIMATION_EASING = {
 - **MECHANICAL** - Button hovers, UI state changes (precise and controlled)
 - **QUINT_OUT** - Upward motion, rising elements (ethereal lift)
 - **LINEAR** - Progress bars, loading indicators (consistent progress)
-- **EASE_IN** - Exit animations (accelerating away)
+- **EASE_IN / CUBIC_IN** - Exit animations (accelerating away)
 
 ### Performance Considerations (60fps Target)
 
@@ -150,12 +205,14 @@ All animations target **60fps** (16.67ms per frame) on standard hardware:
 
 ## Duration Standards
 
-All duration constants are defined in `src/lib/constants/animations.js`:
+All duration constants are defined in `src/lib/constants/animations.js` (v2 adds `STATE`,
+`ENTER`, `OVERLAY`, `BEAT`, `SEQUENCE_MAX`, `AMBIENT` and `AMBIENT_SLOW`; see the table at the top).
+The older names:
 
 ```javascript
 export const ANIMATION_DURATION = {
-	/** Fast transitions (150ms) - Quick interactions, button hovers */
-	FAST: 150,
+	/** Fast transitions (120ms, = STATE) */
+	FAST: 120,
 
 	/** Normal transitions (200ms) - Standard modal, fade transitions */
 	NORMAL: 200,
@@ -184,7 +241,7 @@ export const ANIMATION_DURATION = {
 
 ```
 Is it a button hover or small UI state change?
-├─ YES → Use ANIMATION_DURATION.FAST (150ms)
+├─ YES → Use ANIMATION_DURATION.STATE (120ms)
 └─ NO → Continue
 
 Is it a modal opening/closing or standard fade?
@@ -211,7 +268,7 @@ Is it story mode navigation?
 
 ### When to Use Each Duration
 
-#### FAST (150ms) - Quick Interactions
+#### STATE / FAST (120ms) - Quick Interactions
 
 **Use for:**
 
@@ -233,8 +290,8 @@ Is it story mode navigation?
 <style>
 	.status-btn {
 		transition:
-			background-color 150ms ease-out,
-			transform 150ms ease-out;
+			background-color var(--dur-state) var(--ease-enter),
+			transform var(--dur-state) var(--ease-enter);
 	}
 
 	.status-btn:hover {
@@ -578,11 +635,11 @@ CARD_DISMISS (600ms)  → Animation completes
 		color: var(--color-text-primary);
 		padding: var(--space-md) var(--space-lg);
 
-		/* Transition using FAST duration */
+		/* State changes use the 120ms token; the glow is static (no infinite pulse) */
 		transition:
-			background-color 150ms ease-out,
-			transform 150ms ease-out,
-			box-shadow 150ms ease-out;
+			background-color var(--dur-state) var(--ease-enter),
+			transform var(--dur-state) var(--ease-enter),
+			box-shadow var(--dur-state) var(--ease-enter);
 	}
 
 	.augmented-button:hover {
@@ -598,7 +655,7 @@ CARD_DISMISS (600ms)  → Animation completes
 </style>
 ```
 
-**Why 150ms?**
+**Why 120ms?**
 
 - Fast enough to feel immediate
 - Slow enough to be perceived as intentional
@@ -800,18 +857,20 @@ CARD_DISMISS (600ms)  → Animation completes
 
 **File:** `src/lib/components/ThreeJSDiceBoxRoller.svelte`
 
-### StatusDisplay.svelte
+### StatusDisplay.svelte and status/StatusHUD.svelte
 
-**Purpose:** Always-visible HUD showing game stats
+**Purpose:** The header plus the one-row HUD (Stability, Kings, Aces, tokens, cards, roll)
 
-**Features:**
+**Motion:**
 
-- Z-index: 100 (always on top)
-- Reactive stat updates with smooth transitions
-- Responsive augmented-ui configurations
-- Color-coded stability gradient (green = high, red = low)
+- The block fades in once (200ms) with the table; nothing slides
+- Stability damage: a red wash and a 2px ease-out shake for one 400ms beat
+- Critical Stability (4 or less): a 1.6s alert pulse
+- A new King: its skull ignites for one beat; lit skulls pulse faster with each King
+- The fourth King: a hold, then all four skulls flare 250ms apart, done within 1.5s
+- The Ace of Hearts: flash, ring and count strike in within 600ms
 
-**File:** `src/lib/components/StatusDisplay.svelte`
+**Files:** `src/lib/components/StatusDisplay.svelte`, `src/lib/components/status/*Cell.svelte`
 
 ---
 
@@ -1405,19 +1464,20 @@ Important state changes should be announced to screen readers.
 
 | Animation Type    | Duration | Easing   | Properties            | Example               |
 | ----------------- | -------- | -------- | --------------------- | --------------------- |
-| Button hover      | 150ms    | ease-out | transform, opacity    | Status button hover   |
-| Button press      | 100ms    | ease-in  | transform             | Active state          |
-| Tooltip reveal    | 150ms    | ease-out | opacity, transform    | Help icon tooltip     |
+| Button hover      | 120ms    | cubicOut | transform, filter     | Status button hover   |
+| Button press      | 120ms    | cubicOut | transform             | Active state          |
+| Tooltip reveal    | 120ms    | ease-out | opacity, transform    | Help icon tooltip     |
 | Modal open        | 200ms    | cubicOut | opacity, scale        | Help modal            |
 | Modal close       | 200ms    | cubicOut | opacity, scale        | Settings modal        |
 | Fog overlay       | 200ms    | cubicOut | opacity, scale        | OverlayModal backdrop |
-| Screen transition | 300ms    | ease-out | opacity, transform    | Intro → Game          |
+| Screen transition | 200ms    | cubicOut | opacity, 8px rise     | Page navigation       |
+| HUD beat          | 400ms    | cubicOut | opacity, transform    | King ignite, damage   |
 | Round crossfade   | 300ms    | cubicOut | opacity, position     | Story mode navigation |
 | Card reveal       | 1000ms   | ease-out | opacity, transform    | Card materialization  |
 | Card dismiss      | 600ms    | ease-out | opacity, transform    | Continue to next card |
 | Dice fade         | 250ms    | ease-out | opacity, scale        | After roll complete   |
 | Dice delay        | 500ms    | N/A      | N/A                   | Pause before fade     |
-| Status change     | 150ms    | ease-out | transform, color      | Tower value update    |
+| Status change     | 120ms    | ease-out | transform, color      | Tower value update    |
 | Progress bar      | varies   | linear   | width (via transform) | Card deck progress    |
 
 ---
@@ -1635,11 +1695,14 @@ async function onDismiss() {
 
 ## Versioning and Updates
 
-**Current Version:** 1.0
-**Effective Date:** November 2025
+**Current Version:** 2.0
+**Effective Date:** November 2026
 
 **Change Log:**
 
+- **v2.0 (Nov 2026):** One token set exported to CSS (120/200/300/400ms, 1.5s sequences,
+  4s/8s ambient loops); one paused ambient loop per screen; static CTA glow; page transitions
+  at 200ms with an 8px rise; the one-row HUD's beats (UX review, section 14)
 - **v1.0 (Nov 2025):** Initial style guide based on Phase 1/2 animation work
 
 **Future Updates:**

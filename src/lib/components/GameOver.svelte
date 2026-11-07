@@ -1,28 +1,37 @@
 <script>
+	/**
+	 * GameOver - the ending: title, what happened, the run in a few tiles, then the final log.
+	 *
+	 * It lives on the same overlay layer as the card and the journal, with the ending's
+	 * backdrop at full opacity from the first frame, so it never fades up from black:
+	 * - Kings: the fourth King's card already staged the beat (CardDeck), and its overlay
+	 *   fades out over this one. The title follows at once.
+	 * - Stability: a short drain of the Stability reading to 0, then the title.
+	 * - Victory: the title at once.
+	 * The title fades in as one word over 400ms; the rest follows 100ms apart.
+	 */
 	import { onMount } from 'svelte';
 	import { gameState, transitionTo } from '../stores/gameStore.svelte.js';
 	import ContinueButton from './ContinueButton.svelte';
+	import OverlayModal from './OverlayModal.svelte';
 	import RunRecap from './RunRecap.svelte';
-	import { getEndingText, getEndingCause, MAX_STABILITY } from '../utils/endingSummary.js';
+	import { getEndingCause, getEndingText, MAX_STABILITY } from '../utils/endingSummary.js';
 
-	// Final beat before the title: skulls ignite (King loss) or Stability drains (Stability loss)
-	const BEAT_DURATION = 1500;
-	const SKULL_STAGGER = 250;
+	// Stability loss: the reading drains to 0, holds a moment, then the title
+	const DRAIN_MS = 600;
+	const DRAIN_HOLD_MS = 150;
 
 	let isVictory = $derived(gameState.win === true);
 	let ending = $derived(getEndingText(gameState, gameState.config?.labels));
-	let words = $derived((isVictory ? 'VICTORY' : 'GAME OVER').split(' '));
+	let title = $derived(isVictory ? 'Victory' : 'Game Over');
 
-	// Victory has no beat; reduced-motion players skip it
-	const hasBeat =
+	const reducedMotion =
 		typeof window !== 'undefined' &&
-		!gameState.win &&
-		!!getEndingCause(gameState) &&
-		!window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-	let beatDone = $state(!hasBeat);
-	console.log('DBG', hasBeat, gameState.win, getEndingCause(gameState), gameState.kingsRevealed);
+		window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+	const hasDrain = !reducedMotion && getEndingCause(gameState) === 'stability';
+
+	let beatDone = $state(!hasDrain);
 	let drained = $state(0);
-	let startStability = $state(MAX_STABILITY);
 
 	// Where the Stability reading drains from: last snapshot taken before the loss
 	function lastStability() {
@@ -33,22 +42,19 @@
 	}
 
 	onMount(() => {
-		if (!hasBeat) return;
+		if (!hasDrain) return;
 
-		startStability = lastStability();
-		drained = startStability;
-
+		const from = lastStability();
+		drained = from;
 		let frame;
 		const started = performance.now();
-		if (ending.cause === 'stability') {
-			const tick = (now) => {
-				const progress = Math.min(1, (now - started) / BEAT_DURATION);
-				drained = Math.round(startStability * (1 - progress));
-				if (progress < 1) frame = requestAnimationFrame(tick);
-			};
-			frame = requestAnimationFrame(tick);
-		}
-		const timer = setTimeout(() => (beatDone = true), BEAT_DURATION);
+		const tick = (now) => {
+			const progress = Math.min(1, (now - started) / DRAIN_MS);
+			drained = Math.round(from * (1 - progress));
+			if (progress < 1) frame = requestAnimationFrame(tick);
+		};
+		frame = requestAnimationFrame(tick);
+		const timer = setTimeout(() => (beatDone = true), DRAIN_MS + DRAIN_HOLD_MS);
 		return () => {
 			clearTimeout(timer);
 			cancelAnimationFrame(frame);
@@ -56,118 +62,73 @@
 	});
 </script>
 
-<div
-	class="game-over-overlay"
-	class:victory={isVictory}
-	class:beat={!beatDone}
-	class:kings={ending.cause === 'kings'}
->
-	{#if !beatDone}
-		<div class="beat-stage" data-testid="game-over-beat" aria-hidden="true">
-			{#if ending.cause === 'kings'}
-				<div class="skulls">
-					{#each [0, 1, 2, 3] as n (n)}
-						<svg
-							class="skull"
-							style="animation-delay: {n * SKULL_STAGGER}ms"
-							viewBox="0 0 24 24"
-							width="56"
-							height="56"
-							fill="currentColor"
-						>
-							<path
-								d="M12 2C7.6 2 4 5.4 4 9.7c0 2.5 1.2 4.6 3 6V19a1 1 0 0 0 1 1h1v2h2v-2h2v2h2v-2h1a1 1 0 0 0 1-1v-3.3c1.8-1.4 3-3.5 3-6C20 5.4 16.4 2 12 2Zm-3.5 11a2 2 0 1 1 0-4 2 2 0 0 1 0 4Zm7 0a2 2 0 1 1 0-4 2 2 0 0 1 0 4Z"
-							/>
-						</svg>
-					{/each}
-				</div>
-			{:else}
-				<div class="drain">
-					<span class="drain-label">Stability</span>
-					<span class="drain-value">{drained}/{MAX_STABILITY}</span>
-					<span class="drain-bar"
-						><span class="drain-fill" style="transform: scaleX({drained / MAX_STABILITY})"
-						></span></span
-					>
-				</div>
-			{/if}
-		</div>
-	{:else}
-		<div class="game-over-content">
-			<h1 class="game-over-title" class:victory={isVictory} aria-label={words.join(' ')}>
-				{#each words as word, w (w)}
-					<span class="word" aria-hidden="true">
-						{#each word.split('') as letter, index (index)}
-							<span class="letter" style="animation-delay: {0.1 + (w * 5 + index) * 0.1}s"
-								>{letter}</span
-							>
-						{/each}
-					</span>
-				{/each}
-			</h1>
+<OverlayModal label={title} tone={isVictory ? 'victory' : 'loss'} zIndex={4900} isVisible={true}>
+	<div class="game-over" class:victory={isVictory} data-testid="game-over">
+		{#if !beatDone}
+			<div class="drain" data-testid="game-over-beat" aria-hidden="true">
+				<span class="drain-label">Stability</span>
+				<span class="drain-value">{drained}/{MAX_STABILITY}</span>
+				<span class="drain-bar">
+					<span class="drain-fill" style="transform: scaleX({drained / MAX_STABILITY})"></span>
+				</span>
+			</div>
+		{:else}
+			<div class="game-over-content">
+				<h1 class="game-over-title">{title}</h1>
 
-			<div class="game-over-message" class:victory={isVictory}>
-				<p data-testid="game-over-message">{ending.message}</p>
-				{#if ending.causeLine}
-					<p class="cause" data-testid="game-over-cause">{ending.causeLine}</p>
+				<div class="game-over-message">
+					<p data-testid="game-over-message">{ending.message}</p>
+					{#if ending.causeLine}
+						<p class="cause" data-testid="game-over-cause">{ending.causeLine}</p>
+					{/if}
+				</div>
+
+				<div class="game-over-recap">
+					<RunRecap />
+				</div>
+
+				{#if !isVictory && ending.afterword}
+					<p class="afterword" data-testid="game-over-afterword">{ending.afterword}</p>
 				{/if}
-			</div>
 
-			<div class="game-over-recap">
-				<RunRecap />
+				<div class="game-over-button">
+					<ContinueButton
+						text={gameState.config?.labels?.gameOverButtonText ?? 'Record your final log'}
+						onclick={() => transitionTo('finalLog')}
+						testid="game-over-final-log-button"
+						variant="primary"
+					/>
+				</div>
 			</div>
-
-			{#if !isVictory && ending.afterword}
-				<p class="afterword" data-testid="game-over-afterword">{ending.afterword}</p>
-			{/if}
-
-			<div class="game-over-button">
-				<ContinueButton
-					text={gameState.config?.labels?.gameOverButtonText ?? 'record your final log'}
-					onclick={() => transitionTo('finalLog')}
-					testid="game-over-final-log-button"
-				/>
-			</div>
-		</div>
-	{/if}
-</div>
+		{/if}
+	</div>
+</OverlayModal>
 
 <style>
-	:root {
-		--bg-color: #05070a;
-		--neon-yellow: #ffe400;
-		--neon-cyan: #00ffff;
-		--neon-magenta: #ff00ff;
-		--neon-red: #ff2a6d;
-	}
+	.game-over {
+		--ending-accent: #ff2a6d;
+		--ending-glow: #ff00ff;
+		--ending-message: #9ff7ff;
 
-	.game-over-overlay {
-		position: fixed;
-		top: 0;
-		left: 0;
+		position: relative;
 		width: 100%;
 		height: 100%;
-		background-color: var(--bg-color);
-		background-image:
-			radial-gradient(circle at 50% 50%, rgba(255, 0, 255, 0.08), transparent 75%),
-			radial-gradient(circle at 25% 75%, rgba(255, 42, 109, 0.1), transparent 70%);
 		display: flex;
 		align-items: safe center;
 		justify-content: center;
 		overflow-x: hidden;
 		overflow-y: auto;
-		z-index: 100;
+		overscroll-behavior: contain;
 	}
 
-	/* Victory state - positive colors */
-	.game-over-overlay.victory {
-		background-image:
-			radial-gradient(circle at 50% 50%, rgba(255, 215, 0, 0.12), transparent 75%),
-			radial-gradient(circle at 25% 75%, rgba(0, 255, 100, 0.1), transparent 70%);
+	.game-over.victory {
+		--ending-accent: #ffe400;
+		--ending-glow: rgba(0, 255, 100, 0.6);
+		--ending-message: #7dffb3;
 	}
 
-	/* Scanlines overlay */
-	.game-over-overlay::before {
+	/* Scanlines over the backdrop (static apart from a slow 4px drift) */
+	.game-over::before {
 		content: '';
 		position: fixed;
 		inset: 0;
@@ -183,63 +144,14 @@
 	}
 
 	@keyframes scan {
-		0% {
-			transform: translateY(0);
-		}
-		100% {
+		to {
 			transform: translateY(-4px);
 		}
 	}
 
-	/* Final beat: the screen darkens (opacity only) */
-	.game-over-overlay.kings.beat::after {
-		content: '';
-		position: fixed;
-		inset: 0;
-		background: #000;
-		pointer-events: none;
-		animation: darken 1.5s ease-out forwards;
-	}
-
-	@keyframes darken {
-		from {
-			opacity: 0;
-		}
-		to {
-			opacity: 0.75;
-		}
-	}
-
-	.beat-stage {
-		z-index: 1;
-		display: flex;
-		justify-content: center;
-		padding: var(--space-lg, 1.5rem);
-	}
-
-	.skulls {
-		display: flex;
-		gap: var(--space-lg, 1.5rem);
-	}
-
-	.skull {
-		color: var(--color-danger, #ff4d6d);
-		opacity: 0.15;
-		animation: ignite 0.4s ease-out forwards;
-	}
-
-	@keyframes ignite {
-		0% {
-			opacity: 0.15;
-			transform: scale(0.9);
-		}
-		100% {
-			opacity: 1;
-			transform: scale(1);
-		}
-	}
-
+	/* Stability loss: the reading drains to zero */
 	.drain {
+		position: relative;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -250,8 +162,10 @@
 	}
 
 	.drain-label {
-		font-size: 0.875rem;
-		letter-spacing: 0.15em;
+		font-family: var(--font-body, 'Inter', sans-serif);
+		font-size: 0.8125rem;
+		font-weight: 600;
+		letter-spacing: 0.12em;
 		text-transform: uppercase;
 	}
 
@@ -275,103 +189,92 @@
 	}
 
 	.game-over-content {
+		position: relative;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		gap: var(--space-lg, 1.5rem);
-		z-index: 1;
 		width: 100%;
-		max-width: var(--content-max, 720px);
+		max-width: 880px;
 		box-sizing: border-box;
-		padding: var(--space-lg, 1.5rem) var(--space-md, 1rem);
+		padding: var(--space-xl, 2rem) var(--space-md, 1rem);
 	}
 
-	/* Animated title */
+	/* The title arrives as one word: 400ms fade plus an 8px rise */
 	.game-over-title {
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		flex-wrap: wrap;
-		column-gap: 0.4em;
 		margin: 0;
 		font-family: var(--font-display, 'lixdu', 'Orbitron', sans-serif);
 		font-weight: normal;
-		font-size: 4rem;
+		font-size: clamp(2.5rem, 9vw, 4rem);
+		line-height: 1.1;
+		text-align: center;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
-		color: var(--neon-red);
+		color: var(--ending-accent);
 		text-shadow:
-			0 0 5px var(--neon-red),
-			0 0 20px var(--neon-magenta),
-			0 0 35px var(--neon-magenta);
+			0 0 5px var(--ending-accent),
+			0 0 20px var(--ending-glow),
+			0 0 35px var(--ending-glow);
+		animation: rise-in 400ms cubic-bezier(0.33, 1, 0.68, 1) 100ms both;
 	}
 
-	/* Victory title - gold and green */
-	.game-over-title.victory {
-		color: var(--neon-yellow);
-		text-shadow:
-			0 0 5px var(--neon-yellow),
-			0 0 20px rgba(255, 215, 0, 0.8),
-			0 0 35px rgba(0, 255, 100, 0.6);
-	}
-
-	.word {
-		display: inline-flex;
-		white-space: nowrap;
-	}
-
-	.letter {
-		display: inline-block;
-		opacity: 0;
-		transform: translateY(-80px);
-		animation: dropIn 0.9s forwards;
-	}
-
-	@keyframes dropIn {
-		0% {
-			opacity: 0;
-			transform: translateY(-80px) scale(0.9);
-		}
-		100% {
-			opacity: 1;
-			transform: translateY(0) scale(1);
-		}
+	.game-over-message,
+	.game-over-recap,
+	.afterword,
+	.game-over-button {
+		animation: rise-in 200ms cubic-bezier(0.33, 1, 0.68, 1) both;
 	}
 
 	.game-over-message {
-		font-family: var(--font-mono, 'Share Tech Mono', ui-monospace, monospace);
-		font-size: 1.125rem;
-		color: var(--neon-cyan);
-		text-shadow: 0 0 10px var(--neon-cyan);
+		max-width: 40rem;
 		text-align: center;
-		max-width: 90%;
-		opacity: 0;
-		animation: fadeIn 0.6s 0.8s forwards;
-	}
-
-	.game-over-message.victory {
-		color: #00ff64;
-		text-shadow: 0 0 10px #00ff64;
-	}
-
-	.game-over-message p {
-		margin: 0;
-		line-height: 1.6;
-	}
-
-	.game-over-message .cause {
-		margin-top: var(--space-sm, 0.5rem);
-		font-size: 0.9375rem;
-		color: var(--color-danger, #ff4d6d);
-		text-shadow: none;
+		animation-delay: 500ms;
 	}
 
 	.game-over-recap {
 		width: 100%;
 		display: flex;
 		justify-content: center;
-		opacity: 0;
-		animation: fadeIn 0.6s 1.1s forwards;
+		animation-delay: 600ms;
+	}
+
+	.afterword {
+		animation-delay: 700ms;
+	}
+
+	.game-over-button {
+		animation-delay: 800ms;
+	}
+
+	@keyframes rise-in {
+		from {
+			opacity: 0;
+			transform: translateY(8px);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+
+	.game-over-message p {
+		margin: 0;
+		font-family: var(--font-body, 'Inter', sans-serif);
+		font-size: 1.125rem;
+		line-height: 1.55;
+		color: var(--ending-message);
+	}
+
+	.game-over-message .cause {
+		margin-top: var(--space-sm, 0.5rem);
+		font-size: 0.9375rem;
+		font-weight: 600;
+		color: var(--color-danger, #ff4d6d);
+	}
+
+	/* A win has a cause line too (the fourth Ace): in the victory accent, not the loss red */
+	.game-over.victory .game-over-message .cause {
+		color: var(--ending-accent);
 	}
 
 	.afterword {
@@ -382,67 +285,43 @@
 		font-style: italic;
 		line-height: 1.6;
 		color: rgba(255, 255, 255, 0.8);
-		opacity: 0;
-		animation: fadeIn 0.6s 1.4s forwards;
 	}
 
-	.game-over-button {
-		opacity: 0;
-		animation: fadeIn 0.6s 1.7s forwards;
-	}
-
-	@keyframes fadeIn {
-		0% {
-			opacity: 0;
-			transform: translateY(10px);
-		}
-		100% {
-			opacity: 1;
-			transform: translateY(0);
+	@media (max-width: 600px) {
+		.game-over-content {
+			gap: var(--space-md, 1rem);
+			padding: var(--space-lg, 1.5rem) var(--space-md, 1rem);
 		}
 	}
 
-	@media (max-width: 768px) {
-		.game-over-title {
-			font-size: 3rem;
+	/* Landscape phones: everything shrinks a step so the button stays in reach */
+	@media (max-height: 500px) {
+		.game-over-content {
+			gap: var(--space-sm, 0.5rem);
+			padding: var(--space-md, 1rem);
 		}
 
-		.game-over-message {
-			font-size: 1rem;
-		}
-	}
-
-	@media (max-width: 480px) {
 		.game-over-title {
 			font-size: 2.25rem;
 		}
 
-		.game-over-message {
-			font-size: 0.9375rem;
+		.game-over-message p {
+			font-size: 1rem;
 		}
 
-		.game-over-content {
-			gap: var(--space-md, 1rem);
-		}
-
-		.skulls {
-			gap: var(--space-sm, 0.5rem);
+		.afterword {
+			font-size: 0.875rem;
 		}
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.game-over-overlay::before {
-			animation: none;
-		}
-
-		.letter,
+		.game-over::before,
+		.game-over-title,
 		.game-over-message,
 		.game-over-recap,
 		.afterword,
 		.game-over-button {
 			animation: none;
-			opacity: 1;
-			transform: none;
 		}
 	}
 </style>

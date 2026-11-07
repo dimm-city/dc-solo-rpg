@@ -6,13 +6,15 @@
 	import { getCustomGame } from '$lib/stores/customGames.js';
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
-	import { goto } from '$app/navigation';
-	import { resolve } from '$app/paths';
+	import ErrorScreen from '$lib/components/ErrorScreen.svelte';
 
 	const availableDiceThemes = getAllDiceThemes();
 	let gameConfig = $state(null);
 	let player = $state({ name: 'Guest' });
 	let error = $state(null);
+	const docTitle = $derived(
+		error ? 'Signal lost · Dream Console' : `${gameConfig?.title ?? 'Loading'} · Dream Console`
+	);
 
 	onMount(() => {
 		const slug = $page.params.slug;
@@ -26,11 +28,7 @@
 		const customGame = getCustomGame(slug);
 
 		if (!customGame) {
-			error = `Custom game "${slug}" not found`;
-			// Redirect back to home after showing error
-			setTimeout(() => {
-				goto(resolve('/'));
-			}, 3000);
+			error = `We couldn't find a custom game called “${slug}” in this browser.`;
 			return;
 		}
 
@@ -49,12 +47,12 @@
 	});
 </script>
 
+<svelte:head>
+	<title>{docTitle}</title>
+</svelte:head>
+
 {#if error}
-	<div class="error-screen">
-		<h1>Game Not Found</h1>
-		<p>{error}</p>
-		<p>Redirecting to home...</p>
-	</div>
+	<ErrorScreen message={error} />
 {:else if gameConfig}
 	<div class="game-page" data-testid="game-page">
 		<Game systemSettings={{ player, availableDiceThemes }} />
@@ -73,7 +71,6 @@
 		flex-direction: column;
 	}
 
-	.error-screen,
 	.loading-screen {
 		display: flex;
 		flex-direction: column;
@@ -83,14 +80,5 @@
 		padding: var(--space-xl);
 		text-align: center;
 		color: var(--color-text-primary);
-	}
-
-	.error-screen h1 {
-		color: var(--color-brand-yellow);
-		margin-bottom: var(--space-lg);
-	}
-
-	.error-screen p {
-		margin: var(--space-sm) 0;
 	}
 </style>

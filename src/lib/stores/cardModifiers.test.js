@@ -47,6 +47,14 @@ describe('Card modifiers', () => {
 			expect(gameState.state).toBe('drawCard');
 		});
 
+		it('says so when it skips the check (CK-01)', () => {
+			gameState.deck = [narrative('skip-damage')];
+			drawCard();
+			confirmCard();
+			expect(gameState.status).toBe('No Stability check this time');
+			expect(gameState.lastCard.modifierResult).toBe('No Stability check this time');
+		});
+
 		it('plain Narrative still triggers a failure check', () => {
 			gameState.deck = [narrative(null)];
 			drawCard();
@@ -76,7 +84,8 @@ describe('Card modifiers', () => {
 			expect(gameState.kingOfSpades).toBe(true);
 			expect(gameState.deck).toHaveLength(3);
 			expect(gameState.deck[0]).toEqual(king('hearts'));
-			expect(gameState.status).toBe('A King returns to the deck');
+			expect(gameState.status).toBe('King of Hearts returns to the deck · 1 of 4');
+			expect(gameState.lastCard.modifierResult).toBe(gameState.status);
 			expect(gameState.acesRevealed).toBe(1);
 			expect(gameState.state).toBe('failureCheck');
 		});
@@ -109,6 +118,21 @@ describe('Card modifiers', () => {
 			confirmCard();
 			expect(gameState.kingsRevealed).toBe(3);
 			expect(gameState.gameOver).toBe(false);
+		});
+	});
+
+	describe('lastCard (RF-03)', () => {
+		it('keeps the confirmed card for the Stability check it causes', () => {
+			gameState.deck = [{ card: '7', suit: 'spades', type: 'challenge', description: 'Gas leak' }];
+			drawCard();
+			confirmCard();
+			expect(gameState.state).toBe('failureCheck');
+			expect(gameState.currentCard).toBeNull();
+			expect(gameState.lastCard).toMatchObject({
+				card: '7',
+				suit: 'spades',
+				description: 'Gas leak'
+			});
 		});
 	});
 });

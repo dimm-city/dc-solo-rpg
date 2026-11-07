@@ -16,11 +16,6 @@
 	}
 
 	const seconds = (ms) => `${(ms / 1000).toFixed(1)}s`;
-
-	function applyPreset(audio, gameplay) {
-		updateAudioSettings(audio);
-		updateGameplaySettings(gameplay);
-	}
 </script>
 
 <TTSSection />
@@ -197,56 +192,5 @@
 				</div>
 			</div>
 		{/if}
-	</div>
-</section>
-
-<section class="cm-section" aria-labelledby="presets-heading">
-	<h3 class="cm-section-title" id="presets-heading">Quick presets</h3>
-	<p class="cm-section-desc">Set narration and auto-play together in one tap.</p>
-	<div class="cm-btn-group">
-		<button
-			class="cm-btn"
-			onclick={() =>
-				applyPreset(
-					{ autoReadCards: true, autoReadPrompts: true, autoAnnounceRolls: true },
-					{
-						autoRollDice: true,
-						autoContinueAfterReading: true,
-						autoAdvanceDelay: 2000,
-						autoHandleJournaling: 'timed',
-						journalPauseTime: 10000
-					}
-				)}
-		>
-			Full auto-play
-		</button>
-		<button
-			class="cm-btn"
-			onclick={() =>
-				applyPreset(
-					{ autoReadCards: true, autoReadPrompts: true, autoAnnounceRolls: true },
-					{
-						autoRollDice: false,
-						autoContinueAfterReading: false,
-						autoHandleJournaling: 'manual'
-					}
-				)}
-		>
-			Audio only
-		</button>
-		<button
-			class="cm-btn"
-			onclick={() =>
-				applyPreset(
-					{ autoReadCards: false, autoReadPrompts: false, autoAnnounceRolls: false },
-					{
-						autoRollDice: false,
-						autoContinueAfterReading: false,
-						autoHandleJournaling: 'manual'
-					}
-				)}
-		>
-			Turn all off
-		</button>
 	</div>
 </section>

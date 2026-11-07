@@ -27,7 +27,8 @@ test.describe('Integration and Edge Cases', () => {
 		await openContentModal(page, 'About');
 
 		// The modal scrim covers the header, so the menu behind it cannot be reached
-		const toggle = page.locator('.hamburger-button');
+		const hamburger = page.locator('.hamburger-button');
+		const toggle = (await hamburger.isVisible()) ? hamburger : page.locator('.more-button');
 		await expect(toggle).toBeVisible();
 		const toggleIsCovered = await toggle.evaluate((el) => {
 			const box = el.getBoundingClientRect();
@@ -44,9 +45,7 @@ test.describe('Integration and Edge Cases', () => {
 	test('should handle starting a game, going back and starting again', async ({ page }) => {
 		await openHomePage(page);
 
-		const firstStart = page.locator('.game-card').first().getByRole('button', {
-			name: 'Start new game'
-		});
+		const firstStart = page.locator('.game-card').first().getByRole('button', { name: 'Play' });
 
 		// Start the game and come back via the browser's back button
 		await firstStart.click();
@@ -56,17 +55,13 @@ test.describe('Integration and Edge Cases', () => {
 		await expect(page.getByTestId('home-page')).toBeVisible();
 
 		// Start it again and it works normally
-		await page
-			.locator('.game-card')
-			.first()
-			.getByRole('button', { name: 'Start new game' })
-			.click();
+		await page.locator('.game-card').first().getByRole('button', { name: 'Play' }).click();
 		await expect(page).toHaveURL(/\/game\/[a-z0-9-]+$/);
 		await expect(page.getByTestId('screen-showIntro')).toBeVisible();
 	});
 
 	test('should maintain state after browser refresh', async ({ page }) => {
-		// Setup with Skip Always
+		// Setup: a first visit that plays without tips
 		await page.goto('/');
 		await page.evaluate(() => {
 			sessionStorage.clear();
@@ -74,10 +69,10 @@ test.describe('Integration and Edge Cases', () => {
 		});
 		await page.goto('/');
 
-		// Splash, then the choice screen
-		const skipAlwaysCard = page.locator('.choice-card').filter({ hasText: 'Skip Always' });
-		await expect(skipAlwaysCard).toBeVisible();
-		await skipAlwaysCard.click();
+		// Splash, then the first-time panel
+		const skipTips = page.getByRole('button', { name: "I know how to play: don't show tips." });
+		await expect(skipTips).toBeVisible();
+		await skipTips.click();
 		await expect(page.getByTestId('home-page')).toBeVisible();
 		expect(await page.evaluate((key) => localStorage.getItem(key), INSTRUCTIONS_SEEN_KEY)).toBe(
 			'true'
@@ -120,7 +115,7 @@ test.describe('Integration and Edge Cases', () => {
 		expect(await cards.count()).toBeGreaterThanOrEqual(2);
 
 		// Clicking around the card bodies in quick succession does nothing (no selection,
-		// no confirmation); only the Start button acts.
+		// no confirmation); only the Play button acts.
 		await cards.nth(0).locator('.game-card-title').click();
 		await cards.nth(1).locator('.game-card-title').click();
 		await cards.nth(0).locator('.game-card-title').click();
@@ -158,14 +153,12 @@ test.describe('Integration and Edge Cases', () => {
 			});
 		});
 		await page.goto('/');
-		await page.evaluate(() => sessionStorage.setItem('splashShown', 'true'));
-		await page.goto('/');
 
-		// Without a stored "seen" flag the instructions choice is offered; skipping once
-		// does not need localStorage, so the player can still reach the games.
-		const skipOnce = page.locator('.choice-card').filter({ hasText: 'Skip Once' });
-		await expect(skipOnce).toBeVisible();
-		await skipOnce.click();
+		// Nothing can be remembered, so the splash and the first-time panel show; Play still
+		// works without storage, so the player can reach the games.
+		const play = page.getByRole('button', { name: /^Play/ });
+		await expect(play).toBeVisible();
+		await play.click();
 
 		await expect(page.locator('[data-testid="home-page"]')).toBeVisible();
 		await expect(page.locator('[data-testid="game-selector"]')).toBeVisible();

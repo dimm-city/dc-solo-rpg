@@ -1,160 +1,133 @@
 <script>
 	/**
-	 * StoryProgressBar - Visual progress indicator for story mode
+	 * StoryProgressBar - Where you are in the story, and a way to jump to any round
 	 *
-	 * Shows current progress through rounds with clickable markers
-	 * Displays progress bar fill and individual round markers
+	 * A thin track, plus numbered markers on wider screens. A dot under a marker means the
+	 * player wrote something that round.
 	 *
 	 * @component
 	 * @example
-	 * <StoryProgressBar
-	 *   currentRound={2}
-	 *   totalRounds={10}
-	 *   onJumpToRound={(index) => logger.debug('Jump to', index)}
-	 * />
+	 * <StoryProgressBar currentRound={2} totalRounds={10} written={[true, false, true]}
+	 *   onJumpToRound={(index) => nav.jumpToRound(index)} />
 	 */
 
-	let { currentRound = 0, totalRounds = 1, onJumpToRound = () => {} } = $props();
+	let { currentRound = 0, totalRounds = 1, written = [], onJumpToRound = () => {} } = $props();
 
-	let progressPercentage = $derived(((currentRound + 1) / totalRounds) * 100);
+	let progress = $derived(((currentRound + 1) / Math.max(1, totalRounds)) * 100);
 </script>
 
 <div class="progress-section">
-	<div class="progress-bar-container">
-		<div class="progress-track">
-			<div class="progress-fill" style="width: {progressPercentage}%"></div>
-		</div>
-		<div class="progress-markers">
-			{#each Array(totalRounds) as _, i (i)}
-				<button
-					class="progress-marker"
-					class:active={i === currentRound}
-					class:completed={i < currentRound}
-					onclick={() => onJumpToRound(i)}
-					aria-label="Jump to round {i + 1}"
-				>
-					<span class="marker-number">{i + 1}</span>
-				</button>
-			{/each}
-		</div>
+	<div class="progress-track" aria-hidden="true">
+		<div class="progress-fill" style="transform: scaleX({progress / 100})"></div>
 	</div>
+	{#if totalRounds > 1}
+		<ol class="progress-markers" aria-label="Jump to a round">
+			{#each Array(totalRounds) as _, i (i)}
+				<li>
+					<button
+						type="button"
+						class="progress-marker"
+						class:active={i === currentRound}
+						class:written={written[i]}
+						aria-current={i === currentRound ? 'step' : undefined}
+						aria-label="Round {i + 1}{written[i] ? ', has a journal entry' : ''}"
+						onclick={() => onJumpToRound(i)}
+					>
+						{i + 1}
+					</button>
+				</li>
+			{/each}
+		</ol>
+	{/if}
 </div>
 
 <style>
-	/* Progress Section */
 	.progress-section {
-		padding: 0 var(--space-xl);
-	}
-
-	.progress-bar-container {
-		position: relative;
 		width: 100%;
+		max-width: 640px;
+		margin: 0 auto;
 	}
 
 	.progress-track {
-		width: 100%;
-		height: 8px;
+		height: 4px;
 		background: rgba(255, 255, 255, 0.1);
-		border-radius: 4px;
+		border-radius: 2px;
 		overflow: hidden;
-		box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
 	}
 
 	.progress-fill {
 		height: 100%;
 		background: linear-gradient(90deg, var(--color-cyber-magenta), var(--color-neon-cyan));
-		border-radius: 4px;
-		transition: width 0.3s cubic-bezier(0.4, 0, 0.6, 1);
-		box-shadow: 0 0 15px rgba(217, 70, 239, 0.6);
+		transform-origin: left center;
+		transition: transform 200ms cubic-bezier(0.4, 0, 0.6, 1);
 	}
 
 	.progress-markers {
 		display: flex;
-		justify-content: space-between;
-		margin-top: var(--space-md);
-		gap: var(--space-xs);
+		flex-wrap: wrap;
+		gap: 6px;
+		margin: 12px 0 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.progress-markers li {
+		margin: 0;
 	}
 
 	.progress-marker {
-		flex: 1;
-		max-width: 48px;
-		height: 32px;
-		background: rgba(255, 255, 255, 0.05);
+		position: relative;
+		min-width: 36px;
+		height: 36px;
+		min-height: 36px;
+		padding: 0 6px;
+		background: rgba(255, 255, 255, 0.04);
 		border: 1px solid rgba(255, 255, 255, 0.2);
 		border-radius: 4px;
+		color: #aebbcc;
+		font-family: var(--font-body);
+		font-size: 0.875rem;
+		font-weight: 600;
+		font-variant-numeric: tabular-nums;
 		cursor: pointer;
 		transition:
-			background 0.2s,
-			border-color 0.2s,
-			transform 0.2s;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		position: relative;
+			background-color 150ms ease-out,
+			border-color 150ms ease-out;
+	}
+
+	.progress-marker.written::after {
+		content: '';
+		position: absolute;
+		left: 50%;
+		bottom: 3px;
+		width: 4px;
+		height: 4px;
+		margin-left: -2px;
+		border-radius: 50%;
+		background: var(--color-cyber-magenta);
 	}
 
 	.progress-marker:hover {
-		background: rgba(255, 255, 255, 0.1);
-		border-color: rgba(255, 255, 255, 0.4);
-		transform: translateY(-2px);
+		border-color: rgba(255, 255, 255, 0.5);
 	}
 
 	.progress-marker.active {
-		background: linear-gradient(135deg, var(--color-cyber-magenta), var(--color-neon-cyan));
+		background: rgba(0, 255, 255, 0.16);
 		border-color: var(--color-neon-cyan);
-		box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+		color: #fff;
 	}
 
-	.progress-marker.completed {
-		background: rgba(0, 255, 255, 0.2);
-		border-color: rgba(0, 255, 255, 0.4);
-	}
-
-	.marker-number {
-		font-size: var(--text-xs);
-		font-weight: 700;
-		font-family: var(--font-display);
-		color: rgba(255, 255, 255, 0.6);
-	}
-
-	.progress-marker.active .marker-number {
-		color: rgba(10, 10, 10, 1);
-	}
-
-	/* Responsive */
-	@media (max-width: 768px) {
-		.progress-section {
-			padding: 0 var(--space-md);
-		}
-
-		.progress-track {
-			height: 6px;
-		}
-
+	/* Phones: the track is enough; Previous / Next sit at the bottom */
+	@media (max-width: 640px) {
 		.progress-markers {
-			display: none; /* Too many markers on mobile */
+			display: none;
 		}
 	}
 
-	@media (min-width: 769px) and (max-width: 1024px) {
-		.progress-marker {
-			max-width: 36px;
-			height: 28px;
-		}
-	}
-
-	/* Accessibility: Reduced motion */
 	@media (prefers-reduced-motion: reduce) {
-		.progress-fill {
-			transition: none;
-		}
-
+		.progress-fill,
 		.progress-marker {
 			transition: none;
-		}
-
-		.progress-marker:hover {
-			transform: none;
 		}
 	}
 </style>

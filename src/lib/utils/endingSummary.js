@@ -1,13 +1,14 @@
 /**
- * Pure helpers for the ending screens: why the game ended, a recap of the run,
- * and the key moments and status line shown in the final log.
- * They take plain state objects so they are easy to test.
+ * Pure helpers for the ending screens: why the game ended, a recap of the run, and the
+ * journal's status line. They take plain state objects so they are easy to test.
+ * (The final log's timeline is built in gameTimeline.js.)
  */
 
 export const MAX_STABILITY = 20;
 
 const DEFAULT_KINGS_CAUSE = 'The fourth King was revealed.';
 const DEFAULT_STABILITY_CAUSE = 'Your Stability reached 0.';
+const DEFAULT_ACES_CAUSE = 'The fourth Ace was revealed.';
 const DEFAULT_AFTERWORD = 'Winning was never likely. What you wrote along the way is the story.';
 
 /**
@@ -24,8 +25,10 @@ export function getEndingCause(state) {
 
 /**
  * Text for the ending screen: the author's main line, a game-written cause line
- * and (on a loss) the afterword.
- * @param {{kingsRevealed?: number, tower?: number, win?: boolean, status?: string}} state
+ * and (on a loss) the afterword. A win through the fourth Ace (Easy: tokens still left) names
+ * it; a win through the last token needs no cause line, the message says it.
+ * @param {{kingsRevealed?: number, tower?: number, win?: boolean, status?: string,
+ *   acesRevealed?: number, tokens?: number}} state
  * @param {object} [labels] - game labels from the game config
  */
 export function getEndingText(state, labels = {}) {
@@ -34,7 +37,10 @@ export function getEndingText(state, labels = {}) {
 		return {
 			cause,
 			message: labels.successCheckWin ?? state.status ?? '',
-			causeLine: '',
+			causeLine:
+				(state.acesRevealed ?? 0) >= 4 && (state.tokens ?? 0) > 0
+					? (labels.acesCauseLine ?? DEFAULT_ACES_CAUSE)
+					: '',
 			afterword: ''
 		};
 	}
@@ -81,17 +87,6 @@ export function getRunRecap(state) {
 		recap.push({ key: 'tokens', label: 'Tokens left', value: state.tokens ?? 0 });
 	}
 	return recap;
-}
-
-/** Kings and Aces drawn across the run, in order, for the final log. */
-export function getKeyMoments(log = []) {
-	return drawnCards(log)
-		.filter((entry) => entry.card === 'K' || entry.card === 'A')
-		.map((entry) => ({
-			round: entry.round,
-			isKing: entry.card === 'K',
-			label: `${entry.card === 'K' ? 'King' : 'Ace'} of ${entry.suit}`
-		}));
 }
 
 /** One-line status, e.g. "Stability 9/20 · 3 of 4 Kings · 11 tokens left". */

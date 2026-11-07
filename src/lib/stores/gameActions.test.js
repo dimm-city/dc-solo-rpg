@@ -2,7 +2,7 @@
  * Tests for gameActions.svelte.js
  * Tests all game mechanics and actions
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
 	startGame,
 	startRound,
@@ -20,6 +20,16 @@ import {
 	services
 } from './gameActions.svelte.js';
 import { gameState, transitionTo } from './gameStore.svelte.js';
+import { isFinalStabilityCheck } from './gameActions.svelte.js';
+import { mockDieRoll, resetRNG } from '../services/random.js';
+
+/** The difficulty the game plays by (the config carries it, as initializeGame leaves it) */
+const setDifficulty = (level) => {
+	gameState.config = {
+		...(gameState.config ?? {}),
+		options: { ...(gameState.config?.options ?? {}), difficulty: level }
+	};
+};
 
 describe('gameActions - Core Game Mechanics', () => {
 	// Mock game configuration
@@ -161,7 +171,7 @@ describe('gameActions - Core Game Mechanics', () => {
 
 			await startRound();
 
-			expect(gameState.state).toBe('startRound');
+			expect(gameState.state).toBe('rollForTasks');
 		});
 	});
 
@@ -549,39 +559,60 @@ describe('gameActions - Core Game Mechanics', () => {
 			gameState.rollWithModifiers = originalRoll;
 		});
 
-		it('should add 1 token on failure (roll 2-5)', async () => {
+		it('a miss (roll 2-5) loses no token on Normal', async () => {
 			const originalRoll = gameState.rollWithModifiers;
 			gameState.rollWithModifiers = vi.fn(() => ({ roll: 3, wasLucid: false, wasSurreal: false }));
 
 			successCheck();
 			applyPendingSuccessCheck();
 
-			expect(gameState.tokens).toBe(11); // 10 + 1
+			expect(gameState.tokens).toBe(10);
+			expect(gameState.state).toBe('log');
 
 			gameState.rollWithModifiers = originalRoll;
 		});
 
-		it('should add 2 tokens on natural 1', async () => {
+		it('a natural 1 loses no token on Normal, and makes the player Surreal', async () => {
 			const originalRoll = gameState.rollWithModifiers;
 			gameState.rollWithModifiers = vi.fn(() => ({ roll: 1, wasLucid: false, wasSurreal: false }));
 
 			successCheck();
 			applyPendingSuccessCheck();
 
-			expect(gameState.tokens).toBe(12); // 10 + 2
+			expect(gameState.tokens).toBe(10);
+			expect(gameState.isSurreal).toBe(true);
 
 			gameState.rollWithModifiers = originalRoll;
 		});
 
-		it('should add 1 token on failure (roll 10 < threshold 17)', async () => {
-			// Per spec: ALL rolls below threshold should give +1 token (failure)
+		it('a miss (roll 10 < threshold 17) loses no token on Normal', async () => {
+			// ALL rolls below the threshold are a miss
 			const originalRoll = gameState.rollWithModifiers;
 			gameState.rollWithModifiers = vi.fn(() => ({ roll: 10, wasLucid: false, wasSurreal: false }));
 
 			successCheck();
 			applyPendingSuccessCheck();
 
-			expect(gameState.tokens).toBe(11); // +1 token (failure)
+			expect(gameState.tokens).toBe(10);
+
+			gameState.rollWithModifiers = originalRoll;
+		});
+
+		it('on Hard, a miss adds 1 token and a natural 1 adds 2 (and Surreal)', async () => {
+			setDifficulty(2);
+			const originalRoll = gameState.rollWithModifiers;
+			gameState.rollWithModifiers = vi.fn(() => ({ roll: 10, wasLucid: false, wasSurreal: false }));
+			successCheck();
+			applyPendingSuccessCheck();
+			expect(gameState.tokens).toBe(11); // 10 + 1
+			expect(gameState.state).toBe('log');
+
+			gameState.state = 'successCheck';
+			gameState.rollWithModifiers = vi.fn(() => ({ roll: 1, wasLucid: false, wasSurreal: false }));
+			successCheck();
+			applyPendingSuccessCheck();
+			expect(gameState.tokens).toBe(13); // 11 + 2
+			expect(gameState.isSurreal).toBe(true);
 
 			gameState.rollWithModifiers = originalRoll;
 		});
@@ -612,18 +643,75 @@ describe('gameActions - Core Game Mechanics', () => {
 			gameState.rollWithModifiers = originalRoll;
 		});
 
-		it('should auto-succeed with 4 Aces (threshold 0)', async () => {
-			gameState.acesRevealed = 4;
-			const originalRoll = gameState.rollWithModifiers;
-			// Any roll should succeed
-			gameState.rollWithModifiers = vi.fn(() => ({ roll: 5, wasLucid: false, wasSurreal: false }));
+		describe.each([
+			['Normal', 1],
+			['Hard', 2]
+		])('with 4 Aces on %s (no target: a Stability check, then the token)', (_, level) => {
+			beforeEach(() => {
+				setDifficulty(level);
+				gameState.acesRevealed = 4;
+			});
 
-			successCheck();
-			applyPendingSuccessCheck();
+			it('the roll is a Stability check and the token comes off', async () => {
+				const originalRoll = gameState.rollWithModifiers;
+				// No target to beat: roll 5 costs 2 Stability (2-5), then the token comes off
+				gameState.rollWithModifiers = vi.fn(() => ({
+					roll: 5,
+					wasLucid: false,
+					wasSurreal: false
+				}));
 
-			expect(gameState.tokens).toBe(9); // Success
+				expect(successCheck().automatic).toBe(true);
+				applyPendingSuccessCheck();
 
-			gameState.rollWithModifiers = originalRoll;
+				expect(gameState.tower).toBe(18);
+				expect(gameState.tokens).toBe(9);
+				expect(gameState.state).toBe('log');
+
+				gameState.rollWithModifiers = originalRoll;
+			});
+
+			it('a roll that takes the last Stability loses the game and keeps the token', async () => {
+				gameState.tower = 1;
+				gameState.tokens = 1;
+				const originalRoll = gameState.rollWithModifiers;
+				gameState.rollWithModifiers = vi.fn(() => ({
+					roll: 9,
+					wasLucid: false,
+					wasSurreal: false
+				}));
+
+				successCheck();
+				applyPendingSuccessCheck();
+
+				expect(gameState.tower).toBe(0);
+				expect(gameState.tokens).toBe(1);
+				expect(gameState.gameOver).toBe(true);
+				expect(gameState.win).toBe(false);
+				expect(gameState.state).toBe('gameOver');
+
+				gameState.rollWithModifiers = originalRoll;
+			});
+
+			it('the last token wins the game, as on any Salvation', async () => {
+				gameState.tokens = 1;
+				const originalRoll = gameState.rollWithModifiers;
+				gameState.rollWithModifiers = vi.fn(() => ({
+					roll: 13,
+					wasLucid: false,
+					wasSurreal: false
+				}));
+
+				successCheck();
+				applyPendingSuccessCheck();
+
+				expect(gameState.tower).toBe(20);
+				expect(gameState.tokens).toBe(0);
+				expect(gameState.win).toBe(true);
+				expect(gameState.state).toBe('gameOver');
+
+				gameState.rollWithModifiers = originalRoll;
+			});
 		});
 
 		it('should trigger victory when tokens reach 0', async () => {
@@ -697,15 +785,15 @@ describe('gameActions - Core Game Mechanics', () => {
 			expect(gameState.journalEntries[0].dateRecorded).toBeDefined();
 		});
 
-		it('should transition to startRound regardless of Ace status', async () => {
+		it('should open the next round regardless of Ace status', async () => {
 			// D20 workflow: success checks happen during confirmCard, not after recordRound
-			// recordRound always transitions to startRound (success check happens before journal)
+			// recordRound always opens the next round on Roll for Tasks (success check happens before journal)
 			gameState.aceOfHeartsRevealed = true;
 			gameState.state = 'log';
 
 			await recordRound({ text: 'Entry' });
 
-			expect(gameState.state).toBe('startRound');
+			expect(gameState.state).toBe('rollForTasks');
 		});
 
 		it('should start new round if Ace not yet revealed', async () => {
@@ -713,8 +801,8 @@ describe('gameActions - Core Game Mechanics', () => {
 
 			await recordRound({ text: 'Entry' });
 
-			// startRound transitions to startRound state first, then to rollForTasks
-			expect(gameState.state).toBe('startRound');
+			// startRound opens the round on Roll for Tasks
+			expect(gameState.state).toBe('rollForTasks');
 		});
 
 		it('should throw error if no journal entry provided', async () => {
@@ -769,11 +857,181 @@ describe('gameActions - Core Game Mechanics', () => {
 
 	describe('State Transitions - transitionTo', () => {
 		it('should transition to specified screen', () => {
-			gameState.state = 'startRound';
+			gameState.state = 'initialDamageRoll';
 
 			transitionTo('rollForTasks');
 
 			expect(gameState.state).toBe('rollForTasks');
+		});
+	});
+
+	describe('The fourth Ace (Easy: it ends the game; Normal and Hard: Salvation goes on)', () => {
+		const fourthAce = (modifier = null) => ({
+			card: 'A',
+			suit: 'spades',
+			type: 'narrative',
+			modifier,
+			description: 'The fourth Ace'
+		});
+
+		beforeEach(() => {
+			Object.assign(gameState, {
+				state: 'drawCard',
+				round: 3,
+				tower: 9,
+				tokens: 6,
+				acesRevealed: 3,
+				aceOfHeartsRevealed: true,
+				kingsRevealed: 2,
+				cardsToDraw: 2,
+				currentCard: null,
+				gameOver: false,
+				win: false,
+				isLucid: false,
+				isSurreal: false,
+				log: [],
+				deck: [{ card: '8', suit: 'clubs' }, fourthAce()]
+			});
+			for (const key of Object.keys(gameState.pendingUpdates)) gameState.pendingUpdates[key] = null;
+			gameState.config = {
+				slug: 'test-game',
+				labels: {
+					successCheckWin: 'Salvation has arrived',
+					failureCheckLoss: 'The tower has fallen'
+				}
+			};
+		});
+
+		afterEach(() => resetRNG());
+
+		describe('on Easy', () => {
+			beforeEach(() => setDifficulty(0));
+
+			it('sends the fourth Ace to its Stability check, which is the final one', () => {
+				expect(isFinalStabilityCheck()).toBe(false); // three Aces
+				drawCard();
+				confirmCard();
+				expect(gameState.acesRevealed).toBe(4);
+				expect(gameState.state).toBe('failureCheck');
+				expect(isFinalStabilityCheck()).toBe(true);
+			});
+
+			it('wins the game when Stability survives that check, whatever tokens remain', () => {
+				drawCard();
+				confirmCard();
+				applyFailureCheckResult(4); // -2 Stability
+				applyPendingDiceRoll();
+
+				expect(gameState.tower).toBe(7);
+				expect(gameState.tokens).toBe(6);
+				expect(gameState.win).toBe(true);
+				expect(gameState.gameOver).toBe(true);
+				expect(gameState.status).toBe('Salvation has arrived');
+				expect(gameState.state).toBe('gameOver');
+			});
+
+			it('loses the game by Stability when that check takes the last of it', () => {
+				gameState.tower = 2;
+				drawCard();
+				confirmCard();
+				applyFailureCheckResult(3); // -2 Stability
+				applyPendingDiceRoll();
+
+				expect(gameState.tower).toBe(0);
+				expect(gameState.win).toBe(false);
+				expect(gameState.gameOver).toBe(true);
+				expect(gameState.status).toBe('The tower has fallen');
+				expect(gameState.state).toBe('gameOver');
+			});
+
+			it('a natural 20 on that check still wins (and Lucid is moot)', () => {
+				drawCard();
+				confirmCard();
+				applyFailureCheckResult(20);
+				applyPendingDiceRoll();
+				expect(gameState.tower).toBe(10);
+				expect(gameState.win).toBe(true);
+			});
+
+			it('a fourth Ace that skips its check (skip-damage) wins outright', () => {
+				gameState.deck = [{ card: '8', suit: 'clubs' }, fourthAce('skip-damage')];
+				drawCard();
+				confirmCard();
+
+				expect(gameState.acesRevealed).toBe(4);
+				expect(gameState.win).toBe(true);
+				expect(gameState.gameOver).toBe(true);
+				expect(gameState.state).toBe('gameOver');
+				expect(gameState.tower).toBe(9);
+			});
+		});
+
+		describe.each([
+			['Normal', 1],
+			['Hard', 2]
+		])('on %s', (_, level) => {
+			beforeEach(() => setDifficulty(level));
+
+			it('the fourth Ace ends nothing: its check is an ordinary one, and the round goes on', () => {
+				drawCard();
+				confirmCard();
+				expect(gameState.acesRevealed).toBe(4);
+				expect(gameState.state).toBe('failureCheck');
+				expect(isFinalStabilityCheck()).toBe(false);
+
+				applyFailureCheckResult(13);
+				applyPendingDiceRoll();
+				expect(gameState.gameOver).toBe(false);
+				expect(gameState.win).toBe(false);
+				expect(gameState.tokens).toBe(6);
+				expect(gameState.state).toBe('drawCard'); // one card left this round
+			});
+
+			it('with four Aces, Salvation has no target: a Stability check, then the token comes off', () => {
+				drawCard();
+				confirmCard();
+				applyFailureCheckResult(13);
+				applyPendingDiceRoll();
+
+				gameState.deck = [{ card: '8', suit: 'clubs' }];
+				gameState.cardsToDraw = 1;
+				drawCard();
+				confirmCard();
+				expect(gameState.state).toBe('successCheck');
+
+				mockDieRoll(5); // 2-5 costs 2 Stability, then the token
+				const thrown = successCheck();
+				expect(thrown.automatic).toBe(true);
+				expect(thrown.threshold).toBe(0);
+				applyPendingSuccessCheck();
+				expect(gameState.tower).toBe(7);
+				expect(gameState.tokens).toBe(5);
+				expect(gameState.gameOver).toBe(false);
+				expect(gameState.state).toBe('log');
+			});
+
+			it('is won only by the last token, however many Aces are out', () => {
+				gameState.acesRevealed = 4;
+				gameState.tokens = 1;
+				gameState.state = 'successCheck';
+
+				mockDieRoll(13);
+				successCheck();
+				applyPendingSuccessCheck();
+				expect(gameState.tokens).toBe(0);
+				expect(gameState.win).toBe(true);
+				expect(gameState.status).toBe('Salvation has arrived');
+				expect(gameState.state).toBe('gameOver');
+			});
+
+			it('a skip-damage fourth Ace does not win: it only skips its check', () => {
+				gameState.deck = [{ card: '8', suit: 'clubs' }, fourthAce('skip-damage')];
+				drawCard();
+				confirmCard();
+				expect(gameState.acesRevealed).toBe(4);
+				expect(gameState.gameOver).toBe(false);
+				expect(gameState.state).toBe('drawCard');
+			});
 		});
 	});
 });

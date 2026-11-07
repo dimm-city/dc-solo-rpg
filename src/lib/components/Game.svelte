@@ -87,10 +87,6 @@
 		--dc-failure-token-fill: var(--dc-accent-color);
 	}
 
-	* {
-		-webkit-tap-highlight-color: transparent;
-	}
-
 	.dc-game-container {
 		display: grid;
 		height: 100%;
@@ -103,7 +99,12 @@
 		font-family: var(--dc-default-font-family);
 		color: var(--dc-default-text-color);
 		overflow: hidden; /* CRITICAL: Prevent all scrolling */
-		position: relative; /* CRITICAL: Position context for neural background */
+		position: relative; /* Position context for the neural background */
+		/* Own stacking context: the neural background (z-index -1) paints above this
+		   container's background and below every screen, without forcing a position on them.
+		   Fixed and absolute children (modals, the live region) keep their own positioning. */
+		isolation: isolate;
+		--neural-z: -1;
 	}
 
 	/* CRITICAL: Disable all pointer events when modal is active */
@@ -111,26 +112,8 @@
 	.dc-game-container.modal-active {
 		pointer-events: none;
 	}
-	.dc-game-container,
-	:global(.dc-intro-container) {
+	.dc-game-container {
 		border-radius: var(--dc-default-border-radius);
-	}
-
-	/* Neural background at game container level */
-	.dc-game-container > :global(.neural-background) {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		z-index: 0;
-		pointer-events: none;
-	}
-
-	/* GameScreen component appears above neural background */
-	.dc-game-container > :global(*:not(.neural-background)) {
-		position: relative;
-		/* z-index removed to prevent stacking context - modals need to escape */
 	}
 
 	/* Screen-specific styles moved to GameScreen.svelte */
@@ -153,27 +136,6 @@
 		font-family: var(--dc-default-font-family);
 	}
 
-	:global(.dc-header) {
-		position: absolute;
-		display: grid;
-		justify-self: center;
-		width: auto;
-		min-width: 80%;
-		bottom: 0.25rem;
-		padding: 0.5rem;
-		border-radius: var(--dc-default-border-radius);
-		overflow: visible; /* Allow button glows to extend beyond bounds */
-	}
-	:global(.dc-header .aug-button-wrapper) {
-		width: 100%;
-	}
-	:global(.dc-header .aug-button) {
-		display: grid;
-		justify-self: center;
-		align-self: center;
-		width: 100%;
-		margin: 0;
-	}
 	/* Animations and media queries remain global for all screens */
 	@keyframes fadeIn {
 		from {
@@ -184,24 +146,9 @@
 		}
 	}
 
+	/* Enter: the 200ms token with an ease-out (was 350ms ease-in) */
 	:global(.dc-fade-in) {
-		animation: fadeIn 350ms ease-in;
-	}
-
-	@media (max-width: 450px) or (max-height: 600px) {
-		:global(.dc-header) {
-			width: 90%;
-			bottom: 0.5rem; /* Slightly higher on small screens for better thumb access */
-			padding: 0.25rem;
-		}
-	}
-
-	/* Ensure button always stays at bottom on very small screens */
-	@media (max-height: 500px) {
-		:global(.dc-header) {
-			bottom: 0.25rem;
-			min-width: 85%;
-		}
+		animation: fadeIn var(--dur-enter, 200ms) var(--ease-enter, ease-out);
 	}
 
 	/* Allow overflow on mobile for toolbar elements to appear above toolbar */

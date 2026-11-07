@@ -11,7 +11,10 @@ const DB_VERSION = 2; // Bumped to 2 for AI story support
 const SAVE_STORE = 'saves';
 const AUDIO_STORE = 'audio';
 const SETTINGS_STORE = 'ai-settings'; // AI settings store
-const SAVE_VERSION = '2.0'; // Bumped from 1.0 to indicate IndexedDB migration
+// 2.1 adds acesRevealed, isLucid, isSurreal, pendingUpdates, taskRoll and lastCard.
+// 2.0 saves still load: restoreGameState derives what they lack (see normalizeSave).
+const SAVE_VERSION = '2.1';
+const LOADABLE_SAVE_VERSIONS = ['2.0', SAVE_VERSION];
 
 /**
  * Initialize the IndexedDB database
@@ -107,6 +110,37 @@ async function blobToBase64(blob) {
 }
 
 /**
+ * Where a journal entry's voice note is kept in the audio record: by round, and the final log
+ * (written after the ending, in the last round) under its own key
+ * @param {{round: number, final?: boolean}} entry
+ * @returns {string|number}
+ */
+const audioKey = (entry) => (entry.final ? 'final' : entry.round);
+
+/**
+ * The completed record this run is saved under. The ending saves the game as completed, then
+ * the final log is recorded and saved again: the second save must update the same record, not
+ * add a second story to the library. A run is known by its log, which nothing adds to after the
+ * ending, and which no two runs share.
+ */
+let lastCompleted = null;
+
+/**
+ * @param {string} gameSlug
+ * @param {object} saveData - The serializable state (its cardLog names the run)
+ * @returns {string} "slug:completed:timestamp", the same for every save of one run
+ */
+function completedSaveKey(gameSlug, saveData) {
+	const run = `${gameSlug}|${JSON.stringify(saveData.cardLog)}`;
+	if (lastCompleted?.run !== run) {
+		// A later run always gets a later key, even within the same millisecond
+		const stamp = Math.max(Date.now(), (lastCompleted?.stamp ?? 0) + 1);
+		lastCompleted = { run, stamp, key: `${gameSlug}:completed:${stamp}` };
+	}
+	return lastCompleted.key;
+}
+
+/**
  * Get the serializable portion of game state
  * @param {object} gameState - Current game state
  * @returns {object} Serializable state (without audio data)
@@ -154,6 +188,16 @@ function getSerializableState(gameState) {
 
 		// Ace tracking
 		aceOfHeartsRevealed: gameState.aceOfHeartsRevealed,
+		acesRevealed: gameState.acesRevealed,
+
+		// Lucid/Surreal, and updates waiting on an animation (e.g. a Salvation roll in flight)
+		isLucid: gameState.isLucid,
+		isSurreal: gameState.isSurreal,
+		pendingUpdates: gameState.pendingUpdates,
+
+		// This round's deal and the last confirmed card
+		taskRoll: gameState.taskRoll,
+		lastCard: gameState.lastCard,
 
 		// Game over state
 		gameOver: gameState.gameOver,
@@ -205,13 +249,15 @@ export async function saveGame(gameState) {
 		// Only save if game is in progress OR completed (include gameOver for completion tracking)
 		const validStatesForSaving = [
 			'showIntro',
-			'startRound',
+			// NV-08: leaving before the opening roll keeps the game, as the Exit dialog promises
+			'initialDamageRoll',
 			'rollForTasks',
 			'drawCard',
 			'failureCheck',
 			'log',
 			'successCheck',
-			'gameOver' // Include to save completed games
+			'gameOver', // Include to save completed games
+			'finalLog' // The final log, recorded into the completed game
 		];
 
 		if (!validStatesForSaving.includes(gameState.state)) {
@@ -237,9 +283,8 @@ export async function saveGame(gameState) {
 		// Determine save key based on game completion status
 		let saveKey;
 		if (gameState.gameOver && gameState.win !== undefined) {
-			// Game is completed - save as completed with timestamp
-			const timestamp = Date.now();
-			saveKey = `${gameSlug}:completed:${timestamp}`;
+			// Game is completed - save as completed with timestamp (one record per run)
+			saveKey = completedSaveKey(gameSlug, cleanedSaveData);
 
 			// Also clear the active save since game is now completed
 			try {
@@ -256,14 +301,12 @@ export async function saveGame(gameState) {
 
 		await db.put(SAVE_STORE, cleanedSaveData, saveKey);
 
-		// Save audio data separately as Blobs (keyed by round number)
+		// Save audio data separately as Blobs (keyed by round number, the final log by 'final')
 		const audioData = {};
 		for (const entry of gameState.journalEntries) {
 			if (entry.audioData) {
 				// Convert base64 to Blob for efficient storage
-				const audioBlob = await base64ToBlob(entry.audioData);
-				// Use round number as key (more reliable than id)
-				audioData[entry.round] = audioBlob;
+				audioData[audioKey(entry)] = await base64ToBlob(entry.audioData);
 			}
 		}
 
@@ -300,7 +343,7 @@ export async function loadGame(gameSlug) {
 		}
 
 		// Version check (for future compatibility)
-		if (saveData.version !== SAVE_VERSION) {
+		if (!LOADABLE_SAVE_VERSIONS.includes(saveData.version)) {
 			logger.warn('[loadGame] Save version mismatch, clearing old save');
 			await clearSave(gameSlug);
 			return null;
@@ -313,9 +356,9 @@ export async function loadGame(gameSlug) {
 		if (saveData.journalEntries) {
 			saveData.journalEntries = await Promise.all(
 				saveData.journalEntries.map(async (entry) => {
-					if (entry.hasAudio && audioData[entry.round]) {
+					if (entry.hasAudio && audioData[audioKey(entry)]) {
 						// Convert Blob back to base64 for compatibility with current component
-						const base64 = await blobToBase64(audioData[entry.round]);
+						const base64 = await blobToBase64(audioData[audioKey(entry)]);
 						return { ...entry, audioData: base64 };
 					}
 					return entry;
@@ -405,9 +448,9 @@ export async function loadAllSaves() {
 				// Reattach audio data to journal entries
 				if (audioData && saveData.journalEntries) {
 					for (const entry of saveData.journalEntries) {
-						if (entry.hasAudio && audioData[entry.round]) {
+						if (entry.hasAudio && audioData[audioKey(entry)]) {
 							// Convert Blob back to base64 for audio player
-							entry.audioData = await blobToBase64(audioData[entry.round]);
+							entry.audioData = await blobToBase64(audioData[audioKey(entry)]);
 						}
 					}
 				}
@@ -454,6 +497,78 @@ export async function clearSave(gameSlug) {
 	}
 }
 
+/** Pending updates with every field present (older saves have none, or only some) */
+function pendingFrom(saved) {
+	return {
+		diceRoll: null,
+		towerDamage: null,
+		towerGain: null,
+		tokenChange: null,
+		aceChange: null,
+		kingsChange: null,
+		kingsSuit: null,
+		gameOverCondition: null,
+		isLucid: null,
+		isSurreal: null,
+		...(saved ?? {})
+	};
+}
+
+/**
+ * Bring a save of any loadable version up to date, as plain data:
+ * - a save from the old "Begin Round" step resumes on Roll for Tasks;
+ * - a card that was drawn but not yet confirmed goes back on top of the deck, so the
+ *   resumed game draws (and applies) it again instead of drawing past it;
+ * - a 2.0 save gets acesRevealed from the log (plus the Ace of Hearts that Easy starts with),
+ *   and no Lucid or Surreal.
+ * @param {object} saveData - Save data as loaded
+ * @returns {object} The fields to restore
+ */
+export function normalizeSave(saveData) {
+	const save = { ...saveData };
+	let log = [...(save.log ?? [])];
+	let deck = [...(save.deck ?? [])];
+	const pendingUpdates = pendingFrom(save.pendingUpdates);
+
+	if (save.state === 'startRound') save.state = 'rollForTasks';
+
+	const unconfirmed = save.state === 'drawCard' ? save.currentCard : null;
+	if (unconfirmed) {
+		const index = log.findLastIndex((entry) => entry.id === unconfirmed.id);
+		if (index !== -1) log.splice(index, 1);
+		// Strip what drawCard() and confirmCard() add to a drawn card
+		const { id, round, gameState: snapshot, modifierResult, ...card } = unconfirmed;
+		deck.push(card); // drawCard() pops from the end
+		save.cardsToDraw = (save.cardsToDraw ?? 0) + 1;
+		if (card.card === 'A' && card.suit === 'hearts') save.aceOfHeartsRevealed = false;
+		Object.assign(pendingUpdates, {
+			aceChange: null,
+			kingsChange: null,
+			kingsSuit: null,
+			gameOverCondition: null
+		});
+		save.currentCard = null;
+	}
+
+	if (typeof save.acesRevealed !== 'number') {
+		const aces = log.filter((entry) => entry.card === 'A');
+		const easyAce =
+			save.aceOfHeartsRevealed && !aces.some((entry) => entry.suit === 'hearts') ? 1 : 0;
+		save.acesRevealed = aces.length + easyAce;
+	}
+
+	return {
+		...save,
+		log,
+		deck,
+		pendingUpdates,
+		isLucid: save.isLucid === true,
+		isSurreal: save.isSurreal === true && save.isLucid !== true,
+		taskRoll: save.taskRoll ?? null,
+		lastCard: save.lastCard ?? null
+	};
+}
+
 /**
  * Restore game state from a save object
  * @param {object} gameState - Game state object to restore into
@@ -461,36 +576,43 @@ export async function clearSave(gameSlug) {
  */
 export function restoreGameState(gameState, saveData) {
 	try {
+		const save = normalizeSave(saveData);
 		// Restore all saved properties
 		Object.assign(gameState, {
-			state: saveData.state,
-			playerName: saveData.playerName,
-			tower: saveData.tower,
-			tokens: saveData.tokens,
-			round: saveData.round,
-			cardsToDraw: saveData.cardsToDraw,
-			cardsDrawn: saveData.cardsDrawn,
-			deck: saveData.deck,
-			discard: saveData.discard,
-			log: saveData.log,
-			currentCard: saveData.currentCard,
-			diceRoll: saveData.diceRoll,
-			kingsRevealed: saveData.kingsRevealed,
-			kingOfHearts: saveData.kingOfHearts,
-			kingOfDiamonds: saveData.kingOfDiamonds,
-			kingOfClubs: saveData.kingOfClubs,
-			kingOfSpades: saveData.kingOfSpades,
-			aceOfHeartsRevealed: saveData.aceOfHeartsRevealed,
-			gameOver: saveData.gameOver,
-			win: saveData.win,
-			bonus: saveData.bonus,
-			journalEntries: saveData.journalEntries,
-			config: saveData.config,
-			originalConfig: saveData.originalConfig,
-			systemConfig: saveData.systemConfig,
-			stylesheet: saveData.stylesheet,
-			status: saveData.status,
-			player: saveData.player
+			state: save.state,
+			playerName: save.playerName,
+			tower: save.tower,
+			tokens: save.tokens,
+			round: save.round,
+			cardsToDraw: save.cardsToDraw,
+			cardsDrawn: save.cardsDrawn,
+			deck: save.deck,
+			discard: save.discard,
+			log: save.log,
+			currentCard: save.currentCard,
+			lastCard: save.lastCard,
+			taskRoll: save.taskRoll,
+			diceRoll: save.diceRoll,
+			kingsRevealed: save.kingsRevealed,
+			kingOfHearts: save.kingOfHearts,
+			kingOfDiamonds: save.kingOfDiamonds,
+			kingOfClubs: save.kingOfClubs,
+			kingOfSpades: save.kingOfSpades,
+			aceOfHeartsRevealed: save.aceOfHeartsRevealed,
+			acesRevealed: save.acesRevealed,
+			isLucid: save.isLucid,
+			isSurreal: save.isSurreal,
+			pendingUpdates: save.pendingUpdates,
+			gameOver: save.gameOver,
+			win: save.win,
+			bonus: save.bonus,
+			journalEntries: save.journalEntries,
+			config: save.config,
+			originalConfig: save.originalConfig,
+			systemConfig: save.systemConfig,
+			stylesheet: save.stylesheet,
+			status: save.status,
+			player: save.player
 		});
 
 		logger.info('[restoreGameState] Game state restored successfully');
@@ -731,6 +853,26 @@ export async function deleteAIStory(saveKey) {
 		return true;
 	} catch (error) {
 		logger.error('[deleteAIStory] Failed to delete AI story:', error);
+		return false;
+	}
+}
+
+/**
+ * Delete a completed game from the Story Library, with its journal audio and AI story audio
+ * @param {string} saveKey - Save key (gameSlug:completed:timestamp)
+ * @returns {Promise<boolean>} Success status
+ */
+export async function deleteCompletedGame(saveKey) {
+	if (!saveKey?.includes(':completed:')) return false;
+	try {
+		const db = await initDB();
+		await db.delete(SAVE_STORE, saveKey);
+		await db.delete(AUDIO_STORE, saveKey);
+		await db.delete(AUDIO_STORE, `${saveKey}:story-audio`);
+		logger.info('[deleteCompletedGame] Deleted', saveKey);
+		return true;
+	} catch (error) {
+		logger.error('[deleteCompletedGame] Failed to delete completed game:', error);
 		return false;
 	}
 }

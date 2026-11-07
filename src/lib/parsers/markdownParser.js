@@ -4,6 +4,7 @@
  */
 
 import { logger } from '../utils/logger.js';
+import { DIFFICULTY, DIFFICULTY_BY_NAME } from '../constants/difficulty.js';
 
 /**
  * Custom error class for validation failures
@@ -496,17 +497,20 @@ function assignCardsByType(deck, cards, ranks, suits, type, usedAssignments, add
 }
 
 /**
- * Convert the optional `difficulty` frontmatter value to a difficulty number
- * @param {string} [value] - Raw frontmatter value ("easy" or "normal", any case)
- * @returns {number} 0 = Easy, 1 = Normal (default when absent)
+ * Parse the optional `difficulty` frontmatter field (the game's default; the player can
+ * override it in Settings)
+ * @param {string} [value] - easy, normal or hard, in any case
+ * @returns {number} 0 = Easy, 1 = Normal (default when absent), 2 = Hard
  */
 function parseDifficulty(value) {
-	if (value === undefined || value === '') return 1;
+	if (value === undefined || value === '') return DIFFICULTY.NORMAL;
 	const key = value.toLowerCase();
-	if (key !== 'easy' && key !== 'normal') {
-		throw new ValidationError(`Invalid difficulty "${value}". Allowed values: easy, normal`);
+	if (!Object.hasOwn(DIFFICULTY_BY_NAME, key)) {
+		throw new ValidationError(
+			`Invalid difficulty "${value}". Allowed values: ${Object.keys(DIFFICULTY_BY_NAME).join(', ')}`
+		);
 	}
-	return key === 'easy' ? 0 : 1;
+	return DIFFICULTY_BY_NAME[key];
 }
 
 /**

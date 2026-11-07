@@ -7,13 +7,13 @@ import { GAME_STATES as S } from '../constants/gameStates.js';
 export const transitionGraph = {
 	[S.LOAD_GAME]: [S.SHOW_INTRO],
 	[S.SHOW_INTRO]: [S.INITIAL_DAMAGE_ROLL],
-	[S.INITIAL_DAMAGE_ROLL]: [S.START_ROUND],
-	[S.START_ROUND]: [S.ROLL_FOR_TASKS],
+	// Each round opens on Roll for Tasks, titled "Round N" (there is no separate round-start step)
+	[S.INITIAL_DAMAGE_ROLL]: [S.ROLL_FOR_TASKS],
 	[S.ROLL_FOR_TASKS]: [S.DRAW_CARD],
 	[S.DRAW_CARD]: [S.FAILURE_CHECK, S.DRAW_CARD, S.END_TURN, S.LOG, S.SUCCESS_CHECK, S.GAME_OVER],
 	[S.FAILURE_CHECK]: [S.DRAW_CARD, S.END_TURN, S.LOG, S.SUCCESS_CHECK, S.GAME_OVER],
 	[S.END_TURN]: [S.LOG],
-	[S.LOG]: [S.START_ROUND],
+	[S.LOG]: [S.ROLL_FOR_TASKS],
 	[S.SUCCESS_CHECK]: [S.LOG, S.GAME_OVER],
 	[S.GAME_OVER]: [S.FINAL_LOG],
 	[S.FINAL_LOG]: [S.EXIT_GAME],
