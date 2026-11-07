@@ -219,12 +219,13 @@
 </div>
 
 <style>
-	/* A column the card can shrink in: it is sized to its content, up to what fits */
+	/* The column below the progress line: the card fills it, up to its own cap (CardDisplay) */
 	.dc-card-deck {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		flex: 0 1 auto;
+		justify-content: center;
+		flex: 1 1 auto;
 		width: 100%;
 		min-height: 0;
 		/* Visible so the card glow is not cut off at the deck edge */

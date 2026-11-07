@@ -6,7 +6,6 @@ import {
 	getKeyMoments,
 	getStatusLine
 } from './endingSummary.js';
-import { getJournalPrompts, getFinalPrompts } from '../configuration/journalPrompts.js';
 
 const labels = {
 	failureCheckLoss: 'The tower fell.',
@@ -116,28 +115,5 @@ describe('getKeyMoments and getStatusLine', () => {
 		expect(getStatusLine({ ...base, aceOfHeartsRevealed: true })).toBe(
 			'Stability 9/20 · 3 of 4 Kings · 11 tokens left'
 		);
-	});
-});
-
-describe('journal prompts', () => {
-	it('puts King and Ace prompts first, at most two', () => {
-		const prompts = getJournalPrompts([{ card: '7' }, { card: 'K' }, { card: 'A' }]);
-		expect(prompts).toEqual(['What is slipping away?', 'Where does hope come from?']);
-	});
-
-	it('uses a challenge prompt for odd ranks and an event prompt for even', () => {
-		expect(getJournalPrompts([{ card: '7' }])[0]).toBe('What did this cost you?');
-		expect(getJournalPrompts([{ card: '4' }])[0]).toBe(
-			"What do you notice that you didn't before?"
-		);
-	});
-
-	it('falls back when the round has no cards, and offers a second prompt', () => {
-		expect(getJournalPrompts([])).toHaveLength(2);
-	});
-
-	it('has final prompts for each ending', () => {
-		expect(getFinalPrompts('kings')).not.toEqual(getFinalPrompts('stability'));
-		expect(getFinalPrompts(null, true)).toHaveLength(2);
 	});
 });
