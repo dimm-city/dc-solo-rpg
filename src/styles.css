@@ -200,6 +200,9 @@
 }
 
 html {
+	/* No grey or blue flash on tap (touch devices); buttons and links have their own pressed
+	   and :focus-visible states. Inherited, so this covers every element. */
+	-webkit-tap-highlight-color: transparent;
 	scroll-behavior: smooth;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;

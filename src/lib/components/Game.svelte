@@ -87,10 +87,6 @@
 		--dc-failure-token-fill: var(--dc-accent-color);
 	}
 
-	* {
-		-webkit-tap-highlight-color: transparent;
-	}
-
 	.dc-game-container {
 		display: grid;
 		height: 100%;

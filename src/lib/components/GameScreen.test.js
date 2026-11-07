@@ -68,7 +68,6 @@ vi.mock('../stores/indexedDBStorage.js', () => ({
 vi.mock('../stores/diceStore.svelte.js', () => ({
 	rollDice: vi.fn(async () => {}),
 	skipRoll: vi.fn(() => true),
-	resizeDiceBox: vi.fn(),
 	updateDiceTheme: vi.fn(),
 	diceState: { isRolling: false, lastRoll: null, staticRoll: null }
 }));

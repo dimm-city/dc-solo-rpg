@@ -17,7 +17,6 @@
 	 * @component
 	 */
 	import { gameState } from '../../stores/gameStore.svelte.js';
-	import { resizeDiceBox } from '../../stores/diceStore.svelte.js';
 	import StabilityCell from './StabilityCell.svelte';
 	import KingsCell from './KingsCell.svelte';
 	import RollCell from './RollCell.svelte';
@@ -32,11 +31,10 @@
 		let last = -1;
 		const publish = () => {
 			const bottom = Math.round(hud.getBoundingClientRect().bottom) + 8;
-			// resizeDiceBox() fires a window resize, so only act on a real change
+			// Only act on a real change
 			if (bottom === last) return;
 			last = bottom;
 			document.documentElement.style.setProperty('--hud-bottom', `${bottom}px`);
-			resizeDiceBox();
 		};
 		const observer = new ResizeObserver(publish);
 		observer.observe(hud);

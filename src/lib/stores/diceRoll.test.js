@@ -37,7 +37,8 @@ class FakeDiceBox {
 	framerate = 1 / 60;
 	animstate = 'throw';
 	throwFinished = vi.fn(() => true);
-	renderer = { render: vi.fn() };
+	renderer = { render: vi.fn(), domElement: { width: 0, height: 0 } };
+	setDimensions = vi.fn();
 }
 const box = new FakeDiceBox();
 
@@ -94,6 +95,40 @@ describe('readDiceValues', () => {
 	it('is empty for a result without sets (the old result.rolls read)', () => {
 		expect(readDiceValues({ total: 24 })).toEqual([]);
 		expect(readDiceValues(null)).toEqual([]);
+	});
+});
+
+describe('dice canvas size', () => {
+	function setContainerSize(width, height) {
+		const container = document.getElementById('dice-roller-container');
+		Object.defineProperty(container, 'clientWidth', { value: width, configurable: true });
+		Object.defineProperty(container, 'clientHeight', { value: height, configurable: true });
+	}
+
+	it('resizes a canvas stuck at the wrong size to its container before the throw', async () => {
+		// Measured while the container was small: the browser's 300x150 canvas default
+		box.renderer.domElement = { width: 300, height: 150 };
+		setContainerSize(1280, 800);
+		const order = [];
+		box.setDimensions.mockImplementation(() => order.push('size'));
+		box.roll.mockImplementation(async () => {
+			order.push('roll');
+			return realResult;
+		});
+
+		await rollDice(19, { isLucid: true });
+
+		expect(box.setDimensions).toHaveBeenCalledWith({ x: 1280, y: 800 });
+		expect(order).toEqual(['size', 'roll']);
+	});
+
+	it('leaves a canvas that already fits alone', async () => {
+		box.renderer.domElement = { width: 1280, height: 800 };
+		setContainerSize(1280, 800);
+
+		await rollDice(12);
+
+		expect(box.setDimensions).not.toHaveBeenCalled();
 	});
 });
 

@@ -139,14 +139,7 @@ export async function initializeDiceBox(container) {
 		logger.debug('[diceStore] DiceBox initialized successfully');
 		isInitialized = true;
 
-		// Call resizeWorld initially
-		diceBoxInstance.resizeWorld();
-
-		// Trigger a window resize event after transition completes (300ms + buffer)
-		// This ensures the DiceBox's resize listener picks up the correct container dimensions
-		setTimeout(() => {
-			window.dispatchEvent(new Event('resize'));
-		}, 500);
+		syncDiceBoxSize();
 
 		return diceBoxInstance;
 	} catch (error) {
@@ -167,13 +160,20 @@ export function isDiceBoxInitialized() {
 }
 
 /**
- * Trigger a resize of the DiceBox
- * Call this when the container size changes or after screen transitions
+ * Size the dice canvas to its container.
+ *
+ * dice-box measures its container once, when it is created, and afterwards only on a window
+ * resize event. If the container measured small at that moment (created during a navigation or
+ * a layout change), every throw stayed in a corner of the screen until the window was resized.
+ * So the canvas is re-measured before every throw.
  */
-export function resizeDiceBox() {
-	if (diceBoxInstance && containerElement) {
-		// Trigger window resize event to let DiceBox handle it
-		window.dispatchEvent(new Event('resize'));
+function syncDiceBoxSize() {
+	const canvas = diceBoxInstance?.renderer?.domElement;
+	const width = containerElement?.clientWidth;
+	const height = containerElement?.clientHeight;
+	if (!canvas || !width || !height) return;
+	if (canvas.width !== width || canvas.height !== height) {
+		diceBoxInstance.setDimensions({ x: width, y: height });
 	}
 }
 
@@ -410,6 +410,7 @@ export async function rollDice(value = null, options = {}) {
 	const thisRoll = ++rollCount;
 
 	let rolls;
+	if (!reduced) syncDiceBoxSize();
 	if (reduced) {
 		rolls = preset ?? Array.from({ length: count }, () => randomInt(1, 20));
 		await showStaticRoll(rolls, keptValue(rolls, { isLucid, isSurreal }));
