@@ -5,6 +5,8 @@
 	 * The count includes a King that is on screen but not yet confirmed
 	 * (pendingUpdates.kingsChange), so a skull lights as its card is drawn:
 	 * - a new King ignites its skull for one beat (400ms);
+	 * - a King sent back into the deck (return-king) un-ignites: its skull runs the ignite in
+	 *   reverse, one beat, as the count drops, so the player sees the King leave;
 	 * - lit skulls pulse, harder and faster with each King (an alert loop);
 	 * - at 3 of 4 the cell turns urgent;
 	 * - the fourth King is the ending: after a short hold, all four skulls flare in turn,
@@ -27,29 +29,32 @@
 	);
 	const label = $derived(gameState.config?.labels?.failureCounters ?? 'Kings');
 
-	// Index of the skull that just lit (one-off ignite), and the fourth-King finale
+	// Index of the skull that just lit (one-off ignite), the skulls that just went dark
+	// (dimFrom up to dimTo), and the fourth-King finale
 	let igniting = $state(-1);
+	let dimFrom = $state(-1);
+	let dimTo = $state(-1);
 	let finale = $state(false);
 	let previous = untrack(() => count);
 	let timer;
 	$effect(() => {
 		const current = count;
-		if (current > previous) {
-			igniting = current - 1;
-			finale = current === 4;
-			clearTimeout(timer);
-			timer = setTimeout(
-				() => {
-					igniting = -1;
-					finale = false;
-				},
-				finale ? ANIMATION_DURATION.SEQUENCE_MAX : ANIMATION_DURATION.BEAT
-			);
-		} else if (current < previous) {
-			// A King went back into the deck (return-king): no flare for a skull going dark
-			igniting = -1;
-			finale = false;
-		}
+		if (current === previous) return;
+		const rising = current > previous;
+		igniting = rising ? current - 1 : -1;
+		finale = rising && current === 4;
+		// A King went back into the deck (return-king): its skull dims back, one beat
+		dimFrom = rising ? -1 : current;
+		dimTo = rising ? -1 : previous;
+		clearTimeout(timer);
+		timer = setTimeout(
+			() => {
+				igniting = -1;
+				dimFrom = dimTo = -1;
+				finale = false;
+			},
+			finale ? ANIMATION_DURATION.SEQUENCE_MAX : ANIMATION_DURATION.BEAT
+		);
 		previous = current;
 	});
 	$effect(() => () => clearTimeout(timer));
@@ -74,6 +79,7 @@
 					class="skull"
 					class:lit={i < count}
 					class:igniting={i === igniting}
+					class:dimming={i >= dimFrom && i < dimTo}
 					style="--i: {i}"
 					src="/skull-color-64.png"
 					alt=""
@@ -147,6 +153,11 @@
 			kingPulse var(--pulse-time) ease-in-out var(--hud-beat) infinite;
 	}
 
+	/* A King back in the deck: the ignite in reverse, from lit through the flare to dark */
+	.skull.dimming {
+		animation: kingIgnite var(--hud-beat) var(--ease-enter, ease-out) reverse;
+	}
+
 	/* The fourth King: after the hold, each skull flares in turn, then they all pulse */
 	.finale .skull.lit,
 	.finale .skull.lit.igniting {
@@ -205,6 +216,7 @@
 	@media (prefers-reduced-motion: reduce) {
 		.skull.lit,
 		.skull.lit.igniting,
+		.skull.dimming,
 		.finale .skull.lit,
 		.finale .skull.lit.igniting {
 			animation: none;

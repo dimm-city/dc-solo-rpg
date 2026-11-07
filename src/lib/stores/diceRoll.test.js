@@ -1,6 +1,7 @@
 /**
  * rollDice: which dice were thrown (LS-03), resolving once the dice are at rest (LS-05),
- * skipping to the result (LS-05), and reduced motion (AC-04).
+ * skipping to the result (LS-05), reduced motion (AC-04), and the staging: landed dice stay
+ * on top for one beat, then sink beneath the board in the moment the roll resolves.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
@@ -52,9 +53,12 @@ const {
 	readDiceValues,
 	diceState,
 	initializeDiceBox,
+	diceScreenCentre,
 	SETTLE_HOLD_MS,
+	DICE_HOLD_MS,
 	STATIC_ROLL_MS
 } = await import('./diceStore.svelte.js');
+const { ANIMATION_DURATION } = await import('../constants/animations.js');
 
 let reducedMotion = false;
 
@@ -70,6 +74,7 @@ beforeEach(async () => {
 	box.diceList = [];
 	diceState.lastRoll = null;
 	diceState.staticRoll = null;
+	diceState.sinkOrigin = null;
 
 	if (!document.getElementById('dice-roller-container')) {
 		const container = document.createElement('div');
@@ -180,5 +185,72 @@ describe('rollDice', () => {
 		expect(skipRoll()).toBe(true);
 		const result = await rolling;
 		expect(result.finalValue).toBe(9);
+	});
+});
+
+describe('the dice staging: on top, then sinking as the result appears', () => {
+	it('rests the landed dice for one beat in all', () => {
+		expect(SETTLE_HOLD_MS + DICE_HOLD_MS).toBe(ANIMATION_DURATION.BEAT);
+	});
+
+	it('keeps the landed dice up for the hold, then sinks them in the moment the roll resolves', async () => {
+		vi.useFakeTimers();
+		let resolved = false;
+		const rolling = rollDice(11, {}).then((r) => {
+			resolved = true;
+			return r;
+		});
+		expect(diceState.isRolling).toBe(true);
+		await vi.advanceTimersByTimeAsync(0); // the throw lands (the fake dice-box resolves at once)
+		await vi.advanceTimersByTimeAsync(DICE_HOLD_MS - 1);
+		expect(resolved).toBe(false);
+		expect(diceState.isRolling).toBe(true); // still on top
+		await vi.advanceTimersByTimeAsync(1);
+		const result = await rolling;
+		expect(result.finalValue).toBe(11);
+		// The sink (isRolling false) and the result are the same moment: nothing waits after it
+		expect(diceState.isRolling).toBe(false);
+	});
+
+	it('a tap while the landed dice are held sinks them at once', async () => {
+		vi.useFakeTimers();
+		let resolved = false;
+		const rolling = rollDice(6, {}).then(() => (resolved = true));
+		await vi.advanceTimersByTimeAsync(0);
+		expect(resolved).toBe(false);
+		expect(skipRoll()).toBe(true);
+		await rolling;
+		expect(resolved).toBe(true);
+		expect(diceState.isRolling).toBe(false);
+		expect(skipRoll()).toBe(false);
+	});
+
+	it('a finished roll never sinks the dice of a roll thrown after it', async () => {
+		vi.useFakeTimers();
+		const half = Math.round(DICE_HOLD_MS / 2);
+		const first = rollDice(3, {});
+		await vi.advanceTimersByTimeAsync(half);
+		const second = rollDice(15, {}); // thrown while the first is still held
+		await vi.advanceTimersByTimeAsync(DICE_HOLD_MS - half);
+		await first;
+		expect(diceState.isRolling).toBe(true); // the second roll's dice stay up
+		expect(skipRoll()).toBe(true); // and a tap still reaches them
+		await second;
+		expect(diceState.isRolling).toBe(false);
+		expect(diceState.lastRoll.finalValue).toBe(15);
+	});
+
+	it('finds where the dice landed on screen, so they shrink in place', () => {
+		// dice-box projects world positions through its camera to -1..1 on each axis
+		const at = (x, y) => ({ clone: () => ({ project: () => ({ x, y }) }) });
+		const box = {
+			camera: {},
+			renderer: { domElement: { clientWidth: 400, clientHeight: 800 } },
+			diceList: [{ position: at(0, 0) }, { position: at(0.5, -0.5) }]
+		};
+		// (200, 400) and (300, 600): the middle is (250, 500)
+		expect(diceScreenCentre(box)).toBe('250px 500px');
+		expect(diceScreenCentre({ ...box, diceList: [] })).toBeNull();
+		expect(diceScreenCentre(null)).toBeNull();
 	});
 });

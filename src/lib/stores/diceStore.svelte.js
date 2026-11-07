@@ -19,22 +19,29 @@ let containerElement = $state(null);
  * Svelte 5 requires exported state to be objects (not reassigned primitives)
  */
 let diceState = $state({
-	/** Dice are on the table (the container is shown) */
+	/** Dice are up, on top of everything. When it turns false they sink beneath the board. */
 	isRolling: false,
 	/** The last completed roll ({ rolls, finalValue, isLucid, isSurreal }) so the HUD can show which die counted */
 	lastRoll: null,
 	/** Reduced motion (or no 3D dice): the roll shown as numbers in a d20 outline, { rolls, kept } */
-	staticRoll: null
+	staticRoll: null,
+	/** Where the landed dice are on screen ("x y" in px), so they shrink in place as they sink */
+	sinkOrigin: null
 });
 
-/** How long every die must stay at rest before the roll resolves */
+/** How long every die must stay at rest before the throw counts as landed */
 export const SETTLE_HOLD_MS = 150;
+/**
+ * Landed dice stay on top this much longer, so they rest for one beat in all, before they
+ * sink beneath the board and the result appears. A tap ends the hold.
+ */
+export const DICE_HOLD_MS = ANIMATION_DURATION.BEAT - SETTLE_HOLD_MS;
 /** Reduced motion: how long the number is shown before the result line */
 export const STATIC_ROLL_MS = 600;
 
 /** The roll in flight: skip() jumps it to its result */
 let activeRoll = null;
-/** Counts rolls, so a finished roll's fade-out never hides the next roll's dice */
+/** Counts rolls, so a finished roll never sinks the next roll's dice */
 let rollCount = 0;
 
 /**
@@ -261,6 +268,28 @@ function fastForward(box) {
 }
 
 /**
+ * The middle of the landed dice on screen, as a CSS transform-origin ("120px 480px"), or null.
+ * Each die's position is projected through dice-box's camera onto its canvas.
+ */
+export function diceScreenCentre(box) {
+	try {
+		const dice = (box?.diceList ?? []).filter((die) => die.position?.clone);
+		const canvas = box?.renderer?.domElement;
+		if (!dice.length || !box.camera || !canvas?.clientWidth) return null;
+		let x = 0;
+		let y = 0;
+		for (const die of dice) {
+			const p = die.position.clone().project(box.camera);
+			x += ((p.x + 1) / 2) * canvas.clientWidth;
+			y += ((1 - p.y) / 2) * canvas.clientHeight;
+		}
+		return `${Math.round(x / dice.length)}px ${Math.round(y / dice.length)}px`;
+	} catch {
+		return null;
+	}
+}
+
+/**
  * Throw the 3D dice. Resolves as soon as every die has been at rest for SETTLE_HOLD_MS
  * (dice-box waits another 0.9s before it calls a die asleep), when dice-box finishes, or
  * when the player skips. Resolves with the dice-box result, or null if it was not awaited.
@@ -311,22 +340,29 @@ function throwDice(box, notation) {
 	});
 }
 
-/** Reduced motion (or no 3D dice): show the number for STATIC_ROLL_MS, opacity only */
-function showStaticRoll(rolls, kept) {
-	diceState.staticRoll = { rolls, kept };
+/** Wait `ms`; a tap (skipRoll) ends the wait at once */
+function hold(ms) {
 	return new Promise((resolve) => {
-		const timer = setTimeout(done, STATIC_ROLL_MS);
+		const timer = setTimeout(done, ms);
+		const handle = { skip: done };
 		function done() {
 			clearTimeout(timer);
-			activeRoll = null;
+			if (activeRoll === handle) activeRoll = null;
 			resolve();
 		}
-		activeRoll = { skip: done };
+		activeRoll = handle;
 	});
 }
 
+/** Reduced motion (or no 3D dice): show the number for STATIC_ROLL_MS, opacity only */
+function showStaticRoll(rolls, kept) {
+	diceState.staticRoll = { rolls, kept };
+	return hold(STATIC_ROLL_MS);
+}
+
 /**
- * A tap or Space during a roll: jump to the result (the dice snap to their faces).
+ * A tap or Space during a roll: jump to the result. Mid-throw the dice snap to their faces;
+ * while they rest on top, they sink at once.
  * @returns {boolean} true if a roll was in flight
  */
 export function skipRoll() {
@@ -343,6 +379,11 @@ export function isRollInFlight() {
 /**
  * Roll the dice with optional preset value
  * D20 system with Lucid/Surreal support
+ *
+ * The staging (with +layout.svelte): the dice are thrown on top of everything, header and
+ * HUD included. Once they have rested for one beat (SETTLE_HOLD_MS + DICE_HOLD_MS) they sink
+ * beneath the board, and the roll resolves in that same moment, so the result line and the
+ * HUD's numbers appear in front of the sinking dice and are never covered.
  * @param {number|null} value - The kept d20 value (1-20) the game already rolled
  * @param {Object} options - Roll options
  * @param {boolean} options.isLucid - Roll with advantage (2d20 keep high)
@@ -377,19 +418,18 @@ export async function rollDice(value = null, options = {}) {
 		const result = await throwDice(diceBoxInstance, notation);
 		const read = readDiceValues(result);
 		rolls = read.length === count ? read : (preset ?? read);
+		// The landed dice rest on top for the rest of the beat, as evidence
+		await hold(DICE_HOLD_MS);
+		diceState.sinkOrigin = diceScreenCentre(diceBoxInstance);
 	}
 
 	const finalValue = keptValue(rolls, { isLucid, isSurreal });
 
-	// Settled dice stay up a moment as evidence, then fade (no hold for the static number)
-	setTimeout(
-		() => {
-			if (thisRoll !== rollCount) return;
-			diceState.isRolling = false;
-			diceState.staticRoll = null;
-		},
-		reduced ? 0 : ANIMATION_DURATION.DICE_DELAY
-	);
+	// Now they sink beneath the board (the static number fades) as the result appears
+	if (thisRoll === rollCount) {
+		diceState.isRolling = false;
+		diceState.staticRoll = null;
+	}
 
 	diceState.lastRoll = { rolls, finalValue, isLucid, isSurreal };
 

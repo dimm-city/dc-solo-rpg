@@ -19,6 +19,15 @@
 	font-weight: 700 900;
 }
 
+/* Seven-segment digits for the HUD's last roll: DSEG7 Classic Bold from the dseg package
+   (SIL Open Font License 1.1). Only this one 5KB woff2 is bundled. */
+@font-face {
+	font-family: 'DSEG7 Classic';
+	src: url('dseg/fonts/DSEG7-Classic/DSEG7Classic-Bold.woff2') format('woff2');
+	font-display: swap;
+	font-weight: 700;
+}
+
 /* ============================================
    CSS CUSTOM PROPERTIES - DIMM CITY SYSTEM
    ============================================ */
@@ -49,6 +58,7 @@
 	     resolves to the UI face (see "Controls and small titles" below).
 	   --font-ui (Inter 600, uppercase, 0.08em): buttons, labels and titles under 28px.
 	   --font-mono (Share Tech Mono): HUD numbers and IDs (use tabular-nums).
+	   --font-led (DSEG7 Classic): the seven-segment roll readout in the HUD, digits only.
 	   --font-body (Inter): reading text. */
 	--font-display: 'lixdu', 'Inter Variable', 'Inter', sans-serif;
 	--font-body: 'Inter Variable', 'Inter', system-ui, sans-serif;
@@ -56,6 +66,7 @@
 	--font-ui-weight: 600;
 	--tracking-ui: 0.08em;
 	--font-mono: 'Share Tech Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+	--font-led: 'DSEG7 Classic', var(--font-mono);
 
 	/* === SHARED UI TOKENS === */
 	--color-danger: #ff4d6d; /* danger only: Kings, Stability loss, critical states */

@@ -23,6 +23,7 @@ never disagree. `styles.css` defines no motion numbers of its own; a unit test c
 | `ANIMATION_EASING.CUBIC_OUT`      | `--ease-enter`         | cubic out | Entering, state changes                          |
 | `ANIMATION_EASING.CUBIC_IN`       | `--ease-exit`          | cubic in  | Leaving                                          |
 | `ANIMATION_DISTANCE.RISE`         | `--rise-enter`         | 8px       | The most an entering element moves               |
+| `ANIMATION_DURATION.DICE_SINK`    | `--dur-dice-sink`      | 350ms     | Landed dice sinking beneath the board (ease-in)  |
 
 The older names still work and follow the standard: `FAST` = 120, `NORMAL` = 200, `SLOW` = 300;
 `--transition-fast/base/slow` = 120/200/300ms; `--anim-fast` = 200ms. `CARD_DISMISS` (600ms),
@@ -38,6 +39,12 @@ The older names still work and follow the standard: `FAST` = 120, `NORMAL` = 200
   urgency. They stop under reduced motion.
 - **Sequences** (the fourth King, the Salvation unlock) stay under 1.5s, built from beats and
   staggers, with no blank frames.
+- **Dice** (`+layout.svelte`, `diceStore.rollDice`): thrown across the whole screen on top of
+  everything in the game (dialogs and the menu stay above). Landed dice rest for one beat, then
+  sink: the z-index drops behind the page content at once, and over `--dur-dice-sink` they drop
+  8px, shrink 10% in place and darken out, ease-in. The roll resolves in that same moment, so
+  the result line appears in front of them. Under reduced motion there is no throw: the number
+  shows, then fades. This replaces the `DICE_DELAY` + `DICE_FADE` pattern further down.
 - **Never animate layout** (`width`, `height`, `background-size`, `top`) or run `box-shadow`,
   `background-position` or `filter` loops; animate `transform` and `opacity`.
 - **Reduced motion:** movement goes; a colour change or a static highlight stays.

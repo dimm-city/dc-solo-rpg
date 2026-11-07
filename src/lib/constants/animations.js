@@ -61,6 +61,9 @@ export const ANIMATION_DURATION = {
 	/** Dice delay (500ms) - Pause before dice fade begins */
 	DICE_DELAY: 500,
 
+	/** Dice sink (350ms) - landed dice drop beneath the board as the result appears (ease-in) */
+	DICE_SINK: 350,
+
 	/** Story mode transitions (250ms) - Story library and save animations */
 	STORY_MODE: 250,
 
@@ -145,6 +148,7 @@ export function animationCssVariables() {
 		'--dur-sequence-max': ms(d.SEQUENCE_MAX),
 		'--dur-ambient': ms(d.AMBIENT),
 		'--dur-ambient-slow': ms(d.AMBIENT_SLOW),
+		'--dur-dice-sink': ms(d.DICE_SINK),
 		'--ease-enter': e.CUBIC_OUT,
 		'--ease-exit': e.CUBIC_IN,
 		'--ease-mechanical': e.MECHANICAL,

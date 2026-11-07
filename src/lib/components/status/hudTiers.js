@@ -1,9 +1,15 @@
 /**
- * Shared HUD helpers: Stability tiers, the Aces summary and the 2d20 badge and caption.
- * Pure functions, so the HUD cells and their tests agree.
+ * Shared HUD helpers: Stability tiers, the Aces and their suits, the token and card meters,
+ * and the 2d20 badge and caption. Pure functions, so the HUD cells and their tests agree.
  */
 
 export const MAX_STABILITY = 20;
+
+/** Cards in a full deck (the Oracle) */
+export const DECK_SIZE = 52;
+
+/** Tokens a game starts with when it does not say */
+export const DEFAULT_STARTING_TOKENS = 10;
 
 /**
  * Stability tier: steady (16-20), caution (11-15), danger (5-10), critical (4 or less).
@@ -42,6 +48,43 @@ const SALVATION_NEED = { 1: '17+', 2: '14+', 3: '11+', 4: 'auto' };
 export function acesSummary(aces) {
 	const count = Math.max(0, Math.min(4, aces || 0));
 	return { count, need: SALVATION_NEED[count] ?? null };
+}
+
+/** The Ace pips, in order: the Ace of Hearts (it unlocks Salvation) first, red and black alternating */
+export const ACE_SUITS = ['hearts', 'spades', 'diamonds', 'clubs'];
+
+/**
+ * Which Aces are out, by suit. The suits come from the cards drawn so far (the log, which
+ * includes a card still on screen) plus the Ace of Hearts flag (Easy mode removes that card
+ * from the deck). A state that knows only the count (a forced or older state) lights the
+ * other suits in order, so the pips always agree with the number.
+ * @param {{count:number, aceOfHeartsRevealed?:boolean, log?:Array<{card?:string, suit?:string}>}} state
+ * @returns {Array<{suit:string, lit:boolean}>}
+ */
+export function aceSuits({ count, aceOfHeartsRevealed = false, log = [] }) {
+	const out = new Set(
+		(log ?? []).filter((card) => card?.card === 'A' && card.suit).map((card) => card.suit)
+	);
+	if (aceOfHeartsRevealed) out.add('hearts');
+	for (const suit of ACE_SUITS) {
+		if (out.size >= count) break;
+		if (suit !== 'hearts') out.add(suit);
+	}
+	return ACE_SUITS.map((suit) => ({ suit, lit: out.has(suit) }));
+}
+
+/**
+ * The token meter: tokens left out of the tokens the game started with, the same reading as
+ * Stability's bar. Failed Salvation rolls can push tokens past the start: the bar stays full
+ * and `over` says by how many.
+ * @param {number} tokens
+ * @param {number} start
+ * @returns {{fraction:number, over:number}}
+ */
+export function tokenMeter(tokens, start) {
+	const max = start > 0 ? start : DEFAULT_STARTING_TOKENS;
+	const left = Math.max(0, tokens || 0);
+	return { fraction: Math.min(1, left / max), over: Math.max(0, left - max) };
 }
 
 /**

@@ -2,8 +2,9 @@ import { test, expect, type Page } from '@playwright/test';
 import { INSTRUCTIONS_SEEN_KEY } from './helpers';
 
 /**
- * The in-game HUD: one row at every width (HD-02), the 2d20 badge (HD-03), the landscape
- * layout (VP-01) and the step button's keyboard focus (AC-03).
+ * The in-game HUD: one row at every width (HD-02), mirrored around the middle (Stability,
+ * Kings, Roll, Cards, Aces, Tokens), the 2d20 badge (HD-03), the landscape layout (VP-01) and
+ * the step button's keyboard focus (AC-03).
  */
 
 /** Open a game and get past the intro to the opening roll, where the HUD and table show */
@@ -32,7 +33,7 @@ async function setState(page: Page, src: string) {
 	);
 }
 
-const CELLS = ['hud-stability', 'hud-kings', 'hud-aces', 'hud-tokens', 'hud-cards', 'hud-roll'];
+const CELLS = ['hud-stability', 'hud-kings', 'hud-roll', 'hud-cards', 'hud-aces', 'hud-tokens'];
 
 test.describe('Game HUD', () => {
 	test('is one row of six cells, at most 960px wide and about 64px tall', async ({ page }) => {
@@ -42,16 +43,40 @@ test.describe('Game HUD', () => {
 		expect(hud!.height).toBeGreaterThanOrEqual(50);
 		expect(hud!.height).toBeLessThanOrEqual(66);
 
+		// Measured in one frame: the table (and the HUD with it) may still be fading in
+		const { row, boxes } = await page.getByTestId('hud').evaluate((el, ids) => {
+			const rect = (node: Element) => {
+				const { x, y, width } = node.getBoundingClientRect();
+				return { x, y, width };
+			};
+			return {
+				row: rect(el),
+				boxes: ids.map((id) => {
+					const cell = el.querySelector(`[data-testid="${id}"]`);
+					return cell ? rect(cell) : null;
+				})
+			};
+		}, CELLS);
 		const tops = [];
-		for (const id of CELLS) {
-			const box = await page.getByTestId(id).boundingBox();
+		let right = -Infinity;
+		for (const [i, box] of boxes.entries()) {
+			const id = CELLS[i];
 			expect(box, id).not.toBeNull();
 			tops.push(Math.round(box!.y));
-			// Every cell sits inside the row
-			expect(box!.x).toBeGreaterThanOrEqual(hud!.x - 1);
-			expect(box!.x + box!.width).toBeLessThanOrEqual(hud!.x + hud!.width + 1);
+			// Every cell sits inside the row, in order from left to right
+			expect(box!.x).toBeGreaterThanOrEqual(row.x - 1);
+			expect(box!.x + box!.width).toBeLessThanOrEqual(row.x + row.width + 1);
+			expect(box!.x, id).toBeGreaterThanOrEqual(right - 1);
+			right = box!.x + box!.width;
 		}
 		expect(new Set(tops).size).toBe(1);
+
+		// Every label sits on one line
+		const labelTops = await page
+			.getByTestId('hud')
+			.locator('.hud-label')
+			.evaluateAll((labels) => labels.map((l) => Math.round(l.getBoundingClientRect().top)));
+		expect(Math.max(...labelTops) - Math.min(...labelTops)).toBeLessThanOrEqual(1);
 
 		// No label is cut off
 		const clipped = await page
@@ -67,19 +92,71 @@ test.describe('Game HUD', () => {
 		expect(button!.y).toBeGreaterThan(hud!.y + hud!.height);
 	});
 
-	test('shows Aces with what Salvation needs, and a lock until the Ace of Hearts', async ({
+	test('shows Aces by suit with what Salvation needs, and tokens locked until the Ace of Hearts', async ({
 		page
 	}) => {
 		await openTable(page);
 		const aces = page.getByTestId('hud-aces');
 		const tokens = page.getByTestId('hud-tokens');
 		await expect(aces).toContainText('0/4');
-		await expect(tokens).toContainText('find A♥');
+		await expect(aces.locator('.pip')).toHaveCount(4);
+		await expect(aces.locator('.pip.lit')).toHaveCount(0);
+		// Locked: the same n/N and bar as later, dimmed, with a lock and a way to unlock it
+		await expect(tokens).toHaveClass(/locked/);
+		await expect(tokens).toContainText('10/10');
+		await expect(tokens.locator('.lock')).toBeVisible();
+		await expect(tokens).toHaveAttribute('title', /Ace of Hearts/);
+		await expect(tokens.locator('.sr-only')).toHaveText('Tokens locked: find the Ace of Hearts');
 
-		await setState(page, 'g.acesRevealed = 2; g.aceOfHeartsRevealed = true; g.tokens = 9;');
-		await expect(aces.getByTestId('aces-need')).toHaveText('need 14+');
-		await expect(tokens).toContainText('9');
+		await setState(
+			page,
+			"g.log = [{ card: 'A', suit: 'hearts' }, { card: 'A', suit: 'clubs' }]; g.acesRevealed = 2; g.aceOfHeartsRevealed = true; g.tokens = 9;"
+		);
+		await expect(aces).toHaveAttribute('title', 'Salvation needs 14+');
+		await expect(aces.locator('.sr-only')).toHaveText(
+			'Aces 2 of 4 (hearts, clubs), Salvation needs 14 or more'
+		);
+		await expect(aces.locator('.pip.lit')).toHaveCount(2);
+		await expect(aces.locator('.pip.lit.hearts')).toHaveCount(1);
+		await expect(tokens).toContainText('9/10');
 		await expect(tokens.locator('.lock')).toHaveCount(0);
+		await expect(tokens.locator('.fill')).toHaveAttribute('style', /scaleX\(0\.9\)/);
+
+		// Failed Salvations can push tokens past the start: the bar stays full
+		await setState(page, 'g.tokens = 12;');
+		await expect(tokens).toContainText('12/10');
+		await expect(tokens).toHaveClass(/over/);
+		await expect(tokens.locator('.fill')).toHaveAttribute('style', /scaleX\(1\)/);
+	});
+
+	test('shows the cards left over a meter and the roll on a seven-segment display', async ({
+		page
+	}) => {
+		await openTable(page);
+		const cards = page.getByTestId('hud-cards');
+		await expect(cards.locator('.bar .fill')).toHaveAttribute('style', /scaleX\(1\)/);
+		await setState(page, 'g.deck = g.deck.slice(0, 26);');
+		await expect(cards).toContainText('26');
+		await expect(cards.locator('.fill')).toHaveAttribute('style', /scaleX\(0\.5\)/);
+
+		const roll = page.getByTestId('hud-roll');
+		await expect(roll.locator('.led-on')).toHaveText('--');
+		await setState(page, 'g.diceRoll = 7;');
+		await expect(roll.locator('.led-on')).toHaveText('7');
+		// The digits are the self-hosted DSEG7 face, larger than the other numbers
+		const led = await roll.locator('.led-on').evaluate(async (el) => {
+			await document.fonts.ready;
+			const other = document.querySelector('[data-testid="hud-cards"] .hud-value')!;
+			return {
+				family: getComputedStyle(el).fontFamily,
+				loaded: document.fonts.check(`700 20px "DSEG7 Classic"`),
+				size: parseFloat(getComputedStyle(el).fontSize),
+				otherSize: parseFloat(getComputedStyle(other).fontSize)
+			};
+		});
+		expect(led.family).toContain('DSEG7 Classic');
+		expect(led.loaded).toBe(true);
+		expect(led.size).toBeGreaterThan(led.otherSize);
 	});
 
 	test('tiers, Kings and the 2d20 badge follow the game state', async ({ page }) => {
