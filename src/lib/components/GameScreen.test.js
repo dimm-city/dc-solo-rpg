@@ -216,6 +216,29 @@ describe('GameScreen result hold', { timeout: 15000 }, () => {
 		expect(gameState.state).toBe('log');
 	});
 
+	it('waits while the tab is hidden', async () => {
+		setUp('failureCheck');
+		const { getByTestId } = render(GameScreen);
+		await settle(GUARD_MS);
+		mockDieRoll(13);
+		await fireEvent.click(getByTestId('failure-check-button'));
+		await settle(50);
+
+		const setHidden = (hidden) => {
+			Object.defineProperty(document, 'hidden', { value: hidden, configurable: true });
+			document.dispatchEvent(new Event('visibilitychange'));
+		};
+		try {
+			setHidden(true);
+			await settle(HOLD_MS + 200);
+			expect(gameState.state).toBe('failureCheck');
+		} finally {
+			setHidden(false);
+		}
+		await settle(HOLD_MS);
+		expect(gameState.state).toBe('log');
+	});
+
 	it('a press as the journal opens (meant for the step button) does not save an empty entry', async () => {
 		setUp('failureCheck');
 		const { getByTestId } = render(GameScreen);

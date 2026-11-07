@@ -204,18 +204,22 @@
 	});
 
 	// A result moves on by itself after a beat (the result hold). While a dialog covers the
-	// table the hold waits, so nothing moves on unseen.
+	// table, or the tab is hidden, the hold waits, so nothing moves on unseen.
 	const stepComposables = [initialDamage, rollForTasks, failureCheck, successCheck];
-	const dialogOpen = $derived(showExitModal || showSettingsModal || showHelpModal);
+	let pageHidden = $state(false);
+	const holdPaused = $derived(showExitModal || showSettingsModal || showHelpModal || pageHidden);
 	$effect(() => {
-		const open = dialogOpen;
+		const paused = holdPaused;
 		untrack(() => {
 			for (const composable of stepComposables) {
-				if (open) composable.hold.pause();
+				if (paused) composable.hold.pause();
 				else composable.hold.resume();
 			}
 		});
 	});
+	function onVisibilityChange() {
+		pageHidden = document.hidden;
+	}
 
 	function cancelHolds() {
 		for (const composable of stepComposables) composable.hold.cancel();
@@ -489,9 +493,11 @@
 
 	onMount(() => {
 		window.addEventListener('keydown', handleKeyPress);
+		document.addEventListener('visibilitychange', onVisibilityChange);
 
 		return () => {
 			window.removeEventListener('keydown', handleKeyPress);
+			document.removeEventListener('visibilitychange', onVisibilityChange);
 			leaving = true;
 			cancelAutoPlay();
 			cancelHolds();
