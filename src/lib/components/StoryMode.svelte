@@ -8,6 +8,11 @@
 	 * Moving between rounds slides the incoming round in from the side it comes from (16px,
 	 * 200ms, opacity and transform) while the outgoing round fades over 120ms. Both share one grid
 	 * cell, so the content area is never empty (SM-05). Reduced motion swaps instantly.
+	 *
+	 * The story is its own scroller, a fixed box the size of the visible viewport, with the
+	 * Previous / Next bar pinned to its bottom edge. On phones that bar is the only way to turn
+	 * the page (the round markers are hidden), so the box must never run under the browser's
+	 * bars: see the .story-mode rule.
 	 */
 
 	import { untrack } from 'svelte';
@@ -182,9 +187,14 @@
 {/if}
 
 <style>
-	/* Its own full-page scroller; absolute so it overlaps the library during the hand-off */
+	/* Its own full-page scroller, over the library during the hand-off. Fixed, not absolute:
+	   the page (body and main) is 100vh tall, and on Android 100vh is the viewport with the
+	   browser bars hidden, so a box sized to the page runs on under the address bar and, in
+	   Vivaldi, the bottom toolbar whenever they are shown; a nested scroller never hides them.
+	   The Previous / Next bar pinned to the bottom of such a box is off screen for good. A
+	   fixed box is sized to the visible viewport in every browser. */
 	.story-mode {
-		position: absolute;
+		position: fixed;
 		inset: 0;
 		display: flex;
 		flex-direction: column;
