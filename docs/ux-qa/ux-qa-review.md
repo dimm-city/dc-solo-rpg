@@ -1715,6 +1715,24 @@ game layout (`100dvh`, with `100vh` as the fallback).
 
 **Touch.** No browser tap highlight on any button or link.
 
+## Playtest follow-ups (2026-11-07, later)
+
+**Read-aloud timing.** The first card of a round now waits for the roll's narration to end (then a
+400ms beat); with narration off the 2s hold applies, and a press deals at once. The run-out line
+stays full and dim while the voice speaks. Game Over waits for the ending card's narration, or for
+the player's tap, which now silences the voice before the fourth-King staging. A stop issued right
+after a narration began, and stale on-device audio after a stop, are fixed; turning read-aloud off
+silences a sentence in progress.
+
+**Journal.** The entry takes focus on open on desktop only (touch keeps the keyboard closed); the
+tab order is Voice note → entry → Record Entry by DOM order. The final log was never saved into the
+completed game (`saveGame` skipped the `finalLog` state, and a second save would have made a second
+record); it is now saved into the one record, marked final, and shown in story mode as a "Final log"
+section after the ending. In the final-log sheet the Ace/King badges are replaced by a per-round
+timeline of the run's events (Kings, Aces and thresholds, Stability checks, Lucid/Surreal, Salvation
+results, modifiers, the ending): beside the entry from 768px up, behind a Timeline / Your entry
+switch below. Salvation rolls are now logged so the timeline can show them.
+
 ## Recommendations
 
 ### Earlier reviews: what is fixed, open, or fixed badly
