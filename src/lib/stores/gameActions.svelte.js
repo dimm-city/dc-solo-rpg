@@ -11,7 +11,8 @@ import {
 	convertD20ToCardCount,
 	calculateStabilityLoss,
 	getSalvationThreshold,
-	calculateSalvationResult
+	calculateSalvationResult,
+	calculateAutomaticSalvation
 } from '../services/d20Mechanics.js';
 
 // Re-export D20 mechanics for backwards compatibility
@@ -19,7 +20,8 @@ export {
 	convertD20ToCardCount,
 	calculateStabilityLoss,
 	getSalvationThreshold,
-	calculateSalvationResult
+	calculateSalvationResult,
+	calculateAutomaticSalvation
 };
 
 /**
@@ -594,7 +596,6 @@ export function applyPendingDiceRoll({ advance = true } = {}) {
 
 	const result = gameState.pendingUpdates.diceRoll;
 	const stabilityLoss = gameState.pendingUpdates.towerDamage || 0;
-	const stabilityGain = gameState.pendingUpdates.towerGain || 0;
 
 	// Apply the dice roll to state
 	gameState.diceRoll = result;
@@ -612,40 +613,47 @@ export function applyPendingDiceRoll({ advance = true } = {}) {
 		];
 	}
 
-	// Apply stability gain first (if any, from natural 20)
-	if (stabilityGain > 0) {
-		gameState.tower = Math.min(gameState.tower + stabilityGain, 20); // Cap at 20 Stability
-		logger.debug(
-			`[applyPendingDiceRoll] Applied stability gain +${stabilityGain}, stability now at ${gameState.tower} (capped at 20)`
-		);
-	}
-
-	// Apply stability loss
-	if (stabilityLoss > 0) {
-		gameState.tower -= stabilityLoss;
-		logger.debug(
-			`[applyPendingDiceRoll] Applied stability loss -${stabilityLoss}, stability now at ${gameState.tower}`
-		);
-	}
+	// Apply the Stability gain (natural 20) and loss; at 0 the game is lost
+	applyPendingStability();
 
 	// Apply pending modifier state changes (after animation)
 	applyPendingModifier();
 
 	// Clear pending updates
 	gameState.pendingUpdates.diceRoll = null;
+
+	if (advance) {
+		advanceAfterFailureCheck();
+	}
+}
+
+/**
+ * Apply a Stability check's pending result: the gain first (natural 20, capped at 20 Stability),
+ * then the loss. Stability at 0 ends the game. Shared by the Stability check and the automatic
+ * Salvation (four Aces), whose token only comes off if Stability holds.
+ */
+function applyPendingStability() {
+	const loss = gameState.pendingUpdates.towerDamage || 0;
+	const gain = gameState.pendingUpdates.towerGain || 0;
+
+	if (gain > 0) {
+		gameState.tower = Math.min(gameState.tower + gain, 20);
+	}
+	if (loss > 0) {
+		gameState.tower -= loss;
+	}
 	gameState.pendingUpdates.towerDamage = null;
 	gameState.pendingUpdates.towerGain = null;
+	logger.debug(
+		`[applyPendingStability] +${gain} -${loss}, Stability now at ${Math.max(0, gameState.tower)}`
+	);
 
-	// Check for stability collapse
+	// Stability collapse
 	if (gameState.tower <= 0) {
 		gameState.tower = 0;
 		gameState.status =
 			gameState.config.labels?.failureCheckLoss ?? 'Stability collapsed completely';
 		gameState.gameOver = true;
-	}
-
-	if (advance) {
-		advanceAfterFailureCheck();
 	}
 }
 
@@ -770,7 +778,7 @@ export async function recordRound(journalEntry) {
 /**
  * The roll Salvation needs right now. Salvation only opens with the Ace of Hearts, which
  * counts as the first Ace, so the button and the roll always agree on one threshold.
- * @returns {number} 17, 14 or 11, or 0 when automatic (all four Aces)
+ * @returns {number} 17, 14 or 11, or 0 when there is no target (all four Aces)
  */
 export function getCurrentSalvationThreshold() {
 	return getSalvationThreshold(Math.max(1, gameState.acesRevealed));
@@ -780,27 +788,35 @@ export function getSalvationCheckRoll() {
 	// Get threshold based on Aces revealed
 	const threshold = getCurrentSalvationThreshold();
 
-	// Four Aces: Salvation is automatic. No die is thrown, so no Lucid/Surreal is used up.
-	if (threshold === 0) {
-		const { tokenChange } = calculateSalvationResult(null, threshold);
-		clearPendingModifier();
-		gameState.pendingUpdates.diceRoll = null;
-		gameState.pendingUpdates.tokenChange = tokenChange;
-		return {
-			roll: null,
-			dice: [],
-			threshold,
-			tokenChange,
-			automatic: true,
-			wasLucid: false,
-			wasSurreal: false,
-			gainedLucid: false,
-			gainedSurreal: false
-		};
-	}
-
 	// Roll d20 with Lucid/Surreal modifiers
 	const { roll, dice, wasLucid, wasSurreal } = gameState.rollWithModifiers();
+
+	// Four Aces: no target to beat, but the token only comes off after one Stability check.
+	// The roll is read on the Stability table; at 0 Stability the game is lost instead.
+	if (threshold === 0) {
+		const outcome = calculateAutomaticSalvation(roll, gameState.tower);
+		gameState.pendingUpdates.diceRoll = roll;
+		gameState.pendingUpdates.towerDamage = outcome.stabilityLoss;
+		gameState.pendingUpdates.towerGain = outcome.stabilityGain > 0 ? outcome.stabilityGain : null;
+		gameState.pendingUpdates.tokenChange = outcome.tokenChange;
+		queueModifierFromRoll(roll);
+		logger.debug(
+			`[getSalvationCheckRoll] Four Aces: Stability check ${roll}, Stability ${gameState.tower} -> ${outcome.stabilityAfter}, token change ${outcome.tokenChange}`
+		);
+		return {
+			roll,
+			dice,
+			threshold,
+			tokenChange: outcome.tokenChange,
+			automatic: true,
+			stabilityLoss: outcome.stabilityLoss,
+			stabilityGain: outcome.stabilityGain,
+			wasLucid,
+			wasSurreal,
+			gainedLucid: outcome.gainedLucid,
+			gainedSurreal: outcome.gainedSurreal
+		};
+	}
 
 	// Calculate token change using salvation table
 	const { tokenChange, gainedLucid, gainedSurreal } = calculateSalvationResult(roll, threshold);
@@ -848,17 +864,18 @@ export function successCheck() {
  * D20 System - Graduated Token Changes:
  * - Critical Success (Natural 20): -2 tokens + Lucid state
  * - Success (≥ threshold): -1 token
- * - Partial Failure (6 to threshold-1): No change
- * - Failure (2-5): +1 token
+ * - Failure (2 to threshold-1): +1 token
  * - Critical Failure (Natural 1): +2 tokens + Surreal state
+ * - Four Aces (no threshold): the roll is a Stability check; -1 token if Stability holds,
+ *   otherwise the game is lost by Stability
  *
  * Victory Condition:
  * - Tokens reach 0 → Instant victory (game over, win = true)
  *
  * State Flow:
  * 1. Apply pending dice roll
- * 2. Apply token change (+2 to -2)
- * 3. Ensure tokens ≥ 0 (floor at 0)
+ * 2. Four Aces: apply the Stability gain or loss (Stability at 0 ends the game)
+ * 3. Apply token change (+2 to -2), floored at 0
  * 4. Apply Lucid/Surreal states
  * 5. Check for victory (tokens = 0)
  * 6. Transition to game over or journal entry
@@ -881,13 +898,26 @@ export function applyPendingSuccessCheck({ advance = true } = {}) {
 		return;
 	}
 
-	// Apply dice roll (an automatic Salvation has none)
+	// Apply dice roll
 	if (gameState.pendingUpdates.diceRoll !== null) {
 		gameState.diceRoll = gameState.pendingUpdates.diceRoll;
 	}
 
+	// Four Aces: the Stability check comes first. If it takes the last Stability, the game is lost
+	// and the token stays (its pending change is 0).
+	if (
+		gameState.pendingUpdates.towerDamage !== null ||
+		gameState.pendingUpdates.towerGain !== null
+	) {
+		applyPendingStability();
+	}
+
 	// Apply token change (can be negative for success, positive for failure)
-	if (gameState.pendingUpdates.tokenChange !== null && gameState.pendingUpdates.tokenChange !== 0) {
+	if (
+		!gameState.gameOver &&
+		gameState.pendingUpdates.tokenChange !== null &&
+		gameState.pendingUpdates.tokenChange !== 0
+	) {
 		gameState.tokens += gameState.pendingUpdates.tokenChange;
 
 		// Ensure tokens don't go below 0
@@ -906,7 +936,7 @@ export function applyPendingSuccessCheck({ advance = true } = {}) {
 		gameState.tokens
 	);
 
-	if (gameState.tokens === 0) {
+	if (gameState.tokens === 0 && !gameState.gameOver) {
 		// D20 System: Victory when tokens reach 0 (no final damage roll)
 		gameState.win = true;
 		gameState.gameOver = true;

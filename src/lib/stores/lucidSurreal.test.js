@@ -155,14 +155,57 @@ describe('Lucid and Surreal on every d20 roll', () => {
 		expect(gameState.isLucid).toBe(false);
 	});
 
-	it('an automatic Salvation (four Aces) throws no die and keeps the modifier for the next roll', async () => {
-		gameState.acesRevealed = 4;
-		gameState.isLucid = true;
-		const thrown = await ROLLS.salvation();
-		expect(thrown.automatic).toBe(true);
-		expect(thrown.dice).toEqual([]);
-		expect(gameState.tokens).toBe(9);
-		expect(gameState.isLucid).toBe(true);
+	describe('Salvation with four Aces (a Stability check, then the token)', () => {
+		beforeEach(() => {
+			gameState.acesRevealed = 4;
+		});
+
+		it('uses up a Lucid modifier: two dice, the higher kept, read on the Stability table', async () => {
+			gameState.isLucid = true;
+			mockDieRollSequence([3, 8]);
+			const thrown = await ROLLS.salvation();
+			expect(thrown.automatic).toBe(true);
+			expect(thrown.dice).toEqual([3, 8]);
+			expect(thrown.roll).toBe(8);
+			expect(gameState.isLucid).toBe(false);
+			expect(gameState.tower).toBe(14); // 6-10 costs 1
+			expect(gameState.tokens).toBe(9);
+		});
+
+		it('uses up a Surreal modifier: two dice, the lower kept', async () => {
+			gameState.isSurreal = true;
+			mockDieRollSequence([3, 8]);
+			const thrown = await ROLLS.salvation();
+			expect(thrown.roll).toBe(3);
+			expect(gameState.isSurreal).toBe(false);
+			expect(gameState.tower).toBe(13); // 2-5 costs 2
+			expect(gameState.tokens).toBe(9);
+		});
+
+		it('a natural 20 gives +1 Stability and Lucid; a natural 1 costs 3 and gives Surreal', async () => {
+			mockDieRoll(20);
+			await ROLLS.salvation();
+			expect(gameState.tower).toBe(16);
+			expect(gameState.isLucid).toBe(true);
+			expect(gameState.tokens).toBe(9);
+
+			mockDieRollSequence([1, 1]); // Lucid: both dice are 1
+			await ROLLS.salvation();
+			expect(gameState.tower).toBe(13);
+			expect(gameState.isSurreal).toBe(true);
+			expect(gameState.tokens).toBe(8);
+		});
+
+		it('a roll that takes the last Stability loses the game, and the token stays', async () => {
+			gameState.tower = 2;
+			mockDieRoll(4);
+			const thrown = await ROLLS.salvation();
+			expect(thrown.tokenChange).toBe(0);
+			expect(gameState.tower).toBe(0);
+			expect(gameState.tokens).toBe(10);
+			expect(gameState.gameOver).toBe(true);
+			expect(gameState.win).toBe(false);
+		});
 	});
 
 	it('a roll that earns nothing leaves no stale pending modifier behind', async () => {

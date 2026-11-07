@@ -2,8 +2,9 @@
 	/**
 	 * AcesCell - Aces n/4 and what Salvation needs: "Aces 2/4 · need 14+"
 	 *
-	 * Every Ace lowers the Salvation roll: 17+ with one, 14+ with two, 11+ with three, and
-	 * automatic with all four. The value pops for one beat when an Ace arrives.
+	 * Every Ace lowers the Salvation roll: 17+ with one, 14+ with two, 11+ with three, and no
+	 * target with all four ("auto": a Stability check, then the token comes off). The value pops
+	 * for one beat when an Ace arrives.
 	 *
 	 * @component
 	 */
@@ -19,7 +20,7 @@
 	const needText = $derived(aces.need === 'auto' ? 'auto' : aces.need ? `need ${aces.need}` : null);
 	const spoken = $derived(
 		aces.need === 'auto'
-			? 'Salvation succeeds automatically'
+			? 'Salvation needs only a Stability check'
 			: aces.need
 				? `Salvation needs ${aces.need.replace('+', '')} or more`
 				: 'no Salvation roll yet'

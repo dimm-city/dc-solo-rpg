@@ -1,5 +1,5 @@
 import { test, describe, expect, vi, beforeEach } from 'vitest';
-import { gameState } from './gameStore.svelte.js';
+import { gameState, createPendingUpdates } from './gameStore.svelte.js';
 import {
 	drawCard,
 	confirmCard,
@@ -751,11 +751,12 @@ describe('Card Drawing and Failure Check Flow', () => {
 				gameState.rollWithModifiers = originalRoll;
 			});
 
-			test('should auto-succeed with 4 Aces (threshold 0)', () => {
+			test('with 4 Aces, removes a token on any roll while Stability holds', () => {
 				gameState.acesRevealed = 4;
+				gameState.tower = 20;
 				const originalRoll = gameState.rollWithModifiers;
 
-				// Any roll should succeed with 4 Aces
+				// No target to beat: the roll is a Stability check, and 20 Stability survives any roll
 				const testRolls = [1, 5, 10, 15, 20];
 
 				for (const roll of testRolls) {
@@ -770,8 +771,8 @@ describe('Card Drawing and Failure Check Flow', () => {
 					// Should always remove 1 token
 					expect(gameState.pendingUpdates.tokenChange).toBe(-1);
 
-					// Clear for next test
-					gameState.pendingUpdates.tokenChange = null;
+					// Clear for next test (the Stability part and the modifier too)
+					gameState.pendingUpdates = createPendingUpdates();
 				}
 
 				gameState.rollWithModifiers = originalRoll;

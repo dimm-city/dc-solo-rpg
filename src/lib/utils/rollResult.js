@@ -13,13 +13,19 @@
  *   Tasks       "Rolled 17 · Draw 5 cards"
  *   Salvation   "Rolled 18 · −1 token · 9 left"
  *               "Rolled 2 · needed 14+ · +1 token · 11 left"
- *               "Automatic · −1 token · 9 left"
+ *   Salvation with four Aces (a Stability check, then the token comes off):
+ *               "Rolled 14 · no Stability lost · −1 token · 3 left"
+ *               "Rolled 3 · −2 Stability · 0/20 · nothing left to hold on to" (the fatal roll)
  *
  * A roll made with two dice (Lucid or Surreal) names both and which one counted:
  *   "Rolled 19 (high of 19, 5) · Draw 5 cards"
  */
 
-import { calculateStabilityLoss, calculateSalvationResult } from '../services/d20Mechanics.js';
+import {
+	calculateStabilityLoss,
+	calculateSalvationResult,
+	calculateAutomaticSalvation
+} from '../services/d20Mechanics.js';
 
 export const LUCID_NOTE = 'Lucid: your next roll keeps the higher of two dice';
 export const SURREAL_NOTE = 'Surreal: your next roll keeps the lower of two dice';
@@ -59,6 +65,15 @@ const rolled = (roll, thrown) => {
 	return dice ? `${head} ${dice}` : head;
 };
 
+/** What a Stability roll did, in words: "+1 Stability", "−2 Stability", "no Stability lost" */
+function stabilityChange({ stabilityLoss, stabilityGain, stabilityBefore, max }) {
+	if (stabilityGain > 0) {
+		const gained = Math.min(stabilityBefore + stabilityGain, max) - stabilityBefore;
+		return gained > 0 ? `+${gained} Stability` : 'Stability already full';
+	}
+	return stabilityLoss > 0 ? `${MINUS}${stabilityLoss} Stability` : 'no Stability lost';
+}
+
 /**
  * Result line for a Stability check (also the initial instability roll)
  * @param {number} roll - Kept d20 value
@@ -70,20 +85,22 @@ const rolled = (roll, thrown) => {
 export function formatStabilityResult(roll, towerBefore, towerAfter, max = 20, thrown) {
 	const { loss, gainedLucid, gainedSurreal, optionalGain } = calculateStabilityLoss(roll);
 	const parts = [rolled(roll, thrown)];
+	const change = stabilityChange({
+		stabilityLoss: loss,
+		stabilityGain: optionalGain,
+		stabilityBefore: towerBefore,
+		max
+	});
 
 	if (towerAfter <= 0) {
 		// The fatal roll: no modifier note, the game is over
 		parts.push(`${MINUS}${loss} Stability`, `0/${max}`, FATAL_NOTE);
 	} else if (gainedLucid) {
-		const gained = Math.min(towerBefore + optionalGain, max) - towerBefore;
-		parts.push(gained > 0 ? `+${gained} Stability` : 'Stability already full', LUCID_NOTE);
+		parts.push(change, LUCID_NOTE);
 	} else if (gainedSurreal) {
-		parts.push(`${MINUS}${loss} Stability`, SURREAL_NOTE);
+		parts.push(change, SURREAL_NOTE);
 	} else {
-		parts.push(
-			loss > 0 ? `${MINUS}${loss} Stability` : 'no Stability lost',
-			`${towerAfter}/${max}`
-		);
+		parts.push(change, `${towerAfter}/${max}`);
 	}
 	return parts.join(SEP);
 }
@@ -103,35 +120,62 @@ export function formatTaskResult(roll, cards, thrown) {
 
 /**
  * Result line for a Salvation check
- * @param {number|null} roll - Kept d20 value (null when automatic)
- * @param {number} threshold - From getSalvationThreshold (0 = automatic)
+ * @param {number} roll - Kept d20 value
+ * @param {number} threshold - From getSalvationThreshold (0 = four Aces: a Stability check)
  * @param {number} tokensAfter - Tokens left after the result was applied
  * @param {Throw} [thrown] - The dice, for a two-dice roll
+ * @param {{ stabilityBefore?: number, max?: number }} [stability] - Four Aces only: Stability
+ *   before the roll, and its cap
  */
-export function formatSalvationResult(roll, threshold, tokensAfter, thrown) {
+export function formatSalvationResult(
+	roll,
+	threshold,
+	tokensAfter,
+	thrown,
+	{ stabilityBefore = 20, max = 20 } = {}
+) {
+	if (threshold === 0) {
+		return formatAutomaticSalvation(roll, tokensAfter, thrown, stabilityBefore, max);
+	}
+
 	const { tokenChange, gainedLucid, gainedSurreal } = calculateSalvationResult(roll, threshold);
 	const change = `${tokenChange < 0 ? MINUS : '+'}${count(Math.abs(tokenChange), 'token')}`;
-	const parts = [];
-
-	if (threshold === 0) {
-		parts.push('Automatic', change, `${tokensAfter} left`);
-	} else {
-		parts.push(rolled(roll, thrown));
-		if (tokenChange > 0 && !gainedSurreal) parts.push(`needed ${threshold}+`);
-		parts.push(change, `${tokensAfter} left`);
-	}
+	const parts = [rolled(roll, thrown)];
+	if (tokenChange > 0 && !gainedSurreal) parts.push(`needed ${threshold}+`);
+	parts.push(change, `${tokensAfter} left`);
 	if (gainedLucid) parts.push(LUCID_NOTE);
 	if (gainedSurreal) parts.push(SURREAL_NOTE);
 	return parts.join(SEP);
 }
 
+/** Four Aces: the Stability check first, then the token (unless Stability ran out) */
+function formatAutomaticSalvation(roll, tokensAfter, thrown, stabilityBefore, max) {
+	const outcome = calculateAutomaticSalvation(roll, stabilityBefore, max);
+	const parts = [rolled(roll, thrown)];
+
+	if (outcome.stabilityAfter <= 0) {
+		// The fatal roll: the token stays, the game is over
+		parts.push(`${MINUS}${outcome.stabilityLoss} Stability`, `0/${max}`, FATAL_NOTE);
+		return parts.join(SEP);
+	}
+	parts.push(
+		stabilityChange({ ...outcome, stabilityBefore, max }),
+		`${MINUS}${count(1, 'token')}`,
+		`${tokensAfter} left`
+	);
+	if (outcome.gainedLucid) parts.push(LUCID_NOTE);
+	if (outcome.gainedSurreal) parts.push(SURREAL_NOTE);
+	return parts.join(SEP);
+}
+
 /**
- * Label for the Salvation button: shows the target before the player rolls
- * @param {number} threshold - From getSalvationThreshold (0 = automatic)
+ * Label for the Salvation button: shows the target before the player rolls. With four Aces
+ * there is none: the roll is a Stability check, and the token comes off if Stability holds.
+ * @param {number} threshold - From getSalvationThreshold (0 = four Aces)
  */
 export function formatSalvationButton(threshold) {
 	return threshold === 0
-		? 'Remove a token · automatic'
+		? 'Roll for Stability · Salvation is assured'
 		: `Roll to remove a token · need ${threshold}+`;
 }
 

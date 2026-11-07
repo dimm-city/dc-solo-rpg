@@ -58,12 +58,12 @@ function salvationNote(card, state) {
 	const threshold = getSalvationThreshold(aces);
 	if (card.suit === 'hearts') {
 		return threshold === 0
-			? 'Salvation unlocked · automatic'
+			? 'Salvation unlocked · assured'
 			: `Salvation unlocked · needs ${threshold}+`;
 	}
 	const unlocked = !!before.aceOfHeartsRevealed;
-	if (threshold === 0)
-		return unlocked ? 'Salvation is now automatic' : 'Salvation will be automatic';
+	// Four Aces: no target, only a Stability check stands between the player and the token
+	if (threshold === 0) return unlocked ? 'Salvation is now assured' : 'Salvation will be assured';
 	return unlocked ? `Salvation now needs ${threshold}+` : `Salvation will need ${threshold}+`;
 }
 

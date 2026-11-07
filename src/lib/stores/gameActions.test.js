@@ -612,16 +612,37 @@ describe('gameActions - Core Game Mechanics', () => {
 			gameState.rollWithModifiers = originalRoll;
 		});
 
-		it('should auto-succeed with 4 Aces (threshold 0)', async () => {
+		it('with 4 Aces, the roll is a Stability check and the token comes off', async () => {
 			gameState.acesRevealed = 4;
 			const originalRoll = gameState.rollWithModifiers;
-			// Any roll should succeed
+			// No target to beat: roll 5 costs 2 Stability (2-5), then the token comes off
 			gameState.rollWithModifiers = vi.fn(() => ({ roll: 5, wasLucid: false, wasSurreal: false }));
 
 			successCheck();
 			applyPendingSuccessCheck();
 
-			expect(gameState.tokens).toBe(9); // Success
+			expect(gameState.tower).toBe(18);
+			expect(gameState.tokens).toBe(9);
+			expect(gameState.state).toBe('log');
+
+			gameState.rollWithModifiers = originalRoll;
+		});
+
+		it('with 4 Aces, a roll that takes the last Stability loses the game and keeps the token', async () => {
+			gameState.acesRevealed = 4;
+			gameState.tower = 1;
+			gameState.tokens = 1;
+			const originalRoll = gameState.rollWithModifiers;
+			gameState.rollWithModifiers = vi.fn(() => ({ roll: 9, wasLucid: false, wasSurreal: false }));
+
+			successCheck();
+			applyPendingSuccessCheck();
+
+			expect(gameState.tower).toBe(0);
+			expect(gameState.tokens).toBe(1);
+			expect(gameState.gameOver).toBe(true);
+			expect(gameState.win).toBe(false);
+			expect(gameState.state).toBe('gameOver');
 
 			gameState.rollWithModifiers = originalRoll;
 		});

@@ -179,19 +179,55 @@ describe('useSuccessCheck', () => {
 		expect(gameState.state).toBe('log');
 	});
 
-	it('CK-03: with four Aces there are no dice; one press shows the result', async () => {
+	it('with four Aces the roll is a Stability check, and the token comes off', async () => {
 		gameState.state = 'successCheck';
 		gameState.acesRevealed = 4;
+		gameState.tower = 16;
 		gameState.isLucid = true;
 		const check = useSuccessCheck();
-		expect(check.buttonText).toBe('Remove a token · automatic');
-		expect(check.buttonHint).toBeNull(); // nothing is rolled, so nothing uses the modifier
+		expect(check.buttonText).toBe('Roll for Stability · Salvation is assured');
+		expect(check.buttonHint).toBe('Lucid: 2 dice, keep high'); // the dice are thrown again
+		mockDieRollSequence([9, 14]);
 
 		await check.handleSuccessCheck();
-		expect(rollDice).not.toHaveBeenCalled();
-		expect(check.resultLine).toBe('Automatic · −1 token · 9 left');
+		expect(rollDice).toHaveBeenCalledWith(14, { isLucid: true, isSurreal: false, dice: [9, 14] });
+		expect(check.resultLine).toBe(
+			'Rolled 14 (high of 9, 14) · no Stability lost · −1 token · 9 left'
+		);
+		expect(gameState.isLucid).toBe(false);
 		expect(check.buttonText).toBe('Continue');
-		expect(gameState.isLucid).toBe(true);
+		check.resetState();
+	});
+
+	it('with four Aces a loss of Stability is named', async () => {
+		gameState.state = 'successCheck';
+		gameState.acesRevealed = 4;
+		gameState.tower = 16;
+		const check = useSuccessCheck();
+		mockDieRoll(4);
+
+		await check.handleSuccessCheck();
+		expect(gameState.tower).toBe(14);
+		expect(gameState.tokens).toBe(9);
+		expect(check.resultLine).toBe('Rolled 4 · −2 Stability · −1 token · 9 left');
+		check.resetState();
+	});
+
+	it('with four Aces a roll that takes the last Stability ends the game', async () => {
+		gameState.state = 'successCheck';
+		gameState.acesRevealed = 4;
+		gameState.tower = 1;
+		const check = useSuccessCheck();
+		mockDieRoll(8);
+
+		await check.handleSuccessCheck();
+		expect(gameState.tower).toBe(0);
+		expect(gameState.tokens).toBe(10);
+		expect(check.resultLine).toBe('Rolled 8 · −1 Stability · 0/20 · nothing left to hold on to');
+		expect(check.buttonText).toBe('Face the end');
+
+		await check.handleSuccessCheck();
+		expect(gameState.state).toBe('gameOver');
 	});
 
 	it('resumes a Salvation roll saved in flight on its result, without a second roll', () => {
@@ -276,3 +312,4 @@ describe('useRollForTasks', () => {
 		tasks.resetState();
 	});
 });
+

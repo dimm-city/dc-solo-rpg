@@ -1,11 +1,14 @@
 /**
  * useSuccessCheck - Salvation check screen logic composable
  *
- * Two steps on one button:
  * 1. Roll: dice animate ("Rolling…"; a press skips to the result), the tokens update and a
  *    result line stays on screen. The button becomes "Continue".
- *    With all four Aces, Salvation is automatic: no dice, the result shows at once.
+ *    With all four Aces there is no target, but the roll is a Stability check: the token comes
+ *    off only if Stability holds.
  * 2. Continue: only now does the game move on (the ending or the journal).
+ *
+ * A result that ends the game (the last token, or Stability lost to the four-Aces check) is
+ * named on the button: "Escape" or "Face the end".
  *
  * The roll button shows the target before rolling ("need 14+").
  *
@@ -32,6 +35,21 @@ export function useSuccessCheck() {
 	let successCheckDone = $state(false);
 	let successCheckResultLine = $state('');
 
+	/** Leave the check (once, and only from this screen) */
+	function advance() {
+		if (gameState.state !== 'successCheck' || !successCheckDone) return;
+		advanceAfterSuccessCheck();
+	}
+
+	/** Apply the rolled (or resumed) result and show its line */
+	function settle(roll, threshold, thrown) {
+		const stabilityBefore = gameState.tower;
+		applyPendingSuccessCheck({ advance: false });
+		successCheckResultLine = formatSalvationResult(roll, threshold, gameState.tokens, thrown, {
+			stabilityBefore
+		});
+	}
+
 	/**
 	 * Roll the check, skip a roll in flight, or (once rolled) continue to the next step
 	 */
@@ -49,22 +67,14 @@ export function useSuccessCheck() {
 				// Threshold before rolling: the Aces can't change mid-check
 				const thrown = await successCheck();
 				successCheckDone = true;
-				if (!thrown.automatic) {
-					// Show the dice the game rolled (2d20 if Lucid/Surreal) and wait for them to land
-					await rollDice(thrown.roll, {
-						isLucid: thrown.wasLucid,
-						isSurreal: thrown.wasSurreal,
-						dice: thrown.dice
-					});
-				}
+				// Show the dice the game rolled (2d20 if Lucid/Surreal) and wait for them to land
+				await rollDice(thrown.roll, {
+					isLucid: thrown.wasLucid,
+					isSurreal: thrown.wasSurreal,
+					dice: thrown.dice
+				});
 				// Apply the result after the animation, but stay here until the player continues
-				applyPendingSuccessCheck({ advance: false });
-				successCheckResultLine = formatSalvationResult(
-					thrown.roll,
-					thrown.threshold,
-					gameState.tokens,
-					thrown
-				);
+				settle(thrown.roll, thrown.threshold, thrown);
 			} finally {
 				successCheckRolling = false;
 			}
@@ -73,7 +83,7 @@ export function useSuccessCheck() {
 				setTimeout(() => triggerAutoPlay(), 0);
 			}
 		} else {
-			advanceAfterSuccessCheck();
+			advance();
 		}
 	}
 
@@ -93,25 +103,25 @@ export function useSuccessCheck() {
 	function resumePending() {
 		const { diceRoll, tokenChange } = gameState.pendingUpdates;
 		if (gameState.state !== 'successCheck' || tokenChange === null) return;
-		const threshold = getCurrentSalvationThreshold();
-		applyPendingSuccessCheck({ advance: false });
 		successCheckDone = true;
-		successCheckResultLine = formatSalvationResult(diceRoll, threshold, gameState.tokens);
+		settle(diceRoll, getCurrentSalvationThreshold());
 	}
 
-	// Reactive button text: the target is shown before rolling
+	// Reactive button text: the target is shown before rolling; an ending is named
 	const buttonText = $derived(
 		successCheckRolling
 			? ROLLING_LABEL
 			: successCheckDone
-				? 'Continue'
+				? gameState.gameOver
+					? gameState.win
+						? 'Escape'
+						: 'Face the end'
+					: 'Continue'
 				: formatSalvationButton(getCurrentSalvationThreshold())
 	);
-	// The modifier the roll will use, shown on the roll button only (an automatic Salvation rolls nothing)
+	// The modifier the roll will use, shown on the roll button only
 	const buttonHint = $derived(
-		successCheckDone || successCheckRolling || getCurrentSalvationThreshold() === 0
-			? null
-			: formatModifierHint(gameState)
+		successCheckDone || successCheckRolling ? null : formatModifierHint(gameState)
 	);
 
 	return {

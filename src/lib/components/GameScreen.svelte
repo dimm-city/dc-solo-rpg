@@ -97,7 +97,7 @@
 	function salvationDescription() {
 		const need = getCurrentSalvationThreshold();
 		return need === 0
-			? 'All four Aces are out. Salvation is automatic: one token comes off.'
+			? 'All four Aces are out. No target to beat now: survive one Stability check and a token comes off.'
 			: `Roll to remove a token. You need ${need}+.`;
 	}
 

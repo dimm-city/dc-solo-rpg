@@ -142,16 +142,22 @@ describe('Game Integration Tests - Based on Documentation', () => {
 			// Rolls 11-20 succeed (10 out of 20 = 50%)
 		});
 
-		it('should auto-succeed with 4 Aces (100% success)', () => {
-			// From CLAUDE.md: "4 Aces: Automatic success (100% success)"
+		it('should remove a token after a Stability check with 4 Aces', () => {
+			// From CLAUDE.md: "4 Aces: Automatic success, after one Stability check"
 			gameState.state = 'successCheck';
 			gameState.aceOfHeartsRevealed = true;
 			gameState.acesRevealed = 4;
 			gameState.tokens = 10;
+			gameState.tower = 20;
 
-			const { threshold, tokenChange } = getSalvationCheckRoll();
-			expect(threshold).toBe(0); // Auto-success
-			expect(tokenChange).toBe(-1); // Always remove 1 token
+			mockDieRoll(8);
+			const { threshold, tokenChange, automatic, roll, stabilityLoss } = getSalvationCheckRoll();
+			expect(threshold).toBe(0); // No target to beat
+			expect(automatic).toBe(true);
+			expect(roll).toBe(8); // ... but the dice are thrown: a Stability check
+			expect(stabilityLoss).toBe(1);
+			expect(tokenChange).toBe(-1);
+			resetRNG();
 		});
 
 		it('should apply graduated token changes correctly', () => {
@@ -482,10 +488,10 @@ describe('Game Integration Tests - Based on Documentation', () => {
 			({ threshold } = getSalvationCheckRoll());
 			expect(threshold).toBe(11);
 
-			// 4 Aces: auto-success
+			// 4 Aces: no target (a Stability check instead)
 			gameState.acesRevealed = 4;
 			({ threshold } = getSalvationCheckRoll());
-			expect(threshold).toBe(0); // Auto-succeed
+			expect(threshold).toBe(0);
 		});
 
 		it('should support skip-damage modifier on Aces', () => {
@@ -713,9 +719,11 @@ describe('Game Integration Tests - Based on Documentation', () => {
 				labels: { successCheckWin: 'Win!' }
 			};
 
-			// Auto-succeed with 4 Aces
-			const { tokenChange } = getSalvationCheckRoll();
-			gameState.pendingUpdates.tokenChange = tokenChange;
+			// 4 Aces: the Stability check holds (13 costs nothing), so the last token comes off
+			gameState.tower = 10;
+			mockDieRoll(13);
+			getSalvationCheckRoll();
+			resetRNG();
 
 			applyPendingSuccessCheck();
 

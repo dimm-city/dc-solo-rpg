@@ -29,7 +29,7 @@ export function describeTwoDiceRoll(last, shown) {
 	return `${last.isLucid ? 'high' : 'low'} of ${last.rolls[0]}, ${last.rolls[1]}`;
 }
 
-/** Salvation needs this roll or better for 1-3 Aces; 4 Aces succeed on their own */
+/** Salvation needs this roll or better for 1-3 Aces; 4 Aces have no target (a Stability check) */
 const SALVATION_NEED = { 1: '17+', 2: '14+', 3: '11+', 4: 'auto' };
 
 /**
