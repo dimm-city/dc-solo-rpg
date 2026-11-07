@@ -82,6 +82,16 @@ describe('save and resume', () => {
 		expect(gameState.lastCard.card).toBe('7');
 	});
 
+	it('NV-08: keeps a game left before the opening roll, and resumes on that roll', async () => {
+		Object.assign(gameState, { state: 'initialDamageRoll', round: 1, tower: 20 });
+		expect(await saveGame(gameState)).toBe(true);
+
+		Object.assign(gameState, createRunState());
+		restoreGameState(gameState, await loadGame(SLUG));
+		expect(gameState.state).toBe('initialDamageRoll');
+		expect(gameState.tower).toBe(20);
+	});
+
 	it('still loads a 2.0 save, deriving the Aces from the log', async () => {
 		store('saves').set(`${SLUG}:active`, {
 			version: '2.0',

@@ -218,6 +218,8 @@ export async function saveGame(gameState) {
 		// Only save if game is in progress OR completed (include gameOver for completion tracking)
 		const validStatesForSaving = [
 			'showIntro',
+			// NV-08: leaving before the opening roll keeps the game, as the Exit dialog promises
+			'initialDamageRoll',
 			'rollForTasks',
 			'drawCard',
 			'failureCheck',
