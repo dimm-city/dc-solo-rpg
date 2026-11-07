@@ -216,6 +216,26 @@ describe('GameScreen result hold', { timeout: 15000 }, () => {
 		expect(gameState.state).toBe('log');
 	});
 
+	it('a press as the journal opens (meant for the step button) does not save an empty entry', async () => {
+		setUp('failureCheck');
+		const { getByTestId } = render(GameScreen);
+		await settle(GUARD_MS);
+		mockDieRoll(13);
+		await fireEvent.click(getByTestId('failure-check-button'));
+		await settle(HOLD_MS + 50);
+		expect(gameState.state).toBe('log');
+
+		await fireEvent.click(getByTestId('journal-save-button')); // the late press
+		await settle(1000);
+		expect(gameState.state).toBe('log');
+		expect(gameState.journalEntries).toHaveLength(0);
+
+		await fireEvent.click(getByTestId('journal-save-button'));
+		await settle(1000);
+		expect(gameState.journalEntries).toHaveLength(1);
+		expect(gameState.state).toBe('rollForTasks');
+	});
+
 	it('a result that ends the game waits for the player, and auto-play still takes it on', async () => {
 		setUp('failureCheck');
 		gameState.tower = 2;
