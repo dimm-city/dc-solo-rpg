@@ -3,7 +3,8 @@
  *
  * 1. Roll: dice animate ("Rolling…"; a press skips to the result), then a result line
  *    ("Rolled 17 · Draw 5 cards") stays on screen.
- * 2. The cards are dealt on their own DEAL_DELAY_MS later. A press deals at once.
+ * 2. The cards are dealt on their own DEAL_DELAY_MS later (the result hold, shown as a line
+ *    running out on the button). A press deals at once.
  *
  * @param {Object} [options]
  * @param {number} [options.dealDelay] - ms from the result to the deal
@@ -18,20 +19,20 @@ import {
 import { rollDice, skipRoll } from '../../stores/diceStore.svelte.js';
 import { gameState } from '../../stores/gameStore.svelte.js';
 import { formatTaskResult, formatModifierHint, ROLLING_LABEL } from '../../utils/rollResult.js';
+import { createResultHold, RESULT_HOLD_MS } from './resultHold.svelte.js';
 
-/** Time to read the result line before the cards are dealt */
-export const DEAL_DELAY_MS = 1200;
+/** Time to read the result line before the cards are dealt (the shared result hold) */
+export const DEAL_DELAY_MS = RESULT_HOLD_MS;
 
 export function useRollForTasks({ dealDelay = DEAL_DELAY_MS } = {}) {
 	let rollTasksRolled = $state(false);
 	let rollTasksRolling = $state(false);
 	let rollTasksConfirming = $state(false);
 	let rollTasksResultLine = $state('');
-	let dealTimer = null;
+	const hold = createResultHold();
 
 	function cancelDeal() {
-		if (dealTimer) clearTimeout(dealTimer);
-		dealTimer = null;
+		hold.cancel();
 	}
 
 	/** Deal the cards (once, and only from this screen) */
@@ -78,7 +79,7 @@ export function useRollForTasks({ dealDelay = DEAL_DELAY_MS } = {}) {
 			rollTasksRolling = false;
 		}
 		// Deal on its own once the player has had a moment with the result
-		dealTimer = setTimeout(deal, dealDelay);
+		hold.start(deal, dealDelay);
 		// Trigger auto-play after roll completes (event-driven)
 		if (triggerAutoPlay) {
 			setTimeout(() => triggerAutoPlay(), 0);
@@ -136,6 +137,8 @@ export function useRollForTasks({ dealDelay = DEAL_DELAY_MS } = {}) {
 		get buttonDisabled() {
 			return buttonDisabled;
 		},
+		/** The wait before the deal (see createResultHold) */
+		hold,
 
 		// Actions
 		handleRollForTasks,

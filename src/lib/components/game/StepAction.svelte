@@ -9,6 +9,9 @@
 	 * Only roll buttons pass one, and it is part of the label, never a separate chip.
 	 * `changed` briefly highlights a button that has just changed meaning (GameScreen ignores
 	 * presses for that moment, so a press meant for the old button never lands on the new one).
+	 * `advancing` means the game moves on by itself in `advanceMs` (a result hold): a thin line
+	 * along the bottom of the button runs out over that time, and stops while `advancePaused`.
+	 * `advanceKey` restarts it for each new hold.
 	 *
 	 * @component
 	 */
@@ -25,6 +28,10 @@
 		disabled = false,
 		busy = false,
 		changed = false,
+		advancing = false,
+		advanceMs = 0,
+		advancePaused = false,
+		advanceKey = 0,
 		testid,
 		id = undefined
 	} = $props();
@@ -63,6 +70,17 @@
 					</span>
 				{/key}
 			</span>
+			{#if advancing}
+				{#key advanceKey}
+					<span
+						class="advance-line"
+						class:paused={advancePaused}
+						style:animation-duration="{advanceMs}ms"
+						data-testid="step-advance"
+						aria-hidden="true"
+					></span>
+				{/key}
+			{/if}
 		</AugmentedButton>
 	</ButtonBar>
 </div>
@@ -108,5 +126,43 @@
 
 	.step-action :global(.step-button.busy .aug-button) {
 		cursor: progress;
+	}
+
+	/* The game moves on by itself: a thin line inside the frame runs out, right to left, like the
+	   card's auto-play hold line. Linear, because it is a clock. */
+	.advance-line {
+		position: absolute;
+		left: 18px;
+		right: 18px;
+		bottom: 5px;
+		height: 2px;
+		border-radius: 1px;
+		background: currentColor;
+		opacity: 0.7;
+		transform-origin: left center;
+		pointer-events: none;
+		animation-name: advance-run-out;
+		animation-timing-function: linear;
+		animation-fill-mode: both;
+	}
+
+	.advance-line.paused {
+		animation-play-state: paused;
+	}
+
+	@keyframes advance-run-out {
+		from {
+			transform: scaleX(1);
+		}
+		to {
+			transform: scaleX(0);
+		}
+	}
+
+	/* Reduced motion: the line steps down in quarters instead of gliding */
+	@media (prefers-reduced-motion: reduce) {
+		.advance-line {
+			animation-timing-function: steps(4, end);
+		}
 	}
 </style>

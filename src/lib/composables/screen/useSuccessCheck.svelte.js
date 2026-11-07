@@ -5,10 +5,10 @@
  *    result line stays on screen. The button becomes "Continue".
  *    With all four Aces there is no target, but the roll is a Stability check: the token comes
  *    off only if Stability holds.
- * 2. Continue: only now does the game move on (the ending or the journal).
+ * 2. The game moves on to the journal by itself after the result hold. A press moves on at once.
  *
- * A result that ends the game (the last token, or Stability lost to the four-Aces check) is
- * named on the button: "Escape" or "Face the end".
+ * A result that ends the game (the last token, or Stability lost to the four-Aces check)
+ * does not move on by itself: the button reads "Escape" or "Face the end" and waits.
  *
  * The roll button shows the target before rolling ("need 14+").
  *
@@ -29,29 +29,33 @@ import {
 	formatModifierHint,
 	ROLLING_LABEL
 } from '../../utils/rollResult.js';
+import { createResultHold } from './resultHold.svelte.js';
 
 export function useSuccessCheck() {
 	let successCheckRolling = $state(false);
 	let successCheckDone = $state(false);
 	let successCheckResultLine = $state('');
+	const hold = createResultHold();
 
 	/** Leave the check (once, and only from this screen) */
 	function advance() {
+		hold.cancel();
 		if (gameState.state !== 'successCheck' || !successCheckDone) return;
 		advanceAfterSuccessCheck();
 	}
 
-	/** Apply the rolled (or resumed) result and show its line */
+	/** Apply the rolled (or resumed) result, show its line and start the hold */
 	function settle(roll, threshold, thrown) {
 		const stabilityBefore = gameState.tower;
 		applyPendingSuccessCheck({ advance: false });
 		successCheckResultLine = formatSalvationResult(roll, threshold, gameState.tokens, thrown, {
 			stabilityBefore
 		});
+		if (!gameState.gameOver) hold.start(advance);
 	}
 
 	/**
-	 * Roll the check, skip a roll in flight, or (once rolled) continue to the next step
+	 * Roll the check, skip a roll in flight, or (once rolled) move on now
 	 */
 	async function handleSuccessCheck(triggerAutoPlay) {
 		const currentScreen = gameState.state;
@@ -73,7 +77,7 @@ export function useSuccessCheck() {
 					isSurreal: thrown.wasSurreal,
 					dice: thrown.dice
 				});
-				// Apply the result after the animation, but stay here until the player continues
+				// Apply the result after the animation; the game moves on after the hold
 				settle(thrown.roll, thrown.threshold, thrown);
 			} finally {
 				successCheckRolling = false;
@@ -91,6 +95,7 @@ export function useSuccessCheck() {
 	 * Reset state when entering screen
 	 */
 	function resetState() {
+		hold.cancel();
 		successCheckDone = false;
 		successCheckResultLine = '';
 		successCheckRolling = false;
@@ -142,6 +147,8 @@ export function useSuccessCheck() {
 		get buttonHint() {
 			return buttonHint;
 		},
+		/** The wait before the game moves on (see createResultHold) */
+		hold,
 
 		// Actions
 		handleSuccessCheck,

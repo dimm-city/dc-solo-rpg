@@ -1,5 +1,6 @@
 /**
- * The check composables roll once, publish a result line and wait; a second press continues.
+ * The check composables roll once and publish a result line; the game then moves on by itself
+ * after the result hold, or at once on a second press. Results that end the game wait.
  * While the dice roll the button reads "Rolling…" and a press skips to the result.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
@@ -10,6 +11,7 @@ import { useFailureCheck } from './useFailureCheck.svelte.js';
 import { useSuccessCheck } from './useSuccessCheck.svelte.js';
 import { useRollForTasks, DEAL_DELAY_MS } from './useRollForTasks.svelte.js';
 import { useInitialDamage } from './useInitialDamage.svelte.js';
+import { createResultHold, RESULT_HOLD_MS } from './resultHold.svelte.js';
 
 vi.mock('../../stores/diceStore.svelte.js', () => ({
 	rollDice: vi.fn(async () => {}),
@@ -213,7 +215,8 @@ describe('useSuccessCheck', () => {
 		check.resetState();
 	});
 
-	it('with four Aces a roll that takes the last Stability ends the game', async () => {
+	it('with four Aces a roll that takes the last Stability ends the game and waits', async () => {
+		vi.useFakeTimers();
 		gameState.state = 'successCheck';
 		gameState.acesRevealed = 4;
 		gameState.tower = 1;
@@ -225,6 +228,9 @@ describe('useSuccessCheck', () => {
 		expect(gameState.tokens).toBe(10);
 		expect(check.resultLine).toBe('Rolled 8 · −1 Stability · 0/20 · nothing left to hold on to');
 		expect(check.buttonText).toBe('Face the end');
+		expect(check.hold.active).toBe(false);
+		await vi.advanceTimersByTimeAsync(RESULT_HOLD_MS * 2);
+		expect(gameState.state).toBe('successCheck');
 
 		await check.handleSuccessCheck();
 		expect(gameState.state).toBe('gameOver');
@@ -313,3 +319,140 @@ describe('useRollForTasks', () => {
 	});
 });
 
+describe('the result hold: a result moves on by itself after a beat', () => {
+	it('is the shared 2s beat, the same for the deal', () => {
+		expect(RESULT_HOLD_MS).toBe(2000);
+		expect(DEAL_DELAY_MS).toBe(RESULT_HOLD_MS);
+	});
+
+	it('a Stability result moves on by itself, and only once', async () => {
+		vi.useFakeTimers();
+		gameState.state = 'failureCheck';
+		const completed = vi.fn();
+		const check = useFailureCheck(completed);
+		mockDieRoll(12);
+
+		await check.handleFailureCheck();
+		expect(check.hold.active).toBe(true);
+		expect(check.hold.duration).toBe(RESULT_HOLD_MS);
+		await vi.advanceTimersByTimeAsync(RESULT_HOLD_MS - 1);
+		expect(gameState.state).toBe('failureCheck');
+		await vi.advanceTimersByTimeAsync(1);
+		expect(gameState.state).toBe('drawCard');
+		expect(completed).toHaveBeenCalledTimes(1);
+		expect(check.hold.active).toBe(false);
+	});
+
+	it('a press moves on at once and the hold never fires after it', async () => {
+		vi.useFakeTimers();
+		gameState.state = 'failureCheck';
+		const completed = vi.fn();
+		const check = useFailureCheck(completed);
+		mockDieRoll(12);
+
+		await check.handleFailureCheck();
+		await check.handleFailureCheck();
+		expect(gameState.state).toBe('drawCard');
+		gameState.state = 'failureCheck'; // the next odd card, before the screen resets
+		await vi.advanceTimersByTimeAsync(RESULT_HOLD_MS * 2);
+		expect(gameState.state).toBe('failureCheck');
+		expect(completed).toHaveBeenCalledTimes(1);
+	});
+
+	it('the fatal Stability roll does not move on by itself', async () => {
+		vi.useFakeTimers();
+		gameState.state = 'failureCheck';
+		gameState.tower = 2;
+		const check = useFailureCheck();
+		mockDieRoll(3);
+
+		await check.handleFailureCheck();
+		expect(check.hold.active).toBe(false);
+		await vi.advanceTimersByTimeAsync(RESULT_HOLD_MS * 2);
+		expect(gameState.state).toBe('failureCheck');
+		expect(check.buttonText).toBe('Face the end');
+	});
+
+	it('a Salvation result moves on to the journal by itself', async () => {
+		vi.useFakeTimers();
+		gameState.state = 'successCheck';
+		const check = useSuccessCheck();
+		mockDieRoll(16);
+
+		await check.handleSuccessCheck();
+		expect(check.hold.active).toBe(true);
+		await vi.advanceTimersByTimeAsync(RESULT_HOLD_MS);
+		expect(gameState.state).toBe('log');
+	});
+
+	it('a Salvation that clears the last token waits, on "Escape"', async () => {
+		vi.useFakeTimers();
+		gameState.state = 'successCheck';
+		gameState.tokens = 1;
+		const check = useSuccessCheck();
+		mockDieRoll(16);
+
+		await check.handleSuccessCheck();
+		expect(gameState.win).toBe(true);
+		expect(check.hold.active).toBe(false);
+		expect(check.buttonText).toBe('Escape');
+		await vi.advanceTimersByTimeAsync(RESULT_HOLD_MS * 2);
+		expect(gameState.state).toBe('successCheck');
+		await check.handleSuccessCheck();
+		expect(gameState.state).toBe('gameOver');
+	});
+
+	it('the opening roll starts round 1 by itself', async () => {
+		vi.useFakeTimers();
+		gameState.state = 'initialDamageRoll';
+		gameState.round = 0;
+		const roll = useInitialDamage();
+		mockDieRoll(15);
+
+		await roll.handleInitialDamageRoll();
+		expect(roll.hold.active).toBe(true);
+		await vi.advanceTimersByTimeAsync(RESULT_HOLD_MS);
+		expect(gameState.state).toBe('rollForTasks');
+	});
+
+	it('leaving the screen cancels the hold', async () => {
+		vi.useFakeTimers();
+		gameState.state = 'failureCheck';
+		const check = useFailureCheck();
+		mockDieRoll(12);
+
+		await check.handleFailureCheck();
+		check.resetState();
+		expect(check.hold.active).toBe(false);
+		await vi.advanceTimersByTimeAsync(RESULT_HOLD_MS * 2);
+		expect(gameState.state).toBe('failureCheck');
+	});
+
+	it('waits while paused (a dialog is open), including a hold that starts paused', async () => {
+		vi.useFakeTimers();
+		const done = vi.fn();
+		const hold = createResultHold();
+
+		hold.start(done);
+		await vi.advanceTimersByTimeAsync(500);
+		hold.pause();
+		expect(hold.paused).toBe(true);
+		await vi.advanceTimersByTimeAsync(RESULT_HOLD_MS * 2);
+		expect(done).not.toHaveBeenCalled();
+		hold.resume();
+		await vi.advanceTimersByTimeAsync(RESULT_HOLD_MS - 500 - 1);
+		expect(done).not.toHaveBeenCalled();
+		await vi.advanceTimersByTimeAsync(1);
+		expect(done).toHaveBeenCalledTimes(1);
+
+		const later = vi.fn();
+		hold.pause();
+		hold.start(later); // the dice landed while the dialog was open
+		expect(hold.paused).toBe(true);
+		await vi.advanceTimersByTimeAsync(RESULT_HOLD_MS * 2);
+		expect(later).not.toHaveBeenCalled();
+		hold.resume();
+		await vi.advanceTimersByTimeAsync(RESULT_HOLD_MS);
+		expect(later).toHaveBeenCalledTimes(1);
+	});
+});

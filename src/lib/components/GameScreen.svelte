@@ -197,10 +197,29 @@
 			hint: s.composable.buttonHint,
 			busy: s.composable.rolling,
 			disabled: s.disabled ?? false,
+			hold: s.composable.hold,
 			testid: s.testid,
 			run: s.run
 		};
 	});
+
+	// A result moves on by itself after a beat (the result hold). While a dialog covers the
+	// table the hold waits, so nothing moves on unseen.
+	const stepComposables = [initialDamage, rollForTasks, failureCheck, successCheck];
+	const dialogOpen = $derived(showExitModal || showSettingsModal || showHelpModal);
+	$effect(() => {
+		const open = dialogOpen;
+		untrack(() => {
+			for (const composable of stepComposables) {
+				if (open) composable.hold.pause();
+				else composable.hold.resume();
+			}
+		});
+	});
+
+	function cancelHolds() {
+		for (const composable of stepComposables) composable.hold.cancel();
+	}
 
 	// LS-06: when the button changes meaning (Roll → Rolling… → Continue), hold presses off
 	// briefly and highlight it, so a press meant for the old button never lands on the new one
@@ -349,7 +368,7 @@
 		showExitModal = false;
 		leaving = true;
 		cancelAutoPlay();
-		rollForTasks.cancelDeal();
+		cancelHolds();
 
 		const current = stepFor(currentScreen);
 		if (current?.composable.rolling) {
@@ -475,7 +494,7 @@
 			window.removeEventListener('keydown', handleKeyPress);
 			leaving = true;
 			cancelAutoPlay();
-			rollForTasks.cancelDeal();
+			cancelHolds();
 			announcer.clear();
 			clearTimeout(drawTimer);
 			clearTimeout(stepChangedTimer);
@@ -642,11 +661,12 @@
 						initialDamage.handleInitialDamageRoll(triggerAutoPlayForCurrentScreen)
 					);
 				}
-				// Auto-continue after result if enabled
+				// Auto-continue after a result that does not move on by itself
 				else if (
 					gameplaySettings.autoContinueAfterReading &&
 					initialDamage.result !== undefined &&
-					!initialDamage.rolling
+					!initialDamage.rolling &&
+					!initialDamage.hold.active
 				) {
 					autoPlayCanceller = autoAdvance({
 						text: null,
@@ -691,11 +711,12 @@
 						failureCheck.handleFailureCheck(triggerAutoPlayForCurrentScreen)
 					);
 				}
-				// Auto-continue after result if enabled
+				// Auto-continue after a result that does not move on by itself (the fatal roll)
 				else if (
 					gameplaySettings.autoContinueAfterReading &&
 					failureCheck.result !== undefined &&
-					!failureCheck.rolling
+					!failureCheck.rolling &&
+					!failureCheck.hold.active
 				) {
 					autoPlayCanceller = autoAdvance({
 						text: null,
@@ -721,11 +742,12 @@
 						successCheck.handleSuccessCheck(triggerAutoPlayForCurrentScreen)
 					);
 				}
-				// Auto-continue after result if enabled
+				// Auto-continue after a result that does not move on by itself (an ending)
 				else if (
 					gameplaySettings.autoContinueAfterReading &&
 					successCheck.result !== undefined &&
-					!successCheck.rolling
+					!successCheck.rolling &&
+					!successCheck.hold.active
 				) {
 					autoPlayCanceller = autoAdvance({
 						text: null,
@@ -823,6 +845,10 @@
 							busy={step.busy}
 							disabled={step.disabled}
 							changed={stepChanged}
+							advancing={step.hold.active}
+							advanceMs={step.hold.duration}
+							advancePaused={step.hold.paused}
+							advanceKey={step.hold.id}
 							testid={step.testid}
 							onclick={runStep}
 						/>

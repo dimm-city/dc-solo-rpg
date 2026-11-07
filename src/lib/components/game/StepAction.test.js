@@ -53,4 +53,27 @@ describe('StepAction', () => {
 		});
 		expect(container.querySelector('.step-action.changed')).not.toBeNull();
 	});
+
+	it('draws a line inside the button that runs out while the game is about to move on', () => {
+		const { getByTestId, container } = render(StepAction, {
+			props: { text: 'Continue', advancing: true, advanceMs: 2000, testid: 'c-button' }
+		});
+		const line = getByTestId('step-advance');
+		expect(getByTestId('c-button').contains(line)).toBe(true);
+		expect(line.style.animationDuration).toBe('2000ms');
+		expect(line.getAttribute('aria-hidden')).toBe('true');
+		expect(line.classList.contains('paused')).toBe(false);
+		// Decorative only: the label and accessible name are unchanged
+		expect(getByTestId('c-button').getAttribute('aria-label')).toBe('Continue');
+		expect(container.textContent.trim()).toBe('Continue');
+	});
+
+	it('stops the line while paused, and has none when nothing is pending', async () => {
+		const { getByTestId, queryByTestId, rerender } = render(StepAction, {
+			props: { text: 'Continue', advancing: true, advancePaused: true, testid: 'c-button' }
+		});
+		expect(getByTestId('step-advance').classList.contains('paused')).toBe(true);
+		await rerender({ text: 'Continue', advancing: false, testid: 'c-button' });
+		expect(queryByTestId('step-advance')).toBeNull();
+	});
 });

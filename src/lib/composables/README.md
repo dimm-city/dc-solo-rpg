@@ -18,15 +18,18 @@ Screen-specific composables that manage state and logic for each game screen.
 
 - `useRollForTasks()` - Roll for Tasks ("Round N"): the roll, then the cards are dealt on their own
 - `useFailureCheck()` - Stability check screen logic
-- `useSuccessCheck()` - Salvation screen logic (automatic, with no dice, at four Aces)
+- `useSuccessCheck()` - Salvation screen logic (at four Aces: no target, a Stability check)
 - `useInitialDamage()` - The opening instability roll
+- `createResultHold()` (`resultHold.svelte.js`) - the beat a result stays up before the game moves
+  on by itself (`ANIMATION_DURATION.RESULT_HOLD`, 2s); pausable, drawn as a line on the button
 
 **Features:**
 
 - Every roll goes through `gameState.rollWithModifiers()`, so Lucid/Surreal applies to every roll
 - Integration with dice rolling and 3D animations; "Rolling…" while the dice roll, and a press
   then skips to the result
-- A result line that stays until the player continues
+- A result line that holds for 2s, then the game moves on by itself (a press moves on at once).
+  Results that end the game (the fatal roll, the last token) wait for the player.
 - Auto-play trigger support
 - Button state (`buttonText`, plus `buttonHint`: the modifier, on roll buttons only)
 - State reset on screen transitions
@@ -41,7 +44,8 @@ import { useRollForTasks } from '$lib/composables/screen/useRollForTasks.svelte.
 
 const rollTasks = useRollForTasks();
 
-// Roll; a second press during the roll skips it; once rolled, a press deals at once
+// Roll; a second press during the roll skips it; once rolled, the deal waits the result hold
+// (rollTasks.hold), and a press deals at once
 async function onButtonClick() {
 	await rollTasks.handleRollForTasks(triggerAutoPlay);
 }
@@ -59,6 +63,7 @@ Each screen composable exports:
 - Handler function (e.g., `handleRollForTasks()`)
 - Reset function (`resetState()`)
 - Derived values for the button (`buttonText`, `buttonHint`)
+- `hold`: the result hold (`active`, `paused`, `duration`, `id`; GameScreen pauses it under dialogs)
 
 ---
 

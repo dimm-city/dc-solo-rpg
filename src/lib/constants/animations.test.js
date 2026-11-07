@@ -20,6 +20,10 @@ describe('animation tokens', () => {
 		expect([ANIMATION_DURATION.AMBIENT, ANIMATION_DURATION.AMBIENT_SLOW]).toEqual([4000, 8000]);
 	});
 
+	it('hold a roll result for 2s before the game moves on by itself', () => {
+		expect(ANIMATION_DURATION.RESULT_HOLD).toBe(2000);
+	});
+
 	it('keep the older names, mapped onto the standard', () => {
 		expect(ANIMATION_DURATION.FAST).toBe(ANIMATION_DURATION.STATE);
 		expect(ANIMATION_DURATION.NORMAL).toBe(ANIMATION_DURATION.ENTER);

@@ -1,7 +1,8 @@
 /**
  * GameScreen's round-step wiring: one step button for every step (AN-02), presses held off
  * right after the button changes meaning (LS-06), a press during a roll skips it (LS-05),
- * and auto-play armed the moment it is switched on (LS-07).
+ * auto-play armed the moment it is switched on (LS-07), and results that move on by
+ * themselves after the result hold (announced first, paused under a dialog).
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
@@ -55,6 +56,7 @@ vi.mock('../stores/diceStore.svelte.js', () => ({
 }));
 
 const GUARD_MS = 400;
+const HOLD_MS = 2000; // ANIMATION_DURATION.RESULT_HOLD
 
 function setUp(state) {
 	Object.assign(gameState, createRunState(), {
@@ -167,5 +169,63 @@ describe('GameScreen step button', () => {
 		updateGameplaySettings({ autoRollDice: true });
 		await settle(600);
 		expect(rollDice).toHaveBeenCalledTimes(1);
+	});
+});
+
+describe('GameScreen result hold', () => {
+	it('announces the result, shows the run-out line, then moves on by itself', async () => {
+		setUp('failureCheck');
+		const { getByTestId, queryByTestId } = render(GameScreen);
+		await settle(GUARD_MS);
+		mockDieRoll(13);
+		await fireEvent.click(getByTestId('failure-check-button'));
+		await settle(50);
+
+		// The live region has the result while the screen still shows it
+		expect(getByTestId('live-region').textContent.trim()).toBe(
+			'Rolled 13 · no Stability lost · 20/20'
+		);
+		expect(gameState.state).toBe('failureCheck');
+		const line = getByTestId('step-advance');
+		expect(line.style.animationDuration).toBe(`${HOLD_MS}ms`);
+
+		await settle(HOLD_MS);
+		expect(gameState.state).toBe('log');
+		expect(queryByTestId('step-advance')).toBeNull();
+	});
+
+	it('waits while the Exit dialog is open, and goes on after Keep playing', async () => {
+		setUp('failureCheck');
+		const { getByTestId, getByRole } = render(GameScreen);
+		await settle(GUARD_MS);
+		mockDieRoll(13);
+		await fireEvent.click(getByTestId('failure-check-button'));
+		await settle(50);
+
+		await fireEvent.click(getByRole('button', { name: 'Exit game' }));
+		await settle(HOLD_MS + 200);
+		expect(gameState.state).toBe('failureCheck');
+		expect(getByTestId('step-advance').classList.contains('paused')).toBe(true);
+
+		await fireEvent.click(getByRole('button', { name: 'Keep playing' }));
+		await settle(HOLD_MS);
+		expect(gameState.state).toBe('log');
+	});
+
+	it('a result that ends the game waits for the player, and auto-play still takes it on', async () => {
+		setUp('failureCheck');
+		gameState.tower = 2;
+		const { getByTestId, queryByTestId } = render(GameScreen);
+		await settle(GUARD_MS);
+		mockDieRoll(3);
+		await fireEvent.click(getByTestId('failure-check-button'));
+		await settle(HOLD_MS + 200);
+		expect(gameState.state).toBe('failureCheck');
+		expect(getByTestId('failure-check-button').getAttribute('aria-label')).toBe('Face the end');
+		expect(queryByTestId('step-advance')).toBeNull();
+
+		updateGameplaySettings({ autoContinueAfterReading: true, autoAdvanceDelay: 300 });
+		await settle(600);
+		expect(gameState.state).toBe('gameOver');
 	});
 });
