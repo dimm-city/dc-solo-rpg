@@ -10,6 +10,7 @@
 	 */
 	import { onMount } from 'svelte';
 	import { logger } from '../../utils/logger.js';
+	import { micErrorMessage } from './micError.js';
 
 	let {
 		/** The recording as a data URL, saved with the entry */
@@ -64,7 +65,7 @@
 		} catch (err) {
 			logger.error('[VoiceNote] Could not start recording:', err);
 			releaseStream();
-			error = 'The microphone is blocked. Allow it in your browser to record.';
+			error = micErrorMessage(err);
 		}
 	}
 
