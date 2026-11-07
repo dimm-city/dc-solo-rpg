@@ -12,7 +12,6 @@ describe('transitions', () => {
 				'loadGame',
 				'showIntro',
 				'initialDamageRoll',
-				'startRound',
 				'rollForTasks',
 				'drawCard',
 				'failureCheck',
@@ -43,15 +42,16 @@ describe('transitions', () => {
 		});
 
 		it('should define valid game flow through main gameplay', () => {
-			expect(transitionGraph.initialDamageRoll).toContain('startRound');
+			expect(transitionGraph.initialDamageRoll).toContain('rollForTasks');
 			expect(transitionGraph.rollForTasks).toContain('drawCard');
 			expect(transitionGraph.drawCard).toContain('failureCheck');
 			expect(transitionGraph.drawCard).toContain('endTurn');
 		});
 
 		it('should define valid round cycle', () => {
-			expect(transitionGraph.log).toContain('startRound');
-			expect(transitionGraph.startRound).toContain('rollForTasks');
+			// Each round opens on Roll for Tasks: there is no separate Begin Round step
+			expect(transitionGraph.log).toEqual(['rollForTasks']);
+			expect(transitionGraph).not.toHaveProperty('startRound');
 		});
 
 		it('should allow drawCard to repeat', () => {
@@ -119,7 +119,7 @@ describe('transitions', () => {
 			});
 
 			it('should validate initialDamageRoll -> rollForTasks', () => {
-				expect(isValidTransition('initialDamageRoll', 'startRound')).toBe(true);
+				expect(isValidTransition('initialDamageRoll', 'rollForTasks')).toBe(true);
 			});
 
 			it('should validate rollForTasks -> drawCard', () => {
@@ -142,8 +142,8 @@ describe('transitions', () => {
 				expect(isValidTransition('endTurn', 'log')).toBe(true);
 			});
 
-			it('should validate log -> startRound', () => {
-				expect(isValidTransition('log', 'startRound')).toBe(true);
+			it('should validate log -> rollForTasks', () => {
+				expect(isValidTransition('log', 'rollForTasks')).toBe(true);
 			});
 
 			it('should validate drawCard -> gameOver', () => {
@@ -224,13 +224,11 @@ describe('transitions', () => {
 				const flow = [
 					['loadGame', 'showIntro'],
 					['showIntro', 'initialDamageRoll'],
-					['initialDamageRoll', 'startRound'],
-					['startRound', 'rollForTasks'],
+					['initialDamageRoll', 'rollForTasks'],
 					['rollForTasks', 'drawCard'],
 					['drawCard', 'successCheck'],
 					['successCheck', 'log'],
-					['log', 'startRound'],
-					['startRound', 'rollForTasks']
+					['log', 'rollForTasks']
 				];
 
 				flow.forEach(([from, to]) => {
@@ -242,8 +240,7 @@ describe('transitions', () => {
 				const flow = [
 					['loadGame', 'showIntro'],
 					['showIntro', 'initialDamageRoll'],
-					['initialDamageRoll', 'startRound'],
-					['startRound', 'rollForTasks'],
+					['initialDamageRoll', 'rollForTasks'],
 					['rollForTasks', 'drawCard'],
 					['drawCard', 'gameOver'],
 					['gameOver', 'finalLog'],

@@ -178,11 +178,10 @@ lose-message: Defeat message
 
 - `Game.svelte` - Root game component, handles lifecycle
 - `GameSelector.svelte` - Game selection interface
-- `GameScreen.svelte` - Main game play screen
-- `IntroScreen.svelte` - Game introduction
-- `CardDeck.svelte` - Card drawing interface
-- `StatusDisplay.svelte` - Game statistics display
-- `ThreeJSDiceBoxRoller.svelte` - 3D dice rolling (uses @3d-dice/dice-box-threejs)
+- `GameScreen.svelte` - Main game play screen: the intro, the table and the one step button (`game/StepAction.svelte`)
+- `CardDeck.svelte` - Card drawing interface (the card itself is `card/CardDisplay.svelte`)
+- `StatusDisplay.svelte` - In-game header plus the one-row HUD (`status/StatusHUD.svelte`)
+- 3D dice: `stores/diceStore.svelte.js` (uses @3d-dice/dice-box-threejs), shown in the dice container in `src/routes/+layout.svelte`
 
 **Component Pattern:**
 
@@ -237,30 +236,44 @@ The game uses a **D20 dice system** inspired by Wretched and Alone mechanics but
 ### Core Resources
 
 - **Stability**: 20 points (your life). Reaches 0 = instant loss.
-- **Tokens**: Start with 10. Remove all to win.
-- **Aces Revealed**: 0-4. Determines Salvation success threshold.
+- **Tokens**: Start with 10. Remove all to win. On Normal they only ever fall.
+- **Aces Revealed**: 0-4. Determines Salvation success threshold; on Normal the fourth Ace ends the game.
 
 ### D20 Rolling Mechanics
 
 - **Standard Roll**: 1d20 for all checks
-- **Lucid State (Advantage)**: Roll 2d20, keep highest. Triggered by natural 20 on Stability checks.
-- **Surreal State (Disadvantage)**: Roll 2d20, keep lowest. Triggered by natural 1 on Stability checks.
+- **Lucid State (Advantage)**: Roll 2d20, keep highest. Triggered by a natural 20 on any d20 roll (the opening instability roll, Roll for Tasks, a Stability check or Salvation).
+- **Surreal State (Disadvantage)**: Roll 2d20, keep lowest. Triggered by a natural 1 on any d20 roll.
+- On 2d20, only the kept die counts as a natural 20 or 1.
+- The modifier applies to, and is used up by, the next roll, whichever roll that is. The two never stack, and a new game starts with neither.
 
 ### Salvation System (Win Condition)
 
 Drawing the Ace of Hearts unlocks Salvation checks. Each subsequent Ace improves success rate:
 
-- **1 Ace**: Roll ≥17 to remove 1 token (20% success, 5% chance)
+- **1 Ace**: Roll ≥17 to remove 1 token (20% success)
 - **2 Aces**: Roll ≥14 to remove 1 token (35% success)
 - **3 Aces**: Roll ≥11 to remove 1 token (50% success)
-- **4 Aces**: Automatic success (100% success)
+- **4 Aces**: On Normal (and Easy) there is no Salvation roll: **the fourth Ace ends the game**. Being odd it calls for a Stability check like any Ace, and that check is the last roll of the game (`isFinalStabilityCheck`): any Lucid or Surreal applies and is used up; if Stability is still above 0 afterwards the game is won, whatever tokens remain; if it reaches 0 the game is lost by Stability. A fourth Ace with `skip-damage` skips the check and wins outright. On Hard, Salvation goes on: there is no target, each check is a Stability check and the token comes off if Stability holds (`calculateAutomaticSalvation`).
 
-**Graduated Token Changes:**
+**Token Changes** (1 to 3 Aces; `calculateSalvationResult(roll, threshold, { hard })`):
 
-- Natural 1: +2 tokens (critical failure)
-- Below threshold: +1 token (failure)
+- Natural 20: -2 tokens (critical success), Lucid
 - At/above threshold: -1 token (success)
-- Natural 20: -2 tokens (critical success)
+- Below threshold: no change on Normal; +1 token on Hard
+- Natural 1: a miss, Surreal; no change on Normal; +2 tokens on Hard
+
+So on Normal tokens only ever fall and can never rise above the starting count.
+
+### Difficulty
+
+`difficulty` is 0 = Easy, 1 = Normal, 2 = Hard (`src/lib/constants/difficulty.js`; `isHardGame(gameState)` gates the Hard rules).
+
+- **Easy**: the Normal rules, with the Ace of Hearts revealed (and out of the deck) from the start.
+- **Normal**: tokens only ever fall, and the fourth Ace ends the game (see above).
+- **Hard**: a missed Salvation roll adds tokens (+1, or +2 on a natural 1), and the fourth Ace does not end the game: with four Aces each Salvation is a Stability check, then -1 token if Stability holds. Winning means clearing every token.
+
+Win rates (Monte Carlo through the real actions, see `docs/d20-mechanics-guide.md` 7.3): Normal and Easy are well above the SRD's <1%; Hard is the <1% ruleset.
 
 ### Card Types
 
@@ -277,6 +290,7 @@ Drawing the Ace of Hearts unlocks Salvation checks. Each subsequent Ace improves
    - Reflective moments, emotional beats
    - Each Ace improves Salvation threshold
    - Aces are odd ranks, so every Ace (Ace of Hearts included) triggers a Stability check, unless a Narrative card carries `skip-damage`
+   - The fourth Ace (whichever suit comes last) ends the game on Normal and Easy: survive its Stability check and the game is won (the ending's cause line reads "The fourth Ace was revealed."); on Hard it only removes the Salvation target
    - Optional special modifiers (skip-damage, return-king)
 
 4. **Challenge** - Ranks 3, 5, 7, 9 - 16 cards
@@ -335,14 +349,14 @@ resetRNG();
   introduction: { /* markdown sections */ },
   deck: [ /* 52 card objects */ ],
   options: {
-    difficulty: 0, // 0 = easy (Ace of Hearts pre-revealed), 1 = normal; author default (frontmatter), overridable by the player
+    difficulty: 0, // 0 = easy (Ace of Hearts pre-revealed), 1 = normal, 2 = hard; author default (frontmatter), overridable by the player
     startingTokens: 10, // Number of tokens to start with
     diceTheme: "pinkdreams"  // Dice theme (user can change in settings)
   }
 }
 ```
 
-**Note:** Difficulty has an author default (`difficulty: easy|normal` in the `.game.md` frontmatter, Normal if absent) and a player override ("Game default", "Normal" or "Easy" in the settings modal). Precedence: frontmatter < player setting < explicit `options` passed to `startGame`. Users can also change dice theme.
+**Note:** Difficulty has an author default (`difficulty: easy|normal|hard` in the `.game.md` frontmatter, Normal if absent) and a player override ("Game default", "Normal", "Easy" or "Hard" in the settings modal). Precedence: frontmatter < player setting < explicit `options` passed to `startGame`. Users can also change dice theme.
 
 **Card Object:**
 
@@ -479,32 +493,41 @@ describe('My Feature', () => {
 
 ## Animation Patterns & Best Practices (Phase 2 Learnings)
 
-### Animation Constants System
+### Animation Constants System (the standard)
 
-**Key File:** `src/lib/constants/animations.js`
+**Key File:** `src/lib/constants/animations.js`, the one token set for JS and CSS.
+`animationTokensCss()` renders the same values as custom properties on `:root` (from
+`src/routes/+layout.svelte`); `styles.css` defines no motion numbers of its own.
 
-All animations use centralized constants to ensure consistency:
+| JS (`ANIMATION_DURATION`) | CSS                    | Value   | Use                                 |
+| ------------------------- | ---------------------- | ------- | ----------------------------------- |
+| `STATE` (= `FAST`)        | `--dur-state`          | 120ms   | Hover, press, chip or label change  |
+| `ENTER` (= `NORMAL`)      | `--dur-enter`          | 200ms   | Enter/exit, screen and page swaps   |
+| `OVERLAY` (= `SLOW`)      | `--dur-overlay`        | 300ms   | A dialog or overlay opening         |
+| `BEAT`                    | `--dur-beat`           | 400ms   | A held moment (King ignite, unlock) |
+| `SEQUENCE_MAX`            | `--dur-sequence-max`   | 1.5s    | Longest staged sequence             |
+| `AMBIENT`, `AMBIENT_SLOW` | `--dur-ambient(-slow)` | 4s / 8s | The only ambient loop periods       |
+| `RESULT_HOLD`             | (none)                 | 2s      | A result holds, then moves on       |
 
 ```javascript
 import { ANIMATION_DURATION, ANIMATION_EASING, Z_INDEX } from '$lib/constants/animations.js';
 
-// In Svelte transitions
-in:fade={{ duration: ANIMATION_DURATION.NORMAL }} // 200ms
-in:scale={{ duration: ANIMATION_DURATION.SLOW, easing: cubicOut }} // 300ms
+in:fade={{ duration: ANIMATION_DURATION.ENTER }} // 200ms
 ```
 
-**29 Constants Available:**
+```css
+transition: transform var(--dur-state) var(--ease-enter); /* 120ms state change */
+```
 
-- **Durations**: FAST (150ms), NORMAL (200ms), SLOW (300ms), CARD_DISMISS (600ms), etc.
-- **Easing**: MECHANICAL, EASE_OUT, CUBIC_OUT, QUINT_OUT, etc.
+- **Easing**: `--ease-enter` (cubic out) for entering, `--ease-exit` (cubic in) for leaving;
+  `ANIMATION_EASING` keeps MECHANICAL, EASE_OUT, CUBIC_OUT, CUBIC_IN, QUINT_OUT
+- **Distance**: an entering element rises at most 8px (`--rise-enter`)
+- **Loops**: at most one ambient loop per screen (the `NeuralBackground` motes), paused under
+  overlays, in hidden tabs and under reduced motion; CTA glows are static. Alert loops (critical
+  Stability, lit Kings) are the only other loops.
+- **Older names** (`FAST`, `NORMAL`, `SLOW`, `CARD_DISMISS`, `DICE_*`, `--transition-*`,
+  `--anim-*`) still work; never rename or remove an export.
 - **Z-Index**: BACKGROUND, CONTENT, STATUS_DISPLAY, FOG_OVERLAY, MODAL, DICE_ROLLING, etc.
-
-**Benefits:**
-
-- No magic numbers
-- Consistent timing across application
-- Easy to adjust globally
-- Self-documenting code
 
 ### Sequential Animation Pattern
 
@@ -512,27 +535,25 @@ in:scale={{ duration: ANIMATION_DURATION.SLOW, easing: cubicOut }} // 300ms
 **Solution:** Async/await pattern for smooth sequencing
 
 ```javascript
-async function onDismiss() {
+async function handleDismiss() {
 	if (animationStage !== 'revealed') return;
 
-	// 1. Start dismiss animation (600ms)
+	// 1. The card lifts away (220ms; instant under reduced motion)
 	animationStage = 'dismissing';
-	await sleep(ANIMATION_DURATION.CARD_DISMISS);
+	await sleep(reducedMotion() ? 0 : DISMISS_MS);
 
-	// 2. Reset card state FIRST
+	// 2. Notify the parent (the state transition), then reset the card
+	onconfirmcard();
 	animationStage = 'idle';
-	particles = [];
 	card = null;
 
-	// 3. Small pause for visual clarity (100ms)
-	await sleep(100);
-
-	// 4. NOW notify parent - triggers state transition
-	onconfirmcard();
+	// 3. More cards this round: the next one is drawn 100ms later (card to card in ~600ms)
+	triggerAutoDrawIfNeeded();
 }
 ```
 
-**Key Principle:** Complete visual animation → Reset state → Brief pause → Trigger next state
+**Key Principle:** Complete visual animation → Trigger next state → Reset → Brief pause before the next item.
+`ANIMATION_DURATION.CARD_DISMISS` (600ms) is an older name the card no longer uses.
 
 **Applies to:**
 
@@ -540,31 +561,34 @@ async function onDismiss() {
 - Modal transitions
 - State changes requiring smooth hand-off
 
-### Z-Index Choreography Pattern
+### Z-Index Choreography Pattern (dice)
 
-**Problem:** Dice fade-out causing visual "popping"
-**Solution:** Delayed z-index transition
+**Goal:** dice are thrown on top of everything, then sink beneath the board once they land.
 
 ```css
-.dice-container:not(.rolling):not(.hidden) {
-	z-index: 9999; /* Keep high during fade */
+.dice-container.rolling {
+	z-index: 1000; /* above the header, HUD, title and button; dialogs and menus stay above */
+}
+.dice-container {
+	z-index: -10; /* behind the page content the moment the sink starts */
 	opacity: 0;
-	transform: scale(0.9);
-	filter: brightness(1) blur(0px);
+	transform: translateY(var(--rise-enter)) scale(0.9);
+	filter: brightness(0.3);
+	/* No z-index in the transition list: it drops at once, then the dice sink and darken */
 	transition:
-		opacity 250ms ease-out,
-		transform 250ms ease-out,
-		filter 250ms ease-out,
-		z-index 0s 250ms; /* Delay z-index drop until after fade */
+		transform var(--dur-dice-sink) ease-in,
+		filter var(--dur-dice-sink) ease-in,
+		opacity var(--dur-dice-sink) var(--ease-exit);
 }
 ```
 
-**Key Principle:** `transition: z-index 0s <duration>` delays z-index change until visual animation completes
+**Key Principle:** drop the z-index first, then animate. The HUD, title, button and result line
+are in front of the dice for the whole sink, so the result line is never covered. Under reduced
+motion there is no throw (the number shows in a d20 outline) and the sink is a plain fade.
 
 **Applies to:**
 
-- Dice fade-out (+layout.svelte)
-- Any layered element that needs to fade while maintaining z-order
+- Dice (`src/routes/+layout.svelte`, `diceStore.rollDice`)
 
 ### OverlayModal Reusable Pattern
 
@@ -593,33 +617,33 @@ Standard 200ms modal with fog overlay, used project-wide:
 
 **Performance:** Modal opening went from feeling sluggish to instant (4.83/5 → 5.0/5 rating)
 
-### Crossfade Transition Pattern
+### Directional Slide Pattern
 
 **File:** `src/lib/components/StoryMode.svelte`
 
-Smooth navigation between rounds using Svelte's crossfade:
+Moving between rounds, the incoming round slides 16px in from the side it comes from (200ms,
+`ANIMATION_DURATION.ENTER`, cubic out) while the outgoing one fades in 120ms (`STATE`), so the
+swap never reads as a blank. Under reduced motion both are instant.
 
 ```javascript
-import { crossfade } from 'svelte/transition';
-import { cubicOut } from 'svelte/easing';
-
-const [send, receive] = crossfade({
-	duration: ANIMATION_DURATION.ROUND_TRANSITION, // 300ms
-	easing: cubicOut
-});
+function roundIn(_node, { direction }) {
+	if (reducedMotion()) return { duration: 0 };
+	return {
+		duration: ANIMATION_DURATION.ENTER,
+		easing: cubicOut,
+		css: (t, u) => `opacity: ${t}; transform: translateX(${u * 16 * direction}px);`
+	};
+}
 ```
 
 ```svelte
-<div
-	class="round-wrapper"
-	in:receive={{ key: currentRoundIndex }}
-	out:send={{ key: currentRoundIndex }}
->
-	<!-- Round content -->
-</div>
+{#key nav.currentRoundIndex}
+	<div in:roundIn={{ direction: nav.direction }} out:roundOut><!-- Round content --></div>
+{/key}
 ```
 
-**Key Principle:** Use crossfade for navigating between similar content items (rounds, tabs, etc.)
+**Key Principle:** Direction tells the reader where they are going; keep the exit shorter than the
+entrance. (`ANIMATION_DURATION.ROUND_TRANSITION` is an older name, kept for compatibility.)
 
 ### Animation Design Principles
 
@@ -627,7 +651,7 @@ const [send, receive] = crossfade({
 
 - ✅ Use: `cubic-bezier(0.4, 0, 0.6, 1)`, `ease-out`, `cubic-out`
 - ❌ Avoid: Bounce, spring, elastic effects
-- ⏱️ Timing: 150-300ms for most transitions, up to 600ms for card dismissal
+- ⏱️ Timing: 120ms state, 200ms enter/exit, 300ms overlay, 400ms beat, 1.5s max sequence
 
 **Performance:**
 
@@ -643,7 +667,8 @@ const [send, receive] = crossfade({
 
 ### Animation Style Guide
 
-**Complete documentation:** `docs/animation-style-guide.md` (1,606 lines)
+**Complete documentation:** `docs/animation-style-guide.md` (the v2 table at the top is the
+standard)
 
 Covers:
 

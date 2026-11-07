@@ -4,6 +4,7 @@
 	import { hasSavedGame, getSaveMetadata } from '../stores/indexedDBStorage.js';
 	import { resumeGame, deleteSavedGame } from '../stores/gameActions.svelte.js';
 	import { getCustomGames, addCustomGame, removeCustomGame } from '../stores/customGames.js';
+	import { formatTimeAgo } from '../utils/homeGames.js';
 
 	let {
 		players = [],
@@ -234,14 +235,14 @@
 				<p><strong>Player:</strong> {saveMetadata.playerName}</p>
 				<p><strong>Round:</strong> {saveMetadata.round}</p>
 				<p>
-					<strong>Tower:</strong>
-					{saveMetadata.tower} |
+					<strong>Stability:</strong>
+					{saveMetadata.tower}/20 |
 					<strong>Tokens:</strong>
 					{saveMetadata.tokens}
 				</p>
 				<p class="save-time">
 					<strong>Saved:</strong>
-					{new Date(saveMetadata.timestamp).toLocaleString()}
+					{formatTimeAgo(saveMetadata.timestamp)}
 				</p>
 			</div>
 			<div class="button-group">

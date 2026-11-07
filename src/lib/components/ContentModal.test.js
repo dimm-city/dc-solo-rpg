@@ -33,7 +33,7 @@ describe('ContentModal accessibility', () => {
 		vi.spyOn(Element.prototype, 'getClientRects').mockReturnValue([1]);
 		await open();
 		const dialog = screen.getByRole('dialog');
-		const last = screen.getByRole('button', { name: 'Got it' });
+		const last = screen.getByRole('button', { name: 'Done' });
 		last.focus();
 		await fireEvent.keyDown(dialog, { key: 'Tab' });
 		expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Close Game Guide' }));

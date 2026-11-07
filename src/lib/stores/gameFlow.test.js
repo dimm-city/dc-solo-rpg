@@ -98,7 +98,8 @@ describe('WAAStore', () => {
 
 		// Assert that the round number in the gameState is incremented
 		expect(gameState.round).toBe(2);
-		expect(gameState.state).toBe('startRound');
+		// A round opens on Roll for Tasks (titled "Round N"); there is no Begin Round step
+		expect(gameState.state).toBe('rollForTasks');
 	});
 
 	// Test rollForTasks - D20 System
@@ -350,7 +351,7 @@ describe('WAAStore', () => {
 
 	// Test recordRound
 	describe('recordRound', () => {
-		test('should record the round and transition to startRound', async () => {
+		test('should record the round and open the next round', async () => {
 			const journalEntry = { text: 'Journal entry 1' };
 			const initialState = {
 				round: 1,
@@ -368,11 +369,11 @@ describe('WAAStore', () => {
 			expect(gameState.journalEntries).toEqual([
 				expect.objectContaining({ text: journalEntry.text, round: initialState.round })
 			]);
-			// recordRound now always transitions to startRound (success check happens before journal)
-			expect(gameState.state).toBe('startRound');
+			// recordRound always opens the next round (success check happens before journal)
+			expect(gameState.state).toBe('rollForTasks');
 		});
 
-		test('should record the round and transition to startRound (no ace)', async () => {
+		test('should record the round and open the next round (no ace)', async () => {
 			const journalEntry = { text: 'Journal entry 1' };
 			const initialState = {
 				round: 1,
@@ -389,7 +390,7 @@ describe('WAAStore', () => {
 			expect(gameState.journalEntries).toEqual([
 				expect.objectContaining({ text: journalEntry.text, round: initialState.round })
 			]);
-			expect(gameState.state).toBe('startRound');
+			expect(gameState.state).toBe('rollForTasks');
 		});
 
 		test('should throw an error if no journal entry provided', async () => {
@@ -443,7 +444,7 @@ describe('WAAStore', () => {
 			gameState.rollWithModifiers = originalRoll;
 		});
 
-		test('should add token on failure (D20 system)', async () => {
+		test('a miss keeps the tokens on Normal, and adds one on Hard (D20 system)', async () => {
 			// Mock rollWithModifiers for D20 system
 			const originalRoll = gameState.rollWithModifiers;
 			gameState.rollWithModifiers = vi.fn(() => ({ roll: 4, wasLucid: false, wasSurreal: false }));
@@ -455,8 +456,8 @@ describe('WAAStore', () => {
 			gameState.gameOver = false;
 			gameState.aceOfHeartsRevealed = true; // Required for success check
 			gameState.config = {
-				difficulty: 1,
 				slug: 'test-game',
+				options: { difficulty: 1 },
 				labels: {}
 			};
 
@@ -470,7 +471,14 @@ describe('WAAStore', () => {
 			const { applyPendingSuccessCheck } = await import('./gameActions.svelte.js');
 			applyPendingSuccessCheck();
 
-			// Roll 4 (range 2-5) → +1 token
+			// Roll 4 is a miss: on Normal tokens only ever fall
+			expect(gameState.tokens).toBe(5);
+
+			// On Hard the same miss adds a token
+			gameState.state = 'successCheck';
+			gameState.config.options.difficulty = 2;
+			successCheck();
+			applyPendingSuccessCheck();
 			expect(gameState.tokens).toBe(6);
 			expect(gameState.win).toBe(false);
 			expect(gameState.gameOver).toBe(false);

@@ -1,114 +1,95 @@
 <!--
- * GeneratedStory - Display AI-generated story with audio
+ * GeneratedStory - An AI summary of a finished run, with optional narration
  *
- * Shows story text, audio player, metadata, and regenerate action
+ * Reading face (Inter, about 18px, 640px measure) to match the journal in story mode.
  *
- * @component ⭐ REUSABLE
+ * @component
  * @example
- * <GeneratedStory
- *   {story}
- *   {isGenerating}
- *   onRegenerate={() => regenerate()}
- * />
+ * <GeneratedStory {story} {isGenerating} onRegenerate={() => regenerate()} />
  -->
 
 <script>
-	import { fade } from 'svelte/transition';
-	import AugmentedButton from '../AugmentedButton.svelte';
 	import AudioPlayer from '../AudioPlayer.svelte';
+	import { CLAUDE_MODELS } from '../../services/storyGeneration.js';
 
 	let { story = null, isGenerating = false, onRegenerate = () => {} } = $props();
+
+	const PROVIDERS = { anthropic: 'Claude', openai: 'OpenAI', custom: 'your endpoint' };
+
+	let source = $derived.by(() => {
+		if (!story) return '';
+		const claude = CLAUDE_MODELS.find((m) => m.id === story.model);
+		return claude ? claude.label.replace(/ \(.*\)$/, '') : (PROVIDERS[story.provider] ?? 'AI');
+	});
+
+	let date = $derived(
+		story?.generatedAt
+			? new Date(story.generatedAt).toLocaleDateString(undefined, {
+					month: 'short',
+					day: 'numeric',
+					year: 'numeric'
+				})
+			: ''
+	);
 </script>
 
 {#if story}
-	<div class="story-content" transition:fade={{ duration: 300 }}>
-		<div class="story-text">
-			{story.text}
-		</div>
-
+	<div class="generated-story">
 		{#if story.audioData}
 			<div class="story-audio">
 				<AudioPlayer audioData={story.audioData} />
 			</div>
 		{/if}
 
-		<div class="story-metadata">
-			<span>Generated with {story.provider}</span>
-			<span>•</span>
-			<span>{new Date(story.generatedAt).toLocaleDateString()}</span>
-		</div>
+		<div class="story-text">{story.text}</div>
 
-		<div class="story-actions">
-			<AugmentedButton
-				onclick={onRegenerate}
-				disabled={isGenerating}
-				style="secondary"
-				label="Regenerate Story"
-			>
-				<svg
-					width="20"
-					height="20"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					slot="icon"
-				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-					/>
-				</svg>
-				Regenerate
-			</AugmentedButton>
+		<div class="story-footer">
+			<p class="story-source">Written by {source}{date ? ` · ${date}` : ''}</p>
+			<button type="button" class="cm-btn" onclick={onRegenerate} disabled={isGenerating}>
+				{isGenerating ? 'Writing…' : 'Write it again'}
+			</button>
 		</div>
 	</div>
 {/if}
 
 <style>
-	.story-content {
+	.generated-story {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-lg);
+		gap: 24px;
 	}
 
 	.story-text {
-		padding: var(--space-xl);
-		background: rgba(0, 0, 0, 0.3);
-		border-left: 4px solid var(--color-cyber-magenta);
-		border-radius: 4px;
-		font-size: 1rem;
-		line-height: 1.8;
-		color: rgba(255, 255, 255, 0.9);
+		max-width: 640px;
+		font-family: var(--font-body);
+		font-size: 1.125rem;
+		line-height: 1.7;
+		color: #eef3f8;
 		white-space: pre-wrap;
 	}
 
-	.story-audio {
-		padding: var(--space-md);
-		background: rgba(0, 0, 0, 0.2);
-		border-radius: 4px;
-	}
-
-	.story-metadata {
+	.story-footer {
 		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
-		gap: var(--space-sm);
-		font-size: 0.75rem;
-		color: rgba(255, 255, 255, 0.5);
-		justify-content: center;
+		justify-content: space-between;
+		gap: 12px 24px;
+		padding-top: 16px;
+		border-top: 1px solid rgba(255, 255, 255, 0.12);
 	}
 
-	.story-actions {
-		display: flex;
-		justify-content: center;
-		padding-top: var(--space-md);
+	.story-source {
+		margin: 0;
+		font-size: 0.875rem;
+		color: #aebbcc;
 	}
 
-	@media (max-width: 640px) {
-		.story-text {
-			padding: var(--space-md);
-			font-size: 0.9rem;
-		}
+	.story-footer .cm-btn {
+		flex: 0 0 auto;
+	}
+
+	.cm-btn:disabled {
+		opacity: 0.6;
+		cursor: progress;
 	}
 </style>

@@ -1,10 +1,11 @@
 import { browser } from '$app/environment';
 import { logger } from '../utils/logger.js';
+import { isDifficulty } from '../constants/difficulty.js';
 
 /**
  * Settings store with localStorage persistence
  * Manages global user preferences for the game
- * difficulty: null = use the game's default, 0 = Easy, 1 = Normal
+ * difficulty: null = use the game's default, 0 = Easy, 1 = Normal, 2 = Hard
  */
 
 const SETTINGS_KEY = 'gameSettings';
@@ -30,7 +31,7 @@ function loadSettings() {
 			const parsed = JSON.parse(stored);
 			return {
 				diceTheme: parsed.diceTheme ?? DEFAULT_SETTINGS.diceTheme,
-				difficulty: parsed.difficulty === 0 || parsed.difficulty === 1 ? parsed.difficulty : null
+				difficulty: isDifficulty(parsed.difficulty) ? parsed.difficulty : null
 			};
 		}
 	} catch (e) {

@@ -16,10 +16,10 @@ test.describe('Responsive Design', () => {
 		await openHomePage(page);
 	});
 
-	test('should display 3 columns on desktop (1280px)', async ({ page }) => {
+	test('should display 2 columns on desktop (1280px)', async ({ page }) => {
 		await page.setViewportSize({ width: 1280, height: 720 });
 
-		await expect.poll(() => columnCount(page)).toBe(3);
+		await expect.poll(() => columnCount(page)).toBe(2);
 	});
 
 	test('should display 2 columns on tablet (768px)', async ({ page }) => {
@@ -60,9 +60,9 @@ test.describe('Responsive Design', () => {
 		// Resize to mobile
 		await page.setViewportSize({ width: 375, height: 667 });
 
-		// Starting a game works from the card's Start button
+		// Starting a game works from the card's Play button
 		const firstCard = page.locator('.game-card').first();
-		await firstCard.getByRole('button', { name: 'Start new game' }).click();
+		await firstCard.getByRole('button', { name: 'Play' }).click();
 
 		await expect(page).toHaveURL(/\/game\/[a-z0-9-]+$/);
 		await expect(page.getByTestId('screen-showIntro')).toBeVisible();
@@ -101,7 +101,7 @@ test.describe('Responsive Design', () => {
 		// The controls themselves must also be at least 44x44
 		const controls = [
 			page.getByRole('button', { name: 'Toggle menu' }),
-			firstCard.getByRole('button', { name: 'Start new game' })
+			firstCard.getByRole('button', { name: 'Play' })
 		];
 		for (const control of controls) {
 			const box = await control.boundingBox();
@@ -135,7 +135,7 @@ test.describe('Responsive Design', () => {
 		}
 	});
 
-	test('should adjust instruction cards on mobile', async ({ page, context }) => {
+	test('should fit the first-time panel on mobile', async ({ page, context }) => {
 		// Clear storage and resize
 		await context.clearCookies();
 		await page.evaluate(() => {
@@ -146,16 +146,18 @@ test.describe('Responsive Design', () => {
 		await page.setViewportSize({ width: 375, height: 667 });
 		await page.goto('/');
 
-		// Instruction cards appear after the splash
-		const cards = page.locator('.choice-card');
-		await expect(cards.first()).toBeVisible();
-		expect(await cards.count()).toBe(3);
-
-		// Each card should be full width on mobile
-		const firstCard = cards.first();
-		const width = await firstCard.evaluate((el) => el.getBoundingClientRect().width);
-
-		// Should take most of the viewport width
-		expect(width).toBeGreaterThan(300);
+		// The panel appears after the splash; its two buttons span the panel and fit the screen
+		const panel = page.locator('.instructions-choice-container');
+		await expect(panel).toBeVisible();
+		for (const name of [/^Play/, 'Read the rules first']) {
+			const box = await panel.getByRole('button', { name }).boundingBox();
+			expect(box!.width).toBeGreaterThan(260);
+			expect(box!.x + box!.width).toBeLessThanOrEqual(375);
+			expect(box!.height).toBeGreaterThanOrEqual(44);
+		}
+		const overflowsHorizontally = await page.evaluate(
+			() => document.documentElement.scrollWidth > document.documentElement.clientWidth
+		);
+		expect(overflowsHorizontally).toBe(false);
 	});
 });

@@ -3,17 +3,29 @@
    Matching dimm.city website aesthetic EXACTLY
    ============================================ */
 
-/* augmented-ui is bundled through Vite (no external CDN dependency).
-   Google Fonts (Orbitron, Inter, Share Tech Mono) load from a <link> in app.html;
-   an @import nested in @layer is ignored by browsers, so it must not live here. */
+/* Everything ships with the app: augmented-ui and the fonts are bundled through Vite from
+   npm packages (no CDN, no Google Fonts). Inter is the variable font (100-900); Share Tech
+   Mono has one weight. */
 @import 'augmented-ui/augmented-ui.min.css';
+@import '@fontsource-variable/inter/wght.css';
+@import '@fontsource-variable/inter/wght-italic.css';
+@import '@fontsource/share-tech-mono/400.css';
 
-/* Load custom display font */
+/* Display font (house face), self-hosted in static/fonts */
 @font-face {
 	font-family: 'lixdu';
 	src: url('/fonts/lixdu.woff') format('woff');
 	font-display: swap;
 	font-weight: 700 900;
+}
+
+/* Seven-segment digits for the HUD's last roll: DSEG7 Classic Bold from the dseg package
+   (SIL Open Font License 1.1). Only this one 5KB woff2 is bundled. */
+@font-face {
+	font-family: 'DSEG7 Classic';
+	src: url('dseg/fonts/DSEG7-Classic/DSEG7Classic-Bold.woff2') format('woff2');
+	font-display: swap;
+	font-weight: 700;
 }
 
 /* ============================================
@@ -41,13 +53,20 @@
 
 	/* === TYPOGRAPHY === */
 	/* Font roles:
-	   --font-display (lixdu): titles at 24px and above ONLY. Never for numbers or small
-	     labels, it misreads at small sizes ("TASKS" -> "TASHS", a 4 reads as "Ч").
-	   --font-mono (Share Tech Mono): HUD numbers, labels and IDs (use tabular-nums).
+	   --font-display (lixdu): screen titles of 28px and up ONLY. It misreads at small sizes
+	     (M, K and W blur; "TASKS" reads "TASHS"). Inside controls and small headings it
+	     resolves to the UI face (see "Controls and small titles" below).
+	   --font-ui (Inter 600, uppercase, 0.08em): buttons, labels and titles under 28px.
+	   --font-mono (Share Tech Mono): HUD numbers and IDs (use tabular-nums).
+	   --font-led (DSEG7 Classic): the seven-segment roll readout in the HUD, digits only.
 	   --font-body (Inter): reading text. */
-	--font-display: 'lixdu', 'Orbitron', 'Tomorrow', sans-serif;
-	--font-body: 'Inter', 'Tomorrow', sans-serif;
+	--font-display: 'lixdu', 'Inter Variable', 'Inter', sans-serif;
+	--font-body: 'Inter Variable', 'Inter', system-ui, sans-serif;
+	--font-ui: var(--font-body);
+	--font-ui-weight: 600;
+	--tracking-ui: 0.08em;
 	--font-mono: 'Share Tech Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+	--font-led: 'DSEG7 Classic', var(--font-mono);
 
 	/* === SHARED UI TOKENS === */
 	--color-danger: #ff4d6d; /* danger only: Kings, Stability loss, critical states */
@@ -126,23 +145,10 @@
 	--shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
 	--shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
 
-	/* === TRANSITIONS === */
-	--transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-	--transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
-	--transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
-
-	/* === SCREEN TRANSITION ANIMATION DURATIONS === */
-	--anim-instant: 0.1s;
-	--anim-fast: 0.3s;
-	--anim-normal: 0.5s;
-	--anim-slow: 0.8s;
-	--anim-very-slow: 1.2s;
-
-	/* === EASING FUNCTIONS FOR SCREEN TRANSITIONS === */
-	--ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
-	--ease-smooth: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-	--ease-out: cubic-bezier(0.215, 0.61, 0.355, 1);
-	--ease-in-out: cubic-bezier(0.645, 0.045, 0.355, 1);
+	/* === MOTION ===
+	   Durations and easings (--dur-*, --ease-*, and the older --transition-* and --anim-*
+	   names) come from src/lib/constants/animations.js, rendered on :root by +layout.svelte.
+	   Do not define motion numbers here. */
 
 	/* === AUGMENTED UI SIZES === */
 	--aug-clip-xs: 8px;
@@ -194,6 +200,9 @@
 }
 
 html {
+	/* No grey or blue flash on tap (touch devices); buttons and links have their own pressed
+	   and :focus-visible states. Inherited, so this covers every element. */
+	-webkit-tap-highlight-color: transparent;
 	scroll-behavior: smooth;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
@@ -216,7 +225,10 @@ body {
 	margin: 0;
 	padding: 0;
 	overflow: hidden;
+	/* The visible viewport: on Android, 100vh is the height with the browser bars hidden, so the
+	   bottom of the page sat under them while they showed. dvh follows the bars; vh is the fallback. */
 	height: 100vh;
+	height: 100dvh;
 	/* Mobile viewport fixes */
 	position: fixed;
 	width: 100%;
@@ -279,12 +291,35 @@ h3 {
 	margin-bottom: var(--space-md);
 }
 
-/* h4-h6 render below 24px, so they use the body face (see font roles in :root) */
+/* ============================================
+   CONTROLS AND SMALL TITLES
+   The display face is for screen titles of 28px and up. Buttons, labels and titles below
+   that use the UI face: Inter 600, uppercase, 0.08em. Inside these elements --font-display
+   itself resolves to the UI face, so a small button or heading that asks for the display
+   face still gets a legible one.
+   ============================================ */
+
 h4,
 h5,
 h6 {
-	font-family: var(--font-body);
-	font-weight: 700;
+	font-family: var(--font-ui);
+	font-weight: var(--font-ui-weight);
+	letter-spacing: var(--tracking-ui);
+}
+
+button,
+[role='button'],
+label,
+legend,
+h4,
+h5,
+h6 {
+	--font-display: var(--font-ui);
+}
+
+/* Buttons take the UI face instead of the browser's control font */
+button {
+	font-family: var(--font-ui);
 }
 
 h4 {
@@ -326,7 +361,9 @@ main {
 	padding: 0;
 	max-width: 100%;
 	min-height: 100vh;
+	min-height: 100dvh;
 	height: 100vh;
+	height: 100dvh;
 }
 
 .main {
@@ -563,18 +600,6 @@ body::before {
 	z-index: 9999;
 }
 
-/* Subtle glow animation for interactive elements */
-@keyframes glow-pulse {
-	0%,
-	100% {
-		box-shadow: 0 0 8px rgba(217, 70, 239, 0.3);
-	}
-
-	50% {
-		box-shadow: 0 0 16px rgba(217, 70, 239, 0.5);
-	}
-}
-
 /* Add subtle glow to form containers */
 .form-container::after {
 	content: '';
@@ -612,12 +637,19 @@ body::before {
 	}
 }
 
+/* Phones: text buttons get a 44px touch target and room around their label. Icon-only
+   buttons (a lone SVG) size themselves: 16px of side padding inside a 36-40px button left
+   their icon 0-4px wide. Icons never shrink inside a button. */
 @media (max-width: 450px) {
-	button {
+	button:not(:has(> svg:only-child)) {
 		padding: var(--space-sm) var(--space-md);
 		font-size: var(--text-sm);
 		min-height: 44px;
 	}
+}
+
+button > svg {
+	flex-shrink: 0;
 }
 
 /* ============================================
@@ -630,54 +662,6 @@ body::before {
 	*::after {
 		animation-duration: 0.01ms !important;
 		animation-iteration-count: 1 !important;
-		transition-duration: 0.01ms !important;
-	}
-}
-
-/* ============================================
-   SCREEN TRANSITIONS
-   Creating breathing room between game states
-   ============================================ */
-
-/* Exit animation - screen fades out and scales down slightly */
-.screen-transition-out {
-	animation: fade-out-scale var(--anim-fast) var(--ease-out) forwards;
-}
-
-@keyframes fade-out-scale {
-	0% {
-		opacity: 1;
-		transform: scale(1);
-	}
-
-	100% {
-		opacity: 0;
-		transform: scale(0.95);
-	}
-}
-
-/* Enter animation - screen fades in and rises up */
-.screen-transition-in {
-	animation: fade-in-rise var(--anim-normal) var(--ease-out) forwards;
-}
-
-@keyframes fade-in-rise {
-	0% {
-		opacity: 0;
-		transform: translateY(20px);
-	}
-
-	100% {
-		opacity: 1;
-		transform: translateY(0);
-	}
-}
-
-/* Respect reduced motion preferences - override all screen transitions */
-@media (prefers-reduced-motion: reduce) {
-	.screen-transition-out,
-	.screen-transition-in {
-		animation: none !important;
 		transition-duration: 0.01ms !important;
 	}
 }

@@ -1,249 +1,180 @@
 <script>
-	import { onMount, onDestroy } from 'svelte';
-	import { logger } from '../utils/logger.js';
-
-	// 'idle', 'anticipating', 'materializing', 'revealed', 'dismissing'
-
-	let { animationStage = 'idle' } = $props();
-	let canvas = $state();
-	let ctx = $state();
-	let particles = $state([]);
-	let animationFrameId = $state();
-
 	/**
-	 * Particle class for data byte effect
+	 * NeuralBackground - A static scan grid with a slow drift of glowing motes
+	 *
+	 * The motes are the screen's one ambient loop: each lives one 8s cycle, fading in and
+	 * out. The loop pauses while a dialog or overlay covers the page ([aria-modal="true"]),
+	 * while the tab is hidden and under reduced motion (then only the grid shows).
+	 * Motes are drawn from two pre-rendered glow sprites (no per-frame shadowBlur) and live
+	 * in a plain array: nothing reactive changes per frame.
+	 *
+	 * The host sets the layer with --neural-z (the game puts it behind every screen).
 	 */
-	class Particle {
-		constructor(x, y) {
-			this.x = x;
-			this.y = y;
-			this.vx = (Math.random() - 0.5) * 2;
-			this.vy = (Math.random() - 0.5) * 2;
-			this.life = 1.0;
-			this.size = Math.random() * 2 + 1;
-			this.color = Math.random() > 0.5 ? '#00ffff' : '#d946ef';
-		}
+	import { onMount } from 'svelte';
+	import { createMote, stepMote, moteAlpha, shouldAnimate } from '../utils/ambientMotes.js';
 
-		update() {
-			this.x += this.vx;
-			this.y += this.vy;
-			this.life -= 0.01;
-			this.vy += 0.05; // Gentle float upward
+	const COLORS = ['0, 255, 255', '217, 70, 239']; // cyan, magenta
+	const SPRITE = 32; // px; a soft disc that stands in for a blurred glow
 
-			// Wrap around edges (with safety check)
-			if (canvas) {
-				if (this.x < 0) this.x = canvas.width;
-				if (this.x > canvas.width) this.x = 0;
-				if (this.y > canvas.height) this.y = 0;
-			}
-		}
+	/** @type {HTMLCanvasElement | undefined} */
+	let canvas;
 
-		draw(ctx) {
-			ctx.save();
-			ctx.globalAlpha = this.life * 0.6;
-			ctx.fillStyle = this.color;
-			ctx.shadowBlur = 10;
-			ctx.shadowColor = this.color;
-			ctx.fillRect(this.x, this.y, this.size, this.size);
-			ctx.restore();
-		}
-	}
-
-	/**
-	 * Animate particle field
-	 */
-	function animateParticles() {
-		if (!ctx || !canvas) return;
-
-		try {
-			ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-			// Update and filter particles
-			particles = particles.filter((p) => p.life > 0);
-			particles.forEach((p) => {
-				p.update();
-				p.draw(ctx);
-			});
-
-			// Spawn particles (with safety check for window)
-			const maxParticles = typeof window !== 'undefined' && window.innerWidth < 768 ? 20 : 50;
-			const spawnRate = 0.1;
-
-			if (particles.length < maxParticles && Math.random() < spawnRate) {
-				particles.push(new Particle(Math.random() * canvas.width, Math.random() * canvas.height));
-			}
-
-			animationFrameId = requestAnimationFrame(animateParticles);
-		} catch (err) {
-			logger.warn('Animation frame error, stopping animations:', err);
-			if (animationFrameId) {
-				cancelAnimationFrame(animationFrameId);
-			}
-		}
+	/** A radial-gradient disc per colour, drawn once */
+	function makeSprites() {
+		return COLORS.map((rgb) => {
+			const sprite = document.createElement('canvas');
+			sprite.width = sprite.height = SPRITE;
+			const g = sprite.getContext('2d');
+			const r = SPRITE / 2;
+			const gradient = g.createRadialGradient(r, r, 0, r, r, r);
+			gradient.addColorStop(0, `rgba(${rgb}, 1)`);
+			gradient.addColorStop(0.25, `rgba(${rgb}, 0.6)`);
+			gradient.addColorStop(1, `rgba(${rgb}, 0)`);
+			g.fillStyle = gradient;
+			g.fillRect(0, 0, SPRITE, SPRITE);
+			return sprite;
+		});
 	}
 
 	onMount(() => {
-		// Skip animations in test environment or if canvas is unavailable
-		if (!canvas || typeof window === 'undefined') {
+		const ctx = canvas?.getContext('2d');
+		// No 2D canvas (tests, old browsers): the grid alone is fine
+		if (!ctx || typeof ctx.drawImage !== 'function') return;
+
+		let sprites;
+		try {
+			sprites = makeSprites();
+		} catch {
 			return;
 		}
 
-		try {
-			ctx = canvas.getContext('2d', {
-				willReadFrequently: false,
-				alpha: true
-			});
+		const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+		const motes = [];
+		let width = 0;
+		let height = 0;
+		let raf = 0;
+		let last = 0;
+		let running = false;
 
-			if (!ctx) {
-				logger.warn('Failed to get canvas 2D context, skipping animations');
-				return;
+		function resize() {
+			width = canvas.width = canvas.offsetWidth;
+			height = canvas.height = canvas.offsetHeight;
+			const target = width < 768 ? 16 : 36;
+			motes.length = Math.min(motes.length, target);
+			while (motes.length < target) motes.push(createMote(width, height));
+		}
+
+		function draw() {
+			ctx.clearRect(0, 0, width, height);
+			for (const mote of motes) {
+				const r = mote.size * 3;
+				ctx.globalAlpha = moteAlpha(mote);
+				ctx.drawImage(sprites[mote.hue], mote.x - r, mote.y - r, r * 2, r * 2);
 			}
+			ctx.globalAlpha = 1;
+		}
 
-			canvas.width = canvas.offsetWidth;
-			canvas.height = canvas.offsetHeight;
-
-			// Handle window resize
-			const handleResize = () => {
-				if (canvas) {
-					canvas.width = canvas.offsetWidth;
-					canvas.height = canvas.offsetHeight;
+		function frame(now) {
+			// Cap the step so a stalled frame does not jump the field
+			const dt = Math.min(now - last, 50);
+			last = now;
+			for (let i = 0; i < motes.length; i++) {
+				if (!stepMote(motes[i], dt, width, height)) {
+					motes[i] = { ...createMote(width, height), age: 0 };
 				}
-			};
-			window.addEventListener('resize', handleResize);
-
-			// Start animation loop
-			animateParticles();
-
-			return () => {
-				window.removeEventListener('resize', handleResize);
-			};
-		} catch (err) {
-			logger.warn('Canvas initialization failed, skipping animations:', err);
+			}
+			draw();
+			raf = requestAnimationFrame(frame);
 		}
-	});
 
-	onDestroy(() => {
-		if (animationFrameId) {
-			cancelAnimationFrame(animationFrameId);
+		/** Start or stop the loop to match what the viewer can see */
+		function sync() {
+			const run = shouldAnimate({
+				hidden: document.hidden,
+				reducedMotion: reduce.matches,
+				covered: document.querySelector('[aria-modal="true"]') !== null
+			});
+			if (run && !running) {
+				running = true;
+				last = performance.now();
+				raf = requestAnimationFrame(frame);
+			} else if (!run && running) {
+				running = false;
+				cancelAnimationFrame(raf);
+				if (reduce.matches) ctx.clearRect(0, 0, width, height);
+			}
 		}
+
+		// Dialogs mount and unmount anywhere in the page: re-check once per batch of changes
+		let queued = false;
+		const observer = new MutationObserver(() => {
+			if (queued) return;
+			queued = true;
+			queueMicrotask(() => {
+				queued = false;
+				sync();
+			});
+		});
+		observer.observe(document.body, {
+			childList: true,
+			subtree: true,
+			attributes: true,
+			attributeFilter: ['aria-modal']
+		});
+
+		const resizer = new ResizeObserver(() => {
+			resize();
+			if (!running && !reduce.matches) draw();
+		});
+		resizer.observe(canvas);
+		document.addEventListener('visibilitychange', sync);
+		reduce.addEventListener('change', sync);
+
+		resize();
+		sync();
+
+		return () => {
+			running = false;
+			cancelAnimationFrame(raf);
+			observer.disconnect();
+			resizer.disconnect();
+			document.removeEventListener('visibilitychange', sync);
+			reduce.removeEventListener('change', sync);
+		};
 	});
 </script>
 
-<!-- Neural Background -->
-<div class="neural-background">
-	<!-- Particle field canvas -->
-	<canvas class="particle-field" bind:this={canvas} aria-hidden="true"></canvas>
-
-	<!-- Scan grid background -->
-	<div class="scan-grid" aria-hidden="true"></div>
-
-	<!-- Scan grid background -->
-	<div class="scan-grid {animationStage}" aria-hidden="true"></div>
+<div class="neural-background" aria-hidden="true">
+	<div class="scan-grid"></div>
+	<canvas class="particle-field" bind:this={canvas}></canvas>
 </div>
 
 <style>
-	/* ============================================
-	   NEURAL BACKGROUND - CONTAINER
-	   ============================================ */
-
 	.neural-background {
 		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
+		inset: 0;
 		pointer-events: none;
-		z-index: 10;
+		/* The host decides the layer: the game puts it behind every screen (-1) */
+		z-index: var(--neural-z, 10);
 	}
-
-	/* ============================================
-	   PARTICLE FIELD - CANVAS LAYER
-	   ============================================ */
 
 	.particle-field {
 		position: absolute;
-		top: 0;
-		left: 0;
+		inset: 0;
 		width: 100%;
 		height: 100%;
-		pointer-events: none;
-		z-index: 1;
 	}
 
-	/* ============================================
-	   SCAN GRID - ANIMATED BACKGROUND
-	   ============================================ */
-
+	/* A static grid: the motes are the screen's one ambient loop */
 	.scan-grid {
 		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
+		inset: 0;
 		background-image:
 			linear-gradient(0deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px),
 			linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
 		background-size: 40px 40px;
-		opacity: 0.3;
-		z-index: 0;
-		/* Grid animation removed to avoid distraction during dice rolls */
+		opacity: 0.4;
 	}
-
-	.scan-grid.idle {
-		animation: none;
-	}
-	.scan-grid.accelerating {
-		animation: grid-accelerate 0.8s ease-in-out;
-	}
-
-	/* ============================================
-	   SCAN GRID - ANIMATED BACKGROUND
-	   ============================================ */
-
-	.scan-grid {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		background-image:
-			linear-gradient(0deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px),
-			linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
-		background-size: 40px 40px;
-		animation: grid-pulse 4s ease-in-out infinite;
-		z-index: 0;
-	}
-
-	@keyframes grid-pulse {
-		0%,
-		100% {
-			opacity: 0.3;
-			background-size: 40px 40px;
-		}
-		50% {
-			opacity: 0.5;
-			background-size: 42px 42px;
-		}
-	}
-
-	@keyframes grid-accelerate {
-		0% {
-			background-size: 40px 40px;
-			opacity: 0.3;
-		}
-		50% {
-			background-size: 30px 30px;
-			opacity: 0.7;
-		}
-		100% {
-			background-size: 40px 40px;
-			opacity: 0.5;
-		}
-	}
-
-	/* ============================================
-	   MOBILE RESPONSIVE
-	   ============================================ */
 
 	@media (max-width: 768px) {
 		.scan-grid {
@@ -255,13 +186,5 @@
 		.scan-grid {
 			background-size: 25px 25px;
 		}
-	}
-
-	/* ============================================
-	   ACCESSIBILITY - REDUCED MOTION
-	   ============================================ */
-
-	@media (prefers-reduced-motion: reduce) {
-		/* Grid animation already removed - particles can continue */
 	}
 </style>
