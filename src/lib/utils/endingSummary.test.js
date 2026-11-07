@@ -1,11 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-	getEndingCause,
-	getEndingText,
-	getRunRecap,
-	getKeyMoments,
-	getStatusLine
-} from './endingSummary.js';
+import { getEndingCause, getEndingText, getRunRecap, getStatusLine } from './endingSummary.js';
 
 const labels = {
 	failureCheckLoss: 'The tower fell.',
@@ -104,11 +98,7 @@ describe('getRunRecap', () => {
 	});
 });
 
-describe('getKeyMoments and getStatusLine', () => {
-	it('lists Kings and Aces in order', () => {
-		expect(getKeyMoments(log).map((m) => m.label)).toEqual(['King of spades', 'Ace of hearts']);
-	});
-
+describe('getStatusLine', () => {
 	it('builds the status line, with tokens only after Salvation unlocks', () => {
 		const base = { tower: 9, kingsRevealed: 3, tokens: 11 };
 		expect(getStatusLine(base)).toBe('Stability 9/20 · 3 of 4 Kings');

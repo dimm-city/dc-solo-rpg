@@ -952,6 +952,7 @@ export function applyPendingSuccessCheck({ advance = true } = {}) {
 	if (gameState.pendingUpdates.diceRoll !== null) {
 		gameState.diceRoll = gameState.pendingUpdates.diceRoll;
 	}
+	const before = { tower: gameState.tower, tokens: gameState.tokens };
 
 	// Four Aces (Hard): the Stability check comes first. If it takes the last Stability, the game
 	// is lost and the token stays (its pending change is 0).
@@ -981,6 +982,22 @@ export function applyPendingSuccessCheck({ advance = true } = {}) {
 		'[applyPendingSuccessCheck] Applied pending success check, tokens now:',
 		gameState.tokens
 	);
+
+	// Log the roll and what it did (cards log themselves when drawn): the final log's timeline
+	// reads it. Every reader of the log picks cards by their `card` field, so a roll entry is
+	// passed over wherever cards are listed.
+	gameState.log.push({
+		type: 'salvation',
+		id: `${gameState.round}.salvation`,
+		round: gameState.round,
+		roll: gameState.diceRoll,
+		threshold: getCurrentSalvationThreshold(),
+		tokenChange: gameState.tokens - before.tokens,
+		tokens: gameState.tokens,
+		stabilityChange: gameState.tower - before.tower,
+		tower: gameState.tower,
+		timestamp: Date.now()
+	});
 
 	if (gameState.tokens === 0 && !gameState.gameOver) {
 		// D20 System: Victory when tokens reach 0 (no final damage roll)
