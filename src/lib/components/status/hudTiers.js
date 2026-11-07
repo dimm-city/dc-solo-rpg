@@ -1,6 +1,6 @@
 /**
  * Shared HUD helpers: Stability tiers, the Aces and their suits, the token and card meters,
- * and the 2d20 badge and caption. Pure functions, so the HUD cells and their tests agree.
+ * and the roll modifiers and caption. Pure functions, so the HUD cells and their tests agree.
  */
 
 export const MAX_STABILITY = 20;
@@ -35,19 +35,34 @@ export function describeTwoDiceRoll(last, shown) {
 	return `${last.isLucid ? 'high' : 'low'} of ${last.rolls[0]}, ${last.rolls[1]}`;
 }
 
-/** Salvation needs this roll or better for 1-3 Aces; 4 Aces have no target (a Stability check) */
-const SALVATION_NEED = { 1: '17+', 2: '14+', 3: '11+', 4: 'auto' };
+/** Salvation needs this roll or better for 1-3 Aces; with all four there is no target */
+const SALVATION_NEED = { 1: '17+', 2: '14+', 3: '11+', 4: 'all' };
 
 /**
  * What the Aces mean for Salvation, e.g. { count: 2, need: '14+' }.
- * `need` is null before the first Ace (no Salvation threshold yet) and 'auto' at 4.
- * Mirrors getSalvationThreshold() in services/d20Mechanics.js.
+ * `need` is null before the first Ace (no Salvation threshold yet) and 'all' at 4, when there
+ * is no roll to beat (see fourAcesRule). Mirrors getSalvationThreshold() in
+ * services/d20Mechanics.js.
  * @param {number} aces Aces revealed (0-4)
  * @returns {{count:number, need:string|null}}
  */
 export function acesSummary(aces) {
 	const count = Math.max(0, Math.min(4, aces || 0));
 	return { count, need: SALVATION_NEED[count] ?? null };
+}
+
+/**
+ * What all four Aces mean, by difficulty (config.options.difficulty: 0 easy, 1 normal, 2 hard;
+ * anything else reads as Normal). On Easy and Normal the fourth Ace ends the game: after its
+ * own Stability check the player escapes if Stability is still above 0, and is lost if it
+ * reaches 0. On Hard the game goes on: Salvation is automatic after a Stability check.
+ * @param {number|undefined} difficulty
+ * @returns {string} A clause that follows "All four Aces: "
+ */
+export function fourAcesRule(difficulty) {
+	return difficulty === 2
+		? 'Salvation is automatic after a Stability check'
+		: 'survive the final Stability check and you escape';
 }
 
 /** The Ace pips, in order: the Ace of Hearts (it unlocks Salvation) first, red and black alternating */
@@ -75,8 +90,8 @@ export function aceSuits({ count, aceOfHeartsRevealed = false, log = [] }) {
 
 /**
  * The token meter: tokens left out of the tokens the game started with, the same reading as
- * Stability's bar. Failed Salvation rolls can push tokens past the start: the bar stays full
- * and `over` says by how many.
+ * Stability's bar. On Hard a failed Salvation roll adds a token, so tokens can pass the
+ * start: the bar stays full and `over` says by how many.
  * @param {number} tokens
  * @param {number} start
  * @returns {{fraction:number, over:number}}
@@ -88,26 +103,32 @@ export function tokenMeter(tokens, start) {
 }
 
 /**
- * The 2d20 badge for the next roll: "2d20↑" while Lucid (keep the higher), "2d20↓" while
- * Surreal (keep the lower), null otherwise. Lucid/Surreal applies to the next d20 roll,
- * whichever roll that is.
+ * The two roll modifiers under the LED, both always shown: Lucid (the next roll keeps the
+ * higher of two dice) and Surreal (the lower), each on or off. A natural 20 turns Lucid on
+ * and a natural 1 turns Surreal on; the modifier applies to, and is used up by, the next d20
+ * roll, whichever roll that is, and the two never stack (Lucid wins if a state has both). The
+ * label carries the state, so a screen reader hears "off" on a dim icon, and the off label
+ * says how to earn it.
  * @param {{isLucid?:boolean, isSurreal?:boolean}} state
- * @returns {{kind:'lucid'|'surreal', text:string, label:string}|null}
+ * @returns {Array<{kind:'lucid'|'surreal', on:boolean, label:string}>}
  */
-export function rollBadge({ isLucid, isSurreal }) {
-	if (isLucid) {
-		return {
+export function rollModifiers({ isLucid, isSurreal }) {
+	const lucid = !!isLucid;
+	const surreal = !!isSurreal && !lucid;
+	return [
+		{
 			kind: 'lucid',
-			text: '2d20↑',
-			label: 'Lucid: your next roll uses two d20 and keeps the higher'
-		};
-	}
-	if (isSurreal) {
-		return {
+			on: lucid,
+			label: lucid
+				? 'Lucid: next roll keeps the higher of two dice'
+				: 'Lucid (off): a natural 20 makes the next roll keep the higher of two dice'
+		},
+		{
 			kind: 'surreal',
-			text: '2d20↓',
-			label: 'Surreal: your next roll uses two d20 and keeps the lower'
-		};
-	}
-	return null;
+			on: surreal,
+			label: surreal
+				? 'Surreal: next roll keeps the lower of two dice'
+				: 'Surreal (off): a natural 1 makes the next roll keep the lower of two dice'
+		}
+	];
 }

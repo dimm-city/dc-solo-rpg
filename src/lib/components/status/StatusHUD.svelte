@@ -78,6 +78,12 @@
 		--aug-tl: 10px;
 		--aug-br: 10px;
 		--hud-height: 64px;
+		/* The three rows of every cell: the foot (bars, skulls, pips, modifiers) is a fixed
+		   height, and the value row takes what the label and the foot leave, so the labels,
+		   the values and the bottom line each sit on one line across the row */
+		--hud-foot: 16px;
+		--hud-pad-top: 4px;
+		--hud-pad-bottom: 6px;
 
 		display: grid;
 		/* Mirrored: the meters outside, the icon counts next, the dice and the deck in the
@@ -100,20 +106,20 @@
 
 	/* ============================================
 	   SHARED CELL ANATOMY (used by every cell component)
-	   label on top, then the readout: the value and its meta (a bar, four icons, a badge).
-	   Written as plain two-class rules so each cell can colour its own label and value
-	   with a more specific selector.
+	   One grid per cell: the label row, then the readout, itself the value row over the
+	   foot row. The foot row is a fixed height and its content (a bar, four icons, the two
+	   modifiers) is pinned to its end, so a cell with a shorter value never pulls its bar up.
+	   Written as plain two-class rules so each cell can colour its own label and value with
+	   a more specific selector.
 	   ============================================ */
 
 	:global(.status-hud .hud-cell) {
 		position: relative;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: 4px;
+		display: grid;
+		grid-template-rows: auto minmax(0, 1fr);
+		justify-items: center;
 		min-width: 0;
-		padding: 0 0.375rem;
+		padding: var(--hud-pad-top) 0.375rem var(--hud-pad-bottom);
 		overflow: hidden;
 	}
 
@@ -128,32 +134,31 @@
 		background: rgba(255, 255, 255, 0.14);
 	}
 
-	/* Labels: the UI face at 12px (Inter 600, uppercase, 0.08em) */
+	/* Labels: the UI face at 12px (Inter 600, uppercase, 0.08em), one line box. Never
+	   clipped: a label's width is its column's minimum. */
 	:global(.status-hud .hud-label) {
 		display: flex;
 		align-items: center;
 		gap: 3px;
-		max-width: 100%;
-		overflow: hidden;
 		white-space: nowrap;
 		font-family: var(--font-ui, var(--font-body, sans-serif));
 		font-size: 0.75rem;
 		font-weight: var(--font-ui-weight, 600);
-		line-height: 1.15;
+		line-height: 1;
 		letter-spacing: var(--tracking-ui, 0.08em);
 		text-transform: uppercase;
 		color: rgba(255, 255, 255, 0.72);
 	}
 
-	/* Every readout is as tall as the roll's digits, so all six labels share one line */
+	/* The readout fills the cell under the label: the value row, then the foot row */
 	:global(.status-hud .hud-readout) {
-		display: flex;
+		display: grid;
+		grid-template-rows: minmax(0, 1fr) var(--hud-foot);
+		justify-items: center;
 		align-items: center;
-		justify-content: center;
-		gap: 0.5rem;
+		align-self: stretch;
+		width: 100%;
 		min-width: 0;
-		max-width: 100%;
-		min-height: 1.75rem;
 	}
 
 	:global(.status-hud .hud-value) {
@@ -170,11 +175,15 @@
 		color: rgba(255, 255, 255, 0.6);
 	}
 
-	/* The meter beside (or, on phones, under) a number: Stability, Cards and Tokens share it.
-	   A fixed track; only the fill's transform changes. Each cell sets --bar-color/--bar-glow. */
+	/* The foot sits on the row's bottom line, whatever its own height */
+	:global(.status-hud .hud-foot) {
+		align-self: end;
+	}
+
+	/* The meter under a number: Stability, Cards and Tokens share it. A fixed track; only
+	   the fill's transform changes. Each cell sets --bar-color/--bar-glow. */
 	:global(.status-hud .bar) {
 		position: relative;
-		flex: none;
 		width: 56px;
 		height: 4px;
 		overflow: hidden;
@@ -193,7 +202,7 @@
 			background-color var(--dur-overlay, 300ms) var(--ease-enter, ease-out);
 	}
 
-	/* Four icons after a count: the Kings' skulls and the Aces' suits */
+	/* Four icons under a count: the Kings' skulls and the Aces' suits */
 	:global(.status-hud .hud-icons) {
 		display: flex;
 		gap: 3px;
@@ -210,35 +219,27 @@
 	}
 
 	/* ============================================
-	   PHONES (portrait): the same row, each readout stacked under its label
+	   PHONES (portrait): the same three rows, smaller
 	   ============================================ */
 
 	@media (max-width: 600px) {
 		.status-hud {
 			--aug-tl: 8px;
 			--aug-br: 8px;
+			--hud-foot: 12px;
 			grid-template-columns:
 				minmax(min-content, 1.3fr) minmax(min-content, 1.15fr) minmax(min-content, 1fr)
 				minmax(min-content, 0.9fr) minmax(min-content, 1.15fr) minmax(min-content, 1.15fr);
 			padding: 0 0.125rem;
 		}
 
-		/* Three rows (label, value, meta) on one grid: every label sits on the same line */
 		:global(.status-hud .hud-cell) {
-			justify-content: flex-start;
-			gap: 2px;
-			padding: 7px 0.125rem 0;
+			padding-inline: 0.125rem;
 		}
 
 		:global(.status-hud .hud-label) {
 			font-size: 0.6875rem; /* 11px: six labels share 360px */
 			letter-spacing: 0.03em;
-		}
-
-		:global(.status-hud .hud-readout) {
-			flex-direction: column;
-			gap: 4px;
-			min-height: 0;
 		}
 
 		:global(.status-hud .hud-value) {
@@ -260,32 +261,32 @@
 	}
 
 	/* ============================================
-	   LANDSCAPE PHONES: a short row, readouts side by side again
+	   LANDSCAPE PHONES: a short row, the same three rows packed tighter
 	   ============================================ */
 
 	@media (max-height: 500px) and (min-width: 601px) {
 		.status-hud {
 			--hud-height: 52px;
-		}
-
-		:global(.status-hud .hud-cell) {
-			gap: 2px;
+			--hud-foot: 14px;
+			--hud-pad-top: 3px;
+			--hud-pad-bottom: 4px;
 		}
 
 		:global(.status-hud .hud-label) {
 			font-size: 0.6875rem;
 		}
 
-		:global(.status-hud .hud-readout) {
-			min-height: 1.375rem;
+		:global(.status-hud .hud-value) {
+			font-size: 1.125rem;
 		}
 
-		:global(.status-hud .hud-value) {
-			font-size: 1.25rem;
+		:global(.status-hud .hud-max) {
+			font-size: 0.75rem;
 		}
 
 		:global(.status-hud .bar) {
 			width: 44px;
+			height: 3px;
 		}
 	}
 

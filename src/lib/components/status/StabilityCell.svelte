@@ -44,7 +44,9 @@
 			><span class="current">{gameState.tower}</span><span class="hud-max">/{MAX_STABILITY}</span
 			></span
 		>
-		<span class="bar"><span class="fill" style="transform: scaleX({fraction})"></span></span>
+		<span class="hud-foot bar"
+			><span class="fill" style="transform: scaleX({fraction})"></span></span
+		>
 	</span>
 	<span class="sr-only">Stability {gameState.tower} of {MAX_STABILITY}</span>
 </div>

@@ -73,7 +73,7 @@
 		<span class="hud-value"
 			><span class="current">{count}</span><span class="hud-max">/4</span></span
 		>
-		<span class="skulls">
+		<span class="hud-foot skulls">
 			{#each [0, 1, 2, 3] as i (i)}
 				<img
 					class="skull"
@@ -134,8 +134,8 @@
 
 	.skull {
 		display: block;
-		width: 18px;
-		height: 18px;
+		width: var(--hud-foot, 18px);
+		height: var(--hud-foot, 18px);
 		opacity: 0.22;
 		filter: grayscale(1);
 	}
@@ -199,17 +199,6 @@
 	@media (max-width: 600px) {
 		.skulls {
 			gap: 2px;
-		}
-		.skull {
-			width: 12px;
-			height: 12px;
-		}
-	}
-
-	@media (max-height: 500px) and (min-width: 601px) {
-		.skull {
-			width: 15px;
-			height: 15px;
 		}
 	}
 
