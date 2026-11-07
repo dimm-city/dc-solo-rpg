@@ -1675,11 +1675,21 @@ about 6.9, and about 7.9 once Salvation is unlocked.
 Fixes from the owner's own phone testing (Android, Vivaldi, about 393px wide) and three more
 markups, all merged into PR #51.
 
-**Rules.** A missed Salvation roll adds no token (a natural 1 included; it still makes the
-player Surreal), so tokens only ever fall. The fourth Ace ends the game: survive its Stability
-check and the player escapes; drop to 0 and they fall. A **Hard** difficulty keeps the old
-rules (misses add tokens, four Aces make Salvation automatic after a Stability check) to stay
-under the SRD's 1%. Simulated win rates: Hard 0.33%, Normal 46.8%, Easy 55.3%.
+**Rules.** On Normal and Easy a missed Salvation roll adds no token (a natural 1 included; it
+still makes the player Surreal), so tokens only ever fall. On **Easy** the fourth Ace ends the
+game: survive its Stability check and the player escapes; drop to 0 and they fall. On **Normal**
+and **Hard** the fourth Ace does not end the game: with four Aces Salvation has no target, each
+roll is a Stability check and the token comes off if Stability holds, and the game is won only by
+the last token. **Hard** also adds tokens on a miss (+1, +2 on a natural 1). Simulated win rates:
+Hard 0.30%, Normal 1.28%, Easy 54.9%.
+
+**Dice renderer.** A theme change used to create a new renderer and leave the old one alive (11
+live WebGL contexts after 10 changes). One renderer now lasts the session: a theme change
+re-themes it in place, a new game reuses it, and a proper destroy path releases the context when
+a renderer truly must go.
+
+**Journal list.** On phones and windows up to 760px tall the round's card list is capped and
+scrolls inside itself, so the writing keeps four lines and Record Entry stays on screen.
 
 **Dice rolling in a corner: root cause found.** It was never the canvas size. dice-box 0.0.12
 spawns each die inside the table wall (0.9 of the half-size, walls at 0.93, die radius 100)
