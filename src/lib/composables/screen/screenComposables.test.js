@@ -11,7 +11,9 @@ import { useFailureCheck } from './useFailureCheck.svelte.js';
 import { useSuccessCheck } from './useSuccessCheck.svelte.js';
 import { useRollForTasks, DEAL_DELAY_MS } from './useRollForTasks.svelte.js';
 import { useInitialDamage } from './useInitialDamage.svelte.js';
-import { createResultHold, RESULT_HOLD_MS } from './resultHold.svelte.js';
+import { createResultHold, RESULT_HOLD_MS, NARRATION_BEAT_MS } from './resultHold.svelte.js';
+import { updateAudioSettings, stopNarration } from '../../stores/audioStore.svelte.js';
+import { installFakeTTS } from '../../../test-utils/fakeTTS.js';
 
 vi.mock('../../stores/diceStore.svelte.js', () => ({
 	rollDice: vi.fn(async () => {}),
@@ -452,6 +454,90 @@ describe('useRollForTasks', () => {
 	});
 });
 
+describe('useRollForTasks, with dice rolls announced', () => {
+	let fake;
+
+	beforeEach(async () => {
+		gameState.state = 'rollForTasks';
+		fake = await installFakeTTS();
+		await updateAudioSettings({ autoAnnounceRolls: true });
+	});
+
+	afterEach(async () => {
+		stopNarration();
+		await updateAudioSettings({ autoAnnounceRolls: false });
+	});
+
+	it('reads the roll out, and deals a beat after the voice has finished rather than after the hold', async () => {
+		vi.useFakeTimers();
+		const tasks = useRollForTasks();
+		mockDieRoll(8);
+
+		await tasks.handleRollForTasks();
+		expect(fake.spoken).toEqual(['You rolled a 8. Draw 3 cards.']);
+		expect(tasks.hold.active).toBe(true);
+		expect(tasks.hold.waiting).toBe(true);
+		expect(tasks.hold.progress()).toBe(0);
+
+		// The voice is still reading: the hold would long have run out
+		await vi.advanceTimersByTimeAsync(DEAL_DELAY_MS * 3);
+		expect(gameState.state).toBe('rollForTasks');
+		expect(tasks.hold.waiting).toBe(true);
+
+		fake.end();
+		await vi.advanceTimersByTimeAsync(0);
+		expect(tasks.hold.waiting).toBe(false);
+		expect(tasks.hold.duration).toBe(NARRATION_BEAT_MS);
+		await vi.advanceTimersByTimeAsync(NARRATION_BEAT_MS - 1);
+		expect(gameState.state).toBe('rollForTasks');
+		await vi.advanceTimersByTimeAsync(1);
+		expect(gameState.state).toBe('drawCard');
+	});
+
+	it('a press during the reading deals at once; the voice reads on until the card replaces it', async () => {
+		vi.useFakeTimers();
+		const tasks = useRollForTasks();
+		mockDieRoll(8);
+
+		await tasks.handleRollForTasks();
+		await tasks.handleRollForTasks();
+		expect(gameState.state).toBe('drawCard');
+		expect(tasks.hold.active).toBe(false);
+		expect(fake.isSpeaking()).toBe(true);
+
+		fake.end();
+		await vi.advanceTimersByTimeAsync(NARRATION_BEAT_MS * 2);
+		expect(gameState.state).toBe('drawCard'); // and nothing fired twice
+	});
+
+	it('leaving the screen cancels the wait', async () => {
+		vi.useFakeTimers();
+		const tasks = useRollForTasks();
+		mockDieRoll(8);
+
+		await tasks.handleRollForTasks();
+		tasks.resetState();
+		expect(tasks.hold.active).toBe(false);
+		fake.end();
+		await vi.advanceTimersByTimeAsync(NARRATION_BEAT_MS * 2);
+		expect(gameState.state).toBe('rollForTasks');
+	});
+
+	it('with rolls not announced, nothing is read and the hold applies as before', async () => {
+		vi.useFakeTimers();
+		await updateAudioSettings({ autoAnnounceRolls: false });
+		const tasks = useRollForTasks();
+		mockDieRoll(8);
+
+		await tasks.handleRollForTasks();
+		expect(fake.spoken).toEqual([]);
+		expect(tasks.hold.waiting).toBe(false);
+		expect(tasks.hold.duration).toBe(DEAL_DELAY_MS);
+		await vi.advanceTimersByTimeAsync(DEAL_DELAY_MS);
+		expect(gameState.state).toBe('drawCard');
+	});
+});
+
 describe('the result hold: a result moves on by itself after a beat', () => {
 	it('is the shared 2s beat, the same for the deal', () => {
 		expect(RESULT_HOLD_MS).toBe(2000);
@@ -562,6 +648,69 @@ describe('the result hold: a result moves on by itself after a beat', () => {
 		expect(check.hold.active).toBe(false);
 		await vi.advanceTimersByTimeAsync(RESULT_HOLD_MS * 2);
 		expect(gameState.state).toBe('failureCheck');
+	});
+
+	it('holds for a voice (its line full), then runs out over the beat', async () => {
+		vi.useFakeTimers();
+		const done = vi.fn();
+		const hold = createResultHold();
+		let end;
+		const narration = { promise: new Promise((resolve) => (end = resolve)), cancel: vi.fn() };
+
+		hold.start(done, RESULT_HOLD_MS, { narration });
+		expect(hold.active).toBe(true);
+		expect(hold.waiting).toBe(true);
+		expect(hold.paused).toBe(false);
+		expect(hold.progress()).toBe(0);
+		await vi.advanceTimersByTimeAsync(RESULT_HOLD_MS * 2);
+		expect(done).not.toHaveBeenCalled();
+
+		end(true);
+		await vi.advanceTimersByTimeAsync(0);
+		expect(hold.waiting).toBe(false);
+		expect(hold.duration).toBe(NARRATION_BEAT_MS);
+		await vi.advanceTimersByTimeAsync(NARRATION_BEAT_MS - 1);
+		expect(done).not.toHaveBeenCalled();
+		await vi.advanceTimersByTimeAsync(1);
+		expect(done).toHaveBeenCalledTimes(1);
+		expect(hold.active).toBe(false);
+	});
+
+	it('cancelled while waiting for the voice, it cancels the wait and never fires', async () => {
+		vi.useFakeTimers();
+		const done = vi.fn();
+		const hold = createResultHold();
+		let end;
+		const narration = { promise: new Promise((resolve) => (end = resolve)), cancel: vi.fn() };
+
+		hold.start(done, RESULT_HOLD_MS, { narration });
+		hold.cancel();
+		expect(narration.cancel).toHaveBeenCalledTimes(1);
+		expect(hold.active).toBe(false);
+		expect(hold.waiting).toBe(false);
+		expect(hold.progress()).toBe(1);
+		end(true);
+		await vi.advanceTimersByTimeAsync(NARRATION_BEAT_MS * 2);
+		expect(done).not.toHaveBeenCalled();
+	});
+
+	it('a voice that ends under a dialog starts its beat paused', async () => {
+		vi.useFakeTimers();
+		const done = vi.fn();
+		const hold = createResultHold();
+		let end;
+		const narration = { promise: new Promise((resolve) => (end = resolve)), cancel: vi.fn() };
+
+		hold.start(done, RESULT_HOLD_MS, { narration });
+		hold.pause();
+		end(true);
+		await vi.advanceTimersByTimeAsync(0);
+		expect(hold.paused).toBe(true);
+		await vi.advanceTimersByTimeAsync(NARRATION_BEAT_MS * 2);
+		expect(done).not.toHaveBeenCalled();
+		hold.resume();
+		await vi.advanceTimersByTimeAsync(NARRATION_BEAT_MS);
+		expect(done).toHaveBeenCalledTimes(1);
 	});
 
 	it('waits while paused (a dialog is open), including a hold that starts paused', async () => {

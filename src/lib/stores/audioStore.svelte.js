@@ -1,5 +1,6 @@
 import { ttsService } from '$lib/services/tts/textToSpeech.js';
 import { logger } from '../utils/logger.js';
+import { isReadAloudOn } from '../utils/playMode.js';
 
 /**
  * Audio and gameplay auto-play settings store
@@ -276,10 +277,13 @@ export async function updateAudioSettings(updates) {
 	delete globalUpdates.ttsApiEndpoint;
 	delete globalUpdates.ttsModel;
 
+	const wasReading = isReadAloudOn(audioSettings);
 	audioSettings = {
 		...audioSettings,
 		...globalUpdates
 	};
+	// Read-aloud switched off mid-sentence: the voice stops, and whatever waits on it moves on
+	if (wasReading && !isReadAloudOn(audioSettings)) stopNarration();
 
 	// Check if provider changed
 	const providerChanged = updates.ttsProvider && updates.ttsProvider !== previousProvider;
@@ -361,28 +365,96 @@ export function resetSettings() {
 	saveSettings();
 }
 
+// ===== Narration: the speech in flight, and waiting for it =====
+// The game waits for the voice in two places (the deal after Roll for Tasks, and a card that
+// is read aloud) through awaitNarration(). A narration ends when the provider finishes
+// (every provider resolves speak() when playback ends) or when stopNarration() cuts it off.
+
+/** @type {{ done: Promise<void>, settle: () => void } | null} The speech in flight */
+let narration = null;
+
 /**
  * Speak text using TTS service
  * @param {string} text - Text to speak
  * @param {Object} options - Speaking options
- * @returns {Promise<void>}
+ * @returns {Promise<void>} Resolves when the voice has finished (or was cut off)
  */
 export async function speak(text, options = {}) {
 	if (!text) return;
 
+	const current = {};
+	current.done = new Promise((resolve) => (current.settle = resolve));
+	narration = current;
+	ttsState.isSpeaking = true;
+	ttsState.currentText = text;
+
 	try {
-		ttsState.isSpeaking = true;
-		ttsState.currentText = text;
-
 		await ttsService.speak(text, options);
-
-		ttsState.isSpeaking = false;
-		ttsState.currentText = null;
 	} catch (error) {
 		logger.error('[AudioStore] TTS error:', error);
-		ttsState.isSpeaking = false;
-		ttsState.currentText = null;
+	} finally {
+		current.settle();
+		// A later speak() (or a stop) may already have taken over
+		if (narration === current) {
+			narration = null;
+			ttsState.isSpeaking = false;
+			ttsState.currentText = null;
+		}
 	}
+}
+
+/** @returns {boolean} True while the voice is reading something */
+export function isNarrating() {
+	return narration !== null;
+}
+
+/**
+ * Wait for the voice to fall silent.
+ *
+ * Resolves `true` once whatever is being read has ended (and nothing has taken its place), at
+ * once when nothing is being read or read-aloud is off; `false` when cancelled. Cancelling
+ * leaves the voice alone: it only stops the wait.
+ *
+ * @returns {{ promise: Promise<boolean>, cancel: () => void }}
+ */
+export function awaitNarration() {
+	let cancelled = false;
+	let cancel;
+	const promise = new Promise((resolve) => {
+		cancel = () => {
+			cancelled = true;
+			resolve(false);
+		};
+		// Chained: a narration that ends because another took over waits for that one too
+		const waitFor = (current) => {
+			if (!current) {
+				resolve(true);
+				return;
+			}
+			current.done.then(() => {
+				if (!cancelled) waitFor(narration);
+			});
+		};
+		waitFor(narration);
+	});
+	return { promise, cancel };
+}
+
+/**
+ * Cut the voice off: whatever is being read stops, and anyone waiting on it moves on at once
+ * (without waiting for the provider to report the stop).
+ */
+export function stopNarration() {
+	const current = narration;
+	narration = null;
+	ttsState.isSpeaking = false;
+	ttsState.currentText = null;
+	try {
+		ttsService.stop();
+	} catch (error) {
+		logger.error('[AudioStore] TTS stop error:', error);
+	}
+	current?.settle();
 }
 
 /**

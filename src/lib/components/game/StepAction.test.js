@@ -73,6 +73,21 @@ describe('StepAction', () => {
 		expect(container.textContent.trim()).toBe('Continue');
 	});
 
+	it('shows a full, dim line while the hold waits for the voice', () => {
+		const { getByTestId } = render(StepAction, {
+			props: {
+				text: 'Draw 3 Cards',
+				advancing: true,
+				advanceWaiting: true,
+				advanceProgress: () => 0,
+				testid: 'd-button'
+			}
+		});
+		const line = getByTestId('step-advance');
+		expect(line.classList.contains('waiting')).toBe(true);
+		expect(line.style.transform).toBe('scaleX(1)');
+	});
+
 	it('stops the line while paused, and has none when nothing is pending', async () => {
 		const { getByTestId, queryByTestId, rerender } = render(StepAction, {
 			props: { text: 'Continue', advancing: true, advancePaused: true, testid: 'c-button' }
