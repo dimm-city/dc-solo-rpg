@@ -21,7 +21,7 @@ Spec: `splash-and-instructions.spec.ts`.
    Once it has played (or the first-time choice was made), it never plays again.
 2. **The first-run panel** ("Dream Console", with "Dimm City" above it) offers three choices:
    - **Play** ("The game teaches you as you go."): rule tips on, straight to the games.
-   - **Read the rules first**: opens the Game Guide; closing it ("Got it") goes on to the
+   - **Read the rules first**: opens the Game Guide; closing it ("Done") goes on to the
      games with rule tips on.
    - **I know how to play: don't show tips.**: rule tips off, straight to the games.
 3. Any choice sets `instructions-seen`, so the panel is gone for good, across sessions.

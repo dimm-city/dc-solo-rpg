@@ -78,8 +78,6 @@
 	isOpen={open}
 	title={view === 'settings' ? 'AI settings' : 'AI summary'}
 	onClose={handleClose}
-	footerButtonText={view === 'settings' ? 'Done' : 'Close'}
-	footerButtonIcon={view === 'settings' ? 'check' : 'none'}
 >
 	<div bind:this={body}>
 		{#if view === 'settings'}

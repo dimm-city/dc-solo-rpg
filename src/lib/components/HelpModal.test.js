@@ -92,10 +92,10 @@ describe('HelpModal', () => {
 		expect(screen.getByRole('button', { name: "Rules you've met" })).toBeInTheDocument();
 	});
 
-	it('should have "Got it" as confirm button text', async () => {
+	it('should have "Done" as its footer button, like every dialog (MN-03)', async () => {
 		await renderModal();
 
-		expect(screen.getByRole('button', { name: 'Got it' })).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: 'Done' })).toBeInTheDocument();
 	});
 
 	it('should not render when isOpen is false', async () => {
@@ -109,7 +109,7 @@ describe('HelpModal', () => {
 		const onClose = vi.fn();
 		await renderModal({ onClose });
 
-		screen.getByRole('button', { name: 'Got it' }).click();
+		screen.getByRole('button', { name: 'Done' }).click();
 
 		expect(onClose).toHaveBeenCalled();
 	});
