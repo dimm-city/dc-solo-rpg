@@ -328,8 +328,11 @@
 <style>
 	/* ============================================
 	   BYTE CONTAINER
-	   Sized to its content: 420px tall at least, 640px at most (or whatever fits).
-	   Animations touch opacity + transform only.
+	   Most of the viewport at every size (owner decision): the card fills the deck column
+	   below the progress line, capped at 85dvh on desktop and tablet (a tall portrait card)
+	   and 90dvh on phones; landscape phones get whatever height is left. Header, headline,
+	   mechanic note and footer stay put; only the story scrolls, so a short story leaves
+	   calm space in the body. Animations touch opacity + transform only.
 	   ============================================ */
 
 	.byte-container {
@@ -340,11 +343,10 @@
 
 		position: relative;
 		display: flex;
-		flex: 0 1 auto;
-		width: min(92vw, 520px);
-		/* Shrinks to fit short windows (the deck column is flex), never below this */
-		min-height: min(420px, calc(100dvh - 6rem));
-		max-height: 640px;
+		flex: 1 1 auto;
+		min-height: 0;
+		width: min(92vw, 36rem);
+		max-height: 85dvh;
 		max-width: 100%;
 		opacity: 0;
 		/* Static glow: the shell is clip-pathed, so box-shadow would be cut off */
@@ -839,10 +841,11 @@
 		border: 0;
 	}
 
-	/* Phones */
+	/* Phones: 92vw wide, from just under the progress line to near the bottom edge */
 	@media screen and (max-width: 600px) {
 		.byte-container {
-			width: calc(100% - 1rem);
+			width: 92vw;
+			max-height: 90dvh;
 		}
 
 		.byte-shell {
@@ -862,11 +865,12 @@
 		}
 	}
 
-	/* Landscape phones and short windows: wider and shorter, so the story has room */
+	/* Landscape phones and short windows: wider, and as tall as the column allows, with a few
+	   pixels of breathing space at the bottom edge for the glow */
 	@media (max-height: 500px) {
 		.byte-container {
 			width: min(92vw, 720px);
-			min-height: calc(100dvh - 4rem);
+			max-height: calc(100dvh - 2.75rem);
 		}
 
 		.byte-shell {
