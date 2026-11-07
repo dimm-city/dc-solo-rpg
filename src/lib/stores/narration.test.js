@@ -12,7 +12,7 @@ import {
 	resetSettings
 } from './audioStore.svelte.js';
 import { READ_ALOUD_ON, READ_ALOUD_OFF } from '../utils/playMode.js';
-import { installFakeTTS } from '../../test-utils/fakeTTS.js';
+import { installFakeTTS } from '../services/tts/providers/FakeTTSProvider.test.helper.js';
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 

@@ -14,7 +14,7 @@ import {
 	resetSettings,
 	stopNarration
 } from '../stores/audioStore.svelte.js';
-import { installFakeTTS } from '../../test-utils/fakeTTS.js';
+import { installFakeTTS } from '../services/tts/providers/FakeTTSProvider.test.helper.js';
 
 // Reduced motion makes the dismiss and the fourth King's staging instant; one test turns it off
 const motion = vi.hoisted(() => ({ reduced: true }));

@@ -3,10 +3,13 @@
  * `fake.end()` finishes the one being read; `stop()` cuts it off (and, like the real providers,
  * settles its speak() promise). Install it with installFakeTTS(), which makes it the active
  * provider of the shared ttsService.
+ *
+ * Named `*.test.helper.js`: not a test file to Vitest, and left out of the npm package like the
+ * tests (package.json `files`).
  */
-import { BaseTTSProvider } from '../lib/services/tts/providers/BaseTTSProvider.js';
-import { TTS_PROVIDERS } from '../lib/services/tts/providers/index.js';
-import { ttsService } from '../lib/services/tts/textToSpeech.js';
+import { BaseTTSProvider } from './BaseTTSProvider.js';
+import { TTS_PROVIDERS } from './index.js';
+import { ttsService } from '../textToSpeech.js';
 
 export class FakeTTSProvider extends BaseTTSProvider {
 	constructor() {

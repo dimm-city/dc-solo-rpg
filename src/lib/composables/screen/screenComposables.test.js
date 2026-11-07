@@ -13,7 +13,7 @@ import { useRollForTasks, DEAL_DELAY_MS } from './useRollForTasks.svelte.js';
 import { useInitialDamage } from './useInitialDamage.svelte.js';
 import { createResultHold, RESULT_HOLD_MS, NARRATION_BEAT_MS } from './resultHold.svelte.js';
 import { updateAudioSettings, stopNarration } from '../../stores/audioStore.svelte.js';
-import { installFakeTTS } from '../../../test-utils/fakeTTS.js';
+import { installFakeTTS } from '../../services/tts/providers/FakeTTSProvider.test.helper.js';
 
 vi.mock('../../stores/diceStore.svelte.js', () => ({
 	rollDice: vi.fn(async () => {}),
