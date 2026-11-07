@@ -44,7 +44,8 @@ export default [
 			'pnpm-lock.yaml',
 			'package-lock.json',
 			'yarn.lock',
-			'dist/'
+			'dist/',
+			'docs/ux-qa/design-polish/'
 		]
 	}
 ];
