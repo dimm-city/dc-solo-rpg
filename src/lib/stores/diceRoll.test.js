@@ -39,6 +39,29 @@ class FakeDiceBox {
 	throwFinished = vi.fn(() => true);
 	renderer = { render: vi.fn(), domElement: { width: 0, height: 0 } };
 	setDimensions = vi.fn();
+	// A 393 x 851 phone, in dice-box's terms (world units are half CSS px)
+	display = {
+		currentWidth: 196.5,
+		currentHeight: 425.5,
+		containerWidth: 393,
+		containerHeight: 851
+	};
+	strength = 1.5;
+	baseScale = 100;
+	/** As dice-box's own: each die starts 0.9 of the half-size out, at the edge opposite the target */
+	getNotationVectors = vi.fn((notation, target) => ({
+		vectors: [
+			{
+				pos: {
+					x: this.display.containerWidth * (target.x > 0 ? -0.9 : 0.9),
+					y: this.display.containerHeight * (target.y > 0 ? -0.9 : 0.9),
+					z: 300
+				},
+				velocity: { x: 500, y: -500, z: -10 },
+				axis: { x: 0.9, y: 0.9, z: 0.9, a: 0.5 }
+			}
+		]
+	}));
 }
 const box = new FakeDiceBox();
 
@@ -55,9 +78,12 @@ const {
 	diceState,
 	initializeDiceBox,
 	diceScreenCentre,
+	reportShortThrow,
 	SETTLE_HOLD_MS,
 	DICE_HOLD_MS,
-	STATIC_ROLL_MS
+	STATIC_ROLL_MS,
+	SPAWN_MARGIN,
+	MIN_THROW
 } = await import('./diceStore.svelte.js');
 const { ANIMATION_DURATION } = await import('../constants/animations.js');
 
@@ -140,6 +166,93 @@ describe('dice canvas size', () => {
 		await rollDice(12);
 
 		expect(box.setDimensions).not.toHaveBeenCalled();
+	});
+});
+
+describe('the throw', () => {
+	const phone = {
+		currentWidth: 196.5,
+		currentHeight: 425.5,
+		containerWidth: 393,
+		containerHeight: 851
+	};
+
+	it('initializeDiceBox takes over the throw: every die starts clear of the walls, thrown from far enough', () => {
+		box.display = { ...phone };
+		expect(typeof box.startClickThrow).toBe('function');
+		const vectors = box.startClickThrow('1d20@10');
+		const [notation, target, magnitude, distance] = box.getNotationVectors.mock.calls.at(-1);
+		expect(notation).toBe('1d20@10');
+		expect(Math.hypot(target.x, target.y)).toBeGreaterThanOrEqual(MIN_THROW * 196.5 - 1e-9);
+		expect(distance).toBeCloseTo(Math.hypot(target.x, target.y) + 100);
+		expect(magnitude).toBeGreaterThan(0);
+		// dice-box's 0.9 start would be inside its 0.93 wall by most of the die's radius (100)
+		const [die] = vectors.vectors;
+		expect(Math.abs(die.pos.x)).toBeLessThanOrEqual(0.93 * 393 - 100 - SPAWN_MARGIN);
+		expect(Math.abs(die.pos.y)).toBeLessThanOrEqual(0.93 * 851 - 100 - SPAWN_MARGIN);
+		expect(die.pos.z).toBe(300);
+		// dice-box's spin axis (random each way) is made a unit vector, so the die's first
+		// physics step sees it at its own size
+		expect(Math.hypot(die.axis.x, die.axis.y, die.axis.z)).toBeCloseTo(1);
+		expect(die.axis.a).toBe(0.5);
+	});
+
+	it('logs a throw whose dice stayed in one corner, with the throw that did it', async () => {
+		box.display = { ...phone };
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		box.roll.mockImplementation(() => {
+			box.startClickThrow('1d20@10'); // as dice-box's roll() does
+			return new Promise(() => {});
+		});
+		// A die resting where it started, in the top-left corner
+		box.diceList = [{ body: { sleepState: 1, position: { x: -280, y: 740 } } }];
+
+		await rollDice(10, {});
+
+		const line = warn.mock.calls.map((c) => c.join(' ')).find((t) => t.includes('Short throw'));
+		expect(line).toContain('0% x 0% of the table');
+		expect(line).toContain('"starts"');
+		warn.mockRestore();
+	});
+
+	it('says nothing about a throw that crossed the table', async () => {
+		box.display = { ...phone };
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		box.roll.mockImplementation(() => new Promise(() => {}));
+		let x = -300;
+		box.diceList = [
+			{
+				body: {
+					sleepState: 1,
+					position: {
+						get x() {
+							return (x += 300);
+						},
+						y: 0
+					}
+				}
+			}
+		];
+
+		await rollDice(10, {});
+
+		expect(warn.mock.calls.map((c) => c.join(' ')).some((t) => t.includes('Short throw'))).toBe(
+			false
+		);
+		warn.mockRestore();
+	});
+
+	it('reportShortThrow measures the path against the table', () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		reportShortThrow({ display: phone }, { minX: -300, maxX: -250, minY: 600, maxY: 700 });
+		expect(warn.mock.calls.at(-1).join(' ')).toContain('6% x 6% of the table');
+		warn.mockClear();
+		reportShortThrow({ display: phone }, { minX: -300, maxX: 100, minY: 600, maxY: 700 });
+		expect(warn).not.toHaveBeenCalled();
+		reportShortThrow({ display: phone }, { minX: Infinity }); // nothing tracked
+		reportShortThrow(null, { minX: 0, maxX: 0, minY: 0, maxY: 0 });
+		expect(warn).not.toHaveBeenCalled();
+		warn.mockRestore();
 	});
 });
 
