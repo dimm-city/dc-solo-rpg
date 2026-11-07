@@ -63,7 +63,7 @@ Each screen composable exports:
 - Handler function (e.g., `handleRollForTasks()`)
 - Reset function (`resetState()`)
 - Derived values for the button (`buttonText`, `buttonHint`)
-- `hold`: the result hold (`active`, `paused`, `duration`, `id`; GameScreen pauses it under dialogs)
+- `hold`: the result hold (`active`, `paused`, `progress()`; GameScreen pauses it under dialogs)
 
 ---
 

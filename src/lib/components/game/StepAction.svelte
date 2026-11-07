@@ -9,9 +9,9 @@
 	 * Only roll buttons pass one, and it is part of the label, never a separate chip.
 	 * `changed` briefly highlights a button that has just changed meaning (GameScreen ignores
 	 * presses for that moment, so a press meant for the old button never lands on the new one).
-	 * `advancing` means the game moves on by itself in `advanceMs` (a result hold): a thin line
-	 * along the bottom of the button runs out over that time, and stops while `advancePaused`.
-	 * `advanceKey` restarts it for each new hold.
+	 * `advancing` means the game is about to move on by itself (a result hold): a thin line along
+	 * the bottom of the button runs out as `advanceProgress()` goes from 0 to 1. It follows the
+	 * hold's own clock, so it stops while the hold is paused and never drifts from it.
 	 *
 	 * @component
 	 */
@@ -29,9 +29,8 @@
 		busy = false,
 		changed = false,
 		advancing = false,
-		advanceMs = 0,
+		advanceProgress = () => 0,
 		advancePaused = false,
-		advanceKey = 0,
 		testid,
 		id = undefined
 	} = $props();
@@ -44,6 +43,21 @@
 	const swap = { duration: reduceMotion ? 0 : LABEL_SWAP_MS };
 
 	const label = $derived(hint ? `${text} · ${hint}` : text);
+
+	// The run-out line: what is left of the hold, read from its clock every frame. Under reduced
+	// motion it steps down in quarters instead of gliding (like the card's auto-play hold line).
+	let remaining = $state(1);
+	$effect(() => {
+		if (!advancing) return;
+		let frame;
+		const tick = () => {
+			const progress = Math.min(1, Math.max(0, advanceProgress()));
+			remaining = 1 - (reduceMotion ? Math.floor(progress * 4) / 4 : progress);
+			frame = requestAnimationFrame(tick);
+		};
+		tick();
+		return () => cancelAnimationFrame(frame);
+	});
 </script>
 
 <div class="step-action" class:changed {id}>
@@ -71,15 +85,13 @@
 				{/key}
 			</span>
 			{#if advancing}
-				{#key advanceKey}
-					<span
-						class="advance-line"
-						class:paused={advancePaused}
-						style:animation-duration="{advanceMs}ms"
-						data-testid="step-advance"
-						aria-hidden="true"
-					></span>
-				{/key}
+				<span
+					class="advance-line"
+					class:paused={advancePaused}
+					style:transform="scaleX({remaining})"
+					data-testid="step-advance"
+					aria-hidden="true"
+				></span>
 			{/if}
 		</AugmentedButton>
 	</ButtonBar>
@@ -103,6 +115,12 @@
 		display: grid;
 		justify-items: center;
 		gap: 0.125rem;
+	}
+
+	/* A two-line label splits evenly ("Roll for Stability · / Salvation is assured"), never
+	   leaving one word on a line of its own */
+	.label-main {
+		text-wrap: balance;
 	}
 
 	.label-hint {
@@ -129,7 +147,7 @@
 	}
 
 	/* The game moves on by itself: a thin line inside the frame runs out, right to left, like the
-	   card's auto-play hold line. Linear, because it is a clock. */
+	   card's auto-play hold line (its scale is set from the hold's clock in the script) */
 	.advance-line {
 		position: absolute;
 		left: 18px;
@@ -141,28 +159,5 @@
 		opacity: 0.7;
 		transform-origin: left center;
 		pointer-events: none;
-		animation-name: advance-run-out;
-		animation-timing-function: linear;
-		animation-fill-mode: both;
-	}
-
-	.advance-line.paused {
-		animation-play-state: paused;
-	}
-
-	@keyframes advance-run-out {
-		from {
-			transform: scaleX(1);
-		}
-		to {
-			transform: scaleX(0);
-		}
-	}
-
-	/* Reduced motion: the line steps down in quarters instead of gliding */
-	@media (prefers-reduced-motion: reduce) {
-		.advance-line {
-			animation-timing-function: steps(4, end);
-		}
 	}
 </style>

@@ -56,11 +56,16 @@ describe('StepAction', () => {
 
 	it('draws a line inside the button that runs out while the game is about to move on', () => {
 		const { getByTestId, container } = render(StepAction, {
-			props: { text: 'Continue', advancing: true, advanceMs: 2000, testid: 'c-button' }
+			props: {
+				text: 'Continue',
+				advancing: true,
+				advanceProgress: () => 0.25,
+				testid: 'c-button'
+			}
 		});
 		const line = getByTestId('step-advance');
 		expect(getByTestId('c-button').contains(line)).toBe(true);
-		expect(line.style.animationDuration).toBe('2000ms');
+		expect(line.style.transform).toBe('scaleX(0.75)'); // what is left of the hold
 		expect(line.getAttribute('aria-hidden')).toBe('true');
 		expect(line.classList.contains('paused')).toBe(false);
 		// Decorative only: the label and accessible name are unchanged

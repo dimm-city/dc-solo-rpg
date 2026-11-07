@@ -172,7 +172,8 @@ describe('GameScreen step button', () => {
 	});
 });
 
-describe('GameScreen result hold', () => {
+// Real timers through a 2s hold: these take a few seconds each
+describe('GameScreen result hold', { timeout: 15000 }, () => {
 	it('announces the result, shows the run-out line, then moves on by itself', async () => {
 		setUp('failureCheck');
 		const { getByTestId, queryByTestId } = render(GameScreen);
@@ -186,10 +187,13 @@ describe('GameScreen result hold', () => {
 			'Rolled 13 · no Stability lost · 20/20'
 		);
 		expect(gameState.state).toBe('failureCheck');
-		const line = getByTestId('step-advance');
-		expect(line.style.animationDuration).toBe(`${HOLD_MS}ms`);
+		// The run-out line follows the hold's clock: part-run by now
+		await settle(HOLD_MS / 2);
+		const scale = Number(/scaleX\(([\d.]+)\)/.exec(getByTestId('step-advance').style.transform)[1]);
+		expect(scale).toBeGreaterThan(0.2);
+		expect(scale).toBeLessThan(0.8);
 
-		await settle(HOLD_MS);
+		await settle(HOLD_MS / 2);
 		expect(gameState.state).toBe('log');
 		expect(queryByTestId('step-advance')).toBeNull();
 	});

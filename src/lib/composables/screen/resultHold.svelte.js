@@ -6,7 +6,7 @@
  * hold). Results that end the game never start one: they wait for the player.
  *
  * GameScreen pauses the hold while a dialog covers the table, and StepAction draws it as a
- * thin line that runs out on the step button (`active`, `paused`, `duration`, `id`).
+ * thin line that runs out on the step button (`active`, `paused`, `progress()`).
  */
 import { ANIMATION_DURATION } from '../../constants/animations.js';
 import { createHoldTimer } from '../../components/card/holdTimer.js';
@@ -19,8 +19,6 @@ export function createResultHold() {
 	let active = $state(false);
 	let paused = $state(false);
 	let duration = $state(RESULT_HOLD_MS);
-	/** Bumped on every start, so the cue restarts even when one hold follows another */
-	let id = $state(0);
 	/** Set while a dialog is open: a hold that starts meanwhile starts paused */
 	let held = false;
 
@@ -38,7 +36,6 @@ export function createResultHold() {
 	function start(onDone, ms = RESULT_HOLD_MS) {
 		cancel();
 		duration = ms;
-		id += 1;
 		active = true;
 		timer = createHoldTimer(ms, () => {
 			timer = null;
@@ -66,6 +63,11 @@ export function createResultHold() {
 		paused = false;
 	}
 
+	/** @returns {number} 0 when the hold starts, 1 when it runs out (or when none is running) */
+	function progress() {
+		return timer ? timer.progress() : 1;
+	}
+
 	return {
 		/** True from the result until the game moves on (or the hold is cancelled) */
 		get active() {
@@ -77,9 +79,7 @@ export function createResultHold() {
 		get duration() {
 			return duration;
 		},
-		get id() {
-			return id;
-		},
+		progress,
 		start,
 		cancel,
 		pause,

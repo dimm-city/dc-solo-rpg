@@ -846,9 +846,8 @@
 							disabled={step.disabled}
 							changed={stepChanged}
 							advancing={step.hold.active}
-							advanceMs={step.hold.duration}
+							advanceProgress={step.hold.progress}
 							advancePaused={step.hold.paused}
-							advanceKey={step.hold.id}
 							testid={step.testid}
 							onclick={runStep}
 						/>

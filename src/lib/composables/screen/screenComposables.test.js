@@ -335,7 +335,10 @@ describe('the result hold: a result moves on by itself after a beat', () => {
 		await check.handleFailureCheck();
 		expect(check.hold.active).toBe(true);
 		expect(check.hold.duration).toBe(RESULT_HOLD_MS);
-		await vi.advanceTimersByTimeAsync(RESULT_HOLD_MS - 1);
+		expect(check.hold.progress()).toBe(0);
+		await vi.advanceTimersByTimeAsync(RESULT_HOLD_MS / 2);
+		expect(check.hold.progress()).toBeCloseTo(0.5, 1);
+		await vi.advanceTimersByTimeAsync(RESULT_HOLD_MS / 2 - 1);
 		expect(gameState.state).toBe('failureCheck');
 		await vi.advanceTimersByTimeAsync(1);
 		expect(gameState.state).toBe('drawCard');

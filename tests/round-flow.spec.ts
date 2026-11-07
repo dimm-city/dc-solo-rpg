@@ -187,7 +187,8 @@ test.describe('Results move on by themselves', () => {
 		await expect(page.getByTestId('result-line')).toHaveText(line, { timeout: 30000 });
 		await expect(page.getByTestId('live-region')).toHaveText(line);
 		await expect(check).toHaveAccessibleName('Continue');
-		await expect(page.getByTestId('step-advance')).toBeAttached();
+		// The run-out line runs under reduced motion too (in quarters)
+		await expect(page.getByTestId('step-advance')).toBeVisible();
 
 		// No press: the second card is drawn on its own
 		await expect(page.getByRole('dialog', { name: 'Card drawn' })).toBeVisible({ timeout: 5000 });
