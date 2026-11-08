@@ -34,7 +34,7 @@
 
 	.ending-kicker {
 		margin: 0 0 4px;
-		font-size: 0.8125rem;
+		font-size: 0.75rem;
 		font-weight: 600;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
@@ -46,7 +46,7 @@
 		margin: 0 0 12px;
 		font-family: var(--font-body);
 		font-size: 1.5rem;
-		font-weight: 700;
+		font-weight: 600;
 		line-height: 1.3;
 		color: #ff8fa3;
 	}
@@ -56,7 +56,7 @@
 	}
 
 	.ending-message {
-		max-width: 640px;
+		max-width: var(--measure, 30em);
 		margin: 0;
 		font-size: 1.125rem;
 		line-height: 1.7;

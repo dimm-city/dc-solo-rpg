@@ -327,7 +327,7 @@
 
 	.save-info strong {
 		color: var(--color-brand-yellow, #ffd700);
-		font-weight: 700;
+		font-weight: 600;
 	}
 
 	.save-time {

@@ -17,7 +17,7 @@
 	<div class="error-panel">
 		<h1 id="error-title" class="error-title">Signal lost</h1>
 		<p class="error-message">{message}</p>
-		<a class="error-action" href={resolve('/')}>Back to the console</a>
+		<a class="error-action" href={resolve('/')}>Back to home</a>
 	</div>
 </section>
 
@@ -53,7 +53,7 @@
 
 	.error-message {
 		margin: 0 0 var(--space-xl);
-		font-size: 1.0625rem;
+		font-size: 1rem;
 		line-height: 1.6;
 		color: #d5dfeb;
 	}
@@ -69,7 +69,7 @@
 		border-radius: 4px;
 		color: var(--color-brand-yellow);
 		font-family: var(--font-body);
-		font-size: 0.9375rem;
+		font-size: 0.875rem;
 		font-weight: 600;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;

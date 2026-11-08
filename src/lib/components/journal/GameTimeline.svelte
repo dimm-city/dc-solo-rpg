@@ -8,6 +8,8 @@
 	 */
 	import { gameState } from '../../stores/gameStore.svelte.js';
 	import { buildTimeline } from '../../utils/gameTimeline.js';
+	import SuitText from '../card/SuitText.svelte';
+	import { clauseRuns, rowClauses } from './timelineClauses.js';
 
 	const blocks = $derived(buildTimeline(gameState));
 </script>
@@ -19,12 +21,21 @@
 			{#if block.events.length > 0}
 				<ul class="tl-events">
 					{#each block.events as event, i (i)}
+						{@const parts = rowClauses(event.text)}
 						<li class="tl-event" data-kind={event.kind}>
-							<span class="tl-label">{event.label}</span>
-							{#if event.text}
-								<span class="tl-sep" aria-hidden="true">·</span>
-								{event.text}
-							{/if}
+							<span class="tl-clause"
+								><span class="tl-label"><SuitText text={event.label} /></span
+								>{#if parts.length}&nbsp;<span class="tl-sep">·</span>{/if}</span
+							>{parts.length ? ' ' : ''}{#each parts as part, p (p)}{@const run =
+									clauseRuns(part)}<span class="tl-clause" class:breaks={run.lead}
+									>{#if run.lead}<SuitText text={run.lead} />{/if}<span class="tl-hold"
+										>{#each run.held as piece, k (k)}{#if k > 0}&nbsp;<span class="tl-sep">·</span
+												>&nbsp;{/if}<SuitText
+												text={piece}
+											/>{/each}{#if p < parts.length - 1}&nbsp;<span class="tl-sep">·</span
+											>{/if}</span
+									></span
+								>{p < parts.length - 1 ? ' ' : ''}{/each}
 						</li>
 					{/each}
 				</ul>
@@ -101,13 +112,30 @@
 
 	.tl-label {
 		font-family: var(--font-mono, 'Share Tech Mono', ui-monospace, monospace);
-		font-size: 0.9375rem;
+		font-size: 1rem;
 		color: var(--event-accent, rgba(255, 255, 255, 0.72));
 	}
 
+	/* One clause, kept whole: the separator ends its line, never starts the next */
+	.tl-clause,
+	.tl-hold {
+		white-space: nowrap;
+	}
+
+	/* A long clause holding a total breaks at its own spaces, so the card label never sits alone
+	   on its line; its last word stays with the total ("deck · Kings 0 of 4"): game-copy-s-12 */
+	.tl-clause.breaks {
+		white-space: normal;
+	}
+
 	.tl-sep {
-		margin: 0 0.25em;
-		color: rgba(255, 255, 255, 0.4);
+		color: rgba(255, 255, 255, 0.5);
+	}
+
+	/* The ending may be an author's own sentence: let it wrap like prose */
+	.tl-event[data-kind='end'] .tl-clause,
+	.tl-event[data-kind='end'] .tl-hold {
+		white-space: normal;
 	}
 
 	.tl-event[data-kind='king'] {
@@ -122,9 +150,11 @@
 	.tl-event[data-kind='salvation'] {
 		--event-accent: var(--color-neon-cyan, #0ff);
 	}
+	/* No lone word on the ending's last line ("…was / revealed."): VT-1-14 */
 	.tl-event[data-kind='end'] {
 		--event-accent: var(--color-danger, #ff4d6d);
 		padding-top: var(--space-xs);
+		text-wrap: pretty;
 	}
 	.tl-event[data-kind='end'] .tl-label {
 		font-family: var(--font-body, 'Inter', sans-serif);

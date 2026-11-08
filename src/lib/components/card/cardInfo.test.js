@@ -7,6 +7,9 @@ import {
 	endsGameOnConfirm,
 	triggersStabilityCheck,
 	getCardName,
+	getContinueAction,
+	splitNote,
+	TYPE_LABELS,
 	getRoundProgress,
 	countWords,
 	getCardHoldMs
@@ -36,32 +39,39 @@ describe('getMechanicNote', () => {
 		}
 	});
 
-	it('counts Kings, including the one on the card', () => {
-		expect(getMechanicNote(card('K', 'hearts', {}, { kingsRevealed: 0 }))).toBe('King · 1 of 4');
-		expect(getMechanicNote(card('K', 'clubs', {}, { kingsRevealed: 2 }))).toBe('King · 3 of 4');
-		expect(getMechanicNote(card('K', 'spades', {}, { kingsRevealed: 3 }))).toBe('King · 4 of 4');
+	it('counts Kings, including the one on the card, without repeating the badge', () => {
+		expect(getMechanicNote(card('K', 'hearts', {}, { kingsRevealed: 0 }))).toBe('1 of 4');
+		expect(getMechanicNote(card('K', 'clubs', {}, { kingsRevealed: 2 }))).toBe('3 of 4');
+		expect(getMechanicNote(card('K', 'spades', {}, { kingsRevealed: 3 }))).toBe('4 of 4');
 	});
 
 	it('gives the Ace of Hearts the threshold it unlocks, and its Stability check', () => {
 		expect(getMechanicNote(card('A', 'hearts'))).toBe(
-			'Salvation unlocked · needs 17+ · a Stability check follows'
+			'Unlocked · needs 17+ · a Stability check follows'
 		);
 		// Two Aces already out: this is the third, so 11+
 		expect(getMechanicNote(card('A', 'hearts', {}, { acesRevealed: 2 }))).toBe(
-			'Salvation unlocked · needs 11+ · a Stability check follows'
+			'Unlocked · needs 11+ · a Stability check follows'
 		);
+	});
+
+	it('the Ace of Hearts as the fourth Ace on Normal or Hard has no target', () => {
+		const last = card('A', 'hearts', {}, { acesRevealed: 3 });
+		const unlocked = 'Unlocked · no target · a Stability check follows';
+		expect(getMechanicNote(last)).toBe(unlocked);
+		expect(getMechanicNote(last, { config: { options: { difficulty: 2 } } })).toBe(unlocked);
 	});
 
 	it('tells another Ace what Salvation needs now, or will need once unlocked', () => {
 		expect(
 			getMechanicNote(card('A', 'clubs', {}, { acesRevealed: 1, aceOfHeartsRevealed: true }))
-		).toBe('Ace · Salvation now needs 14+ · a Stability check follows');
+		).toBe('Salvation now needs 14+ · a Stability check follows');
 		expect(getMechanicNote(card('A', 'clubs', {}, { acesRevealed: 0 }))).toBe(
-			'Ace · Salvation will need 17+ · a Stability check follows'
+			'Salvation will need 17+ · a Stability check follows'
 		);
 	});
 
-	it('the fourth Ace makes Salvation assured on Normal and Hard; on Easy it ends the game', () => {
+	it('the fourth Ace leaves Salvation no target on Normal and Hard; on Easy it ends the game', () => {
 		const fourth = card('A', 'spades', {}, { acesRevealed: 3, aceOfHeartsRevealed: true });
 		const freed = card(
 			'A',
@@ -70,18 +80,43 @@ describe('getMechanicNote', () => {
 			{ acesRevealed: 3, aceOfHeartsRevealed: true }
 		);
 		// The live state carries the difficulty (the card's snapshot has the counts); none is Normal
-		const assured = 'Ace · Salvation is now assured · a Stability check follows';
-		expect(getMechanicNote(fourth)).toBe(assured);
-		expect(getMechanicNote(freed)).toBe('Ace · Salvation is now assured');
+		const none = 'Salvation now has no target · a Stability check follows';
+		expect(getMechanicNote(fourth)).toBe(none);
+		expect(getMechanicNote(freed)).toBe('Salvation now has no target');
 		const hard = { config: { options: { difficulty: 2 } } };
-		expect(getMechanicNote(fourth, hard)).toBe(assured);
-		expect(getMechanicNote(freed, hard)).toBe('Ace · Salvation is now assured');
+		expect(getMechanicNote(fourth, hard)).toBe(none);
+		expect(getMechanicNote(freed, hard)).toBe('Salvation now has no target');
+		// Before the Ace of Hearts: what Salvation will be once it is unlocked
+		expect(getMechanicNote(card('A', 'spades', {}, { acesRevealed: 3 }))).toBe(
+			'Salvation will have no target · a Stability check follows'
+		);
 
 		const easy = { config: { options: { difficulty: 0 } } };
 		expect(getMechanicNote(fourth, easy)).toBe(
 			'The fourth Ace · survive its Stability check and you escape'
 		);
 		expect(getMechanicNote(freed, easy)).toBe('The fourth Ace · you escape');
+	});
+
+	it('never says "assured" or repeats the badge', () => {
+		const notes = [];
+		for (const suit of ['hearts', 'clubs']) {
+			for (let aces = 0; aces < 4; aces++) {
+				for (const unlocked of [false, true]) {
+					for (const difficulty of [0, 1, 2]) {
+						notes.push(
+							getMechanicNote(
+								card('A', suit, {}, { acesRevealed: aces, aceOfHeartsRevealed: unlocked }),
+								{ config: { options: { difficulty } } }
+							)
+						);
+					}
+				}
+			}
+		}
+		for (const note of notes) {
+			expect(note).not.toMatch(/assured|^Ace ·|^King ·|Salvation unlocked/);
+		}
 	});
 
 	it('drops the Stability check for a skip-damage card', () => {
@@ -91,28 +126,63 @@ describe('getMechanicNote', () => {
 			{ modifier: 'skip-damage' },
 			{ acesRevealed: 1, aceOfHeartsRevealed: true }
 		);
-		expect(getMechanicNote(ace)).toBe('Ace · Salvation now needs 14+');
+		expect(getMechanicNote(ace)).toBe('Salvation now needs 14+');
 		expect(triggersStabilityCheck(ace)).toBe(false);
 	});
 
 	it('falls back to the live state when the card has no snapshot', () => {
 		const king = { card: 'K', suit: 'hearts' };
-		expect(getMechanicNote(king, { kingsRevealed: 1 })).toBe('King · 2 of 4');
+		expect(getMechanicNote(king, { kingsRevealed: 1 })).toBe('2 of 4');
 		expect(getMechanicNote(null)).toBe('');
 	});
 });
 
-describe('getModifierNote', () => {
-	it('says what skip-damage does', () => {
-		expect(getModifierNote(card('A', 'clubs', { modifier: 'skip-damage' }))).toBe(
-			'No Stability check this time'
+describe('splitNote', () => {
+	it('splits a note into the clauses the card keeps whole on a line', () => {
+		expect(splitNote('Unlocked · needs 14+ · a Stability check follows')).toEqual([
+			'Unlocked',
+			'needs 14+',
+			'a Stability check follows'
+		]);
+		expect(splitNote('3 of 4')).toEqual(['3 of 4']);
+		expect(splitNote('')).toEqual([]);
+	});
+});
+
+describe('getContinueAction', () => {
+	const easy = { config: { options: { difficulty: 0 } } };
+	const normal = { config: { options: { difficulty: 1 } } };
+
+	it('names the end on the fourth King', () => {
+		expect(getContinueAction(card('K', 'spades', {}, { kingsRevealed: 3 }), normal)).toBe(
+			'face the end'
+		);
+		expect(getContinueAction(card('K', 'spades', {}, { kingsRevealed: 2 }), normal)).toBe(
+			'continue'
 		);
 	});
 
-	it('says a King returns, or that none is out to return', () => {
+	it('names the escape on Easy’s fourth Ace that skips its check, and only there', () => {
+		const freed = card('A', 'spades', { modifier: 'skip-damage' }, { acesRevealed: 3 });
+		expect(getContinueAction(freed, easy)).toBe('escape');
+		expect(getContinueAction(freed, normal)).toBe('continue');
+		// With a Stability check still to come, the escape is not yet certain
+		expect(getContinueAction(card('A', 'spades', {}, { acesRevealed: 3 }), easy)).toBe('continue');
+		expect(getContinueAction(card('7'), normal)).toBe('continue');
+	});
+});
+
+describe('getModifierNote', () => {
+	it('says what skip-damage does, in the present tense', () => {
+		expect(getModifierNote(card('A', 'clubs', { modifier: 'skip-damage' }))).toBe(
+			'No Stability check for this Ace'
+		);
+	});
+
+	it('says a King goes back, or that none is out to return', () => {
 		expect(
 			getModifierNote(card('A', 'spades', { modifier: 'return-king' }, { kingsRevealed: 2 }))
-		).toBe('A King returns to the deck');
+		).toBe('A King goes back into the deck');
 		expect(getModifierNote(card('A', 'spades', { modifier: 'return-king' }))).toBe(
 			'No King is out to return'
 		);
@@ -150,14 +220,31 @@ describe('endsGameOnConfirm', () => {
 });
 
 describe('getCardName', () => {
-	it('names the card for a screen reader', () => {
+	it('names the card for a screen reader with the badge it wears', () => {
 		expect(getCardName({ card: '8', suit: 'spades', type: 'event' })).toBe('8 of Spades, Event');
-		expect(getCardName({ card: 'K', suit: 'hearts', type: 'failure-counter' })).toBe(
-			'King of Hearts, Doom'
+		expect(getCardName({ card: '7', suit: 'spades', type: 'challenge' })).toBe(
+			'7 of Spades, Challenge'
 		);
-		expect(getCardName({ card: 'A', suit: 'clubs', type: 'narrative' })).toBe(
-			'Ace of Clubs, Bonus'
+		expect(getCardName({ card: 'A', suit: 'hearts', type: 'primary-success' })).toBe(
+			'Ace of Hearts, Salvation'
 		);
+	});
+
+	it('leaves out a badge that only repeats the rank', () => {
+		expect(getCardName({ card: 'K', suit: 'spades', type: 'failure-counter' })).toBe(
+			'King of Spades'
+		);
+		expect(getCardName({ card: 'A', suit: 'clubs', type: 'narrative' })).toBe('Ace of Clubs');
+	});
+
+	it('uses the one type table', () => {
+		expect(TYPE_LABELS).toEqual({
+			'primary-success': 'Salvation',
+			'failure-counter': 'King',
+			narrative: 'Ace',
+			challenge: 'Challenge',
+			event: 'Event'
+		});
 	});
 });
 

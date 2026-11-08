@@ -1,0 +1,249 @@
+{
+ "kings": [
+  {
+   "state": "rollForTasks",
+   "round": 2,
+   "tower": 20,
+   "tokens": 10,
+   "aces": 0,
+   "kings": 1,
+   "lucid": false,
+   "surreal": false
+  },
+  {
+   "state": "rollForTasks",
+   "round": 3,
+   "tower": 19,
+   "tokens": 10,
+   "aces": 0,
+   "kings": 2,
+   "lucid": false,
+   "surreal": false
+  },
+  {
+   "state": "rollForTasks",
+   "round": 4,
+   "tower": 17,
+   "tokens": 10,
+   "aces": 0,
+   "kings": 3,
+   "lucid": false,
+   "surreal": false
+  },
+  {
+   "state": "gameOver",
+   "round": 4,
+   "tower": 17,
+   "tokens": 10,
+   "aces": 0,
+   "kings": 4,
+   "lucid": false,
+   "surreal": false
+  }
+ ],
+ "stability": [
+  {
+   "state": "rollForTasks",
+   "round": 2,
+   "tower": 18,
+   "tokens": 10,
+   "aces": 0,
+   "kings": 0,
+   "lucid": false,
+   "surreal": false
+  },
+  {
+   "state": "rollForTasks",
+   "round": 3,
+   "tower": 13,
+   "tokens": 10,
+   "aces": 0,
+   "kings": 0,
+   "lucid": false,
+   "surreal": false
+  },
+  {
+   "state": "rollForTasks",
+   "round": 4,
+   "tower": 9,
+   "tokens": 10,
+   "aces": 0,
+   "kings": 0,
+   "lucid": false,
+   "surreal": false
+  },
+  {
+   "state": "gameOver",
+   "round": 4,
+   "tower": 0,
+   "tokens": 10,
+   "aces": 0,
+   "kings": 0,
+   "lucid": false,
+   "surreal": true
+  }
+ ],
+ "tokens": [
+  {
+   "state": "rollForTasks",
+   "round": 2,
+   "tower": 20,
+   "tokens": 9,
+   "aces": 1,
+   "kings": 0,
+   "lucid": false,
+   "surreal": false
+  },
+  {
+   "state": "rollForTasks",
+   "round": 3,
+   "tower": 19,
+   "tokens": 8,
+   "aces": 1,
+   "kings": 0,
+   "lucid": false,
+   "surreal": false
+  },
+  {
+   "state": "rollForTasks",
+   "round": 4,
+   "tower": 19,
+   "tokens": 7,
+   "aces": 1,
+   "kings": 0,
+   "lucid": false,
+   "surreal": false
+  },
+  {
+   "state": "rollForTasks",
+   "round": 5,
+   "tower": 17,
+   "tokens": 6,
+   "aces": 1,
+   "kings": 0,
+   "lucid": false,
+   "surreal": false
+  },
+  {
+   "state": "rollForTasks",
+   "round": 6,
+   "tower": 17,
+   "tokens": 5,
+   "aces": 1,
+   "kings": 0,
+   "lucid": false,
+   "surreal": false
+  },
+  {
+   "state": "rollForTasks",
+   "round": 7,
+   "tower": 17,
+   "tokens": 4,
+   "aces": 1,
+   "kings": 0,
+   "lucid": false,
+   "surreal": false
+  },
+  {
+   "state": "rollForTasks",
+   "round": 8,
+   "tower": 17,
+   "tokens": 3,
+   "aces": 1,
+   "kings": 0,
+   "lucid": false,
+   "surreal": false
+  },
+  {
+   "state": "rollForTasks",
+   "round": 9,
+   "tower": 18,
+   "tokens": 2,
+   "aces": 1,
+   "kings": 0,
+   "lucid": false,
+   "surreal": false
+  },
+  {
+   "state": "rollForTasks",
+   "round": 10,
+   "tower": 18,
+   "tokens": 1,
+   "aces": 1,
+   "kings": 0,
+   "lucid": false,
+   "surreal": false
+  },
+  {
+   "state": "gameOver",
+   "round": 10,
+   "tower": 18,
+   "tokens": 0,
+   "aces": 1,
+   "kings": 0,
+   "lucid": false,
+   "surreal": false
+  }
+ ],
+ "easyAce": [
+  {
+   "state": "rollForTasks",
+   "round": 2,
+   "tower": 20,
+   "tokens": 10,
+   "aces": 2,
+   "kings": 0,
+   "lucid": false,
+   "surreal": false
+  },
+  {
+   "state": "rollForTasks",
+   "round": 3,
+   "tower": 19,
+   "tokens": 9,
+   "aces": 3,
+   "kings": 0,
+   "lucid": false,
+   "surreal": false
+  },
+  {
+   "state": "gameOver",
+   "round": 3,
+   "tower": 19,
+   "tokens": 9,
+   "aces": 4,
+   "kings": 0,
+   "lucid": false,
+   "surreal": false
+  }
+ ],
+ "active": [
+  {
+   "state": "rollForTasks",
+   "round": 2,
+   "tower": 18,
+   "tokens": 10,
+   "aces": 0,
+   "kings": 0,
+   "lucid": false,
+   "surreal": false
+  },
+  {
+   "state": "rollForTasks",
+   "round": 3,
+   "tower": 18,
+   "tokens": 10,
+   "aces": 0,
+   "kings": 0,
+   "lucid": false,
+   "surreal": false
+  }
+ ],
+ "ai": [
+  "future-lost:completed:1794087156770 r4 win=false",
+  "future-lost:completed:1794087165271 r10 win=true",
+  "future-lost:completed:1794087169577 r3 win=true",
+  "ghost-in-the-machine:completed:1794087161331 r4 win=false"
+ ],
+ "seededAt": 1794087172869
+}

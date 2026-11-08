@@ -1733,6 +1733,310 @@ timeline of the run's events (Kings, Aces and thresholds, Stability checks, Luci
 results, modifiers, the ending): beside the entry from 768px up, behind a Timeline / Your entry
 switch below. Salvation rolls are now logged so the timeline can show them.
 
+## Design polish review (2026-11-07)
+
+The owner asked for a final pass on the details: text and typography, text and action positions
+that stay put across game states, clutter and repeated copy, useful copy, and fit on common screen
+sizes. It is not an overhaul. Two owner requirements are fixed for every round:
+
+- **OWN-1.** Every number in the HUD tiles uses the LED face (DSEG7 Classic), as the Roll tile
+  does, on one baseline, and fits at 360px.
+- **OWN-2.** Every HUD tile has the Kings tile's progressive styling: the background shifts to a
+  fitting colour as the value moves into a new tier, and the value's colour changes with it.
+
+Four reviewers (game UX, visual and typography, copy, layout and responsive) review the captures,
+a design lead merges their findings into one plan, two developers (board; surfaces) make the
+changes, and the round repeats until every reviewer approves. The reviews, plan, manifests and
+drift tables are in `docs/ux-qa/design-polish/round-1/`, and the capture scripts in
+`docs/ux-qa/design-polish/tools/`.
+
+### Round 1
+
+**Verdicts.** All four reviewers: not approved.
+
+- **Game UX (GD):** 22 findings (5 high, 15 medium, 2 low) plus the OWN-2 tier spec. The highs:
+  "Salvation is assured / automatic" is false with four Aces; rule captions arrive a round late and
+  say things that are no longer true; the board column jumps 97-154px between steps; the
+  Lucid/Surreal hint inside the step button is unreadable and grows it; under reduced motion the
+  roll's number is off screen.
+- **Visual and typography (VT):** 22 findings (2 high, 11 medium, 9 low). OWN-1 and OWN-2 were
+  not met: two faces and two digit heights in the HUD, the Roll baseline 4-6px below the others,
+  and DSEG7 has no "/" glyph. The highs: the Surreal hint fails contrast (2.06:1), and "VICTORY"
+  runs off both edges at 360px.
+- **Copy (CP):** 24 findings (2 high, 11 medium, 11 low) and a glossary (Stability, Token,
+  Salvation, King, Ace, Lucid, Surreal; never damage, Doom, Bonus or Victory for card types). The
+  highs: "no token lost" reads a missed Salvation as good news, and the Ace of Hearts fires the
+  "each Ace makes Salvation easier" caption, so Salvation is never introduced on its own Ace.
+- **Layout and responsive (LR):** 16 findings (4 high, 6 medium, 6 low). The highs: the board's
+  title, result line and caption move with the game state; on load the game screen is laid out
+  one viewport down, so the reduced-motion roll is off screen; and a straight swap to LED digits,
+  or tints on the current HUD geometry, would jitter and fall short of the frame.
+
+**How conflicts were decided** (from the plan): the visual reviewer's HUD sizes (18/11px on
+phones, 16/10px in landscape, 20/12px elsewhere); the game reviewer's tier boundaries with the
+visual reviewer's tint mechanism and colours; every board slot reserved so nothing moves; the
+caption docked above the step button; a one-line step label with the Lucid/Surreal hint on its
+own line; Inter 18px dialog titles.
+
+**Work items.**
+
+| Id      | Title                                                                                                          | Source findings                                                                                                     | Status              |
+| ------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| DP-1-01 | HUD numbers in the LED face: one size family, fixed digit fields, a truly mirrored row                         | OWN-1, GD-1-18, VT-1-08, VT-1-10, LR-1-03, LR-1-04                                                                  | Done                |
+| DP-1-02 | Progressive tiers on all six HUD tiles: one eased tint layer, tier colours for value, label and bar            | OWN-2, GD-1-16, GD-1-19, VT-1-06, VT-1-07, VT-1-15, LR-1-04                                                         | Done                |
+| DP-1-03 | HUD spoken text and tooltips: label first, then the value, then a tier word                                    | GD-1-01, CP-1-12, CP-1-16                                                                                           | Done                |
+| DP-1-04 | Board text column: fixed slots, one title size per class, clause-safe result line                              | GD-1-03, GD-1-04, VT-1-04, VT-1-11, VT-1-14, VT-1-16, LR-1-01, LR-1-08                                              | Done                |
+| DP-1-05 | Step button: one fixed 48px slot, a one-line verb label, the modifier hint on its own line, a centred key-cap  | GD-1-09, GD-1-10, GD-1-11, VT-1-01, VT-1-03, VT-1-05, VT-1-10, CP-1-16, LR-1-05, LR-1-06, LR-1-12                   | Done                |
+| DP-1-06 | Board copy: titles, descriptions and step labels, one job per element                                          | GD-1-01, GD-1-05, GD-1-06, GD-1-12, GD-1-15, CP-1-05, CP-1-18, CP-1-19                                              | Done                |
+| DP-1-07 | Result lines: one grammar, no totals on screen, the modifier as one word                                       | GD-1-07, GD-1-08, CP-1-01, CP-1-05, CP-1-16                                                                         | Done                |
+| DP-1-08 | Modifier notices: past tense, named by their card                                                              | GD-1-13, CP-1-22                                                                                                    | Done                |
+| DP-1-09 | Rule captions: shown where the rule applies, true when shown, docked above the step button                     | GD-1-02, VT-1-14, CP-1-02, CP-1-05, CP-1-16, CP-1-19                                                                | Done                |
+| DP-1-10 | Reduced-motion roll placed in the table; no off-screen game screen on load                                     | GD-1-17, VT-1-22, LR-1-02                                                                                           | Done                |
+| DP-1-11 | In-game header: one name per feature, labels in names, no Guest, 12px labels, frame edges shared with the HUD  | VT-1-10, VT-1-11, VT-1-12, VT-1-21, CP-1-03, CP-1-04, CP-1-08, LR-1-14                                              | Done                |
+| DP-1-12 | Intro: the scroll cue in its own band, a sentence-case call to action                                          | VT-1-13, CP-1-19                                                                                                    | Done                |
+| DP-1-13 | Board bottom safe area                                                                                         | LR-1-13                                                                                                             | Done                |
+| DP-1-14 | Global type scale, Inter weights and one yellow (board and global files)                                       | VT-1-11, VT-1-12, VT-1-16                                                                                           | Done                |
+| DP-1-15 | Suit symbols on the board drawn with the HUD's pip shapes                                                      | VT-1-17                                                                                                             | Done                |
+| DP-1-16 | Card face: one type vocabulary, footers that add information, named endings, suit shapes                       | GD-1-01, GD-1-12, GD-1-14, GD-1-21, VT-1-11, VT-1-14, VT-1-17, CP-1-06, CP-1-22                                     | Done                |
+| DP-1-17 | Game Over: the title fits, a cause line for the token win, an honest afterword, the recap in HUD terms         | GD-1-08, GD-1-20, GD-1-22, VT-1-02, VT-1-10, VT-1-11, VT-1-14, VT-1-20, CP-1-09, CP-1-11, CP-1-14, LR-1-07          | Done                |
+| DP-1-18 | Journal and final log: one vocabulary, honest destinations, clean status lines and timeline, room in landscape | GD-1-20, GD-1-21, VT-1-07, VT-1-14, CP-1-01, CP-1-04, CP-1-05, CP-1-07, CP-1-08, CP-1-11, CP-1-19, CP-1-22, LR-1-10 | Done                |
+| DP-1-19 | Dialogs: one title style, quieter section headings, room in landscape                                          | VT-1-09, VT-1-11, LR-1-11                                                                                           | Done                |
+| DP-1-20 | Game Guide and Help: true rules, one vocabulary, a visible chip-row edge                                       | GD-1-01, VT-1-19, CP-1-04, CP-1-05, CP-1-15, CP-1-16                                                                | Done                |
+| DP-1-21 | Settings copy: difficulty help for the selected option, journal and narration options, key fields              | GD-1-01, CP-1-10, CP-1-20, CP-1-23                                                                                  | Done                |
+| DP-1-22 | Home: one name per feature, readable small text, a clean Continue button, nothing on the fold                  | VT-1-07, VT-1-10, VT-1-11, VT-1-14, VT-1-18, CP-1-03, CP-1-04, CP-1-19, LR-1-15                                     | Done                |
+| DP-1-23 | Home messages: plain upload and save errors, consistent confirm dialogs, punctuation                           | CP-1-13, CP-1-17, CP-1-18                                                                                           | Done                |
+| DP-1-24 | Static pages, errors and the shipped game's metadata                                                           | CP-1-04, CP-1-18, CP-1-24                                                                                           | Done                |
+| DP-1-25 | Story Library and story mode: one noun, a consistent delete dialog, no Guest, room in landscape, 44px targets  | CP-1-04, CP-1-08, CP-1-17, CP-1-21, LR-1-06, LR-1-09                                                                | Partial (see below) |
+| DP-1-26 | Inter at two weights across the surfaces files                                                                 | VT-1-12                                                                                                             | Done                |
+
+**Deviations the developers made to meet an acceptance check.**
+
+- The HUD is two mirrored `.hud-half` grids, so the cells are no longer direct children of
+  `[data-testid=hud]` (the test ids are unchanged). Equal mirrored tracks could not keep 4px label
+  clearance and a centred hairline at 375px.
+- The HUD's side padding equals the 2px frame, so the tints start at the frame's inner edge.
+- In landscape the step block sits at the foot of the action column, and the button bar has no
+  side padding, so a 4-line caption has room and the label gets 216px or more.
+- The in-game header is two equal fixed-width sides around a centred title, not nine equal
+  tracks: 12px labels did not fit equal tracks at 721px.
+- Card note clauses are inline blocks that wrap inside themselves, not `nowrap`: Easy's fourth-Ace
+  clause is about 380px at 12px and the note box is 299px at 360.
+- The recap's max digits are never under 12px (0.6 x 18px would be 10.8px on phones).
+- DP-1-25 is partial: in story mode landscape the "Read AI summary" button sits on the outcome
+  row, not beside the title, because beside it even "Future Lost" was cut to "FUTURE L…" at 844px.
+
+**Declined.**
+
+- **LR-1-16** (bound the dice world above the step slot): it reverses an owner decision. In the
+  Final round the owner chose dice thrown across the whole screen on top of the UI, then sinking
+  beneath the board after one beat. The die covers the "Rolling…" label only until it sinks.
+
+**Verification (both branches merged into `claude/vibrant-curie-w9bn88`).**
+
+- Both branches merged with no conflicts. The one shared file, `card/SuitText.svelte`, is the
+  same in both.
+- Unit tests (`npx vitest run`): 58 files, 1028 passed, 1 skipped.
+- `npx eslint .` and `npx prettier --check .`: clean. `npm run check`: 0 errors, 0 warnings.
+  `npm run build`: passes, and publint says "All good".
+- Playwright, full suite on Desktop Chrome, Mobile Chrome and Tablet: 544 passed, 5 skipped
+  (project-conditional skips that were already there), 0 failed, in 15.6 minutes.
+- The first full run had 1 failure: the dice-lifecycle test timed out clicking Play on Home.
+  The cause was in the app. Home listed the games, then read their saves, so a card with a save
+  showed Play for a moment and then swapped it for Continue. The test clicked Play just as it
+  turned into Continue. Both developers had seen this test fail now and then and put it down to
+  load. Home now reads the saves before it shows the cards, so a card appears with Play or
+  Continue already in place, and the `openHomePage` e2e helper waits for the cards.
+- The surfaces capture script now uses the renamed menu items ("Game Guide", "Dice theme"), so
+  round 2's captures can open those dialogs.
+- Not run in round 1: the per-frame load sampling (`loadjump`) and captures with a forced bottom
+  safe area. The DP-1-13 figures come from the layout. Round 2's reviewers recapture every state.
+
+### stage-1
+
+QA and integration of the owner items and the round-2 fixes, at `d3a902a` on
+`claude/vibrant-curie-w9bn88`.
+
+- **Built.** OWN-3: on phones in portrait the in-game header sits under the step button, clear
+  of the bottom safe area, and the HUD stays on top. OWN-4 and OWN-5: the board's centre text is
+  one settled readout that wraps and never clips, with no notice for a modifier that did nothing.
+  Round-2 fixes: the four-Ace and fatal result lines fit one line at 390px, one verb for Tokens,
+  true rule copy, no two Inter sizes 1px apart, and the recap's "/10" set like the HUD's.
+- **Merged.** The three developer branches (`design/v3-owner-items`, `design/v3-board-1`,
+  `design/v3-surfaces-1`) were all on origin with clean worktrees. The worktrees and branches are
+  removed.
+- **Checks.** Unit tests: 61 files, 1042 passed, 1 skipped (the old Easy-difficulty skip in
+  `gameActions.test.js`). ESLint and Prettier: clean. `npm run check`: 0 errors, 0 warnings.
+  `npm run build`: passes, and publint says "All good".
+- **Playwright.** Full suite on Desktop Chrome, Mobile Chrome and Tablet: 545 passed, 7 skipped,
+  0 failed, in 23.6 minutes. The skips are project-conditional: the three viewport tests in
+  `game-hud.spec.ts` (the new OWN-3 one among them) set their own viewport and run once, on
+  Desktop Chrome, and the card-grid test skips on phones.
+- **Found.** No failures, so no fixes were needed at this stage.
+- **Saved.** The owner-items spec and the two verify reviews (game UX and copy; visual and
+  layout) are in `docs/ux-qa/design-polish/v3/`.
+
+### stage-2
+
+QA and integration of the sign-off fixes and the owner's timing items, from `0ea3607` on
+`claude/vibrant-curie-w9bn88`.
+
+- **Built.** The sign-off fixes: the HUD's text fits its row at any text size, the ⋯ menu is a
+  real menu button with an opaque fill, the RULE caption sits in the readout's frame, a new card
+  takes input only once it has been up 400ms, story emphasis in italic, and the copy fixes
+  (no non-event notices, one name for the Stability ending). OWN-6: the dice sink over 800ms.
+  OWN-7: the task roll's result now holds 3s before the first card (1s after the voice when the
+  roll is read aloud).
+- **No empty table between cards.** The owner did not ask for a pause between cards. The 300ms
+  pause was reverted to the 100ms gap in `a449adc`. Measured in the app on an iPhone 13 viewport:
+  about 100ms of empty table between cards, with and without reduced motion, and 3.0s from the
+  task result to the first card. Docs and comments that still described "a beat on the empty
+  table" are corrected (CLAUDE.md, the animation style guide, `drawBeat.js`, the workflow record).
+- **Checks.** Unit tests: 65 files, 1076 passed, 1 skipped (the old Easy-difficulty skip).
+  ESLint and Prettier: clean. `npm run check`: 0 errors, 0 warnings. `npm run build`: passes.
+- **Playwright.** Full suite: 544 passed, 7 skipped, 1 failed, in 23.2 minutes.
+- **Found and fixed.** The failure was the read-aloud deal test: it timed the first card with a
+  visibility poll whose back-off rounded 1.01s up to about 1.9s, so the new 1s beat crossed its
+  2s limit under load. It now times the card frame by frame and checks both limits (at least
+  the 1s beat, under 2s). A rerun also showed a flaky final-log test: it pressed Record before
+  the sheet's 400ms open guard had passed. It now waits 450ms. Both pass on every project, and
+  the final-log tests passed 54 of 54 repeats.
+- **Cleaned up.** The `design/v3-board-2` and `design/v3-surfaces-2` worktrees and branches are
+  removed; their commits are on origin. The sign-off reviews are saved in
+  `docs/ux-qa/design-polish/v3/`.
+
+### stage-3
+
+QA and integration of the second sign-off's fixes, at `f642635` on
+`claude/vibrant-curie-w9bn88`.
+
+- **Built.** The intro's Begin button is the step button, so the main action keeps one box from
+  the intro to round 1. Settings and Dice theme opened from the ⋯ menu take focus, and focus goes
+  back to ⋯ when they close. The background motes sit behind every page's content. Body copy has
+  no lone last words. The journal's round list shows the "more below" cue. The landscape journal
+  and final log keep their column labels. Copy: a returned King's count reads "Kings 0 of 4",
+  the Tokens announcement reads label first, the Game Over recap reads as the HUD does, and the
+  play mode help says "instructions" and "countdown".
+- **Checks.** Unit tests: 66 files, 1086 passed, 1 skipped (the old Easy-difficulty skip).
+  ESLint and Prettier: clean. `npm run check`: 0 errors, 0 warnings. `npm run build`: passes,
+  and publint says "All good".
+- **Playwright.** Full suite on Desktop Chrome, Mobile Chrome and Tablet: 545 passed, 7 skipped
+  (the same project-conditional skips as stage-1), 0 failed, 0 flaky, in 24.2 minutes.
+- **Found.** No failures, so no fixes were needed at this stage.
+- **Cleaned up.** The `design/v3-board-3` and `design/v3-surfaces-3` worktrees and branches are
+  removed; their commits are on origin. The second sign-off reviews are saved in
+  `docs/ux-qa/design-polish/v3/`, and the first ones are kept as `*.signoff1.md`.
+
+### stage-4
+
+QA and integration of the third sign-off's fixes, at `7b4f138` on
+`claude/vibrant-curie-w9bn88`.
+
+- **Built.** On phones, hover styles no longer stick after a tap: the step button and the
+  toolbar show hover only on pointer devices, and a tap gets press feedback instead. The rule
+  caption is as wide as the step button on desktop (480px), so their edges line up. The Story
+  Library header in landscape matches story mode's. Copy: the final log keeps a running total
+  with its last word, so the card label shares a line with the row's first words, and the
+  timeline shows the "more below" cue. The Game Over recap reads each label once and always
+  shows Tokens, locked when the Ace of Hearts was never found.
+- **Checks.** Unit tests: 68 files, 1096 passed, 1 skipped (the old Easy-difficulty skip).
+  ESLint and Prettier: clean. `npm run check`: 0 errors, 0 warnings. `npm run build`: passes,
+  and publint says "All good".
+- **Playwright.** Full suite on Desktop Chrome, Mobile Chrome and Tablet: 545 passed, 7 skipped
+  (the same project-conditional skips as stage-1), 0 failed, 0 flaky, in 23.5 minutes.
+- **Found.** No failures, so no fixes were needed at this stage.
+- **Cleaned up.** The `design/v3-board-4` and `design/v3-surfaces-4` worktrees and branches are
+  removed; their commits are on origin. The third sign-off reviews are saved in
+  `docs/ux-qa/design-polish/v3/`. The second visual-layout sign-off is kept as
+  `signoff-visual-layout.signoff2.md`; the second game-copy sign-off is in git at `f642635`.
+
+### stage-5
+
+QA and integration of the fourth sign-off's fixes, at `5c6eb3d` on
+`claude/vibrant-curie-w9bn88`.
+
+- **Built.** Home clears the notch on a landscape iPhone: the Home header, its menu, the Home
+  column and the first-run panel pad each side by the safe-area inset, as the Story Library
+  does. Game Over already did, through the overlay's stage. Dialog bodies that scroll (Settings,
+  Game Guide, Dice theme, About) now show the journal's cue: a bottom fade and chevron while
+  more content is below, and a top fade once scrolled. A body that fits shows neither.
+- **Checks.** Unit tests: 68 files, 1098 passed, 1 skipped (the old Easy-difficulty skip).
+  ESLint and Prettier: clean. `npm run check`: 0 errors, 0 warnings. `npm run build`: passes,
+  and publint says "All good".
+- **Playwright.** Full suite on Desktop Chrome, Mobile Chrome and Tablet: 545 passed, 7 skipped
+  (the same project-conditional skips as stage-1), 0 failed, 0 flaky, in 18.1 minutes.
+- **Found.** No failures, so no fixes were needed at this stage.
+- **Cleaned up.** The `design/v3-surfaces-5` worktree and branch are removed; its commits are on
+  origin. The fourth sign-off reviews are saved in `docs/ux-qa/design-polish/v3/`. The third
+  ones are kept as `signoff-visual-layout.signoff3.md` and `signoff-game-copy.signoff3.md`.
+
+### stage-6
+
+QA and integration of the fifth sign-off's fixes, at `4568859` on
+`claude/vibrant-curie-w9bn88`.
+
+- **Built.** On a notched iPhone in landscape, the game intro's text clears the notch: its
+  column pads by the side inset, and so does the skip link (visual-layout-s-16). Running text
+  has one reading measure, a `--measure` token of 30em. It replaces `65ch` on the card story,
+  the Game Guide and About, and caps the intro column, so lines run about 65 characters and
+  never more than 70 (visual-layout-s-17). Phones at 360 and 390 are unchanged.
+- **Checks.** Unit tests: 68 files, 1098 passed, 1 skipped (the old Easy-difficulty skip).
+  ESLint and Prettier: clean. `npm run check`: 0 errors, 0 warnings. `npm run build`: passes,
+  and publint says "All good".
+- **Playwright.** Full suite on Desktop Chrome, Mobile Chrome and Tablet: 544 passed, 7 skipped
+  (the same project-conditional skips as stage-1), 1 failed, in 25.2 minutes. A capture
+  server for the next sign-off was running at the same time, so the machine was loaded.
+- **Found.** The failure was a race in the test, not in the game. "Round 1 opens on Roll for
+  Tasks" polled for the button's "Rolling…" name after the press. On the loaded machine the
+  dice landed before the first poll, and the button already read "Draw the cards". The test
+  now records every name the button takes from before the press and checks that "Rolling…" is
+  one of them. It passed 24 of 24 repeats on all three projects, and 6 of 6 with the CPUs
+  saturated.
+- **Cleaned up.** The `design/v3-board-6` worktree and branch are removed; its commits are on
+  origin. The fifth visual-layout sign-off is saved in `docs/ux-qa/design-polish/v3/`, and the
+  fourth ones are kept as `signoff-visual-layout.signoff4.md` and
+  `signoff-game-copy.signoff4.md`. The fifth game-copy sign-off was not finished: its file
+  holds only the header and an unchecked progress list.
+
+### stage-7
+
+QA and integration of the sixth sign-off's fixes, at `a32f7b0` on
+`claude/vibrant-curie-w9bn88`.
+
+- **Built.** Story mode's journal entries, final log and card panels, the AI summary, the
+  ending message and the Settings help now take the reading measure (`--measure`, 30em). Their
+  longest lines at 844x390 and 1440 drop from 76-85 characters to 60-66; phones are unchanged
+  (visual-layout-s-18). Numbers stay on the word after them in the Game Guide, About and the
+  Ghost in the Machine intro: no line ends on "10" before "Tokens", or on "52-" before "card"
+  (visual-layout-s-19). New unit tests check that no numeral in the Guide or About can end a
+  line apart from its word.
+- **Checks.** Unit tests: 69 files, 1100 passed, 1 skipped (the old Easy-difficulty skip).
+  ESLint and Prettier: clean. `npm run check`: 0 errors, 0 warnings. `npm run build`: passes,
+  and publint says "All good".
+- **Playwright.** Full suite on Desktop Chrome, Mobile Chrome and Tablet: 545 passed, 7 skipped
+  (the same project-conditional skips as stage-1), 0 failed, 0 flaky, in 23.8 minutes.
+- **Found.** No failures, so no fixes were needed at this stage.
+- **Cleaned up.** The `design/v3-board-7` and `design/v3-surfaces-7` worktrees and branches are
+  removed; their commits are on origin. The sixth visual-layout sign-off is saved in
+  `docs/ux-qa/design-polish/v3/`, and the fifth is kept as `signoff-visual-layout.signoff5.md`.
+
+### stage-8
+
+QA and integration of the seventh sign-off's one fix, at `7dae241` on
+`claude/vibrant-curie-w9bn88`.
+
+- **Built.** The Game Guide's table cells align to the top, so a one-line label sits by the
+  first line of a wrapped value, and the column heads sit on the rule beneath them
+  (visual-layout-s-20). It is five lines of CSS in `GameGuide.svelte`.
+- **Checks.** Unit tests: 69 files, 1100 passed, 1 skipped. ESLint and Prettier: clean.
+  `npm run check`: 0 errors, 0 warnings. `npm run build`: passes, and publint says "All good".
+- **Playwright.** A CSS-only change to one component, so only the specs that open the Guide ran
+  (header navigation, splash and instructions, the smoke test and accessibility) on all three
+  projects: 117 passed, 0 failed. The full suite passed at stage 7. No new screenshot capture
+  was made.
+- **Found.** No failures, so no fixes were needed at this stage.
+- **Cleaned up.** No developer worktrees or `design/v3-*` branches were left. The seventh
+  visual-layout review was already saved in `docs/ux-qa/design-polish/v3/`.
+
 ## Recommendations
 
 ### Earlier reviews: what is fixed, open, or fixed badly

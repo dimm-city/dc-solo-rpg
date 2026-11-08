@@ -2,7 +2,8 @@
  * useFailureCheck - Stability check screen logic composable
  *
  * 1. Roll: dice animate ("Rolling…"; a press skips to the result), the result is applied
- *    (the HUD updates) and a result line stays on screen. The button becomes "Continue".
+ *    (the HUD updates) and a result line stays on screen. The button names where it goes next
+ *    ("Draw the next card", "Go to Salvation", "Open your journal").
  * 2. The game moves on by itself after the result hold (next card, Salvation or the journal).
  *    A press moves on at once.
  *
@@ -25,9 +26,11 @@ import {
 } from '../../stores/gameActions.svelte.js';
 import { rollDice, skipRoll } from '../../stores/diceStore.svelte.js';
 import { gameState } from '../../stores/gameStore.svelte.js';
+import { getGameplaySettings } from '../../stores/audioStore.svelte.js';
 import {
 	formatStabilityResult,
 	formatModifierHint,
+	formatNextStepLabel,
 	ROLLING_LABEL,
 	FINAL_CHECK_LABEL
 } from '../../utils/rollResult.js';
@@ -106,19 +109,27 @@ export function useFailureCheck(onCompleted = () => {}) {
 		failureCheckRolling = false;
 	}
 
-	// Reactive button text: the final check (Easy) says what is at stake; an ending is named
+	// Reactive button text (DP-1-06): "Roll for Stability" before the roll (the final check on
+	// Easy too: its stakes are in the description); after it, the screen the button goes to
 	const buttonText = $derived(
 		failureCheckRolling
 			? ROLLING_LABEL
 			: failureCheckResult
-				? gameState.gameOver
-					? gameState.win
-						? 'Escape'
-						: 'Face the end'
-					: 'Continue'
+				? formatNextStepLabel({
+						gameOver: gameState.gameOver,
+						win: gameState.win,
+						next:
+							gameState.cardsToDraw > 0
+								? 'draw'
+								: gameState.aceOfHeartsRevealed && gameState.tokens > 0
+									? 'salvation'
+									: 'journal',
+						round: gameState.round,
+						skipJournal: getGameplaySettings().autoHandleJournaling === 'skip'
+					})
 				: isFinalStabilityCheck()
 					? FINAL_CHECK_LABEL
-					: 'Roll for damage'
+					: 'Roll for Stability'
 	);
 	// The modifier the roll will use, shown on the roll button only
 	const buttonHint = $derived(

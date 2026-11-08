@@ -42,10 +42,10 @@ describe('getEndingText', () => {
 		expect(text.causeLine).toBe('Your Stability reached 0.');
 	});
 
-	it('uses the win message and no cause or afterword on a win', () => {
-		const text = getEndingText({ win: true, tower: 4, kingsRevealed: 0 }, labels);
+	it('uses the win message and no afterword on a win', () => {
+		const text = getEndingText({ win: true, tower: 4, kingsRevealed: 0, tokens: 0 }, labels);
 		expect(text.message).toBe('You got out.');
-		expect(text.causeLine).toBe('');
+		expect(text.cause).toBeNull();
 		expect(text.afterword).toBe('');
 	});
 
@@ -55,9 +55,34 @@ describe('getEndingText', () => {
 		expect(getEndingText(fourthAce, { ...labels, acesCauseLine: 'Four Aces.' }).causeLine).toBe(
 			'Four Aces.'
 		);
-		// Normal and Hard: four Aces, then the last token (no cause line, the message says it)
-		expect(getEndingText({ ...fourthAce, tokens: 0 }, labels).causeLine).toBe('');
-		expect(getEndingText({ ...fourthAce, acesRevealed: 3, tokens: 0 }, labels).causeLine).toBe('');
+	});
+
+	it('names the last Token on a win by the tokens, as the fourth-Ace win names its Ace', () => {
+		const tokensWin = { win: true, tower: 7, kingsRevealed: 2, acesRevealed: 3, tokens: 0 };
+		expect(getEndingText(tokensWin, labels).causeLine).toBe('The last Token was removed.');
+		// Normal and Hard: four Aces, then the last token
+		expect(getEndingText({ ...tokensWin, acesRevealed: 4 }, labels).causeLine).toBe(
+			'The last Token was removed.'
+		);
+		expect(
+			getEndingText(tokensWin, { ...labels, tokensCauseLine: 'The ledger is clear.' }).causeLine
+		).toBe('The ledger is clear.');
+	});
+
+	it('keeps "Winning was never likely" off an Easy loss, where escape is likely', () => {
+		const loss = { kingsRevealed: 4, tower: 3 };
+		const easy = { ...loss, config: { options: { difficulty: 0 } } };
+		expect(getEndingText(easy, labels).afterword).toBe(
+			'What you wrote along the way is the story.'
+		);
+		expect(getEndingText(easy, labels).afterword).not.toMatch(/never likely/);
+		for (const difficulty of [1, 2]) {
+			expect(
+				getEndingText({ ...loss, config: { options: { difficulty } } }, labels).afterword
+			).toBe('Winning was never likely. What you wrote along the way is the story.');
+		}
+		expect(getEndingText(loss, labels).afterword).toMatch(/^Winning was never likely/);
+		expect(getEndingText(easy, { ...labels, gameOverAfterword: 'Rest.' }).afterword).toBe('Rest.');
 	});
 
 	it('lets authors override the cause lines and afterword', () => {
@@ -81,29 +106,108 @@ describe('getRunRecap', () => {
 		log
 	};
 
-	it('counts rounds, drawn cards (not rolls), Kings, Aces and Stability', () => {
+	it('counts rounds, drawn cards (not rolls), Kings, Aces and Stability in the HUD’s n/max', () => {
 		const byKey = Object.fromEntries(getRunRecap(state).map((r) => [r.key, r.value]));
 		expect(byKey).toEqual({
-			rounds: 6,
-			cards: 3,
-			kings: '3 of 4',
-			aces: '2 of 4',
-			stability: '0/20'
+			rounds: '6',
+			cards: '3/52',
+			kings: '3/4',
+			aces: '2/4',
+			stability: '0/20',
+			tokens: '8/10'
 		});
 	});
 
-	it('includes tokens only once Salvation was unlocked', () => {
+	it('runs in the HUD’s order, Rounds in the Roll slot, and names the cards drawn "Drawn" (game-copy-s-08, s-09)', () => {
 		const recap = getRunRecap({ ...state, aceOfHeartsRevealed: true });
-		expect(recap.find((r) => r.key === 'tokens').value).toBe(8);
+		expect(recap.map((r) => r.label)).toEqual([
+			'Stability',
+			'Kings',
+			'Rounds',
+			'Drawn',
+			'Aces',
+			'Tokens'
+		]);
+		// The visible label names each tile, so the spoken value does not repeat it (game-copy-s-13)
+		expect(recap.map((r) => r.spoken)).toEqual([
+			'0 of 20',
+			'3 of 4',
+			'6',
+			'3 of 52 cards',
+			'2 of 4',
+			'8 of 10 left'
+		]);
+		const kings = recap.find((r) => r.key === 'kings');
+		expect([kings.n, kings.max]).toEqual([3, 4]);
+	});
+
+	it('gives each resource the HUD tier of its final value; Rounds and Drawn are neutral (game-copy-s-09)', () => {
+		const tiers = (s) => Object.fromEntries(getRunRecap(s).map((r) => [r.key, r.tier]));
+		// The Stability ending: 0 of 20 is critical, as the HUD showed it
+		expect(tiers({ ...state, aceOfHeartsRevealed: true })).toEqual({
+			stability: 'critical',
+			kings: 'urgent',
+			rounds: null,
+			cards: null,
+			aces: 'two',
+			tokens: 'full'
+		});
+		// A win by the last Token: Tokens cleared, Stability steady, Kings calm
+		expect(
+			tiers({
+				...state,
+				tower: 17,
+				kingsRevealed: 1,
+				acesRevealed: 4,
+				tokens: 0,
+				aceOfHeartsRevealed: true,
+				config: { options: { difficulty: 1 } }
+			})
+		).toMatchObject({ stability: 'steady', kings: 'calm', aces: 'four', tokens: 'clear' });
+		// Easy: all four Aces end the game ("final"); Aces before the Ace of Hearts are "locked"
+		expect(tiers({ ...state, acesRevealed: 4, config: { options: { difficulty: 0 } } }).aces).toBe(
+			'final'
+		);
+		expect(tiers({ ...state, acesRevealed: 1 }).aces).toBe('locked');
+	});
+
+	it('always includes Tokens, locked when the Ace of Hearts was never found (game-copy-s-14)', () => {
+		const locked = getRunRecap(state);
+		expect(locked.map((r) => r.key)).toEqual([
+			'stability',
+			'kings',
+			'rounds',
+			'cards',
+			'aces',
+			'tokens'
+		]);
+		expect(locked.find((r) => r.key === 'tokens')).toMatchObject({
+			tier: 'locked',
+			value: '8/10',
+			spoken: 'locked, the Ace of Hearts never found'
+		});
+	});
+
+	it('counts tokens out of the tokens the game started with', () => {
+		const recap = getRunRecap({
+			...state,
+			aceOfHeartsRevealed: true,
+			config: { options: { startingTokens: 6 } }
+		});
+		expect(recap.find((r) => r.key === 'tokens').value).toBe('8/6');
 	});
 });
 
 describe('getStatusLine', () => {
-	it('builds the status line, with tokens only after Salvation unlocks', () => {
+	it('builds the status line label first, n of max, with tokens only after Salvation unlocks (game-copy-v-04)', () => {
 		const base = { tower: 9, kingsRevealed: 3, tokens: 11 };
-		expect(getStatusLine(base)).toBe('Stability 9/20 · 3 of 4 Kings');
+		expect(getStatusLine(base)).toBe('Stability 9 of 20 · Kings 3 of 4');
 		expect(getStatusLine({ ...base, aceOfHeartsRevealed: true })).toBe(
-			'Stability 9/20 · 3 of 4 Kings · 11 tokens left'
+			'Stability 9 of 20 · Kings 3 of 4 · Tokens 11 left'
 		);
+		expect(getStatusLine({ ...base, tokens: 1, aceOfHeartsRevealed: true })).toBe(
+			'Stability 9 of 20 · Kings 3 of 4 · Tokens 1 left'
+		);
+		expect(getStatusLine({ tower: -2, kingsRevealed: 4 })).toBe('Stability 0 of 20 · Kings 4 of 4');
 	});
 });

@@ -19,16 +19,19 @@ export async function openHomePage(page: Page) {
 	await page.evaluate((key) => localStorage.setItem(key, 'true'), INSTRUCTIONS_SEEN_KEY);
 	await page.goto('/');
 	await expect(page.getByTestId('home-page')).toBeVisible();
+	// The game cards appear once each game's save has been read, with Play or Continue already
+	// in place
+	await expect(page.locator('.game-card').first()).toBeVisible();
 }
 
 /**
  * Open the header menu. At 900px and up it is the "More" button next to the inline
- * Stories, Settings and Help actions; below 900px it is the "Toggle menu" button and holds
+ * Story Library, Settings and Guide actions; below 900px it is the "Menu" button and holds
  * every action.
  */
 export async function openHeaderMenu(page: Page) {
 	const header = page.locator('.page-header');
-	const toggle = header.getByRole('button', { name: 'Toggle menu' });
+	const toggle = header.getByRole('button', { name: 'Menu', exact: true });
 	const button = (await toggle.isVisible())
 		? toggle
 		: header.getByRole('button', { name: 'More', exact: true });
@@ -40,9 +43,10 @@ export async function openHeaderMenu(page: Page) {
 
 /** The inline desktop label of a header action, where it differs from its menu label */
 const INLINE_LABELS: Record<string, string> = {
-	'Story Library': 'Stories',
+	'Story Library': 'Story Library',
 	Settings: 'Settings',
-	Help: 'Help'
+	// Shown as "Guide", named "Game Guide"
+	'Game Guide': 'Game Guide'
 };
 
 /**
@@ -101,9 +105,7 @@ export async function playToFirstRound(page: Page) {
 	await expect(page.getByTestId('roll-tasks-button')).toBeVisible({ timeout: 30000 });
 
 	// There is no Begin Round step: round 1 opens on Roll for Tasks, titled "Round 1".
-	// A natural 20 or 1 on the opening roll puts its modifier on this roll button.
-	await expect(page.getByTestId('roll-tasks-button')).toHaveAccessibleName(
-		/^Roll for tasks( · (Lucid: 2 dice, keep high|Surreal: 2 dice, keep low))?$/
-	);
+	// A natural 20 or 1 on the opening roll puts its modifier on the hint line above the button.
+	await expect(page.getByTestId('roll-tasks-button')).toHaveAccessibleName('Roll for tasks');
 	await expect(page.getByRole('heading', { name: 'Round 1' })).toBeVisible();
 }

@@ -151,14 +151,14 @@ async function stackFourthKing(page: Page) {
 /** Roll for tasks, let the voice finish the roll, and wait for the first card */
 async function dealToFirstCard(page: Page) {
 	await pressStep(page, 'roll-tasks-button');
-	await expect(page.getByTestId('result-line')).toHaveText('Rolled 3 · Draw 2 cards', {
+	await expect(page.getByTestId('result-line')).toHaveText('Rolled 3 · 2 cards this round', {
 		timeout: 30000
 	});
 	await expect.poll(() => isSpeaking(page)).toBe(true);
 	await endUtterance(page);
 	const card = page.getByTestId('card');
 	await expect(card).toHaveClass(/revealed/, { timeout: 10000 });
-	await expect(page.getByTestId('card-mechanic')).toHaveText('King · 4 of 4');
+	await expect(page.getByTestId('card-mechanic')).toHaveText('4 of 4');
 	await expect.poll(() => isSpeaking(page)).toBe(true); // the card is being read
 	return card;
 }
@@ -174,31 +174,49 @@ test.describe('Read-aloud: the deal waits for the voice', () => {
 		await openGame(page);
 		await store(page, 'rnd.mockDieRoll(17)');
 		await pressStep(page, 'roll-tasks-button');
-		await expect(page.getByTestId('result-line')).toHaveText('Rolled 17 · Draw 5 cards', {
+		await expect(page.getByTestId('result-line')).toHaveText('Rolled 17 · 5 cards this round', {
 			timeout: 30000
 		});
 		await expect.poll(() => ttsLog(page)).toContain('speak: You rolled a 17. Draw 5 cards.');
 
-		// Well past the 2s hold: the voice is still reading, so no card yet, and the button's
-		// line waits in full rather than counting down
+		// Well past the 3s deal hold: the voice is still reading, so no card yet, and the
+		// button's line waits in full rather than counting down
 		const line = page.getByTestId('step-advance');
 		await expect(line).toHaveClass(/waiting/);
-		await page.waitForTimeout(3000);
+		await page.waitForTimeout(4000);
 		await expect(page.getByRole('dialog', { name: 'Card drawn' })).toHaveCount(0);
 		await expect(line).toHaveClass(/waiting/);
 		await expect(line).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, 0)');
 
-		const ended = Date.now();
-		expect(await endUtterance(page)).toBe(true);
-		await expect(page.getByRole('dialog', { name: 'Card drawn' })).toBeVisible({ timeout: 5000 });
-		expect(Date.now() - ended).toBeLessThan(2000); // a beat, not another hold
+		// Timed in the page, frame by frame: a toBeVisible poll's back-off (…, 850ms, 1850ms) would
+		// round a card that came 1.1s after the voice up to about 1.9s
+		const dealt = await page.evaluate(
+			() =>
+				new Promise<{ ended: boolean; ms: number }>((resolve) => {
+					const ended = (window as unknown as { __tts: { end: () => boolean } }).__tts.end();
+					const t0 = performance.now();
+					const frame = () => {
+						if (document.querySelector('[role="dialog"][aria-label="Card drawn"]')) {
+							resolve({ ended, ms: performance.now() - t0 });
+						} else if (performance.now() - t0 > 5000) {
+							resolve({ ended, ms: Infinity });
+						} else requestAnimationFrame(frame);
+					};
+					requestAnimationFrame(frame);
+				})
+		);
+		expect(dealt.ended).toBe(true);
+		await expect(page.getByRole('dialog', { name: 'Card drawn' })).toBeVisible();
+		// The 1s deal beat (DEAL_BEAT) after the voice, not another 3s hold, and never sooner
+		expect(dealt.ms).toBeGreaterThanOrEqual(950);
+		expect(dealt.ms).toBeLessThan(2000);
 	});
 
 	test('a press during the reading deals at once', async ({ page }) => {
 		await openGame(page);
 		await store(page, 'rnd.mockDieRoll(17)');
 		await pressStep(page, 'roll-tasks-button');
-		await expect(page.getByTestId('result-line')).toHaveText('Rolled 17 · Draw 5 cards', {
+		await expect(page.getByTestId('result-line')).toHaveText('Rolled 17 · 5 cards this round', {
 			timeout: 30000
 		});
 		await expect(page.getByTestId('step-advance')).toHaveClass(/waiting/);

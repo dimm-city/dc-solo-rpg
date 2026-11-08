@@ -363,6 +363,9 @@ function winGame() {
 
 const cap = (word) => word.charAt(0).toUpperCase() + word.slice(1);
 
+/** The suit symbols the board, the notices and the timeline use (♠ ♥ ♦ ♣) */
+const SUIT_SYMBOL = { hearts: '♥', diamonds: '♦', clubs: '♣', spades: '♠' };
+
 /**
  * return-king modifier: put the first revealed King (hearts, diamonds, clubs, spades order)
  * back into the deck at a random position so it can be drawn again.
@@ -371,7 +374,7 @@ const cap = (word) => word.charAt(0).toUpperCase() + word.slice(1);
 function returnKingToDeck(card) {
 	const suit = ['hearts', 'diamonds', 'clubs', 'spades'].find((s) => gameState[`kingOf${cap(s)}`]);
 	if (!suit) {
-		card.modifierResult = 'No King to return';
+		card.modifierResult = 'No King was out to return';
 		gameState.status = card.modifierResult;
 		return;
 	}
@@ -383,7 +386,9 @@ function returnKingToDeck(card) {
 
 	gameState.kingsRevealed -= 1;
 	gameState[`kingOf${cap(suit)}`] = false;
-	card.modifierResult = `King of ${cap(suit)} returns to the deck · ${gameState.kingsRevealed} of 4`;
+	// Past tense, named by its card (DP-1-08), the count in the HUD's form and held to its clause
+	// by no-break spaces (game-copy-s-02): "K♥ went back into the deck · Kings 0 of 4"
+	card.modifierResult = `K${SUIT_SYMBOL[suit]} went back into the deck\u00a0·\u00a0Kings ${gameState.kingsRevealed} of 4`;
 	gameState.status = card.modifierResult;
 }
 
@@ -448,9 +453,10 @@ export function confirmCard() {
 	if (card?.modifier === 'return-king') {
 		returnKingToDeck(card);
 	}
-	// skip-damage modifier: an odd card that skips its own Stability check says so
+	// skip-damage modifier: an odd card that skips its own Stability check says so, in the past
+	// tense and by its name ("A♣ skipped its Stability check")
 	if (card?.modifier === 'skip-damage' && ODD_RANKS.includes(card.card)) {
-		card.modifierResult = 'No Stability check this time';
+		card.modifierResult = `${card.card}${SUIT_SYMBOL[card.suit] ?? ''} skipped its Stability check`;
 		gameState.status = card.modifierResult;
 	}
 

@@ -24,6 +24,9 @@
 		addableCloudProviders
 	} from '../../utils/voiceProviders.js';
 
+	/** A format hint for the key field (a placeholder is never the label); none for the rest */
+	const KEY_PLACEHOLDERS = { openai: 'sk-…' };
+
 	let availableVoices = $state([]);
 	let providerError = $state(null);
 	/** Set while a provider is starting up (Supertonic downloads its models the first time) */
@@ -262,9 +265,7 @@
 		{#if adding}
 			<form class="add-service" onsubmit={saveService} aria-labelledby="add-service-heading">
 				<p class="cm-label" id="add-service-heading">Add a voice service</p>
-				<p class="cm-help">
-					Use your own API key for a cloud voice. The key is stored in this browser only.
-				</p>
+				<p class="cm-help">Use your own API key for a cloud voice.</p>
 				<div class="cm-rows">
 					<div class="cm-row">
 						<label class="cm-label" for="new-tts-service">Service</label>
@@ -275,14 +276,18 @@
 						</select>
 					</div>
 					<div class="cm-row">
-						<label class="cm-label" for="new-tts-key">API key</label>
+						<div>
+							<label class="cm-label" for="new-tts-key">API key</label>
+							<p class="cm-help" id="new-tts-key-help">Stored only in this browser.</p>
+						</div>
 						<input
 							id="new-tts-key"
 							class="cm-control"
 							type="password"
 							autocomplete="off"
+							aria-describedby="new-tts-key-help"
 							bind:value={newKey}
-							placeholder="Paste your key"
+							placeholder={KEY_PLACEHOLDERS[newService]}
 						/>
 					</div>
 				</div>
@@ -312,7 +317,7 @@
 				<div class="cm-row">
 					<div>
 						<label class="cm-label" for="tts-api-key">{CLOUD_PROVIDERS[provider]} API key</label>
-						<p class="cm-help" id="tts-api-key-help">Stored in this browser only.</p>
+						<p class="cm-help" id="tts-api-key-help">Stored only in this browser.</p>
 					</div>
 					<input
 						id="tts-api-key"
@@ -322,7 +327,7 @@
 						aria-describedby="tts-api-key-help"
 						value={getAudioSettings().ttsApiKey || ''}
 						oninput={(e) => handleTTSSettingChange('ttsApiKey', e.target.value || null)}
-						placeholder="Paste your key"
+						placeholder={KEY_PLACEHOLDERS[provider]}
 					/>
 				</div>
 
@@ -382,7 +387,7 @@
 		background: none;
 		border: none;
 		font-family: var(--font-body, 'Inter', sans-serif);
-		font-size: 0.9375rem;
+		font-size: 0.875rem;
 		font-weight: 600;
 		color: var(--color-neon-cyan, #00ffff);
 		text-decoration: underline;

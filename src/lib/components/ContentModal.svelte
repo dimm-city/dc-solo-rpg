@@ -17,6 +17,7 @@
 	import { fade, fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import { ANIMATION_DURATION } from '../constants/animations.js';
+	import { scrollEdges } from './journal/scrollEdges.js';
 
 	let {
 		children,
@@ -41,6 +42,8 @@
 	let modalElement = $state();
 	let dialogElement = $state();
 	let previouslyFocused = null;
+	/** Whether the body has content past its top or bottom edge (visual-layout-s-15) */
+	let bodyEdges = $state({ above: false, below: false });
 
 	const prefersReducedMotion = () =>
 		typeof window !== 'undefined' &&
@@ -162,10 +165,33 @@
 					</button>
 				</div>
 
-				<div class="content-body-wrapper">
-					<div class="content-body">
-						{@render children()}
+				<!-- While content remains below the fold, the journal's cue: a 40px fade and the cyan
+				     chevron; a 24px fade at the top once scrolled (visual-layout-s-15) -->
+				<div class="content-body-frame">
+					<div
+						class="content-body-wrapper"
+						class:more-below={bodyEdges.below}
+						class:more-above={bodyEdges.above}
+						use:scrollEdges={(edges) => {
+							if (edges.above !== bodyEdges.above || edges.below !== bodyEdges.below)
+								bodyEdges = edges;
+						}}
+						data-testid="content-body"
+					>
+						<div class="content-body">
+							{@render children()}
+						</div>
 					</div>
+					<span
+						class="more-cue"
+						class:visible={bodyEdges.below}
+						aria-hidden="true"
+						data-testid="content-more-cue"
+					>
+						<svg viewBox="0 0 24 24" width="16" height="16">
+							<path d="m6 9 6 6 6-6" />
+						</svg>
+					</span>
 				</div>
 
 				{#if footer}
@@ -262,25 +288,19 @@
 		flex-shrink: 0;
 	}
 
+	/* One title style for every dialog, at every width: Inter 600 caps, 18px. The display face
+	   stays out of dialogs (it is for 28px and up, MN-07), which also frees landscape room. */
 	.content-header h2 {
 		margin: 0;
-		font-family: var(--font-display, 'Orbitron', sans-serif);
-		font-size: 1.75rem; /* 28px: the display face is for 28px and up only */
+		font-family: var(--font-body, 'Inter', sans-serif);
+		font-size: 1.125rem;
 		font-weight: 600;
 		line-height: 1.2;
-		letter-spacing: var(--letter-spacing-wide, 0.05em);
-		text-wrap: balance;
-		color: #fff;
-	}
-
-	/* Compact (confirmations): a small title, so Inter 600 caps rather than the display face */
-	.compact .content-header h2 {
-		font-family: var(--font-body, 'Inter', sans-serif);
-		font-size: 1.0625rem;
-		font-weight: 600;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		text-shadow: none;
+		text-wrap: balance;
+		color: #fff;
 	}
 
 	.content-modal-wrapper.compact {
@@ -319,18 +339,82 @@
 		opacity: 1;
 	}
 
-	/* Scrolling body */
+	/* Scrolling body, in a frame that holds its "more below" chevron */
+	.content-body-frame {
+		position: relative;
+		flex: 1;
+		min-height: 0; /* Important for flex scrolling */
+		display: flex;
+		flex-direction: column;
+	}
+
 	.content-body-wrapper {
 		flex: 1;
 		overflow-y: auto;
 		overflow-x: hidden;
 		overscroll-behavior: contain;
-		min-height: 0; /* Important for flex scrolling */
+		min-height: 0;
+	}
+
+	/* Content past an edge fades out there, as the journal's lists do: 40px at the bottom with
+	   the chevron, 24px at the top once the body is scrolled down (visual-layout-s-15) */
+	.content-body-wrapper.more-below {
+		-webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 40px), transparent 100%);
+		mask-image: linear-gradient(to bottom, #000 calc(100% - 40px), transparent 100%);
+	}
+
+	.content-body-wrapper.more-above {
+		-webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 24px);
+		mask-image: linear-gradient(to bottom, transparent 0, #000 24px);
+	}
+
+	.content-body-wrapper.more-above.more-below {
+		-webkit-mask-image: linear-gradient(
+			to bottom,
+			transparent 0,
+			#000 24px,
+			#000 calc(100% - 40px),
+			transparent 100%
+		);
+		mask-image: linear-gradient(
+			to bottom,
+			transparent 0,
+			#000 24px,
+			#000 calc(100% - 40px),
+			transparent 100%
+		);
+	}
+
+	/* The journal's "more below" chevron, at the body's bottom-right corner; opacity only */
+	.more-cue {
+		position: absolute;
+		right: var(--space-sm, 0.5rem);
+		bottom: 4px;
+		display: grid;
+		place-items: center;
+		width: 24px;
+		height: 24px;
+		color: var(--color-neon-cyan, #0ff);
+		opacity: 0;
+		transition: opacity var(--dur-enter, 200ms) ease-out;
+		pointer-events: none;
+	}
+
+	.more-cue.visible {
+		opacity: 1;
+	}
+
+	.more-cue svg {
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 2;
+		stroke-linecap: round;
+		stroke-linejoin: round;
 	}
 
 	.content-body {
 		padding: var(--space-lg, 1.5rem) var(--space-xl, 2rem) var(--space-xl, 2rem);
-		font-size: 1.0625rem; /* 17px body */
+		font-size: 1rem; /* 16px body */
 		line-height: 1.6;
 	}
 
@@ -360,7 +444,7 @@
 		border: 1px solid var(--color-cyber-magenta, #d946ef);
 		border-radius: 4px;
 		font-size: 1rem;
-		font-weight: 700;
+		font-weight: 600;
 		letter-spacing: var(--letter-spacing-wider, 0.1em);
 		text-transform: uppercase;
 		cursor: pointer;
@@ -410,7 +494,7 @@
 
 	:global(.cm-action.danger) {
 		color: #ff8fa3;
-		font-weight: 700;
+		font-weight: 600;
 		border: 2px solid var(--color-danger, #ff4d6d);
 	}
 
@@ -422,7 +506,7 @@
 
 	:global(.cm-action.primary) {
 		color: var(--color-brand-yellow, #ffd700);
-		font-weight: 700;
+		font-weight: 600;
 		background: linear-gradient(135deg, #831d98, #6d22c7);
 		border: 1px solid var(--color-cyber-magenta, #d946ef);
 	}
@@ -456,16 +540,6 @@
 				calc(var(--space-md, 1rem) + env(safe-area-inset-right, 0px)) var(--space-sm, 0.5rem)
 				calc(var(--space-lg, 1.25rem) + env(safe-area-inset-left, 0px));
 			min-height: 64px;
-		}
-
-		/* Below 28px the display face is hard to read: phones get Inter 600 caps, like
-		   the compact titles, so long titles such as Game Settings stay on one line */
-		.content-header h2 {
-			font-family: var(--font-body, 'Inter', sans-serif);
-			font-size: 1.125rem;
-			letter-spacing: 0.08em;
-			text-transform: uppercase;
-			text-shadow: none;
 		}
 
 		.content-body {
@@ -505,9 +579,32 @@
 		}
 	}
 
+	/* Landscape phones and short windows: the dialog takes the height, with an 8px margin, and its
+	   header and footer slim down (both stay pinned; only the body scrolls) */
+	@media (max-height: 500px) {
+		.content-modal-wrapper,
+		.content-modal-wrapper:not(.compact) {
+			max-height: calc(100dvh - 16px);
+		}
+
+		.content-header,
+		.compact .content-header,
+		.content-footer,
+		.compact .content-footer {
+			min-height: 0;
+			padding: var(--space-sm, 0.5rem) var(--space-lg, 1.5rem);
+		}
+
+		.content-body {
+			padding-top: var(--space-md, 1rem);
+			padding-bottom: var(--space-md, 1rem);
+		}
+	}
+
 	@media (prefers-reduced-motion: reduce) {
 		.close-button,
 		.done-button,
+		.more-cue,
 		:global(.cm-action) {
 			transition: none;
 		}
@@ -519,7 +616,7 @@
 
 	/* ------------------------------------------------------------------
 	   Shared "cm-*" building blocks for modal content (Settings, Help, About).
-	   Type scale: section title 18px / label 16px / body 17px / helper 14px.
+	   Type scale: section title 16px / label 16px / body 16px / helper 14px; Inter 400 and 600.
 	   Spacing: 8px grid.
 	   ------------------------------------------------------------------ */
 	:global(.cm-section + .cm-section) {
@@ -532,18 +629,18 @@
 		/* Overrides the global h3 / label / input rules in styles.css */
 		margin: 0;
 		font-family: var(--font-body, 'Inter', sans-serif);
-		font-size: 1.125rem;
-		font-weight: 700;
-		line-height: 1.3;
-		letter-spacing: 0.02em;
+		font-size: 1rem;
+		font-weight: 600;
+		line-height: 1.25;
+		letter-spacing: 0;
 		text-transform: none;
 		color: var(--color-neon-cyan, #00ffff);
 	}
 
 	:global(.cm-section-desc) {
 		margin: 8px 0 0;
-		max-width: 65ch;
-		font-size: 0.9375rem;
+		max-width: var(--measure, 30em);
+		font-size: 0.875rem;
 		line-height: 1.5;
 		color: #b8c5d6;
 	}
@@ -581,8 +678,11 @@
 		color: #fff;
 	}
 
+	/* Helper and section text keep the reading measure, about 65 characters a line at any size
+	   (visual-layout-s-18; 65ch and no cap ran 84-85) */
 	:global(.cm-help) {
 		margin: 4px 0 0;
+		max-width: var(--measure, 30em);
 		font-size: 0.875rem;
 		font-weight: 400;
 		line-height: 1.5;
@@ -823,7 +923,7 @@
 		border: 1px solid var(--color-danger, #ff4d6d);
 		border-radius: 4px;
 		color: #ff8fa3;
-		font-size: 0.9375rem;
+		font-size: 0.875rem;
 		line-height: 1.5;
 	}
 
@@ -832,7 +932,7 @@
 		padding: 12px 16px;
 		border-left: 3px solid var(--color-neon-cyan, #00ffff);
 		background: rgba(0, 255, 255, 0.06);
-		font-size: 0.9375rem;
+		font-size: 0.875rem;
 		line-height: 1.5;
 		color: #d5dfeb;
 	}

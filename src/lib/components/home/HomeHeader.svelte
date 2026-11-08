@@ -2,8 +2,9 @@
 	/**
 	 * HomeHeader - brand plus the home screen's actions.
 	 *
-	 * 900px and up: Stories, Settings and Help inline with text labels, and a "More" menu for the
-	 * rest. Below 900px: one menu button ("Toggle menu") holding every action.
+	 * 900px and up: Story Library, Settings and Guide inline with text labels, and a "More" menu
+	 * for the rest. Below 900px: one menu button ("Menu") holding every action. Each feature has
+	 * one name everywhere: Story Library, Game Guide, Dice theme.
 	 */
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
@@ -135,13 +136,13 @@
 	<nav class="header-nav" aria-label="Main">
 		<div class="header-buttons">
 			<button class="header-button library-button" onclick={act(onstories)}>
-				{@render icon('stories', 18)}<span>Stories</span>
+				{@render icon('stories', 18)}<span>Story Library</span>
 			</button>
 			<button class="header-button settings-button" onclick={act(onsettings)}>
 				{@render icon('settings', 18)}<span>Settings</span>
 			</button>
-			<button class="header-button help-button" onclick={act(onhelp)}>
-				{@render icon('help', 18)}<span>Help</span>
+			<button class="header-button help-button" onclick={act(onhelp)} aria-label="Game Guide">
+				{@render icon('help', 18)}<span>Guide</span>
 			</button>
 			<button
 				class="header-button more-button"
@@ -156,7 +157,7 @@
 		<button
 			class="hamburger-button"
 			onclick={toggleMenu}
-			aria-label="Toggle menu"
+			aria-label="Menu"
 			aria-expanded={menuOpen}
 			aria-controls={MENU_ID}
 		>
@@ -167,7 +168,7 @@
 	{#if menuOpen}
 		<div id={MENU_ID} class="mobile-menu" transition:fade={menuFade()}>
 			<button class="mobile-menu-item" onclick={act(onupload)} disabled={uploading}>
-				{@render icon('upload')}<span>Upload Game</span>
+				{@render icon('upload')}<span>Upload game</span>
 			</button>
 			<button class="mobile-menu-item inline-on-desktop" onclick={act(onstories)}>
 				{@render icon('stories')}<span>Story Library</span>
@@ -176,17 +177,17 @@
 				{@render icon('settings')}<span>Settings</span>
 			</button>
 			<button class="mobile-menu-item" onclick={act(ondice)}>
-				{@render icon('dice')}<span>Dice Theme</span>
+				{@render icon('dice')}<span>Dice theme</span>
 			</button>
 			<button class="mobile-menu-item" onclick={act(onabout)}>
 				{@render icon('about')}<span>About</span>
 			</button>
 			<button class="mobile-menu-item inline-on-desktop" onclick={act(onhelp)}>
-				{@render icon('help')}<span>Help</span>
+				{@render icon('help')}<span>Game Guide</span>
 			</button>
 			{#if signedIn}
 				<button class="mobile-menu-item signout-menu-item" onclick={act(onsignout)}>
-					{@render icon('signout')}<span>Sign Out</span>
+					{@render icon('signout')}<span>Sign out</span>
 				</button>
 			{/if}
 		</div>
@@ -202,7 +203,11 @@
 		justify-content: space-between;
 		align-items: center;
 		gap: var(--space-md);
-		padding: var(--space-sm) clamp(var(--space-md), 3vw, var(--space-xl));
+		/* Clear of the notch and rounded corners in landscape (viewport-fit=cover; visual-layout-s-14) */
+		padding: var(--space-sm)
+			max(clamp(var(--space-md), 3vw, var(--space-xl)), env(safe-area-inset-right, 0px))
+			var(--space-sm)
+			max(clamp(var(--space-md), 3vw, var(--space-xl)), env(safe-area-inset-left, 0px));
 		background: rgba(5, 7, 13, 0.55);
 		backdrop-filter: blur(16px);
 		-webkit-backdrop-filter: blur(16px);
@@ -231,20 +236,21 @@
 	.version-text {
 		font-family: var(--font-body);
 		font-size: 1rem;
-		font-weight: 700;
+		font-weight: 600;
 		letter-spacing: 0.12em;
 		text-transform: uppercase;
 		color: var(--color-brand-yellow);
 		text-shadow: var(--text-glow-yellow);
 	}
 
+	/* The maker line: 12px, and light enough to hold 4.5:1 even over the logo's glow */
 	.maker {
 		font-family: var(--font-body);
-		font-size: 0.6875rem;
+		font-size: 0.75rem;
 		font-weight: 600;
 		letter-spacing: 0.16em;
 		text-transform: uppercase;
-		color: #9fb3c8;
+		color: #b4c4d6;
 	}
 
 	.header-nav {
@@ -270,7 +276,7 @@
 		border-radius: 4px;
 		color: #e2e9f2;
 		font-family: var(--font-body);
-		font-size: 0.8125rem;
+		font-size: 0.75rem;
 		font-weight: 600;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
@@ -326,7 +332,7 @@
 	.mobile-menu {
 		position: absolute;
 		top: calc(100% + 4px);
-		right: clamp(var(--space-md), 3vw, var(--space-xl));
+		right: max(clamp(var(--space-md), 3vw, var(--space-xl)), env(safe-area-inset-right, 0px));
 		z-index: 1001;
 		min-width: 220px;
 		padding: var(--space-xs);

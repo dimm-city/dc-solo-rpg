@@ -67,12 +67,24 @@
 	--tracking-ui: 0.08em;
 	--font-mono: 'Share Tech Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 	--font-led: 'DSEG7 Classic', var(--font-mono);
+	/* A seven-segment "1" lights only its right-hand segments, so a number led by a 1 ("/10")
+	   leaves an unlit gap; it pulls in by this much (the HUD's .hud-max and RunRecap's .max).
+	   Measured: the slash-to-ink gap of "/10" then matches "/20" within 0.5px at 360-1440px. */
+	--led-lead-one: -0.52em;
 
 	/* === SHARED UI TOKENS === */
 	--color-danger: #ff4d6d; /* danger only: Kings, Stability loss, critical states */
 	--frame-border: linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta));
 	--content-max: 720px; /* desktop reading column */
+	/* The reading measure for running text (visual-layout-s-17): in em, not ch, because Inter's
+	   "0" is wider than its average letter (65ch rendered 85-95 characters), so it holds at 16px
+	   and 18px alike. Measured over every card story, intro paragraph and Guide line: about 65
+	   characters a line, never more than 70 (34em reached 79 on narrow-lettered lines). */
+	--measure: 30em;
 	--cta-max: 480px; /* primary button max width on desktop */
+	/* The bottom safe area (the home indicator): every bottom inset reads this, so a capture
+	   can force it (DP-1-13) */
+	--safe-bottom: env(safe-area-inset-bottom, 0px);
 
 	/* Font Sizes - 8px baseline grid */
 	--text-xs: 0.75rem;
@@ -335,9 +347,25 @@ p {
 	color: var(--color-text-secondary);
 }
 
+/* visual-layout-s-09: body copy never ends on a lone short word (the browser rebalances the
+   last lines). Table cells are a few words in a narrow column, so their lines are balanced.
+   Display titles use balance in their own components. */
+p,
+li,
+dd,
+.confirm-message,
+.round-text {
+	text-wrap: pretty;
+}
+
+td {
+	text-wrap: balance;
+}
+
 strong,
 b {
-	font-weight: 700;
+	/* Inter at two weights only, 400 and 600 (VT-1-12) */
+	font-weight: 600;
 	color: var(--color-text-primary);
 }
 
@@ -503,7 +531,7 @@ label {
 	display: block;
 	font-family: var(--font-body);
 	font-size: var(--text-sm);
-	font-weight: 700;
+	font-weight: 600;
 	color: #ffffff;
 	/* FIX #4: WCAG AA */
 	text-transform: uppercase;

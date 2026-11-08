@@ -1,5 +1,5 @@
 <script>
-	import { untrack } from 'svelte';
+	import { onDestroy, untrack } from 'svelte';
 	import { sleep } from '../utils/timing.js';
 	import { logger } from '../utils/logger.js';
 	import { gameState } from '../stores/gameStore.svelte.js';
@@ -12,15 +12,19 @@
 	} from '../stores/audioStore.svelte.js';
 	import { autoAdvance } from '../utils/autoPlay.js';
 	import CardDisplay from './card/CardDisplay.svelte';
+	import { storyPlain } from './card/storyText.js';
 	import {
 		endsGameOnConfirm,
 		getCardHoldMs,
+		getContinueAction,
 		getKingNumber,
 		getMechanicNote,
 		getModifierNote,
 		isFinalKing
 	} from './card/cardInfo.js';
 	import { createHoldTimer } from './card/holdTimer.js';
+	import { CARD_GUARD_MS, createDrawBeat } from './card/drawBeat.js';
+	import { ANIMATION_DURATION } from '../constants/animations.js';
 
 	let {
 		card = $bindable(null),
@@ -29,10 +33,11 @@
 		onconfirmcard = () => {}
 	} = $props();
 
-	// Card to card in about 600ms: dismiss 220ms, next draw after 100ms, face rises in 250ms
+	// Card to card in about 0.57s: dismiss 220ms, the gap before the next draw (DRAW_PAUSE, 100ms),
+	// then the face rises in 250ms. It takes input 400ms after it appears (CARD_GUARD_MS)
 	const RISE_MS = 250;
 	const DISMISS_MS = 220;
-	const NEXT_DRAW_MS = 100;
+	const NEXT_DRAW_MS = ANIMATION_DURATION.DRAW_PAUSE;
 	// The fourth King: the card holds while its skulls flare (4 x 120ms stagger), then the ending
 	const DOOM_HOLD_MS = 700;
 
@@ -43,12 +48,17 @@
 	const note = $derived(getMechanicNote(card, gameState));
 	const modifierNote = $derived(getModifierNote(card, gameState));
 	const kingNumber = $derived(getKingNumber(card, gameState));
+	const continueAction = $derived(getContinueAction(card, gameState));
 
 	/**
 	 * Draw a card and show it: the face rises with all its text present.
 	 */
+	let drawing = false;
 	async function handleProceed() {
-		if (animationStage !== 'idle') return;
+		if (animationStage !== 'idle' || drawing) return;
+		// A draw in hand (a tap or Space during the beat) replaces the pending one: never two
+		drawBeat.cancel();
+		drawing = true;
 
 		try {
 			onrequestcard();
@@ -64,23 +74,44 @@
 				return;
 			}
 
+			// The card can be dismissed once it has risen and been up CARD_GUARD_MS, with or
+			// without motion (game-copy-s-01): until then a tap, Space or Enter does nothing
 			animationStage = 'materializing';
-			await sleep(reducedMotion() ? 0 : RISE_MS);
+			await sleep(Math.max(reducedMotion() ? 0 : RISE_MS, CARD_GUARD_MS));
 			if (animationStage === 'materializing') animationStage = 'revealed';
 		} catch (error) {
 			logger.error('Proceed to byte failed:', error);
 			animationStage = 'idle';
+		} finally {
+			drawing = false;
 		}
 	}
 
+	const roundHasCards = () => gameState.state === 'drawCard' && gameState.cardsToDraw > 0;
+
+	// The beat before the next card: it is drawn once, after the beat or at a tap, whichever
+	// comes first, and not at all if the round or the game moved on meanwhile
+	const drawBeat = createDrawBeat({
+		draw: () => handleProceed(),
+		canDraw: roundHasCards,
+		ms: NEXT_DRAW_MS
+	});
+	onDestroy(() => drawBeat.cancel());
+
 	/**
-	 * Dismissing a card while more remain in the round draws the next one at once,
+	 * Dismissing a card while more remain in the round draws the next one after the beat,
 	 * in manual and auto-play alike.
 	 */
 	function triggerAutoDrawIfNeeded() {
-		if (gameState.state === 'drawCard' && gameState.cardsToDraw > 0) {
-			setTimeout(() => handleProceed(), NEXT_DRAW_MS);
-		}
+		if (roundHasCards()) drawBeat.schedule();
+	}
+
+	/**
+	 * Draw the next card now, if the table is empty and the round has one: the deal's first card,
+	 * and a tap on the table during the beat. A no-op while a card is up.
+	 */
+	export async function draw() {
+		if (animationStage === 'idle' && roundHasCards()) await handleProceed();
 	}
 
 	// ===== AUTO-PLAY =====
@@ -139,7 +170,8 @@
 		const gameplaySettings = getGameplaySettings();
 
 		if (audioSettings.autoReadCards) {
-			speak(`${shown.description}. ${shown.story || ''}`);
+			// The story's emphasis markers are not read aloud
+			speak(`${shown.description}. ${storyPlain(shown.story)}`);
 			// Only once the voice has finished the card (or was switched off) may it move on
 			narrationWait = awaitNarration();
 			narrationWait.promise.then((ended) => {
@@ -227,6 +259,7 @@
 		{note}
 		{modifierNote}
 		{kingNumber}
+		{continueAction}
 		{holdProgress}
 		{onReadingChange}
 		riseMs={RISE_MS}

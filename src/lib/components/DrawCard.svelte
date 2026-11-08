@@ -31,6 +31,13 @@
 	}
 
 	/**
+	 * Draw the next card if none is up (a no-op while a card is shown or leaving)
+	 */
+	export async function draw() {
+		await cardDeckRef?.draw();
+	}
+
+	/**
 	 * Expose button disabled state for toolbar - derived from animation stage
 	 */
 	export function isButtonDisabled() {
@@ -83,7 +90,7 @@
 		min-height: 1.5rem;
 		margin: 0 0 var(--space-sm, 0.5rem);
 		font-family: var(--font-body, 'Inter', sans-serif);
-		font-size: 0.8125rem;
+		font-size: 0.75rem;
 		font-weight: 600;
 		line-height: 1.5rem;
 		letter-spacing: 0.08em;

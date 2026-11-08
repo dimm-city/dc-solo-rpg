@@ -12,7 +12,11 @@
 	<div class="first-run-panel" data-augmented-ui="tl-clip br-clip border">
 		<p class="first-run-brand">Dimm City</p>
 		<h1 id="first-run-title" class="first-run-title">Dream Console</h1>
-		<p class="first-run-pitch">A solo journaling game. Draw, roll, write.</p>
+		<!-- Each sentence stays whole: the only break is between them -->
+		<p class="first-run-pitch">
+			<span class="pitch-sentence">A solo journaling game.</span>
+			<span class="pitch-sentence">Draw, roll, write.</span>
+		</p>
 
 		<!-- choice-card/skip-card: kept for the playthrough capture scripts that skip this screen -->
 		<button class="first-run-play choice-card skip-card" onclick={onplay}>
@@ -22,8 +26,7 @@
 
 		<button class="first-run-rules" onclick={onreadrules}>Read the rules first</button>
 
-		<button class="first-run-skip" onclick={onskiptips}>I know how to play: don't show tips.</button
-		>
+		<button class="first-run-skip" onclick={onskiptips}>I know how to play: skip the tips</button>
 	</div>
 </section>
 
@@ -35,7 +38,8 @@
 		align-items: center;
 		justify-content: center;
 		min-height: 100dvh;
-		padding: var(--space-xl) var(--space-md);
+		padding: var(--space-xl) max(var(--space-md), env(safe-area-inset-right, 0px)) var(--space-xl)
+			max(var(--space-md), env(safe-area-inset-left, 0px));
 	}
 
 	.first-run-panel {
@@ -62,7 +66,7 @@
 		font-weight: 600;
 		letter-spacing: 0.16em;
 		text-transform: uppercase;
-		color: #9fb3c8;
+		color: #b4c4d6;
 	}
 
 	/* Screen title: the display face at 28px and up */
@@ -75,8 +79,14 @@
 
 	.first-run-pitch {
 		margin: 0 0 var(--space-sm);
-		font-size: 1.0625rem;
+		font-size: 1rem;
+		text-wrap: balance;
 		color: #d5dfeb;
+	}
+
+	.pitch-sentence {
+		display: inline-block;
+		white-space: nowrap;
 	}
 
 	.first-run-play,
@@ -87,7 +97,8 @@
 		justify-content: center;
 		gap: 2px;
 		min-height: 56px;
-		padding: 10px var(--space-lg);
+		/* 16px sides: the Play subtitle fits one line at 360px (VT-1-14) */
+		padding: 10px var(--space-md);
 		border-radius: 4px;
 		font-family: var(--font-body);
 		cursor: pointer;
@@ -109,14 +120,17 @@
 	}
 
 	.play-label {
-		font-size: 1.0625rem;
+		font-size: 1rem;
 		font-weight: 600;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 	}
 
+	/* Narrower than 360px it wraps, balanced: never one word on a line of its own */
 	.play-detail {
-		font-size: 0.9375rem;
+		font-size: 0.875rem;
+		text-wrap: balance;
+		text-align: center;
 		font-weight: 400;
 		color: #fde68a;
 	}
@@ -126,7 +140,7 @@
 		background: transparent;
 		border: 1px solid rgba(0, 255, 255, 0.55);
 		color: var(--color-neon-cyan);
-		font-size: 0.9375rem;
+		font-size: 0.875rem;
 		font-weight: 600;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
@@ -143,7 +157,7 @@
 		background: none;
 		border: none;
 		font-family: var(--font-body);
-		font-size: 0.9375rem;
+		font-size: 0.875rem;
 		color: #b8c5d6;
 		text-decoration: underline;
 		text-underline-offset: 3px;

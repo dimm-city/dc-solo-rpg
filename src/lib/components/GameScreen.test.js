@@ -113,7 +113,8 @@ describe('GameScreen step button', () => {
 		mockDieRoll(13);
 		await fireEvent.click(button);
 		await settle(GUARD_MS);
-		expect(button.getAttribute('aria-label')).toBe('Continue');
+		// DP-1-06: after the result, the button names where it goes
+		expect(button.getAttribute('aria-label')).toBe('Begin round 1');
 
 		await fireEvent.click(button);
 		await settle(GUARD_MS);
@@ -123,6 +124,38 @@ describe('GameScreen step button', () => {
 		expect(container.querySelector('[data-testid="context-title"]').textContent).toBe('Round 1');
 	});
 
+	it("visual-layout-s-06: the intro's Begin button is the step button, so it never moves", async () => {
+		setUp('showIntro');
+		const { getByTestId, container } = render(GameScreen);
+		await settle(0);
+		const begin = getByTestId('story-continue-button');
+		// In the one step slot, the slot the board's steps use
+		expect(begin.closest('#step-action')).not.toBeNull();
+		expect(container.querySelectorAll('#step-action')).toHaveLength(1);
+		expect(begin.getAttribute('aria-label')).toBe('Begin your journey');
+		// The intro text is the screen's; the slot carries no second screen-showIntro
+		expect(container.querySelectorAll('[data-testid="screen-showIntro"]')).toHaveLength(1);
+
+		// It is the first step button, so there is no earlier press to hold off
+		await fireEvent.click(begin);
+		expect(gameState.state).toBe('initialDamageRoll');
+		await settle(0);
+		// Same element, now the opening roll
+		expect(getByTestId('initial-damage-button')).toBe(begin);
+		expect(begin.getAttribute('aria-label')).toBe('Roll for instability');
+	});
+
+	it('the intro begins from its button or Space, never from a tap beside it', async () => {
+		setUp('showIntro');
+		const { container } = render(GameScreen);
+		await settle(0);
+		await fireEvent.click(container.querySelector('.main-screen-area'));
+		expect(gameState.state).toBe('showIntro');
+
+		await fireEvent.keyDown(window, { key: ' ' });
+		expect(gameState.state).toBe('initialDamageRoll');
+	});
+
 	it('ignores a press that lands just after the button changed meaning', async () => {
 		setUp('failureCheck');
 		const { getByTestId } = render(GameScreen);
@@ -130,7 +163,9 @@ describe('GameScreen step button', () => {
 		mockDieRoll(13);
 		await fireEvent.click(getByTestId('failure-check-button'));
 		await settle(0);
-		expect(getByTestId('failure-check-button').getAttribute('aria-label')).toBe('Continue');
+		expect(getByTestId('failure-check-button').getAttribute('aria-label')).toBe(
+			'Open your journal'
+		);
 
 		await fireEvent.click(getByTestId('failure-check-button')); // a double click
 		expect(gameState.state).toBe('failureCheck');
@@ -155,20 +190,41 @@ describe('GameScreen step button', () => {
 		expect(skipRoll).toHaveBeenCalledTimes(1);
 		land();
 		await settle(0);
-		expect(getByTestId('result-line').textContent).toBe('Rolled 13 · no Stability lost · 20/20');
+		expect(getByTestId('result-line').textContent).toBe('Rolled 13 · no Stability lost');
 	});
 
-	it('shows the Lucid modifier on the roll button only', async () => {
+	it('shows the Lucid modifier on the hint line above the roll button only', async () => {
 		setUp('failureCheck');
 		gameState.isLucid = true;
-		const { getByTestId, queryByTestId } = render(GameScreen);
+		const { getByTestId } = render(GameScreen);
 		await settle(GUARD_MS);
-		expect(getByTestId('roll-modifier').textContent).toBe('Lucid: 2 dice, keep high');
+		expect(getByTestId('roll-modifier').textContent.trim()).toBe(
+			'Lucid · two dice, keep the higher'
+		);
+		expect(getByTestId('failure-check-button').getAttribute('aria-label')).toBe(
+			'Roll for Stability'
+		);
 
 		await fireEvent.click(getByTestId('failure-check-button'));
 		await settle(GUARD_MS);
-		expect(queryByTestId('roll-modifier')).toBeNull();
-		expect(getByTestId('failure-check-button').getAttribute('aria-label')).toBe('Continue');
+		// The line stays (so nothing moves) but is empty once the roll is made
+		expect(getByTestId('roll-modifier').classList.contains('empty')).toBe(true);
+		expect(getByTestId('failure-check-button').getAttribute('aria-label')).toBe(
+			'Open your journal'
+		);
+	});
+
+	it('breaks a result line only between its clauses, the modifier its own word', async () => {
+		setUp('failureCheck');
+		const { getByTestId } = render(GameScreen);
+		await settle(GUARD_MS);
+		mockDieRoll(20);
+		await fireEvent.click(getByTestId('failure-check-button'));
+		await settle(GUARD_MS);
+		const line = getByTestId('result-line');
+		const clauses = [...line.querySelectorAll('.clause')].map((clause) => clause.textContent);
+		expect(clauses).toEqual(['Natural 20 ·', 'Stability already full ·', 'Lucid']);
+		expect(line.querySelector('.clause.modifier.lucid').textContent).toBe('Lucid');
 	});
 
 	it('arms auto-play the moment it is switched on, and cancels it when switched off', async () => {
@@ -200,8 +256,9 @@ describe('GameScreen result hold', { timeout: 15000 }, () => {
 		await settle(50);
 
 		// The live region has the result while the screen still shows it
+		// DP-1-07: the totals are in the announcement, not on the result line
 		expect(getByTestId('live-region').textContent.trim()).toBe(
-			'Rolled 13 · no Stability lost · 20/20'
+			'Rolled 13 · no Stability lost. Stability 20 of 20.'
 		);
 		expect(gameState.state).toBe('failureCheck');
 		// The run-out line follows the hold's clock: part-run by now
@@ -306,15 +363,13 @@ describe('GameScreen result hold', { timeout: 15000 }, () => {
 		const { getByTestId, queryByTestId, container } = render(GameScreen);
 		await settle(GUARD_MS);
 		expect(container.querySelector('[data-testid="context-title"]').textContent).toBe(
-			'Final Stability Check'
+			'Final Check'
 		);
-		expect(container.querySelector('.context-description').textContent).toBe(
-			'The fourth Ace is out. Survive this one Stability check and you escape. If it takes your last Stability, you fall.'
+		expect(container.querySelector('.context-description').textContent.trim()).toBe(
+			'Come through this roll with any Stability left and you escape.'
 		);
 		const button = getByTestId('failure-check-button');
-		expect(button.getAttribute('aria-label')).toBe(
-			'Roll for Stability · survive this and you escape'
-		);
+		expect(button.getAttribute('aria-label')).toBe('Roll for Stability');
 
 		mockDieRoll(13);
 		await fireEvent.click(button);
@@ -323,7 +378,7 @@ describe('GameScreen result hold', { timeout: 15000 }, () => {
 		expect(gameState.state).toBe('failureCheck');
 		expect(gameState.win).toBe(true);
 		expect(getByTestId('result-line').textContent).toBe(
-			'Rolled 13 · no Stability lost · 9/20 · you escape'
+			'Rolled 13 · no Stability lost · you escape'
 		);
 		expect(button.getAttribute('aria-label')).toBe('Escape');
 		expect(queryByTestId('step-advance')).toBeNull();
@@ -353,18 +408,19 @@ describe('GameScreen result hold', { timeout: 15000 }, () => {
 			expect(container.querySelector('[data-testid="context-title"]').textContent).toBe(
 				'Stability Check'
 			);
-			expect(container.querySelector('.context-description').textContent).toBe(
-				'An odd card demands a price. Roll to see how much Stability you lose.'
+			expect(container.querySelector('.context-description').textContent.trim()).toBe(
+				'10 or less costs Stability.'
 			);
 			const button = getByTestId('failure-check-button');
-			expect(button.getAttribute('aria-label')).toBe('Roll for damage');
+			expect(button.getAttribute('aria-label')).toBe('Roll for Stability');
 
 			mockDieRoll(13);
 			await fireEvent.click(button);
 			await settle(GUARD_MS);
 			expect(gameState.win).toBe(false);
 			expect(gameState.gameOver).toBe(false);
-			expect(getByTestId('result-line').textContent).toBe('Rolled 13 · no Stability lost · 9/20');
+			expect(getByTestId('result-line').textContent).toBe('Rolled 13 · no Stability lost');
+			expect(button.getAttribute('aria-label')).toBe('Go to Salvation');
 
 			// The round goes on: no cards left, so Salvation, with no target to beat
 			await fireEvent.click(button);
@@ -373,11 +429,11 @@ describe('GameScreen result hold', { timeout: 15000 }, () => {
 			expect(container.querySelector('[data-testid="context-title"]').textContent).toBe(
 				'Salvation'
 			);
-			expect(container.querySelector('.context-description').textContent).toBe(
-				'All four Aces are out. No target to beat now: survive one Stability check and a token comes off.'
+			expect(container.querySelector('.context-description').textContent.trim()).toBe(
+				'No target now. Survive this Stability check and a Token comes off.'
 			);
 			expect(getByTestId('success-check-button').getAttribute('aria-label')).toBe(
-				'Roll for Stability · Salvation is assured'
+				'Roll for Salvation'
 			);
 		}
 	);
@@ -396,7 +452,7 @@ describe('GameScreen: each visit to a step starts clean', () => {
 		mockDieRoll(3);
 		await fireEvent.click(getByTestId('roll-tasks-button'));
 		await settle(50);
-		expect(getByTestId('result-line').textContent).toBe('Rolled 3 · Draw 2 cards');
+		expect(getByTestId('result-line').textContent).toBe('Rolled 3 · 2 cards this round');
 		gameState.state = 'drawCard'; // the deal
 		await settle(1100);
 
@@ -414,7 +470,7 @@ describe('GameScreen: each visit to a step starts clean', () => {
 		expect(queryByTestId('result-line')).toBeNull();
 		await settle(1100);
 		// Round 1's roll was announced once, when it was made, and not again
-		expect(announcements.filter((m) => m === 'Rolled 3 · Draw 2 cards')).toHaveLength(1);
+		expect(announcements.filter((m) => m === 'Rolled 3 · 2 cards this round')).toHaveLength(1);
 	});
 
 	it('NV-06: a modifier notice shows on the first table screen after its card, then goes', async () => {
@@ -424,14 +480,18 @@ describe('GameScreen: each visit to a step starts clean', () => {
 			round: 1,
 			card: 'A',
 			suit: 'clubs',
-			modifierResult: 'King of Hearts returns to the deck · 2 of 4'
+			modifierResult: 'K♥ went back into the deck\u00a0·\u00a0Kings 2 of 4'
 		};
 		Object.assign(gameState, { aceOfHeartsRevealed: true, tokens: 5, acesRevealed: 2 });
+		announcements.length = 0;
 		const { getByTestId, queryByTestId } = render(GameScreen);
 		await settle(GUARD_MS);
-		expect(getByTestId('context-notice').textContent).toBe(
-			'King of Hearts returns to the deck · 2 of 4'
-		);
+		// The suit is drawn with the HUD's pip (SuitText), named for screen readers. No running
+		// total: the HUD's Kings tile shows it (game-copy-s-03); the announcement keeps it
+		const notice = getByTestId('context-notice');
+		expect(notice.textContent.trim()).toBe('K went back into the deck');
+		expect(announcements).toContain('K♥ went back into the deck\u00a0·\u00a0Kings 2 of 4');
+		expect(notice.querySelector('svg[role="img"]').getAttribute('aria-label')).toBe('hearts');
 
 		mockDieRoll(13);
 		await fireEvent.click(getByTestId('failure-check-button'));
@@ -442,18 +502,50 @@ describe('GameScreen: each visit to a step starts clean', () => {
 		expect(queryByTestId('context-notice')).toBeNull();
 	});
 
-	it('NV-06: on Salvation the notice names its card', async () => {
+	it('OWN-4: the card tab is the card alone; a modifier that did nothing has no notice', async () => {
+		setUp('failureCheck');
+		gameState.lastCard = {
+			id: '1.1',
+			round: 1,
+			card: 'A',
+			suit: 'spades',
+			description: 'A second chance manifests from the darkness',
+			modifier: 'return-king',
+			modifierResult: 'No King was out to return'
+		};
+		Object.assign(gameState, { acesRevealed: 1 });
+		const { getByTestId, queryByTestId, container } = render(GameScreen);
+		await settle(GUARD_MS);
+		// One job per line: the card (the check's cause), the phase, the stakes
+		const card = getByTestId('context-card');
+		expect(card.textContent.trim()).toBe('A');
+		expect(card.querySelector('svg[role="img"]').getAttribute('aria-label')).toBe('spades');
+		expect(container.querySelector('[data-testid="readout"]').textContent).not.toContain(
+			'second chance'
+		);
+		expect(getByTestId('context-title').textContent).toBe('Stability Check');
+		expect(getByTestId('context-description').textContent.trim()).toBe(
+			'10 or less costs Stability.'
+		);
+		// The non-event is neither shown nor announced
+		expect(queryByTestId('context-notice')).toBeNull();
+		expect(getByTestId('live-region').textContent).not.toContain('No King');
+	});
+
+	it('NV-06, DP-1-08: on Salvation the notice is about its card, in the past tense', async () => {
 		setUp('successCheck');
 		gameState.lastCard = {
 			id: '1.1',
 			round: 1,
 			card: 'A',
 			suit: 'clubs',
-			modifierResult: 'No Stability check this time'
+			modifierResult: 'A♣ skipped its Stability check'
 		};
 		Object.assign(gameState, { aceOfHeartsRevealed: true, tokens: 5, acesRevealed: 2 });
 		const { getByTestId } = render(GameScreen);
 		await settle(GUARD_MS);
-		expect(getByTestId('context-notice').textContent).toBe('A♣ · No Stability check this time');
+		const notice = getByTestId('context-notice');
+		expect(notice.textContent.trim()).toBe('A skipped its Stability check');
+		expect(notice.querySelector('svg').getAttribute('aria-label')).toBe('clubs');
 	});
 });

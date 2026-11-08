@@ -2,7 +2,9 @@
 	/**
 	 * RoundStats - Where the run stood at the end of a round
 	 *
-	 * Stability, Kings, Aces and (once Salvation is unlocked) tokens, in the game's own words.
+	 * Stability, Kings, Aces and (once Salvation is unlocked) tokens, label first and "n of max"
+	 * as in the journal's status line and the HUD's spoken text: "Stability 16 of 20",
+	 * "Kings 1 of 4", "Tokens 10 left" (tokens have no fixed max).
 	 *
 	 * @component
 	 * @example
@@ -18,7 +20,7 @@
 		if (typeof state.tower === 'number') {
 			list.push({
 				label: 'Stability',
-				value: `${Math.max(0, state.tower)}/${MAX_STABILITY}`,
+				value: `${Math.max(0, state.tower)} of ${MAX_STABILITY}`,
 				danger: state.tower <= 4
 			});
 		}
@@ -33,7 +35,7 @@
 			list.push({ label: 'Aces', value: `${state.acesRevealed} of 4` });
 		}
 		if (state.aceOfHeartsRevealed && typeof state.tokens === 'number') {
-			list.push({ label: 'Tokens left', value: String(state.tokens) });
+			list.push({ label: 'Tokens', value: `${state.tokens} left` });
 		}
 		return list;
 	});
@@ -59,7 +61,7 @@
 		padding: 12px 0 0;
 		border-top: 1px solid rgba(255, 255, 255, 0.12);
 		font-family: var(--font-body);
-		font-size: 0.9375rem;
+		font-size: 0.875rem;
 	}
 
 	.stat {
@@ -74,7 +76,7 @@
 
 	dd {
 		margin: 0;
-		font-weight: 700;
+		font-weight: 600;
 		font-variant-numeric: tabular-nums;
 		color: #e6edf5;
 	}

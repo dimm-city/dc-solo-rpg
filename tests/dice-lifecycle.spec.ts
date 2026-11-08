@@ -121,21 +121,21 @@ async function startGame(page: Page) {
 /** Leave for the home page through the header's Exit (the game is saved on the way) */
 async function exitGame(page: Page) {
 	await page.getByRole('button', { name: 'Exit game' }).click();
-	const dialog = await settled(page, 'Leave the game?');
-	await dialog.getByRole('button', { name: 'Leave', exact: true }).click();
+	const dialog = await settled(page, 'Exit the game?');
+	await dialog.getByRole('button', { name: 'Exit game', exact: true }).click();
 	await expect(page.getByTestId('home-page')).toBeVisible();
 }
 
 /** Pick a dice theme: the Dice button at 900px and up, else the "⋯" menu's Dice theme */
 async function changeTheme(page: Page, key: string) {
-	const wide = page.getByRole('button', { name: 'Change dice theme' });
+	const wide = page.getByRole('button', { name: 'Dice theme' });
 	if (await wide.isVisible()) {
 		await wide.click();
 	} else {
 		await page.getByRole('button', { name: 'More game options' }).click();
 		await page.locator('.game-menu-item', { hasText: 'Dice theme' }).click();
 	}
-	const dialog = await settled(page, 'Dice');
+	const dialog = await settled(page, 'Dice theme');
 	await dialog.getByTestId(`dice-theme-${key}`).click();
 	await expect(dialog.getByTestId(`dice-theme-${key}`)).toHaveAttribute('aria-checked', 'true');
 	await page.keyboard.press('Escape');

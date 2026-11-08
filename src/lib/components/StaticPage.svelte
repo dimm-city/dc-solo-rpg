@@ -1,6 +1,6 @@
 <script>
 	/**
-	 * StaticPage - shell for the reading pages (/about, /how-to): a back link to the console,
+	 * StaticPage - shell for the reading pages (/about, /how-to): a "Back to home" link,
 	 * a screen title and one 720px reading column.
 	 *
 	 * @prop {string} title Screen title (also the tab title: "<title> · Dream Console")
@@ -16,7 +16,8 @@
 	<title>{title} · Dream Console</title>
 </svelte:head>
 
-<NeuralBackground />
+<!-- Behind the page: the motes show in the gaps, never over a button, card or prose (visual-layout-s-08) -->
+<NeuralBackground --neural-z="-1" />
 
 <div class="static-page">
 	<nav class="static-nav" aria-label="Page">
@@ -35,7 +36,7 @@
 			>
 				<path d="m15 18-6-6 6-6" />
 			</svg>
-			Back to the console
+			Back to home
 		</a>
 	</nav>
 
@@ -90,7 +91,7 @@
 		background: rgba(11, 22, 34, 0.86);
 		border: 1px solid rgba(0, 255, 255, 0.22);
 		border-radius: 4px;
-		font-size: 1.0625rem;
+		font-size: 1rem;
 		line-height: 1.6;
 	}
 

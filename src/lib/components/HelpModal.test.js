@@ -56,10 +56,33 @@ describe('HelpModal', () => {
 	it('should display help message text', async () => {
 		await renderModal();
 
-		expect(document.body.textContent).toContain('20 Stability');
-		expect(document.body.textContent).toContain('Odd cards');
-		expect(document.body.textContent).toContain('all 4 Kings');
-		expect(document.body.textContent).toContain('Roll 17 or higher');
+		// The Guide keeps numerals on their words with no-break spaces; \s also matches those
+		const text = document.body.textContent.replace(/\s+/g, ' ');
+		expect(text).toContain('20 Stability');
+		expect(text).toContain('Odd cards');
+		expect(text).toContain('all four Kings');
+		expect(text).toContain('Roll 17 or higher');
+	});
+
+	it('never lets a numeral end a line apart from the word after it (visual-layout-s-19)', async () => {
+		await renderModal();
+
+		const guide = document.body.querySelector('.game-guide');
+		const walker = document.createTreeWalker(guide, NodeFilter.SHOW_TEXT);
+		const breakable = [];
+		for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+			// The table's row headers (Roll, Aces revealed) never wrap (white-space: nowrap)
+			if (node.parentElement.closest('tbody th')) continue;
+			const pairs = node.textContent.match(/\b\d+[ \t\n-]+[A-Za-z]+/g);
+			if (pairs) breakable.push(...pairs);
+		}
+		expect(breakable).toEqual([]);
+		// The key figures, the table data and the Hard rule all carry the no-break space
+		expect(guide.textContent).toContain('20\u00a0Stability');
+		expect(guide.textContent).toContain('10\u00a0Tokens');
+		expect(guide.textContent).toContain('Lose\u00a03\u00a0Stability');
+		expect(guide.textContent).toContain('then 1\u00a0Token comes off');
+		expect(guide.textContent).toContain('adds 1\u00a0Token');
 	});
 
 	it('states the Lucid and Surreal rule for every roll (owner decision 1)', async () => {
@@ -67,7 +90,9 @@ describe('HelpModal', () => {
 
 		const text = document.body.textContent.replace(/\s+/g, ' ');
 		expect(text).toContain('Any natural 20 makes you Lucid; any natural 1 makes you Surreal.');
-		expect(text).toContain('the opening roll, the roll for cards, Stability checks and Salvation');
+		expect(text).toContain('the opening roll, the roll for tasks, Stability checks and Salvation');
+		expect(text).toContain('Lucid: your next roll uses two dice and keeps the higher.');
+		expect(text).not.toMatch(/d20s|keep high|keep low|2 dice|roll for cards|all 4 Kings/);
 		expect(text).not.toContain('on a Stability check makes you');
 	});
 
@@ -81,6 +106,9 @@ describe('HelpModal', () => {
 		expect(text).toContain('And the fourth Ace ends the game');
 		expect(text).toContain('Hard changes one thing: a missed Salvation roll adds 1 Token');
 		expect(text).not.toContain('The fourth Ace ends the game.');
+		// Three endings: escape, fall, taken (the deck never runs out first)
+		expect(text).not.toContain('if the deck runs out');
+		expect(text).not.toMatch(/automatic|assured/);
 	});
 
 	it('lists no "Rules you\'ve met" before any rule tip has been shown', async () => {
@@ -103,6 +131,20 @@ describe('HelpModal', () => {
 			'Odd cards call for a Stability check. Low rolls cost Stability.'
 		]);
 		expect(screen.getByRole('button', { name: "Rules you've met" })).toBeInTheDocument();
+	});
+
+	it("keeps every met rule true on every difficulty, in the board's words (game-copy-v-01)", async () => {
+		for (const id of ['ace', 'fourth-ace', 'token']) markRuleTipSeen(id);
+		await renderModal();
+
+		const heading = screen.getByRole('heading', { name: "Rules you've met" });
+		const items = [...heading.parentElement.querySelectorAll('li')].map((li) => li.textContent);
+		expect(items).toEqual([
+			'Every Ace you reveal makes Salvation easier. On Normal and Hard, with all four there is no target: each Salvation is a Stability check, and the Token comes off if you hold on.',
+			'On Easy, the fourth Ace ends the game: survive its Stability check and you escape.',
+			'On Hard, a missed Salvation roll adds a Token (two on a natural 1).'
+		]);
+		expect(items.join(' ')).not.toMatch(/failed/i);
 	});
 
 	it('should have "Done" as its footer button, like every dialog (MN-03)', async () => {

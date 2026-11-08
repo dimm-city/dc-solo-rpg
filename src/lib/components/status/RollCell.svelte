@@ -3,26 +3,46 @@
 	 * RollCell - The last d20 result on a two-digit seven-segment display, with the two roll
 	 * modifiers under it
 	 *
-	 * The digits are DSEG7 Classic (--font-led) over a faint "88", the unlit segments, so a 4
-	 * sits in the ones place like a real display. "--" before the first roll. Under the
-	 * number, on the HUD's bottom line, sit two icons that are always there: an up arrow for
-	 * Lucid (the next roll keeps the higher of two dice) and a down arrow for Surreal (keeps
-	 * the lower). Off, an icon is dim and colourless; on, it is lit in its colour and ignites
-	 * for one beat (400ms), like a King's skull. Each has an accessible name that carries its
-	 * state and the rule, and the same text as a tooltip. Lucid/Surreal applies to the next
-	 * d20 roll, whichever roll that is. When the last roll was 2d20, the display's tooltip and
-	 * the spoken text say which die counted.
+	 * The digits are the HUD's shared LED field (DP-1-01, StatusHUD): DSEG7 Classic over a
+	 * faint "88", so a 4 sits in the ones place like a real display. "--" before the first
+	 * roll, and while a roll is in flight (the 3D dice or the reduced-motion static roll), until
+	 * the result lands. Under the number, on the HUD's bottom line, sit two icons that are
+	 * always there: an up arrow for Lucid (the next roll keeps the higher of two dice) and a
+	 * down arrow for Surreal (keeps the lower). Off, an icon is dim and colourless; on, it is
+	 * lit in its colour and ignites for one beat (400ms), like a King's skull.
+	 *
+	 * Tiers (rollTier, DP-1-02): idle and plain read yellow with no tint; a pending Lucid or
+	 * Surreal tints the tile and colours the digits, ghosts and label. While the dice are in
+	 * flight the tier holds, and is worked out again when the result lands.
 	 *
 	 * @component
 	 */
+	import { untrack } from 'svelte';
 	import { gameState } from '../../stores/gameStore.svelte.js';
 	import { diceState } from '../../stores/diceStore.svelte.js';
 	import { ANIMATION_DURATION } from '../../constants/animations.js';
-	import { describeTwoDiceRoll, rollModifiers } from './hudTiers.js';
+	import { describeTwoDiceRoll, rollModifiers, rollTier, rollSpoken } from './hudTiers.js';
 
 	const hasRolled = $derived(gameState.diceRoll > 0);
+	const inFlight = $derived(diceState.isRolling || !!diceState.staticRoll);
 	const detail = $derived(describeTwoDiceRoll(diceState.lastRoll, gameState.diceRoll));
 	const mods = $derived(rollModifiers(gameState));
+
+	// The tier as the state stands, and the tier the tile shows: held while a roll is in flight
+	// (the roll uses its modifier up as it starts), worked out again when the result lands
+	const liveTier = $derived(
+		rollTier({ hasRolled, isLucid: gameState.isLucid, isSurreal: gameState.isSurreal })
+	);
+	let heldTier = $state(untrack(() => liveTier));
+	$effect(() => {
+		const current = liveTier;
+		if (!inFlight) heldTier = current;
+	});
+	const tier = $derived(inFlight ? heldTier : liveTier);
+	const showDigits = $derived(hasRolled && !inFlight);
+	const spoken = $derived(
+		rollSpoken({ inFlight, value: gameState.diceRoll, last: diceState.lastRoll })
+	);
 
 	// Filled arrows: up for Lucid (keep the higher), down for Surreal (keep the lower)
 	const ARROW = {
@@ -50,17 +70,25 @@
 </script>
 
 <div
-	class="hud-cell roll"
-	class:idle={!hasRolled}
+	class="hud-cell roll tier-{tier}"
+	class:idle={!showDigits}
+	data-tier={tier}
 	data-testid="hud-roll"
 	style="--hud-beat: {ANIMATION_DURATION.BEAT}ms"
 >
-	<span class="hud-label">Roll</span>
+	<span class="tint" aria-hidden="true"></span>
+	<span class="hud-label" aria-hidden="true">Roll</span>
 	<span class="hud-readout">
-		<span class="led" aria-hidden="true" title={detail ? `Two dice: ${detail}` : undefined}>
-			<span class="led-off">88</span>
-			<span class="hud-value led-on">{hasRolled ? gameState.diceRoll : '--'}</span>
-		</span>
+		<span
+			class="hud-value led"
+			aria-hidden="true"
+			title={detail && showDigits ? `Two dice: ${detail}` : undefined}
+			><span class="led-field"
+				><span class="led-off" aria-hidden="true">88</span><span class="led-on current"
+					>{showDigits ? gameState.diceRoll : '--'}</span
+				></span
+			></span
+		>
 		<span class="hud-foot mods">
 			{#each mods as mod (mod.kind)}
 				<span
@@ -79,51 +107,33 @@
 			{/each}
 		</span>
 	</span>
-	<span class="sr-only"
-		>{hasRolled
-			? `Last roll ${gameState.diceRoll}${detail ? ` (${detail})` : ''}`
-			: 'No roll yet'}</span
-	>
+	<span class="sr-only">{spoken}</span>
 </div>
 
 <style>
+	/* The tier ladder (DP-1-02): idle and plain are yellow on no tint; a pending modifier tints
+	   the tile and colours the digits, the ghosts and the label */
 	.roll {
-		--led-color: var(--color-brand-yellow, #ffd700);
-		/* A touch larger than the other numbers (1.5rem), within the value row */
-		--led-size: 1.625rem;
+		--tint-color: #00ffaa;
+		--tint-alpha: 0;
+		--value-color: var(--color-brand-yellow, #ffd700);
 		--mod-size: 16px;
 		--mod-gap: 8px;
 	}
-
-	/* Two digit cells: the unlit "88" sets the size, the lit digits sit on it, right-aligned */
-	.led {
-		position: relative;
-		display: block;
-		font-family: var(--font-led, var(--font-mono, monospace));
-		font-size: var(--led-size);
-		font-weight: 700;
-		line-height: 1;
-		white-space: nowrap;
+	.tier-lucid {
+		--tint-color: #00ffaa;
+		--tint-alpha: 0.1;
+		--value-color: #00ffaa;
+		--label-color: #00ffaa;
+	}
+	.tier-surreal {
+		--tint-color: #f07cff;
+		--tint-alpha: 0.1;
+		--value-color: #f07cff;
+		--label-color: #f07cff;
 	}
 
-	.led-off {
-		display: block;
-		color: var(--led-color);
-		opacity: 0.1;
-	}
-
-	.roll .led-on {
-		position: absolute;
-		inset: 0;
-		font: inherit;
-		text-align: right;
-		color: var(--led-color);
-		text-shadow:
-			0 0 6px rgba(255, 215, 0, 0.55),
-			0 0 14px rgba(255, 215, 0, 0.25);
-	}
-
-	/* "--" before the first roll: lit, but quieter */
+	/* "--" before the first roll and while one is in flight: lit, but quieter */
 	.idle .led-on {
 		opacity: 0.6;
 	}
@@ -190,7 +200,6 @@
 
 	@media (max-width: 600px) {
 		.roll {
-			--led-size: 1.375rem;
 			--mod-size: 12px;
 			--mod-gap: 6px;
 		}
@@ -198,7 +207,6 @@
 
 	@media (max-height: 500px) and (min-width: 601px) {
 		.roll {
-			--led-size: 1.25rem;
 			--mod-size: 14px;
 			--mod-gap: 6px;
 		}

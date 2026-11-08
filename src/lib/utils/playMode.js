@@ -2,9 +2,10 @@
  * Play modes: three presets over the existing audio and gameplay settings.
  *
  * - Manual: nothing is read aloud and nothing happens on its own.
- * - Read aloud: the narrator reads cards, prompts and rolls; the player rolls and continues.
- * - Hands-free: read aloud, and the game also rolls and moves on by itself, pausing on a
- *   countdown at each journal prompt.
+ * - Read aloud: the narrator reads the cards, the instructions and the rolls; the player rolls
+ *   and continues.
+ * - Hands-free: read aloud, and the game also rolls and moves on by itself; the journal waits
+ *   on a countdown (Advanced: "Count down, then move on").
  *
  * Any other mix of settings (made under Advanced, or with the in-game AUTO and VOICE toggles)
  * is "custom": no mode is selected.
@@ -15,12 +16,12 @@ export const PLAY_MODES = [
 	{
 		id: 'read-aloud',
 		label: 'Read aloud',
-		help: 'The narrator reads each card, prompt and roll. You roll and move on.'
+		help: 'The narrator reads the cards, the instructions and the rolls. You roll and move on.'
 	},
 	{
 		id: 'hands-free',
 		label: 'Hands-free',
-		help: 'The narrator reads, and the game rolls and moves on by itself. Journal prompts wait on a countdown.'
+		help: 'The narrator reads, and the game rolls and moves on by itself. The journal waits on a countdown.'
 	}
 ];
 

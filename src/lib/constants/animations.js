@@ -45,6 +45,19 @@ export const ANIMATION_DURATION = {
 	 */
 	RESULT_HOLD: 2000,
 
+	/**
+	 * Deal hold (3s, OWN-7) - how long the Roll for Tasks result stays up before the first card is
+	 * dealt. The owner found the 2s result hold too fast here: the dice take 1.2s to rest and
+	 * sink, so the result was alone on a clear table for under a second. Only the deal uses it.
+	 */
+	DEAL_HOLD: 3000,
+
+	/**
+	 * Deal beat (1s, OWN-7) - with the roll read aloud, the first card is dealt this long after
+	 * the voice finishes (other read-aloud results move on after BEAT).
+	 */
+	DEAL_BEAT: 1000,
+
 	/** Ambient loop period (4s) */
 	AMBIENT: 4000,
 
@@ -71,8 +84,24 @@ export const ANIMATION_DURATION = {
 	/** Dice delay (500ms) - Pause before dice fade begins */
 	DICE_DELAY: 500,
 
-	/** Dice sink (350ms) - landed dice drop beneath the board as the result appears (ease-in) */
-	DICE_SINK: 350,
+	/**
+	 * Dice sink (800ms, OWN-6) - landed dice drop beneath the board and fade as the result
+	 * appears (ease-in-out, ANIMATION_EASING.DICE_SINK). Slow enough to see them settle and
+	 * leave (350ms read as a blink); with the 400ms rest on top the roll's staging is 1.2s,
+	 * inside the 1.5s cap, and it ends well inside the 2s result hold.
+	 */
+	DICE_SINK: 800,
+
+	/** Dice sink under reduced motion (350ms) - no movement, a plain short fade */
+	DICE_SINK_REDUCED: 350,
+
+	/**
+	 * Draw pause (100ms) - the gap between dismissing a card and the next card rising, as it was
+	 * before OWN-7 (the owner did not want a longer gap; card to card about 0.57s: 220ms
+	 * dismiss, this pause, 250ms rise). A tap or Space during it draws at once. A pause, not
+	 * motion, so it holds under reduced motion too.
+	 */
+	DRAW_PAUSE: 100,
 
 	/** Story mode transitions (250ms) - Story library and save animations */
 	STORY_MODE: 250,
@@ -105,7 +134,10 @@ export const ANIMATION_EASING = {
 	CUBIC_IN: 'cubic-bezier(0.32, 0, 0.67, 0)',
 
 	/** Quint out - Smooth deceleration for upward motion */
-	QUINT_OUT: 'cubic-bezier(0.22, 1, 0.36, 1)'
+	QUINT_OUT: 'cubic-bezier(0.22, 1, 0.36, 1)',
+
+	/** Dice sink - ease-in-out: the landed dice ease away and the fade is spread evenly (OWN-6) */
+	DICE_SINK: 'cubic-bezier(0.4, 0, 0.6, 1)'
 };
 
 /** Distance for an enter or exit move: a rise of at most 8px */
@@ -159,6 +191,8 @@ export function animationCssVariables() {
 		'--dur-ambient': ms(d.AMBIENT),
 		'--dur-ambient-slow': ms(d.AMBIENT_SLOW),
 		'--dur-dice-sink': ms(d.DICE_SINK),
+		'--dur-dice-sink-reduced': ms(d.DICE_SINK_REDUCED),
+		'--ease-dice-sink': e.DICE_SINK,
 		'--ease-enter': e.CUBIC_OUT,
 		'--ease-exit': e.CUBIC_IN,
 		'--ease-mechanical': e.MECHANICAL,

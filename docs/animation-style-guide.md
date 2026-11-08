@@ -12,19 +12,24 @@ One token set lives in `src/lib/constants/animations.js`. `animationTokensCss()`
 values as CSS custom properties on `:root` (from `src/routes/+layout.svelte`), so JS and CSS can
 never disagree. `styles.css` defines no motion numbers of its own; a unit test checks that.
 
-| Token (JS)                        | CSS                    | Value     | Use                                              |
-| --------------------------------- | ---------------------- | --------- | ------------------------------------------------ |
-| `ANIMATION_DURATION.STATE`        | `--dur-state`          | 120ms     | Hover, press, a chip or label changing           |
-| `ANIMATION_DURATION.ENTER`        | `--dur-enter`          | 200ms     | Anything entering or leaving; screen swaps       |
-| `ANIMATION_DURATION.OVERLAY`      | `--dur-overlay`        | 300ms     | A dialog or overlay opening                      |
-| `ANIMATION_DURATION.BEAT`         | `--dur-beat`           | 400ms     | A held moment: a King igniting, Salvation unlock |
-| `ANIMATION_DURATION.SEQUENCE_MAX` | `--dur-sequence-max`   | 1.5s      | The longest any staged sequence may run          |
-| `AMBIENT` / `AMBIENT_SLOW`        | `--dur-ambient(-slow)` | 4s / 8s   | The only periods allowed for ambient loops       |
-| `ANIMATION_DURATION.RESULT_HOLD`  | (none)                 | 2s        | A roll's result holds, then the game moves on    |
-| `ANIMATION_EASING.CUBIC_OUT`      | `--ease-enter`         | cubic out | Entering, state changes                          |
-| `ANIMATION_EASING.CUBIC_IN`       | `--ease-exit`          | cubic in  | Leaving                                          |
-| `ANIMATION_DISTANCE.RISE`         | `--rise-enter`         | 8px       | The most an entering element moves               |
-| `ANIMATION_DURATION.DICE_SINK`    | `--dur-dice-sink`      | 350ms     | Landed dice sinking beneath the board (ease-in)  |
+| Token (JS)                             | CSS                       | Value     | Use                                              |
+| -------------------------------------- | ------------------------- | --------- | ------------------------------------------------ |
+| `ANIMATION_DURATION.STATE`             | `--dur-state`             | 120ms     | Hover, press, a chip or label changing           |
+| `ANIMATION_DURATION.ENTER`             | `--dur-enter`             | 200ms     | Anything entering or leaving; screen swaps       |
+| `ANIMATION_DURATION.OVERLAY`           | `--dur-overlay`           | 300ms     | A dialog or overlay opening                      |
+| `ANIMATION_DURATION.BEAT`              | `--dur-beat`              | 400ms     | A held moment: a King igniting, Salvation unlock |
+| `ANIMATION_DURATION.SEQUENCE_MAX`      | `--dur-sequence-max`      | 1.5s      | The longest any staged sequence may run          |
+| `AMBIENT` / `AMBIENT_SLOW`             | `--dur-ambient(-slow)`    | 4s / 8s   | The only periods allowed for ambient loops       |
+| `ANIMATION_DURATION.RESULT_HOLD`       | (none)                    | 2s        | A roll's result holds, then the game moves on    |
+| `ANIMATION_DURATION.DEAL_HOLD`         | (none)                    | 3s        | The task roll's result before the first card     |
+| `ANIMATION_DURATION.DEAL_BEAT`         | (none)                    | 1s        | The first card after the voice reads the roll    |
+| `ANIMATION_EASING.CUBIC_OUT`           | `--ease-enter`            | cubic out | Entering, state changes                          |
+| `ANIMATION_EASING.CUBIC_IN`            | `--ease-exit`             | cubic in  | Leaving                                          |
+| `ANIMATION_DISTANCE.RISE`              | `--rise-enter`            | 8px       | The most an entering element moves               |
+| `ANIMATION_DURATION.DICE_SINK`         | `--dur-dice-sink`         | 800ms     | Landed dice sinking and fading beneath the board |
+| `ANIMATION_EASING.DICE_SINK`           | `--ease-dice-sink`        | in-out    | The sink's curve: (0.4, 0, 0.6, 1)               |
+| `ANIMATION_DURATION.DICE_SINK_REDUCED` | `--dur-dice-sink-reduced` | 350ms     | The sink under reduced motion: a plain fade      |
+| `ANIMATION_DURATION.DRAW_PAUSE`        | (none)                    | 100ms     | The gap between one card and the next            |
 
 The older names still work and follow the standard: `FAST` = 120, `NORMAL` = 200, `SLOW` = 300;
 `--transition-fast/base/slow` = 120/200/300ms; `--anim-fast` = 200ms. `CARD_DISMISS` (600ms),
@@ -42,10 +47,16 @@ The older names still work and follow the standard: `FAST` = 120, `NORMAL` = 200
   staggers, with no blank frames.
 - **Dice** (`+layout.svelte`, `diceStore.rollDice`): thrown across the whole screen on top of
   everything in the game (dialogs and the menu stay above). Landed dice rest for one beat, then
-  sink: the z-index drops behind the page content at once, and over `--dur-dice-sink` they drop
-  8px, shrink 10% in place and darken out, ease-in. The roll resolves in that same moment, so
-  the result line appears in front of them. Under reduced motion there is no throw: the number
-  shows, then fades. This replaces the `DICE_DELAY` + `DICE_FADE` pattern further down.
+  sink: the z-index drops behind the page content at once, and over `--dur-dice-sink` (800ms,
+  ease-in-out, OWN-6: 350ms read as a blink) they drop 8px, shrink 10% in place, darken and
+  fade. The roll resolves in that same moment, so the result line appears in front of them.
+  Under reduced motion there is no throw: the number shows, then fades over 350ms
+  (`--dur-dice-sink-reduced`). This replaces the `DICE_DELAY` + `DICE_FADE` pattern further down.
+- **Between cards** (`CardDeck.svelte`): the card lifts away (220ms), the next is drawn after
+  `DRAW_PAUSE` (100ms) and rises (250ms): card to card in about 0.57s, with no pause on an empty
+  table. A tap on the table, Space or the button during the gap draws at once, and only once.
+  The first card of a round comes after the task roll's result has held for `DEAL_HOLD` (3s), or
+  `DEAL_BEAT` (1s) after the voice has read it, so it needs no extra pause.
 - **The result hold** is a reading pause, not an animation: a roll's result line stays 2s, then
   the game moves on by itself (a press moves on at once; an ending waits). A 2px line on the
   step button runs out over the hold, read from the hold's own clock, in quarters under reduced

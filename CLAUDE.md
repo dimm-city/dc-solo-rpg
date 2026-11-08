@@ -508,6 +508,9 @@ describe('My Feature', () => {
 | `SEQUENCE_MAX`            | `--dur-sequence-max`   | 1.5s    | Longest staged sequence             |
 | `AMBIENT`, `AMBIENT_SLOW` | `--dur-ambient(-slow)` | 4s / 8s | The only ambient loop periods       |
 | `RESULT_HOLD`             | (none)                 | 2s      | A result holds, then moves on       |
+| `DEAL_HOLD`, `DEAL_BEAT`  | (none)                 | 3s / 1s | Task roll result to the first card  |
+| `DICE_SINK`               | `--dur-dice-sink`      | 800ms   | Landed dice sink and fade (in-out)  |
+| `DRAW_PAUSE`              | (none)                 | 100ms   | Gap before the next card is drawn   |
 
 ```javascript
 import { ANIMATION_DURATION, ANIMATION_EASING, Z_INDEX } from '$lib/constants/animations.js';
@@ -547,7 +550,9 @@ async function handleDismiss() {
 	animationStage = 'idle';
 	card = null;
 
-	// 3. More cards this round: the next one is drawn 100ms later (card to card in ~600ms)
+	// 3. More cards this round: the next one is drawn after the draw pause
+	//    (ANIMATION_DURATION.DRAW_PAUSE, 100ms: card to card in about 0.57s); a tap or Space
+	//    during the pause draws it at once, once
 	triggerAutoDrawIfNeeded();
 }
 ```
@@ -574,17 +579,19 @@ async function handleDismiss() {
 	opacity: 0;
 	transform: translateY(var(--rise-enter)) scale(0.9);
 	filter: brightness(0.3);
-	/* No z-index in the transition list: it drops at once, then the dice sink and darken */
+	/* No z-index in the transition list: it drops at once, then the dice sink, darken and fade */
 	transition:
-		transform var(--dur-dice-sink) ease-in,
-		filter var(--dur-dice-sink) ease-in,
-		opacity var(--dur-dice-sink) var(--ease-exit);
+		transform var(--dur-dice-sink) var(--ease-dice-sink),
+		filter var(--dur-dice-sink) var(--ease-dice-sink),
+		opacity var(--dur-dice-sink) var(--ease-dice-sink);
 }
 ```
 
 **Key Principle:** drop the z-index first, then animate. The HUD, title, button and result line
-are in front of the dice for the whole sink, so the result line is never covered. Under reduced
-motion there is no throw (the number shows in a d20 outline) and the sink is a plain fade.
+are in front of the dice for the whole sink, so the result line is never covered. The sink is
+`DICE_SINK` (800ms, ease-in-out `ANIMATION_EASING.DICE_SINK`): slow enough to see the dice settle
+and leave. Under reduced motion there is no throw (the number shows in a d20 outline) and the
+sink is a plain 350ms fade (`DICE_SINK_REDUCED`, `--dur-dice-sink-reduced`).
 
 **Applies to:**
 

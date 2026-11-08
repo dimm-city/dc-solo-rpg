@@ -22,9 +22,9 @@
 			How it plays
 		</svelte:element>
 		<p>
-			It is built on the Wretched and Alone system. A standard 52-card deck sets the pace and a d20
-			decides the risk, while every prompt invites you to write your own story through the neon
-			streets of Dimm City.
+			It is built on the Wretched and Alone system. A standard <span class="nobreak">52-card</span> deck
+			sets the pace and a d20 decides the risk, while every prompt invites you to write your own story
+			through the neon streets of Dimm&nbsp;City.
 		</p>
 	</section>
 
@@ -32,16 +32,16 @@
 		<svelte:element this={headingTag} class="about-title" id="about-credits-{uid}">
 			Credits
 		</svelte:element>
-		<p>Dream Console is made by Dimm City.</p>
+		<p>Dream Console is made by Dimm&nbsp;City.</p>
 		<p class="about-credit">
 			This work is based on
 			<a href="https://loottheroom.itch.io/wretched" target="_blank" rel="noopener noreferrer"
-				>The Wretched</a
+				>The&nbsp;Wretched</a
 			>, product of Chris Bissette and Loot The Room, and licensed under
 			<a
 				href="https://creativecommons.org/licenses/by/3.0/"
 				target="_blank"
-				rel="noopener noreferrer">CC Attribution 3.0 Unported</a
+				rel="noopener noreferrer">CC&nbsp;Attribution&nbsp;3.0&nbsp;Unported</a
 			>.
 		</p>
 	</section>
@@ -50,13 +50,18 @@
 </div>
 
 <style>
-	.about-content {
-		max-width: 65ch;
-	}
-
+	/* Running text keeps the reading measure (visual-layout-s-17); the section rules keep the
+	   full column */
 	.about-content p {
+		max-width: var(--measure, 30em);
 		margin: 0;
 		color: #e2e9f2;
+	}
+
+	/* A compound that must not split at its hyphen (visual-layout-s-19). Not U+2011: Inter's web
+	   subset has no glyph for it, so it would be drawn in a fallback font */
+	.nobreak {
+		white-space: nowrap;
 	}
 
 	.about-content p + p {
@@ -64,7 +69,7 @@
 	}
 
 	.about-lead {
-		font-size: 1.1875rem;
+		font-size: 1.125rem;
 		color: #d5dfeb;
 		margin-bottom: 8px;
 	}
@@ -75,14 +80,14 @@
 		border-top: 1px solid rgba(255, 255, 255, 0.14);
 	}
 
-	/* Inter: these titles are 18px (the display face is for 28px and up) */
+	/* A section heading, as in every dialog (.cm-section-title): Inter 600, 16px, sentence case */
 	.about-title {
 		margin: 0 0 12px;
 		font-family: var(--font-body, 'Inter', sans-serif);
-		font-size: 1.125rem;
-		font-weight: 700;
-		line-height: 1.3;
-		letter-spacing: 0.02em;
+		font-size: 1rem;
+		font-weight: 600;
+		line-height: 1.25;
+		letter-spacing: 0;
 		text-transform: none;
 		text-shadow: none;
 		color: var(--color-neon-cyan, #00ffff);
@@ -100,6 +105,7 @@
 	}
 
 	.about-content .version-info {
+		max-width: none;
 		margin-top: 40px;
 		padding-top: 24px;
 		border-top: 1px solid rgba(255, 255, 255, 0.14);

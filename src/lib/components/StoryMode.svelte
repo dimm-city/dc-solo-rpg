@@ -17,7 +17,7 @@
 
 	import { untrack } from 'svelte';
 	import { scale } from 'svelte/transition';
-	import { cubicOut } from 'svelte/easing';
+	import { cubicIn, cubicOut } from 'svelte/easing';
 	import StoryRound from './StoryRound.svelte';
 	import StoryGenerationPanel from './StoryGenerationPanel.svelte';
 	import StoryProgressBar from './story/StoryProgressBar.svelte';
@@ -46,7 +46,11 @@
 	let isLastRound = $derived(nav.currentRoundIndex === totalRounds - 1);
 
 	let gameTitle = $derived(savedGame?.gameTitle || 'Untitled game');
-	let playerName = $derived(savedGame?.playerName || '');
+	// No name in the header for an anonymous run (the Guest default)
+	let playerName = $derived.by(() => {
+		const name = (savedGame?.playerName || '').trim();
+		return name.toLowerCase() === 'guest' ? '' : name;
+	});
 	let outcome = $derived(getStoryOutcome(savedGame ?? {}));
 	let written = $derived(enrichedRounds.map((round) => !!round.journalEntry || !!round.finalEntry));
 	let finishedOn = $derived.by(() => {
@@ -81,12 +85,20 @@
 		return { duration: ROUND_EXIT_MS, css: (t) => `opacity: ${t};` };
 	}
 
-	function modeTransition() {
+	/**
+	 * Story mode scales in over the library; its exit is shorter (STATE), so the two pages, whose
+	 * panels let the background motes through (visual-layout-s-08), never sit long on each other
+	 */
+	function modeTransition(exit = false) {
 		return {
-			duration: reducedMotion() ? 0 : ANIMATION_DURATION.STORY_MODE,
+			duration: reducedMotion()
+				? 0
+				: exit
+					? ANIMATION_DURATION.STATE
+					: ANIMATION_DURATION.STORY_MODE,
 			start: 0.97,
 			opacity: 0,
-			easing: cubicOut
+			easing: exit ? cubicIn : cubicOut
 		};
 	}
 
@@ -115,14 +127,14 @@
 		bind:this={scroller}
 		data-testid="story-mode"
 		in:scale={modeTransition()}
-		out:scale={modeTransition()}
+		out:scale={modeTransition(true)}
 	>
 		<header class="story-header">
 			<button class="back-button" onclick={onExit} aria-label="Back to Story Library">
 				<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 19l-7-7 7-7" /></svg>
 			</button>
 
-			<h1 class="game-title">{gameTitle}</h1>
+			<h1 class="game-title" title={gameTitle}>{gameTitle}</h1>
 
 			<p class="story-meta">
 				<span class="outcome" class:won={outcome.won}>{outcome.label}</span>
@@ -165,7 +177,6 @@
 						<StoryRound
 							round={currentRound}
 							roundNumber={currentRound?.roundNumber || nav.currentRoundIndex + 1}
-							{totalRounds}
 							outcome={isLastRound ? outcome.label : ''}
 						/>
 					</div>
@@ -201,11 +212,13 @@
 		overflow-x: hidden;
 		overflow-y: auto;
 		overscroll-behavior: contain;
+		/* 85%: the background motes show faintly through, behind every card and line of text
+		   (visual-layout-s-08) */
 		background: linear-gradient(
 			180deg,
-			rgba(10, 10, 10, 0.96),
-			rgba(20, 22, 28, 0.96),
-			rgba(10, 10, 10, 0.96)
+			rgba(10, 10, 10, 0.85),
+			rgba(20, 22, 28, 0.85),
+			rgba(10, 10, 10, 0.85)
 		);
 		font-family: var(--font-body);
 	}
@@ -287,7 +300,7 @@
 	}
 
 	.outcome {
-		font-weight: 700;
+		font-weight: 600;
 		color: #ff8fa3;
 	}
 
@@ -378,12 +391,58 @@
 		}
 
 		.story-meta {
-			font-size: 0.9375rem;
+			font-size: 0.875rem;
 		}
 
 		.reader {
 			padding: 12px 16px 32px;
 			gap: 20px;
+		}
+	}
+
+	/* Landscape phones: two short rows. The title, on one line beside the back button (an
+	   ellipsis past that, the full title in its tooltip); the outcome line with the AI button.
+	   The round's cards and the first lines of the entry then show above the Previous / Next
+	   bar. (The AI button sits on the meta row so a short title such as "Future Lost" is never
+	   cut.) */
+	@media (max-height: 500px) {
+		.story-header {
+			grid-template-columns: auto minmax(0, 1fr) auto;
+			align-items: center;
+			padding-top: 8px;
+			gap: 4px 16px;
+		}
+
+		.back-button {
+			grid-area: 1 / 1;
+			position: static;
+			width: 44px;
+			height: 44px;
+			min-height: 44px;
+		}
+
+		.game-title {
+			grid-area: 1 / 2 / 2 / 4;
+			font-size: 1.75rem;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			overflow-wrap: normal;
+			/* A clipped glow reads as a box: none on one line */
+			text-shadow: none;
+		}
+
+		.header-ai {
+			grid-area: 2 / 3;
+		}
+
+		.story-meta {
+			grid-area: 2 / 2;
+		}
+
+		.reader {
+			padding-top: 8px;
+			gap: 8px;
 		}
 	}
 

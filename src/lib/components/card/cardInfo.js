@@ -11,11 +11,14 @@ const ODD_RANKS = ['A', '3', '5', '7', '9'];
 
 const SUIT_NAMES = { hearts: 'Hearts', diamonds: 'Diamonds', clubs: 'Clubs', spades: 'Spades' };
 const RANK_NAMES = { A: 'Ace', J: 'Jack', Q: 'Queen', K: 'King' };
-/** The type badge on the card face, also read out as part of the card's name */
+/**
+ * The one name for each card type: the badge on the card face, the card's spoken name and the
+ * story-mode chips (story/storyCards.js) all read it.
+ */
 export const TYPE_LABELS = {
-	'primary-success': 'Victory',
-	'failure-counter': 'Doom',
-	narrative: 'Bonus',
+	'primary-success': 'Salvation',
+	'failure-counter': 'King',
+	narrative: 'Ace',
 	challenge: 'Challenge',
 	event: 'Event'
 };
@@ -70,32 +73,34 @@ export function endsGameOnConfirm(card, state) {
 }
 
 /**
- * What a Salvation check needs once this Ace is counted, e.g. "Salvation now needs 14+".
- * Every Ace counts, but checks only start once the Ace of Hearts is out.
+ * What Salvation needs once this Ace is counted. The badge already names the card, so the
+ * Ace of Hearts says "Unlocked · needs 14+" and another Ace "Salvation now needs 14+".
+ * Every Ace counts, but checks only start once the Ace of Hearts is out. With four Aces there
+ * is no target: each Salvation is a Stability check (Normal and Hard; Easy ends on the Ace).
  */
 function salvationNote(card, state) {
 	const before = snapshot(card, state);
 	const aces = Math.min(4, (before.acesRevealed ?? 0) + 1);
 	const threshold = getSalvationThreshold(aces);
 	if (card.suit === 'hearts') {
-		return threshold === 0
-			? 'Salvation unlocked · assured'
-			: `Salvation unlocked · needs ${threshold}+`;
+		return threshold === 0 ? 'Unlocked · no target' : `Unlocked · needs ${threshold}+`;
 	}
 	const unlocked = !!before.aceOfHeartsRevealed;
-	// Four Aces: no target, only a Stability check stands between the player and the token
-	if (threshold === 0) return unlocked ? 'Salvation is now assured' : 'Salvation will be assured';
+	if (threshold === 0) {
+		return unlocked ? 'Salvation now has no target' : 'Salvation will have no target';
+	}
 	return unlocked ? `Salvation now needs ${threshold}+` : `Salvation will need ${threshold}+`;
 }
 
 /**
  * One-line footer saying what the card does, accurate to the rules. Empty for even cards.
- * @example getMechanicNote({ card: 'K', gameState: { kingsRevealed: 2 } }) // 'King · 3 of 4'
+ * It leaves out what the type badge already says. The card face breaks it only at a ' · '.
+ * @example getMechanicNote({ card: 'K', gameState: { kingsRevealed: 2 } }) // '3 of 4'
  * @example getMechanicNote({ card: '7' }) // 'Odd · a Stability check follows'
  */
 export function getMechanicNote(card, state) {
 	if (!card) return '';
-	if (card.card === 'K') return `King · ${getKingNumber(card, state)} of 4`;
+	if (card.card === 'K') return `${getKingNumber(card, state)} of 4`;
 	// On Easy the fourth Ace ends the game; only its own Stability check stands in the way
 	if (isFourthAce(card, state)) {
 		return triggersStabilityCheck(card)
@@ -104,16 +109,27 @@ export function getMechanicNote(card, state) {
 	}
 
 	const parts = [];
-	if (card.card === 'A') {
-		parts.push(
-			card.suit === 'hearts' ? salvationNote(card, state) : `Ace · ${salvationNote(card, state)}`
-		);
-	} else if (isOddRank(card)) {
-		parts.push('Odd');
-	}
+	if (card.card === 'A') parts.push(salvationNote(card, state));
+	else if (isOddRank(card)) parts.push('Odd');
 	// skip-damage says so on the card face instead (see getModifierNote)
 	if (triggersStabilityCheck(card)) parts.push('a Stability check follows');
 	return parts.join(' · ');
+}
+
+/** @returns {string[]} the note's clauses, each kept whole on a line: 'a · b' -> ['a', 'b'] */
+export function splitNote(note) {
+	return note ? String(note).split(' · ') : [];
+}
+
+/**
+ * What continuing past this card does, for the footer hint ("Tap to …" / "Click to …"):
+ * 'face the end' on the fourth King, 'escape' on Easy's fourth Ace without a check, else
+ * 'continue'.
+ */
+export function getContinueAction(card, state) {
+	if (isFinalKing(card, state)) return 'face the end';
+	if (isFourthAce(card, state) && card?.modifier === 'skip-damage') return 'escape';
+	return 'continue';
 }
 
 /**
@@ -123,10 +139,10 @@ export function getMechanicNote(card, state) {
 export function getModifierNote(card, state) {
 	switch (card?.modifier) {
 		case 'skip-damage':
-			return 'No Stability check this time';
+			return 'No Stability check for this Ace';
 		case 'return-king':
 			return (snapshot(card, state).kingsRevealed ?? 0) > 0
-				? 'A King returns to the deck'
+				? 'A King goes back into the deck'
 				: 'No King is out to return';
 		default:
 			return '';
@@ -134,13 +150,15 @@ export function getModifierNote(card, state) {
 }
 
 /**
- * Spoken name of a card, e.g. "8 of Spades, Event": rank, suit and the badge it wears.
+ * Spoken name of a card: rank, suit and the badge it wears, leaving out a badge that only
+ * repeats the rank. "8 of Spades, Event", "Ace of Hearts, Salvation", "King of Spades".
  */
 export function getCardName(card) {
 	if (!card) return '';
 	const rank = RANK_NAMES[card.card] ?? card.card;
 	const suit = SUIT_NAMES[card.suit] ?? card.suit ?? '';
-	const type = TYPE_LABELS[card.type];
+	const label = TYPE_LABELS[card.type];
+	const type = label && label !== rank ? label : '';
 	return `${rank}${suit ? ` of ${suit}` : ''}${type ? `, ${type}` : ''}`;
 }
 

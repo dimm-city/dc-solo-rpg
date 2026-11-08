@@ -1,9 +1,10 @@
 <!--
  * GameCard - One finished run in the Story Library (an <li> of the library's list)
  *
- * Title, how it ended ("Escaped", "Taken by the fourth King", "Stability gave out"), rounds and
- * date. The whole card opens the story; Delete lives in an overflow menu, away from that tap,
- * and asks for confirmation (the parent owns the confirmation dialog).
+ * Title, how it ended in the Guide's verbs ("Escaped", "Taken by the fourth King", "Fell when
+ * Stability reached 0"), rounds and date. The whole card opens the story; Delete lives in an
+ * overflow menu, away from that tap, and asks for confirmation (the parent owns the
+ * confirmation dialog).
  *
  * @component
  * @example
@@ -187,8 +188,7 @@
 		align-items: flex-start;
 		gap: 8px;
 		min-width: 0;
-		/* Room on the right for the overflow button */
-		padding: 20px 64px 20px 24px;
+		padding: 20px 24px;
 		background: none;
 		border: 0;
 		color: inherit;
@@ -210,11 +210,16 @@
 	/* Display face is for titles of 28px and up; card titles use Inter (MN-07) */
 	.card-title {
 		font-size: 1.25rem;
-		font-weight: 700;
+		font-weight: 600;
 		line-height: 1.3;
 		letter-spacing: 0.02em;
 		color: #fff;
 		overflow-wrap: anywhere;
+		/* Only the title shares a row with the overflow button (top 8px, 44px tall, 8px from the
+		   right): it keeps clear of it, and is tall enough (28px on phones) that the outcome line
+		   below starts under the button, so that line can use the card's full width */
+		align-self: stretch;
+		padding-right: 40px;
 	}
 
 	.card-outcome {
@@ -242,7 +247,7 @@
 	}
 
 	.card-meta {
-		font-size: 0.9375rem;
+		font-size: 0.875rem;
 		color: #b8c5d6;
 		font-variant-numeric: tabular-nums;
 	}
@@ -351,10 +356,11 @@
 
 	@media (max-width: 640px) {
 		.card-open {
-			padding: 16px 60px 16px 20px;
+			padding: 16px 20px;
 		}
 
 		.card-title {
+			min-height: 28px;
 			font-size: 1.125rem;
 		}
 	}

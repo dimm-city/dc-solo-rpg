@@ -72,7 +72,7 @@ test.describe('DC Solo RPG - Smoke Test', () => {
 		await expect(page.getByRole('button', { name: /^Play/ })).toBeVisible();
 		await expect(page.getByRole('button', { name: 'Read the rules first' })).toBeVisible();
 		await expect(
-			page.getByRole('button', { name: "I know how to play: don't show tips." })
+			page.getByRole('button', { name: 'I know how to play: skip the tips' })
 		).toBeVisible();
 
 		// "Play" proceeds to game selection
@@ -92,10 +92,10 @@ test.describe('DC Solo RPG - Smoke Test', () => {
 		await expect(page.locator('.logo-dice')).toBeVisible();
 		await expect(page.locator('.version-text')).toHaveText('Dream Console');
 		await openHeaderMenu(page);
-		for (const name of ['Upload Game', 'Dice Theme', 'About']) {
+		for (const name of ['Upload game', 'Dice theme', 'About']) {
 			await expect(page.locator('.mobile-menu').getByRole('button', { name })).toBeVisible();
 		}
-		for (const name of [/^(Stories|Story Library)$/, /^Settings$/, /^Help$/]) {
+		for (const name of [/^Story Library$/, /^Settings$/, /^Game Guide$/]) {
 			await expect(page.locator('.page-header').getByRole('button', { name })).toBeVisible();
 		}
 
@@ -138,7 +138,7 @@ test.describe('DC Solo RPG - Smoke Test', () => {
 	test('should test Help modal', async ({ page }) => {
 		await skipToGameSelection(page);
 
-		await clickMenuItem(page, 'Help');
+		await clickMenuItem(page, 'Game Guide');
 		const dialog = page.getByRole('dialog');
 		await expect(dialog).toBeVisible();
 		await expect(dialog).toHaveAccessibleName('Game Guide');
@@ -169,7 +169,7 @@ test.describe('DC Solo RPG - Smoke Test', () => {
 		await expect(intro).toBeVisible();
 		await expect(intro.locator('h1')).toHaveText(gameTitle);
 		const begin = page.getByTestId('story-continue-button');
-		await expect(begin).toHaveText('Begin Your Journey');
+		await expect(begin).toHaveText('Begin your journey');
 
 		await page.screenshot({
 			path: 'tests/screenshots/07-game-loaded.png',
@@ -192,7 +192,7 @@ test.describe('DC Solo RPG - Smoke Test', () => {
 		await expect(page.getByRole('heading', { level: 1, name: 'Story Library' })).toBeVisible();
 		await expect(page.getByTestId('home-page')).toHaveCount(0);
 		// A fresh browser has no completed games yet
-		await expect(page.getByRole('heading', { name: 'No Completed Games' })).toBeVisible();
+		await expect(page.getByRole('heading', { name: 'No stories yet' })).toBeVisible();
 
 		await page.screenshot({
 			path: 'tests/screenshots/08-story-library.png',
@@ -200,7 +200,7 @@ test.describe('DC Solo RPG - Smoke Test', () => {
 		});
 
 		// Back returns to the game selection screen
-		await page.getByRole('button', { name: 'Back to menu' }).click();
+		await page.getByRole('button', { name: 'Back to home' }).click();
 		await expect(page.getByTestId('home-page')).toBeVisible();
 	});
 

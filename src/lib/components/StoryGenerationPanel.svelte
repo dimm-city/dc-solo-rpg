@@ -154,7 +154,7 @@
 		border-radius: 4px;
 		color: #f3d9fb;
 		font-family: var(--font-body);
-		font-size: 0.9375rem;
+		font-size: 1rem;
 		font-weight: 600;
 		letter-spacing: 0.01em;
 		white-space: nowrap;
@@ -176,7 +176,7 @@
 
 	.summary-intro {
 		margin: 0;
-		max-width: 60ch;
+		max-width: var(--measure, 30em);
 		color: #d5dfeb;
 	}
 
@@ -204,7 +204,7 @@
 	.progress {
 		min-height: 1.5em;
 		margin: 12px 0 0;
-		font-size: 0.9375rem;
+		font-size: 0.875rem;
 		color: #aebbcc;
 	}
 

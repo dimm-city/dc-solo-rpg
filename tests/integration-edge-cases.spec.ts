@@ -70,7 +70,7 @@ test.describe('Integration and Edge Cases', () => {
 		await page.goto('/');
 
 		// Splash, then the first-time panel
-		const skipTips = page.getByRole('button', { name: "I know how to play: don't show tips." });
+		const skipTips = page.getByRole('button', { name: 'I know how to play: skip the tips' });
 		await expect(skipTips).toBeVisible();
 		await skipTips.click();
 		await expect(page.getByTestId('home-page')).toBeVisible();

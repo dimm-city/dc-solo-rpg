@@ -60,7 +60,7 @@
 	}
 
 	.story-text {
-		max-width: 640px;
+		max-width: var(--measure, 30em);
 		font-family: var(--font-body);
 		font-size: 1.125rem;
 		line-height: 1.7;

@@ -18,6 +18,17 @@ test.describe('Game Selection Screen', () => {
 		await expect(page.getByRole('heading', { level: 1 })).toHaveText(
 			'A solo journaling game. Draw, roll, write.'
 		);
+		// Each sentence stays whole: a line breaks only between them, never inside one
+		const sentences = page.locator('.home-pitch .pitch-sentence');
+		await expect(sentences).toHaveText(['A solo journaling game.', 'Draw, roll, write.']);
+		for (const box of await sentences.evaluateAll((els) =>
+			els.map((el) => ({
+				h: el.getBoundingClientRect().height,
+				lh: parseFloat(getComputedStyle(el).lineHeight)
+			}))
+		)) {
+			expect(box.h).toBeLessThan(box.lh * 1.5);
+		}
 		await expect(page).toHaveTitle('Dream Console');
 	});
 
@@ -52,7 +63,7 @@ test.describe('Game Selection Screen', () => {
 		);
 		await expect(
 			page.getByTestId('game-card-ghost-in-the-machine').locator('.game-subtitle')
-		).toHaveText('Grab and go turned mad dash for the gate');
+		).toHaveText('A grab-and-go turned mad dash for the gate');
 		await expect(page.getByText('Begin your adventure')).toHaveCount(0);
 	});
 
@@ -186,7 +197,7 @@ test.describe('Game Selection Screen', () => {
 	test('should be keyboard navigable', async ({ page }) => {
 		// The last header control (More on desktop, the menu button on phones), then Tab
 		const header = page.locator('.page-header');
-		const toggle = header.getByRole('button', { name: 'Toggle menu' });
+		const toggle = header.getByRole('button', { name: 'Menu', exact: true });
 		const last = (await toggle.isVisible())
 			? toggle
 			: header.getByRole('button', { name: 'More', exact: true });

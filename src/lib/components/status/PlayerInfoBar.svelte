@@ -3,22 +3,32 @@
 	 * PlayerInfoBar - the in-game header: exit, help, the game's title and round, and the
 	 * settings, dice theme, auto-play and read-aloud controls.
 	 *
-	 * One grid, mirrored around the title: the same number of equal tracks on each side, so
-	 * the title is centred on the bar whatever sits beside it, and a long one ends in "…".
-	 * Above 720px every control is an icon with a small label under it (EXIT, HELP, SETTINGS |
-	 * PLAYER | title | ROUND | DICE, AUTO, VOICE); the two toggles fill and say ON when on. On
-	 * phones the bar keeps Exit and Help, the round and one "⋯" menu for the rest.
+	 * One grid, mirrored around the title: two sides of the same width (the wider group's), so
+	 * the title is centred on the bar whatever sits beside it, and a long one wraps to a second
+	 * line. Above 720px every control is an icon with a 12px label under it (EXIT, GUIDE,
+	 * SETTINGS, PLAYER | title | ROUND, DICE, AUTO-PLAY, READ ALOUD); each label is part of its
+	 * control's accessible name, and the two toggles fill when on (aria-pressed says so). The
+	 * player segment shows only for a named player, never "Guest". On phones the bar keeps Exit
+	 * and the Guide, the round and one "⋯" menu for the rest.
 	 *
 	 * The frame is cut so that its two side points sit on the bar's centre line (the top steps
 	 * are half the height of the bottom bevels), and every control and label is centred on that
-	 * line, the same inset (--hdr-inset) in from either end.
+	 * line, the same inset (--hdr-inset) in from either end. The frame is its own layer
+	 * (.bar-frame) behind the controls, so where the bar docks at the bottom of the screen
+	 * (phones in portrait, OWN-3: StatusDisplay) the frame alone is mirrored, its bevels facing
+	 * the board, and the ⋯ menu opens upward.
+	 *
+	 * The ⋯ menu is a menu button (visual-layout-s-03): opening it focuses its first item; the
+	 * arrow keys, Home and End move between the four items; Tab, Shift+Tab or Escape closes it
+	 * and puts focus back on ⋯, so nothing under the menu (the step button) takes focus while it
+	 * is open. Its fill is opaque.
 	 *
 	 * The AUTO toggle writes the same gameplay settings as before (playMode.js AUTO_PLAY_ON/OFF);
 	 * GameScreen watches them to arm auto-play.
 	 *
 	 * @component
 	 */
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { gameState } from '../../stores/gameStore.svelte.js';
 	import {
@@ -37,6 +47,7 @@
 	} from '../../utils/playMode.js';
 	import { ANIMATION_DURATION } from '../../constants/animations.js';
 	import DiceThemePicker from '../DiceThemePicker.svelte';
+	import { menuPlacement } from './menuPlacement.js';
 
 	let {
 		/** Handler for exit button click */
@@ -52,13 +63,19 @@
 	let wrapEl = $state();
 	let menuEl = $state();
 	let moreButton = $state();
-	/** Where the menu sits: under the ⋯ button, right edges aligned */
-	let menuPosition = $state({ top: 0, right: 0 });
+	/** Where the menu sits: on the side of the ⋯ button with more room, right edges aligned */
+	let menuPosition = $state({ top: undefined, bottom: undefined, right: 0 });
 
 	const MENU_ID = 'game-more-menu';
 	const audioEnabled = $derived(isReadAloudOn(getAudioSettings()));
 	const autoPlayEnabled = $derived(isAutoPlayOn(getGameplaySettings()));
 	const roundLabel = $derived(gameState.config?.labels?.statusDisplayRoundText ?? 'Round');
+	/** A named player only: no segment (and no room kept) for a guest */
+	const playerName = $derived(
+		(gameState.player?.name ?? '').trim().toLowerCase() === 'guest'
+			? ''
+			: (gameState.player?.name ?? '').trim()
+	);
 
 	function toggleAudio() {
 		updateAudioSettings(audioEnabled ? READ_ALOUD_OFF : READ_ALOUD_ON);
@@ -68,12 +85,65 @@
 		updateGameplaySettings(autoPlayEnabled ? AUTO_PLAY_OFF : AUTO_PLAY_ON);
 	}
 
+	const menuItems = () => [...(menuEl?.querySelectorAll('.game-menu-item') ?? [])];
+
+	/** Open the menu and focus one of its items: the first, or the last ('last') */
+	async function openMenu(focus = 'first') {
+		if (moreButton) menuPosition = menuPlacement(moreButton.getBoundingClientRect(), window);
+		menuOpen = true;
+		await tick();
+		const items = menuItems();
+		(focus === 'last' ? items.at(-1) : items[0])?.focus();
+	}
+
 	function toggleMenu() {
-		if (!menuOpen && moreButton) {
-			const rect = moreButton.getBoundingClientRect();
-			menuPosition = { top: rect.bottom + 6, right: window.innerWidth - rect.right };
+		if (menuOpen) closeMenu();
+		else openMenu();
+	}
+
+	/** On ⋯: the down and up arrows open the menu on its first and last item */
+	function onMoreKeydown(event) {
+		if (menuOpen || (event.key !== 'ArrowDown' && event.key !== 'ArrowUp')) return;
+		event.preventDefault();
+		openMenu(event.key === 'ArrowUp' ? 'last' : 'first');
+	}
+
+	/** Inside the menu: the arrows, Home and End move between the items; Tab leaves to ⋯ */
+	function onMenuKeydown(event) {
+		const items = menuItems();
+		const index = items.indexOf(document.activeElement);
+		const move = {
+			ArrowDown: (index + 1) % items.length,
+			ArrowUp: (index - 1 + items.length) % items.length,
+			Home: 0,
+			End: items.length - 1
+		}[event.key];
+		if (move !== undefined) {
+			event.preventDefault();
+			items[move]?.focus();
+		} else if (event.key === 'Tab') {
+			event.preventDefault();
+			closeMenu({ restoreFocus: true });
 		}
-		menuOpen = !menuOpen;
+	}
+
+	/** Focus leaving the menu and ⋯ (a tap elsewhere) closes it */
+	function onMenuFocusOut(event) {
+		const next = event.relatedTarget;
+		if (next && (menuEl?.contains(next) || next === moreButton)) return;
+		if (next) closeMenu();
+	}
+
+	/** Svelte action: the menu's keyboard model (the menu is a group of buttons) */
+	function menuKeys(node) {
+		node.addEventListener('keydown', onMenuKeydown);
+		node.addEventListener('focusout', onMenuFocusOut);
+		return {
+			destroy() {
+				node.removeEventListener('keydown', onMenuKeydown);
+				node.removeEventListener('focusout', onMenuFocusOut);
+			}
+		};
 	}
 
 	/**
@@ -91,9 +161,13 @@
 		if (restoreFocus) moreButton?.focus();
 	}
 
-	/** Menu items that open something close the menu first */
+	/**
+	 * Menu items that open something close the menu first, with focus back on ⋯: the dialog then
+	 * records ⋯ as its trigger (not the vanishing item), takes focus, and gives it back to ⋯ on
+	 * close (visual-layout-s-07)
+	 */
 	const fromMenu = (handler) => () => {
-		closeMenu();
+		closeMenu({ restoreFocus: true });
 		handler();
 	};
 
@@ -191,43 +265,41 @@
 {/snippet}
 
 <div class="player-bar-wrap" bind:this={wrapEl}>
-	<div
-		class="player-round-bar header-fade-in"
-		data-augmented-ui="tl-2-clip-x tr-2-clip-x br-clip bl-clip border"
-	>
+	<div class="player-round-bar header-fade-in">
+		<span
+			class="bar-frame"
+			data-augmented-ui="tl-2-clip-x tr-2-clip-x br-clip bl-clip border"
+			aria-hidden="true"
+		></span>
 		<div class="bar-group bar-start">
 			<button class="status-bar-button exit-button" onclick={onExitClick} aria-label="Exit game">
 				{@render icon('exit')}<span class="btn-label">Exit</span>
 			</button>
-			<button class="status-bar-button help-button" onclick={onHelpClick} aria-label="Game help">
-				{@render icon('help')}<span class="btn-label">Help</span>
+			<button class="status-bar-button help-button" onclick={onHelpClick} aria-label="Game Guide">
+				{@render icon('help')}<span class="btn-label">Guide</span>
 			</button>
-			<button
-				class="status-bar-button settings-button wide-only"
-				onclick={onSettingsClick}
-				aria-label="Game settings"
-			>
+			<button class="status-bar-button settings-button wide-only" onclick={onSettingsClick}>
 				{@render icon('settings')}<span class="btn-label">Settings</span>
 			</button>
+			{#if playerName}
+				<div class="info-segment player-segment wide-only">
+					<span class="label">Player</span>
+					<span class="value">{playerName}</span>
+				</div>
+			{/if}
 		</div>
 
-		<div class="bar-info">
-			<div class="info-segment player-segment wide-only">
-				<span class="label">Player</span>
-				<span class="value">{gameState.player?.name}</span>
-			</div>
-			<h5 class="game-title">{gameState.config?.title}</h5>
+		<h5 class="game-title">{gameState.config?.title}</h5>
+
+		<div class="bar-group bar-end">
 			<div class="info-segment round-segment">
 				<span class="label">{roundLabel}</span>
 				<span class="value">{gameState?.round}</span>
 			</div>
-		</div>
-
-		<div class="bar-group bar-end">
 			<button
 				class="status-bar-button dice-theme-button wide-only"
 				onclick={() => (showDiceThemePicker = true)}
-				aria-label="Change dice theme"
+				aria-label="Dice theme"
 			>
 				{@render icon('dice')}<span class="btn-label">Dice</span>
 			</button>
@@ -235,25 +307,24 @@
 				class="status-bar-button toggle-button wide-only"
 				class:active={autoPlayEnabled}
 				onclick={toggleAutoPlay}
-				aria-label="Toggle Auto-Play"
 				aria-pressed={autoPlayEnabled}
 			>
-				{@render icon('auto')}<span class="btn-label">Auto{autoPlayEnabled ? ' on' : ''}</span>
+				{@render icon('auto')}<span class="btn-label">Auto-play</span>
 			</button>
 			<button
 				class="status-bar-button toggle-button wide-only"
 				class:active={audioEnabled}
 				onclick={toggleAudio}
-				aria-label="Toggle Audio"
 				aria-pressed={audioEnabled}
 			>
-				{@render icon('voice')}<span class="btn-label">Voice{audioEnabled ? ' on' : ''}</span>
+				{@render icon('voice')}<span class="btn-label">Read aloud</span>
 			</button>
 			<button
 				bind:this={moreButton}
 				class="status-bar-button more-button phone-only"
 				class:active={autoPlayEnabled || audioEnabled}
 				onclick={toggleMenu}
+				onkeydown={onMoreKeydown}
 				aria-label="More game options"
 				aria-expanded={menuOpen}
 				aria-controls={MENU_ID}
@@ -267,9 +338,13 @@
 		<div
 			id={MENU_ID}
 			class="game-menu"
+			role="group"
+			aria-label="More game options"
 			bind:this={menuEl}
 			use:portal
-			style:top="{menuPosition.top}px"
+			use:menuKeys
+			style:top={menuPosition.top === undefined ? undefined : `${menuPosition.top}px`}
+			style:bottom={menuPosition.bottom === undefined ? undefined : `${menuPosition.bottom}px`}
 			style:right="{menuPosition.right}px"
 			transition:fade={menuFade()}
 		>
@@ -324,6 +399,28 @@
 	}
 
 	.player-round-bar {
+		/* The inset from either end, and each side's width: the wider group's (ROUND, DICE,
+		   AUTO-PLAY, READ ALOUD), so the title is centred on the bar */
+		--hdr-inset: var(--space-md);
+		--hdr-side: 18rem;
+
+		display: grid;
+		grid-template-columns: var(--hdr-side) minmax(0, 1fr) var(--hdr-side);
+		align-items: center;
+		column-gap: var(--space-sm);
+		/* From 1024px the bar is as wide as the HUD under it, edge for edge */
+		max-width: 960px;
+		margin-inline: auto;
+		min-height: 52px;
+		padding: 4px var(--hdr-inset);
+		box-sizing: border-box;
+		position: relative;
+		/* The frame layer stays behind the controls, inside the bar */
+		isolation: isolate;
+	}
+
+	/* The frame: its own layer, so it can be mirrored without touching the controls */
+	.bar-frame {
 		--aug-border-all: 2px;
 		--aug-border-bg: var(
 			--frame-border,
@@ -335,22 +432,11 @@
 		--aug-tr: 9px;
 		--aug-br: 18px;
 		--aug-bl: 18px;
-		/* The inset from either end, a button track and an info track (PLAYER, ROUND) */
-		--hdr-inset: var(--space-md);
-		--hdr-btn: 64px;
-		--hdr-seg: 112px;
-
-		display: grid;
-		grid-template-columns:
-			repeat(3, var(--hdr-btn)) var(--hdr-seg) minmax(0, 1fr) var(--hdr-seg)
-			repeat(3, var(--hdr-btn));
-		align-items: center;
-		column-gap: var(--space-xs);
-		min-height: 52px;
-		padding: 4px var(--hdr-inset);
-		box-sizing: border-box;
-		position: relative;
-
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		display: block;
+		pointer-events: none;
 		background: linear-gradient(
 			135deg,
 			rgba(100, 50, 200, 0.3),
@@ -364,23 +450,31 @@
 			inset 0 0 30px rgba(255, 0, 255, 0.2);
 	}
 
-	/* The groups only order the controls; every control is a track of the bar's grid */
-	.bar-group,
-	.bar-info {
-		display: contents;
+	/* Each side is one row of controls: the start group from the left, the end group from the
+	   right */
+	.bar-group {
+		display: flex;
+		align-items: center;
+		gap: 2px;
+		min-width: 0;
 	}
 
-	/* Icon over a 10px label; the whole track wide and at least 44px tall */
+	.bar-end {
+		justify-content: flex-end;
+	}
+
+	/* Icon over a 12px label; at least 44px wide and tall */
 	.status-bar-button {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: 3px;
-		width: 100%;
-		min-width: 0;
+		gap: 2px;
+		flex: none;
+		box-sizing: border-box;
+		min-width: 44px;
 		min-height: 44px;
-		padding: 4px 2px;
+		padding: 2px 4px;
 		background: transparent;
 		border: 1px solid transparent;
 		border-radius: 4px;
@@ -398,18 +492,28 @@
 
 	.btn-label {
 		font-family: var(--font-body);
-		font-size: 0.625rem;
+		font-size: 0.75rem;
 		font-weight: 600;
 		line-height: 1;
-		letter-spacing: 0.08em;
+		letter-spacing: 0.06em;
 		text-transform: uppercase;
 		white-space: nowrap;
 		color: #c8d6e5;
 	}
 
-	.status-bar-button:hover {
+	/* The light under a button: on hover where a pointer can hover (on touch a tap would leave
+	   :hover stuck until the next tap elsewhere), and on press everywhere. Scoped to the bar so
+	   it outranks Game.svelte's button reset, which sets the background on :hover too. */
+	.player-round-bar .status-bar-button:active {
 		color: #fff;
 		background: rgba(0, 238, 255, 0.1);
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.player-round-bar .status-bar-button:hover {
+			color: #fff;
+			background: rgba(0, 238, 255, 0.1);
+		}
 	}
 
 	.status-bar-button:focus-visible,
@@ -418,11 +522,19 @@
 		outline-offset: 1px;
 	}
 
-	/* On: filled, and the label says so in cyan */
-	.toggle-button.active {
+	/* On: filled, and the label says so in cyan (scoped like the light above, so a stuck touch
+	   :hover cannot clear the fill) */
+	.player-round-bar .toggle-button.active {
 		color: #04121a;
 		background: var(--color-neon-cyan);
 		border-color: var(--color-neon-cyan);
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.player-round-bar .toggle-button.active:hover {
+			color: #04121a;
+			background: #7ffcff;
+		}
 	}
 
 	.toggle-button.active svg {
@@ -433,26 +545,24 @@
 		color: #04121a;
 	}
 
-	.toggle-button.active:hover {
-		color: #04121a;
-		background: #7ffcff;
-	}
-
 	.info-segment {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		gap: 2px;
-		min-width: 0;
+		flex: none;
+		min-width: 56px;
+		max-width: 7rem;
+		padding-inline: 4px;
 		text-transform: uppercase;
 	}
 
 	.info-segment .label {
 		font-family: var(--font-body);
-		font-size: 0.625rem;
+		font-size: 0.75rem;
 		font-weight: 600;
 		line-height: 1;
-		letter-spacing: 0.1em;
+		letter-spacing: 0.06em;
 		white-space: nowrap;
 		color: #00ffff;
 	}
@@ -463,19 +573,23 @@
 		text-overflow: ellipsis;
 		white-space: nowrap;
 		font-family: var(--font-body);
-		font-size: 0.9375rem;
-		font-weight: 700;
+		font-size: 1rem;
+		font-weight: 600;
 		line-height: 1.15;
 		color: #fff;
 	}
 
-	/* Centred on the bar: the middle track of a mirrored grid */
+	/* Centred on the bar: the middle track of a mirrored grid. A long title takes a second
+	   line (balanced) rather than an ellipsis; the bar's height does not change. */
 	.game-title {
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
 		margin: 0;
 		min-width: 0;
 		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
+		text-wrap: balance;
 		font-family: var(--font-body);
 		font-size: 1rem;
 		font-weight: 600;
@@ -495,7 +609,8 @@
 		z-index: 1500;
 		min-width: 220px;
 		padding: 4px;
-		background: rgba(8, 12, 22, 0.97);
+		/* Opaque: nothing on the board (the step button's glow) shows through */
+		background: rgb(8, 12, 22);
 		border: 1px solid rgba(0, 255, 255, 0.5);
 		border-radius: 6px;
 		box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
@@ -526,8 +641,10 @@
 		color: var(--color-neon-cyan);
 	}
 
-	.game-menu-item:hover {
-		background: rgba(0, 255, 255, 0.1);
+	@media (hover: hover) and (pointer: fine) {
+		.game-menu-item:hover {
+			background: rgba(0, 255, 255, 0.1);
+		}
 	}
 
 	.toggle-item .state {
@@ -535,7 +652,7 @@
 		padding: 2px 8px;
 		border: 1px solid #6a87a3;
 		border-radius: 3px;
-		font-size: 0.6875rem;
+		font-size: 0.75rem;
 		color: #c8d6e5;
 	}
 
@@ -545,11 +662,11 @@
 		color: #04121a;
 	}
 
-	/* Tablets and landscape phones: narrower tracks */
+	/* Tablets and landscape phones: the sides at the end group's own width */
 	@media (max-width: 1023px) {
 		.player-round-bar {
-			--hdr-btn: 60px;
-			--hdr-seg: 80px;
+			--hdr-inset: var(--space-sm);
+			--hdr-side: 17.25rem;
 		}
 	}
 
@@ -557,12 +674,17 @@
 	@media (max-width: 720px) {
 		.player-round-bar {
 			--hdr-inset: var(--space-sm);
-			--hdr-btn: 44px;
-			grid-template-columns:
-				var(--hdr-btn) var(--hdr-btn) minmax(0, 1fr) var(--hdr-btn)
-				var(--hdr-btn);
+			--hdr-side: calc(2 * 44px + 2px);
 			min-height: 48px;
 			padding-block: 2px;
+		}
+
+		.bar-group {
+			gap: 2px;
+		}
+
+		.info-segment {
+			min-width: 44px;
 		}
 
 		.wide-only {
@@ -582,18 +704,21 @@
 			height: 22px;
 		}
 
-		.more-button.active {
+		/* Scoped so a stuck touch :hover (Game.svelte's reset) cannot turn it back to white */
+		.player-round-bar .more-button.active {
 			color: var(--color-neon-cyan);
 			border-color: rgba(0, 255, 255, 0.5);
-		}
-
-		.game-title {
-			font-size: 0.9375rem;
 		}
 
 		/* The round's label may be a little wider than its track; it stays centred on it */
 		.round-segment {
 			justify-self: center;
+		}
+	}
+
+	@media (max-width: 600px) {
+		.game-title {
+			font-size: 0.875rem;
 		}
 	}
 

@@ -13,20 +13,21 @@
 	import FinalLog from './story/FinalLog.svelte';
 	import GameOverMessage from './story/GameOverMessage.svelte';
 	import RoundStats from './story/RoundStats.svelte';
-	import { sanitizeHtml } from '../utils/sanitizeHtml.js';
+	import SuitText from './card/SuitText.svelte';
+	import { getCardName } from './card/cardInfo.js';
+	import { storyHtml } from './card/storyText.js';
 	import {
 		cardShort,
 		cardName,
 		cardTypeLabel,
 		isRedSuit,
-		modifierLabel,
+		modifierLine,
 		rollLine
 	} from './story/storyCards.js';
 
 	let {
 		round = null, // From useEnrichedRounds
 		roundNumber = 0,
-		totalRounds = 0,
 		outcome = '', // e.g. "Taken by the fourth King"; pass it on the last round only
 		showStats = true
 	} = $props();
@@ -50,7 +51,7 @@
 	<article class="story-round" aria-labelledby={headingId}>
 		<header class="round-head">
 			<h2 class="round-title" id={headingId}>
-				Round {roundNumber}&nbsp;<span class="round-of">of {totalRounds}</span>
+				Round {roundNumber}
 			</h2>
 		</header>
 
@@ -68,8 +69,8 @@
 							aria-controls={panelId}
 							onclick={() => toggle(index)}
 						>
-							<span aria-hidden="true">{cardShort(chip)}</span>
-							<span class="sr-only">{cardName(chip)}, {cardTypeLabel(chip.type)}</span>
+							<span aria-hidden="true"><SuitText text={cardShort(chip)} /></span>
+							<span class="sr-only">{getCardName(chip)}</span>
 						</button>
 						{#if index < round.cards.length - 1}
 							<span class="chip-sep" aria-hidden="true">·</span>
@@ -90,12 +91,12 @@
 						{/if}
 						{#if card.story}
 							<div class="card-panel-story">
-								<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized via sanitizeHtml -->
-								{@html sanitizeHtml(card.story.replace(/\n/g, '<br>'))}
+								<!-- eslint-disable-next-line svelte/no-at-html-tags -- escaped, then sanitized (storyText.js) -->
+								{@html storyHtml(card.story)}
 							</div>
 						{/if}
-						{#if modifierLabel(card.modifier)}
-							<p class="card-panel-note">{modifierLabel(card.modifier)}</p>
+						{#if modifierLine(card)}
+							<p class="card-panel-note"><SuitText text={modifierLine(card)} /></p>
 						{/if}
 						{#if rollLine(card)}
 							<p class="card-panel-note">{rollLine(card)}</p>
@@ -122,7 +123,7 @@
 						{#if prompt.description}
 							<li>
 								<span class="prompt-card" class:red={isRedSuit(prompt)} aria-hidden="true"
-									>{cardShort(prompt)}</span
+									><SuitText text={cardShort(prompt)} /></span
 								>
 								<span class="sr-only">{cardName(prompt)}:</span>
 								{prompt.description}
@@ -176,16 +177,6 @@
 		text-shadow: none;
 	}
 
-	.round-of {
-		margin-left: 0.15em;
-		font-family: var(--font-body);
-		font-size: 1rem;
-		font-weight: 500;
-		letter-spacing: 0;
-		text-transform: none;
-		color: #aebbcc;
-	}
-
 	/* The round's cards on one line */
 	.card-chips {
 		display: flex;
@@ -208,15 +199,15 @@
 		align-items: center;
 		justify-content: center;
 		min-width: 52px;
-		min-height: 40px;
+		min-height: 44px;
 		padding: 4px 12px;
 		background: rgba(255, 255, 255, 0.04);
 		border: 1px solid rgba(255, 255, 255, 0.28);
 		border-radius: 4px;
 		color: #e6edf5;
 		font-family: var(--font-body);
-		font-size: 1.0625rem;
-		font-weight: 700;
+		font-size: 1.125rem;
+		font-weight: 600;
 		font-variant-numeric: tabular-nums;
 		cursor: pointer;
 		transition:
@@ -271,12 +262,12 @@
 
 	.card-panel-name {
 		font-size: 1rem;
-		font-weight: 700;
+		font-weight: 600;
 		color: #fff;
 	}
 
 	.card-panel-type {
-		font-size: 0.8125rem;
+		font-size: 0.75rem;
 		font-weight: 600;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
@@ -285,13 +276,15 @@
 
 	.card-panel-desc {
 		margin: 0 0 8px;
-		font-size: 1.0625rem;
+		max-width: var(--measure, 30em);
+		font-size: 1.125rem;
 		line-height: 1.6;
 		font-style: italic;
 		color: #eef3f8;
 	}
 
 	.card-panel-story {
+		max-width: var(--measure, 30em);
 		font-size: 1rem;
 		line-height: 1.65;
 		color: #c9d4e0;
@@ -299,11 +292,12 @@
 
 	.card-panel-note {
 		margin: 8px 0 0;
-		font-size: 0.9375rem;
+		font-size: 0.875rem;
 		color: #aebbcc;
 	}
 
-	/* The player's writing: the heart of the page */
+	/* The player's writing: the heart of the page. Running text keeps the reading measure (about
+	   65 characters a line, visual-layout-s-18); the 640px column is for the chips and panels. */
 	.journal {
 		display: flex;
 		flex-direction: column;
@@ -311,6 +305,7 @@
 	}
 
 	.journal-text {
+		max-width: var(--measure, 30em);
 		font-size: 1.125rem;
 		line-height: 1.75;
 		color: #f2f5f9;
@@ -320,7 +315,7 @@
 
 	.voice-label {
 		margin: 0 0 8px;
-		font-size: 0.8125rem;
+		font-size: 0.75rem;
 		font-weight: 600;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
@@ -329,7 +324,7 @@
 
 	.no-entry {
 		margin: 0;
-		font-size: 0.9375rem;
+		font-size: 0.875rem;
 		color: #aebbcc;
 	}
 
@@ -356,8 +351,8 @@
 	.prompt-card {
 		flex: 0 0 3ch;
 		font-style: normal;
-		font-weight: 700;
-		font-size: 0.9375rem;
+		font-weight: 600;
+		font-size: 0.875rem;
 		color: #aebbcc;
 	}
 
@@ -384,7 +379,18 @@
 
 		.journal-text,
 		.card-prompts li {
-			font-size: 1.0625rem;
+			font-size: 1rem;
+		}
+	}
+
+	/* Landscape phones: tighter rhythm, so the cards and the entry's first lines fit the view */
+	@media (max-height: 500px) {
+		.story-round {
+			gap: 8px;
+		}
+
+		.journal-text {
+			line-height: 1.6;
 		}
 	}
 

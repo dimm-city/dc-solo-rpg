@@ -31,7 +31,7 @@
 
 	let deleteMessage = $derived(
 		pendingDelete
-			? `“${pendingDelete.gameTitle || 'Untitled game'}” (${getStoryOutcome(pendingDelete).label}, ${saves.formatDate(pendingDelete.lastPlayed || pendingDelete.savedAt)}) and its journal will be deleted for good. This can't be undone.`
+			? `“${pendingDelete.gameTitle || 'Untitled game'}” (${getStoryOutcome(pendingDelete).label}, ${saves.formatDate(pendingDelete.lastPlayed || pendingDelete.savedAt)}) and its journal will be deleted. This can't be undone.`
 			: ''
 	);
 
@@ -40,18 +40,18 @@
 		pendingDelete = null;
 		const deleted = await saves.deleteGame(game.id);
 		notice = deleted
-			? `Deleted ${game.gameTitle || 'the story'}.`
-			: "That story couldn't be deleted. Please try again.";
+			? `Deleted “${game.gameTitle || 'Untitled game'}”.`
+			: "That story couldn't be deleted. Try again.";
 	}
 </script>
 
 <div
 	class="browse-games"
 	in:fly={{ y: 20, duration: duration(ANIMATION_DURATION.STORY_MODE), easing: quintOut }}
-	out:fade={{ duration: duration(ANIMATION_DURATION.STORY_MODE) }}
+	out:fade={{ duration: duration(ANIMATION_DURATION.STATE) }}
 >
 	<header class="browse-header">
-		<button class="back-button" onclick={onBack} aria-label="Back to menu">
+		<button class="back-button" onclick={onBack} aria-label="Back to home">
 			<svg viewBox="0 0 24 24" aria-hidden="true">
 				<path d="M15 19l-7-7 7-7" />
 			</svg>
@@ -59,7 +59,7 @@
 
 		<div class="title-section">
 			<h1 class="page-title">Story Library</h1>
-			<p class="subtitle">Your finished runs, in your own words.</p>
+			<p class="subtitle">Your finished games, in your own words.</p>
 		</div>
 
 		{#if !saves.isLoading && saves.completedGames.length > 0}
@@ -87,7 +87,7 @@
 					<path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
 				</svg>
 				{#if saves.completedGames.length === 0}
-					<h2>No completed games yet</h2>
+					<h2>No stories yet</h2>
 					<p>Finish a game, win or lose, and its story is kept here to read again.</p>
 					<button class="text-button" onclick={onBack}>Choose a game</button>
 				{:else}
@@ -114,10 +114,10 @@
 
 <ConfirmModal
 	isOpen={!!pendingDelete}
-	title="Delete this story?"
+	title="Delete story"
 	message={deleteMessage}
-	confirmText="Delete"
-	cancelText="Keep it"
+	confirmText="Delete story"
+	cancelText="Keep story"
 	onConfirm={confirmDelete}
 	onCancel={() => (pendingDelete = null)}
 />
@@ -130,11 +130,13 @@
 		   story mode overlap while one fades out and the other in, instead of stacking */
 		position: absolute;
 		inset: 0;
+		/* 85%: the background motes show faintly through, behind every card and line of text
+		   (visual-layout-s-08) */
 		background: linear-gradient(
 			180deg,
-			rgba(10, 10, 10, 0.95),
-			rgba(26, 26, 26, 0.95),
-			rgba(10, 10, 10, 0.95)
+			rgba(10, 10, 10, 0.85),
+			rgba(26, 26, 26, 0.85),
+			rgba(10, 10, 10, 0.85)
 		);
 		padding: var(--space-xl) var(--space-xl) var(--space-2xl);
 		gap: var(--space-lg);
@@ -213,7 +215,7 @@
 		max-width: 1200px;
 		margin: 0 auto;
 		min-height: 0;
-		font-size: 0.9375rem;
+		font-size: 0.875rem;
 		color: #b8c5d6;
 	}
 
@@ -283,7 +285,7 @@
 		margin: 0;
 		font-family: var(--font-body);
 		font-size: 1.25rem;
-		font-weight: 700;
+		font-weight: 600;
 		letter-spacing: 0.02em;
 		text-transform: none;
 		text-shadow: none;
@@ -345,12 +347,70 @@
 		}
 
 		.subtitle {
-			font-size: 0.9375rem;
+			font-size: 0.875rem;
 		}
 
 		.games-grid {
 			grid-template-columns: 1fr;
 			gap: var(--space-md);
+		}
+	}
+
+	/* Landscape phones: story mode's header (visual-layout-s-13). Two short rows: the title at
+	   28px on one line beside the back button (an ellipsis past that, never expected), then the
+	   subtitle with the sort control, as story mode's outcome line carries its AI button; so a
+	   long title is never cut by the control and a second row of stories shows. The sides clear
+	   the notch (the page is drawn edge to edge: viewport-fit=cover).
+	   The 44px back button overhangs the 32px title row by 6px each way (--overhang), so the
+	   title row is only as tall as the title; the top padding gives the overhang back, and the
+	   back button and title land exactly where story mode's do. */
+	@media (max-height: 500px) {
+		.browse-games {
+			--overhang: calc((44px - 1.75rem * 1.15) / 2);
+			padding: calc(var(--space-sm) + var(--overhang))
+				max(var(--space-xl), env(safe-area-inset-right, 0px)) var(--space-xl)
+				max(var(--space-xl), env(safe-area-inset-left, 0px));
+			gap: var(--space-sm);
+		}
+
+		.browse-header {
+			grid-template-columns: auto minmax(0, 1fr) auto;
+			gap: 0 var(--space-md);
+		}
+
+		.title-section {
+			display: contents;
+		}
+
+		.back-button {
+			grid-area: 1 / 1;
+			width: 44px;
+			height: 44px;
+			min-height: 44px;
+			margin-block: calc(-1 * var(--overhang));
+		}
+
+		.page-title {
+			grid-area: 1 / 2 / 2 / 4;
+			font-size: 1.75rem;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			overflow-wrap: normal;
+			/* A clipped glow reads as a box: none on one line, as in story mode */
+			text-shadow: none;
+		}
+
+		.subtitle {
+			grid-area: 2 / 2;
+			margin: 0;
+			font-size: 0.875rem;
+			line-height: 1.25;
+		}
+
+		.browse-header :global(.sort-controls) {
+			grid-area: 2 / 3;
+			justify-self: end;
 		}
 	}
 

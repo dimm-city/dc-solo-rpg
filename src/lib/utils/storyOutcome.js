@@ -9,7 +9,7 @@ import { getEndingCause } from './endingSummary.js';
 const LABELS = {
 	escaped: 'Escaped',
 	kings: 'Taken by the fourth King',
-	stability: 'Stability gave out',
+	stability: 'Fell when Stability reached 0',
 	lost: 'Did not escape'
 };
 

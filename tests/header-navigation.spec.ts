@@ -23,13 +23,15 @@ test.describe('Header and Navigation', () => {
 		page
 	}) => {
 		const header = page.locator('.page-header');
-		const toggle = header.getByRole('button', { name: 'Toggle menu' });
+		const toggle = header.getByRole('button', { name: 'Menu', exact: true });
 
 		if (isDesktop(page)) {
-			for (const name of ['Stories', 'Settings', 'Help', 'More']) {
+			// One name per feature; the Game Guide shows the short label "Guide"
+			const shown: Record<string, string> = { 'Game Guide': 'Guide' };
+			for (const name of ['Story Library', 'Settings', 'Game Guide', 'More']) {
 				const button = header.getByRole('button', { name, exact: true });
 				await expect(button).toBeVisible();
-				await expect(button).toHaveText(name);
+				await expect(button).toHaveText(shown[name] ?? name);
 			}
 			await expect(toggle).toBeHidden();
 		} else {
@@ -42,10 +44,10 @@ test.describe('Header and Navigation', () => {
 		await openHeaderMenu(page);
 		const menu = page.locator('.mobile-menu');
 
-		// Desktop shows Stories, Settings and Help inline, so the More menu holds the rest
+		// Desktop shows Story Library, Settings and the Guide inline, so the More menu holds the rest
 		const names = isDesktop(page)
-			? ['Upload Game', 'Dice Theme', 'About']
-			: ['Upload Game', 'Story Library', 'Settings', 'Dice Theme', 'About', 'Help'];
+			? ['Upload game', 'Dice theme', 'About']
+			: ['Upload game', 'Story Library', 'Settings', 'Dice theme', 'About', 'Game Guide'];
 		for (const name of names) {
 			await expect(menu.getByRole('button', { name, exact: true })).toBeVisible();
 		}
@@ -56,7 +58,7 @@ test.describe('Header and Navigation', () => {
 		const header = page.locator('.page-header');
 		const button = isDesktop(page)
 			? header.getByRole('button', { name: 'More', exact: true })
-			: header.getByRole('button', { name: 'Toggle menu' });
+			: header.getByRole('button', { name: 'Menu', exact: true });
 		await expect(button).toHaveAttribute('aria-expanded', 'false');
 
 		await button.click();
@@ -112,7 +114,7 @@ test.describe('Header and Navigation', () => {
 	});
 
 	test('should open Help modal from the header', async ({ page }) => {
-		const dialog = await openContentModal(page, 'Help');
+		const dialog = await openContentModal(page, 'Game Guide');
 		await expect(dialog).toHaveAccessibleName('Game Guide');
 	});
 

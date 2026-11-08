@@ -5,8 +5,10 @@ import {
 	cardTypeLabel,
 	isRedSuit,
 	modifierLabel,
+	modifierLine,
 	rollLine
 } from './storyCards.js';
+import { TYPE_LABELS } from '../card/cardInfo.js';
 
 describe('story card words', () => {
 	it('names cards', () => {
@@ -22,8 +24,26 @@ describe('story card words', () => {
 		expect(cardTypeLabel('failure-counter')).toBe('King');
 		expect(cardTypeLabel('primary-success')).toBe('Salvation');
 		expect(cardTypeLabel('narrative')).toBe('Ace');
-		expect(modifierLabel('skip-damage')).toBe('No Stability check');
+		expect(cardTypeLabel('mystery')).toBe('Card');
+		for (const [type, label] of Object.entries(TYPE_LABELS)) {
+			expect(cardTypeLabel(type)).toBe(label);
+		}
+	});
+
+	it('says what a special card did, as the board logged it', () => {
+		expect(modifierLabel('skip-damage')).toBe('Skipped its Stability check');
+		expect(modifierLabel('return-king')).toBe('A King went back into the deck');
 		expect(modifierLabel(null)).toBe('');
+		const returned = 'K♥ went back into the deck\u00a0·\u00a0Kings 0 of 4';
+		expect(modifierLine({ modifier: 'return-king', modifierResult: returned })).toBe(returned);
+		expect(modifierLine({ modifier: 'skip-damage' })).toBe('Skipped its Stability check');
+		expect(modifierLine({ modifierResult: 'stale' })).toBe('');
+		expect(modifierLine(null)).toBe('');
+	});
+
+	it('states no non-event: a King return with no King out has no line', () => {
+		const card = { modifier: 'return-king', modifierResult: 'No King was out to return' };
+		expect(modifierLine(card)).toBe('');
 	});
 
 	it('says what a Stability check did', () => {
@@ -33,7 +53,9 @@ describe('story card words', () => {
 		expect(rollLine({ diceRoll: 1, damageDealt: 3 })).toBe(
 			'Stability check: rolled 1 · −3 Stability · Surreal'
 		);
-		expect(rollLine({ diceRoll: 15, damageDealt: 0 })).toBe('Stability check: rolled 15 · no loss');
+		expect(rollLine({ diceRoll: 15, damageDealt: 0 })).toBe(
+			'Stability check: rolled 15 · no Stability lost'
+		);
 		expect(rollLine({ diceRoll: 20, damageDealt: 0 })).toBe(
 			'Stability check: rolled 20 · +1 Stability · Lucid'
 		);

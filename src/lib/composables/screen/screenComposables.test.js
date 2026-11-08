@@ -9,10 +9,14 @@ import { mockDieRoll, mockDieRollSequence, resetRNG } from '../../services/rando
 import { rollDice, skipRoll } from '../../stores/diceStore.svelte.js';
 import { useFailureCheck } from './useFailureCheck.svelte.js';
 import { useSuccessCheck } from './useSuccessCheck.svelte.js';
-import { useRollForTasks, DEAL_DELAY_MS } from './useRollForTasks.svelte.js';
+import { useRollForTasks, DEAL_DELAY_MS, DEAL_BEAT_MS } from './useRollForTasks.svelte.js';
 import { useInitialDamage } from './useInitialDamage.svelte.js';
 import { createResultHold, RESULT_HOLD_MS, NARRATION_BEAT_MS } from './resultHold.svelte.js';
-import { updateAudioSettings, stopNarration } from '../../stores/audioStore.svelte.js';
+import {
+	updateAudioSettings,
+	updateGameplaySettings,
+	stopNarration
+} from '../../stores/audioStore.svelte.js';
 import { installFakeTTS } from '../../services/tts/providers/FakeTTSProvider.test.helper.js';
 
 vi.mock('../../stores/diceStore.svelte.js', () => ({
@@ -62,14 +66,15 @@ describe('useFailureCheck', () => {
 	it('applies and explains the roll, then continues on the second press', async () => {
 		gameState.state = 'failureCheck';
 		const check = useFailureCheck();
-		expect(check.buttonText).toBe('Roll for damage');
+		expect(check.buttonText).toBe('Roll for Stability');
 		mockDieRoll(4);
 
 		await check.handleFailureCheck();
 		expect(gameState.tower).toBe(18);
 		expect(gameState.state).toBe('failureCheck');
-		expect(check.resultLine).toBe('Rolled 4 · −2 Stability · 18/20');
-		expect(check.buttonText).toBe('Continue');
+		expect(check.resultLine).toBe('Rolled 4 · −2 Stability');
+		// Cards are left this round: the button names the next screen (DP-1-06)
+		expect(check.buttonText).toBe('Draw the next card');
 		expect(check.rolling).toBe(false);
 
 		await check.handleFailureCheck();
@@ -92,19 +97,19 @@ describe('useFailureCheck', () => {
 
 		await land();
 		await rolling;
-		expect(check.buttonText).toBe('Continue');
+		expect(check.buttonText).toBe('Draw the next card');
 	});
 
 	it('shows the Lucid modifier on the roll button only, and both dice in the result', async () => {
 		gameState.state = 'failureCheck';
 		gameState.isLucid = true;
 		const check = useFailureCheck();
-		expect(check.buttonHint).toBe('Lucid: 2 dice, keep high');
+		expect(check.buttonHint).toBe('Lucid · two dice, keep the higher');
 		mockDieRollSequence([5, 19]);
 
 		await check.handleFailureCheck();
 		expect(rollDice).toHaveBeenCalledWith(19, { isLucid: true, isSurreal: false, dice: [5, 19] });
-		expect(check.resultLine).toBe('Rolled 19 (high of 5, 19) · no Stability lost · 20/20');
+		expect(check.resultLine).toBe('Rolled 19 (high of 5, 19) · no Stability lost');
 		expect(check.buttonHint).toBeNull();
 	});
 
@@ -115,7 +120,7 @@ describe('useFailureCheck', () => {
 		mockDieRoll(3);
 
 		await check.handleFailureCheck();
-		expect(check.resultLine).toBe('Rolled 3 · −2 Stability · 0/20 · nothing left to hold on to');
+		expect(check.resultLine).toBe('Rolled 3 · −2 Stability · you fall');
 		expect(check.buttonText).toBe('Face the end');
 	});
 
@@ -129,8 +134,71 @@ describe('useFailureCheck', () => {
 	});
 });
 
+describe('step labels after a result name where they go (DP-1-06)', () => {
+	afterEach(() => updateGameplaySettings({ autoHandleJournaling: 'manual' }));
+
+	it.each([
+		['cards left this round', { cardsToDraw: 2 }, 'Draw the next card'],
+		['the last check, Salvation unlocked', { cardsToDraw: 0 }, 'Go to Salvation'],
+		[
+			'the last check, no Salvation yet',
+			{ cardsToDraw: 0, aceOfHeartsRevealed: false },
+			'Open your journal'
+		]
+	])('a Stability check with %s', async (_, state, label) => {
+		Object.assign(gameState, { state: 'failureCheck', round: 3, ...state });
+		const check = useFailureCheck();
+		mockDieRoll(15);
+		await check.handleFailureCheck();
+		expect(check.buttonText).toBe(label);
+		expect(check.buttonText).not.toMatch(/continue|damage/i);
+		check.resetState();
+	});
+
+	it('names the next round instead of the journal when the journal is skipped', async () => {
+		updateGameplaySettings({ autoHandleJournaling: 'skip' });
+		Object.assign(gameState, { state: 'failureCheck', round: 3, cardsToDraw: 0 });
+		gameState.aceOfHeartsRevealed = false;
+		const check = useFailureCheck();
+		mockDieRoll(15);
+		await check.handleFailureCheck();
+		expect(check.buttonText).toBe('Begin round 4');
+		check.resetState();
+
+		Object.assign(gameState, { state: 'successCheck', aceOfHeartsRevealed: true });
+		const salvation = useSuccessCheck();
+		mockDieRoll(2);
+		await salvation.handleSuccessCheck();
+		expect(salvation.buttonText).toBe('Begin round 4');
+		salvation.resetState();
+	});
+
+	it('every label is sentence case, at most 20 characters, with no "..."', () => {
+		const labels = [
+			'Roll for instability',
+			'Roll for tasks',
+			'Roll for Stability',
+			'Roll for Salvation',
+			'Rolling…',
+			'Begin round 1',
+			'Draw the cards',
+			'Draw the card',
+			'Draw the next card',
+			'Go to Salvation',
+			'Open your journal',
+			'Begin round 12',
+			'Escape',
+			'Face the end'
+		];
+		for (const label of labels) {
+			expect(label.length).toBeLessThanOrEqual(20);
+			expect(label).not.toMatch(/\.\.\./);
+		}
+	});
+});
+
 describe("useFailureCheck on the fourth Ace's check (Easy: the final roll)", () => {
-	const FINAL = 'Roll for Stability · survive this and you escape';
+	const FINAL = 'Roll for Stability';
 
 	beforeEach(() => {
 		gameState.state = 'failureCheck';
@@ -151,7 +219,7 @@ describe("useFailureCheck on the fourth Ace's check (Easy: the final roll)", () 
 		expect(gameState.tokens).toBe(6);
 		expect(gameState.win).toBe(true);
 		expect(gameState.gameOver).toBe(true);
-		expect(check.resultLine).toBe('Rolled 13 · no Stability lost · 9/20 · you escape');
+		expect(check.resultLine).toBe('Rolled 13 · no Stability lost · you escape');
 		expect(check.buttonText).toBe('Escape');
 		// No result hold: the ending waits for the player
 		expect(check.hold.active).toBe(false);
@@ -172,7 +240,7 @@ describe("useFailureCheck on the fourth Ace's check (Easy: the final roll)", () 
 		expect(gameState.tower).toBe(0);
 		expect(gameState.win).toBe(false);
 		expect(gameState.gameOver).toBe(true);
-		expect(check.resultLine).toBe('Rolled 4 · −2 Stability · 0/20 · nothing left to hold on to');
+		expect(check.resultLine).toBe('Rolled 4 · −2 Stability · you fall');
 		expect(check.buttonText).toBe('Face the end');
 		expect(check.hold.active).toBe(false);
 		await vi.advanceTimersByTimeAsync(RESULT_HOLD_MS * 2);
@@ -185,15 +253,13 @@ describe("useFailureCheck on the fourth Ace's check (Easy: the final roll)", () 
 	it('applies and uses up a Lucid modifier like any roll', async () => {
 		gameState.isLucid = true;
 		const check = useFailureCheck();
-		expect(check.buttonHint).toBe('Lucid: 2 dice, keep high');
+		expect(check.buttonHint).toBe('Lucid · two dice, keep the higher');
 		mockDieRollSequence([3, 14]);
 
 		await check.handleFailureCheck();
 		expect(rollDice).toHaveBeenCalledWith(14, { isLucid: true, isSurreal: false, dice: [3, 14] });
 		expect(gameState.isLucid).toBe(false);
-		expect(check.resultLine).toBe(
-			'Rolled 14 (high of 3, 14) · no Stability lost · 9/20 · you escape'
-		);
+		expect(check.resultLine).toBe('Rolled 14 (high of 3, 14) · no Stability lost · you escape');
 		expect(gameState.win).toBe(true);
 	});
 
@@ -201,14 +267,12 @@ describe("useFailureCheck on the fourth Ace's check (Easy: the final roll)", () 
 		gameState.isSurreal = true;
 		gameState.tower = 2;
 		const check = useFailureCheck();
-		expect(check.buttonHint).toBe('Surreal: 2 dice, keep low');
+		expect(check.buttonHint).toBe('Surreal · two dice, keep the lower');
 		mockDieRollSequence([15, 3]);
 
 		await check.handleFailureCheck();
 		expect(gameState.isSurreal).toBe(false);
-		expect(check.resultLine).toBe(
-			'Rolled 3 (low of 15, 3) · −2 Stability · 0/20 · nothing left to hold on to'
-		);
+		expect(check.resultLine).toBe('Rolled 3 (low of 15, 3) · −2 Stability · you fall');
 		expect(gameState.win).toBe(false);
 		expect(gameState.gameOver).toBe(true);
 	});
@@ -220,14 +284,14 @@ describe("useFailureCheck on the fourth Ace's check (Easy: the final roll)", () 
 		gameState.config = { labels: {}, options: { difficulty } };
 		gameState.cardsToDraw = 0;
 		const check = useFailureCheck();
-		expect(check.buttonText).toBe('Roll for damage');
+		expect(check.buttonText).toBe('Roll for Stability');
 		mockDieRoll(13);
 
 		await check.handleFailureCheck();
 		expect(gameState.gameOver).toBe(false);
 		expect(gameState.tokens).toBe(6);
-		expect(check.resultLine).toBe('Rolled 13 · no Stability lost · 9/20');
-		expect(check.buttonText).toBe('Continue');
+		expect(check.resultLine).toBe('Rolled 13 · no Stability lost');
+		expect(check.buttonText).toBe('Go to Salvation');
 		expect(check.hold.active).toBe(true);
 		check.resetState();
 	});
@@ -242,23 +306,23 @@ describe('useInitialDamage', () => {
 		await roll.handleInitialDamageRoll();
 		expect(roll.result).toBe(15);
 		expect(gameState.tower).toBe(20);
-		expect(roll.resultLine).toBe('Rolled 15 · no Stability lost · 20/20');
+		expect(roll.resultLine).toBe('Rolled 15 · no Stability lost');
 	});
 
 	it('uses the modifier like every other roll', async () => {
 		gameState.state = 'initialDamageRoll';
 		gameState.isSurreal = true;
 		const roll = useInitialDamage();
-		expect(roll.buttonHint).toBe('Surreal: 2 dice, keep low');
+		expect(roll.buttonHint).toBe('Surreal · two dice, keep the lower');
 		mockDieRollSequence([9, 14]);
 
 		await roll.handleInitialDamageRoll();
 		expect(roll.result).toBe(9);
 		expect(gameState.isSurreal).toBe(false);
-		expect(roll.resultLine).toBe('Rolled 9 (low of 9, 14) · −1 Stability · 19/20');
+		expect(roll.resultLine).toBe('Rolled 9 (low of 9, 14) · −1 Stability');
 	});
 
-	it('reads "Rolling…" while rolling, then Continue', async () => {
+	it('reads "Rolling…" while rolling, then "Begin round 1"', async () => {
 		gameState.state = 'initialDamageRoll';
 		const roll = useInitialDamage();
 		const land = holdDice();
@@ -267,7 +331,7 @@ describe('useInitialDamage', () => {
 		expect(roll.buttonText).toBe('Rolling…');
 		await land();
 		await rolling;
-		expect(roll.buttonText).toBe('Continue');
+		expect(roll.buttonText).toBe('Begin round 1');
 	});
 });
 
@@ -275,14 +339,14 @@ describe('useSuccessCheck', () => {
 	it('shows the target before rolling and the outcome after (a miss loses no token)', async () => {
 		gameState.state = 'successCheck';
 		const check = useSuccessCheck();
-		expect(check.buttonText).toBe('Roll to remove a token · need 14+');
+		expect(check.buttonText).toBe('Roll for Salvation');
 		mockDieRoll(2);
 
 		await check.handleSuccessCheck();
 		expect(gameState.tokens).toBe(10);
 		expect(gameState.state).toBe('successCheck');
-		expect(check.resultLine).toBe('Rolled 2 · needed 14+ · no token lost');
-		expect(check.buttonText).toBe('Continue');
+		expect(check.resultLine).toBe('Rolled 2 · missed 14+');
+		expect(check.buttonText).toBe('Open your journal');
 
 		await check.handleSuccessCheck();
 		expect(gameState.state).toBe('log');
@@ -296,7 +360,7 @@ describe('useSuccessCheck', () => {
 
 		await check.handleSuccessCheck();
 		expect(gameState.tokens).toBe(11);
-		expect(check.resultLine).toBe('Rolled 2 · needed 14+ · +1 token · 11 left');
+		expect(check.resultLine).toBe('Rolled 2 · missed 14+ · +1 Token');
 		check.resetState();
 	});
 
@@ -307,17 +371,15 @@ describe('useSuccessCheck', () => {
 		gameState.tower = 16;
 		gameState.isLucid = true;
 		const check = useSuccessCheck();
-		expect(check.buttonText).toBe('Roll for Stability · Salvation is assured');
-		expect(check.buttonHint).toBe('Lucid: 2 dice, keep high'); // the dice are thrown again
+		expect(check.buttonText).toBe('Roll for Salvation');
+		expect(check.buttonHint).toBe('Lucid · two dice, keep the higher'); // the dice are thrown again
 		mockDieRollSequence([9, 14]);
 
 		await check.handleSuccessCheck();
 		expect(rollDice).toHaveBeenCalledWith(14, { isLucid: true, isSurreal: false, dice: [9, 14] });
-		expect(check.resultLine).toBe(
-			'Rolled 14 (high of 9, 14) · no Stability lost · −1 token · 9 left'
-		);
+		expect(check.resultLine).toBe('Rolled 14 (high of 9, 14) · no Stability lost · −1 Token');
 		expect(gameState.isLucid).toBe(false);
-		expect(check.buttonText).toBe('Continue');
+		expect(check.buttonText).toBe('Open your journal');
 		check.resetState();
 	});
 
@@ -332,7 +394,7 @@ describe('useSuccessCheck', () => {
 		await check.handleSuccessCheck();
 		expect(gameState.tower).toBe(14);
 		expect(gameState.tokens).toBe(9);
-		expect(check.resultLine).toBe('Rolled 4 · −2 Stability · −1 token · 9 left');
+		expect(check.resultLine).toBe('Rolled 4 · −2 Stability · −1 Token');
 		check.resetState();
 	});
 
@@ -348,7 +410,7 @@ describe('useSuccessCheck', () => {
 		await check.handleSuccessCheck();
 		expect(gameState.tower).toBe(0);
 		expect(gameState.tokens).toBe(10);
-		expect(check.resultLine).toBe('Rolled 8 · −1 Stability · 0/20 · nothing left to hold on to');
+		expect(check.resultLine).toBe('Rolled 8 · −1 Stability · you fall');
 		expect(check.buttonText).toBe('Face the end');
 		expect(check.hold.active).toBe(false);
 		await vi.advanceTimersByTimeAsync(RESULT_HOLD_MS * 2);
@@ -366,8 +428,8 @@ describe('useSuccessCheck', () => {
 		check.resetState();
 		check.resumePending();
 		expect(gameState.tokens).toBe(9);
-		expect(check.resultLine).toBe('Rolled 16 · −1 token · 9 left');
-		expect(check.buttonText).toBe('Continue');
+		expect(check.resultLine).toBe('Rolled 16 · −1 Token');
+		expect(check.buttonText).toBe('Open your journal');
 		expect(rollDice).not.toHaveBeenCalled();
 	});
 
@@ -379,8 +441,8 @@ describe('useSuccessCheck', () => {
 		check.resetState();
 		check.resumePending();
 		expect(gameState.tokens).toBe(10);
-		expect(check.resultLine).toBe('Rolled 7 · needed 14+ · no token lost');
-		expect(check.buttonText).toBe('Continue');
+		expect(check.resultLine).toBe('Rolled 7 · missed 14+');
+		expect(check.buttonText).toBe('Open your journal');
 		expect(rollDice).not.toHaveBeenCalled();
 	});
 });
@@ -393,7 +455,7 @@ describe('useRollForTasks', () => {
 		mockDieRoll(17);
 
 		await tasks.handleRollForTasks();
-		expect(tasks.resultLine).toBe('Rolled 17 · Draw 5 cards');
+		expect(tasks.resultLine).toBe('Rolled 17 · 5 cards this round');
 		expect(gameState.taskRoll).toEqual({ roll: 17, dice: [17], cards: 5 });
 		expect(gameState.state).toBe('rollForTasks');
 		tasks.resetState();
@@ -449,7 +511,7 @@ describe('useRollForTasks', () => {
 		expect(skipRoll).toHaveBeenCalledTimes(1);
 		await land();
 		await rolling;
-		expect(tasks.buttonText).toBe('Draw 5 Cards');
+		expect(tasks.buttonText).toBe('Draw the cards');
 		tasks.resetState();
 	});
 });
@@ -487,8 +549,8 @@ describe('useRollForTasks, with dice rolls announced', () => {
 		fake.end();
 		await vi.advanceTimersByTimeAsync(0);
 		expect(tasks.hold.waiting).toBe(false);
-		expect(tasks.hold.duration).toBe(NARRATION_BEAT_MS);
-		await vi.advanceTimersByTimeAsync(NARRATION_BEAT_MS - 1);
+		expect(tasks.hold.duration).toBe(DEAL_BEAT_MS);
+		await vi.advanceTimersByTimeAsync(DEAL_BEAT_MS - 1);
 		expect(gameState.state).toBe('rollForTasks');
 		await vi.advanceTimersByTimeAsync(1);
 		expect(gameState.state).toBe('drawCard');
@@ -539,9 +601,11 @@ describe('useRollForTasks, with dice rolls announced', () => {
 });
 
 describe('the result hold: a result moves on by itself after a beat', () => {
-	it('is the shared 2s beat, the same for the deal', () => {
+	it('is the shared 2s beat; the deal holds longer (OWN-7: the first card came too soon)', () => {
 		expect(RESULT_HOLD_MS).toBe(2000);
-		expect(DEAL_DELAY_MS).toBe(RESULT_HOLD_MS);
+		expect(DEAL_DELAY_MS).toBe(3000);
+		expect(DEAL_BEAT_MS).toBe(1000);
+		expect(DEAL_BEAT_MS).toBeGreaterThan(NARRATION_BEAT_MS);
 	});
 
 	it('a Stability result moves on by itself, and only once', async () => {

@@ -3,8 +3,9 @@
 	 * HomeGameCard - one game on the home screen: generated key art, title, the game's own
 	 * subtitle, a time estimate, and labelled actions pinned to the bottom of the card.
 	 *
-	 * Without a save: Play. With a save: Continue (round and time since the save), New game
-	 * (the page confirms the overwrite) and a small Delete save link.
+	 * Without a save: Play. With a save: Continue, a two-line button by design ("Continue" over
+	 * "Round 3 · 5 min ago"), New game (the page confirms the overwrite) and a small Delete save
+	 * link. Every primary button is the same height, so a row of cards lines up.
 	 */
 	import GameKeyArt from './GameKeyArt.svelte';
 	import {
@@ -73,7 +74,7 @@
 					>
 						<span class="btn-label">Continue</span>
 						{#if saveParts.length}
-							<span class="btn-detail">· {saveParts.join(' · ')}</span>
+							<span class="btn-detail">{saveParts.join(' · ')}</span>
 						{/if}
 					</button>
 					<div class="secondary-actions">
@@ -237,6 +238,7 @@
 		font-family: var(--font-body);
 		font-size: 1rem;
 		line-height: 1.5;
+		text-wrap: balance;
 		color: #d5dfeb;
 	}
 
@@ -246,7 +248,7 @@
 		gap: var(--space-sm);
 		margin: 0;
 		font-family: var(--font-mono);
-		font-size: 0.8125rem;
+		font-size: 0.75rem;
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
 		color: #9fb3c8;
@@ -257,15 +259,16 @@
 		border: 1px solid var(--color-cyber-magenta);
 		border-radius: 3px;
 		font-family: var(--font-body);
-		font-size: 0.6875rem;
+		font-size: 0.75rem;
 		font-weight: 600;
 		letter-spacing: 0.08em;
 		color: #f0abfc;
 	}
 
-	/* Actions sit at the bottom of their row */
+	/* Actions start at the top of their shared row, so every card's primary button (Play or
+	   Continue) sits on the same line */
 	.card-actions {
-		align-self: end;
+		align-self: start;
 		padding-top: var(--space-md);
 		display: flex;
 		flex-direction: column;
@@ -282,7 +285,7 @@
 		padding: 8px var(--space-lg);
 		border-radius: 4px;
 		font-family: var(--font-body);
-		font-size: 0.9375rem;
+		font-size: 0.875rem;
 		font-weight: 600;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
@@ -294,8 +297,10 @@
 			opacity 120ms ease-out;
 	}
 
+	/* One height for every primary button (Play, and the two-line Continue) */
 	.card-btn-primary {
 		width: 100%;
+		min-height: 60px;
 		background: linear-gradient(135deg, #831d98, #6d22c7);
 		border: 1px solid var(--color-cyber-magenta);
 		color: var(--color-brand-yellow);
@@ -306,9 +311,16 @@
 		opacity: 0.94;
 	}
 
+	/* Continue's second line: where the save stands, in sentence case */
+	.resume-btn {
+		flex-direction: column;
+		flex-wrap: nowrap;
+	}
+
 	.btn-detail {
-		font-weight: 500;
-		letter-spacing: 0.04em;
+		font-size: 0.875rem;
+		font-weight: 400;
+		letter-spacing: 0;
 		text-transform: none;
 		color: #fde68a;
 	}
@@ -338,7 +350,7 @@
 		border: none;
 		font-family: var(--font-body);
 		font-size: 0.875rem;
-		font-weight: 500;
+		font-weight: 400;
 		color: #ff8fa3;
 		text-decoration: underline;
 		text-underline-offset: 3px;
@@ -377,6 +389,13 @@
 
 	.remove-custom-btn:hover {
 		background: rgba(255, 77, 109, 0.2);
+	}
+
+	/* Short desktop windows (1280x720): a wider, shorter band, so Play sits clear of the fold */
+	@media (min-width: 601px) and (max-height: 820px) {
+		.key-art {
+			aspect-ratio: 21 / 9;
+		}
 	}
 
 	@media (max-width: 600px) {

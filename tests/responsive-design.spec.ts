@@ -100,7 +100,7 @@ test.describe('Responsive Design', () => {
 
 		// The controls themselves must also be at least 44x44
 		const controls = [
-			page.getByRole('button', { name: 'Toggle menu' }),
+			page.getByRole('button', { name: 'Menu', exact: true }),
 			firstCard.getByRole('button', { name: 'Play' })
 		];
 		for (const control of controls) {

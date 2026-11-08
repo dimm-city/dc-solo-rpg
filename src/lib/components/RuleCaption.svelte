@@ -1,11 +1,19 @@
 <script>
 	/**
-	 * RuleCaption - shows the current one-time rule caption above the table's title, in the same
-	 * column (GameScreen renders it inside ContextBackground).
+	 * RuleCaption - shows the current one-time rule caption, docked above the step button,
+	 * beside the action it explains (design polish DP-1-09). GameScreen renders it inside the
+	 * step anchor; it is placed absolutely above it, so it never covers the text column, the
+	 * hint line or the button, and its arrival moves nothing.
 	 *
 	 * `captions` is the useRuleCaptions() instance owned by GameScreen, which also announces
 	 * each caption through the game's single live region (after the result line), so this
-	 * region is not live itself. A covered caption is hidden; its countdown is paused.
+	 * region is not live itself. A covered caption is hidden; its countdown is paused. A tap or
+	 * Escape dismisses it.
+	 *
+	 * Its frame is the readout's (visual-layout-s-04): chamfered top-left and bottom-right
+	 * corners, a 1px border at the readout's 55% gradient and the same fill, so this secondary
+	 * help never outranks the readout. In the landscape action column it is the step button's
+	 * width.
 	 */
 	import { fade } from 'svelte/transition';
 	import { ANIMATION_DURATION } from '../constants/animations.js';
@@ -22,55 +30,67 @@
 
 <svelte:window onkeydown={onKeydown} />
 
-<div class="rule-caption-region">
-	{#key captions.current?.id}
-		{#if captions.current && !captions.paused}
-			<!-- svelte-ignore a11y_click_events_have_key_events -->
-			<!-- svelte-ignore a11y_no_static_element_interactions -->
-			<div
-				class="rule-caption"
-				data-testid="rule-caption"
-				transition:fade={{ duration: reduceMotion ? 0 : ANIMATION_DURATION.NORMAL }}
-				onclick={(event) => {
-					event.stopPropagation();
-					captions.dismiss();
-				}}
-			>
-				<span class="rule-label">RULE</span>
-				<span class="rule-text">{captions.current.text}</span>
-			</div>
-		{/if}
-	{/key}
-</div>
+{#key captions.current?.id}
+	{#if captions.current && !captions.paused}
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div
+			class="rule-caption"
+			data-testid="rule-caption"
+			transition:fade={{ duration: reduceMotion ? 0 : ANIMATION_DURATION.NORMAL }}
+			onclick={(event) => {
+				event.stopPropagation();
+				captions.dismiss();
+			}}
+		>
+			<span class="rule-frame" data-augmented-ui="tl-clip br-clip border" aria-hidden="true"></span>
+			<span class="rule-label">Rule</span>
+			<span class="rule-text">{captions.current.text}</span>
+		</div>
+	{/if}
+{/key}
 
 <style>
-	/* In the table's context column, above the card line and title (see ContextBackground):
-	   it pushes them rather than covering them (NV-02) */
-	.rule-caption-region {
-		display: flex;
-		justify-content: center;
-		width: 100%;
-		pointer-events: none;
-	}
-
+	/* Docked 12px above the step anchor (the hint line and the button), centred on it, and never
+	   wider than the step button (--cta-max), so on desktop it shares both of the button's edges */
 	.rule-caption {
-		margin-bottom: 0.75rem;
-		text-align: left;
-		pointer-events: auto;
-		cursor: pointer;
+		position: absolute;
+		bottom: calc(100% + 12px);
+		left: 0;
+		right: 0;
+		z-index: 2;
+		isolation: isolate;
 		box-sizing: border-box;
-		max-width: min(100%, 420px);
+		width: min(100%, var(--cta-max, 480px));
+		margin-inline: auto;
 		display: flex;
 		align-items: baseline;
 		gap: 10px;
 		padding: 8px 12px;
-		background: rgba(8, 8, 20, 0.92);
-		border: 1px solid transparent;
-		border-image: var(--frame-border, linear-gradient(135deg, #0ff, #f0f)) 1;
+		text-align: left;
+		pointer-events: auto;
+		cursor: pointer;
 		color: var(--color-text, #f2f2fa);
 		font-family: var(--font-body, 'Inter', system-ui, sans-serif);
 		font-size: 0.875rem;
 		line-height: 1.4;
+	}
+
+	/* The readout's frame (ContextBackground .readout-frame), behind the text */
+	.rule-frame {
+		--aug-border-all: 1px;
+		--aug-border-bg: linear-gradient(135deg, rgba(0, 255, 255, 0.55), rgba(217, 70, 239, 0.55));
+		--aug-tl: 8px;
+		--aug-br: 8px;
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		display: block;
+		background: linear-gradient(135deg, rgba(10, 10, 20, 0.9), rgba(15, 15, 25, 0.85));
+	}
+
+	.rule-text {
+		text-wrap: balance;
 	}
 
 	.rule-label {
@@ -78,6 +98,7 @@
 		font-family: var(--font-mono, 'Share Tech Mono', ui-monospace, monospace);
 		font-size: 0.75rem;
 		letter-spacing: 0.12em;
+		text-transform: uppercase;
 		color: var(--color-neon-cyan, #0ff);
 	}
 </style>
