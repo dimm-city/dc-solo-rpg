@@ -125,8 +125,9 @@ async function openFinalLog(page: Page) {
 	await page.getByTestId('game-over-final-log-button').click();
 	const sheet = page.locator('.journal-sheet.final');
 	await expect(sheet.getByTestId('journal-save-button')).toBeVisible();
-	// The sheet rises 8px over 200ms as it opens: let it settle before anything is measured
-	await page.waitForTimeout(300);
+	// The sheet rises 8px over 200ms as it opens, and Record ignores presses for its first
+	// 400ms (JournalEntry's OPEN_GUARD_MS): let both pass before anything is measured or pressed
+	await page.waitForTimeout(450);
 	return sheet;
 }
 

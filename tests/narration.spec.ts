@@ -188,10 +188,28 @@ test.describe('Read-aloud: the deal waits for the voice', () => {
 		await expect(line).toHaveClass(/waiting/);
 		await expect(line).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, 0)');
 
-		const ended = Date.now();
-		expect(await endUtterance(page)).toBe(true);
-		await expect(page.getByRole('dialog', { name: 'Card drawn' })).toBeVisible({ timeout: 5000 });
-		expect(Date.now() - ended).toBeLessThan(2000); // a beat, not another hold
+		// Timed in the page, frame by frame: a toBeVisible poll's back-off (…, 850ms, 1850ms) would
+		// round a card that came 1.1s after the voice up to about 1.9s
+		const dealt = await page.evaluate(
+			() =>
+				new Promise<{ ended: boolean; ms: number }>((resolve) => {
+					const ended = (window as unknown as { __tts: { end: () => boolean } }).__tts.end();
+					const t0 = performance.now();
+					const frame = () => {
+						if (document.querySelector('[role="dialog"][aria-label="Card drawn"]')) {
+							resolve({ ended, ms: performance.now() - t0 });
+						} else if (performance.now() - t0 > 5000) {
+							resolve({ ended, ms: Infinity });
+						} else requestAnimationFrame(frame);
+					};
+					requestAnimationFrame(frame);
+				})
+		);
+		expect(dealt.ended).toBe(true);
+		await expect(page.getByRole('dialog', { name: 'Card drawn' })).toBeVisible();
+		// The 1s deal beat (DEAL_BEAT) after the voice, not another 3s hold, and never sooner
+		expect(dealt.ms).toBeGreaterThanOrEqual(950);
+		expect(dealt.ms).toBeLessThan(2000);
 	});
 
 	test('a press during the reading deals at once', async ({ page }) => {
