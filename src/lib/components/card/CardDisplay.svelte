@@ -697,10 +697,11 @@
 		min-height: 24px;
 	}
 
-	/* The second index, upright (a rotated "7♠" only reads as a typo on a screen), and quieter */
+	/* The second index, upright (a rotated "7♠" only reads as a typo on a screen), and quieter
+	   by size, not opacity: at full colour it keeps 4.5:1 on the card face (visual-layout-v-02) */
 	.corner-index.mirrored {
 		margin-left: auto;
-		opacity: 0.6;
+		font-size: 1rem;
 	}
 
 	/* King count: lit skulls for the Kings already out; this card's skull ignites */
@@ -921,6 +922,10 @@
 
 		.corner-index {
 			font-size: 1rem;
+		}
+
+		.corner-index.mirrored {
+			font-size: 0.875rem;
 		}
 	}
 
