@@ -18,12 +18,17 @@
 	 * (phones in portrait, OWN-3: StatusDisplay) the frame alone is mirrored, its bevels facing
 	 * the board, and the ⋯ menu opens upward.
 	 *
+	 * The ⋯ menu is a menu button (visual-layout-s-03): opening it focuses its first item; the
+	 * arrow keys, Home and End move between the four items; Tab, Shift+Tab or Escape closes it
+	 * and puts focus back on ⋯, so nothing under the menu (the step button) takes focus while it
+	 * is open. Its fill is opaque.
+	 *
 	 * The AUTO toggle writes the same gameplay settings as before (playMode.js AUTO_PLAY_ON/OFF);
 	 * GameScreen watches them to arm auto-play.
 	 *
 	 * @component
 	 */
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { gameState } from '../../stores/gameStore.svelte.js';
 	import {
@@ -80,11 +85,65 @@
 		updateGameplaySettings(autoPlayEnabled ? AUTO_PLAY_OFF : AUTO_PLAY_ON);
 	}
 
+	const menuItems = () => [...(menuEl?.querySelectorAll('.game-menu-item') ?? [])];
+
+	/** Open the menu and focus one of its items: the first, or the last ('last') */
+	async function openMenu(focus = 'first') {
+		if (moreButton) menuPosition = menuPlacement(moreButton.getBoundingClientRect(), window);
+		menuOpen = true;
+		await tick();
+		const items = menuItems();
+		(focus === 'last' ? items.at(-1) : items[0])?.focus();
+	}
+
 	function toggleMenu() {
-		if (!menuOpen && moreButton) {
-			menuPosition = menuPlacement(moreButton.getBoundingClientRect(), window);
+		if (menuOpen) closeMenu();
+		else openMenu();
+	}
+
+	/** On ⋯: the down and up arrows open the menu on its first and last item */
+	function onMoreKeydown(event) {
+		if (menuOpen || (event.key !== 'ArrowDown' && event.key !== 'ArrowUp')) return;
+		event.preventDefault();
+		openMenu(event.key === 'ArrowUp' ? 'last' : 'first');
+	}
+
+	/** Inside the menu: the arrows, Home and End move between the items; Tab leaves to ⋯ */
+	function onMenuKeydown(event) {
+		const items = menuItems();
+		const index = items.indexOf(document.activeElement);
+		const move = {
+			ArrowDown: (index + 1) % items.length,
+			ArrowUp: (index - 1 + items.length) % items.length,
+			Home: 0,
+			End: items.length - 1
+		}[event.key];
+		if (move !== undefined) {
+			event.preventDefault();
+			items[move]?.focus();
+		} else if (event.key === 'Tab') {
+			event.preventDefault();
+			closeMenu({ restoreFocus: true });
 		}
-		menuOpen = !menuOpen;
+	}
+
+	/** Focus leaving the menu and ⋯ (a tap elsewhere) closes it */
+	function onMenuFocusOut(event) {
+		const next = event.relatedTarget;
+		if (next && (menuEl?.contains(next) || next === moreButton)) return;
+		if (next) closeMenu();
+	}
+
+	/** Svelte action: the menu's keyboard model (the menu is a group of buttons) */
+	function menuKeys(node) {
+		node.addEventListener('keydown', onMenuKeydown);
+		node.addEventListener('focusout', onMenuFocusOut);
+		return {
+			destroy() {
+				node.removeEventListener('keydown', onMenuKeydown);
+				node.removeEventListener('focusout', onMenuFocusOut);
+			}
+		};
 	}
 
 	/**
@@ -261,6 +320,7 @@
 				class="status-bar-button more-button phone-only"
 				class:active={autoPlayEnabled || audioEnabled}
 				onclick={toggleMenu}
+				onkeydown={onMoreKeydown}
 				aria-label="More game options"
 				aria-expanded={menuOpen}
 				aria-controls={MENU_ID}
@@ -274,8 +334,11 @@
 		<div
 			id={MENU_ID}
 			class="game-menu"
+			role="group"
+			aria-label="More game options"
 			bind:this={menuEl}
 			use:portal
+			use:menuKeys
 			style:top={menuPosition.top === undefined ? undefined : `${menuPosition.top}px`}
 			style:bottom={menuPosition.bottom === undefined ? undefined : `${menuPosition.bottom}px`}
 			style:right="{menuPosition.right}px"
@@ -529,7 +592,8 @@
 		z-index: 1500;
 		min-width: 220px;
 		padding: 4px;
-		background: rgba(8, 12, 22, 0.97);
+		/* Opaque: nothing on the board (the step button's glow) shows through */
+		background: rgb(8, 12, 22);
 		border: 1px solid rgba(0, 255, 255, 0.5);
 		border-radius: 6px;
 		box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
