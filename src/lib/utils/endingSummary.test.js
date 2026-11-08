@@ -113,7 +113,8 @@ describe('getRunRecap', () => {
 			cards: '3/52',
 			kings: '3/4',
 			aces: '2/4',
-			stability: '0/20'
+			stability: '0/20',
+			tokens: '8/10'
 		});
 	});
 
@@ -127,14 +128,14 @@ describe('getRunRecap', () => {
 			'Aces',
 			'Tokens'
 		]);
-		// Each spoken text starts with the tile's visible label
+		// The visible label names each tile, so the spoken value does not repeat it (game-copy-s-13)
 		expect(recap.map((r) => r.spoken)).toEqual([
-			'Stability 0 of 20',
-			'Kings 3 of 4',
-			'Rounds 6',
-			'Drawn 3 of 52 cards',
-			'Aces 2 of 4',
-			'Tokens 8 of 10 left'
+			'0 of 20',
+			'3 of 4',
+			'6',
+			'3 of 52 cards',
+			'2 of 4',
+			'8 of 10 left'
 		]);
 		const kings = recap.find((r) => r.key === 'kings');
 		expect([kings.n, kings.max]).toEqual([3, 4]);
@@ -170,8 +171,24 @@ describe('getRunRecap', () => {
 		expect(tiers({ ...state, acesRevealed: 1 }).aces).toBe('locked');
 	});
 
-	it('includes tokens only once Salvation was unlocked, out of the tokens the game started with', () => {
-		expect(getRunRecap(state).some((r) => r.key === 'tokens')).toBe(false);
+	it('always includes Tokens, locked when the Ace of Hearts was never found (game-copy-s-14)', () => {
+		const locked = getRunRecap(state);
+		expect(locked.map((r) => r.key)).toEqual([
+			'stability',
+			'kings',
+			'rounds',
+			'cards',
+			'aces',
+			'tokens'
+		]);
+		expect(locked.find((r) => r.key === 'tokens')).toMatchObject({
+			tier: 'locked',
+			value: '8/10',
+			spoken: 'locked, the Ace of Hearts never found'
+		});
+	});
+
+	it('counts tokens out of the tokens the game started with', () => {
 		const recap = getRunRecap({
 			...state,
 			aceOfHeartsRevealed: true,

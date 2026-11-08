@@ -3,9 +3,11 @@
 	 * RunRecap - the whole run in a few numbers, from real game state, on the Game Over
 	 * screen, read as the HUD (game-copy-s-09): its order (Stability, Kings | Rounds, Drawn |
 	 * Aces, Tokens), its labels, its n/max in its LED face, and each resource in its tier's
-	 * colours for the final value (tint, label, count). One row on wider screens; on phones two
-	 * rows of three, the HUD's two halves. (The final log shows the run as a timeline instead:
-	 * journal/GameTimeline.)
+	 * colours for the final value (tint, label, count). One row of six on wider screens; on
+	 * phones two rows of three, the HUD's two halves. Tokens are always there: when the Ace of
+	 * Hearts was never found, in the HUD's locked look, dimmed with a padlock (game-copy-s-14).
+	 * The visible label is each tile's only spoken name; the hidden text gives the value alone
+	 * (game-copy-s-13). (The final log shows the run as a timeline instead: journal/GameTimeline.)
 	 */
 	import { gameState } from '../stores/gameStore.svelte.js';
 	import { getRunRecap } from '../utils/endingSummary.js';
@@ -37,6 +39,18 @@
 						>{#if item.max !== undefined}<span class="slash">/</span><span
 								class="max"
 								class:lead-one={String(item.max).startsWith('1')}>{item.max}</span
+							>{/if}{#if item.tier === 'locked'}<svg
+								class="lock"
+								data-testid="recap-tokens-lock"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2.5"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								><rect width="18" height="11" x="3" y="11" rx="2" ry="2" /><path
+									d="M7 11V7a5 5 0 0 1 10 0v4"
+								/></svg
 							>{/if}</span
 					>
 					<span class="sr-only">{item.spoken}</span>
@@ -162,6 +176,16 @@
 	.stat[data-key='tokens'][data-tier='clear'] {
 		--tint-alpha: 0.12;
 	}
+	/* Never unlocked: the HUD's locked look, dimmed, no tint or glow, a padlock beside it */
+	.stat[data-key='tokens'][data-tier='locked'] {
+		--tint-alpha: 0;
+		--value-color: rgba(255, 255, 255, 0.6);
+		--label-color: rgba(255, 255, 255, 0.72);
+		--max-color: rgba(255, 255, 255, 0.5);
+	}
+	.stat[data-tier='locked'] .led-on {
+		text-shadow: none;
+	}
 	.stat[data-key='tokens'][data-tier='over'] {
 		--tint-color: #ff8a3d;
 		--tint-alpha: 0.08;
@@ -203,6 +227,7 @@
 	}
 
 	.value {
+		position: relative;
 		display: inline-flex;
 		align-items: baseline;
 		font-size: var(--value-size);
@@ -237,6 +262,17 @@
 		font-weight: 700;
 		font-size: max(12px, 0.6em);
 		line-height: 1;
+		color: var(--max-color, rgba(255, 255, 255, 0.6));
+	}
+
+	/* The padlock hangs right of the count, so the count stays centred with the other tiles' */
+	.lock {
+		position: absolute;
+		left: calc(100% + 0.25rem);
+		top: 50%;
+		width: max(12px, 0.6em);
+		height: max(12px, 0.6em);
+		transform: translateY(-50%);
 		color: rgba(255, 255, 255, 0.6);
 	}
 
@@ -250,7 +286,7 @@
 		font-family: var(--font-mono, 'Share Tech Mono', ui-monospace, monospace);
 		font-size: calc(max(12px, 0.6em) * 1.25);
 		line-height: 0;
-		color: rgba(255, 255, 255, 0.6);
+		color: var(--max-color, rgba(255, 255, 255, 0.6));
 	}
 
 	.sr-only {
