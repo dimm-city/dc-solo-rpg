@@ -1,10 +1,12 @@
 <script>
 	/**
-	 * SettingsModal - opens with what most players change (difficulty, play mode, rule tips);
-	 * every finer control (voice, read-aloud switches, auto-play timing) sits under Advanced.
+	 * SettingsModal - opens with what most players change (difficulty, play mode, rule tips),
+	 * then the GitHub repositories games are loaded from; every finer control (voice, read-aloud
+	 * switches, auto-play timing) sits under Advanced.
 	 */
 	import ContentModal from '../ContentModal.svelte';
 	import AudioSettings from './AudioSettings.svelte';
+	import GameSourcesSection from './GameSourcesSection.svelte';
 	import { getSettings, updateSettings } from '../../stores/settingsStore.svelte.js';
 	import {
 		getAudioSettings,
@@ -146,6 +148,8 @@
 			</div>
 		</div>
 	</section>
+
+	<GameSourcesSection />
 
 	<details class="settings-advanced">
 		<summary>

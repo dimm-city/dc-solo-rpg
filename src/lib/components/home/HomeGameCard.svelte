@@ -1,7 +1,8 @@
 <script>
 	/**
 	 * HomeGameCard - one game on the home screen: generated key art, title, the game's own
-	 * subtitle, a time estimate, and labelled actions pinned to the bottom of the card.
+	 * subtitle, a time estimate (with the repository for a game from a GitHub source), and
+	 * labelled actions pinned to the bottom of the card.
 	 *
 	 * Without a save: Play. With a save: Continue, a two-line button by design ("Continue" over
 	 * "Round 3 · 5 min ago"), New game (the page confirms the overwrite) and a small Delete save
@@ -59,7 +60,11 @@
 			<p class="game-subtitle">{subtitle}</p>
 			<p class="game-meta">
 				<span>{SESSION_ESTIMATE}</span>
-				{#if game.isCustom}
+				{#if game.source}
+					<span class="custom-badge source-badge" title="Loaded from GitHub">
+						{game.source.owner}/{game.source.repo}
+					</span>
+				{:else if game.isCustom}
 					<span class="custom-badge">Custom</span>
 				{/if}
 			</p>
@@ -116,7 +121,8 @@
 		</div>
 	</div>
 
-	{#if game.isCustom}
+	<!-- A game from a GitHub source goes when its repository is removed in Settings -->
+	{#if game.isCustom && !game.source}
 		<button
 			class="remove-custom-btn"
 			onclick={() => onremove(game)}
@@ -263,6 +269,16 @@
 		font-weight: 600;
 		letter-spacing: 0.08em;
 		color: #f0abfc;
+	}
+
+	/* The repository's own spelling, and no break inside the name */
+	.source-badge {
+		min-width: 0;
+		letter-spacing: 0.02em;
+		text-transform: none;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	/* Actions start at the top of their shared row, so every card's primary button (Play or

@@ -69,6 +69,8 @@ npm run prepublishOnly   # Pre-publish checks (runs automatically)
 
 - **`static/games/`** - The built-in games (`*.game.md`, plus a folder per game for its card art). The home loader finds them at build time (`src/routes/builtInGames.js`, an `import.meta.glob`), so adding a game is adding its file. There is no games index to generate or maintain.
 
+- **GitHub game sources**: players add public repositories in Settings (`components/settings/GameSourcesSection.svelte`). `stores/gameSources.svelte.js` keeps the list and each source's cached games in localStorage (`dc-solo-rpg-game-sources`), checks a source at most once an hour (`shouldRefresh`; `refreshGameSources()` runs on home load and from "Refresh now") and never drops cached games over a failed check. `services/githubGames.js` reads the `owner/repo[/folder][@branch]` string (or a github.com link) and does one check through GitHub's Contents API: the listing's ETag is sent back (304 = unchanged, free), only files with a new `sha` are downloaded, and a rate-limit 403 keeps the cache. A source game is an uploaded-game config (`isCustom: true`, so it plays at `/game/custom/[slug]`) plus `source: { id, owner, repo, branch, path, sha, url }`; its slug is the slugified source id, `--`, the file name. The home card shows the repository instead of the Custom badge. Creator docs: "Hosting Games on GitHub" in `docs/game-config.md`
+
 - **`docs/`** - Documentation for game creators
   - `game-config.md` - Type-based markdown format specification
   - `simplified-type-based-format.md` - Complete format guide with examples
@@ -383,6 +385,9 @@ resetRNG();
 - `src/lib/stores/gameActions.svelte.js` - All game actions and mutations
 - `src/lib/stores/gameInit.js` - Game initialization
 - `src/lib/stores/transitions.js` - State transition graph
+- `src/lib/stores/customGames.js` - Uploaded games (localStorage)
+- `src/lib/stores/gameSources.svelte.js` - GitHub game sources and their cached games
+- `src/lib/services/githubGames.js` - The source string and one check through GitHub's API
 
 ### Game Mechanics
 

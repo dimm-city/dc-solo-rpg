@@ -25,9 +25,10 @@
 		markSplashSeen,
 		setRuleTipsEnabled
 	} from '$lib/utils/instructionsStorage.js';
-	import { gameSlug, saveRoundLabel } from '$lib/utils/homeGames.js';
+	import { gameSlug, homeGameList, saveRoundLabel } from '$lib/utils/homeGames.js';
 	import { ANIMATION_DURATION } from '$lib/constants/animations.js';
 	import { getCustomGames, addCustomGame, removeCustomGame } from '$lib/stores/customGames.js';
+	import { getSourceGames, refreshGameSources } from '$lib/stores/gameSources.svelte.js';
 	import {
 		hasSavedGame,
 		getSaveMetadata,
@@ -119,9 +120,21 @@
 		else if (story !== null) showBrowseGames = true;
 
 		await loadGames();
+		gamesLoaded = true;
+
+		// Sources not checked for an hour are asked again, in the background; their games (and
+		// the cached ones meanwhile) are already in the list
+		refreshGameSources().catch((error) => console.error('Game sources refresh failed:', error));
 	});
 
 	onDestroy(() => clearTimeout(toastTimer));
+
+	/** A source's games arrived, or a source was added or removed in Settings: rebuild the list */
+	let gamesLoaded = false;
+	$effect(() => {
+		getSourceGames();
+		if (gamesLoaded) loadGames();
+	});
 
 	async function openLatestStory() {
 		try {
@@ -146,9 +159,7 @@
 	 * it for Continue once its save has been read.
 	 */
 	async function loadGames() {
-		const games = [...getCustomGames(), ...data.games].sort((a, b) =>
-			a.title.localeCompare(b.title)
-		);
+		const games = homeGameList(getCustomGames(), getSourceGames(), data.games);
 		gameSaveData = await readSaveData(games);
 		allGames = games;
 	}
