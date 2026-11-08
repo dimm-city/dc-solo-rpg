@@ -340,7 +340,8 @@ p {
 
 strong,
 b {
-	font-weight: 700;
+	/* Inter at two weights only, 400 and 600 (VT-1-12) */
+	font-weight: 600;
 	color: var(--color-text-primary);
 }
 
@@ -506,7 +507,7 @@ label {
 	display: block;
 	font-family: var(--font-body);
 	font-size: var(--text-sm);
-	font-weight: 700;
+	font-weight: 600;
 	color: #ffffff;
 	/* FIX #4: WCAG AA */
 	text-transform: uppercase;
