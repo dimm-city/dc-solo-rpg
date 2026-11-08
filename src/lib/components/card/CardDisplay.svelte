@@ -9,19 +9,22 @@
 	 *
 	 * @component
 	 */
-	import { getCardName, TYPE_LABELS } from './cardInfo.js';
+	import { getCardName, splitNote, TYPE_LABELS } from './cardInfo.js';
+	import SuitText from './SuitText.svelte';
 
 	let {
 		card = null,
 		animationStage = 'idle',
 		onDismiss = () => {},
 		clickable = true,
-		/** One-line mechanic note for the footer, e.g. "King · 3 of 4" */
+		/** Mechanic note for the footer, e.g. "3 of 4"; it breaks only at a ' · ' */
 		note = '',
-		/** What a special card does, e.g. "No Stability check this time" */
+		/** What a special card does, e.g. "No Stability check for this Ace" */
 		modifierNote = '',
 		/** 1-4 on a King: lights that many skull pips */
 		kingNumber = 0,
+		/** What continuing does, for the hint: 'continue', 'face the end' or 'escape' */
+		continueAction = 'continue',
 		/** Auto-play hold, 0 to 1, or null when auto-play is not holding this card */
 		holdProgress = null,
 		/** Called with true while the player is reading (pointer, focus or scroll), false after */
@@ -37,6 +40,8 @@
 	// Corner index text, e.g. "K♠" or "10♥"
 	let cornerIndex = $derived(card ? `${card.card}${SUIT_GLYPHS[card.suit] ?? ''}` : '');
 	let cardName = $derived(getCardName(card));
+	// Each clause stays whole on a line; a line breaks only after a separator
+	let noteClauses = $derived(splitNote(note));
 	let canDismiss = $derived(clickable && animationStage === 'revealed');
 
 	// Keyboard focus lands on the card once it can be dismissed (Enter/Space continue).
@@ -197,7 +202,7 @@
 		<div class="byte-shell" data-augmented-ui="tl-clip tr-clip br-clip bl-clip border">
 			<div class="byte-content">
 				<div class="card-head">
-					<span class="corner-index" aria-hidden="true">{cornerIndex}</span>
+					<span class="corner-index" aria-hidden="true"><SuitText text={cornerIndex} /></span>
 					<span class="sr-only" id="{uid}-name">{cardName}:</span>
 					{#if TYPE_LABELS[card.type]}
 						<div class="card-type-badge" data-type={card.type} aria-hidden="true">
@@ -296,18 +301,26 @@
 									{/each}
 								</span>
 							{/if}
-							<span>{note}</span>
+							<span class="note-text">
+								{#each noteClauses as clause, index (index)}
+									<span class="clause"
+										>{clause}{#if index < noteClauses.length - 1}&nbsp;·{/if}</span
+									>
+								{/each}
+							</span>
 						</p>
 					{/if}
 					<div class="foot-row">
 						{#if clickable}
 							<span class="tap-hint" aria-hidden="true">
-								<span class="hint-touch">Tap to continue</span>
-								<span class="hint-pointer">Click to continue</span>
+								<span class="hint-touch">Tap to {continueAction}</span>
+								<span class="hint-pointer">Click to {continueAction}</span>
 							</span>
-							<span class="sr-only" id="{uid}-hint">Press Enter to continue.</span>
+							<span class="sr-only" id="{uid}-hint">Press Enter to {continueAction}.</span>
 						{/if}
-						<span class="corner-index inverted" aria-hidden="true">{cornerIndex}</span>
+						<span class="corner-index mirrored" aria-hidden="true"
+							><SuitText text={cornerIndex} /></span
+						>
 					</div>
 				</div>
 			</div>
@@ -505,12 +518,12 @@
 	.byte-data {
 		flex: none;
 		font-family: var(--font-body, 'Inter', sans-serif);
-		font-size: 1.375rem;
+		font-size: 1.25rem;
 		line-height: 1.3;
 		color: #ffffff;
 		margin: 0;
 		font-weight: 600;
-		text-wrap: balance;
+		text-wrap: pretty;
 	}
 
 	/* What a special card does, on its face */
@@ -594,6 +607,7 @@
 		margin: 0;
 		font-weight: 400;
 		white-space: pre-line;
+		text-wrap: pretty;
 	}
 
 	/* Chevron that says "more below"; opacity only */
@@ -659,12 +673,21 @@
 		padding-top: var(--space-sm, 0.5rem);
 		border-top: 1px solid color-mix(in srgb, var(--card-accent) 35%, transparent);
 		font-family: var(--font-body, 'Inter', sans-serif);
-		font-size: 0.8125rem;
+		font-size: 0.75rem;
 		font-weight: 600;
-		line-height: 1.4;
+		line-height: 1.5;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		color: var(--card-accent);
+	}
+
+	/* One clause of the note, kept whole: a line breaks only after a ' ·', which stays at the
+	   line end. A clause wider than the card (Easy's fourth Ace on a phone) wraps inside
+	   itself, balanced, rather than overflow. */
+	.clause {
+		display: inline-block;
+		max-width: 100%;
+		text-wrap: balance;
 	}
 
 	.foot-row {
@@ -674,9 +697,10 @@
 		min-height: 24px;
 	}
 
-	.corner-index.inverted {
-		transform: rotate(180deg);
+	/* The second index, upright (a rotated "7♠" only reads as a typo on a screen), and quieter */
+	.corner-index.mirrored {
 		margin-left: auto;
+		opacity: 0.6;
 	}
 
 	/* King count: lit skulls for the Kings already out; this card's skull ignites */
@@ -856,12 +880,8 @@
 			gap: var(--space-sm, 0.75rem);
 		}
 
-		.byte-data {
-			font-size: 1.25rem;
-		}
-
 		.byte-story {
-			font-size: 1.0625rem;
+			font-size: 1rem;
 		}
 	}
 
@@ -892,7 +912,7 @@
 
 		.modifier-note {
 			padding: 0.25rem var(--space-sm, 0.5rem);
-			font-size: 0.9375rem;
+			font-size: 0.875rem;
 		}
 
 		.mechanic-note {

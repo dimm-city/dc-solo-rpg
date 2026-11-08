@@ -194,7 +194,7 @@ test.describe('Card overlay', () => {
 	test('a King counts the Kings out, including itself', async ({ page }) => {
 		const card = await dealCards(page, ['K:clubs'], 'g.kingsRevealed = 2;');
 
-		await expect(card.getByTestId('card-mechanic')).toHaveText('King · 3 of 4');
+		await expect(card.getByTestId('card-mechanic')).toHaveText('3 of 4');
 	});
 
 	test('a skip-damage card says so on its face, and no Stability check follows', async ({
@@ -206,7 +206,7 @@ test.describe('Card overlay', () => {
 			'g.aceOfHeartsRevealed = false; g.acesRevealed = 0;'
 		);
 
-		await expect(card.getByTestId('card-modifier')).toHaveText('No Stability check this time');
+		await expect(card.getByTestId('card-modifier')).toHaveText('No Stability check for this Ace');
 		await expect(card.getByTestId('card-mechanic')).not.toContainText('Stability check');
 
 		await card.press('Enter');

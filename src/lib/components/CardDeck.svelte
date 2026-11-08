@@ -15,6 +15,7 @@
 	import {
 		endsGameOnConfirm,
 		getCardHoldMs,
+		getContinueAction,
 		getKingNumber,
 		getMechanicNote,
 		getModifierNote,
@@ -43,6 +44,7 @@
 	const note = $derived(getMechanicNote(card, gameState));
 	const modifierNote = $derived(getModifierNote(card, gameState));
 	const kingNumber = $derived(getKingNumber(card, gameState));
+	const continueAction = $derived(getContinueAction(card, gameState));
 
 	/**
 	 * Draw a card and show it: the face rises with all its text present.
@@ -227,6 +229,7 @@
 		{note}
 		{modifierNote}
 		{kingNumber}
+		{continueAction}
 		{holdProgress}
 		{onReadingChange}
 		riseMs={RISE_MS}
