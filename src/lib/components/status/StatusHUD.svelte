@@ -66,8 +66,11 @@
 		   height, and the value row takes what the label and the foot leave, so the labels,
 		   the values and the bottom line each sit on one line across the row */
 		--hud-foot: 16px;
-		--hud-pad-top: 4px;
-		--hud-pad-bottom: 6px;
+		--hud-pad-top: 3px;
+		--hud-pad-bottom: 3px;
+		/* The value sits this far above the foot row, which leaves at least as much again
+		   between the label and the value (VT-1-10: 4px, 2px in landscape) */
+		--value-gap: 4px;
 		/* The row's side padding lives in the outer cells, so their tints run frame to frame */
 		--hud-row-pad: 0.5rem;
 		/* The mirrored tracks of each half: outer, icon count, middle */
@@ -200,6 +203,13 @@
 		min-width: 0;
 	}
 
+	/* The value row: the number sits a fixed gap above the foot row, so every tile's value is
+	   on one baseline and the gaps to the label and the foot are the same in every tile */
+	:global(.status-hud .hud-readout > .hud-value) {
+		align-self: end;
+		margin-bottom: var(--value-gap);
+	}
+
 	/* ============================================
 	   THE NUMBERS (DP-1-01): the seven-segment face in every tile. The lit digits sit over
 	   faint unlit "8"s (a fixed digit field, so a value never shifts as it changes), then a
@@ -328,6 +338,9 @@
 			--aug-tl: 8px;
 			--aug-br: 8px;
 			--hud-foot: 12px;
+			--hud-pad-top: 4px;
+			--hud-pad-bottom: 6px;
+			--value-gap: 5px;
 			--hud-row-pad: 0.125rem;
 			--value-size: 1.125rem;
 			--max-size: 0.6875rem;
@@ -371,8 +384,9 @@
 		.status-hud {
 			--hud-height: 52px;
 			--hud-foot: 14px;
-			--hud-pad-top: 3px;
-			--hud-pad-bottom: 4px;
+			--hud-pad-top: 1.5px;
+			--hud-pad-bottom: 3px;
+			--value-gap: 2px;
 			--value-size: 1rem;
 			--max-size: 0.625rem;
 		}
