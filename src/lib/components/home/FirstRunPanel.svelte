@@ -87,7 +87,8 @@
 		justify-content: center;
 		gap: 2px;
 		min-height: 56px;
-		padding: 10px var(--space-lg);
+		/* 16px sides: the Play subtitle fits one line at 360px (VT-1-14) */
+		padding: 10px var(--space-md);
 		border-radius: 4px;
 		font-family: var(--font-body);
 		cursor: pointer;
@@ -115,8 +116,11 @@
 		text-transform: uppercase;
 	}
 
+	/* Narrower than 360px it wraps, balanced: never one word on a line of its own */
 	.play-detail {
 		font-size: 0.875rem;
+		text-wrap: balance;
+		text-align: center;
 		font-weight: 400;
 		color: #fde68a;
 	}
