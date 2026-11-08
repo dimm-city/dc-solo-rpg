@@ -139,9 +139,11 @@
 	.tl-event[data-kind='salvation'] {
 		--event-accent: var(--color-neon-cyan, #0ff);
 	}
+	/* No lone word on the ending's last line ("…was / revealed."): VT-1-14 */
 	.tl-event[data-kind='end'] {
 		--event-accent: var(--color-danger, #ff4d6d);
 		padding-top: var(--space-xs);
+		text-wrap: pretty;
 	}
 	.tl-event[data-kind='end'] .tl-label {
 		font-family: var(--font-body, 'Inter', sans-serif);
