@@ -51,7 +51,8 @@
 {/key}
 
 <style>
-	/* Docked 12px above the step anchor (the hint line and the button), centred on it */
+	/* Docked 12px above the step anchor (the hint line and the button), centred on it, and never
+	   wider than the step button (--cta-max), so on desktop it shares both of the button's edges */
 	.rule-caption {
 		position: absolute;
 		bottom: calc(100% + 12px);
@@ -60,7 +61,7 @@
 		z-index: 2;
 		isolation: isolate;
 		box-sizing: border-box;
-		width: min(100%, 420px);
+		width: min(100%, var(--cta-max, 480px));
 		margin-inline: auto;
 		display: flex;
 		align-items: baseline;
@@ -99,12 +100,5 @@
 		letter-spacing: 0.12em;
 		text-transform: uppercase;
 		color: var(--color-neon-cyan, #0ff);
-	}
-
-	/* Landscape phones: the width of the action column, edge to edge with the step button */
-	@media (max-height: 500px) and (orientation: landscape) {
-		.rule-caption {
-			width: 100%;
-		}
 	}
 </style>
