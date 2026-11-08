@@ -391,11 +391,15 @@
 		}
 	}
 
-	/* Landscape phones: the title shares row 1 with the back and AI buttons, on one line, so the
-	   round's cards and the first lines of the entry show above the Previous / Next bar */
+	/* Landscape phones: two short rows. The title, on one line beside the back button (an
+	   ellipsis past that, the full title in its tooltip); the outcome line with the AI button.
+	   The round's cards and the first lines of the entry then show above the Previous / Next
+	   bar. (The AI button sits on the meta row so a short title such as "Future Lost" is never
+	   cut.) */
 	@media (max-height: 500px) {
 		.story-header {
 			grid-template-columns: auto minmax(0, 1fr) auto;
+			align-items: center;
 			padding-top: 12px;
 			gap: 4px 16px;
 		}
@@ -406,20 +410,22 @@
 		}
 
 		.game-title {
-			grid-area: 1 / 2;
+			grid-area: 1 / 2 / 2 / 4;
 			font-size: 1.75rem;
 			white-space: nowrap;
 			overflow: hidden;
 			text-overflow: ellipsis;
 			overflow-wrap: normal;
+			/* A clipped glow reads as a box: none on one line */
+			text-shadow: none;
 		}
 
 		.header-ai {
-			grid-area: 1 / 3;
+			grid-area: 2 / 3;
 		}
 
 		.story-meta {
-			grid-area: 2 / 2 / 3 / 4;
+			grid-area: 2 / 2;
 		}
 
 		.reader {

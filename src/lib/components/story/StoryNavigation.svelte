@@ -127,6 +127,7 @@
 
 	.round-indicator strong {
 		font-size: 1.125rem;
+		font-weight: 600;
 		color: #fff;
 	}
 

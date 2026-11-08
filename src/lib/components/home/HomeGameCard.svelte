@@ -265,9 +265,10 @@
 		color: #f0abfc;
 	}
 
-	/* Actions sit at the bottom of their row */
+	/* Actions start at the top of their shared row, so every card's primary button (Play or
+	   Continue) sits on the same line */
 	.card-actions {
-		align-self: end;
+		align-self: start;
 		padding-top: var(--space-md);
 		display: flex;
 		flex-direction: column;

@@ -28,14 +28,11 @@
 							<span class="tl-clause"
 								><span class="tl-label"><SuitText text={event.label} /></span
 								>{#if parts.length}&nbsp;<span class="tl-sep">·</span>{/if}</span
-							>
-							{#each parts as part, p (p)}
-								<span class="tl-clause"
+							>{parts.length ? ' ' : ''}{#each parts as part, p (p)}<span class="tl-clause"
 									><SuitText text={part} />{#if p < parts.length - 1}&nbsp;<span class="tl-sep"
 											>·</span
 										>{/if}</span
-								>
-							{/each}
+								>{p < parts.length - 1 ? ' ' : ''}{/each}
 						</li>
 					{/each}
 				</ul>

@@ -504,6 +504,11 @@
 			min-height: 0;
 			padding: var(--space-sm, 0.5rem) var(--space-lg, 1.5rem);
 		}
+
+		.content-body {
+			padding-top: var(--space-md, 1rem);
+			padding-bottom: var(--space-md, 1rem);
+		}
 	}
 
 	@media (prefers-reduced-motion: reduce) {

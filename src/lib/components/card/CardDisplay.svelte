@@ -305,7 +305,7 @@
 								{#each noteClauses as clause, index (index)}
 									<span class="clause"
 										>{clause}{#if index < noteClauses.length - 1}&nbsp;·{/if}</span
-									>
+									>{index < noteClauses.length - 1 ? ' ' : ''}
 								{/each}
 							</span>
 						</p>

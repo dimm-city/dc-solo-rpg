@@ -185,7 +185,7 @@
 			{#each statusClauses as clause, index (index)}
 				<span class="clause"
 					>{clause}{#if index < statusClauses.length - 1}&nbsp;·{/if}</span
-				>
+				>{index < statusClauses.length - 1 ? ' ' : ''}
 			{/each}
 		</p>
 	</header>
@@ -987,6 +987,30 @@
 
 		.journal-sheet.has-log .writing {
 			min-height: 140px;
+		}
+	}
+
+	/* Landscape phones, after the final entry: the three actions on one row and a smaller
+	   epitaph, so the signature is never cut off by the actions */
+	@media (max-height: 500px) and (orientation: landscape) {
+		.final-actions {
+			flex-direction: row;
+			justify-content: center;
+			gap: var(--space-md);
+		}
+
+		.epitaph {
+			gap: var(--space-sm);
+		}
+
+		.epitaph blockquote {
+			padding: var(--space-xs) var(--space-md);
+			font-size: 1.125rem;
+			line-height: 1.6;
+		}
+
+		.epitaph-by {
+			padding-left: var(--space-md);
 		}
 	}
 </style>
