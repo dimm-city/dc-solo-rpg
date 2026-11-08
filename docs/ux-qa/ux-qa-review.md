@@ -1904,6 +1904,28 @@ QA and integration of the sign-off fixes and the owner's timing items, from `0ea
   removed; their commits are on origin. The sign-off reviews are saved in
   `docs/ux-qa/design-polish/v3/`.
 
+### stage-3
+
+QA and integration of the second sign-off's fixes, at `f642635` on
+`claude/vibrant-curie-w9bn88`.
+
+- **Built.** The intro's Begin button is the step button, so the main action keeps one box from
+  the intro to round 1. Settings and Dice theme opened from the ⋯ menu take focus, and focus goes
+  back to ⋯ when they close. The background motes sit behind every page's content. Body copy has
+  no lone last words. The journal's round list shows the "more below" cue. The landscape journal
+  and final log keep their column labels. Copy: a returned King's count reads "Kings 0 of 4",
+  the Tokens announcement reads label first, the Game Over recap reads as the HUD does, and the
+  play mode help says "instructions" and "countdown".
+- **Checks.** Unit tests: 66 files, 1086 passed, 1 skipped (the old Easy-difficulty skip).
+  ESLint and Prettier: clean. `npm run check`: 0 errors, 0 warnings. `npm run build`: passes,
+  and publint says "All good".
+- **Playwright.** Full suite on Desktop Chrome, Mobile Chrome and Tablet: 545 passed, 7 skipped
+  (the same project-conditional skips as stage-1), 0 failed, 0 flaky, in 24.2 minutes.
+- **Found.** No failures, so no fixes were needed at this stage.
+- **Cleaned up.** The `design/v3-board-3` and `design/v3-surfaces-3` worktrees and branches are
+  removed; their commits are on origin. The second sign-off reviews are saved in
+  `docs/ux-qa/design-polish/v3/`, and the first ones are kept as `*.signoff1.md`.
+
 ## Recommendations
 
 ### Earlier reviews: what is fixed, open, or fixed badly
