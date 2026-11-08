@@ -51,8 +51,10 @@ describe('Card modifiers', () => {
 			gameState.deck = [narrative('skip-damage')];
 			drawCard();
 			confirmCard();
-			expect(gameState.status).toBe('No Stability check this time');
-			expect(gameState.lastCard.modifierResult).toBe('No Stability check this time');
+			// Past tense, named by its card (DP-1-08)
+			expect(gameState.status).toBe('A♣ skipped its Stability check');
+			expect(gameState.lastCard.modifierResult).toBe('A♣ skipped its Stability check');
+			expect(gameState.status).not.toMatch(/this time/);
 		});
 
 		it('plain Narrative still triggers a failure check', () => {
@@ -84,7 +86,7 @@ describe('Card modifiers', () => {
 			expect(gameState.kingOfSpades).toBe(true);
 			expect(gameState.deck).toHaveLength(3);
 			expect(gameState.deck[0]).toEqual(king('hearts'));
-			expect(gameState.status).toBe('King of Hearts returns to the deck · 1 of 4');
+			expect(gameState.status).toBe('K♥ went back into the deck · 1 of 4 Kings out');
 			expect(gameState.lastCard.modifierResult).toBe(gameState.status);
 			expect(gameState.acesRevealed).toBe(1);
 			expect(gameState.state).toBe('failureCheck');
@@ -97,7 +99,7 @@ describe('Card modifiers', () => {
 
 			expect(gameState.kingsRevealed).toBe(0);
 			expect(gameState.deck).toHaveLength(1);
-			expect(gameState.status).toBe('No King to return');
+			expect(gameState.status).toBe('No King was out to return');
 			expect(gameState.acesRevealed).toBe(1);
 		});
 
