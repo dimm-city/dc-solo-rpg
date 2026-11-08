@@ -47,7 +47,7 @@
 	.final-log-title {
 		margin: 0;
 		font-family: var(--font-body);
-		font-size: 0.8125rem;
+		font-size: 0.75rem;
 		font-weight: 600;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
@@ -65,7 +65,7 @@
 
 	.voice-label {
 		margin: 0 0 8px;
-		font-size: 0.8125rem;
+		font-size: 0.75rem;
 		font-weight: 600;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
@@ -74,7 +74,7 @@
 
 	@media (max-width: 640px) {
 		.final-log-text {
-			font-size: 1.0625rem;
+			font-size: 1rem;
 		}
 	}
 </style>

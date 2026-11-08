@@ -59,7 +59,7 @@
 		padding: 12px 0 0;
 		border-top: 1px solid rgba(255, 255, 255, 0.12);
 		font-family: var(--font-body);
-		font-size: 0.9375rem;
+		font-size: 0.875rem;
 	}
 
 	.stat {
@@ -74,7 +74,7 @@
 
 	dd {
 		margin: 0;
-		font-weight: 700;
+		font-weight: 600;
 		font-variant-numeric: tabular-nums;
 		color: #e6edf5;
 	}
