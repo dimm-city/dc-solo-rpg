@@ -42,6 +42,9 @@
 	let hasText = $derived(!!round?.journalEntry?.text);
 	let hasAudio = $derived(!!round?.journalEntry?.audio);
 
+	/** Pictures that failed to load, by URL: a broken image shows no frame */
+	let brokenArt = $state({});
+
 	function toggle(index) {
 		openCard = openCard === index ? null : index;
 	}
@@ -86,6 +89,20 @@
 							<span class="card-panel-name">{cardName(card)}</span>
 							<span class="card-panel-type">{cardTypeLabel(card.type)}</span>
 						</p>
+						{#if card.image?.src && !brokenArt[card.image.src]}
+							<figure
+								class="card-panel-art"
+								data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
+							>
+								<img
+									src={card.image.src}
+									alt={card.image.alt ?? ''}
+									loading="lazy"
+									decoding="async"
+									onerror={() => (brokenArt[card.image.src] = true)}
+								/>
+							</figure>
+						{/if}
 						{#if card.description}
 							<p class="card-panel-desc">{card.description}</p>
 						{/if}
@@ -272,6 +289,30 @@
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		color: var(--color-neon-cyan);
+	}
+
+	/* The card's picture, small: a wide thumbnail framed like the card face */
+	.card-panel-art {
+		--aug-border-all: 1px;
+		--aug-border-bg: color-mix(in srgb, var(--color-neon-cyan) 45%, transparent);
+		--aug-tl: var(--aug-clip-xs, 8px);
+		--aug-tr: var(--aug-clip-xs, 8px);
+		--aug-br: var(--aug-clip-xs, 8px);
+		--aug-bl: var(--aug-clip-xs, 8px);
+
+		position: relative;
+		width: min(100%, 20rem);
+		aspect-ratio: 2 / 1;
+		margin: 0 0 12px;
+		overflow: hidden;
+		background: color-mix(in srgb, var(--color-neon-cyan) 8%, transparent);
+	}
+
+	.card-panel-art img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
 	}
 
 	.card-panel-desc {

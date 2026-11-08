@@ -76,11 +76,20 @@
 		onReadingChange(pointerOver || focusInside || scrolling);
 	});
 
-	// A new card starts with nobody reading it
+	// Card art: the frame is there before the picture arrives, the picture fades in, and a
+	// broken image hides the frame (no broken-image icon on the card face)
+	let artSrc = $derived(card?.image?.src ?? '');
+	let artLoaded = $state(false);
+	let artFailed = $state(false);
+	let showArt = $derived(!!artSrc && !artFailed);
+
+	// A new card starts with nobody reading it, and its art not yet loaded
 	$effect(() => {
 		if (animationStage === 'materializing') {
 			pointerOver = false;
 			moveOrigin = null;
+			artLoaded = false;
+			artFailed = false;
 		}
 	});
 
@@ -193,7 +202,13 @@
 	tabindex={canDismiss ? '0' : '-1'}
 	aria-labelledby={canDismiss ? `${uid}-name ${uid}-title` : undefined}
 	aria-describedby={canDismiss
-		? [modifierNote && `${uid}-mod`, `${uid}-story`, note && `${uid}-note`, `${uid}-hint`]
+		? [
+				modifierNote && `${uid}-mod`,
+				showArt && card.image.alt && `${uid}-art`,
+				`${uid}-story`,
+				note && `${uid}-note`,
+				`${uid}-hint`
+			]
 				.filter(Boolean)
 				.join(' ')
 		: undefined}
@@ -258,8 +273,22 @@
 					</p>
 				{/if}
 
-				<!-- Only the story scrolls; frame, header, headline and footer stay put -->
+				<!-- Only the story scrolls; frame, header, headline, art and footer stay put -->
 				<div class="story-wrap">
+					{#if showArt}
+						<!-- The author's picture, framed like the card; its alt text is read with the story -->
+						<figure class="card-art" data-augmented-ui="tl-clip tr-clip br-clip bl-clip border">
+							<img
+								id="{uid}-art"
+								src={artSrc}
+								alt={card.image.alt ?? ''}
+								decoding="async"
+								class:loaded={artLoaded}
+								onload={() => (artLoaded = true)}
+								onerror={() => (artFailed = true)}
+							/>
+						</figure>
+					{/if}
 					<!-- Focusable so keyboard users can scroll a long story -->
 					<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 					<div
@@ -556,12 +585,51 @@
 		stroke-linejoin: round;
 	}
 
-	/* The story: the only part of the card that scrolls */
+	/* The story: the only part of the card that scrolls. The art, when the card has one, stands
+	   above it and stays put. */
 	.story-wrap {
 		position: relative;
 		flex: 1 1 auto;
 		min-height: 0;
 		display: flex;
+		flex-direction: column;
+		gap: var(--space-md, 1rem);
+	}
+
+	/* Card art: a wide band framed like the card (the same clipped corners, a hairline in the
+	   type's accent), never taller than a quarter of the screen so the story keeps its room.
+	   The picture covers the frame, and melts into the panel at its foot. */
+	.card-art {
+		--aug-border-all: 1px;
+		--aug-border-bg: color-mix(in srgb, var(--card-accent) 45%, transparent);
+		--aug-tl: var(--aug-clip-xs, 8px);
+		--aug-tr: var(--aug-clip-xs, 8px);
+		--aug-br: var(--aug-clip-xs, 8px);
+		--aug-bl: var(--aug-clip-xs, 8px);
+
+		flex: none;
+		position: relative;
+		margin: 0;
+		width: 100%;
+		aspect-ratio: 2 / 1;
+		max-height: 25dvh;
+		overflow: hidden;
+		background: color-mix(in srgb, var(--card-accent) 8%, transparent);
+	}
+
+	.card-art img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		-webkit-mask-image: linear-gradient(to bottom, #000 60%, rgba(0, 0, 0, 0.55));
+		mask-image: linear-gradient(to bottom, #000 60%, rgba(0, 0, 0, 0.55));
+		opacity: 0;
+		transition: opacity var(--dur-enter, 200ms) var(--ease-enter, ease-out);
+	}
+
+	.card-art img.loaded {
+		opacity: 1;
 	}
 
 	.story-scroll {
@@ -881,7 +949,8 @@
 			padding: var(--space-md, 1rem);
 		}
 
-		.byte-content {
+		.byte-content,
+		.story-wrap {
 			gap: var(--space-sm, 0.75rem);
 		}
 
@@ -913,6 +982,20 @@
 		.byte-story {
 			font-size: 1rem;
 			line-height: 1.5;
+		}
+
+		/* No height to spare: the art stands beside the story instead of above it */
+		.story-wrap {
+			flex-direction: row;
+			gap: var(--space-md, 1rem);
+		}
+
+		.card-art {
+			width: 38%;
+			max-width: 16rem;
+			aspect-ratio: auto;
+			max-height: none;
+			align-self: stretch;
 		}
 
 		.modifier-note {
@@ -951,6 +1034,7 @@
 
 		.tap-hint,
 		.more-cue,
+		.card-art img,
 		.byte-container.doom .story-wrap,
 		.byte-container.doom .foot-row {
 			transition: none;

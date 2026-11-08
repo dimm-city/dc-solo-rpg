@@ -129,6 +129,25 @@ The Primary Success card inherently has dual behavior (activates salvation count
 
 ---
 
+## Card Images (Optional)
+
+Any card can carry one picture: a markdown image on a line of its own, anywhere in the card body. It shows on the card face, framed above the story (beside it on a landscape phone), and small in Story mode's card panel. It is left out of the story text and the read-aloud voice, and the next cards' pictures are fetched ahead of their draw. Future Lost carries pictures on its Salvation card, Kings and Aces (`static/games/future-lost/`).
+
+```markdown
+### Event
+
+**You discover a hidden stash of resources**
+
+![Sealed crates behind a false wall](art/stash.jpg)
+
+Behind a false wall in an abandoned building, you find a prepper's cache...
+```
+
+- **Alt text**: the words in `[...]` are what a screen reader says for the picture. Empty (`![](art/stash.jpg)`) means decorative
+- **Paths**: a relative path (`art/stash.jpg`) is taken from beside the game file, as in a markdown preview, when the app knows the file's location (the games in `static/games/`, or `parseGameFile(markdown, { baseUrl })`). An uploaded game is one file on its own, so use full `https://` URLs there
+- **Shape and size**: the card shows a wide (2:1) crop of the picture's middle, so keep the subject central. Keep each file small, a few hundred KB at most: a deck can have 52 of them
+- **Limits**: `http(s)` URLs and paths only (no `data:` URIs), and one image per card. A picture that fails to load is simply not shown
+
 ## Format Example
 
 ```markdown

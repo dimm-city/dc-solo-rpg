@@ -67,6 +67,8 @@ npm run prepublishOnly   # Pre-publish checks (runs automatically)
   - Demo pages and examples
   - Not included in published package
 
+- **`static/games/`** - The built-in games (`*.game.md`, plus a folder per game for its card art). The home loader finds them at build time (`src/routes/builtInGames.js`, an `import.meta.glob`), so adding a game is adding its file. There is no games index to generate or maintain.
+
 - **`docs/`** - Documentation for game creators
   - `game-config.md` - Type-based markdown format specification
   - `simplified-type-based-format.md` - Complete format guide with examples
@@ -168,6 +170,7 @@ lose-message: Defeat message
 - Writers focus on **card types**, not card identifiers
 - System auto-assigns cards to the 52-card deck
 - Optional special modifiers: `skip-damage`, `return-king`
+- Optional card image: one markdown image line (`![alt](art/x.jpg)`) in the card body; shown framed above the story on the card face (`card/CardDisplay.svelte`) and as a thumbnail in story mode (`StoryRound.svelte`). Relative paths resolve against the game file's URL when `parseGameFile` is given `{ baseUrl }`; the next cards' pictures are fetched ahead (`GameScreen.svelte`, `utils/preloadImages.js`) and auto-play holds a card with a picture 1.5s longer
 - Parser: `src/lib/parsers/markdownParser.js`
 
 **Full specification:** See `docs/game-config.md` and `docs/simplified-type-based-format.md`
@@ -367,7 +370,8 @@ resetRNG();
   type: "challenge",      // primary-success, failure-counter, narrative, challenge, event
   modifier: null,         // null, "skip-damage", "return-king"
   description: "Short description",
-  story: "Full narrative text (markdown supported)"
+  story: "Full narrative text (markdown supported)",
+  image: null             // or { src, alt }: optional picture, a markdown image line in the card body
 }
 ```
 

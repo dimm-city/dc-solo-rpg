@@ -185,6 +185,36 @@ function parseModifiers(modifierText) {
 }
 
 /**
+ * A card's optional image: one markdown image on a line of its own, anywhere in the card body,
+ * e.g. `![A flooded tram tunnel](art/tunnel.jpg)`. The alt text is what a screen reader says
+ * for it (empty for pure decoration). The line is taken out of the story text.
+ * @param {string} section - Card section markdown
+ * @returns {{image: {src: string, alt: string}|null, section: string}} the image, and the
+ *   section without its line
+ */
+function extractImage(section) {
+	// The whole line, with the blank lines around it, so the story closes up where it was
+	const IMAGE_LINE = /\n*^[ \t]*!\[([^\]]*)\]\(\s*(\S+?)(?:\s+"[^"]*")?\s*\)[ \t]*$\n*/m;
+	const match = section.match(IMAGE_LINE);
+	if (!match) return { image: null, section };
+
+	const [, alt, src] = match;
+	const scheme = src.match(/^([a-z][a-z0-9+.-]*):/i)?.[1];
+	if (scheme && !/^https?$/i.test(scheme)) {
+		throw new ValidationError(
+			`Card image must be an http(s) URL or a path, not ${scheme}: (${src.substring(0, 40)})`
+		);
+	}
+
+	const rest = section.replace(IMAGE_LINE, '\n\n');
+	if (IMAGE_LINE.test(rest)) {
+		throw new ValidationError(`A card can have one image; found more than one near: ${src}`);
+	}
+
+	return { image: { src, alt: alt.trim() }, section: rest };
+}
+
+/**
  * Parse individual card section
  * @param {string} section - Card section markdown
  * @returns {object} Parsed card data
@@ -199,6 +229,10 @@ function parseCardSection(section) {
 
 	const type = normalizeType(headerMatch[1].trim());
 	const modifiers = parseModifiers(headerMatch[2]);
+
+	// The optional image comes out first, so the story is text only
+	const { image, section: body } = extractImage(section);
+	section = body;
 
 	// Parse description (text in **bold**)
 	const descMatch = section.match(/\*\*(.+?)\*\*/);
@@ -221,7 +255,8 @@ function parseCardSection(section) {
 		type,
 		modifiers,
 		description,
-		story: story || null
+		story: story || null,
+		image
 	};
 }
 
@@ -376,7 +411,8 @@ function assignCardsToDeck(cardsByType) {
 			type,
 			description: data.description,
 			story: data.story,
-			modifier: data.modifiers?.special || null
+			modifier: data.modifiers?.special || null,
+			image: data.image ?? null
 		});
 	}
 
@@ -497,6 +533,21 @@ function assignCardsByType(deck, cards, ranks, suits, type, usedAssignments, add
 }
 
 /**
+ * A card image path as the browser fetches it. A relative path is taken from the game file's
+ * own URL when that is known (`art/x.jpg` in `/games/my-game.game.md` is `/games/art/x.jpg`,
+ * as in a markdown preview); a full URL passes through. Without a base it is left as written.
+ * @param {string} src - The path as the author wrote it
+ * @param {string} [baseUrl] - The game file's URL or path
+ * @returns {string}
+ */
+function resolveImageSrc(src, baseUrl) {
+	if (!baseUrl) return src;
+	const origin = 'http://game-file.invalid';
+	const url = new URL(src, new URL(baseUrl, origin));
+	return url.origin === origin ? `${url.pathname}${url.search}` : url.href;
+}
+
+/**
  * Parse the optional `difficulty` frontmatter field (the game's default; the player can
  * override it in Settings)
  * @param {string} [value] - easy, normal or hard, in any case
@@ -517,9 +568,11 @@ function parseDifficulty(value) {
  * Main parser function
  * Parse Type-Based Markdown format into game configuration
  * @param {string} markdown - Raw markdown content
+ * @param {{baseUrl?: string}} [options] - baseUrl: the game file's URL or path, so a card
+ *   image written as a relative path is fetched from beside the file
  * @returns {object} Game configuration object
  */
-export function parseGameFile(markdown) {
+export function parseGameFile(markdown, { baseUrl } = {}) {
 	if (!markdown || typeof markdown !== 'string') {
 		throw new ValidationError('Invalid input: markdown must be a non-empty string');
 	}
@@ -542,6 +595,9 @@ export function parseGameFile(markdown) {
 
 		// 6. Assign cards to deck positions
 		const deck = assignCardsToDeck(cardsByType);
+		for (const card of deck) {
+			if (card.image) card.image.src = resolveImageSrc(card.image.src, baseUrl);
+		}
 
 		// 7. Build final configuration
 		const difficulty = parseDifficulty(frontmatter.difficulty);

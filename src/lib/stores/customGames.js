@@ -120,6 +120,10 @@ export function friendlyUploadError(error) {
 	if (missing) return `it has no ${orList(missing[1].split(/,\s*/))}`;
 	if (/^No "## Card Deck" section found/.test(first)) return 'it has no Card Deck section';
 	if (/^File too large/.test(first)) return "it's larger than 100KB";
+	if (/^Card image must be an http\(s\) URL or a path/.test(first)) {
+		return "a card's image isn't a web address or a path";
+	}
+	if (/^A card can have one image/.test(first)) return 'a card has more than one image';
 	// validateCardCounts lists every count that is off
 	if (messages.some((m) => /^(Expected exactly|Only ONE)/.test(m))) {
 		return "its deck doesn't have the cards the format needs";

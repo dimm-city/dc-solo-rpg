@@ -19,6 +19,14 @@ describe('friendlyUploadError', () => {
 			],
 			['No "## Card Deck" section found', 'it has no Card Deck section'],
 			['File too large. Game files should be under 100KB.', "it's larger than 100KB"],
+			[
+				'Card image must be an http(s) URL or a path, not data: (data:image/png;base64,AAAA)',
+				"a card's image isn't a web address or a path"
+			],
+			[
+				'A card can have one image; found more than one near: a.jpg',
+				'a card has more than one image'
+			],
 			['Invalid card rank: 11', "it isn't a valid game file"],
 			['Parser error: something broke', "it isn't a valid game file"]
 		];

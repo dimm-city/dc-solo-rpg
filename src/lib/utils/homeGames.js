@@ -15,8 +15,9 @@ export function gameSlug(game) {
 }
 
 /**
- * The card subtitle: the game's own `subtitle` frontmatter (via static/games/index.json for
- * the built-in games, the parsed file for uploads). Empty when the game has none.
+ * The card subtitle: the game's own `subtitle` frontmatter (read from the file by the home
+ * loader for the built-in games, from the parsed upload for custom games). Empty when the game
+ * has none.
  * @param {{ subtitle?: string, isCustom?: boolean }} game
  * @returns {string}
  */

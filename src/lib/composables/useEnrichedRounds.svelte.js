@@ -79,6 +79,7 @@ export function useEnrichedRounds(savedGame) {
 				modifier: card.modifier,
 				description: card.description,
 				story: card.story,
+				image: card.image ?? null,
 				diceRoll: card.diceRoll,
 				damageDealt: card.damageDealt
 			})),
