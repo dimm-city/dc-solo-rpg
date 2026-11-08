@@ -56,6 +56,7 @@
 	}
 
 	.final-log-text {
+		max-width: var(--measure, 30em);
 		font-size: 1.125rem;
 		line-height: 1.75;
 		color: #f2f5f9;

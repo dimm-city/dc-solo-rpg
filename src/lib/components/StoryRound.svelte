@@ -276,6 +276,7 @@
 
 	.card-panel-desc {
 		margin: 0 0 8px;
+		max-width: var(--measure, 30em);
 		font-size: 1.125rem;
 		line-height: 1.6;
 		font-style: italic;
@@ -283,6 +284,7 @@
 	}
 
 	.card-panel-story {
+		max-width: var(--measure, 30em);
 		font-size: 1rem;
 		line-height: 1.65;
 		color: #c9d4e0;
@@ -294,7 +296,8 @@
 		color: #aebbcc;
 	}
 
-	/* The player's writing: the heart of the page */
+	/* The player's writing: the heart of the page. Running text keeps the reading measure (about
+	   65 characters a line, visual-layout-s-18); the 640px column is for the chips and panels. */
 	.journal {
 		display: flex;
 		flex-direction: column;
@@ -302,6 +305,7 @@
 	}
 
 	.journal-text {
+		max-width: var(--measure, 30em);
 		font-size: 1.125rem;
 		line-height: 1.75;
 		color: #f2f5f9;
