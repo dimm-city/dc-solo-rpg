@@ -919,6 +919,7 @@
 					data-testid="screen-showIntro"
 					style:bottom="{introInset.bottom}px"
 					style:right="{introInset.right}px"
+					style:--intro-right="{introInset.right}px"
 					in:fade|global={{ duration: TRANSITION_DURATION }}
 					out:fade={{ duration: ANIMATION_DURATION.SLOW }}
 				>
@@ -1138,7 +1139,7 @@
 	.skip-link {
 		position: absolute;
 		top: 0.5rem;
-		left: 0.5rem;
+		left: max(0.5rem, env(safe-area-inset-left, 0px));
 		z-index: 300;
 		padding: 0.5rem 0.75rem;
 		background: #08080f;
@@ -1268,7 +1269,15 @@
 		flex-direction: column;
 		overflow-y: auto;
 		overflow-x: hidden;
+		/* visual-layout-s-16: the intro lies outside the table's safe-area padding, so its text
+		   clears a landscape notch itself. Its right edge is the action column there (already
+		   inside the inset), so only the part of the inset it still covers counts. */
 		padding: var(--space-md);
+		padding-left: max(var(--space-md), env(safe-area-inset-left, 0px));
+		padding-right: max(
+			var(--space-md),
+			calc(env(safe-area-inset-right, 0px) - var(--intro-right, 0px))
+		);
 		background-color: transparent;
 		min-height: 0;
 		width: 100%;
@@ -1279,11 +1288,11 @@
 		mask-image: linear-gradient(to bottom, #000 calc(100% - 24px), transparent);
 	}
 
-	/* Reading column: no 180-character lines on desktop */
+	/* Reading column: the reading measure (visual-layout-s-17), centred */
 	.intro-column {
 		margin-block: auto;
 		width: 100%;
-		max-width: var(--content-max, 720px);
+		max-width: min(var(--content-max, 720px), var(--measure, 30em));
 		margin-inline: auto;
 	}
 

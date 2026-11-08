@@ -289,9 +289,16 @@
 <style>
 	/* Reading text: 18px on desktop, 16px on phones (below) */
 	.game-guide {
-		max-width: 65ch;
 		font-size: 1.125rem;
 		color: #fff;
+	}
+
+	/* Running text keeps the reading measure (visual-layout-s-17); the chips, tables and section
+	   rules keep the full width */
+	.guide-intro,
+	.guide-section p,
+	.guide-section ul {
+		max-width: var(--measure, 30em);
 	}
 
 	.game-guide p,

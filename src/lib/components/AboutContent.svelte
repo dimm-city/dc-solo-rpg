@@ -50,11 +50,10 @@
 </div>
 
 <style>
-	.about-content {
-		max-width: 65ch;
-	}
-
+	/* Running text keeps the reading measure (visual-layout-s-17); the section rules keep the
+	   full column */
 	.about-content p {
+		max-width: var(--measure, 30em);
 		margin: 0;
 		color: #e2e9f2;
 	}
@@ -100,6 +99,7 @@
 	}
 
 	.about-content .version-info {
+		max-width: none;
 		margin-top: 40px;
 		padding-top: 24px;
 		border-top: 1px solid rgba(255, 255, 255, 0.14);

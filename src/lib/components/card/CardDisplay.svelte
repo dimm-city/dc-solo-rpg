@@ -603,7 +603,7 @@
 	}
 
 	.byte-story {
-		max-width: 65ch;
+		max-width: var(--measure, 30em);
 		font-family: var(--font-body, 'Inter', sans-serif);
 		font-size: 1.125rem;
 		line-height: 1.6;
