@@ -508,6 +508,7 @@ describe('My Feature', () => {
 | `SEQUENCE_MAX`            | `--dur-sequence-max`   | 1.5s    | Longest staged sequence             |
 | `AMBIENT`, `AMBIENT_SLOW` | `--dur-ambient(-slow)` | 4s / 8s | The only ambient loop periods       |
 | `RESULT_HOLD`             | (none)                 | 2s      | A result holds, then moves on       |
+| `DEAL_HOLD`, `DEAL_BEAT`  | (none)                 | 3s / 1s | Task roll result to the first card  |
 | `DICE_SINK`               | `--dur-dice-sink`      | 800ms   | Landed dice sink and fade (in-out)  |
 | `DRAW_PAUSE`              | (none)                 | 100ms   | Gap before the next card is drawn   |
 

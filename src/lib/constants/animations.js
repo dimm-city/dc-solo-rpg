@@ -45,6 +45,19 @@ export const ANIMATION_DURATION = {
 	 */
 	RESULT_HOLD: 2000,
 
+	/**
+	 * Deal hold (3s, OWN-7) - how long the Roll for Tasks result stays up before the first card is
+	 * dealt. The owner found the 2s result hold too fast here: the dice take 1.2s to rest and
+	 * sink, so the result was alone on a clear table for under a second. Only the deal uses it.
+	 */
+	DEAL_HOLD: 3000,
+
+	/**
+	 * Deal beat (1s, OWN-7) - with the roll read aloud, the first card is dealt this long after
+	 * the voice finishes (other read-aloud results move on after BEAT).
+	 */
+	DEAL_BEAT: 1000,
+
 	/** Ambient loop period (4s) */
 	AMBIENT: 4000,
 

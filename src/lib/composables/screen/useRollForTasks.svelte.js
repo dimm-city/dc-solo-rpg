@@ -4,8 +4,8 @@
  * 1. Roll: dice animate ("Rolling…"; a press skips to the result), then a result line
  *    ("Rolled 16 · 5 cards this round") stays on screen. With "Announce dice rolls" on, the voice
  *    reads it out ("You rolled a 17. Draw 5 cards.").
- * 2. The cards are dealt on their own DEAL_DELAY_MS later (the result hold, shown as a line
- *    running out on the button); when the roll is read aloud, a beat after the voice has
+ * 2. The cards are dealt on their own DEAL_DELAY_MS later (the deal hold, 3s, shown as a line
+ *    running out on the button); when the roll is read aloud, DEAL_BEAT_MS after the voice has
  *    finished instead, so the first card never cuts it off. A press deals at once.
  *
  * @param {Object} [options]
@@ -27,10 +27,13 @@ import {
 	formatNextStepLabel,
 	ROLLING_LABEL
 } from '../../utils/rollResult.js';
-import { createResultHold, RESULT_HOLD_MS } from './resultHold.svelte.js';
+import { createResultHold } from './resultHold.svelte.js';
+import { ANIMATION_DURATION } from '../../constants/animations.js';
 
-/** Time to read the result line before the cards are dealt (the shared result hold) */
-export const DEAL_DELAY_MS = RESULT_HOLD_MS;
+/** Time with the result before the first card is dealt (longer than other results: OWN-7) */
+export const DEAL_DELAY_MS = ANIMATION_DURATION.DEAL_HOLD;
+/** With the roll read aloud, the first card is dealt this long after the voice finishes */
+export const DEAL_BEAT_MS = ANIMATION_DURATION.DEAL_BEAT;
 
 /** What the voice says about the roll, e.g. "You rolled a 17. Draw 5 cards." */
 function formatTaskAnnouncement(roll, cardCount) {
@@ -100,7 +103,10 @@ export function useRollForTasks({ dealDelay = DEAL_DELAY_MS } = {}) {
 		}
 		// Deal on its own once the player has had a moment with the result: after the hold, or,
 		// when the roll is read aloud, a beat after the voice has finished
-		hold.start(deal, dealDelay, { narration: announce(thrown.roll, thrown.cardCount) });
+		hold.start(deal, dealDelay, {
+			narration: announce(thrown.roll, thrown.cardCount),
+			beat: DEAL_BEAT_MS
+		});
 		// Trigger auto-play after roll completes (event-driven)
 		if (triggerAutoPlay) {
 			setTimeout(() => triggerAutoPlay(), 0);

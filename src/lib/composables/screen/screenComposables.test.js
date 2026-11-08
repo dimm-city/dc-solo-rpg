@@ -9,7 +9,7 @@ import { mockDieRoll, mockDieRollSequence, resetRNG } from '../../services/rando
 import { rollDice, skipRoll } from '../../stores/diceStore.svelte.js';
 import { useFailureCheck } from './useFailureCheck.svelte.js';
 import { useSuccessCheck } from './useSuccessCheck.svelte.js';
-import { useRollForTasks, DEAL_DELAY_MS } from './useRollForTasks.svelte.js';
+import { useRollForTasks, DEAL_DELAY_MS, DEAL_BEAT_MS } from './useRollForTasks.svelte.js';
 import { useInitialDamage } from './useInitialDamage.svelte.js';
 import { createResultHold, RESULT_HOLD_MS, NARRATION_BEAT_MS } from './resultHold.svelte.js';
 import {
@@ -549,8 +549,8 @@ describe('useRollForTasks, with dice rolls announced', () => {
 		fake.end();
 		await vi.advanceTimersByTimeAsync(0);
 		expect(tasks.hold.waiting).toBe(false);
-		expect(tasks.hold.duration).toBe(NARRATION_BEAT_MS);
-		await vi.advanceTimersByTimeAsync(NARRATION_BEAT_MS - 1);
+		expect(tasks.hold.duration).toBe(DEAL_BEAT_MS);
+		await vi.advanceTimersByTimeAsync(DEAL_BEAT_MS - 1);
 		expect(gameState.state).toBe('rollForTasks');
 		await vi.advanceTimersByTimeAsync(1);
 		expect(gameState.state).toBe('drawCard');
@@ -601,9 +601,11 @@ describe('useRollForTasks, with dice rolls announced', () => {
 });
 
 describe('the result hold: a result moves on by itself after a beat', () => {
-	it('is the shared 2s beat, the same for the deal', () => {
+	it('is the shared 2s beat; the deal holds longer (OWN-7: the first card came too soon)', () => {
 		expect(RESULT_HOLD_MS).toBe(2000);
-		expect(DEAL_DELAY_MS).toBe(RESULT_HOLD_MS);
+		expect(DEAL_DELAY_MS).toBe(3000);
+		expect(DEAL_BEAT_MS).toBe(1000);
+		expect(DEAL_BEAT_MS).toBeGreaterThan(NARRATION_BEAT_MS);
 	});
 
 	it('a Stability result moves on by itself, and only once', async () => {

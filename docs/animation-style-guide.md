@@ -21,6 +21,8 @@ never disagree. `styles.css` defines no motion numbers of its own; a unit test c
 | `ANIMATION_DURATION.SEQUENCE_MAX`      | `--dur-sequence-max`      | 1.5s      | The longest any staged sequence may run          |
 | `AMBIENT` / `AMBIENT_SLOW`             | `--dur-ambient(-slow)`    | 4s / 8s   | The only periods allowed for ambient loops       |
 | `ANIMATION_DURATION.RESULT_HOLD`       | (none)                    | 2s        | A roll's result holds, then the game moves on    |
+| `ANIMATION_DURATION.DEAL_HOLD`         | (none)                    | 3s        | The task roll's result before the first card     |
+| `ANIMATION_DURATION.DEAL_BEAT`         | (none)                    | 1s        | The first card after the voice reads the roll    |
 | `ANIMATION_EASING.CUBIC_OUT`           | `--ease-enter`            | cubic out | Entering, state changes                          |
 | `ANIMATION_EASING.CUBIC_IN`            | `--ease-exit`             | cubic in  | Leaving                                          |
 | `ANIMATION_DISTANCE.RISE`              | `--rise-enter`            | 8px       | The most an entering element moves               |

@@ -60,9 +60,10 @@ export function createResultHold() {
 	 * @param {Object} [options]
 	 * @param {{ promise: Promise<boolean>, cancel: () => void } | null} [options.narration] - The
 	 *   voice reading the result (see awaitNarration): the hold then waits for it to end and runs
-	 *   out over NARRATION_BEAT_MS after that, instead of over `ms`
+	 *   out over `beat` after that, instead of over `ms`
+	 * @param {number} [options.beat] - The run-out after the voice (NARRATION_BEAT_MS by default)
 	 */
-	function start(onDone, ms = RESULT_HOLD_MS, { narration = null } = {}) {
+	function start(onDone, ms = RESULT_HOLD_MS, { narration = null, beat = NARRATION_BEAT_MS } = {}) {
 		cancel();
 		active = true;
 		if (!narration) {
@@ -71,13 +72,13 @@ export function createResultHold() {
 		}
 		wait = narration;
 		waiting = true;
-		duration = NARRATION_BEAT_MS;
+		duration = beat;
 		narration.promise.then(() => {
 			// Cancelled meanwhile (a press, leaving the screen), or a new hold took over
 			if (wait !== narration) return;
 			wait = null;
 			waiting = false;
-			arm(onDone, NARRATION_BEAT_MS);
+			arm(onDone, beat);
 		});
 	}
 

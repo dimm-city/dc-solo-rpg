@@ -179,11 +179,11 @@ test.describe('Read-aloud: the deal waits for the voice', () => {
 		});
 		await expect.poll(() => ttsLog(page)).toContain('speak: You rolled a 17. Draw 5 cards.');
 
-		// Well past the 2s hold: the voice is still reading, so no card yet, and the button's
-		// line waits in full rather than counting down
+		// Well past the 3s deal hold: the voice is still reading, so no card yet, and the
+		// button's line waits in full rather than counting down
 		const line = page.getByTestId('step-advance');
 		await expect(line).toHaveClass(/waiting/);
-		await page.waitForTimeout(3000);
+		await page.waitForTimeout(4000);
 		await expect(page.getByRole('dialog', { name: 'Card drawn' })).toHaveCount(0);
 		await expect(line).toHaveClass(/waiting/);
 		await expect(line).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, 0)');
