@@ -104,12 +104,20 @@
 	 * modifier that did nothing ("No King was out to return") has no notice (OWN-4).
 	 */
 	let noticeDoneFor = $state(null);
-	const modifierNotice = $derived.by(() => {
+	/** The modifier card whose notice is on the board now, or null */
+	const noticeCard = $derived.by(() => {
 		const card = gameState.lastCard;
-		const notice = formatModifierNotice(card?.modifierResult);
-		if (!notice || card.round !== gameState.round) return null;
-		return card.id !== undefined && card.id === noticeDoneFor ? null : notice;
+		if (!formatModifierNotice(card?.modifierResult) || card.round !== gameState.round) return null;
+		return card.id !== undefined && card.id === noticeDoneFor ? null : card;
 	});
+	// The board's notice drops the Kings count the HUD shows; the announcement keeps it
+	// (game-copy-s-03)
+	const modifierNotice = $derived(
+		noticeCard && formatModifierNotice(noticeCard.modifierResult, { withTotals: false })
+	);
+	const modifierAnnouncement = $derived(
+		noticeCard && formatModifierNotice(noticeCard.modifierResult)
+	);
 
 	// DP-1-06: one job per element. The title names the step, the description says what is at
 	// stake (the target lives here, not on the button), the button names the action.
@@ -308,7 +316,7 @@
 		}
 	});
 	$effect(() => {
-		if (modifierNotice) announcer.announce(modifierNotice);
+		if (modifierAnnouncement) announcer.announce(modifierAnnouncement);
 	});
 	let announcedCaption = null;
 	$effect(() => {

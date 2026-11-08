@@ -215,7 +215,7 @@
 		max-width: calc(100% - 32px);
 		min-height: 22px;
 		padding: 2px 10px;
-		font-size: 0.8125rem;
+		font-size: 0.875rem;
 		line-height: 18px;
 		color: var(--color-neon-cyan, #00ffff);
 		text-wrap: balance;
@@ -330,10 +330,6 @@
 			--title-size: min(clamp(1.75rem, 4.2vw, 2.5rem), 5cqi);
 			--body-size: 1.125rem;
 		}
-
-		.notice-tab {
-			font-size: 0.875rem;
-		}
 	}
 
 	@media (min-width: 1024px) {
@@ -354,10 +350,6 @@
 			--title-lines: 1;
 			--title-size: min(1.75rem, 5cqi);
 			--body-size: 1rem;
-		}
-
-		.notice-tab {
-			font-size: 0.8125rem;
 		}
 	}
 </style>

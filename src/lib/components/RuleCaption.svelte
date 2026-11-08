@@ -9,6 +9,11 @@
 	 * each caption through the game's single live region (after the result line), so this
 	 * region is not live itself. A covered caption is hidden; its countdown is paused. A tap or
 	 * Escape dismisses it.
+	 *
+	 * Its frame is the readout's (visual-layout-s-04): chamfered top-left and bottom-right
+	 * corners, a 1px border at the readout's 55% gradient and the same fill, so this secondary
+	 * help never outranks the readout. In the landscape action column it is the step button's
+	 * width.
 	 */
 	import { fade } from 'svelte/transition';
 	import { ANIMATION_DURATION } from '../constants/animations.js';
@@ -38,6 +43,7 @@
 				captions.dismiss();
 			}}
 		>
+			<span class="rule-frame" data-augmented-ui="tl-clip br-clip border" aria-hidden="true"></span>
 			<span class="rule-label">Rule</span>
 			<span class="rule-text">{captions.current.text}</span>
 		</div>
@@ -52,6 +58,7 @@
 		left: 0;
 		right: 0;
 		z-index: 2;
+		isolation: isolate;
 		box-sizing: border-box;
 		width: min(100%, 420px);
 		margin-inline: auto;
@@ -62,13 +69,23 @@
 		text-align: left;
 		pointer-events: auto;
 		cursor: pointer;
-		background: rgba(8, 8, 20, 0.92);
-		border: 1px solid transparent;
-		border-image: var(--frame-border, linear-gradient(135deg, #0ff, #f0f)) 1;
 		color: var(--color-text, #f2f2fa);
 		font-family: var(--font-body, 'Inter', system-ui, sans-serif);
 		font-size: 0.875rem;
 		line-height: 1.4;
+	}
+
+	/* The readout's frame (ContextBackground .readout-frame), behind the text */
+	.rule-frame {
+		--aug-border-all: 1px;
+		--aug-border-bg: linear-gradient(135deg, rgba(0, 255, 255, 0.55), rgba(217, 70, 239, 0.55));
+		--aug-tl: 8px;
+		--aug-br: 8px;
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		display: block;
+		background: linear-gradient(135deg, rgba(10, 10, 20, 0.9), rgba(15, 15, 25, 0.85));
 	}
 
 	.rule-text {
@@ -84,10 +101,10 @@
 		color: var(--color-neon-cyan, #0ff);
 	}
 
-	/* Landscape phones: the width of the action column, less 8px either side */
+	/* Landscape phones: the width of the action column, edge to edge with the step button */
 	@media (max-height: 500px) and (orientation: landscape) {
 		.rule-caption {
-			width: calc(100% - 16px);
+			width: 100%;
 		}
 	}
 </style>

@@ -16,6 +16,12 @@
 	 * hudTiers.js): as its value moves into a new one, a tint layer behind the tile and the
 	 * value, label and bar colours ease to the tier's colours. Tiers change colour only.
 	 *
+	 * The text fits the row at any browser text size (visual-layout-s-01): the labels, values
+	 * and maxes are rem sizes capped by the HUD's own width (cqi; the HUD is a size container),
+	 * so at a larger root font no track's minimum outgrows its share of the half and the Roll
+	 * and Cards tiles never run into each other. The caps sit just above the sizes the default
+	 * root gives on phones (360-600px), so at 16px nothing changes.
+	 *
 	 * @component
 	 */
 	import { gameState } from '../../stores/gameStore.svelte.js';
@@ -80,6 +86,14 @@
 		/* The numbers (DP-1-01): one size family across the six tiles */
 		--value-size: 1.25rem;
 		--max-size: 0.75rem;
+		--label-size: 0.75rem;
+		/* visual-layout-s-01: each size capped by the row's width. At the default root the caps
+		   bind nowhere (18px values, 11px maxes and 12px labels in a 340-355px phone row: 5.3,
+		   3.25 and 3.4cqi are just above them); at a 125% root they hold the row to its width */
+		--value-fit: min(var(--value-size), 5.3cqi);
+		--max-fit: min(var(--max-size), 3.25cqi);
+		--label-fit: min(var(--label-size), 3.4cqi);
+		container-type: inline-size;
 		/* The neutral tier colours, inherited, so any cell's own tier rule wins */
 		--label-color: rgba(255, 255, 255, 0.72);
 		--value-color: #f2f4f8;
@@ -180,7 +194,7 @@
 		align-items: center;
 		white-space: nowrap;
 		font-family: var(--font-ui, var(--font-body, sans-serif));
-		font-size: 0.75rem;
+		font-size: var(--label-fit);
 		font-weight: var(--font-ui-weight, 600);
 		line-height: 1;
 		letter-spacing: var(--tracking-ui, 0.08em);
@@ -219,7 +233,7 @@
 	:global(.status-hud .hud-value) {
 		display: inline-flex;
 		align-items: baseline;
-		font-size: var(--value-size);
+		font-size: var(--value-fit);
 		line-height: 1;
 		white-space: nowrap;
 	}
@@ -253,7 +267,7 @@
 	:global(.status-hud .hud-max) {
 		font-family: var(--font-led);
 		font-weight: 700;
-		font-size: var(--max-size);
+		font-size: var(--max-fit);
 		line-height: 1;
 		color: var(--max-color, rgba(255, 255, 255, 0.6));
 		transition: color var(--dur-overlay, 300ms) var(--ease-enter, ease-out);
@@ -268,7 +282,7 @@
 	/* A declared mono slash, a little larger than the max; it never enlarges the line box */
 	:global(.status-hud .hud-slash) {
 		font-family: var(--font-mono);
-		font-size: calc(var(--max-size) * 1.25);
+		font-size: calc(var(--max-fit) * 1.25);
 		line-height: 0;
 		margin-inline: 1px;
 		color: var(--max-color, rgba(255, 255, 255, 0.6));
@@ -370,8 +384,11 @@
 
 	/* Six labels share 360px: 11px with tighter tracking below 375px only (VT-1-10) */
 	@media (max-width: 374px) {
+		.status-hud {
+			--label-size: 0.6875rem;
+		}
+
 		:global(.status-hud .hud-label) {
-			font-size: 0.6875rem;
 			letter-spacing: 0.03em;
 		}
 	}
