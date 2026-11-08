@@ -1425,6 +1425,12 @@
 			align-content: end;
 		}
 
+		/* The button spans the column (the table's own padding is its margin), so a 16px label
+		   has 216px or more even in the narrowest column */
+		.step-slot :global(.step-action .button-bar) {
+			padding-inline: 0;
+		}
+
 		/* The intro reads on the left with its button on the right, like the table */
 		.intro-story-container {
 			flex-direction: row;
