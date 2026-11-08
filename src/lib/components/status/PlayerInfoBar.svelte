@@ -501,9 +501,19 @@
 		color: #c8d6e5;
 	}
 
-	.status-bar-button:hover {
+	/* The light under a button: on hover where a pointer can hover (on touch a tap would leave
+	   :hover stuck until the next tap elsewhere), and on press everywhere. Scoped to the bar so
+	   it outranks Game.svelte's button reset, which sets the background on :hover too. */
+	.player-round-bar .status-bar-button:active {
 		color: #fff;
 		background: rgba(0, 238, 255, 0.1);
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.player-round-bar .status-bar-button:hover {
+			color: #fff;
+			background: rgba(0, 238, 255, 0.1);
+		}
 	}
 
 	.status-bar-button:focus-visible,
@@ -512,11 +522,19 @@
 		outline-offset: 1px;
 	}
 
-	/* On: filled, and the label says so in cyan */
-	.toggle-button.active {
+	/* On: filled, and the label says so in cyan (scoped like the light above, so a stuck touch
+	   :hover cannot clear the fill) */
+	.player-round-bar .toggle-button.active {
 		color: #04121a;
 		background: var(--color-neon-cyan);
 		border-color: var(--color-neon-cyan);
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.player-round-bar .toggle-button.active:hover {
+			color: #04121a;
+			background: #7ffcff;
+		}
 	}
 
 	.toggle-button.active svg {
@@ -525,11 +543,6 @@
 
 	.toggle-button.active .btn-label {
 		color: #04121a;
-	}
-
-	.toggle-button.active:hover {
-		color: #04121a;
-		background: #7ffcff;
 	}
 
 	.info-segment {
@@ -628,8 +641,10 @@
 		color: var(--color-neon-cyan);
 	}
 
-	.game-menu-item:hover {
-		background: rgba(0, 255, 255, 0.1);
+	@media (hover: hover) and (pointer: fine) {
+		.game-menu-item:hover {
+			background: rgba(0, 255, 255, 0.1);
+		}
 	}
 
 	.toggle-item .state {
@@ -689,7 +704,8 @@
 			height: 22px;
 		}
 
-		.more-button.active {
+		/* Scoped so a stuck touch :hover (Game.svelte's reset) cannot turn it back to white */
+		.player-round-bar .more-button.active {
 			color: var(--color-neon-cyan);
 			border-color: rgba(0, 255, 255, 0.5);
 		}

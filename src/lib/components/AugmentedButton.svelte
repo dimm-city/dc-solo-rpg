@@ -120,12 +120,16 @@
 		filter: var(--glow-cta-primary);
 	}
 
-	.aug-button-wrapper:hover {
-		filter: var(--glow-cta-secondary-hover);
-	}
+	/* Hover only where a pointer can hover: on touch a tap leaves :hover stuck until the next
+	   tap elsewhere, so the frame would change with the last tap, not the game state */
+	@media (hover: hover) and (pointer: fine) {
+		.aug-button-wrapper:hover {
+			filter: var(--glow-cta-secondary-hover);
+		}
 
-	.aug-button-wrapper.primary:hover {
-		filter: var(--glow-cta-primary-hover);
+		.aug-button-wrapper.primary:hover {
+			filter: var(--glow-cta-primary-hover);
+		}
 	}
 
 	/* Atmospheric glow behind the button: a fixed soft halo, never animated */
@@ -223,17 +227,20 @@
 		color: var(--color-bg-primary);
 	}
 
-	/* Hover: brighter, with a warmer border */
-	.aug-button:hover {
-		filter: brightness(1.08);
-		box-shadow:
-			inset 0 0 12px rgba(255, 215, 0, 0.1),
-			0 0 12px rgba(0, 255, 255, 0.25);
-		--aug-border-bg: linear-gradient(135deg, #ffd700, #00ffff);
-	}
+	/* Hover (pointer devices only, as above): brighter, with a warmer border. On touch the
+	   press feedback is :active below. */
+	@media (hover: hover) and (pointer: fine) {
+		.aug-button:hover {
+			filter: brightness(1.08);
+			box-shadow:
+				inset 0 0 12px rgba(255, 215, 0, 0.1),
+				0 0 12px rgba(0, 255, 255, 0.25);
+			--aug-border-bg: linear-gradient(135deg, #ffd700, #00ffff);
+		}
 
-	.aug-button.primary:hover {
-		transform: translateY(-2px);
+		.aug-button.primary:hover {
+			transform: translateY(-2px);
+		}
 	}
 
 	/* Press */
