@@ -356,6 +356,64 @@
 		}
 	}
 
+	/* Landscape phones: story mode's header (visual-layout-s-13). Two short rows: the title at
+	   28px on one line beside the back button (an ellipsis past that, never expected), then the
+	   subtitle with the sort control, as story mode's outcome line carries its AI button; so a
+	   long title is never cut by the control and a second row of stories shows. The sides clear
+	   the notch (the page is drawn edge to edge: viewport-fit=cover).
+	   The 44px back button overhangs the 32px title row by 6px each way (--overhang), so the
+	   title row is only as tall as the title; the top padding gives the overhang back, and the
+	   back button and title land exactly where story mode's do. */
+	@media (max-height: 500px) {
+		.browse-games {
+			--overhang: calc((44px - 1.75rem * 1.15) / 2);
+			padding: calc(var(--space-sm) + var(--overhang))
+				max(var(--space-xl), env(safe-area-inset-right, 0px)) var(--space-xl)
+				max(var(--space-xl), env(safe-area-inset-left, 0px));
+			gap: var(--space-sm);
+		}
+
+		.browse-header {
+			grid-template-columns: auto minmax(0, 1fr) auto;
+			gap: 0 var(--space-md);
+		}
+
+		.title-section {
+			display: contents;
+		}
+
+		.back-button {
+			grid-area: 1 / 1;
+			width: 44px;
+			height: 44px;
+			min-height: 44px;
+			margin-block: calc(-1 * var(--overhang));
+		}
+
+		.page-title {
+			grid-area: 1 / 2 / 2 / 4;
+			font-size: 1.75rem;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			overflow-wrap: normal;
+			/* A clipped glow reads as a box: none on one line, as in story mode */
+			text-shadow: none;
+		}
+
+		.subtitle {
+			grid-area: 2 / 2;
+			margin: 0;
+			font-size: 0.875rem;
+			line-height: 1.25;
+		}
+
+		.browse-header :global(.sort-controls) {
+			grid-area: 2 / 3;
+			justify-self: end;
+		}
+	}
+
 	@media (prefers-reduced-motion: reduce) {
 		.back-button,
 		.text-button {
