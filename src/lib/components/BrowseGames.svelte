@@ -48,7 +48,7 @@
 <div
 	class="browse-games"
 	in:fly={{ y: 20, duration: duration(ANIMATION_DURATION.STORY_MODE), easing: quintOut }}
-	out:fade={{ duration: duration(ANIMATION_DURATION.STORY_MODE) }}
+	out:fade={{ duration: duration(ANIMATION_DURATION.STATE) }}
 >
 	<header class="browse-header">
 		<button class="back-button" onclick={onBack} aria-label="Back to home">
@@ -130,11 +130,13 @@
 		   story mode overlap while one fades out and the other in, instead of stacking */
 		position: absolute;
 		inset: 0;
+		/* 85%: the background motes show faintly through, behind every card and line of text
+		   (visual-layout-s-08) */
 		background: linear-gradient(
 			180deg,
-			rgba(10, 10, 10, 0.95),
-			rgba(26, 26, 26, 0.95),
-			rgba(10, 10, 10, 0.95)
+			rgba(10, 10, 10, 0.85),
+			rgba(26, 26, 26, 0.85),
+			rgba(10, 10, 10, 0.85)
 		);
 		padding: var(--space-xl) var(--space-xl) var(--space-2xl);
 		gap: var(--space-lg);
