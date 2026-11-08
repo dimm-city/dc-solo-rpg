@@ -42,8 +42,8 @@ const OWNER_ITEMS = [
 
 // Added by the owner while stage 1 ran; a separate developer builds them, and they join the sign-off
 const LATE_ITEMS = [
-  { id: 'OWN-6', lens: 'game', area: 'global', text: 'OWN-6 (owner requirement): "The dice fade animation is too fast." After a roll lands the dice sank and faded over 350ms (DICE_SINK). It must be a calm, readable sink and fade: the player sees the dice settle and leave rather than blink out; the HUD, title and result line are never covered; reduced motion stays a short plain fade. Judge it by measuring: read the token and record a roll (video or frame sheet).' },
-  { id: 'OWN-7', lens: 'game', area: 'play', text: 'OWN-7 (owner requirement): "The time before a card is drawn is too fast." After a card was dismissed the next was drawn 100ms later (NEXT_DRAW_MS in CardDeck), so cards arrived on top of each other. Each draw needs a deliberate beat on the empty table so every card lands as its own moment, consistent for the first card of a round, later cards and auto-play; a tap or Space during the beat is never lost and never draws twice. Judge it by measuring: read the tokens and record two draws.' },
+  { id: 'OWN-6', lens: 'game', area: 'global', text: 'OWN-6 (owner requirement): "The dice fade animation is too fast." After a roll lands the dice sank and faded over 350ms (DICE_SINK). It must be a calm, readable sink and fade: the player sees the dice settle and leave rather than blink out; the HUD, title and result line are never covered; reduced motion stays a short plain fade. Judge it by measuring: read the token and record a roll (video or frame sheet). A separate developer is building this item. If origin/claude/vibrant-curie-w9bn88 has no commit citing it yet (git fetch, then git log --grep), wait for one before you verify it: check every minute for up to 60 minutes with a Monitor until-loop, and only then judge it.' },
+  { id: 'OWN-7', lens: 'game', area: 'play', text: 'OWN-7 (owner requirement): "The time before a card is drawn is too fast." After a card was dismissed the next was drawn 100ms later (NEXT_DRAW_MS in CardDeck), so cards arrived on top of each other. Each draw needs a deliberate beat on the empty table so every card lands as its own moment, consistent for the first card of a round, later cards and auto-play; a tap or Space during the beat is never lost and never draws twice. Judge it by measuring: read the tokens and record two draws. A separate developer is building this item. If origin/claude/vibrant-curie-w9bn88 has no commit citing it yet (git fetch, then git log --grep), wait for one before you verify it: check every minute for up to 60 minutes with a Monitor until-loop, and only then judge it.' },
 ]
 
 const CONTEXT = `## Context
@@ -260,7 +260,8 @@ for (;;) {
     log(`Added the owner's ${o.id} to the sign-off`)
   }
   const capsText = cap ? `- manifest ${cap.manifest}; shots ${cap.dir}; drift ${cap.drift || 'n/a'}; missing: ${(cap.missing || []).join('; ') || 'none'}` : `- the capture failed: capture the key states yourself from origin/${BRANCH}`
-  for (const pair of PAIRS) {
+  // Visual and layout first: the game lens judges OWN-6 and OWN-7, whose developer may still be pushing
+  for (const pair of [...PAIRS].reverse()) {
     const lenses = pair.lenses.filter((l) => !signedOff[l])
     if (!lenses.length) continue
     const ids = Object.keys(status).filter((id) => lenses.includes(lensOf[id]) && ['open', 'regressed', 'built'].includes(status[id]))
