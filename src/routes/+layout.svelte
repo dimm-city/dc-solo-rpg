@@ -4,8 +4,7 @@
 	import { browser } from '$app/environment';
 	import { page } from '$app/stores';
 	import { untrack } from 'svelte';
-	import { fade } from 'svelte/transition';
-	import { animationTokensCss, ANIMATION_DURATION } from '$lib/constants/animations.js';
+	import { animationTokensCss } from '$lib/constants/animations.js';
 	import { initializeDiceBox, resetDiceBox, diceState } from '$lib/stores/diceStore.svelte.js';
 
 	let { children, data } = $props();
@@ -75,31 +74,6 @@
 	style:transform-origin={diceState.sinkOrigin}
 ></div>
 
-<!-- Reduced motion (or no 3D dice): the roll as numbers in a d20 outline, shown without motion;
-     where the dice would sink, it fades -->
-{#if showDice && diceState.staticRoll}
-	<div
-		class="static-roll"
-		data-testid="static-roll"
-		aria-hidden="true"
-		out:fade={{ duration: ANIMATION_DURATION.DICE_SINK }}
-	>
-		{#each diceState.staticRoll.rolls as value, index (index)}
-			<svg
-				class="static-die"
-				class:dropped={diceState.staticRoll.rolls.length > 1 && value !== diceState.staticRoll.kept}
-				viewBox="0 0 100 100"
-				width="96"
-				height="96"
-			>
-				<polygon class="die-outline" points="50,4 90,27 90,73 50,96 10,73 10,27" />
-				<polygon class="die-face" points="50,12 84,70 16,70" />
-				<text x="50" y="54" text-anchor="middle" dominant-baseline="middle">{value}</text>
-			</svg>
-		{/each}
-	</div>
-{/if}
-
 <div class="page-content">
 	{@render children()}
 </div>
@@ -160,48 +134,6 @@
 			filter: none;
 			transition: opacity var(--dur-dice-sink, 350ms) linear;
 		}
-	}
-
-	/* The static roll sits in the lower table, clear of the title and the result line (they
-	   end at 40% of the table, see ContextBackground) */
-	.static-roll {
-		--dice-table-top: var(--hud-bottom, 2.5rem);
-		position: fixed;
-		top: calc(var(--dice-table-top) + (100dvh - var(--dice-table-top)) * 0.44);
-		left: 0;
-		right: 0;
-		bottom: 6rem;
-		z-index: 1000;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 1.5rem;
-		pointer-events: none;
-	}
-
-	.static-die .die-outline {
-		fill: rgba(8, 8, 20, 0.9);
-		stroke: var(--color-neon-cyan, #00ffff);
-		stroke-width: 3;
-		stroke-linejoin: round;
-	}
-
-	.static-die .die-face {
-		fill: none;
-		stroke: rgba(0, 255, 255, 0.25);
-		stroke-width: 1.5;
-	}
-
-	.static-die text {
-		fill: #fff;
-		font-family: var(--font-body, 'Inter', sans-serif);
-		font-size: 30px;
-		font-weight: 700;
-	}
-
-	/* The die that did not count, under Lucid or Surreal */
-	.static-die.dropped {
-		opacity: 0.4;
 	}
 
 	/* Canvas from DiceBox should fill the container */

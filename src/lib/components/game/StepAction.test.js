@@ -1,7 +1,7 @@
 /**
- * StepAction is the one step button GameScreen mounts for every round step.
- * It shows the Lucid/Surreal modifier only when its caller passes one (the roll buttons),
- * inside the label, and never as a separate chip.
+ * StepAction is the one step button GameScreen mounts for every round step: a one-line verb
+ * label in a fixed frame. The Lucid/Surreal modifier its caller passes (the roll buttons) sits
+ * on its own reserved line above the button, which describes the button while it shows.
  */
 import { describe, it, expect, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/svelte';
@@ -11,45 +11,69 @@ describe('StepAction', () => {
 	it('renders its label and calls its handler', async () => {
 		const onclick = vi.fn();
 		const { getByTestId } = render(StepAction, {
-			props: { text: 'Roll for damage', onclick, testid: 'x-button' }
+			props: { text: 'Roll for Stability', onclick, testid: 'x-button' }
 		});
 		const button = getByTestId('x-button');
-		expect(button.textContent).toContain('Roll for damage');
-		expect(button.getAttribute('aria-label')).toBe('Roll for damage');
+		expect(button.textContent).toContain('Roll for Stability');
+		expect(button.getAttribute('aria-label')).toBe('Roll for Stability');
 
 		await fireEvent.click(button);
 		expect(onclick).toHaveBeenCalledTimes(1);
 	});
 
-	it('puts the modifier inside the roll button label', () => {
+	it('puts the modifier on its own line above the button, which it describes', () => {
 		const { getByTestId } = render(StepAction, {
-			props: { text: 'Roll for damage', hint: 'Lucid: 2 dice, keep high', testid: 'roll-button' }
+			props: {
+				text: 'Roll for Stability',
+				hint: 'Lucid · two dice, keep the higher',
+				testid: 'roll-button'
+			}
 		});
 		const button = getByTestId('roll-button');
-		expect(getByTestId('roll-modifier').textContent).toBe('Lucid: 2 dice, keep high');
-		expect(button.contains(getByTestId('roll-modifier'))).toBe(true);
-		expect(button.getAttribute('aria-label')).toBe('Roll for damage · Lucid: 2 dice, keep high');
+		const hint = getByTestId('roll-modifier');
+		expect(hint.textContent.trim()).toBe('Lucid · two dice, keep the higher');
+		expect(hint.classList.contains('lucid')).toBe(true);
+		expect(hint.querySelector('svg')).toBeTruthy(); // the HUD's arrow
+		expect(button.contains(hint)).toBe(false);
+		// The button's name is its visible label; the hint describes it
+		expect(button.getAttribute('aria-label')).toBe('Roll for Stability');
+		expect(button.getAttribute('aria-describedby')).toBe(hint.id);
 	});
 
-	it('shows no modifier and no chip without a hint (Continue, Draw and the rest)', () => {
-		const { queryByTestId, container } = render(StepAction, {
-			props: { text: 'Continue', testid: 'continue-button' }
+	it('colours a Surreal hint as Surreal', () => {
+		const { getByTestId } = render(StepAction, {
+			props: {
+				text: 'Roll for Salvation',
+				hint: 'Surreal · two dice, keep the lower',
+				testid: 'roll-button'
+			}
 		});
-		expect(queryByTestId('roll-modifier')).toBeNull();
+		expect(getByTestId('roll-modifier').classList.contains('surreal')).toBe(true);
+	});
+
+	it('keeps the hint line, empty and hidden, without a hint, so nothing moves', () => {
+		const { getByTestId, queryByTestId } = render(StepAction, {
+			props: { text: 'Draw the next card', testid: 'next-button' }
+		});
+		const hint = getByTestId('roll-modifier');
+		expect(hint.classList.contains('empty')).toBe(true);
+		expect(hint.getAttribute('aria-hidden')).toBe('true');
+		expect(hint.textContent.trim()).toBe('');
+		expect(getByTestId('next-button').hasAttribute('aria-describedby')).toBe(false);
 		expect(queryByTestId('state-chip')).toBeNull();
-		expect(container.textContent.trim()).toBe('Continue');
+		expect(getByTestId('next-button').textContent.trim()).toBe('Draw the next card');
 	});
 
 	it('disables the button when asked', () => {
 		const { getByTestId } = render(StepAction, {
-			props: { text: 'Draw 3 Cards', disabled: true, testid: 'deal-button' }
+			props: { text: 'Draw the cards', disabled: true, testid: 'deal-button' }
 		});
 		expect(getByTestId('deal-button').disabled).toBe(true);
 	});
 
 	it('marks a button that has just changed meaning', () => {
 		const { container } = render(StepAction, {
-			props: { text: 'Continue', changed: true, testid: 'c-button' }
+			props: { text: 'Draw the next card', changed: true, testid: 'c-button' }
 		});
 		expect(container.querySelector('.step-action.changed')).not.toBeNull();
 	});
@@ -57,7 +81,7 @@ describe('StepAction', () => {
 	it('draws a line inside the button that runs out while the game is about to move on', () => {
 		const { getByTestId, container } = render(StepAction, {
 			props: {
-				text: 'Continue',
+				text: 'Open your journal',
 				advancing: true,
 				advanceProgress: () => 0.25,
 				testid: 'c-button'
@@ -69,14 +93,14 @@ describe('StepAction', () => {
 		expect(line.getAttribute('aria-hidden')).toBe('true');
 		expect(line.classList.contains('paused')).toBe(false);
 		// Decorative only: the label and accessible name are unchanged
-		expect(getByTestId('c-button').getAttribute('aria-label')).toBe('Continue');
-		expect(container.textContent.trim()).toBe('Continue');
+		expect(getByTestId('c-button').getAttribute('aria-label')).toBe('Open your journal');
+		expect(container.querySelector('.label-main').textContent).toBe('Open your journal');
 	});
 
 	it('shows a full, dim line while the hold waits for the voice', () => {
 		const { getByTestId } = render(StepAction, {
 			props: {
-				text: 'Draw 3 Cards',
+				text: 'Draw the cards',
 				advancing: true,
 				advanceWaiting: true,
 				advanceProgress: () => 0,
@@ -90,10 +114,10 @@ describe('StepAction', () => {
 
 	it('stops the line while paused, and has none when nothing is pending', async () => {
 		const { getByTestId, queryByTestId, rerender } = render(StepAction, {
-			props: { text: 'Continue', advancing: true, advancePaused: true, testid: 'c-button' }
+			props: { text: 'Go to Salvation', advancing: true, advancePaused: true, testid: 'c-button' }
 		});
 		expect(getByTestId('step-advance').classList.contains('paused')).toBe(true);
-		await rerender({ text: 'Continue', advancing: false, testid: 'c-button' });
+		await rerender({ text: 'Go to Salvation', advancing: false, testid: 'c-button' });
 		expect(queryByTestId('step-advance')).toBeNull();
 	});
 });
