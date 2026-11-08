@@ -20,7 +20,7 @@ const OWNER_SHOTS = DR + '/owner'
 const R2 = DR + '/round-2'
 const ARCHIVE = 'docs/ux-qa/design-polish'
 const BRIEF = SP + '/ux-fix/BRIEF.md'
-const MAX_SIGNOFFS = 3
+const MAX_SIGNOFFS = 8
 const TRAILER = 'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01LRucPctvQBb3dHaC2jbeyn'
 
 const OWNER_ASK = `dispatch a team of game design and visual design experts to do a design review that focuses on text and action positioning. there are some areas in the app that the text is cluttered, redundant, shifts positions depending on game state, and generally feels unpolished. we should also change the font of all numbers in the tiles to use the LED style numbers and make the tiles all use the same progressive styling like the kings tile so that the background slightly shifts to an appropriate color and the tiles values change. this review should be focused on the nits and minor details for the most part and is not meant to be an overhaul but perfecting the design by putting the final touches on things like text and typography fixes, consistent text positioning and useful copy and ensuring the design on common screen sizes. ensure they are highly critical and apply industry best practices and tools to their reviews. have a developer agent field all of the findings and make the changes on a new draft PR. then send the results back to the review team. do this alliteratively until all review agents approve every detail of the design`
