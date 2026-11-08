@@ -73,7 +73,7 @@ test.describe('Splash and first-time choice', () => {
 		const choices = [
 			panel.getByRole('button', { name: /^Play/ }),
 			panel.getByRole('button', { name: 'Read the rules first' }),
-			panel.getByRole('button', { name: "I know how to play: don't show tips." })
+			panel.getByRole('button', { name: 'I know how to play: skip the tips' })
 		];
 		const viewport = page.viewportSize()!;
 		for (const choice of choices) {
@@ -117,11 +117,11 @@ test.describe('Splash and first-time choice', () => {
 		expect(await page.evaluate((key) => localStorage.getItem(key), RULE_TIPS_KEY)).toBe('true');
 	});
 
-	test('"don\'t show tips" turns rule tips off, and Settings can turn them back on', async ({
+	test('"skip the tips" turns rule tips off, and Settings can turn them back on', async ({
 		page
 	}) => {
 		await page.goto('/');
-		await page.getByRole('button', { name: "I know how to play: don't show tips." }).click();
+		await page.getByRole('button', { name: 'I know how to play: skip the tips' }).click();
 		await expect(page.getByTestId('home-page')).toBeVisible();
 		expect(await page.evaluate((key) => localStorage.getItem(key), RULE_TIPS_KEY)).toBe('false');
 

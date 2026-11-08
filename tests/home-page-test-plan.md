@@ -23,7 +23,7 @@ Spec: `splash-and-instructions.spec.ts`.
    - **Play** ("The game teaches you as you go."): rule tips on, straight to the games.
    - **Read the rules first**: opens the Game Guide; closing it ("Done") goes on to the
      games with rule tips on.
-   - **I know how to play: don't show tips.**: rule tips off, straight to the games.
+   - **I know how to play: skip the tips**: rule tips off, straight to the games.
 3. Any choice sets `instructions-seen`, so the panel is gone for good, across sessions.
 4. Rule tips can be switched back on (or off) in Settings › Gameplay › Rule tips.
 
