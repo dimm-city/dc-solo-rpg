@@ -1,70 +1,44 @@
-# Sign-off: game UX + UX writing lenses 
+# Sign-off 2: game UX + UX writing lenses
 
-Head under review: a449adc (origin/claude/vibrant-curie-w9bn88). src changes since the signoff-1 captures (d3a902a): timing only
-(13c9bda, 17d84e4, a449adc), so the stills stand for copy and layout. Timing evidence (mine, iPhone 13 390x844, dev server):
-v3/gcs/timing/ (telemetry.json per run = per-frame samples; events.json; video/*.webm; own6-own7-iphone13.mp4;
-manual/fr/own6-dice-sink.png, manual/fr/own7-draw-a.png, own7-draw-b.png; doubletap-*.json; beatprobe-300ms.json).
+Head under review: 6c774d6 (captures at 0ea3607, signoff-2). Previous pass kept at v3/signoff-game-copy.signoff1.md.
 
-## Timing measurements
-- Tokens at a449adc: DICE_SINK 800 (ease (0.4,0,0.6,1)), DICE_SINK_REDUCED 350, DRAW_PAUSE 100 (owner set it back from 300:
-  "The owner did not ask for a pause on the empty table between cards"), RESULT_HOLD 2000.
-- OWN-6 dice sink (telemetry, manual run): .rolling drops (z 1000 -> -10) in the same frame the result line appears
-  (5788 and 10801); opacity 1 -> 0 over 798ms and 837ms. Frame sheet manual/fr/own6-dice-sink.png: the d20 darkens over
-  ~5 frames behind the step button, never in front of it. Reduced motion (rm run): no throw, static d20 fades 1 -> 0 in 354ms.
-- OWN-7 card to card (manual run at 100ms): lift 199-231ms, empty table 81-105ms, rise 255-265ms: 0.56-0.58s.
-  Auto-play (auto run): empty 79-104ms. First card: 2.0s result hold, then ~150ms to materialising.
-  At 300ms (manual-300ms run): empty 281-303ms; tap/Space/Enter in the gap drew at once (85-101ms / 21ms / 9ms after
-  the table emptied), one card each (beatprobe-300ms.json).
-- Double input (doubletap-*.json): with motion a second tap at +150/+250/+400ms or a second Space at +150ms lands on the
-  rising card and is ignored (0 skipped). Under reduced motion the next card is up instantly after the 100ms gap, so a
-  second tap at +150ms or +250ms, or a second Space at +150ms, dismisses it unread: 1 card skipped in each of 3 trials,
-  and on the round's last card the game jumped straight to the journal.
+## Progress
+- [x] verdicts s-01..s-06
+- [x] state review (board, surfaces) at 360/390/844x390/1440
 
-## Verdicts
+## Verdicts (written as I go)
 
-| id | verdict | note |
-|---|---|---|
-| GD-1-07 | resolved | Grammar holds: 'Rolled 3 · −2 Stability · you fall', 'Rolled 15 · −1 Token · you escape', four-Ace win 'Rolled 15 · no Stability lost · you escape', equal dice not named. Measured in the app (v3/gcs/measure.cjs, body 342px at 390, 312px at 360): every single-die and equal-dice form is one line at 390 (232-337px). The developer's "one line" does not hold for two unequal dice: seven forms are 346-413px (e.g. 'Natural 20 (high of 20, 7) · 6 cards this round · Lucid' 401px) and take two lines. Accepted: the OWN-4 body slot reserves two lines and .context-result balances on clause breaks (ContextBackground.svelte:296-309), so nothing moves, which is what the criterion protected; every form fits two lines at 360. |
-| OWN-4 | resolved | Game lens. One framed readout: card tab (rank+suit), title, stakes or result in one reserved body slot, notice tab only when a modifier did something (formatModifierNotice drops 'No …': rollResult.js:265; GameScreen.svelte:104). Card description gone from the board; 'An odd card demands a price' cut to '10 or less costs Stability.'. drift.md: body, notice, caption, step button Δ0 in every state at all four viewports; the title ink moves 13-14px only between one- and two-line titles in a fixed, centred slot (Δcx 0). No clipped text in any board state (raw metrics problems lists). Residual: the K-return notice's count repeats the HUD (game-copy-s-03), and the final log/story still state the non-event (game-copy-s-04). |
-| game-copy-v-01 | resolved | HelpModal.svelte:18 Ace tip now 'On Normal and Hard, with all four there is no target…'; :23 'a missed Salvation roll'. No 'failed Salvation' in player copy (two code comments only). |
-| game-copy-v-02 | resolved | hudTiers.js:262 and useRuleCaptions.svelte.js:64 say 'each Salvation roll is a Stability check'; grep for 'each roll is a Stability check' is empty. |
-| game-copy-v-03 | resolved | Caption 'Salvation unlocked. Each round ends with a roll to remove a Token. Remove them all to escape.'; intro goal 'remove all 10 Tokens' (seen in the recording); Tokens tier 'all removed' (hudTiers.js:308). No player string uses 'clear' for Tokens. |
-| game-copy-v-04 | resolved | Journal and final-log header 'Stability 16 of 20 · Kings 1 of 4' (+ 'Tokens n left' once Salvation is unlocked, endingSummary.js:115-121); story RoundStats 'Stability 20 of 20 · Kings 0 of 4 · Aces 1 of 4 · Tokens 9 left'. Meets its acceptance. The timeline rows under that header now disagree with it: game-copy-s-02. |
-| game-copy-v-05 | resolved | TTSSection.svelte:268 intro 'Use your own API key for a cloud voice.'; :281 'Stored only in this browser.' once. |
-| game-copy-v-06 | resolved | Captions 'A natural 20 makes you Lucid, for one roll: this one.' / 'A natural 1 makes you Surreal, for one roll: this one.'; the hint 'Surreal · two dice, keep the lower' shares no phrase. |
-| game-copy-v-07 | resolved | Modal title 'SETTINGS' (settings-game shots), bar label 'Settings' with no aria-label (PlayerInfoBar.svelte:219), menus 'Settings'; grep finds no 'Game settings'/'Game Settings'. |
-| OWN-6 | resolved | Token DICE_SINK 800ms, ease (0.4,0,0.6,1); DICE_SINK_REDUCED 350ms. Recorded (iPhone 13, timing/manual): .rolling and z 1000→-10 drop in the frame the result line appears; opacity 1→0 over 798ms and 837ms, ending well inside the 2s hold. Frame sheet manual/fr/own6-dice-sink.png: the d20 darkens and fades over ~5 frames behind the step button; the HUD, title and result are never covered. Reduced motion (timing/rm): no throw, the static d20 fades in 354ms. |
-| OWN-7 | open | Owner-tuned: I propose no retune. At a449adc DRAW_PAUSE is 100ms by the owner's call ('did not ask for a pause on the empty table'). Measured on iPhone 13: card to card 0.56-0.58s (lift 199-231, empty 81-105, rise 255-265ms); auto-play gaps 79-104ms; first card ~150ms after the 2s result hold: consistent across all three. Inputs: with motion a tap/Space/Enter in the gap never double-draws (300ms run: each drew at once, once). Against the item's own words ('a deliberate beat on the empty table') the gap is again what it was when the owner called it too fast; that is for the owner. The reduced-motion double-input skip is a separate defect: game-copy-s-01. |
+### game-copy-s-01 · resolved
+Probe re-run at 6c774d6 on a dev server (v3/gcs/s2-doubletap.cjs, iPhone 13 390x844; results v3/gcs/timing/s2-doubletap-rm.json and s2-doubletap-motion.json), with a fifth case that lands on the round's last card.
+Reduced motion: second tap at +150ms, +250ms, +400ms, second Space at +150ms, and Space x2 at +150ms onto the last card: 0 of 5 skipped, the next card face up each time, the game never left drawCard. Motion on: 0 of 5. Single tap or Space on a card up ~0.9s: 'dismissing' 5-14ms (rm) and 3-16ms (motion) after the input. Log shows the guard: card 'materializing' for 219-390ms under rm, the second input lands inside it and is ignored.
+
+### game-copy-s-02 · open (one row left)
+The captured final-log-timeline passes: at 360 and 390 no 'n/20', 'Kings 1 of 4'..'Kings 4 of 4' as in the header, and the Instability row breaks 'Instability · Rolled 14 ·' / 'no Stability lost · 20 of 20' with the total held to its clause (gameTimeline.js HOLD).
+But the return-King row, the one row whose count was kept on purpose (s-03), still uses the old form and is not held: probe v3/gcs/s2-rk.cjs renders a final log with a return-king Ace that sent K♥ back (v3/gcs/s2/final-log-return-king-android-small.png). At 360 it reads 'A♠ · K♥ went back into the deck ·' / '0 of 4 Kings out': the total alone on line 2, in the count-first form, under the header 'Kings 0 of 4' and two rows below 'K♥ · Kings 1 of 4'. Source: gameActions.svelte.js:390 builds '· n of 4 Kings out'; gameTimeline.js:165-167 and storyCards.modifierLine pass it through as is (story mode shows it above RoundStats 'Kings 0 of 4').
+Fix: count in the header's form, held to its clause: 'K♥ went back into the deck · Kings 0 of 4' (no-break around the dot), in the timeline and story card panel; update TOTAL_CLAUSE (rollResult.js:258) so the board still drops it.
+
+### game-copy-s-03 · resolved
+notice-return-king at 360, 844x390 and 1440 (and 390): the notice tab reads 'K♥ went back into the deck', one line, under the Kings tile '0/4'. GameScreen.svelte:115-120: board passes withTotals:false, modifierAnnouncement keeps the count for the live region (announced at :319).
+
+### game-copy-s-04 · resolved
+buildTimeline + modifierLine (v3/gcs/s2-tl.mjs): a return-king Ace with no King out gives only 'Aces 1 of 4' and its check row, no note; storyCards.modifierLine gives ''. With a King out both give 'K♥ went back into the deck · 0 of 4 Kings out' (its count form is the s-02 residue).
+
+### game-copy-s-05 · resolved
+story-round-1 at 360, 390, 844x390, 1440: heading 'ROUND 1', pager 'Round 1 of 10': 'of 10' once. (Desktop markers 1-10 and the meta '10 rounds' are not the position.)
+
+### game-copy-s-06 · resolved
+library-stories: 'Escaped', 'Taken by the fourth King', 'Fell when Stability reached 0'; the last fits one line at 360 (about 248px of the card's row) and at 1440. Matches the Guide's escape / fall / taken.
+
+## State review (signoff-2, 45 states x 4 viewports; src since 0ea3607 is a comment-only change in drawBeat.js)
+Board: intro, round-start, task-result, every Stability and Salvation state, easy-final-check, caption-odd, Surreal hint, result-hold, rm-static-roll, notice-return-king, header-menu: one readout frame, card tab + title + one reserved body line + notice only when a modifier did something; step labels verb-first (Roll for tasks / Draw the cards / Roll for Stability / Draw the next card / Roll for Salvation / Open your journal / Face the end); stakes copy exact per CLAUDE.md ('10 or less costs Stability.', 'You need 17+ to remove a Token.', 'No target now. Survive this Stability check and a Token comes off.', 'Come through this roll with any Stability left and you escape.'); result grammar holds ('Natural 1 · −3 Stability · Surreal', 'Rolled 9 · missed 14+', 'Rolled 3 · −2 Stability · you fall'). Cards: 'Round 1 · Card 2 of 5', note lines accurate ('Odd · a Stability check follows', 'Unlocked · needs 17+', King '1 of 4'), 'Tap/Click to continue'. Guide, exit confirm, settings, home, about, library, story: copy accurate. Found below.
 
 ## New findings
-
-- **game-copy-s-01 · medium · game · play: under reduced motion a quick second tap or Space throws away the next card unread.**
-  - doubletap-rm.json: a second tap at +150ms, a second tap at +250ms, and a second Space at +150ms after the dismissing input each skipped one card (3/3); on the round's last card the game went straight to the journal. doubletap-motion.json: 0/4 skipped.
-  - Cause: CardDeck.svelte:77 and :229 sleep 0 under reduced motion, so the next card is 'revealed' 100ms (DRAW_PAUSE) after the dismiss, and CardDisplay.svelte:45 accepts a dismiss at once. With motion the 220ms lift + 100ms + 250ms rise ignore a second input for ~570ms.
-  - Fix (not a pause retune): a newly shown card ignores dismiss input until it has been up ~400ms (the step button's STEP_GUARD_MS), whatever the motion setting.
-  - Acceptance: reduced motion at 390x844, a second tap at +150 and +250ms or a second Space at +150ms leaves the next card face up (0 skipped); with motion still 0 skipped; a tap on a card up for 1s dismisses it at once.
-- **game-copy-s-02 · low · copy · overlays: the final log states one fact in two forms on one screen.**
-  - final-log-timeline/iphone-13.png: header 'Stability 17 of 20 · Kings 4 of 4' (y73); rows 'K♣ · 4 of 4 Kings' (y539) and '7♦ · Rolled 3 · −2 Stability · 17/20' (y474); Salvation rows '6 Tokens left' vs header 'Tokens 6 left'. android-small.png: 'Instability · Rolled 14 · no Stability lost ·' with '20/20' alone on line 2.
-  - Cause: game-copy-v-04 made the header label-first; gameTimeline.js:64, :90 ('n/20'), :124 ('n of 4 Kings') and the Token totals kept the old forms.
-  - Fix: rows take the header's forms: running total '17 of 20' (the clause before names Stability), 'Kings 2 of 4', 'Tokens 6 left'; the total never sits alone on a line.
-  - Acceptance: at 360 and 390 the final-log timeline has no 'n/20', King and Token counts read as in the header, and no line holds a lone total.
-- **game-copy-s-03 · low · copy · play: the return-King notice repeats the HUD.**
-  - notice-return-king at all four viewports: 'K♥ went back into the deck · 0 of 4 Kings out' sits under the Kings tile '0/4', whose skull dims in the same beat (KingsCell.svelte:49). It is the only board line still carrying a total (DP-1-07: 'No totals: the HUD shows them', rollResult.js header), in the old count form, and at the 14px VT-1-11 asks for it wraps at 360.
-  - Fix: the board notice is 'K♥ went back into the deck' (formatModifierNotice, rollResult.js:265, drops the count clause); the live announcement keeps the count; the final log keeps its row.
-  - Acceptance: one line 'K♥ went back into the deck' at 360, 390, 844x390 and 1440 (at 14px too); the live region still reads the Kings count.
-- **game-copy-s-04 · low · copy · overlays: the final log and story mode still state the non-event OWN-4 removed from the board.**
-  - buildTimeline on a return-king Ace with no King out (v3/gcs/tl.mjs) gives 'A♠︎ · No King was out to return'; storyCards.modifierLine returns the same, shown at StoryRound.svelte:99-100. gameTimeline.js:148-154 says 'as the board logged it', but the board no longer shows it (GameScreen.svelte:104).
-  - Fix: timeline and story skip a modifierResult that formatModifierNotice rejects: one rule everywhere.
-  - Acceptance: no note for a return-king card with no King out in either the final-log timeline or the story card panel; with a King out both keep 'K♥ went back into the deck…'.
-- **game-copy-s-05 · low · copy · story: story mode says the round's position twice.**
-  - story-round-1 at 360, 390, 844x390 and 1440: heading 'ROUND 1 of 10' (StoryRound.svelte:55) and the pager 'Round 1 of 10' (StoryNavigation.svelte:34) are on screen together; desktop adds the 1-10 markers, and the meta line says '10 rounds'.
-  - Fix: heading 'Round 1'; the sticky pager keeps 'Round 1 of 10'.
-  - Acceptance: 'of 10' appears once on story-round-1 at every core viewport.
-- **game-copy-s-06 · low · copy · story: the Stability ending has a different name in the library.**
-  - The Guide names the endings 'You escape' / 'You fall' / 'You are taken' (GameGuide.svelte:244-249), and the board's fatal line says 'you fall' (rollResult.js:50, chosen in round 1 as the Guide's name). The library and story mode say 'Escaped' and 'Taken by the fourth King', but 'Stability gave out' (storyOutcome.js:12; library-stories/iphone-13.png).
-  - Fix: 'Fell when Stability reached 0' (the Guide's verb, the game-over cause's words).
-  - Acceptance: the three outcome labels use the Guide's verbs, and each fits one line on a library card at 360.
+- game-copy-s-07 · low · copy · play: the live region's Tokens total is count-first. rollResult.js:323 ' 6 of 10 Tokens left.' while the same function says ' Stability 14 of 20.', the HUD tile's own spoken text is 'Tokens 6 of 10 left' (hudTiers.js:301) and the screen shows 'Tokens 6 left'. A screen-reader user hears two orders for one count within seconds. Fix: ' Tokens 6 of 10 left.'. Acceptance: formatResultTotals('salvation'|'salvation-four') gives '… Tokens 6 of 10 left.'; grep of src/lib (no tests) finds no count-first 'of N Tokens' or 'of 4 Kings' in a player-facing or announced string (the Kings-out one goes with s-02).
+- game-copy-s-08 · medium · copy · overlays: 'Cards' means two opposite counts. The HUD's Cards tile is the deck left (StatusHUD.svelte:51 count = deck.length; CardsCell.svelte:3; spoken 'Cards 22 of 52 left'), counting down from 52. The ending's recap tile with the same label is cards drawn (endingSummary.js:97, spoken 'Cards drawn'), counting up: gameover-win-tokens shows 'CARDS 30/52' after a game whose HUD ended at 22. Fix: label the recap tile 'Drawn' (spoken 'Cards drawn 30 of 52'), or show the HUD's count. Acceptance: no surface uses the bare label 'Cards' for cards drawn; the recap label fits one line at 360.
+- game-copy-s-09 · low · game · overlays: the ending's recap does not read as the HUD (GD-1-22's aim). Order: Rounds, Cards, Kings / Aces, Stability, Tokens (endingSummary.js:95-105) against the HUD's Stability, Kings | Roll, Cards | Aces, Tokens, so Stability, the resource the player watched all game, moves from first to fifth. Tint: only Kings is marked (RunRecap.svelte:23, danger when n>0); on the Stability ending 'STABILITY 0/20' is yellow (game-over-stability/iphone-13.png) one beat after the HUD showed it red (salvation-n4-fatal), and the win's 'TOKENS 0/10' is yellow too. Fix: HUD order with Rounds in Roll's slot (Stability, Kings, Rounds | Drawn, Aces, Tokens), and each tile takes its HUD tier for the final value (hudTiers.js). Acceptance: on game-over-kings/-stability/-win at 360 and 1440 the tiles run in that order, Stability 0/20 is in the HUD's critical colour, Kings 4/4 unchanged, Tokens 0/N in the HUD's cleared colour.
+- game-copy-s-10 · low · copy · overlays: Settings still says 'prompt'. CP-1-20's acceptance was 'Settings contains no "prompt"', and the Advanced options now say 'Read instructions' and 'Count down, then move on'. But the Play mode help (SettingsModal.svelte:56-58) shows playMode.js:18 'The narrator reads each card, prompt and roll.' and :23 '… Journal prompts wait on a countdown.' when Read aloud or Hands-free is selected. Fix: 'The narrator reads the cards, the instructions and the rolls. You roll and move on.' / 'The narrator reads, and the game rolls and moves on by itself. The journal waits on a countdown.' Acceptance: no Settings string, play mode help included, contains 'prompt'.
+- game-copy-s-11 · low · copy · overlays: in landscape the journal and final log lose their labels, so the entry field is named only by its placeholder. JournalEntry.svelte:929-932 hides every .section-label at max-height 500px; journal-entry/iphone-13-landscape.png and final-log-timeline/-writing landscape show the two columns with no 'This round' / 'Timeline' / 'Your entry', and once text is typed (final-log-writing landscape) nothing visible names the field. The desktop final log, the same two columns, keeps 'TIMELINE' and 'YOUR ENTRY'. Fix: keep the 12px labels in landscape (about 20px), at least 'Your entry'. Acceptance: at 844x390 journal-entry, final-log and final-log-writing show a visible label over each column.
 
 ## Approval
-- game: not approved (OWN-7 is the owner's call; game-copy-s-01 is open).
-- copy: not approved (game-copy-s-02 to s-06 are open).
+- game: not approved (game-copy-s-09).
+- copy: not approved (game-copy-s-02 open; s-07, s-08, s-10, s-11).
