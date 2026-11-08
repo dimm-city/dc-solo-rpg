@@ -203,7 +203,11 @@
 		justify-content: space-between;
 		align-items: center;
 		gap: var(--space-md);
-		padding: var(--space-sm) clamp(var(--space-md), 3vw, var(--space-xl));
+		/* Clear of the notch and rounded corners in landscape (viewport-fit=cover; visual-layout-s-14) */
+		padding: var(--space-sm)
+			max(clamp(var(--space-md), 3vw, var(--space-xl)), env(safe-area-inset-right, 0px))
+			var(--space-sm)
+			max(clamp(var(--space-md), 3vw, var(--space-xl)), env(safe-area-inset-left, 0px));
 		background: rgba(5, 7, 13, 0.55);
 		backdrop-filter: blur(16px);
 		-webkit-backdrop-filter: blur(16px);
@@ -328,7 +332,7 @@
 	.mobile-menu {
 		position: absolute;
 		top: calc(100% + 4px);
-		right: clamp(var(--space-md), 3vw, var(--space-xl));
+		right: max(clamp(var(--space-md), 3vw, var(--space-xl)), env(safe-area-inset-right, 0px));
 		z-index: 1001;
 		min-width: 220px;
 		padding: var(--space-xs);

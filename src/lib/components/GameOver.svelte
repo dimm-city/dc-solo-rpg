@@ -197,6 +197,8 @@
 		width: 100%;
 		max-width: 880px;
 		box-sizing: border-box;
+		/* No safe-area term: OverlayModal's stage already pads by the insets, so with a landscape
+		   notch this sits 16px inside it (visual-layout-s-14) */
 		padding: var(--space-xl, 2rem) var(--space-md, 1rem);
 	}
 

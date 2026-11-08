@@ -515,7 +515,10 @@
 		width: 100%;
 		max-width: 960px;
 		margin: 0 auto;
-		padding: clamp(var(--space-lg), 6vw, var(--space-3xl)) var(--space-md) var(--space-3xl);
+		/* Sides clear of the notch in landscape (viewport-fit=cover; visual-layout-s-14) */
+		padding: clamp(var(--space-lg), 6vw, var(--space-3xl))
+			max(var(--space-md), env(safe-area-inset-right, 0px)) var(--space-3xl)
+			max(var(--space-md), env(safe-area-inset-left, 0px));
 	}
 
 	/* The one-line pitch: Inter (a sentence, under 28px, so not the display face) */

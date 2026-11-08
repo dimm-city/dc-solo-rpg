@@ -38,7 +38,8 @@
 		align-items: center;
 		justify-content: center;
 		min-height: 100dvh;
-		padding: var(--space-xl) var(--space-md);
+		padding: var(--space-xl) max(var(--space-md), env(safe-area-inset-right, 0px)) var(--space-xl)
+			max(var(--space-md), env(safe-area-inset-left, 0px));
 	}
 
 	.first-run-panel {
