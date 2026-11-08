@@ -160,7 +160,7 @@ function cardEvents(entry, state, seen) {
 		events.push({ kind: 'note', label, text: 'skipped its Stability check' });
 	}
 
-	// "6♠ · K♥ went back into the deck · 0 of 4 Kings out", as the board logged it; a King
+	// "6♠ · K♥ went back into the deck · Kings 0 of 4", as the board logged it; a King
 	// return with no King out did nothing, and no screen states a non-event
 	if (entry.modifier === 'return-king') {
 		const text = modifierLine(entry);

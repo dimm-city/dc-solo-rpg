@@ -386,8 +386,9 @@ function returnKingToDeck(card) {
 
 	gameState.kingsRevealed -= 1;
 	gameState[`kingOf${cap(suit)}`] = false;
-	// Past tense, named by its card (design polish DP-1-08): "K♥ went back into the deck · 0 of 4 Kings out"
-	card.modifierResult = `K${SUIT_SYMBOL[suit]} went back into the deck · ${gameState.kingsRevealed} of 4 Kings out`;
+	// Past tense, named by its card (DP-1-08), the count in the HUD's form and held to its clause
+	// by no-break spaces (game-copy-s-02): "K♥ went back into the deck · Kings 0 of 4"
+	card.modifierResult = `K${SUIT_SYMBOL[suit]} went back into the deck\u00a0·\u00a0Kings ${gameState.kingsRevealed} of 4`;
 	gameState.status = card.modifierResult;
 }
 

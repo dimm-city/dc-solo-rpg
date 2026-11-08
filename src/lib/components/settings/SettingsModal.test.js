@@ -100,6 +100,21 @@ describe('SettingsModal', () => {
 		expect(getGameplaySettings().autoContinueAfterReading).toBe(false);
 	});
 
+	it('says no "prompt" in any play mode help, Advanced open (game-copy-s-10)', async () => {
+		await openSettings();
+		document.querySelector('details.settings-advanced').open = true;
+		const help = () => document.getElementById('play-mode-help')?.textContent.trim();
+		for (const name of ['Manual', 'Read aloud', 'Hands-free']) {
+			await fireEvent.click(screen.getByRole('radio', { name }));
+			expect(document.body.textContent).not.toMatch(/prompt/i);
+		}
+		// Hands-free names the journal as the Advanced option does: a countdown
+		expect(help()).toBe(
+			'The narrator reads, and the game rolls and moves on by itself. The journal waits on a countdown.'
+		);
+		expect(document.body.textContent).toContain('Count down, then move on');
+	});
+
 	it('selects no play mode for a custom mix, and says so', async () => {
 		updateGameplaySettings({ autoRollDice: true });
 		await openSettings();

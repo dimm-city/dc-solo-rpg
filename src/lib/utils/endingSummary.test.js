@@ -117,26 +117,57 @@ describe('getRunRecap', () => {
 		});
 	});
 
-	it('uses the HUD’s words for the labels, and spells out each count for a screen reader', () => {
+	it('runs in the HUD’s order, Rounds in the Roll slot, and names the cards drawn "Drawn" (game-copy-s-08, s-09)', () => {
 		const recap = getRunRecap({ ...state, aceOfHeartsRevealed: true });
 		expect(recap.map((r) => r.label)).toEqual([
-			'Rounds',
-			'Cards',
-			'Kings',
-			'Aces',
 			'Stability',
+			'Kings',
+			'Rounds',
+			'Drawn',
+			'Aces',
 			'Tokens'
 		]);
+		// Each spoken text starts with the tile's visible label
 		expect(recap.map((r) => r.spoken)).toEqual([
-			'Rounds 6',
-			'Cards drawn 3 of 52',
-			'Kings 3 of 4',
-			'Aces 2 of 4',
 			'Stability 0 of 20',
-			'Tokens 8 of 10'
+			'Kings 3 of 4',
+			'Rounds 6',
+			'Drawn 3 of 52 cards',
+			'Aces 2 of 4',
+			'Tokens 8 of 10 left'
 		]);
 		const kings = recap.find((r) => r.key === 'kings');
-		expect([kings.n, kings.max, kings.danger]).toEqual([3, 4, true]);
+		expect([kings.n, kings.max]).toEqual([3, 4]);
+	});
+
+	it('gives each resource the HUD tier of its final value; Rounds and Drawn are neutral (game-copy-s-09)', () => {
+		const tiers = (s) => Object.fromEntries(getRunRecap(s).map((r) => [r.key, r.tier]));
+		// The Stability ending: 0 of 20 is critical, as the HUD showed it
+		expect(tiers({ ...state, aceOfHeartsRevealed: true })).toEqual({
+			stability: 'critical',
+			kings: 'urgent',
+			rounds: null,
+			cards: null,
+			aces: 'two',
+			tokens: 'full'
+		});
+		// A win by the last Token: Tokens cleared, Stability steady, Kings calm
+		expect(
+			tiers({
+				...state,
+				tower: 17,
+				kingsRevealed: 1,
+				acesRevealed: 4,
+				tokens: 0,
+				aceOfHeartsRevealed: true,
+				config: { options: { difficulty: 1 } }
+			})
+		).toMatchObject({ stability: 'steady', kings: 'calm', aces: 'four', tokens: 'clear' });
+		// Easy: all four Aces end the game ("final"); Aces before the Ace of Hearts are "locked"
+		expect(tiers({ ...state, acesRevealed: 4, config: { options: { difficulty: 0 } } }).aces).toBe(
+			'final'
+		);
+		expect(tiers({ ...state, acesRevealed: 1 }).aces).toBe('locked');
 	});
 
 	it('includes tokens only once Salvation was unlocked, out of the tokens the game started with', () => {

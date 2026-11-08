@@ -17,7 +17,7 @@
 
 	import { untrack } from 'svelte';
 	import { scale } from 'svelte/transition';
-	import { cubicOut } from 'svelte/easing';
+	import { cubicIn, cubicOut } from 'svelte/easing';
 	import StoryRound from './StoryRound.svelte';
 	import StoryGenerationPanel from './StoryGenerationPanel.svelte';
 	import StoryProgressBar from './story/StoryProgressBar.svelte';
@@ -85,12 +85,20 @@
 		return { duration: ROUND_EXIT_MS, css: (t) => `opacity: ${t};` };
 	}
 
-	function modeTransition() {
+	/**
+	 * Story mode scales in over the library; its exit is shorter (STATE), so the two pages, whose
+	 * panels let the background motes through (visual-layout-s-08), never sit long on each other
+	 */
+	function modeTransition(exit = false) {
 		return {
-			duration: reducedMotion() ? 0 : ANIMATION_DURATION.STORY_MODE,
+			duration: reducedMotion()
+				? 0
+				: exit
+					? ANIMATION_DURATION.STATE
+					: ANIMATION_DURATION.STORY_MODE,
 			start: 0.97,
 			opacity: 0,
-			easing: cubicOut
+			easing: exit ? cubicIn : cubicOut
 		};
 	}
 
@@ -119,7 +127,7 @@
 		bind:this={scroller}
 		data-testid="story-mode"
 		in:scale={modeTransition()}
-		out:scale={modeTransition()}
+		out:scale={modeTransition(true)}
 	>
 		<header class="story-header">
 			<button class="back-button" onclick={onExit} aria-label="Back to Story Library">
@@ -204,11 +212,13 @@
 		overflow-x: hidden;
 		overflow-y: auto;
 		overscroll-behavior: contain;
+		/* 85%: the background motes show faintly through, behind every card and line of text
+		   (visual-layout-s-08) */
 		background: linear-gradient(
 			180deg,
-			rgba(10, 10, 10, 0.96),
-			rgba(20, 22, 28, 0.96),
-			rgba(10, 10, 10, 0.96)
+			rgba(10, 10, 10, 0.85),
+			rgba(20, 22, 28, 0.85),
+			rgba(10, 10, 10, 0.85)
 		);
 		font-family: var(--font-body);
 	}

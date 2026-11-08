@@ -34,7 +34,7 @@ describe('story card words', () => {
 		expect(modifierLabel('skip-damage')).toBe('Skipped its Stability check');
 		expect(modifierLabel('return-king')).toBe('A King went back into the deck');
 		expect(modifierLabel(null)).toBe('');
-		const returned = 'K♥ went back into the deck · 0 of 4 Kings out';
+		const returned = 'K♥ went back into the deck\u00a0·\u00a0Kings 0 of 4';
 		expect(modifierLine({ modifier: 'return-king', modifierResult: returned })).toBe(returned);
 		expect(modifierLine({ modifier: 'skip-damage' })).toBe('Skipped its Stability check');
 		expect(modifierLine({ modifierResult: 'stale' })).toBe('');

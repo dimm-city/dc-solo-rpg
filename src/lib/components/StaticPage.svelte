@@ -16,7 +16,8 @@
 	<title>{title} · Dream Console</title>
 </svelte:head>
 
-<NeuralBackground />
+<!-- Behind the page: the motes show in the gaps, never over a button, card or prose (visual-layout-s-08) -->
+<NeuralBackground --neural-z="-1" />
 
 <div class="static-page">
 	<nav class="static-nav" aria-label="Page">

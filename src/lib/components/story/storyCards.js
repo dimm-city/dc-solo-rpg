@@ -43,7 +43,7 @@ export function modifierLabel(modifier) {
 
 /**
  * What the card's special rule did: the sentence the board logged (entry.modifierResult,
- * e.g. "K♥ went back into the deck · 0 of 4 Kings out"), else the plain words above. A rule
+ * e.g. "K♥ went back into the deck · Kings 0 of 4"), else the plain words above. A rule
  * that did nothing ("No King was out to return") has no line, by the board's rule
  * (formatModifierNotice): no screen states a non-event.
  */
