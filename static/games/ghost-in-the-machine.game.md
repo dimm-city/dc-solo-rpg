@@ -31,11 +31,11 @@ The augmerc wants his property back. No—he wants _you_ back. Wants to peel you
 
 Corporate kill-squads are mobilizing. The merc's connections run deep—deeper than the transit tunnels, deeper than the data-stacks in the server farms. You've got no allies, no safe houses, no exit strategy. Just the clothes on your back, the stolen tech burning against your ribs, and the growing certainty that the walls are closing in.
 
-The Etherwave Transit Hub is your only shot. Drift Gate 7 cycles every few shorties, opening portals to other districts—if you can reach it before lockdown goes total. If you can sync the neuralware to your own wetware before it rejects and fries your brain. If you can survive long enough to become the ghost the augmerc thinks you already are.
+The Etherwave Transit Hub is your only shot. Drift Gate 7 cycles every few shorties, opening portals to other districts—if you can reach it before lockdown goes total. If you can sync the neuralware to your own wetware before it rejects and fries your brain. If you can survive long enough to become the ghost the augmerc thinks you already are.
 
 ## Your Goal
 
-**Reach Drift Gate 7 and escape the Tech District before the augmerc catches you or the stolen neuralware kills you from the inside.**
+**Reach Drift Gate 7 and escape the Tech District before the augmerc catches you or the stolen neuralware kills you from the inside.**
 
 The neuralware is integrating with your nervous system—you can feel it worming through your synapses like ice-cold fingers. Every shorty brings new capabilities, new visions, new _pain_. You're seeing through security cameras now, hearing encrypted chatter in languages you don't speak, tasting ozone when data-packets route through nearby servers.
 

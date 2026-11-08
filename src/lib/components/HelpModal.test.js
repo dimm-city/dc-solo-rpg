@@ -56,10 +56,33 @@ describe('HelpModal', () => {
 	it('should display help message text', async () => {
 		await renderModal();
 
-		expect(document.body.textContent).toContain('20 Stability');
-		expect(document.body.textContent).toContain('Odd cards');
-		expect(document.body.textContent).toContain('all four Kings');
-		expect(document.body.textContent).toContain('Roll 17 or higher');
+		// The Guide keeps numerals on their words with no-break spaces; \s also matches those
+		const text = document.body.textContent.replace(/\s+/g, ' ');
+		expect(text).toContain('20 Stability');
+		expect(text).toContain('Odd cards');
+		expect(text).toContain('all four Kings');
+		expect(text).toContain('Roll 17 or higher');
+	});
+
+	it('never lets a numeral end a line apart from the word after it (visual-layout-s-19)', async () => {
+		await renderModal();
+
+		const guide = document.body.querySelector('.game-guide');
+		const walker = document.createTreeWalker(guide, NodeFilter.SHOW_TEXT);
+		const breakable = [];
+		for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+			// The table's row headers (Roll, Aces revealed) never wrap (white-space: nowrap)
+			if (node.parentElement.closest('tbody th')) continue;
+			const pairs = node.textContent.match(/\b\d+[ \t\n-]+[A-Za-z]+/g);
+			if (pairs) breakable.push(...pairs);
+		}
+		expect(breakable).toEqual([]);
+		// The key figures, the table data and the Hard rule all carry the no-break space
+		expect(guide.textContent).toContain('20\u00a0Stability');
+		expect(guide.textContent).toContain('10\u00a0Tokens');
+		expect(guide.textContent).toContain('Lose\u00a03\u00a0Stability');
+		expect(guide.textContent).toContain('then 1\u00a0Token comes off');
+		expect(guide.textContent).toContain('adds 1\u00a0Token');
 	});
 
 	it('states the Lucid and Surreal rule for every roll (owner decision 1)', async () => {

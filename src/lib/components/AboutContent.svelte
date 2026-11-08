@@ -22,9 +22,9 @@
 			How it plays
 		</svelte:element>
 		<p>
-			It is built on the Wretched and Alone system. A standard 52-card deck sets the pace and a d20
-			decides the risk, while every prompt invites you to write your own story through the neon
-			streets of Dimm&nbsp;City.
+			It is built on the Wretched and Alone system. A standard <span class="nobreak">52-card</span> deck
+			sets the pace and a d20 decides the risk, while every prompt invites you to write your own story
+			through the neon streets of Dimm&nbsp;City.
 		</p>
 	</section>
 
@@ -36,12 +36,12 @@
 		<p class="about-credit">
 			This work is based on
 			<a href="https://loottheroom.itch.io/wretched" target="_blank" rel="noopener noreferrer"
-				>The Wretched</a
+				>The&nbsp;Wretched</a
 			>, product of Chris Bissette and Loot The Room, and licensed under
 			<a
 				href="https://creativecommons.org/licenses/by/3.0/"
 				target="_blank"
-				rel="noopener noreferrer">CC Attribution 3.0 Unported</a
+				rel="noopener noreferrer">CC&nbsp;Attribution&nbsp;3.0&nbsp;Unported</a
 			>.
 		</p>
 	</section>
@@ -56,6 +56,12 @@
 		max-width: var(--measure, 30em);
 		margin: 0;
 		color: #e2e9f2;
+	}
+
+	/* A compound that must not split at its hyphen (visual-layout-s-19). Not U+2011: Inter's web
+	   subset has no glyph for it, so it would be drawn in a fallback font */
+	.nobreak {
+		white-space: nowrap;
 	}
 
 	.about-content p + p {
