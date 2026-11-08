@@ -3,11 +3,13 @@
 	 * PlayerInfoBar - the in-game header: exit, help, the game's title and round, and the
 	 * settings, dice theme, auto-play and read-aloud controls.
 	 *
-	 * One grid, mirrored around the title: the same number of equal tracks on each side, so
-	 * the title is centred on the bar whatever sits beside it, and a long one ends in "…".
-	 * Above 720px every control is an icon with a small label under it (EXIT, HELP, SETTINGS |
-	 * PLAYER | title | ROUND | DICE, AUTO, VOICE); the two toggles fill and say ON when on. On
-	 * phones the bar keeps Exit and Help, the round and one "⋯" menu for the rest.
+	 * One grid, mirrored around the title: two sides of the same width (the wider group's), so
+	 * the title is centred on the bar whatever sits beside it, and a long one wraps to a second
+	 * line. Above 720px every control is an icon with a 12px label under it (EXIT, GUIDE,
+	 * SETTINGS, PLAYER | title | ROUND, DICE, AUTO-PLAY, READ ALOUD); each label is part of its
+	 * control's accessible name, and the two toggles fill when on (aria-pressed says so). The
+	 * player segment shows only for a named player, never "Guest". On phones the bar keeps Exit
+	 * and the Guide, the round and one "⋯" menu for the rest.
 	 *
 	 * The frame is cut so that its two side points sit on the bar's centre line (the top steps
 	 * are half the height of the bottom bevels), and every control and label is centred on that
@@ -59,6 +61,12 @@
 	const audioEnabled = $derived(isReadAloudOn(getAudioSettings()));
 	const autoPlayEnabled = $derived(isAutoPlayOn(getGameplaySettings()));
 	const roundLabel = $derived(gameState.config?.labels?.statusDisplayRoundText ?? 'Round');
+	/** A named player only: no segment (and no room kept) for a guest */
+	const playerName = $derived(
+		(gameState.player?.name ?? '').trim().toLowerCase() === 'guest'
+			? ''
+			: (gameState.player?.name ?? '').trim()
+	);
 
 	function toggleAudio() {
 		updateAudioSettings(audioEnabled ? READ_ALOUD_OFF : READ_ALOUD_ON);
@@ -199,8 +207,8 @@
 			<button class="status-bar-button exit-button" onclick={onExitClick} aria-label="Exit game">
 				{@render icon('exit')}<span class="btn-label">Exit</span>
 			</button>
-			<button class="status-bar-button help-button" onclick={onHelpClick} aria-label="Game help">
-				{@render icon('help')}<span class="btn-label">Help</span>
+			<button class="status-bar-button help-button" onclick={onHelpClick} aria-label="Game Guide">
+				{@render icon('help')}<span class="btn-label">Guide</span>
 			</button>
 			<button
 				class="status-bar-button settings-button wide-only"
@@ -209,25 +217,25 @@
 			>
 				{@render icon('settings')}<span class="btn-label">Settings</span>
 			</button>
+			{#if playerName}
+				<div class="info-segment player-segment wide-only">
+					<span class="label">Player</span>
+					<span class="value">{playerName}</span>
+				</div>
+			{/if}
 		</div>
 
-		<div class="bar-info">
-			<div class="info-segment player-segment wide-only">
-				<span class="label">Player</span>
-				<span class="value">{gameState.player?.name}</span>
-			</div>
-			<h5 class="game-title">{gameState.config?.title}</h5>
+		<h5 class="game-title">{gameState.config?.title}</h5>
+
+		<div class="bar-group bar-end">
 			<div class="info-segment round-segment">
 				<span class="label">{roundLabel}</span>
 				<span class="value">{gameState?.round}</span>
 			</div>
-		</div>
-
-		<div class="bar-group bar-end">
 			<button
 				class="status-bar-button dice-theme-button wide-only"
 				onclick={() => (showDiceThemePicker = true)}
-				aria-label="Change dice theme"
+				aria-label="Dice theme"
 			>
 				{@render icon('dice')}<span class="btn-label">Dice</span>
 			</button>
@@ -235,19 +243,17 @@
 				class="status-bar-button toggle-button wide-only"
 				class:active={autoPlayEnabled}
 				onclick={toggleAutoPlay}
-				aria-label="Toggle Auto-Play"
 				aria-pressed={autoPlayEnabled}
 			>
-				{@render icon('auto')}<span class="btn-label">Auto{autoPlayEnabled ? ' on' : ''}</span>
+				{@render icon('auto')}<span class="btn-label">Auto-play</span>
 			</button>
 			<button
 				class="status-bar-button toggle-button wide-only"
 				class:active={audioEnabled}
 				onclick={toggleAudio}
-				aria-label="Toggle Audio"
 				aria-pressed={audioEnabled}
 			>
-				{@render icon('voice')}<span class="btn-label">Voice{audioEnabled ? ' on' : ''}</span>
+				{@render icon('voice')}<span class="btn-label">Read aloud</span>
 			</button>
 			<button
 				bind:this={moreButton}
@@ -335,17 +341,18 @@
 		--aug-tr: 9px;
 		--aug-br: 18px;
 		--aug-bl: 18px;
-		/* The inset from either end, a button track and an info track (PLAYER, ROUND) */
+		/* The inset from either end, and each side's width: the wider group's (ROUND, DICE,
+		   AUTO-PLAY, READ ALOUD), so the title is centred on the bar */
 		--hdr-inset: var(--space-md);
-		--hdr-btn: 64px;
-		--hdr-seg: 112px;
+		--hdr-side: 18rem;
 
 		display: grid;
-		grid-template-columns:
-			repeat(3, var(--hdr-btn)) var(--hdr-seg) minmax(0, 1fr) var(--hdr-seg)
-			repeat(3, var(--hdr-btn));
+		grid-template-columns: var(--hdr-side) minmax(0, 1fr) var(--hdr-side);
 		align-items: center;
-		column-gap: var(--space-xs);
+		column-gap: var(--space-sm);
+		/* From 1024px the bar is as wide as the HUD under it, edge for edge */
+		max-width: 960px;
+		margin-inline: auto;
 		min-height: 52px;
 		padding: 4px var(--hdr-inset);
 		box-sizing: border-box;
@@ -364,23 +371,31 @@
 			inset 0 0 30px rgba(255, 0, 255, 0.2);
 	}
 
-	/* The groups only order the controls; every control is a track of the bar's grid */
-	.bar-group,
-	.bar-info {
-		display: contents;
+	/* Each side is one row of controls: the start group from the left, the end group from the
+	   right */
+	.bar-group {
+		display: flex;
+		align-items: center;
+		gap: 2px;
+		min-width: 0;
 	}
 
-	/* Icon over a 10px label; the whole track wide and at least 44px tall */
+	.bar-end {
+		justify-content: flex-end;
+	}
+
+	/* Icon over a 12px label; at least 44px wide and tall */
 	.status-bar-button {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: 3px;
-		width: 100%;
-		min-width: 0;
+		gap: 2px;
+		flex: none;
+		box-sizing: border-box;
+		min-width: 44px;
 		min-height: 44px;
-		padding: 4px 2px;
+		padding: 2px 4px;
 		background: transparent;
 		border: 1px solid transparent;
 		border-radius: 4px;
@@ -398,10 +413,10 @@
 
 	.btn-label {
 		font-family: var(--font-body);
-		font-size: 0.625rem;
+		font-size: 0.75rem;
 		font-weight: 600;
 		line-height: 1;
-		letter-spacing: 0.08em;
+		letter-spacing: 0.06em;
 		text-transform: uppercase;
 		white-space: nowrap;
 		color: #c8d6e5;
@@ -443,16 +458,19 @@
 		flex-direction: column;
 		align-items: center;
 		gap: 2px;
-		min-width: 0;
+		flex: none;
+		min-width: 56px;
+		max-width: 7rem;
+		padding-inline: 4px;
 		text-transform: uppercase;
 	}
 
 	.info-segment .label {
 		font-family: var(--font-body);
-		font-size: 0.625rem;
+		font-size: 0.75rem;
 		font-weight: 600;
 		line-height: 1;
-		letter-spacing: 0.1em;
+		letter-spacing: 0.06em;
 		white-space: nowrap;
 		color: #00ffff;
 	}
@@ -463,19 +481,23 @@
 		text-overflow: ellipsis;
 		white-space: nowrap;
 		font-family: var(--font-body);
-		font-size: 0.9375rem;
-		font-weight: 700;
+		font-size: 1rem;
+		font-weight: 600;
 		line-height: 1.15;
 		color: #fff;
 	}
 
-	/* Centred on the bar: the middle track of a mirrored grid */
+	/* Centred on the bar: the middle track of a mirrored grid. A long title takes a second
+	   line (balanced) rather than an ellipsis; the bar's height does not change. */
 	.game-title {
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
 		margin: 0;
 		min-width: 0;
 		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
+		text-wrap: balance;
 		font-family: var(--font-body);
 		font-size: 1rem;
 		font-weight: 600;
@@ -535,7 +557,7 @@
 		padding: 2px 8px;
 		border: 1px solid #6a87a3;
 		border-radius: 3px;
-		font-size: 0.6875rem;
+		font-size: 0.75rem;
 		color: #c8d6e5;
 	}
 
@@ -545,11 +567,11 @@
 		color: #04121a;
 	}
 
-	/* Tablets and landscape phones: narrower tracks */
+	/* Tablets and landscape phones: the sides at the end group's own width */
 	@media (max-width: 1023px) {
 		.player-round-bar {
-			--hdr-btn: 60px;
-			--hdr-seg: 80px;
+			--hdr-inset: var(--space-sm);
+			--hdr-side: 17.25rem;
 		}
 	}
 
@@ -557,12 +579,17 @@
 	@media (max-width: 720px) {
 		.player-round-bar {
 			--hdr-inset: var(--space-sm);
-			--hdr-btn: 44px;
-			grid-template-columns:
-				var(--hdr-btn) var(--hdr-btn) minmax(0, 1fr) var(--hdr-btn)
-				var(--hdr-btn);
+			--hdr-side: calc(2 * 44px + 2px);
 			min-height: 48px;
 			padding-block: 2px;
+		}
+
+		.bar-group {
+			gap: 2px;
+		}
+
+		.info-segment {
+			min-width: 44px;
 		}
 
 		.wide-only {
@@ -587,13 +614,15 @@
 			border-color: rgba(0, 255, 255, 0.5);
 		}
 
-		.game-title {
-			font-size: 0.9375rem;
-		}
-
 		/* The round's label may be a little wider than its track; it stays centred on it */
 		.round-segment {
 			justify-self: center;
+		}
+	}
+
+	@media (max-width: 600px) {
+		.game-title {
+			font-size: 0.875rem;
 		}
 	}
 

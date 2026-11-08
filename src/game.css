@@ -5,7 +5,6 @@
 		Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
 	--pink: #ef1ebf;
 	--blue: #3e6ab3;
-	--yellow: #f8f400da;
 	--bs-body-font-family: var(--main-font-family);
 	--bg-main: #01242f;
 	--bg-secondary: #190030;
@@ -18,7 +17,7 @@
 	--secondary-accent: #c643ff;
 	--secondary-accent-muted: #c743ffad;
 	--third-accent: #ff15cb;
-	--fourth-accent: var(--yellow);
+	--fourth-accent: var(--color-brand-yellow);
 	--disabled-color: rgb(196, 192, 192);
 	--disabled-color-dark: rgb(75, 75, 75);
 	--dc-button-bg: transparent;
@@ -46,6 +45,6 @@
 	--dc-card-front-bg: var(--dark);
 	--dc-card-front-color: var(--third-accent);
 	--dc-health-meter-high: var(--third-accent);
-	--dc-health-meter-med: var(--yellow);
+	--dc-health-meter-med: var(--color-brand-yellow);
 	--dc-health-meter-low: var(--secondary-accent-muted);
 }

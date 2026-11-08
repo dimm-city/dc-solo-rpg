@@ -2,7 +2,7 @@
  * useSuccessCheck - Salvation check screen logic composable
  *
  * 1. Roll: dice animate ("Rolling…"; a press skips to the result), the tokens update and a
- *    result line stays on screen. The button becomes "Continue".
+ *    result line stays on screen. The button names where it goes ("Open your journal").
  *    On Normal tokens only ever fall: a miss loses none, and the line says so. On Hard a miss
  *    adds tokens. With all four Aces (Normal and Hard; on Easy the fourth Ace ends the game
  *    first) there is no target but the roll is a Stability check: the token comes off only if
@@ -12,7 +12,7 @@
  * A result that ends the game (the last token, or Stability lost to the four-Aces check) does
  * not move on by itself: the button reads "Escape" or "Face the end" and waits.
  *
- * The roll button shows the target before rolling ("need 14+").
+ * The roll button reads "Roll for Salvation"; the target is in the screen's description.
  *
  * @returns {Object} Success check state and actions
  */
@@ -26,10 +26,12 @@ import {
 import { rollDice, skipRoll } from '../../stores/diceStore.svelte.js';
 import { gameState } from '../../stores/gameStore.svelte.js';
 import { isHardGame } from '../../constants/difficulty.js';
+import { getGameplaySettings } from '../../stores/audioStore.svelte.js';
 import {
 	formatSalvationResult,
 	formatSalvationButton,
 	formatModifierHint,
+	formatNextStepLabel,
 	ROLLING_LABEL
 } from '../../utils/rollResult.js';
 import { createResultHold } from './resultHold.svelte.js';
@@ -117,16 +119,19 @@ export function useSuccessCheck() {
 		settle(diceRoll, getCurrentSalvationThreshold());
 	}
 
-	// Reactive button text: the target is shown before rolling; an ending is named
+	// Reactive button text (DP-1-06): "Roll for Salvation" (the target is in the description);
+	// after the roll, the journal (or the next round when the journal is skipped); an ending is named
 	const buttonText = $derived(
 		successCheckRolling
 			? ROLLING_LABEL
 			: successCheckDone
-				? gameState.gameOver
-					? gameState.win
-						? 'Escape'
-						: 'Face the end'
-					: 'Continue'
+				? formatNextStepLabel({
+						gameOver: gameState.gameOver,
+						win: gameState.win,
+						next: 'journal',
+						round: gameState.round,
+						skipJournal: getGameplaySettings().autoHandleJournaling === 'skip'
+					})
 				: formatSalvationButton(getCurrentSalvationThreshold())
 	);
 	// The modifier the roll will use, shown on the roll button only

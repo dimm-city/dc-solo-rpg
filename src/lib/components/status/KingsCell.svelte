@@ -8,7 +8,8 @@
 	 * - a King sent back into the deck (return-king) un-ignites: its skull runs the ignite in
 	 *   reverse, one beat, as the count drops, so the player sees the King leave;
 	 * - lit skulls pulse, harder and faster with each King (an alert loop);
-	 * - at 3 of 4 the cell turns urgent;
+	 * - the label is red from the first King; at 3 of 4 the tile turns urgent (kingsTier): the
+	 *   strongest tint in the HUD and a red, glowing count;
 	 * - the fourth King is the ending: after a short hold, all four skulls flare in turn,
 	 *   250ms apart, and the whole sequence ends within the 1.5s maximum.
 	 *
@@ -17,6 +18,7 @@
 	import { untrack } from 'svelte';
 	import { gameState } from '../../stores/gameStore.svelte.js';
 	import { ANIMATION_DURATION } from '../../constants/animations.js';
+	import { kingsTier, kingsSpoken } from './hudTiers.js';
 
 	// The fourth King: a hold, then four flares 250ms apart, each one beat long. The hold is
 	// whatever the 1.5s maximum leaves (350ms), so the card is seen before the skulls answer.
@@ -28,6 +30,7 @@
 		Math.max(0, Math.min(4, gameState.kingsRevealed + (gameState.pendingUpdates.kingsChange || 0)))
 	);
 	const label = $derived(gameState.config?.labels?.failureCounters ?? 'Kings');
+	const tier = $derived(kingsTier(count));
 
 	// Index of the skull that just lit (one-off ignite), the skulls that just went dark
 	// (dimFrom up to dimTo), and the fourth-King finale
@@ -62,18 +65,23 @@
 
 <div
 	class="hud-cell kings"
-	class:urgent={count >= 3}
+	class:urgent={tier === 'urgent'}
 	class:finale
 	data-level={count}
+	data-tier={tier}
 	data-testid="hud-kings"
 	style="--hud-beat: {ANIMATION_DURATION.BEAT}ms; --finale-delay: {FINALE_DELAY}ms; --finale-stagger: {FINALE_STAGGER}ms"
 >
-	<span class="hud-label">{label}</span>
+	<span class="tint" aria-hidden="true"></span>
+	<span class="hud-label" aria-hidden="true">{label}</span>
 	<span class="hud-readout" aria-hidden="true">
 		<span class="hud-value"
-			><span class="current">{count}</span><span class="hud-max">/4</span></span
+			><span class="led-field"
+				><span class="led-off" aria-hidden="true">8</span><span class="led-on current">{count}</span
+				></span
+			><span class="hud-slash" aria-hidden="true">/</span><span class="hud-max">4</span></span
 		>
-		<span class="hud-foot skulls">
+		<span class="hud-foot skulls hud-icons">
 			{#each [0, 1, 2, 3] as i (i)}
 				<img
 					class="skull"
@@ -87,17 +95,20 @@
 			{/each}
 		</span>
 	</span>
-	<span class="sr-only">{label}: {count} of 4 revealed</span>
+	<span class="sr-only">{kingsSpoken(count, label)}</span>
 </div>
 
 <style>
+	/* calm: no tint, a white count; the label turns red with the first King (VT-1-15) */
 	.kings {
 		--pulse-scale: 1;
 		--pulse-time: 0s;
+		--tint-color: #ff4d6d;
+		--tint-alpha: 0;
+		--value-color: #f2f4f8;
 	}
-
-	.kings .hud-label {
-		color: var(--color-danger, #ff4d6d);
+	.kings:not([data-level='0']) {
+		--label-color: #ff4d6d;
 	}
 
 	/* Lit skulls pulse harder and faster as Kings fall */
@@ -118,24 +129,16 @@
 		--pulse-time: 0.9s;
 	}
 
-	/* 3 of 4: danger colour, the count is the loudest thing in the HUD */
+	/* urgent (3-4): the strongest tint in the HUD (.16, through the shared tint layer) and a
+	   red count with the HUD's one strong glow: the loudest thing on the row */
 	.urgent {
-		background: linear-gradient(180deg, rgba(255, 77, 109, 0.16), rgba(255, 77, 109, 0.04));
-	}
-	.urgent .current {
-		color: var(--color-danger, #ff4d6d);
-		text-shadow: 0 0 10px rgba(255, 77, 109, 0.8);
-	}
-
-	.skulls {
-		display: flex;
-		gap: 3px;
+		--tint-alpha: 0.16;
+		--value-color: #ff4d6d;
+		--value-glow: 0 0 10px rgba(255, 77, 109, 0.8);
 	}
 
 	.skull {
 		display: block;
-		width: var(--hud-foot, 18px);
-		height: var(--hud-foot, 18px);
 		opacity: 0.22;
 		filter: grayscale(1);
 	}
@@ -193,12 +196,6 @@
 			transform: scale(1);
 			opacity: 1;
 			filter: drop-shadow(0 0 4px rgba(255, 77, 109, 0.9));
-		}
-	}
-
-	@media (max-width: 600px) {
-		.skulls {
-			gap: 2px;
 		}
 	}
 

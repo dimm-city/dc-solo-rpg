@@ -151,7 +151,7 @@ async function stackFourthKing(page: Page) {
 /** Roll for tasks, let the voice finish the roll, and wait for the first card */
 async function dealToFirstCard(page: Page) {
 	await pressStep(page, 'roll-tasks-button');
-	await expect(page.getByTestId('result-line')).toHaveText('Rolled 3 · Draw 2 cards', {
+	await expect(page.getByTestId('result-line')).toHaveText('Rolled 3 · 2 cards this round', {
 		timeout: 30000
 	});
 	await expect.poll(() => isSpeaking(page)).toBe(true);
@@ -174,7 +174,7 @@ test.describe('Read-aloud: the deal waits for the voice', () => {
 		await openGame(page);
 		await store(page, 'rnd.mockDieRoll(17)');
 		await pressStep(page, 'roll-tasks-button');
-		await expect(page.getByTestId('result-line')).toHaveText('Rolled 17 · Draw 5 cards', {
+		await expect(page.getByTestId('result-line')).toHaveText('Rolled 17 · 5 cards this round', {
 			timeout: 30000
 		});
 		await expect.poll(() => ttsLog(page)).toContain('speak: You rolled a 17. Draw 5 cards.');
@@ -198,7 +198,7 @@ test.describe('Read-aloud: the deal waits for the voice', () => {
 		await openGame(page);
 		await store(page, 'rnd.mockDieRoll(17)');
 		await pressStep(page, 'roll-tasks-button');
-		await expect(page.getByTestId('result-line')).toHaveText('Rolled 17 · Draw 5 cards', {
+		await expect(page.getByTestId('result-line')).toHaveText('Rolled 17 · 5 cards this round', {
 			timeout: 30000
 		});
 		await expect(page.getByTestId('step-advance')).toHaveClass(/waiting/);

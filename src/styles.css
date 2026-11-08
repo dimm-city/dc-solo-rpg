@@ -73,6 +73,9 @@
 	--frame-border: linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta));
 	--content-max: 720px; /* desktop reading column */
 	--cta-max: 480px; /* primary button max width on desktop */
+	/* The bottom safe area (the home indicator): every bottom inset reads this, so a capture
+	   can force it (DP-1-13) */
+	--safe-bottom: env(safe-area-inset-bottom, 0px);
 
 	/* Font Sizes - 8px baseline grid */
 	--text-xs: 0.75rem;
@@ -337,7 +340,8 @@ p {
 
 strong,
 b {
-	font-weight: 700;
+	/* Inter at two weights only, 400 and 600 (VT-1-12) */
+	font-weight: 600;
 	color: var(--color-text-primary);
 }
 
@@ -503,7 +507,7 @@ label {
 	display: block;
 	font-family: var(--font-body);
 	font-size: var(--text-sm);
-	font-weight: 700;
+	font-weight: 600;
 	color: #ffffff;
 	/* FIX #4: WCAG AA */
 	text-transform: uppercase;

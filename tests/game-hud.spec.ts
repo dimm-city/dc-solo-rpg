@@ -182,21 +182,19 @@ test.describe('Game HUD', () => {
 		await expect(aces).toContainText('0/4');
 		await expect(aces.locator('.pip')).toHaveCount(4);
 		await expect(aces.locator('.pip.lit')).toHaveCount(0);
-		// Locked: the same n/N and bar as later, dimmed, with a lock and a way to unlock it
+		// Locked: the same n/N as later, dimmed, with the lock where the bar will be
 		await expect(tokens).toHaveClass(/locked/);
 		await expect(tokens).toContainText('10/10');
-		await expect(tokens.locator('.lock')).toBeVisible();
+		await expect(tokens.locator('.hud-foot.lock')).toBeVisible();
 		await expect(tokens).toHaveAttribute('title', /Ace of Hearts/);
-		await expect(tokens.locator('.sr-only')).toHaveText('Tokens locked: find the Ace of Hearts');
+		await expect(tokens.locator('.sr-only')).toHaveText('Tokens locked until the Ace of Hearts');
 
 		await setState(
 			page,
 			"g.log = [{ card: 'A', suit: 'hearts' }, { card: 'A', suit: 'clubs' }]; g.acesRevealed = 2; g.aceOfHeartsRevealed = true; g.tokens = 9;"
 		);
 		await expect(aces).toHaveAttribute('title', 'Salvation needs 14+');
-		await expect(aces.locator('.sr-only')).toHaveText(
-			'Aces 2 of 4 (hearts, clubs), Salvation needs 14 or more'
-		);
+		await expect(aces.locator('.sr-only')).toHaveText('Aces 2 of 4, Salvation needs 14 or more');
 		await expect(aces.locator('.pip.lit')).toHaveCount(2);
 		await expect(aces.locator('.pip.lit.hearts')).toHaveCount(1);
 		await expect(tokens).toContainText('9/10');
@@ -209,7 +207,7 @@ test.describe('Game HUD', () => {
 		await expect(tokens).toHaveClass(/over/);
 		await expect(tokens.locator('.fill')).toHaveAttribute('style', /scaleX\(1\)/);
 
-		// All four Aces: automatic Salvation on Normal and Hard, the final Stability check on Easy
+		// All four Aces: each Salvation a Stability check on Normal and Hard, the final check on Easy
 		await setState(
 			page,
 			`g.acesRevealed = 4; g.log = ${FOUR_ACES}; g.config.options.difficulty = 1;`
@@ -217,15 +215,15 @@ test.describe('Game HUD', () => {
 		await expect(aces).toContainText('4/4');
 		await expect(aces).toHaveAttribute(
 			'title',
-			'All four Aces: Salvation is automatic after a Stability check'
+			'All four Aces: each Salvation is a Stability check; hold on and a Token comes off'
 		);
 		await expect(aces.locator('.sr-only')).toHaveText(
-			'Aces 4 of 4 (hearts, spades, diamonds, clubs), Salvation is automatic after a Stability check'
+			'Aces 4 of 4, Salvation has no target: each roll is a Stability check'
 		);
 		await setState(page, 'g.config.options.difficulty = 2;');
 		await expect(aces).toHaveAttribute(
 			'title',
-			'All four Aces: Salvation is automatic after a Stability check'
+			'All four Aces: each Salvation is a Stability check; hold on and a Token comes off'
 		);
 		await setState(page, 'g.config.options.difficulty = 0;');
 		await expect(aces).toHaveAttribute(
@@ -248,20 +246,24 @@ test.describe('Game HUD', () => {
 		await expect(roll.locator('.led-on')).toHaveText('--');
 		await setState(page, 'g.diceRoll = 7;');
 		await expect(roll.locator('.led-on')).toHaveText('7');
-		// The digits are the self-hosted DSEG7 face, larger than the other numbers
+		// Every number in the HUD is the self-hosted DSEG7 face, one size family (OWN-1)
 		const led = await roll.locator('.led-on').evaluate(async (el) => {
 			await document.fonts.ready;
-			const other = document.querySelector('[data-testid="hud-cards"] .hud-value')!;
+			const hud = document.querySelector('[data-testid="hud"]')!;
+			const digits = [...hud.querySelectorAll('.led-on, .led-off, .hud-max')];
 			return {
 				family: getComputedStyle(el).fontFamily,
 				loaded: document.fonts.check(`700 20px "DSEG7 Classic"`),
-				size: parseFloat(getComputedStyle(el).fontSize),
-				otherSize: parseFloat(getComputedStyle(other).fontSize)
+				families: [...new Set(digits.map((d) => getComputedStyle(d).fontFamily.split(',')[0]))],
+				sizes: [
+					...new Set([...hud.querySelectorAll('.led-on')].map((d) => getComputedStyle(d).fontSize))
+				]
 			};
 		});
 		expect(led.family).toContain('DSEG7 Classic');
 		expect(led.loaded).toBe(true);
-		expect(led.size).toBeGreaterThan(led.otherSize);
+		expect(led.families).toEqual(['"DSEG7 Classic"']);
+		expect(led.sizes).toHaveLength(1);
 	});
 
 	test('tiers, Kings and the Lucid and Surreal icons follow the game state', async ({ page }) => {
@@ -271,8 +273,8 @@ test.describe('Game HUD', () => {
 		// Both icons are there before any modifier, dim and said to be off
 		await expect(lucid).toBeVisible();
 		await expect(surreal).toBeVisible();
-		await expect(lucid).toHaveAttribute('aria-label', /^Lucid \(off\): a natural 20/);
-		await expect(surreal).toHaveAttribute('aria-label', /^Surreal \(off\): a natural 1/);
+		await expect(lucid).toHaveAttribute('aria-label', 'Lucid: off');
+		await expect(surreal).toHaveAttribute('aria-label', 'Surreal: off');
 		const dim = await lucid.evaluate((el) => parseFloat(getComputedStyle(el).opacity));
 		expect(dim).toBeGreaterThan(0.2);
 		expect(dim).toBeLessThan(0.4);
@@ -281,10 +283,9 @@ test.describe('Game HUD', () => {
 		await expect(page.getByTestId('hud-stability')).toHaveClass(/tier-critical/);
 		await expect(page.getByTestId('hud-kings')).toHaveClass(/urgent/);
 		await expect(page.getByTestId('hud-kings').locator('.skull.lit')).toHaveCount(3);
-		await expect(
-			page.getByRole('img', { name: 'Lucid: next roll keeps the higher of two dice' })
-		).toHaveClass(/\bon\b/);
-		await expect(lucid).toHaveAttribute('title', 'Lucid: next roll keeps the higher of two dice');
+		const lucidOn = 'Lucid: your next roll uses two dice and keeps the higher.';
+		await expect(page.getByRole('img', { name: lucidOn })).toHaveClass(/\bon\b/);
+		await expect(lucid).toHaveAttribute('title', lucidOn);
 		await expect(surreal).not.toHaveClass(/\bon\b/);
 		// Lit: its own colour, fully opaque
 		await expect
@@ -295,10 +296,10 @@ test.describe('Game HUD', () => {
 
 		await setState(page, 'g.isLucid = false; g.isSurreal = true;');
 		await expect(
-			page.getByRole('img', { name: 'Surreal: next roll keeps the lower of two dice' })
+			page.getByRole('img', { name: 'Surreal: your next roll uses two dice and keeps the lower.' })
 		).toHaveClass(/\bon\b/);
 		await expect(lucid).not.toHaveClass(/\bon\b/);
-		await expect(lucid).toHaveAttribute('aria-label', /\(off\)/);
+		await expect(lucid).toHaveAttribute('aria-label', 'Lucid: off');
 		// Both icons stay on the HUD's bottom line
 		expectOneLineEach(await lines(page));
 	});

@@ -9,9 +9,10 @@
 	import { getAudioSettings, getGameplaySettings, speak } from '../stores/audioStore.svelte.js';
 	import { autoAdvance, autoRoll } from '../utils/autoPlay.js';
 	import { ANIMATION_DURATION } from '../constants/animations.js';
-	import { formatIntroGoal } from '../utils/rollResult.js';
+	import { formatIntroGoal, formatResultTotals } from '../utils/rollResult.js';
+	import { fourthAceWins, isHardGame } from '../constants/difficulty.js';
 	import { createAnnouncer } from '../utils/liveAnnouncer.js';
-	import { skipRoll } from '../stores/diceStore.svelte.js';
+	import { skipRoll, diceState } from '../stores/diceStore.svelte.js';
 	import { saveGame } from '../stores/indexedDBStorage.js';
 	import { useRuleCaptions } from '../composables/useRuleCaptions.svelte.js';
 
@@ -103,49 +104,48 @@
 		return card.id !== undefined && card.id === noticeDoneFor ? null : card.modifierResult;
 	});
 
+	// DP-1-06: one job per element. The title names the step, the description says what is at
+	// stake (the target lives here, not on the button), the button names the action.
+	const INSTABILITY_DESCRIPTION =
+		'The situation is already precarious. 10 or less costs Stability.';
+	const TASKS_DESCRIPTION = 'Your roll sets how many cards you draw, from 1 to 6.';
+
 	function salvationDescription() {
 		const need = getCurrentSalvationThreshold();
 		// No target with four Aces (Normal and Hard; on Easy the fourth Ace ends the game first)
-		return need === 0
-			? 'All four Aces are out. No target to beat now: survive one Stability check and a token comes off.'
-			: `Roll to remove a token. You need ${need}+.`;
+		if (need === 0) return 'No target now. Survive this Stability check and a Token comes off.';
+		const miss = isHardGame(gameState) ? ' A miss adds one.' : '';
+		return `You need ${need}+ to remove a Token.${miss}`;
 	}
 
 	/** On Easy the fourth Ace's check is the last roll of the game: say what is at stake */
 	function stabilityCheckDescription() {
 		return isFinalStabilityCheck()
-			? 'The fourth Ace is out. Survive this one Stability check and you escape. If it takes your last Stability, you fall.'
-			: 'An odd card demands a price. Roll to see how much Stability you lose.';
+			? 'Come through this roll with any Stability left and you escape.'
+			: 'An odd card demands a price. 10 or less costs Stability.';
 	}
 
 	// Contextual background text for each screen
 	const contextText = $derived.by(() => {
 		switch (currentScreen) {
 			case 'initialDamageRoll':
-				return {
-					title: 'Instability',
-					description:
-						"Before your journey begins, the situation is already precarious. Roll to see how much ground you've already lost..."
-				};
+				return { title: 'Instability', description: INSTABILITY_DESCRIPTION };
 			case 'rollForTasks':
 				// The round opens here; after the roll the title stays and the result line gives the count
-				return {
-					title: `Round ${gameState.round}`,
-					description: 'Roll to see how many cards you draw this round.'
-				};
+				return { title: `Round ${gameState.round}`, description: TASKS_DESCRIPTION };
 			case 'failureCheck':
 				return {
-					title: isFinalStabilityCheck() ? 'Final Stability Check' : 'Stability Check',
+					title: isFinalStabilityCheck() ? 'Final Check' : 'Stability Check',
 					eyebrow: cardLine(gameState.lastCard),
 					description: stabilityCheckDescription(),
 					notice: modifierNotice
 				};
 			case 'successCheck':
-				// Name the card: the notice is about it, not about this roll
+				// DP-1-08: the notice names its card in the past tense, so it reads as it is
 				return {
 					title: 'Salvation',
 					description: salvationDescription(),
-					notice: modifierNotice ? `${cardName(gameState.lastCard)} · ${modifierNotice}` : null
+					notice: modifierNotice
 				};
 			default:
 				return null; // Card, journal and ending screens have no background text
@@ -271,8 +271,31 @@
 	// ===== Screen reader: one polite live region for results, events and captions =====
 	let liveMessage = $state('');
 	const announcer = createAnnouncer((message) => (liveMessage = message));
+	// DP-1-07: the result line carries no totals (the HUD shows them); the announcement adds them
+	function resultTotals() {
+		const totals = {
+			stability: gameState.tower,
+			tokens: Math.max(0, gameState.tokens),
+			start: gameState.config?.options?.startingTokens || 10
+		};
+		switch (currentScreen) {
+			case 'initialDamageRoll':
+			case 'failureCheck':
+				return formatResultTotals('stability', totals);
+			case 'successCheck':
+				return formatResultTotals(
+					getCurrentSalvationThreshold() === 0 ? 'salvation-four' : 'salvation',
+					totals
+				);
+			default:
+				return '';
+		}
+	}
 	$effect(() => {
-		if (resultLine) announcer.announce(resultLine, { first: true });
+		if (resultLine) {
+			const line = resultLine;
+			untrack(() => announcer.announce(`${line}${resultTotals()}`, { first: true }));
+		}
 	});
 	$effect(() => {
 		if (modifierNotice) announcer.announce(modifierNotice);
@@ -306,7 +329,8 @@
 		formatIntroGoal({
 			stability: gameState.tower,
 			tokens: gameState.tokens,
-			aceRevealed: gameState.aceOfHeartsRevealed
+			aceRevealed: gameState.aceOfHeartsRevealed,
+			fourthAceWins: fourthAceWins(gameState)
 		})
 	);
 
@@ -676,9 +700,7 @@
 			case 'initialDamageRoll':
 				// Auto-read prompt first if enabled
 				if (audioSettings.autoReadPrompts && initialDamage.result === undefined) {
-					const promptText =
-						'Roll for Initial Damage. Before your journey begins, the situation is already precarious.';
-					speak(promptText);
+					speak(`Instability. ${INSTABILITY_DESCRIPTION}`);
 				}
 
 				// Auto-roll if enabled and not yet rolled
@@ -709,7 +731,7 @@
 			case 'rollForTasks':
 				// Auto-read prompt first if enabled and not yet rolled
 				if (audioSettings.autoReadPrompts && !rollForTasks.rolled) {
-					speak(`Round ${gameState.round}. Roll to see how many cards you draw this round.`);
+					speak(`Round ${gameState.round}. ${TASKS_DESCRIPTION}`);
 				}
 
 				// Auto-roll if enabled and not yet rolled. The composable reads the result out
@@ -786,163 +808,199 @@
 	}
 </script>
 
-{#if currentScreen == 'loadGame'}
-	<div
-		class="dc-game-bg"
-		data-testid="screen-loadGame"
-		transition:fade={{ duration: TRANSITION_DURATION }}
-	>
-		<LoadScreen />
-	</div>
-{:else if currentScreen == 'gameOver'}
-	<div
-		class="dc-screen-container"
-		data-testid="screen-gameOver"
-		transition:fade={{ duration: TRANSITION_DURATION }}
-	>
-		<GameOver />
-	</div>
-{:else if currentScreen == 'exitGame'}
-	<div data-testid="screen-exitGame" transition:fade={{ duration: TRANSITION_DURATION }}>
-		Game Exited
-	</div>
-{:else}
-	<div class="game-screen dc-game-bg">
-		<!-- The table stays mounted under the intro, so the hand-off never goes through black -->
-		<!-- UI Content Layer -->
+<!-- LR-1-02: every screen block shares one grid cell, so an outgoing screen fading out never
+     pushes the incoming one down a viewport: the intro fades in where it will stay -->
+<div class="screen-stack">
+	{#if currentScreen == 'loadGame'}
 		<div
-			class="ui-content-layer"
-			class:behind-intro={currentScreen == 'showIntro'}
-			inert={currentScreen == 'showIntro'}
+			class="dc-game-bg screen-block"
+			data-testid="screen-loadGame"
+			transition:fade={{ duration: TRANSITION_DURATION }}
 		>
-			{#if step}
-				<!-- AC-03: the first tab stop skips the header and goes to the step button -->
-				<a class="skip-link" href="#step-action" onclick={skipToStep}>Skip to action</a>
-			{/if}
-			{#if showStatusHUD}
-				<div class="status-display-area" data-testid="status-display">
-					<StatusDisplay
-						onHelpClick={handleHelpClick}
-						onExitClick={handleExitClick}
-						onSettingsClick={handleSettingsClick}
-					/>
-				</div>
-			{/if}
-			<!-- svelte-ignore a11y_click_events_have_key_events -->
-			<!-- svelte-ignore a11y_no_static_element_interactions -->
-			<div class="main-screen-area dc-table-bg" onclick={handleScreenClick}>
-				<!-- Background contextual text, with the rule caption above it in the same column -->
-				<ContextBackground {contextText} {resultLine}>
-					<RuleCaption {captions} />
-				</ContextBackground>
-
-				{#key currentScreen}
-					{#if currentScreen == 'drawCard'}
-						<OverlayModal isVisible={true} label="Card drawn">
-							<DrawCard bind:this={drawCardRef} />
-						</OverlayModal>
-					{:else if currentScreen == 'finalLog' || currentScreen == 'log'}
-						<OverlayModal
-							isVisible={true}
-							label={gameState.gameOver ? 'Final log' : 'Journal entry'}
-							tone={gameState.gameOver ? (gameState.win ? 'victory' : 'loss') : 'default'}
-						>
-							<JournalEntry
-								bind:journalText={journal.text}
-								bind:audioData={journal.audioData}
-								{journalSaved}
-								onSave={handleJournalSave}
-								onRestart={handleJournalRestart}
-								onExit={handleJournalExit}
-							/>
-						</OverlayModal>
-					{:else if !step && currentScreen != 'showIntro'}
-						<div transition:fade={{ duration: TRANSITION_DURATION }}>error: {currentScreen}</div>
-					{/if}
-				{/key}
-
-				<!-- AN-02: one step button for every round step, mounted once. Moving to the next
-				     step changes its label only; it never blinks out between steps. -->
+			<LoadScreen />
+		</div>
+	{:else if currentScreen == 'gameOver'}
+		<div
+			class="dc-screen-container screen-block"
+			data-testid="screen-gameOver"
+			transition:fade={{ duration: TRANSITION_DURATION }}
+		>
+			<GameOver />
+		</div>
+	{:else if currentScreen == 'exitGame'}
+		<div
+			class="screen-block"
+			data-testid="screen-exitGame"
+			transition:fade={{ duration: TRANSITION_DURATION }}
+		>
+			Game Exited
+		</div>
+	{:else}
+		<div class="game-screen dc-game-bg screen-block">
+			<!-- The table stays mounted under the intro, so the hand-off never goes through black -->
+			<!-- UI Content Layer -->
+			<div
+				class="ui-content-layer"
+				class:behind-intro={currentScreen == 'showIntro'}
+				inert={currentScreen == 'showIntro'}
+			>
 				{#if step}
-					<!-- No entrance of its own: coming back from the card, the overlay fades off it -->
-					<div class="step-slot" data-testid="screen-{currentScreen}">
-						<StepAction
-							id="step-action"
-							text={step.text}
-							hint={step.hint}
-							busy={step.busy}
-							disabled={step.disabled}
-							changed={stepChanged}
-							advancing={step.hold.active}
-							advanceProgress={step.hold.progress}
-							advancePaused={step.hold.paused}
-							advanceWaiting={step.hold.waiting}
-							testid={step.testid}
-							onclick={runStep}
+					<!-- AC-03: the first tab stop skips the header and goes to the step button -->
+					<a class="skip-link" href="#step-action" onclick={skipToStep}>Skip to action</a>
+				{/if}
+				{#if showStatusHUD}
+					<div class="status-display-area" data-testid="status-display">
+						<StatusDisplay
+							onHelpClick={handleHelpClick}
+							onExitClick={handleExitClick}
+							onSettingsClick={handleSettingsClick}
 						/>
 					</div>
 				{/if}
-			</div>
-		</div>
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<div class="main-screen-area dc-table-bg" onclick={handleScreenClick}>
+					<!-- The text column: eyebrow, title and body, every slot reserved (DP-1-04) -->
+					<ContextBackground {contextText} {resultLine} />
 
-		{#if currentScreen == 'showIntro'}
-			<!-- Fades out (300ms) first; the table then fades in underneath it -->
-			<div
-				class="dc-game-bg dc-intro-wrapper"
-				data-testid="screen-showIntro"
-				in:fade|global={{ duration: TRANSITION_DURATION }}
-				out:fade={{ duration: ANIMATION_DURATION.SLOW }}
-			>
-				<div class="intro-story-container">
-					<div class="intro-scroll-area">
-						<div
-							class="content"
-							class:overflows={introOverflows}
-							class:at-end={introAtEnd}
-							bind:this={introScroller}
-							onscroll={measureIntro}
-						>
-							<div class="intro-column">
-								<h1>{gameState.config?.title || 'Game Introduction'}</h1>
-								<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized via sanitizeHtml -->
-								{@html sanitizeHtml(marked(gameState.config?.introduction ?? ''))}
-								<p class="intro-goal" data-testid="intro-goal">{introGoal}</p>
+					{#key currentScreen}
+						{#if currentScreen == 'drawCard'}
+							<OverlayModal isVisible={true} label="Card drawn">
+								<DrawCard bind:this={drawCardRef} />
+							</OverlayModal>
+						{:else if currentScreen == 'finalLog' || currentScreen == 'log'}
+							<OverlayModal
+								isVisible={true}
+								label={gameState.gameOver ? 'Final log' : 'Journal entry'}
+								tone={gameState.gameOver ? (gameState.win ? 'victory' : 'loss') : 'default'}
+							>
+								<JournalEntry
+									bind:journalText={journal.text}
+									bind:audioData={journal.audioData}
+									{journalSaved}
+									onSave={handleJournalSave}
+									onRestart={handleJournalRestart}
+									onExit={handleJournalExit}
+								/>
+							</OverlayModal>
+						{:else if !step && currentScreen != 'showIntro'}
+							<div transition:fade={{ duration: TRANSITION_DURATION }}>error: {currentScreen}</div>
+						{/if}
+					{/key}
+
+					<!-- AN-02: one step button for every round step, mounted once. Moving to the next
+				     step changes its label only; it never blinks out between steps. -->
+					{#if step}
+						<!-- No entrance of its own: coming back from the card, the overlay fades off it -->
+						<div class="step-slot" data-testid="screen-{currentScreen}">
+							<!-- The step anchor: the hint line and the button. A rule caption docks above
+						     it, beside the action it explains (DP-1-09). -->
+							<div class="step-anchor">
+								<RuleCaption {captions} />
+								<StepAction
+									id="step-action"
+									text={step.text}
+									hint={step.hint}
+									busy={step.busy}
+									disabled={step.disabled}
+									changed={stepChanged}
+									advancing={step.hold.active}
+									advanceProgress={step.hold.progress}
+									advancePaused={step.hold.paused}
+									advanceWaiting={step.hold.waiting}
+									testid={step.testid}
+									onclick={runStep}
+								/>
 							</div>
 						</div>
-						{#if introOverflows && !introAtEnd}
-							<button
-								type="button"
-								class="intro-scroll-cue"
-								aria-label="Scroll the introduction"
-								onclick={scrollIntro}
-								in:fade={{ duration: ANIMATION_DURATION.FAST, delay: ANIMATION_DURATION.SLOW }}
-								out:fade={{ duration: ANIMATION_DURATION.FAST }}
-							>
-								<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
-									<path
-										d="M6 9l6 6 6-6"
-										fill="none"
-										stroke="currentColor"
-										stroke-width="2"
-										stroke-linecap="round"
-										stroke-linejoin="round"
-									/>
+					{/if}
+
+					<!-- Reduced motion (or no 3D dice): the roll as numbers in a d20 outline, shown
+				     without motion in the lower table, between the text and the step button;
+				     where the dice would sink, it fades (DP-1-10) -->
+					{#if diceState.staticRoll}
+						<div
+							class="static-roll"
+							data-testid="static-roll"
+							aria-hidden="true"
+							out:fade={{ duration: ANIMATION_DURATION.DICE_SINK }}
+						>
+							{#each diceState.staticRoll.rolls as value, index (index)}
+								<svg
+									class="static-die"
+									class:dropped={diceState.staticRoll.rolls.length > 1 &&
+										value !== diceState.staticRoll.kept}
+									viewBox="0 0 100 100"
+								>
+									<polygon class="die-outline" points="50,4 90,27 90,73 50,96 10,73 10,27" />
+									<polygon class="die-face" points="50,12 84,70 16,70" />
+									<text x="50" y="54" text-anchor="middle" dominant-baseline="middle">{value}</text>
 								</svg>
-							</button>
-						{/if}
-					</div>
-					<ButtonBar>
-						<ContinueButton
-							text="Begin Your Journey"
-							onclick={() => transitionTo('initialDamageRoll')}
-							testid="story-continue-button"
-						/>
-					</ButtonBar>
+							{/each}
+						</div>
+					{/if}
 				</div>
 			</div>
-		{/if}
-	</div>
-{/if}
+
+			{#if currentScreen == 'showIntro'}
+				<!-- Fades out (300ms) first; the table then fades in underneath it -->
+				<div
+					class="dc-game-bg dc-intro-wrapper"
+					data-testid="screen-showIntro"
+					in:fade|global={{ duration: TRANSITION_DURATION }}
+					out:fade={{ duration: ANIMATION_DURATION.SLOW }}
+				>
+					<div class="intro-story-container">
+						<div class="intro-scroll-area" class:overflows={introOverflows}>
+							<div
+								class="content"
+								class:overflows={introOverflows}
+								class:at-end={introAtEnd}
+								bind:this={introScroller}
+								onscroll={measureIntro}
+							>
+								<div class="intro-column">
+									<h1>{gameState.config?.title || 'Game Introduction'}</h1>
+									<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized via sanitizeHtml -->
+									{@html sanitizeHtml(marked(gameState.config?.introduction ?? ''))}
+									<p class="intro-goal" data-testid="intro-goal">{introGoal}</p>
+								</div>
+							</div>
+							{#if introOverflows && !introAtEnd}
+								<button
+									type="button"
+									class="intro-scroll-cue"
+									aria-label="Scroll the introduction"
+									onclick={scrollIntro}
+									in:fade={{ duration: ANIMATION_DURATION.FAST, delay: ANIMATION_DURATION.SLOW }}
+									out:fade={{ duration: ANIMATION_DURATION.FAST }}
+								>
+									<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+										<path
+											d="M6 9l6 6 6-6"
+											fill="none"
+											stroke="currentColor"
+											stroke-width="2"
+											stroke-linecap="round"
+											stroke-linejoin="round"
+										/>
+									</svg>
+								</button>
+							{/if}
+						</div>
+						<ButtonBar>
+							<ContinueButton
+								text="Begin your journey"
+								onclick={() => transitionTo('initialDamageRoll')}
+								testid="story-continue-button"
+							/>
+						</ButtonBar>
+					</div>
+				</div>
+			{/if}
+		</div>
+	{/if}
+</div>
 
 <!-- The game's one live region: result lines, key events and rule captions, in that order -->
 <div class="sr-only" role="status" aria-live="polite" aria-atomic="true" data-testid="live-region">
@@ -952,9 +1010,9 @@
 <!-- Modal rendered at root level, outside game-screen container -->
 <ConfirmModal
 	isOpen={showExitModal}
-	title="Leave the game?"
-	message="Your progress is saved. Continue it from the home screen."
-	confirmText="Leave"
+	title="Exit the game?"
+	message="Your progress is saved. Pick it up from home."
+	confirmText="Exit game"
 	cancelText="Keep playing"
 	onConfirm={handleExitConfirm}
 	onCancel={handleExitCancel}
@@ -964,6 +1022,22 @@
 <SettingsModal isOpen={showSettingsModal} onClose={handleSettingsClose} />
 
 <style>
+	/* One grid cell for every screen block (LR-1-02): during a 200ms swap the old and new
+	   blocks overlap in place instead of stacking */
+	.screen-stack {
+		display: grid;
+		grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+		height: 100%;
+		min-height: 0;
+		min-width: 0;
+	}
+
+	.screen-block {
+		grid-area: 1 / 1;
+		min-height: 0;
+		min-width: 0;
+	}
+
 	.game-screen {
 		position: relative;
 		height: 100%;
@@ -1012,6 +1086,67 @@
 		z-index: 1;
 	}
 
+	/* The hint line and the button; a rule caption docks above it (RuleCaption) */
+	.step-anchor {
+		position: relative;
+	}
+
+	/* ===== The reduced-motion roll (DP-1-10): a band of the lower table, from the dice line
+	   (44%) down to 12px above the step anchor, so it never covers the text or the button ===== */
+	.static-roll {
+		position: absolute;
+		left: 0;
+		right: 0;
+		top: 44%;
+		bottom: calc(var(--step-anchor-h) + 12px);
+		z-index: 2;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 1.5rem;
+		pointer-events: none;
+		container-type: size;
+	}
+
+	.static-die {
+		flex: none;
+		width: 96px;
+		height: 96px;
+	}
+
+	/* A short band (under 112px) takes the small die */
+	@container (max-height: 111px) {
+		.static-die {
+			width: 64px;
+			height: 64px;
+		}
+	}
+
+	.static-die .die-outline {
+		fill: rgba(8, 8, 20, 0.9);
+		stroke: var(--color-neon-cyan, #00ffff);
+		stroke-width: 3;
+		stroke-linejoin: round;
+	}
+
+	.static-die .die-face {
+		fill: none;
+		stroke: rgba(0, 255, 255, 0.25);
+		stroke-width: 1.5;
+	}
+
+	.static-die text {
+		fill: #fff;
+		font-family: var(--font-body, 'Inter', sans-serif);
+		font-size: 30px;
+		font-weight: 600;
+	}
+
+	/* The die that did not count, under Lucid or Surreal */
+	.static-die.dropped {
+		opacity: 0.4;
+	}
+
 	.sr-only {
 		position: absolute;
 		width: 1px;
@@ -1042,6 +1177,12 @@
 		flex: 1;
 		min-height: 0;
 		display: flex;
+	}
+
+	/* VT-1-13: while the intro overflows, the scroll cue has a band of its own under the text
+	   (kept at the end too, so the text never jumps), and no line ever scrolls under it */
+	.intro-scroll-area.overflows {
+		padding-bottom: 52px;
 	}
 
 	.intro-story-container .content {
@@ -1079,7 +1220,7 @@
 	.intro-scroll-cue {
 		position: absolute;
 		left: 50%;
-		bottom: 0.25rem;
+		bottom: 4px;
 		transform: translateX(-50%);
 		display: grid;
 		place-items: center;
@@ -1142,7 +1283,8 @@
 		min-width: 0; /* CRITICAL: Allow grid to shrink */
 		grid-template-rows: min-content 1fr min-content;
 		row-gap: 0.5rem;
-		padding: 0.5rem;
+		/* DP-1-13: the bottom clears the home indicator (--safe-bottom, styles.css) */
+		padding: 0.5rem 0.5rem max(0.5rem, var(--safe-bottom, 0px));
 		box-sizing: border-box;
 		grid-template-areas:
 			'status-area'
@@ -1173,6 +1315,9 @@
 	}
 
 	.main-screen-area {
+		/* The step anchor's height: the hint line (20px + 4px), the 48px button and the
+		   button bar's padding. The reduced-motion roll stops 12px above it. */
+		--step-anchor-h: calc(24px + 48px + 2 * var(--space-md, 1rem));
 		grid-area: main-screen-area;
 		cursor: pointer;
 		width: 100%;
@@ -1240,13 +1385,14 @@
 	   ============================================ */
 	@media (max-height: 500px) and (orientation: landscape) {
 		.game-screen {
-			--action-col: clamp(200px, 32vw, 280px);
+			/* Room for a 16px one-line label (about 205px) and its hint (DP-1-05) */
+			--action-col: clamp(248px, 32vw, 280px);
 		}
 
 		.ui-content-layer {
 			row-gap: 0.375rem;
-			padding: 0.375rem max(0.5rem, env(safe-area-inset-right)) 0.375rem
-				max(0.5rem, env(safe-area-inset-left));
+			padding: 0.375rem max(0.5rem, env(safe-area-inset-right))
+				max(0.375rem, var(--safe-bottom, 0px)) max(0.5rem, env(safe-area-inset-left));
 		}
 
 		/* Title and result line centre in the space left of the button column */
@@ -1256,21 +1402,38 @@
 			padding-inline: 0.5rem;
 		}
 
-		/* 28px and up: the display face's floor (NV-05) */
-		.main-screen-area :global(.context-title) {
-			font-size: clamp(1.75rem, 8vh, 2.25rem);
-			margin-bottom: 0.375rem;
+		/* The reduced-motion roll: left of the action column, under the text column (its fixed
+		   height: eyebrow, one title line, the gap and the body, see ContextBackground) */
+		.static-roll {
+			right: var(--action-col);
+			top: calc(var(--space-sm, 8px) + 29px + 1.75rem * 1.15 + 12px + 3rem + 29px + 8px);
+			bottom: 8px;
 		}
 
-		/* The step button's slot is the right-hand column, full table height, button centred */
+		.static-die {
+			width: 64px;
+			height: 64px;
+		}
+
+		/* The step button's slot is the right-hand column, full table height */
 		.step-slot {
 			position: absolute;
 			top: 0;
 			right: 0;
 			bottom: 0;
+			/* The full column height (a grid item would otherwise keep align-self: end) */
+			align-self: stretch;
 			width: var(--action-col);
 			display: grid;
-			align-content: center;
+			/* The button block sits at the foot of the column, in thumb reach, which leaves the
+			   column above it for a rule caption (centred, a four-line caption reached the HUD) */
+			align-content: end;
+		}
+
+		/* The button spans the column (the table's own padding is its margin), so a 16px label
+		   has 216px or more even in the narrowest column */
+		.step-slot :global(.step-action .button-bar) {
+			padding-inline: 0;
 		}
 
 		/* The intro reads on the left with its button on the right, like the table */

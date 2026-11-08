@@ -29,6 +29,8 @@
 	// 	testid?: string;
 	// 	/** Keyboard shortcut shown as a key-cap inside the button on pointer devices, e.g. "Space" */
 	// 	hint?: string;
+	// 	/** id of an element that describes the button (aria-describedby) */
+	// 	describedby?: string;
 	// }
 
 	let {
@@ -44,6 +46,7 @@
 		type = 'button',
 		testid = undefined,
 		hint = undefined,
+		describedby = undefined,
 		children = undefined
 	} = $props();
 </script>
@@ -78,6 +81,7 @@
 			{disabled}
 			{type}
 			aria-label={ariaLabel || text}
+			aria-describedby={describedby}
 			data-testid={testid}
 		>
 			{#if children}
@@ -158,6 +162,9 @@
 		align-items: center;
 		justify-content: center;
 		gap: 0.75em;
+		box-sizing: border-box;
+		/* A 48px target at every width (LR-1-06) */
+		min-height: 48px;
 		padding: 0.75rem;
 		font-family: var(--font-ui, var(--font-body, sans-serif));
 		font-size: 1.125rem;
@@ -259,19 +266,24 @@
 	   KEY-CAP HINT - "Space" inside the button, pointer devices only
 	   ============================================ */
 
+	/* Pinned 16px from the right edge and centred on the height, out of the label's flow, so the
+	   label centres on the button's own axis and the key-cap sits in the same place on every
+	   label (GD-1-11) */
 	.key-hint {
 		display: none;
-		flex: none;
+		position: absolute;
+		right: 16px;
+		top: 50%;
+		transform: translateY(-50%);
 		padding: 0.15em 0.45em;
 		border: 1px solid currentColor;
 		border-radius: 4px;
 		font-family: var(--font-ui, var(--font-body, sans-serif));
-		font-size: 0.6875rem; /* 11px */
+		font-size: 0.75rem; /* 12px */
 		font-weight: 600;
 		line-height: 1.2;
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
-		opacity: 0.75;
 		background: rgba(0, 0, 0, 0.18);
 	}
 
@@ -282,6 +294,22 @@
 	@media (hover: hover) and (pointer: fine) {
 		.key-hint {
 			display: inline-block;
+		}
+
+		/* Equal room either side, so the label never runs under the key-cap */
+		.aug-button:has(.key-hint) {
+			padding-inline: 84px;
+		}
+	}
+
+	/* Landscape phones (a short window): the action column is too narrow for the key-cap */
+	@media (max-height: 500px) and (orientation: landscape) {
+		.key-hint {
+			display: none;
+		}
+
+		.aug-button:has(.key-hint) {
+			padding-inline: 16px;
 		}
 	}
 

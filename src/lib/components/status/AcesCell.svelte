@@ -6,17 +6,28 @@
 	 * it unlocks Salvation (the Tokens cell beside it). Every Ace lowers the Salvation roll:
 	 * 17+ with one, 14+ with two, 11+ with three. What all four mean depends on the difficulty
 	 * (fourAcesRule): on Easy the fourth Ace ends the game after its own Stability check, on
-	 * Normal and Hard Salvation is automatic after a Stability check. The threshold (or that
-	 * rule) is in the cell's tooltip and its spoken text. The count includes an Ace that is
-	 * on screen but not yet confirmed; a new Ace pops the count and ignites its pip for one
-	 * beat.
+	 * Normal and Hard each Salvation is a Stability check. The threshold (or that rule) is in
+	 * the cell's tooltip and its spoken text (acesTooltip, acesSpoken). The count includes an
+	 * Ace that is on screen but not yet confirmed; a new Ace pops the count and ignites its pip
+	 * for one beat.
+	 *
+	 * Tiers (acesTier, DP-1-02): rising is hope. Cyan from the first Ace, the tint growing with
+	 * each Ace once Salvation is unlocked, and gold for Easy's fourth Ace (the way out).
 	 *
 	 * @component
 	 */
 	import { untrack } from 'svelte';
 	import { gameState } from '../../stores/gameStore.svelte.js';
 	import { ANIMATION_DURATION } from '../../constants/animations.js';
-	import { acesSummary, aceSuits, fourAcesRule } from './hudTiers.js';
+	import { fourthAceWins } from '../../constants/difficulty.js';
+	import {
+		acesSummary,
+		aceSuits,
+		fourAcesRule,
+		acesTier,
+		acesSpoken,
+		acesTooltip
+	} from './hudTiers.js';
 
 	// Includes an Ace that is on screen but not yet confirmed
 	const aces = $derived(
@@ -30,24 +41,14 @@
 		})
 	);
 	const litSuits = $derived(suits.filter((pip) => pip.lit).map((pip) => pip.suit));
-	const allFour = $derived(fourAcesRule(gameState));
-	const need = $derived(
-		aces.need === 'all'
-			? allFour
-			: aces.need
-				? `Salvation needs ${aces.need.replace('+', '')} or more`
-				: 'no Salvation roll yet'
-	);
-	const spoken = $derived(
-		`Aces ${aces.count} of 4${litSuits.length ? ` (${litSuits.join(', ')})` : ''}, ${need}`
-	);
-	const tooltip = $derived(
-		aces.need === 'all'
-			? `All four Aces: ${allFour}`
-			: aces.need
-				? `Salvation needs ${aces.need}`
-				: 'Each Ace makes Salvation easier'
-	);
+	const state = $derived({
+		count: aces.count,
+		heartsAce: gameState.aceOfHeartsRevealed,
+		fourthWins: fourthAceWins(gameState)
+	});
+	const tier = $derived(acesTier(state));
+	const spoken = $derived(acesSpoken(state));
+	const tooltip = $derived(acesTooltip(state, fourAcesRule(gameState)));
 
 	// A new Ace: the count pops and its suit ignites, for one beat
 	let gained = $state(false);
@@ -74,18 +75,24 @@
 </script>
 
 <div
-	class="hud-cell aces"
+	class="hud-cell aces tier-{tier}"
 	class:active={aces.count > 0}
 	class:gained
+	data-tier={tier}
 	data-testid="hud-aces"
 	data-need={aces.need ?? ''}
 	title={tooltip}
 	style="--hud-beat: {ANIMATION_DURATION.BEAT}ms"
 >
-	<span class="hud-label">Aces</span>
+	<span class="tint" aria-hidden="true"></span>
+	<span class="hud-label" aria-hidden="true">Aces</span>
 	<span class="hud-readout" aria-hidden="true">
 		<span class="hud-value"
-			><span class="current">{aces.count}</span><span class="hud-max">/4</span></span
+			><span class="led-field"
+				><span class="led-off" aria-hidden="true">8</span><span class="led-on current"
+					>{aces.count}</span
+				></span
+			><span class="hud-slash" aria-hidden="true">/</span><span class="hud-max">4</span></span
 		>
 		<span class="hud-foot hud-icons">
 			{#each suits as pip (pip.suit)}
@@ -121,33 +128,49 @@
 </div>
 
 <style>
+	/* The tier ladder (DP-1-02): tint colour at its top alpha, value colour, label colour.
+	   none: neutral; cyan from the first Ace (no tint while Salvation is locked), the tint
+	   growing with each Ace; gold for Easy's fourth (the way out). */
 	.aces {
 		--pip-color: var(--color-neon-cyan, #00ffff);
 		--pip-glow: rgba(0, 255, 255, 0.85);
 		--key-color: var(--color-brand-yellow, #ffd700);
 		--key-glow: rgba(255, 215, 0, 0.9);
+		--tint-color: #00ffff;
+		--tint-alpha: 0;
+		--value-color: #f2f4f8;
+	}
+	.aces:not(.tier-none) {
+		--value-color: #00ffff;
+		--label-color: #00ffff;
+	}
+	.tier-one {
+		--tint-alpha: 0.04;
+	}
+	.tier-two {
+		--tint-alpha: 0.07;
+	}
+	.tier-three {
+		--tint-alpha: 0.1;
+	}
+	.tier-four {
+		--tint-alpha: 0.12;
+	}
+	.aces.tier-final {
+		--tint-color: #ffd700;
+		--tint-alpha: 0.12;
+		--value-color: #ffd700;
+		--label-color: #ffd700;
 	}
 
-	.aces .hud-label {
-		color: var(--pip-color);
-	}
-
-	.active .current {
-		color: var(--pip-color);
-		text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
-	}
-
+	/* The pop scales the lit digits only; the ghosts and the max hold still */
 	.gained .current {
-		display: inline-block;
 		animation: acePop var(--hud-beat) var(--ease-enter, ease-out);
 	}
 
 	/* The same footprint as the Kings' skulls (the foot row); dim until its Ace is drawn */
 	.pip {
 		display: block;
-		flex: none;
-		width: var(--hud-foot, 18px);
-		height: var(--hud-foot, 18px);
 		color: rgba(255, 255, 255, 0.2);
 	}
 

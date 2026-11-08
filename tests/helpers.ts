@@ -101,9 +101,7 @@ export async function playToFirstRound(page: Page) {
 	await expect(page.getByTestId('roll-tasks-button')).toBeVisible({ timeout: 30000 });
 
 	// There is no Begin Round step: round 1 opens on Roll for Tasks, titled "Round 1".
-	// A natural 20 or 1 on the opening roll puts its modifier on this roll button.
-	await expect(page.getByTestId('roll-tasks-button')).toHaveAccessibleName(
-		/^Roll for tasks( · (Lucid: 2 dice, keep high|Surreal: 2 dice, keep low))?$/
-	);
+	// A natural 20 or 1 on the opening roll puts its modifier on the hint line above the button.
+	await expect(page.getByTestId('roll-tasks-button')).toHaveAccessibleName('Roll for tasks');
 	await expect(page.getByRole('heading', { name: 'Round 1' })).toBeVisible();
 }
