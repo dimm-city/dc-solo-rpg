@@ -169,7 +169,6 @@
 						<StoryRound
 							round={currentRound}
 							roundNumber={currentRound?.roundNumber || nav.currentRoundIndex + 1}
-							{totalRounds}
 							outcome={isLastRound ? outcome.label : ''}
 						/>
 					</div>

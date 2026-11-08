@@ -12,6 +12,7 @@
 	} from '../stores/audioStore.svelte.js';
 	import { autoAdvance } from '../utils/autoPlay.js';
 	import CardDisplay from './card/CardDisplay.svelte';
+	import { storyPlain } from './card/storyText.js';
 	import {
 		endsGameOnConfirm,
 		getCardHoldMs,
@@ -167,7 +168,8 @@
 		const gameplaySettings = getGameplaySettings();
 
 		if (audioSettings.autoReadCards) {
-			speak(`${shown.description}. ${shown.story || ''}`);
+			// The story's emphasis markers are not read aloud
+			speak(`${shown.description}. ${storyPlain(shown.story)}`);
 			// Only once the voice has finished the card (or was switched off) may it move on
 			narrationWait = awaitNarration();
 			narrationWait.promise.then((ended) => {

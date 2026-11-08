@@ -15,7 +15,7 @@
 	import RoundStats from './story/RoundStats.svelte';
 	import SuitText from './card/SuitText.svelte';
 	import { getCardName } from './card/cardInfo.js';
-	import { sanitizeHtml } from '../utils/sanitizeHtml.js';
+	import { storyHtml } from './card/storyText.js';
 	import {
 		cardShort,
 		cardName,
@@ -28,7 +28,6 @@
 	let {
 		round = null, // From useEnrichedRounds
 		roundNumber = 0,
-		totalRounds = 0,
 		outcome = '', // e.g. "Taken by the fourth King"; pass it on the last round only
 		showStats = true
 	} = $props();
@@ -52,7 +51,7 @@
 	<article class="story-round" aria-labelledby={headingId}>
 		<header class="round-head">
 			<h2 class="round-title" id={headingId}>
-				Round {roundNumber}&nbsp;<span class="round-of">of {totalRounds}</span>
+				Round {roundNumber}
 			</h2>
 		</header>
 
@@ -92,8 +91,8 @@
 						{/if}
 						{#if card.story}
 							<div class="card-panel-story">
-								<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized via sanitizeHtml -->
-								{@html sanitizeHtml(card.story.replace(/\n/g, '<br>'))}
+								<!-- eslint-disable-next-line svelte/no-at-html-tags -- escaped, then sanitized (storyText.js) -->
+								{@html storyHtml(card.story)}
 							</div>
 						{/if}
 						{#if modifierLine(card)}
@@ -176,16 +175,6 @@
 		letter-spacing: 0.04em;
 		color: var(--color-brand-yellow);
 		text-shadow: none;
-	}
-
-	.round-of {
-		margin-left: 0.15em;
-		font-family: var(--font-body);
-		font-size: 1rem;
-		font-weight: 400;
-		letter-spacing: 0;
-		text-transform: none;
-		color: #aebbcc;
 	}
 
 	/* The round's cards on one line */

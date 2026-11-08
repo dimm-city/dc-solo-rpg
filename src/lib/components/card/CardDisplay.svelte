@@ -11,6 +11,7 @@
 	 */
 	import { getCardName, splitNote, TYPE_LABELS } from './cardInfo.js';
 	import SuitText from './SuitText.svelte';
+	import { storyHtml } from './storyText.js';
 
 	let {
 		card = null,
@@ -270,7 +271,9 @@
 						aria-label="Card story"
 						use:scrollCue
 					>
-						<p class="byte-story" id="{uid}-story">{card.story}</p>
+						<!-- The author's emphasis as italic (storyText.js); escaped, then sanitized -->
+						<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized via sanitizeHtml -->
+						<p class="byte-story" id="{uid}-story">{@html storyHtml(card.story)}</p>
 					</div>
 					<span class="more-cue" class:visible={moreBelow} aria-hidden="true">
 						<svg viewBox="0 0 24 24" width="16" height="16">
