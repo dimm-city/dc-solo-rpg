@@ -245,7 +245,7 @@ describe('buildTimeline', () => {
 				card('9', 'hearts', 1, { modifier: 'skip-damage', gameState: snap(15) }),
 				card('6', 'spades', 1, {
 					modifier: 'return-king',
-					modifierResult: 'K♠ went back into the deck · 1 of 4 Kings out',
+					modifierResult: 'K♠ went back into the deck\u00a0·\u00a0Kings 1 of 4',
 					gameState: snap(15, { kings: 2 })
 				}),
 				card('8', 'spades', 1, { modifier: 'return-king', gameState: snap(15) })
@@ -253,9 +253,14 @@ describe('buildTimeline', () => {
 		};
 		expect(lines(buildTimeline(state)[0])).toEqual([
 			'9♥︎ · skipped its Stability check',
-			'6♠︎ · K♠ went back into the deck · 1 of 4 Kings out',
+			// The count in the header's form (game-copy-s-02)
+			'6♠︎ · K♠ went back into the deck · Kings 1 of 4',
 			'8♠︎ · A King went back into the deck'
 		]);
+		// …held to its clause by no-break spaces, so it never sits alone on a line
+		expect(buildTimeline(state)[0].events[1].text).toBe(
+			'K♠ went back into the deck\u00a0·\u00a0Kings 1 of 4'
+		);
 	});
 
 	it('states no non-event: a King return with no King out has no line', () => {

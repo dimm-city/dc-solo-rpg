@@ -254,33 +254,37 @@ export function formatNextStepLabel({
 	}
 }
 
-/** A running total in a modifier's result ("0 of 4 Kings out"): the HUD shows it on screen */
-const TOTAL_CLAUSE = /^\d+ of \d+ Kings? out$/;
+/** A running total in a modifier's result ("Kings 0 of 4"; saved games may hold "0 of 4 Kings out") */
+const TOTAL_CLAUSE = /^(?:Kings \d+ of \d+|(\d+) of (\d+) Kings? out)$/;
+/** Holds a running total to the clause before it: ' · ' with no-break spaces never splits */
+const HOLD = '\u00a0·\u00a0';
 
 /**
  * What a card modifier did, for the board's notice (OWN-4), or null when it did nothing. A card
- * modifier's result is a past-tense statement ("K♥ went back into the deck · 0 of 4 Kings out",
+ * modifier's result is a past-tense statement ("K♥ went back into the deck · Kings 0 of 4",
  * "A♣ skipped its Stability check"); a non-event is phrased "No …" ("No King was out to
  * return"), and the board never states a non-event.
  *
  * The board's notice passes withTotals: false and carries no running total (game-copy-s-03, as
  * DP-1-07 did for the result lines): the Kings count is in the HUD right above it, so
- * "· 0 of 4 Kings out" is dropped there. The screen-reader announcement, the story cards and the
- * final log's row keep it.
+ * "· Kings 0 of 4" is dropped there. The screen-reader announcement, the story cards and the
+ * final log's row keep it, in the HUD's form ("Kings 0 of 4", game-copy-s-02) and held to the
+ * clause before it by no-break spaces, so the count never sits alone on a line.
  * @param {string|null|undefined} modifierResult - The card's modifierResult (gameActions)
  * @param {{ withTotals?: boolean }} [options] - false drops the running total (the board)
- * @returns {string|null} e.g. "K♥ went back into the deck · 0 of 4 Kings out"
+ * @returns {string|null} e.g. "K♥ went back into the deck · Kings 0 of 4"
  */
 export function formatModifierNotice(modifierResult, { withTotals = true } = {}) {
 	const text = (modifierResult ?? '').trim();
 	if (!text || /^No\b/.test(text)) return null;
-	if (withTotals) return text;
-	return (
-		text
-			.split(' · ')
-			.filter((clause) => !TOTAL_CLAUSE.test(clause.trim()))
-			.join(' · ') || null
-	);
+	const clauses = text.split(/\s·\s/).map((clause) => clause.trim());
+	const words = clauses.filter((clause) => !TOTAL_CLAUSE.test(clause)).join(' · ');
+	if (!withTotals) return words || null;
+	const totals = clauses
+		.map((clause) => clause.match(TOTAL_CLAUSE))
+		.filter(Boolean)
+		.map(([clause, out, of]) => (out ? `Kings ${out} of ${of}` : clause));
+	return [words, ...totals].filter(Boolean).join(HOLD) || null;
 }
 
 /**

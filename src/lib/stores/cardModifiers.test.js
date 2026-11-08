@@ -86,7 +86,8 @@ describe('Card modifiers', () => {
 			expect(gameState.kingOfSpades).toBe(true);
 			expect(gameState.deck).toHaveLength(3);
 			expect(gameState.deck[0]).toEqual(king('hearts'));
-			expect(gameState.status).toBe('K♥ went back into the deck · 1 of 4 Kings out');
+			// The count in the HUD's form, held to its clause by no-break spaces (game-copy-s-02)
+			expect(gameState.status).toBe('K♥ went back into the deck\u00a0·\u00a0Kings 1 of 4');
 			expect(gameState.lastCard.modifierResult).toBe(gameState.status);
 			expect(gameState.acesRevealed).toBe(1);
 			expect(gameState.state).toBe('failureCheck');

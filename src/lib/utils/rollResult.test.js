@@ -334,9 +334,10 @@ describe('formatNextStepLabel (the step button after a result)', () => {
 describe('formatModifierNotice (OWN-4): the board states what a modifier did, never a non-event', () => {
 	it('on the board, keeps a modifier that did something, without the running total (game-copy-s-03)', () => {
 		const board = { withTotals: false };
-		expect(formatModifierNotice('K♥ went back into the deck · 0 of 4 Kings out', board)).toBe(
-			'K♥ went back into the deck'
-		);
+		expect(
+			formatModifierNotice('K♥ went back into the deck\u00a0·\u00a0Kings 0 of 4', board)
+		).toBe('K♥ went back into the deck');
+		// A game saved before game-copy-s-02 logged the old form
 		expect(formatModifierNotice('K♠ went back into the deck · 1 of 4 Kings out', board)).toBe(
 			'K♠ went back into the deck'
 		);
@@ -347,8 +348,13 @@ describe('formatModifierNotice (OWN-4): the board states what a modifier did, ne
 	});
 
 	it('keeps the Kings count elsewhere (the announcement, story cards, final log)', () => {
+		// The HUD's form, held to its clause by no-break spaces (game-copy-s-02)
+		expect(formatModifierNotice('K♥ went back into the deck\u00a0·\u00a0Kings 0 of 4')).toBe(
+			'K♥ went back into the deck\u00a0·\u00a0Kings 0 of 4'
+		);
+		// A game saved before then logged '· 0 of 4 Kings out': it reads in the new form too
 		expect(formatModifierNotice('K♥ went back into the deck · 0 of 4 Kings out')).toBe(
-			'K♥ went back into the deck · 0 of 4 Kings out'
+			'K♥ went back into the deck\u00a0·\u00a0Kings 0 of 4'
 		);
 		expect(formatModifierNotice('A♣ skipped its Stability check')).toBe(
 			'A♣ skipped its Stability check'
