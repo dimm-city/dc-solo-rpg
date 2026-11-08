@@ -262,7 +262,7 @@
 	/* A seven-segment "1" lights only its right-hand segments: a max that starts with one
 	   ("/10") closes up to its slash instead of leaving an unlit gap after it */
 	:global(.status-hud .hud-max.lead-one) {
-		margin-inline-start: -0.4em;
+		margin-inline-start: var(--led-lead-one);
 	}
 
 	/* A declared mono slash, a little larger than the max; it never enlarges the line box */

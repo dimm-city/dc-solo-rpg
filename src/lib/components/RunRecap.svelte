@@ -25,8 +25,9 @@
 					<span class="value" aria-hidden="true"
 						><span class="led-field"
 							><span class="led-off">{ghost(item)}</span><span class="led-on">{item.n}</span></span
-						>{#if item.max !== undefined}<span class="slash">/</span><span class="max"
-								>{item.max}</span
+						>{#if item.max !== undefined}<span class="slash">/</span><span
+								class="max"
+								class:lead-one={String(item.max).startsWith('1')}>{item.max}</span
 							>{/if}</span
 					>
 					<span class="sr-only">{item.spoken}</span>
@@ -121,6 +122,11 @@
 		font-size: max(12px, 0.6em);
 		line-height: 1;
 		color: rgba(255, 255, 255, 0.6);
+	}
+
+	/* A max led by a 1 closes up to its slash, as in the HUD (the shared --led-lead-one) */
+	.max.lead-one {
+		margin-inline-start: var(--led-lead-one);
 	}
 
 	.slash {
