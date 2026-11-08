@@ -393,7 +393,11 @@
 	/* Landscape phones: tighter rhythm, so the cards and the entry's first lines fit the view */
 	@media (max-height: 500px) {
 		.story-round {
-			gap: 12px;
+			gap: 8px;
+		}
+
+		.journal-text {
+			line-height: 1.6;
 		}
 	}
 

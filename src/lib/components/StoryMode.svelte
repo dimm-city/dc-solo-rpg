@@ -400,13 +400,16 @@
 		.story-header {
 			grid-template-columns: auto minmax(0, 1fr) auto;
 			align-items: center;
-			padding-top: 12px;
+			padding-top: 8px;
 			gap: 4px 16px;
 		}
 
 		.back-button {
 			grid-area: 1 / 1;
 			position: static;
+			width: 44px;
+			height: 44px;
+			min-height: 44px;
 		}
 
 		.game-title {
@@ -430,7 +433,7 @@
 
 		.reader {
 			padding-top: 8px;
-			gap: 12px;
+			gap: 8px;
 		}
 	}
 
