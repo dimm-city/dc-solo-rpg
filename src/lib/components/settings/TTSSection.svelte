@@ -387,7 +387,7 @@
 		background: none;
 		border: none;
 		font-family: var(--font-body, 'Inter', sans-serif);
-		font-size: 0.9375rem;
+		font-size: 0.875rem;
 		font-weight: 600;
 		color: var(--color-neon-cyan, #00ffff);
 		text-decoration: underline;

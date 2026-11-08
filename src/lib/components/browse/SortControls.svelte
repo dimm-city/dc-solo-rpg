@@ -34,7 +34,7 @@
 	.sort-controls label {
 		margin: 0;
 		font-family: var(--font-body);
-		font-size: 0.9375rem;
+		font-size: 0.875rem;
 		font-weight: 600;
 		letter-spacing: 0;
 		text-transform: none;

@@ -219,7 +219,7 @@
 		gap: 8px;
 		margin: 0;
 		min-height: 1.5em;
-		font-size: 0.9375rem;
+		font-size: 0.875rem;
 		line-height: 1.5;
 		color: #d5dfeb;
 	}

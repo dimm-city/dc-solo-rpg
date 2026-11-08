@@ -90,7 +90,7 @@
 		background: rgba(11, 22, 34, 0.86);
 		border: 1px solid rgba(0, 255, 255, 0.22);
 		border-radius: 4px;
-		font-size: 1.0625rem;
+		font-size: 1rem;
 		line-height: 1.6;
 	}
 

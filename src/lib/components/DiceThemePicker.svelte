@@ -128,7 +128,7 @@
 
 	.theme-name {
 		font-family: var(--font-body, 'Inter', sans-serif);
-		font-size: 0.8125rem;
+		font-size: 0.75rem;
 		font-weight: 600;
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
