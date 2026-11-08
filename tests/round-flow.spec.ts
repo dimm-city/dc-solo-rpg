@@ -132,10 +132,22 @@ test.describe('Round flow', () => {
 		await expect(page.getByRole('button', { name: /Begin Round/i })).toHaveCount(0);
 
 		await store(page, 'rnd.mockDieRoll(8)'); // 3 cards
-		const roll = page.getByTestId('roll-tasks-button');
+		// Record every name the button takes, from before the press: the rolling name lasts only
+		// as long as the dice, which a loaded machine can outrun between two polls
+		await page.evaluate(() => {
+			const button = document.querySelector('[data-testid="roll-tasks-button"]')!;
+			const names: string[] = [];
+			(window as unknown as { rollNames: string[] }).rollNames = names;
+			new MutationObserver(() => names.push(button.getAttribute('aria-label') ?? '')).observe(
+				button,
+				{ attributes: true, attributeFilter: ['aria-label'] }
+			);
+		});
 		await pressStep(page, 'roll-tasks-button');
 		// The accessible name: the visible label crossfades, so old and new text overlap briefly
-		await expect(roll).toHaveAccessibleName('Rolling…');
+		await expect
+			.poll(() => page.evaluate(() => (window as unknown as { rollNames: string[] }).rollNames))
+			.toContain('Rolling…');
 
 		// The result, under the same title, then the deal with no further press
 		await expect(page.getByTestId('result-line')).toHaveText('Rolled 8 · 3 cards this round', {
