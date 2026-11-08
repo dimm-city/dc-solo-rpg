@@ -639,7 +639,7 @@
 
 	:global(.cm-section-desc) {
 		margin: 8px 0 0;
-		max-width: 65ch;
+		max-width: var(--measure, 30em);
 		font-size: 0.875rem;
 		line-height: 1.5;
 		color: #b8c5d6;
@@ -678,8 +678,11 @@
 		color: #fff;
 	}
 
+	/* Helper and section text keep the reading measure, about 65 characters a line at any size
+	   (visual-layout-s-18; 65ch and no cap ran 84-85) */
 	:global(.cm-help) {
 		margin: 4px 0 0;
+		max-width: var(--measure, 30em);
 		font-size: 0.875rem;
 		font-weight: 400;
 		line-height: 1.5;
