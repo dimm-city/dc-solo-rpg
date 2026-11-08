@@ -40,6 +40,12 @@ const OWNER_ITEMS = [
   },
 ]
 
+// Added by the owner while stage 1 ran; a separate developer builds them, and they join the sign-off
+const LATE_ITEMS = [
+  { id: 'OWN-6', lens: 'game', area: 'global', text: 'OWN-6 (owner requirement): "The dice fade animation is too fast." After a roll lands the dice sank and faded over 350ms (DICE_SINK). It must be a calm, readable sink and fade: the player sees the dice settle and leave rather than blink out; the HUD, title and result line are never covered; reduced motion stays a short plain fade. Judge it by measuring: read the token and record a roll (video or frame sheet). A separate developer is building this item. If origin/claude/vibrant-curie-w9bn88 has no commit citing it yet (git fetch, then git log --grep), wait for one before you verify it: check every minute for up to 60 minutes with a Monitor until-loop, and only then judge it.' },
+  { id: 'OWN-7', lens: 'game', area: 'play', text: 'OWN-7 (owner requirement): "The time before a card is drawn is too fast." After a card was dismissed the next was drawn 100ms later (NEXT_DRAW_MS in CardDeck), so cards arrived on top of each other. Each draw needs a deliberate beat on the empty table so every card lands as its own moment, consistent for the first card of a round, later cards and auto-play; a tap or Space during the beat is never lost and never draws twice. Judge it by measuring: read the tokens and record two draws. A separate developer is building this item. If origin/claude/vibrant-curie-w9bn88 has no commit citing it yet (git fetch, then git log --grep), wait for one before you verify it: check every minute for up to 60 minutes with a Monitor until-loop, and only then judge it.' },
+]
+
 const CONTEXT = `## Context
 You are on a design-polish team for DC Solo RPG ("Dream Console" by Dimm City), a SvelteKit 2 / Svelte 5 solo journaling game. Repo: ${REPO}. Branch: ${BRANCH}. Draft PR: https://github.com/dimm-city/dc-solo-rpg/pull/52 (the owner tests it on their phone through the PR's preview site, which rebuilds on every push). CLAUDE.md (in your context) has the rules and architecture.
 
@@ -163,7 +169,7 @@ For each item below, check the built result against its acceptance criteria (in 
     : `## Task: sign-off
 The latest work is pushed (git -C ${REPO} log --oneline -15). Captures of the key states at ${KEY_VIEWPORTS}:
 ${capsText}
-1. Verdict every item below (your lenses' open, built or owner items) against its acceptance criteria and the owner's words: resolved, open, regressed or withdrawn, with a note. For an owner item (OWN-n), the bar is the owner's own words and screenshots in ${OWNER_SHOTS}.
+1. Verdict every item below (your lenses' open, built or owner items) against its acceptance criteria and the owner's words: resolved, open, regressed or withdrawn, with a note. For an owner item (OWN-n), the bar is the owner's own words and screenshots in ${OWNER_SHOTS}. OWN-6 and OWN-7 are timing: verify them by reading the tokens in src/lib/constants/animations.js and recording a roll and two card draws on an iPhone 13 viewport (a video or frame sheet into ${DR}/v3/), not from stills.
 2. Review every key state at every captured viewport through both lenses, as thoroughly as round 1, and report anything still short of award-winning as findings (ids ${pair.key}-s-NN, with lens and area).
 3. approve.<lens> = true only if that lens has no open or regressed item and no new finding, and you would sign off on every detail it covers.`}
 
@@ -248,8 +254,14 @@ for (;;) {
   log(`Stage ${stage}: QA ${qa ? (qa.pushed ? 'pushed ' + qa.head : 'did not push') : 'failed'}; capture ${cap ? cap.shots + ' shots of ' + cap.head : 'failed'}`)
 
   phase('Sign-off')
+  for (const o of LATE_ITEMS) {
+    if (status[o.id]) continue
+    lensOf[o.id] = o.lens; areaOf[o.id] = o.area; status[o.id] = 'built'; details[o.id] = o.text
+    log(`Added the owner's ${o.id} to the sign-off`)
+  }
   const capsText = cap ? `- manifest ${cap.manifest}; shots ${cap.dir}; drift ${cap.drift || 'n/a'}; missing: ${(cap.missing || []).join('; ') || 'none'}` : `- the capture failed: capture the key states yourself from origin/${BRANCH}`
-  for (const pair of PAIRS) {
+  // Visual and layout first: the game lens judges OWN-6 and OWN-7, whose developer may still be pushing
+  for (const pair of [...PAIRS].reverse()) {
     const lenses = pair.lenses.filter((l) => !signedOff[l])
     if (!lenses.length) continue
     const ids = Object.keys(status).filter((id) => lenses.includes(lensOf[id]) && ['open', 'regressed', 'built'].includes(status[id]))
