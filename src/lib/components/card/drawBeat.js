@@ -8,11 +8,11 @@
 export const CARD_GUARD_MS = 400;
 
 /**
- * createDrawBeat - the pause on the empty table before the next card of a round (OWN-7)
+ * createDrawBeat - the short gap before the next card of a round (DRAW_PAUSE, 100ms)
  *
- * When a card is dismissed and more remain, the next one is drawn `ms` later, so each card
- * lands as its own moment. A tap or Space during the beat draws at once (`now()`), and the
- * draw happens once either way: a draw already in hand clears the pending one.
+ * When a card is dismissed and more remain, the next one is drawn `ms` later. A tap or Space
+ * during the gap draws at once (`now()`), and the draw happens once either way: a draw already
+ * in hand clears the pending one.
  *
  * @param {Object} options
  * @param {() => void} options.draw - Draws the next card

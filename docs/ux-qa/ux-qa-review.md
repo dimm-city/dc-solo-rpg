@@ -1875,6 +1875,35 @@ QA and integration of the owner items and the round-2 fixes, at `d3a902a` on
 - **Saved.** The owner-items spec and the two verify reviews (game UX and copy; visual and
   layout) are in `docs/ux-qa/design-polish/v3/`.
 
+### stage-2
+
+QA and integration of the sign-off fixes and the owner's timing items, from `0ea3607` on
+`claude/vibrant-curie-w9bn88`.
+
+- **Built.** The sign-off fixes: the HUD's text fits its row at any text size, the ⋯ menu is a
+  real menu button with an opaque fill, the RULE caption sits in the readout's frame, a new card
+  takes input only once it has been up 400ms, story emphasis in italic, and the copy fixes
+  (no non-event notices, one name for the Stability ending). OWN-6: the dice sink over 800ms.
+  OWN-7: the task roll's result now holds 3s before the first card (1s after the voice when the
+  roll is read aloud).
+- **No empty table between cards.** The owner did not ask for a pause between cards. The 300ms
+  pause was reverted to the 100ms gap in `a449adc`. Measured in the app on an iPhone 13 viewport:
+  about 100ms of empty table between cards, with and without reduced motion, and 3.0s from the
+  task result to the first card. Docs and comments that still described "a beat on the empty
+  table" are corrected (CLAUDE.md, the animation style guide, `drawBeat.js`, the workflow record).
+- **Checks.** Unit tests: 65 files, 1076 passed, 1 skipped (the old Easy-difficulty skip).
+  ESLint and Prettier: clean. `npm run check`: 0 errors, 0 warnings. `npm run build`: passes.
+- **Playwright.** Full suite: 544 passed, 7 skipped, 1 failed, in 23.2 minutes.
+- **Found and fixed.** The failure was the read-aloud deal test: it timed the first card with a
+  visibility poll whose back-off rounded 1.01s up to about 1.9s, so the new 1s beat crossed its
+  2s limit under load. It now times the card frame by frame and checks both limits (at least
+  the 1s beat, under 2s). A rerun also showed a flaky final-log test: it pressed Record before
+  the sheet's 400ms open guard had passed. It now waits 450ms. Both pass on every project, and
+  the final-log tests passed 54 of 54 repeats.
+- **Cleaned up.** The `design/v3-board-2` and `design/v3-surfaces-2` worktrees and branches are
+  removed; their commits are on origin. The sign-off reviews are saved in
+  `docs/ux-qa/design-polish/v3/`.
+
 ## Recommendations
 
 ### Earlier reviews: what is fixed, open, or fixed badly

@@ -53,10 +53,10 @@ The older names still work and follow the standard: `FAST` = 120, `NORMAL` = 200
   Under reduced motion there is no throw: the number shows, then fades over 350ms
   (`--dur-dice-sink-reduced`). This replaces the `DICE_DELAY` + `DICE_FADE` pattern further down.
 - **Between cards** (`CardDeck.svelte`): the card lifts away (220ms), the next is drawn after
-  `DRAW_PAUSE` (100ms) and rises (250ms): card to card in about 0.57s. A tap on the table, Space or the button during the pause
-  draws at once, and only once. The pause holds under reduced motion (it is not motion). The
-  first card of a round comes after the 2s result hold of the task roll, so it needs no extra
-  pause.
+  `DRAW_PAUSE` (100ms) and rises (250ms): card to card in about 0.57s, with no pause on an empty
+  table. A tap on the table, Space or the button during the gap draws at once, and only once.
+  The first card of a round comes after the task roll's result has held for `DEAL_HOLD` (3s), or
+  `DEAL_BEAT` (1s) after the voice has read it, so it needs no extra pause.
 - **The result hold** is a reading pause, not an animation: a roll's result line stays 2s, then
   the game moves on by itself (a press moves on at once; an ending waits). A 2px line on the
   step button runs out over the hold, read from the hold's own clock, in quarters under reduced

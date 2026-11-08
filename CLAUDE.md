@@ -557,7 +557,7 @@ async function handleDismiss() {
 }
 ```
 
-**Key Principle:** Complete visual animation → Trigger next state → Reset → A beat on the empty table before the next item, so each card lands as its own moment.
+**Key Principle:** Complete visual animation → Trigger next state → Reset → Brief pause before the next item.
 `ANIMATION_DURATION.CARD_DISMISS` (600ms) is an older name the card no longer uses.
 
 **Applies to:**

@@ -43,7 +43,7 @@ const OWNER_ITEMS = [
 // Added by the owner while stage 1 ran; a separate developer builds them, and they join the sign-off
 const LATE_ITEMS = [
   { id: 'OWN-6', lens: 'game', area: 'global', text: 'OWN-6 (owner requirement): "The dice fade animation is too fast." After a roll lands the dice sank and faded over 350ms (DICE_SINK). It must be a calm, readable sink and fade: the player sees the dice settle and leave rather than blink out; the HUD, title and result line are never covered; reduced motion stays a short plain fade. Judge it by measuring: read the token and record a roll (video or frame sheet). A separate developer is building this item. If origin/claude/vibrant-curie-w9bn88 has no commit citing it yet (git fetch, then git log --grep), wait for one before you verify it: check every minute for up to 60 minutes with a Monitor until-loop, and only then judge it.' },
-  { id: 'OWN-7', lens: 'game', area: 'play', text: 'OWN-7 (owner requirement): "The time before a card is drawn is too fast." After a card was dismissed the next was drawn 100ms later (NEXT_DRAW_MS in CardDeck), so cards arrived on top of each other. Each draw needs a deliberate beat on the empty table so every card lands as its own moment, consistent for the first card of a round, later cards and auto-play; a tap or Space during the beat is never lost and never draws twice. Judge it by measuring: read the tokens and record two draws. A separate developer is building this item. If origin/claude/vibrant-curie-w9bn88 has no commit citing it yet (git fetch, then git log --grep), wait for one before you verify it: check every minute for up to 60 minutes with a Monitor until-loop, and only then judge it.' },
+  { id: 'OWN-7', lens: 'game', area: 'play', text: 'OWN-7 (owner requirement): "The time before a card is drawn is too fast." The owner meant the time from the task roll result to the first card of a round (now DEAL_HOLD, 3s, or DEAL_BEAT, 1s after the voice). It is not a pause between cards: a 300ms empty table between cards was tried and the owner rejected it ("no one asked for this"); the gap between cards stays 100ms (DRAW_PAUSE). A tap or Space is never lost and never draws twice. Judge it by measuring: read the tokens and record two draws. A separate developer is building this item. If origin/claude/vibrant-curie-w9bn88 has no commit citing it yet (git fetch, then git log --grep), wait for one before you verify it: check every minute for up to 60 minutes with a Monitor until-loop, and only then judge it.' },
 ]
 
 const CONTEXT = `## Context
@@ -141,10 +141,10 @@ const applyReview = (r, lenses, stage, allowed) => {
     if (!lensOf[v.id] || !lenses.includes(lensOf[v.id]) || !allowed.includes(v.id)) continue
     status[v.id] = v.status
     notes[v.id] = v.note
-    // The owner tuned the card pause by hand (100ms too fast, 600ms too long, now 300ms): no agent retunes it
+    // The owner set the card gap by hand (100ms; the 300ms empty-table pause was not wanted): no agent retunes it
     if (v.id === 'OWN-7' && ['open', 'regressed'].includes(v.status)) {
       status[v.id] = 'owner-tuned'
-      log(`OWN-7: the reviewer wanted changes (${String(v.note).slice(0, 200)}); kept for the owner, who set the pause to 300ms`)
+      log(`OWN-7: the reviewer wanted changes (${String(v.note).slice(0, 200)}); kept for the owner, who set the gap back to 100ms`)
     }
   }
   for (const f of r.findings || []) {
