@@ -17,6 +17,7 @@
 	import { fade, fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import { ANIMATION_DURATION } from '../constants/animations.js';
+	import { scrollEdges } from './journal/scrollEdges.js';
 
 	let {
 		children,
@@ -41,6 +42,8 @@
 	let modalElement = $state();
 	let dialogElement = $state();
 	let previouslyFocused = null;
+	/** Whether the body has content past its top or bottom edge (visual-layout-s-15) */
+	let bodyEdges = $state({ above: false, below: false });
 
 	const prefersReducedMotion = () =>
 		typeof window !== 'undefined' &&
@@ -162,10 +165,33 @@
 					</button>
 				</div>
 
-				<div class="content-body-wrapper">
-					<div class="content-body">
-						{@render children()}
+				<!-- While content remains below the fold, the journal's cue: a 40px fade and the cyan
+				     chevron; a 24px fade at the top once scrolled (visual-layout-s-15) -->
+				<div class="content-body-frame">
+					<div
+						class="content-body-wrapper"
+						class:more-below={bodyEdges.below}
+						class:more-above={bodyEdges.above}
+						use:scrollEdges={(edges) => {
+							if (edges.above !== bodyEdges.above || edges.below !== bodyEdges.below)
+								bodyEdges = edges;
+						}}
+						data-testid="content-body"
+					>
+						<div class="content-body">
+							{@render children()}
+						</div>
 					</div>
+					<span
+						class="more-cue"
+						class:visible={bodyEdges.below}
+						aria-hidden="true"
+						data-testid="content-more-cue"
+					>
+						<svg viewBox="0 0 24 24" width="16" height="16">
+							<path d="m6 9 6 6 6-6" />
+						</svg>
+					</span>
 				</div>
 
 				{#if footer}
@@ -313,13 +339,77 @@
 		opacity: 1;
 	}
 
-	/* Scrolling body */
+	/* Scrolling body, in a frame that holds its "more below" chevron */
+	.content-body-frame {
+		position: relative;
+		flex: 1;
+		min-height: 0; /* Important for flex scrolling */
+		display: flex;
+		flex-direction: column;
+	}
+
 	.content-body-wrapper {
 		flex: 1;
 		overflow-y: auto;
 		overflow-x: hidden;
 		overscroll-behavior: contain;
-		min-height: 0; /* Important for flex scrolling */
+		min-height: 0;
+	}
+
+	/* Content past an edge fades out there, as the journal's lists do: 40px at the bottom with
+	   the chevron, 24px at the top once the body is scrolled down (visual-layout-s-15) */
+	.content-body-wrapper.more-below {
+		-webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 40px), transparent 100%);
+		mask-image: linear-gradient(to bottom, #000 calc(100% - 40px), transparent 100%);
+	}
+
+	.content-body-wrapper.more-above {
+		-webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 24px);
+		mask-image: linear-gradient(to bottom, transparent 0, #000 24px);
+	}
+
+	.content-body-wrapper.more-above.more-below {
+		-webkit-mask-image: linear-gradient(
+			to bottom,
+			transparent 0,
+			#000 24px,
+			#000 calc(100% - 40px),
+			transparent 100%
+		);
+		mask-image: linear-gradient(
+			to bottom,
+			transparent 0,
+			#000 24px,
+			#000 calc(100% - 40px),
+			transparent 100%
+		);
+	}
+
+	/* The journal's "more below" chevron, at the body's bottom-right corner; opacity only */
+	.more-cue {
+		position: absolute;
+		right: var(--space-sm, 0.5rem);
+		bottom: 4px;
+		display: grid;
+		place-items: center;
+		width: 24px;
+		height: 24px;
+		color: var(--color-neon-cyan, #0ff);
+		opacity: 0;
+		transition: opacity var(--dur-enter, 200ms) ease-out;
+		pointer-events: none;
+	}
+
+	.more-cue.visible {
+		opacity: 1;
+	}
+
+	.more-cue svg {
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 2;
+		stroke-linecap: round;
+		stroke-linejoin: round;
 	}
 
 	.content-body {
@@ -514,6 +604,7 @@
 	@media (prefers-reduced-motion: reduce) {
 		.close-button,
 		.done-button,
+		.more-cue,
 		:global(.cm-action) {
 			transition: none;
 		}
