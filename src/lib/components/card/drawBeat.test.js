@@ -24,9 +24,10 @@ describe('createDrawBeat', () => {
 		vi.useRealTimers();
 	});
 
-	it('is a deliberate pause, longer than the old 100ms', () => {
-		expect(MS).toBeGreaterThanOrEqual(400);
-		expect(MS).toBeLessThanOrEqual(ANIMATION_DURATION.SEQUENCE_MAX);
+	// The owner found 100ms too fast and 600ms too long
+	it('is a deliberate pause between the 100ms that was too fast and the 600ms that was too long', () => {
+		expect(MS).toBeGreaterThan(100);
+		expect(MS).toBeLessThan(600);
 	});
 
 	it('draws nothing before the beat runs out, then draws once', () => {

@@ -32,7 +32,7 @@
 		onconfirmcard = () => {}
 	} = $props();
 
-	// Card to card in about 1.1s: dismiss 220ms, a beat on the empty table (DRAW_PAUSE, 600ms),
+	// Card to card in about 0.8s: dismiss 220ms, a beat on the empty table (DRAW_PAUSE, 300ms),
 	// then the face rises in 250ms, so each card lands as its own moment (OWN-7)
 	const RISE_MS = 250;
 	const DISMISS_MS = 220;

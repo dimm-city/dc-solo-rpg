@@ -83,12 +83,12 @@ export const ANIMATION_DURATION = {
 	DICE_SINK_REDUCED: 350,
 
 	/**
-	 * Draw pause (600ms, OWN-7) - the beat on the empty table between dismissing a card and the
-	 * next card rising, so each card lands as its own moment (card to card about 1.1s: 220ms
+	 * Draw pause (300ms, OWN-7) - the beat on the empty table between dismissing a card and the
+	 * next card rising, so each card lands as its own moment (card to card about 0.8s: 220ms
 	 * dismiss, this pause, 250ms rise). A tap or Space during it draws at once. A pause, not
 	 * motion, so it holds under reduced motion too.
 	 */
-	DRAW_PAUSE: 600,
+	DRAW_PAUSE: 300,
 
 	/** Story mode transitions (250ms) - Story library and save animations */
 	STORY_MODE: 250,
