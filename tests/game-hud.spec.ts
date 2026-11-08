@@ -325,6 +325,32 @@ test.describe('Game HUD', () => {
 		expect(title!.x + title!.width).toBeLessThanOrEqual(button!.x);
 	});
 
+	test('on a phone in portrait the header docks under the step button, the HUD on top', async ({
+		page
+	}, testInfo) => {
+		test.skip(testInfo.project.name !== 'Desktop Chrome', 'sets its own viewport');
+		await page.setViewportSize({ width: 390, height: 844 });
+		await openTable(page);
+
+		const hud = await page.getByTestId('hud').boundingBox();
+		const bar = await page.locator('.player-round-bar').boundingBox();
+		const button = await page.getByTestId('initial-damage-button').boundingBox();
+		const readout = await page.getByTestId('readout').boundingBox();
+		// HUD first, then the readout, the step button and, last, the header bar
+		expect(hud!.y).toBeLessThanOrEqual(8);
+		expect(readout!.y).toBeGreaterThan(hud!.y + hud!.height);
+		expect(button!.y).toBeGreaterThan(readout!.y + readout!.height);
+		// At least 16px between the step button and the bar, and the bar fully on screen
+		expect(bar!.y).toBeGreaterThanOrEqual(button!.y + button!.height + 16);
+		expect(bar!.y + bar!.height).toBeLessThanOrEqual(844);
+
+		// The ⋯ menu opens upward from the docked bar, fully on screen
+		await page.getByRole('button', { name: 'More game options' }).click();
+		const menu = await page.locator('#game-more-menu').boundingBox();
+		expect(menu!.y).toBeGreaterThanOrEqual(0);
+		expect(menu!.y + menu!.height).toBeLessThanOrEqual(bar!.y);
+	});
+
 	test('the step button shows a visible focus ring from the keyboard', async ({
 		page
 	}, testInfo) => {

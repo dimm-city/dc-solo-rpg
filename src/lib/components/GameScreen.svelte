@@ -9,7 +9,11 @@
 	import { getAudioSettings, getGameplaySettings, speak } from '../stores/audioStore.svelte.js';
 	import { autoAdvance, autoRoll } from '../utils/autoPlay.js';
 	import { ANIMATION_DURATION } from '../constants/animations.js';
-	import { formatIntroGoal, formatResultTotals } from '../utils/rollResult.js';
+	import {
+		formatIntroGoal,
+		formatModifierNotice,
+		formatResultTotals
+	} from '../utils/rollResult.js';
 	import { fourthAceWins, isHardGame } from '../constants/difficulty.js';
 	import { createAnnouncer } from '../utils/liveAnnouncer.js';
 	import { skipRoll, diceState } from '../stores/diceStore.svelte.js';
@@ -82,26 +86,24 @@
 
 	const SUIT_SYMBOLS = { hearts: '♥', diamonds: '♦', clubs: '♣', spades: '♠' };
 
-	/** "7♠" */
-	const cardName = (card) => `${card.card}${SUIT_SYMBOLS[card.suit] ?? ''}`;
-
-	/** "7♠ · Caught in a toxic gas leak" */
-	function cardLine(card) {
-		if (!card) return null;
-		const name = cardName(card);
-		return card.description ? `${name} · ${card.description}` : name;
-	}
+	/**
+	 * "7♠": the card behind a Stability check, on the readout's card tab (OWN-4). Its text was
+	 * read in full on the card a moment before; on the board it is only the check's cause.
+	 */
+	const cardName = (card) => (card ? `${card.card}${SUIT_SYMBOLS[card.suit] ?? ''}` : null);
 
 	/**
 	 * What a modifier card just did, on the first table screen after it (NV-06): its own
 	 * Stability check, or Salvation when it was the round's last card. Once that step is done
-	 * the notice is gone, so a later screen never reads as if it were the one affected.
+	 * the notice is gone, so a later screen never reads as if it were the one affected. A
+	 * modifier that did nothing ("No King was out to return") has no notice (OWN-4).
 	 */
 	let noticeDoneFor = $state(null);
 	const modifierNotice = $derived.by(() => {
 		const card = gameState.lastCard;
-		if (!card?.modifierResult || card.round !== gameState.round) return null;
-		return card.id !== undefined && card.id === noticeDoneFor ? null : card.modifierResult;
+		const notice = formatModifierNotice(card?.modifierResult);
+		if (!notice || card.round !== gameState.round) return null;
+		return card.id !== undefined && card.id === noticeDoneFor ? null : notice;
 	});
 
 	// DP-1-06: one job per element. The title names the step, the description says what is at
@@ -118,11 +120,14 @@
 		return `You need ${need}+ to remove a Token.${miss}`;
 	}
 
-	/** On Easy the fourth Ace's check is the last roll of the game: say what is at stake */
+	/**
+	 * On Easy the fourth Ace's check is the last roll of the game: say what is at stake. Otherwise
+	 * the stakes alone (OWN-4): the cause is the card tab and the rule caption.
+	 */
 	function stabilityCheckDescription() {
 		return isFinalStabilityCheck()
 			? 'Come through this roll with any Stability left and you escape.'
-			: 'An odd card demands a price. 10 or less costs Stability.';
+			: '10 or less costs Stability.';
 	}
 
 	// Contextual background text for each screen
@@ -136,7 +141,7 @@
 			case 'failureCheck':
 				return {
 					title: isFinalStabilityCheck() ? 'Final Check' : 'Stability Check',
-					eyebrow: cardLine(gameState.lastCard),
+					card: cardName(gameState.lastCard),
 					description: stabilityCheckDescription(),
 					notice: modifierNotice
 				};
@@ -860,7 +865,7 @@
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<!-- svelte-ignore a11y_no_static_element_interactions -->
 				<div class="main-screen-area dc-table-bg" onclick={handleScreenClick}>
-					<!-- The text column: eyebrow, title and body, every slot reserved (DP-1-04) -->
+					<!-- The readout: card tab, title, stakes or result, notice tab, every slot reserved (OWN-4) -->
 					<ContextBackground {contextText} {resultLine} />
 
 					{#key currentScreen}
@@ -1378,6 +1383,19 @@
 		}
 	}
 
+	/* OWN-3: phones in portrait. The HUD is the top row and the header docks in the bottom row,
+	   under the step button (StatusDisplay places both in this grid, with the same query). The
+	   top clears a notch in a home-screen app; the bottom already clears the home indicator. */
+	@media (max-width: 600px) and (orientation: portrait) {
+		.ui-content-layer {
+			padding-top: max(0.5rem, env(safe-area-inset-top, 0px));
+		}
+
+		.status-display-area {
+			display: contents;
+		}
+	}
+
 	/* ============================================
 	   VP-01: LANDSCAPE PHONES (up to 500px tall)
 	   The HUD is the short one-row HUD. The step button moves to a right-hand column beside
@@ -1395,18 +1413,21 @@
 				max(0.375rem, var(--safe-bottom, 0px)) max(0.5rem, env(safe-area-inset-left));
 		}
 
-		/* Title and result line centre in the space left of the button column */
+		/* The readout takes the table left of the button column: its left edge on the HUD's,
+		   8px clear of the column */
 		.main-screen-area :global(.context-text-background) {
 			right: var(--action-col);
 			width: auto;
-			padding-inline: 0.5rem;
+			padding-inline: 0 0.5rem;
 		}
 
-		/* The reduced-motion roll: left of the action column, under the text column (its fixed
-		   height: eyebrow, one title line, the gap and the body, see ContextBackground) */
+		/* The reduced-motion roll: left of the action column, 12px under the readout and its
+		   notice tab (the readout's fixed landscape height: its 14px top, 16px padding, one
+		   28px title line, the hairline and its 8px gaps, the 2-line body, 18px padding, then
+		   the tab's 11px below the edge; see ContextBackground) */
 		.static-roll {
 			right: var(--action-col);
-			top: calc(var(--space-sm, 8px) + 29px + 1.75rem * 1.15 + 12px + 3rem + 29px + 8px);
+			top: calc(14px + 16px + 1.75rem * 1.15 + 17px + 3rem + 18px + 11px + 12px);
 			bottom: 8px;
 		}
 

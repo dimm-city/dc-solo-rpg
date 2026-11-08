@@ -248,6 +248,20 @@ export function formatNextStepLabel({
 }
 
 /**
+ * What a card modifier did, for the board's notice (OWN-4), or null when it did nothing. A card
+ * modifier's result is a past-tense statement ("K♥ went back into the deck · 0 of 4 Kings out",
+ * "A♣ skipped its Stability check"); a non-event is phrased "No …" ("No King was out to
+ * return"), and the board never states a non-event.
+ * @param {string|null|undefined} modifierResult - The card's modifierResult (gameActions)
+ * @returns {string|null}
+ */
+export function formatModifierNotice(modifierResult) {
+	const text = (modifierResult ?? '').trim();
+	if (!text || /^No\b/.test(text)) return null;
+	return text;
+}
+
+/**
  * The modifier the next roll will use, for the roll button's label (null when none)
  * @param {{ isLucid?: boolean, isSurreal?: boolean }} state
  */

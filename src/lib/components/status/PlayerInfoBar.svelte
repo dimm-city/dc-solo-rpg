@@ -13,7 +13,10 @@
 	 *
 	 * The frame is cut so that its two side points sit on the bar's centre line (the top steps
 	 * are half the height of the bottom bevels), and every control and label is centred on that
-	 * line, the same inset (--hdr-inset) in from either end.
+	 * line, the same inset (--hdr-inset) in from either end. The frame is its own layer
+	 * (.bar-frame) behind the controls, so where the bar docks at the bottom of the screen
+	 * (phones in portrait, OWN-3: StatusDisplay) the frame alone is mirrored, its bevels facing
+	 * the board, and the ⋯ menu opens upward.
 	 *
 	 * The AUTO toggle writes the same gameplay settings as before (playMode.js AUTO_PLAY_ON/OFF);
 	 * GameScreen watches them to arm auto-play.
@@ -39,6 +42,7 @@
 	} from '../../utils/playMode.js';
 	import { ANIMATION_DURATION } from '../../constants/animations.js';
 	import DiceThemePicker from '../DiceThemePicker.svelte';
+	import { menuPlacement } from './menuPlacement.js';
 
 	let {
 		/** Handler for exit button click */
@@ -54,8 +58,8 @@
 	let wrapEl = $state();
 	let menuEl = $state();
 	let moreButton = $state();
-	/** Where the menu sits: under the ⋯ button, right edges aligned */
-	let menuPosition = $state({ top: 0, right: 0 });
+	/** Where the menu sits: on the side of the ⋯ button with more room, right edges aligned */
+	let menuPosition = $state({ top: undefined, bottom: undefined, right: 0 });
 
 	const MENU_ID = 'game-more-menu';
 	const audioEnabled = $derived(isReadAloudOn(getAudioSettings()));
@@ -78,8 +82,7 @@
 
 	function toggleMenu() {
 		if (!menuOpen && moreButton) {
-			const rect = moreButton.getBoundingClientRect();
-			menuPosition = { top: rect.bottom + 6, right: window.innerWidth - rect.right };
+			menuPosition = menuPlacement(moreButton.getBoundingClientRect(), window);
 		}
 		menuOpen = !menuOpen;
 	}
@@ -199,10 +202,12 @@
 {/snippet}
 
 <div class="player-bar-wrap" bind:this={wrapEl}>
-	<div
-		class="player-round-bar header-fade-in"
-		data-augmented-ui="tl-2-clip-x tr-2-clip-x br-clip bl-clip border"
-	>
+	<div class="player-round-bar header-fade-in">
+		<span
+			class="bar-frame"
+			data-augmented-ui="tl-2-clip-x tr-2-clip-x br-clip bl-clip border"
+			aria-hidden="true"
+		></span>
 		<div class="bar-group bar-start">
 			<button class="status-bar-button exit-button" onclick={onExitClick} aria-label="Exit game">
 				{@render icon('exit')}<span class="btn-label">Exit</span>
@@ -275,7 +280,8 @@
 			class="game-menu"
 			bind:this={menuEl}
 			use:portal
-			style:top="{menuPosition.top}px"
+			style:top={menuPosition.top === undefined ? undefined : `${menuPosition.top}px`}
+			style:bottom={menuPosition.bottom === undefined ? undefined : `${menuPosition.bottom}px`}
 			style:right="{menuPosition.right}px"
 			transition:fade={menuFade()}
 		>
@@ -330,17 +336,6 @@
 	}
 
 	.player-round-bar {
-		--aug-border-all: 2px;
-		--aug-border-bg: var(
-			--frame-border,
-			linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta))
-		);
-		/* Two 9px top steps (18px) mirror the 18px bottom bevels: the side points sit on the
-		   centre line, where the controls are */
-		--aug-tl: 9px;
-		--aug-tr: 9px;
-		--aug-br: 18px;
-		--aug-bl: 18px;
 		/* The inset from either end, and each side's width: the wider group's (ROUND, DICE,
 		   AUTO-PLAY, READ ALOUD), so the title is centred on the bar */
 		--hdr-inset: var(--space-md);
@@ -357,7 +352,28 @@
 		padding: 4px var(--hdr-inset);
 		box-sizing: border-box;
 		position: relative;
+		/* The frame layer stays behind the controls, inside the bar */
+		isolation: isolate;
+	}
 
+	/* The frame: its own layer, so it can be mirrored without touching the controls */
+	.bar-frame {
+		--aug-border-all: 2px;
+		--aug-border-bg: var(
+			--frame-border,
+			linear-gradient(135deg, var(--color-neon-cyan), var(--color-cyber-magenta))
+		);
+		/* Two 9px top steps (18px) mirror the 18px bottom bevels: the side points sit on the
+		   centre line, where the controls are */
+		--aug-tl: 9px;
+		--aug-tr: 9px;
+		--aug-br: 18px;
+		--aug-bl: 18px;
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		display: block;
+		pointer-events: none;
 		background: linear-gradient(
 			135deg,
 			rgba(100, 50, 200, 0.3),

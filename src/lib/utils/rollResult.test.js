@@ -5,6 +5,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import {
+	formatModifierNotice,
 	formatStabilityResult,
 	formatTaskResult,
 	formatSalvationResult,
@@ -311,5 +312,28 @@ describe('formatNextStepLabel (the step button after a result)', () => {
 	it('names an ending for itself', () => {
 		expect(formatNextStepLabel({ gameOver: true, win: true, next: 'journal' })).toBe('Escape');
 		expect(formatNextStepLabel({ gameOver: true, win: false, next: 'draw' })).toBe('Face the end');
+	});
+});
+
+describe('formatModifierNotice (OWN-4): the board states what a modifier did, never a non-event', () => {
+	it('keeps a modifier that did something', () => {
+		expect(formatModifierNotice('K♥ went back into the deck · 0 of 4 Kings out')).toBe(
+			'K♥ went back into the deck · 0 of 4 Kings out'
+		);
+		expect(formatModifierNotice('A♣ skipped its Stability check')).toBe(
+			'A♣ skipped its Stability check'
+		);
+	});
+
+	it('drops a modifier that did nothing, and an empty result', () => {
+		// The exact sentence gameActions logs for a return-king Ace with no King out
+		expect(formatModifierNotice('No King was out to return')).toBeNull();
+		expect(formatModifierNotice('')).toBeNull();
+		expect(formatModifierNotice(undefined)).toBeNull();
+		expect(formatModifierNotice(null)).toBeNull();
+	});
+
+	it('only a leading "No" word marks a non-event', () => {
+		expect(formatModifierNotice('Nothing ventured')).toBe('Nothing ventured');
 	});
 });

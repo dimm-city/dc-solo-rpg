@@ -377,7 +377,7 @@ describe('GameScreen result hold', { timeout: 15000 }, () => {
 				'Stability Check'
 			);
 			expect(container.querySelector('.context-description').textContent.trim()).toBe(
-				'An odd card demands a price. 10 or less costs Stability.'
+				'10 or less costs Stability.'
 			);
 			const button = getByTestId('failure-check-button');
 			expect(button.getAttribute('aria-label')).toBe('Roll for Stability');
@@ -465,6 +465,36 @@ describe('GameScreen: each visit to a step starts clean', () => {
 		await settle(GUARD_MS);
 		expect(gameState.state).toBe('successCheck');
 		expect(queryByTestId('context-notice')).toBeNull();
+	});
+
+	it('OWN-4: the card tab is the card alone; a modifier that did nothing has no notice', async () => {
+		setUp('failureCheck');
+		gameState.lastCard = {
+			id: '1.1',
+			round: 1,
+			card: 'A',
+			suit: 'spades',
+			description: 'A second chance manifests from the darkness',
+			modifier: 'return-king',
+			modifierResult: 'No King was out to return'
+		};
+		Object.assign(gameState, { acesRevealed: 1 });
+		const { getByTestId, queryByTestId, container } = render(GameScreen);
+		await settle(GUARD_MS);
+		// One job per line: the card (the check's cause), the phase, the stakes
+		const card = getByTestId('context-card');
+		expect(card.textContent.trim()).toBe('A');
+		expect(card.querySelector('svg[role="img"]').getAttribute('aria-label')).toBe('spades');
+		expect(container.querySelector('[data-testid="readout"]').textContent).not.toContain(
+			'second chance'
+		);
+		expect(getByTestId('context-title').textContent).toBe('Stability Check');
+		expect(getByTestId('context-description').textContent.trim()).toBe(
+			'10 or less costs Stability.'
+		);
+		// The non-event is neither shown nor announced
+		expect(queryByTestId('context-notice')).toBeNull();
+		expect(getByTestId('live-region').textContent).not.toContain('No King');
 	});
 
 	it('NV-06, DP-1-08: on Salvation the notice is about its card, in the past tense', async () => {
