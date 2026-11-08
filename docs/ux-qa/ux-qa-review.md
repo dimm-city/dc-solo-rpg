@@ -2019,6 +2019,24 @@ QA and integration of the sixth sign-off's fixes, at `a32f7b0` on
   removed; their commits are on origin. The sixth visual-layout sign-off is saved in
   `docs/ux-qa/design-polish/v3/`, and the fifth is kept as `signoff-visual-layout.signoff5.md`.
 
+### stage-8
+
+QA and integration of the seventh sign-off's one fix, at `7dae241` on
+`claude/vibrant-curie-w9bn88`.
+
+- **Built.** The Game Guide's table cells align to the top, so a one-line label sits by the
+  first line of a wrapped value, and the column heads sit on the rule beneath them
+  (visual-layout-s-20). It is five lines of CSS in `GameGuide.svelte`.
+- **Checks.** Unit tests: 69 files, 1100 passed, 1 skipped. ESLint and Prettier: clean.
+  `npm run check`: 0 errors, 0 warnings. `npm run build`: passes, and publint says "All good".
+- **Playwright.** A CSS-only change to one component, so only the specs that open the Guide ran
+  (header navigation, splash and instructions, the smoke test and accessibility) on all three
+  projects: 117 passed, 0 failed. The full suite passed at stage 7. No new screenshot capture
+  was made.
+- **Found.** No failures, so no fixes were needed at this stage.
+- **Cleaned up.** No developer worktrees or `design/v3-*` branches were left. The seventh
+  visual-layout review was already saved in `docs/ux-qa/design-polish/v3/`.
+
 ## Recommendations
 
 ### Earlier reviews: what is fixed, open, or fixed badly
