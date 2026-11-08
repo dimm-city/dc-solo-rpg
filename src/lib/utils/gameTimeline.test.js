@@ -59,30 +59,30 @@ describe('buildTimeline', () => {
 	});
 
 	it('reads the opening roll', () => {
-		expect(lines(timeline[0])).toEqual(['Instability · rolled 6 · −1 Stability · 19/20']);
+		expect(lines(timeline[0])).toEqual(['Instability · Rolled 6 · −1 Stability · 19/20']);
 	});
 
 	it('lists a Stability check with its roll, loss and Stability after', () => {
-		expect(lines(timeline[1])[0]).toBe('7♥︎ · rolled 4 · −2 Stability · 17/20');
+		expect(lines(timeline[1])[0]).toBe('7♥︎ · Rolled 4 · −2 Stability · 17/20');
 	});
 
 	it('names the Ace of Hearts as Salvation unlocked with its target, then its check', () => {
 		expect(lines(timeline[1]).slice(1)).toEqual([
-			'A♥︎ · Salvation unlocked · roll 17+',
-			'A♥︎ · rolled 14 · no loss · 17/20',
-			'Salvation · rolled 15 · missed 17+ · 10 left'
+			'A♥︎ · Salvation unlocked · needs 17+',
+			'A♥︎ · Rolled 14 · no Stability lost · 17/20',
+			'Salvation · Rolled 15 · missed 17+ · 10 Tokens left'
 		]);
 	});
 
 	it('leaves an even card out: a round of one is quiet apart from its Salvation roll', () => {
-		expect(lines(timeline[2])).toEqual(['Salvation · rolled 18 · −1 token · 9 left']);
+		expect(lines(timeline[2])).toEqual(['Salvation · Rolled 18 · −1 Token · 9 Tokens left']);
 	});
 
 	it('counts the Kings out and marks a natural 20 as Lucid with its Stability back', () => {
 		expect(lines(timeline[3])).toEqual([
 			'K♠︎ · 1 of 4 Kings',
 			'K♥︎ · 2 of 4 Kings',
-			'9♣︎ · rolled 20 · +1 Stability · 18/20 · Lucid'
+			'9♣︎ · Natural 20 · +1 Stability · 18/20 · Lucid'
 		]);
 		expect(timeline[3].events[0].kind).toBe('king');
 	});
@@ -114,23 +114,62 @@ describe('buildTimeline', () => {
 			log: [card('5', 'spades', 1, { diceRoll: 1, damageDealt: 3, gameState: snap(2) })]
 		};
 		expect(lines(buildTimeline(state)[0])).toEqual([
-			'5♠︎ · rolled 1 · −3 Stability · 0/20 · Surreal',
+			'5♠︎ · Natural 1 · −3 Stability · 0/20 · Surreal',
 			'The end · Your Stability reached 0.'
 		]);
 	});
 
-	it('reads the Salvation table: a natural 20 takes two tokens, Hard adds one on a miss', () => {
+	it('reads the Salvation table in the board’s words: a natural 20 takes two Tokens, a miss names its target', () => {
 		const state = {
 			round: 1,
 			log: [
 				{ type: 'salvation', round: 1, roll: 20, threshold: 14, tokenChange: -2, tokens: 6 },
-				{ type: 'salvation', round: 1, roll: 1, threshold: 14, tokenChange: 2, tokens: 8 }
+				{ type: 'salvation', round: 1, roll: 17, threshold: 14, tokenChange: -1, tokens: 5 },
+				{ type: 'salvation', round: 1, roll: 9, threshold: 14, tokenChange: 0, tokens: 5 },
+				{ type: 'salvation', round: 1, roll: 1, threshold: 14, tokenChange: 0, tokens: 5 },
+				{ type: 'salvation', round: 1, roll: 13, threshold: 14, tokenChange: 0, tokens: 1 }
 			]
 		};
 		expect(lines(buildTimeline(state)[0])).toEqual([
-			'Salvation · rolled 20 · −2 tokens · 6 left · Lucid',
-			'Salvation · rolled 1 · +2 tokens · 8 left · Surreal'
+			'Salvation · Natural 20 · −2 Tokens · 6 Tokens left · Lucid',
+			'Salvation · Rolled 17 · −1 Token · 5 Tokens left',
+			'Salvation · Rolled 9 · missed 14+ · 5 Tokens left',
+			'Salvation · Natural 1 · missed · 5 Tokens left · Surreal',
+			'Salvation · Rolled 13 · missed 14+ · 1 Token left'
 		]);
+	});
+
+	it('adds the Tokens a missed roll costs on Hard', () => {
+		const state = {
+			round: 1,
+			log: [
+				{ type: 'salvation', round: 1, roll: 9, threshold: 17, tokenChange: 1, tokens: 7 },
+				{ type: 'salvation', round: 1, roll: 1, threshold: 17, tokenChange: 2, tokens: 9 }
+			]
+		};
+		expect(lines(buildTimeline(state)[0])).toEqual([
+			'Salvation · Rolled 9 · missed 17+ · +1 Token · 7 Tokens left',
+			'Salvation · Natural 1 · missed · +2 Tokens · 9 Tokens left · Surreal'
+		]);
+	});
+
+	it('never says "no loss" or a lower-case token, and every roll starts Rolled or Natural', () => {
+		const all = [
+			lost,
+			{
+				round: 1,
+				log: [card('3', 'clubs', 1, { diceRoll: 20, damageDealt: 0, gameState: snap(20) })]
+			}
+		]
+			.flatMap((state) => buildTimeline(state))
+			.flatMap((block) => block.events);
+		for (const event of all) {
+			expect(event.text).not.toMatch(/no loss|\btokens?\b|rolled|roll \d/);
+		}
+		const rolls = all.filter((event) => ['check', 'salvation', 'opening'].includes(event.kind));
+		for (const event of rolls) expect(event.text).toMatch(/^(Rolled|Natural) \d+/);
+		// A natural 20 at full Stability restores nothing
+		expect(all.at(-1).text).toBe('Natural 20 · Stability already full · 20/20 · Lucid');
 	});
 
 	it('reads a four-Aces Salvation as a Stability check that frees a token', () => {
@@ -153,7 +192,7 @@ describe('buildTimeline', () => {
 		};
 		expect(lines(buildTimeline(state).at(-1))).toEqual([
 			'A♦︎ · 4 of 4 Aces · no target',
-			'Salvation · rolled 7 · −1 Stability · 11/20 · −1 token · 4 left'
+			'Salvation · Rolled 7 · −1 Stability · 11/20 · −1 Token · 4 Tokens left'
 		]);
 	});
 
@@ -174,12 +213,13 @@ describe('buildTimeline', () => {
 			]
 		};
 		expect(lines(buildTimeline(state)[1])).toEqual([
-			'A♠︎ · 4 of 4 Aces · no Stability check',
+			'A♠︎ · 4 of 4 Aces',
+			'A♠︎ · skipped its Stability check',
 			'Escaped · The fourth Ace was revealed.'
 		]);
 	});
 
-	it('names the last token as the ending of a win', () => {
+	it('names the last Token as the ending of a win', () => {
 		const state = {
 			round: 3,
 			gameOver: true,
@@ -189,8 +229,8 @@ describe('buildTimeline', () => {
 			log: [{ type: 'salvation', round: 3, roll: 19, threshold: 14, tokenChange: -1, tokens: 0 }]
 		};
 		expect(lines(buildTimeline(state).at(-1))).toEqual([
-			'Salvation · rolled 19 · −1 token · 0 left',
-			'Escaped · The last token was removed.'
+			'Salvation · Rolled 19 · −1 Token · 0 Tokens left',
+			'Escaped · The last Token was removed.'
 		]);
 	});
 
@@ -201,16 +241,16 @@ describe('buildTimeline', () => {
 				card('9', 'hearts', 1, { modifier: 'skip-damage', gameState: snap(15) }),
 				card('6', 'spades', 1, {
 					modifier: 'return-king',
-					modifierResult: 'King of Spades returns to the deck · 1 of 4',
+					modifierResult: 'K♠ went back into the deck · 1 of 4 Kings out',
 					gameState: snap(15, { kings: 2 })
 				}),
 				card('8', 'spades', 1, { modifier: 'return-king', gameState: snap(15) })
 			]
 		};
 		expect(lines(buildTimeline(state)[0])).toEqual([
-			'9♥︎ · no Stability check',
-			'6♠︎ · King of Spades returns to the deck · 1 of 4',
-			'8♠︎ · Returns a King to the deck'
+			'9♥︎ · skipped its Stability check',
+			'6♠︎ · K♠ went back into the deck · 1 of 4 Kings out',
+			'8♠︎ · A King went back into the deck'
 		]);
 	});
 
@@ -227,8 +267,8 @@ describe('buildTimeline', () => {
 		const [one, two] = buildTimeline(state);
 		expect(lines(one)).toEqual(['K♣︎ · 1 of 4 Kings', 'A♣︎ · 1 of 4 Aces']);
 		expect(lines(two)).toEqual([
-			'A♥︎ · Salvation unlocked · 2 of 4 Aces · roll 14+',
-			'A♥︎ · rolled 9 · −1 Stability',
+			'A♥︎ · Salvation unlocked · 2 of 4 Aces · needs 14+',
+			'A♥︎ · Rolled 9 · −1 Stability',
 			'K♥︎ · 2 of 4 Kings'
 		]);
 	});

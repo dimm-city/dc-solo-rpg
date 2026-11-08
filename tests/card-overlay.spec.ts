@@ -359,19 +359,24 @@ test.describe('Card overlay', () => {
 			'Round 4'
 		]);
 
-		// The opening roll, a check with its loss and Stability after, the Ace and its target
-		await expect(rounds.nth(0)).toContainText('Instability · rolled 6 · −1 Stability · 19/20');
-		await expect(rounds.nth(1)).toContainText(/7♥.? · rolled 4 · −2 Stability · 17\/20/);
-		await expect(rounds.nth(1)).toContainText(/A♥.? · Salvation unlocked · roll 17\+/);
-		await expect(rounds.nth(1)).toContainText('Salvation · rolled 15 · missed 17+ · 10 left');
+		// The opening roll, a check with its loss and Stability after, the Ace and its target, in
+		// the board's words. Suits are drawn as the HUD's pip shapes (named images, no text).
+		await expect(rounds.nth(0)).toContainText('Instability · Rolled 6 · −1 Stability · 19/20');
+		await expect(rounds.nth(1)).toContainText('7 · Rolled 4 · −2 Stability · 17/20');
+		await expect(rounds.nth(1).getByRole('img', { name: 'hearts' }).first()).toBeVisible();
+		await expect(rounds.nth(1)).toContainText('A · Salvation unlocked · needs 17+');
+		await expect(rounds.nth(1)).toContainText(
+			'Salvation · Rolled 15 · missed 17+ · 10 Tokens left'
+		);
 		// An even card is no event; the round's Salvation roll is
-		await expect(rounds.nth(2)).not.toContainText(/4♣/);
-		await expect(rounds.nth(2)).toContainText('Salvation · rolled 18 · −1 token · 9 left');
+		await expect(rounds.nth(2).getByRole('img', { name: 'clubs' })).toHaveCount(0);
+		await expect(rounds.nth(2)).toContainText('Salvation · Rolled 18 · −1 Token · 9 Tokens left');
 		// Kings count out; a natural 20 is Lucid; the ending closes the last round
-		await expect(rounds.nth(3)).toContainText(/K♠.? · 1 of 4 Kings/);
-		await expect(rounds.nth(3)).toContainText(/9♣.? · rolled 20 · \+1 Stability · 18\/20 · Lucid/);
-		await expect(rounds.nth(4)).toContainText(/K♦.? · 4 of 4 Kings/);
+		await expect(rounds.nth(3)).toContainText('K · 1 of 4 Kings');
+		await expect(rounds.nth(3)).toContainText('9 · Natural 20 · +1 Stability · 18/20 · Lucid');
+		await expect(rounds.nth(4)).toContainText('K · 4 of 4 Kings');
 		await expect(rounds.nth(4)).toContainText('The end · The fourth King was revealed.');
+		await expect(timeline).not.toContainText(/no loss|\btokens?\b|rolled/);
 		// No recap badges any more
 		await expect(sheet.getByTestId('run-recap')).toHaveCount(0);
 
@@ -443,6 +448,31 @@ test.describe('Card overlay', () => {
 		await sheet.getByTestId('journal-view-entry').click();
 		await expect(entry).toBeVisible();
 		await expect(timeline).toBeHidden();
+	});
+
+	test('after the final log: a signature with no Guest, Play again and Go home, and Read your story opens this run', async ({
+		page
+	}) => {
+		const sheet = await openFinalLog(page);
+		await sheet.locator('textarea').fill('The crowns have the city now.');
+		await sheet.getByTestId('journal-save-button').click();
+
+		const epitaph = sheet.getByTestId('journal-epitaph');
+		await expect(epitaph).toBeVisible();
+		await expect(sheet.getByTestId('journal-epitaph-by')).toHaveText(/^Round 4$|^.+, round 4$/);
+		await expect(epitaph).not.toContainText(/guest/i);
+		await expect(sheet.getByTestId('journal-restart-button')).toHaveText('Play again');
+		await expect(sheet.getByTestId('journal-exit-button')).toHaveText('Go home');
+
+		// The primary button lands on this run's story, round 1; Back returns to the library
+		await sheet.getByTestId('journal-story-button').click();
+		await page.waitForURL(/\?story=latest/);
+		const story = page.getByTestId('story-mode');
+		await expect(story).toBeVisible({ timeout: 15000 });
+		await expect(story).toContainText('Future Lost');
+		await expect(story.locator('[data-testid="story-round"]:not([inert])')).toContainText(
+			'Round 1'
+		);
 	});
 
 	test('the final log tabs voice note, entry, Record final log, with the timeline before them', async ({

@@ -31,12 +31,14 @@
 	import {
 		hasSavedGame,
 		getSaveMetadata,
+		loadAllSaves,
 		migrateFromLocalStorage,
 		clearLocalStorageSaves
 	} from '$lib/stores/indexedDBStorage.js';
 	import { resumeGame, deleteSavedGame } from '$lib/stores/gameActions.svelte.js';
 	import { initializeAudioStore } from '$lib/stores/audioStore.svelte.js';
 	import { gameState } from '$lib/stores/gameStore.svelte.js';
+	import { latestCompletedStory } from '$lib/components/browse/latestStory.js';
 
 	/** @type {import('./$types').PageData} */
 	let { data } = $props();
@@ -106,16 +108,31 @@
 			}
 		}
 
-		// "Read your story" at the end of a game links here with ?story to open the Story Library
-		if (new URLSearchParams(window.location.search).has('story')) {
-			showBrowseGames = true;
-		}
+		// ?story opens the Story Library; "Read your story" at the end of a game links here with
+		// ?story=latest, which opens that run's story at once, as choosing its card does (Back
+		// returns to the library)
+		const story = new URLSearchParams(window.location.search).get('story');
+		if (story === 'latest') await openLatestStory();
+		else if (story !== null) showBrowseGames = true;
 
 		loadGames();
 		await updateSaveData();
 	});
 
 	onDestroy(() => clearTimeout(toastTimer));
+
+	async function openLatestStory() {
+		try {
+			const latest = latestCompletedStory(await loadAllSaves());
+			if (latest) {
+				handleSelectStoryGame(latest);
+				return;
+			}
+		} catch (error) {
+			console.error('Could not open the latest story:', error);
+		}
+		showBrowseGames = true;
+	}
 
 	/** After the splash: the first-time choice once, then straight to the games */
 	function nextView() {
