@@ -124,4 +124,38 @@ describe('PlayerInfoBar, the ⋯ menu (visual-layout-s-03)', () => {
 		expect(menu()).not.toBeNull();
 		expect(focused()).toBe('Read aloud');
 	});
+
+	it('Settings opens with focus on ⋯, so the dialog records ⋯ as its trigger (visual-layout-s-07)', async () => {
+		let focusAtOpen = null;
+		const onSettingsClick = vi.fn(() => (focusAtOpen = document.activeElement));
+		const { getByRole } = render(PlayerInfoBar, {
+			props: { onExitClick: vi.fn(), onHelpClick: vi.fn(), onSettingsClick }
+		});
+		const more = getByRole('button', { name: 'More game options' });
+		more.focus();
+		await fireEvent.click(more);
+		await tick();
+		await tick();
+		document.activeElement.click(); // Settings
+		await tick();
+		expect(onSettingsClick).toHaveBeenCalledOnce();
+		expect(focusAtOpen).toBe(more);
+		expect(menu()?.isConnected ?? false).toBe(false);
+	});
+
+	it('Dice theme takes focus into its dialog; one Escape closes it, back on ⋯ (visual-layout-s-07)', async () => {
+		const { more } = await openWith();
+		await press('ArrowDown');
+		expect(focused()).toBe('Dice theme');
+		document.activeElement.click();
+		await tick();
+		await tick();
+		const dialog = document.querySelector('[role="dialog"]');
+		expect(dialog).not.toBeNull();
+		expect(dialog.contains(document.activeElement)).toBe(true);
+		await fireEvent.keyDown(document.activeElement, { key: 'Escape' });
+		await tick();
+		await tick();
+		expect(document.activeElement).toBe(more);
+	});
 });

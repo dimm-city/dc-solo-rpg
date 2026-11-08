@@ -161,9 +161,13 @@
 		if (restoreFocus) moreButton?.focus();
 	}
 
-	/** Menu items that open something close the menu first */
+	/**
+	 * Menu items that open something close the menu first, with focus back on ⋯: the dialog then
+	 * records ⋯ as its trigger (not the vanishing item), takes focus, and gives it back to ⋯ on
+	 * close (visual-layout-s-07)
+	 */
 	const fromMenu = (handler) => () => {
-		closeMenu();
+		closeMenu({ restoreFocus: true });
 		handler();
 	};
 
