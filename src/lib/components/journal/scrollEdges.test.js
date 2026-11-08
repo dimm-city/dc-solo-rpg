@@ -10,11 +10,12 @@ function scroller({ clientHeight, scrollHeight, scrollTop = 0 }) {
 	const node = document.createElement('ul');
 	Object.defineProperty(node, 'clientHeight', { configurable: true, get: () => clientHeight });
 	Object.defineProperty(node, 'scrollHeight', { configurable: true, get: () => scrollHeight });
-	node.scrollTop = scrollTop;
 	Object.defineProperty(node, 'scrollTop', {
 		configurable: true,
 		get: () => scrollTop,
-		set: (v) => (scrollTop = v)
+		set: (v) => {
+			scrollTop = v;
+		}
 	});
 	return node;
 }
