@@ -116,9 +116,15 @@ describe('formatSalvationResult', () => {
 			);
 		});
 
-		it('keeps the Stability clause with four Aces', () => {
+		it('reads like the Easy final check with four Aces: the Stability clause, then the escape', () => {
 			expect(formatSalvationResult(15, 0, 0, undefined, { stabilityBefore: 16 })).toBe(
-				'Rolled 15 · no Stability lost · −1 Token · you escape'
+				'Rolled 15 · no Stability lost · you escape'
+			);
+			expect(formatSalvationResult(8, 0, 0, undefined, { stabilityBefore: 16 })).toBe(
+				'Rolled 8 · −1 Stability · you escape'
+			);
+			expect(formatSalvationResult(20, 0, 0, undefined, { stabilityBefore: 16 })).toBe(
+				'Natural 20 · +1 Stability · you escape'
 			);
 		});
 	});

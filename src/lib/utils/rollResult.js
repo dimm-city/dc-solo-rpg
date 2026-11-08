@@ -26,7 +26,7 @@
  *               "Rolled 14 · no Stability lost · −1 Token"
  *               "Rolled 3 · −2 Stability · you fall" (the fatal roll)
  *   The winning roll (the last Token): "Rolled 15 · −1 Token · you escape"
- *               (four Aces: "Rolled 15 · no Stability lost · −1 Token · you escape")
+ *               (four Aces, like the Easy final check: "Rolled 15 · no Stability lost · you escape")
  *
  * A roll made with two dice (Lucid or Surreal) names both and which one counted:
  *   "Rolled 6 (low of 6, 15) · −1 Stability". Two equal dice name neither: either one counted.
@@ -203,10 +203,11 @@ function formatAutomaticSalvation(roll, tokensAfter, thrown, stabilityBefore, ma
 		parts.push(`${MINUS}${outcome.stabilityLoss} Stability`, FATAL_NOTE);
 		return parts.join(SEP);
 	}
-	parts.push(stabilityChange({ ...outcome, stabilityBefore, max }), `${MINUS}${count(1, 'Token')}`);
-	// The winning roll: the game is over, so no modifier
+	parts.push(stabilityChange({ ...outcome, stabilityBefore, max }));
+	// The winning roll reads like the Easy final check: the Stability clause, then the escape
+	// (which says the last Token came off), with no modifier, so it stays one line at 390px
 	if (tokensAfter <= 0) return [...parts, ESCAPE_NOTE].join(SEP);
-	parts.push(...modifier(outcome));
+	parts.push(`${MINUS}${count(1, 'Token')}`, ...modifier(outcome));
 	return parts.join(SEP);
 }
 
