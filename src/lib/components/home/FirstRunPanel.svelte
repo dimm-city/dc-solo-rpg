@@ -12,7 +12,11 @@
 	<div class="first-run-panel" data-augmented-ui="tl-clip br-clip border">
 		<p class="first-run-brand">Dimm City</p>
 		<h1 id="first-run-title" class="first-run-title">Dream Console</h1>
-		<p class="first-run-pitch">A solo journaling game. Draw, roll, write.</p>
+		<!-- Each sentence stays whole: the only break is between them -->
+		<p class="first-run-pitch">
+			<span class="pitch-sentence">A solo journaling game.</span>
+			<span class="pitch-sentence">Draw, roll, write.</span>
+		</p>
 
 		<!-- choice-card/skip-card: kept for the playthrough capture scripts that skip this screen -->
 		<button class="first-run-play choice-card skip-card" onclick={onplay}>
@@ -77,6 +81,11 @@
 		font-size: 1rem;
 		text-wrap: balance;
 		color: #d5dfeb;
+	}
+
+	.pitch-sentence {
+		display: inline-block;
+		white-space: nowrap;
 	}
 
 	.first-run-play,
