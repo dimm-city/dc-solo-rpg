@@ -215,11 +215,7 @@
 			<button class="status-bar-button help-button" onclick={onHelpClick} aria-label="Game Guide">
 				{@render icon('help')}<span class="btn-label">Guide</span>
 			</button>
-			<button
-				class="status-bar-button settings-button wide-only"
-				onclick={onSettingsClick}
-				aria-label="Game settings"
-			>
+			<button class="status-bar-button settings-button wide-only" onclick={onSettingsClick}>
 				{@render icon('settings')}<span class="btn-label">Settings</span>
 			</button>
 			{#if playerName}

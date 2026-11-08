@@ -151,14 +151,15 @@ describe('getRunRecap', () => {
 });
 
 describe('getStatusLine', () => {
-	it('builds the status line, with tokens only after Salvation unlocks', () => {
+	it('builds the status line label first, n of max, with tokens only after Salvation unlocks (game-copy-v-04)', () => {
 		const base = { tower: 9, kingsRevealed: 3, tokens: 11 };
-		expect(getStatusLine(base)).toBe('Stability 9/20 · 3 of 4 Kings');
+		expect(getStatusLine(base)).toBe('Stability 9 of 20 · Kings 3 of 4');
 		expect(getStatusLine({ ...base, aceOfHeartsRevealed: true })).toBe(
-			'Stability 9/20 · 3 of 4 Kings · 11 Tokens left'
+			'Stability 9 of 20 · Kings 3 of 4 · Tokens 11 left'
 		);
 		expect(getStatusLine({ ...base, tokens: 1, aceOfHeartsRevealed: true })).toBe(
-			'Stability 9/20 · 3 of 4 Kings · 1 Token left'
+			'Stability 9 of 20 · Kings 3 of 4 · Tokens 1 left'
 		);
+		expect(getStatusLine({ tower: -2, kingsRevealed: 4 })).toBe('Stability 0 of 20 · Kings 4 of 4');
 	});
 });

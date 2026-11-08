@@ -110,6 +110,20 @@ describe('HelpModal', () => {
 		expect(screen.getByRole('button', { name: "Rules you've met" })).toBeInTheDocument();
 	});
 
+	it("keeps every met rule true on every difficulty, in the board's words (game-copy-v-01)", async () => {
+		for (const id of ['ace', 'fourth-ace', 'token']) markRuleTipSeen(id);
+		await renderModal();
+
+		const heading = screen.getByRole('heading', { name: "Rules you've met" });
+		const items = [...heading.parentElement.querySelectorAll('li')].map((li) => li.textContent);
+		expect(items).toEqual([
+			'Every Ace you reveal makes Salvation easier. On Normal and Hard, with all four there is no target: each Salvation is a Stability check, and the Token comes off if you hold on.',
+			'On Easy, the fourth Ace ends the game: survive its Stability check and you escape.',
+			'On Hard, a missed Salvation roll adds a Token (two on a natural 1).'
+		]);
+		expect(items.join(' ')).not.toMatch(/failed/i);
+	});
+
 	it('should have "Done" as its footer button, like every dialog (MN-03)', async () => {
 		await renderModal();
 

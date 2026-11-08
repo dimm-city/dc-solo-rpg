@@ -107,17 +107,16 @@ export function getRunRecap(state) {
 }
 
 /**
- * One-line status, e.g. "Stability 9/20 · 3 of 4 Kings · 11 Tokens left". The journal keeps
- * each ' · ' clause whole on a line.
+ * One-line status, label first like the HUD's spoken text, e.g.
+ * "Stability 9 of 20 · Kings 3 of 4 · Tokens 11 left". Tokens have no fixed max (on Hard
+ * they can pass the start), so they read "n left". The journal keeps each ' · ' clause whole
+ * on a line.
  */
 export function getStatusLine(state) {
 	const parts = [
-		`Stability ${Math.max(0, state.tower ?? 0)}/${MAX_STABILITY}`,
-		`${state.kingsRevealed ?? 0} of 4 Kings`
+		`Stability ${Math.max(0, state.tower ?? 0)} of ${MAX_STABILITY}`,
+		`Kings ${state.kingsRevealed ?? 0} of 4`
 	];
-	if (state.aceOfHeartsRevealed) {
-		const tokens = state.tokens ?? 0;
-		parts.push(`${tokens} ${tokens === 1 ? 'Token' : 'Tokens'} left`);
-	}
+	if (state.aceOfHeartsRevealed) parts.push(`Tokens ${state.tokens ?? 0} left`);
 	return parts.join(' · ');
 }

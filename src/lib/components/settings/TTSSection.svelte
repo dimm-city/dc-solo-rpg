@@ -265,9 +265,7 @@
 		{#if adding}
 			<form class="add-service" onsubmit={saveService} aria-labelledby="add-service-heading">
 				<p class="cm-label" id="add-service-heading">Add a voice service</p>
-				<p class="cm-help">
-					Use your own API key for a cloud voice. The key is stored in this browser only.
-				</p>
+				<p class="cm-help">Use your own API key for a cloud voice.</p>
 				<div class="cm-rows">
 					<div class="cm-row">
 						<label class="cm-label" for="new-tts-service">Service</label>

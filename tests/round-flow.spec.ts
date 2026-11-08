@@ -101,14 +101,14 @@ async function playRound(page: Page, ranks: [string, string], setup = '') {
 
 /** Turn rule tips on or off from the in-game Settings (in the header menu on phones) */
 async function setRuleTips(page: Page, on: boolean) {
-	const inline = page.getByRole('button', { name: 'Game settings' });
+	const inline = page.getByRole('button', { name: 'Settings', exact: true });
 	if (await inline.isVisible()) {
 		await inline.click();
 	} else {
 		await page.getByRole('button', { name: 'More game options' }).click();
 		await page.locator('.game-menu').getByRole('button', { name: 'Settings' }).click();
 	}
-	const dialog = page.getByRole('dialog', { name: 'Game Settings' });
+	const dialog = page.getByRole('dialog', { name: 'Settings' });
 	await dialog.getByRole('switch', { name: 'Rule tips' }).setChecked(on);
 	await dialog.getByRole('button', { name: 'Done' }).click();
 	await expect(dialog).toHaveCount(0);

@@ -76,7 +76,7 @@
 	}
 </script>
 
-<ContentModal {isOpen} title="Game Settings" {onClose}>
+<ContentModal {isOpen} title="Settings" {onClose}>
 	<section class="cm-section" aria-labelledby="gameplay-heading">
 		<h3 class="cm-section-title" id="gameplay-heading">Gameplay</h3>
 		<div class="cm-rows">

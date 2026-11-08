@@ -12,8 +12,8 @@ test.describe('Settings Modal', () => {
 	test('should open Settings modal from the header menu', async ({ page }) => {
 		const dialog = await openContentModal(page, 'Settings');
 
-		await expect(dialog).toHaveAccessibleName('Game Settings');
-		await expect(dialog.getByRole('heading', { level: 2, name: 'Game Settings' })).toBeVisible();
+		await expect(dialog).toHaveAccessibleName('Settings');
+		await expect(dialog.getByRole('heading', { level: 2, name: 'Settings' })).toBeVisible();
 	});
 
 	test('should open with difficulty, play mode and rule tips, and the rest under Advanced', async ({
@@ -68,7 +68,7 @@ test.describe('Settings Modal', () => {
 		await expect(dialog.getByRole('heading', { level: 3, name: 'Auto-play' })).toBeAttached();
 
 		await expect(dialog.getByRole('button', { name: 'Done' })).toBeVisible();
-		await expect(dialog.getByRole('button', { name: 'Close Game Settings' })).toBeVisible();
+		await expect(dialog.getByRole('button', { name: 'Close Settings' })).toBeVisible();
 	});
 
 	test('should show every Gameplay control without scrolling', async ({ page }) => {
@@ -157,7 +157,7 @@ test.describe('Settings Modal', () => {
 
 	test('should close Settings modal with the X button and with Escape', async ({ page }) => {
 		const dialog = await openContentModal(page, 'Settings');
-		await dialog.getByRole('button', { name: 'Close Game Settings' }).click();
+		await dialog.getByRole('button', { name: 'Close Settings' }).click();
 		await expect(page.getByRole('dialog')).toHaveCount(0);
 
 		await openContentModal(page, 'Settings');
