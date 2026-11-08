@@ -1,112 +1,111 @@
-# Sign-off 5: visual/typography + layout/responsive
+# Sign-off 6: visual/typography + layout/responsive
 
-Sign-off 5 is complete. Captures: signoff-5 (head e3d3d88; HEAD 884ba8b changes only the workflow file). Probes run at HEAD on a
-dev server (port 5196) into v3/vl6/. The sign-off 4 review is saved as v3/signoff-visual-layout.signoff4.md.
+Sign-off 6 is complete. Captures: signoff-6 (head 4568859; HEAD 12db0bf changes only tests and docs, no src). Probes run
+at HEAD on a dev server (port 5197, stopped) into v3/vl7/. The sign-off 5 review is saved as
+v3/signoff-visual-layout.signoff5.md.
 
 ## Verdicts
 
-- **visual-layout-s-14: resolved.** v3/vl6/s14.cjs and s14c.cjs at HEAD with real insets through CDP
+- **visual-layout-s-16: resolved.** v3/vl7/s16.cjs at HEAD with real insets through CDP
   (`Emulation.setSafeAreaInsetsOverride`, left/right 47, bottom 21) at 844x390; every visible text run and control
-  measured (sr-only excluded). Report: v3/vl6/s14/report-iphone-13-landscape-i47.txt.
-  - Home first visit and return: every box 47..797 (logo and pitch start at 47, menu button ends at 797); scrolled to
-    the end the same. The first-run frame computes 47px padding each side; its content is 224..620. The open menu's
-    items end at 797 (the menu button itself reaches 799.4 only under its `:hover` scale, see below).
-  - Game Over (Kings, real run): 82.3..758 with insets against 43.1..797.1 without, so the OverlayModal stage's own
-    inset is in effect and nothing doubles. Story Library 47..797, story mode 102..742, About 62..733.
-  - Without insets nothing moved: every tracked element box in the signoff-5 raw metrics for home-first-visit,
-    home-return, gameover-loss-kings and gameover-win-tokens at 360, 390, 844x390 and 1440 is identical to signoff-4.
-  - The board intro is not padded for the notch (its text starts at x 16 with 47px insets): filed as s-16, since s-14
-    named only Home and Game Over.
-- **visual-layout-s-15: resolved.** v3/vl6/s15.cjs at HEAD (report v3/vl6/s15/report.txt, shots v3/vl6/s15/).
-  - Settings at 360x640 opens with `more-below`, the 40px bottom mask and the chevron (328,531 24x24) at opacity 1;
-    scrolled to the end (94px) it has only `more-above` and the chevron at 0; at the middle both classes and the
-    chevron back. Opening Advanced at the end brings the cue back at once (hidden 1,581px): the ResizeObserver on
-    the body's child sees the disclosure grow.
-  - Game Guide at 844x390 (hidden 3,216) and at 750x342 (3,293), and Settings at both landscape sizes: the same open,
-    end and middle behaviour. Guide at 360, 390 and 1440: the same.
-  - Exit confirm at every size and Settings at 390 and 1440 (they fit): no class, mask none, chevron at opacity 0.
-  - Grids: v3/vl6/g-360-settings.png (open and end at 360), v3/vl6/g-844-guide.png (Guide 844x390, Settings 750x342).
-  - Layout is untouched: every tracked box in settings-game, help-game and exit-confirm-game is identical to
-    signoff-4 at all four viewports.
+  measured (sr-only excluded). Report v3/vl7/s16/report-board-iphone-13-landscape-i47.txt.
+  - Intro, first screen: 14 runs, minL 47, maxR 797, 0 under the notch. Scrolled to the end: 12 runs, minL 47, 0 bad.
+    Shot: v3/vl7/s16/iphone-13-landscape-i47-b-intro.png (title and every paragraph start at 47; the scroll cue is
+    centred on the column).
+  - Every other board state the same probe walks (opening roll, round start, task result, draw, card, Stability check
+    and result, Guide, Settings and Exit dialogs, journal): minL 49.8-55, maxR <= 797, 0 bad. Nothing doubled.
+  - The skip link with the insets (Tab, so `:focus-visible`): 47..180, level with the toolbar's left edge (47); 8 without
+    insets (v3/vl7/skip.cjs, v3/vl7/skip-844-i47.png).
+  - Without insets: signoff-6 against signoff-5, the intro at 360 and 390 differs by 8 and 26 pixels (background motes
+    only). 844x390 and 1440 changed only through s-17's measure (below), as expected.
+- **visual-layout-s-17: resolved.** v3/vl7/m7.cjs at HEAD, its own count (all descendant text, a collapsed space counted
+  once), reports v3/vl7/measure/report.txt and report-landscape.txt. Longest line, 360 / 390 / 844x390 / 1440:
+  - Intro, Future Lost: 43 / 47 / 61 / 61. Ghost in the Machine: 45 / 50 / 67 / 67.
+  - Card story, every one of the 104 stories of both games set in the real `.byte-story`: 42 / 47 / 70 / 66; 0 lines
+    over 75 out of 838-1,337 lines per viewport (p95 39 / 42 / 64 / 61).
+  - Game Guide (in game): 46 / 50 / 69 / 69. /how-to: 37 / 43 / 69 / 69. About: 32 / 39 / 61 / 61.
+  - 360 and 390 are unchanged: the column widths (intro 328 / 358, card 291 / 319, About 262 / 292) are those of
+    sign-off 5, and every phone shot is pixel-identical to signoff-5 bar background motes.
+  - At 844x390 the drawn card shows its title and both paragraphs with no scroll (the story scroller's scrollHeight
+    210 = clientHeight 210; v3/vl7/measure/iphone-13-landscape-card.png); the longest story (Ace of Hearts, 1,166
+    characters) shows title and first paragraph (signoff-6 card-primary-success-long/iphone-13-landscape.png).
+  - On desktop the 480px intro column now lines up with the 480px step button (signoff-6 intro/desktop.png).
 
 ## New findings
 
-### visual-layout-s-16 · medium · layout · play: on a notched iPhone in landscape, the game intro's text sits under the notch
+### visual-layout-s-18 · low · layout · pages: the reading measure stops at four surfaces; story mode, the AI summary dialog and Settings help still run 76-85 characters
 
-The intro is the first screen of every game. It is an absolute overlay over the table (`.dc-intro-wrapper`,
-GameScreen.svelte:1127-1135, `inset: 0`), so it is outside `.ui-content-layer`, whose landscape padding is the only
-safe-area term on the board (GameScreen.svelte:1489-1492). Its text column pads by a flat `var(--space-md)`
-(`.intro-story-container .content`, GameScreen.svelte:1265-1276).
+s-17 set `--measure` on the card story, intro, Guide and About. Three other places that show sentences still set their
+width in `ch` or not at all, so at 844x390 and 1440 they run past 75 characters a line (v3/vl7/m7.cjs, sumpanel.cjs and
+settings-m.cjs; report v3/vl7/measure/report.txt):
 
-- v3/vl6/s14b.cjs at HEAD with real insets through CDP (left/right 47, bottom 21) at 844x390 (report
-  v3/vl6/s14/report-board-iphone-13-landscape-i47.txt): the intro's title, headings and every paragraph line start at
-  x 16 (11 runs on the first screen, 10 more scrolled to the end). Every other board state measured the same way
-  (opening roll, round start, task result, card, Stability check and result, the journal, Guide, Settings and Exit)
-  starts at x 49.8 or more and ends at 797 or less; the intro's own step button ends at 797.
-- Overlay: v3/vl6/notch-intro-landscape.png (the 47px insets shaded, the sensor housing drawn at the left) covers the
-  start of "You are", "desperately", "the authorities", "What happened", "Your journey" and "temporal".
-- Fix: give `.intro-story-container .content` side padding of `max(var(--space-md), env(safe-area-inset-left))` and
-  the same on the right, as Home and the library do. In landscape the intro's right edge is the action column, so the
-  right term only matters in portrait; it is harmless there (0).
-- Acceptance: with 47px insets at 844x390 every intro text run starts at x 47 or more (title, headings and paragraphs;
-  first screen and scrolled to the end). With no insets, the intro captures at 360, 390, 844x390 and 1440 are unchanged.
+- **Story mode**, the player's own journal entries and final log, read back: `.journal-text` (StoryRound.svelte:304-310)
+  and `.final-log-text` (story/FinalLog.svelte:58-64) have no max-width and fill the 640px `.story-round` column
+  (StoryRound.svelte:157) at 18px (35.6em). Over every round of the four seeded runs: 79 ("The last King turned over and
+  the lights went with it. I kept writing until the"), 78 and 76 characters, at both 844x390 and 1440. A real entry can
+  be any length, so every long entry reads at about 79. Phones: 45 and 49, fine.
+- **The AI summary dialog** (story mode, "Summarise with AI"): `.summary-intro` is `max-width: 60ch`
+  (StoryGenerationPanel.svelte:177-181), 606px at 16px: lines of 78 and 76 ("An AI can read your journal and the cards you
+  drew, and retell this run as one"; v3/vl7/measure/desktop-summary-panel.png).
+- **Settings help**: `.cm-help` has no cap (ContentModal.svelte:681-687) and `.cm-section-desc` is `max-width: 65ch`
+  (ContentModal.svelte:640-646), the very `ch` measure s-17 found renders long in Inter. At 14px in the 576px row:
+  84 ("A short note the first time a rule comes up in a game. The Game Guide lists the ones", signoff-6
+  settings-game/desktop.png, also at 844x390) and 85 (the Voice section description under Advanced). Both are past
+  WCAG 1.4.8's 80.
+- Fix: `max-width: var(--measure)` on `.journal-text`, `.final-log-text`, `.summary-intro` (replacing 60ch),
+  `.cm-section-desc` (replacing 65ch) and `.cm-help`. The token is in em, so it gives about 65 characters at 18, 16
+  and 14px alike.
+- Acceptance: measured the same way at 360, 390, 844x390 and 1440, no line in story mode (every round of the four
+  seeded runs, journal entries and final log), the AI summary intro, or the Settings help and section descriptions
+  (Advanced open) is longer than 75 characters; the phone figures are unchanged.
 
-### visual-layout-s-17 · medium · layout · global: reading lines run to 85-95 characters; the code's `65ch` measures render about 88 in Inter
+### visual-layout-s-19 · low · visual · global: numbers break away from their units at line ends ("10 | Tokens", "52- | card")
 
-The CSS `ch` unit is the width of "0", and Inter's "0" is much wider than its average character in running text
-(measured 0.466em per character: 656px holds 88 characters at 16px). So every measure set as `65ch` renders about 88
-characters a line, and the 720px `--content-max` column renders 85-95 at 16px. Both are past the 45-75 character
-reading measure (WCAG 1.4.8 asks for no more than 80).
+A number and the word it counts should never be split by a line break; the eye reads "10" at a line end as a
+stray figure. The new measure put two such breaks on the most-read lines, and phones already had others
+(v3/vl7/numbreak.cjs and strongbreak.cjs at HEAD):
 
-- Measured at HEAD, characters per rendered line, longest line of each block (v3/vl6/measure.cjs and measure2.cjs,
-  reports v3/vl6/measure/report.txt and report2.txt):
-  - The drawn card's story (CardDisplay.svelte:605-606, `max-width: 65ch`): 88 at 844x390 (16px, 656px wide,
-    "The ruins all look the same after a while. You took a wrong turn, then another, and now"; see
-    v3/vl6/s14/iphone-13-landscape-i47-b-card.png and signoff-5 card-event, card-challenge, card-primary-success-long
-    at 844x390). 360: 37, 390: 44, 1440: 61 (18px in a 520px card), all fine.
-  - The game intro (`.intro-column`, GameScreen.svelte:1283-1288, `max-width: var(--content-max, 720px)`, styles.css:78):
-    95 at 1440 (16px, 720px; "You must gather the necessary components…", signoff-5 intro/desktop.png). 844x390: 70;
-    360: 44; 390: 48.
-  - The Game Guide (GameGuide.svelte:290-294, `max-width: 65ch` at 18px, held to 656px by the 720px dialog): 86 at
-    844x390 and at 1440 ("Any natural 20 makes you Lucid…"; signoff-5 help-game).
-  - About (StaticPage.svelte:57-61, the same 720px column): 86 at 844x390 (651px) and 85 at 1440 (622px;
-    signoff-5 page-about).
-- Fix: one reading measure in em, not `ch` or px, so it holds at 16 and 18px. For Inter about 34em gives 70-73
-  characters. Use it for `.byte-story` (replace `65ch`), `.game-guide` (replace `65ch`), `.intro-column` and the
-  StaticPage column (`max-width: min(var(--content-max), 34em)`, or a `--measure: 34em` token beside
-  `--content-max`). Headings and the card's title row can keep the wider box; only running text needs the measure.
-- Acceptance: with the same measurement at 360, 390, 844x390 and 1440, no line of running text in the card story,
-  the intro, the Game Guide or About is longer than 75 characters; the 360 and 390 figures are unchanged (37-48), and
-  the card story at 844x390 still shows its title and first paragraph without scrolling the card.
+- Game Guide, "The goal" (the first section): the highlighted key figure `<strong>10 Tokens</strong>`
+  (GameGuide.svelte:134) breaks as "and **10** / **Tokens**" at 844x390 and 1440, in the dialog and on /how-to. It
+  held on one line before s-17: v3/vl7/guide-goal-s5-vs-s6.png (signoff-5 above, signoff-6 below).
+- About: "A standard 52- / card deck" at 844x390 and 1440 (AboutContent.svelte:25; signoff-6 page-about/desktop.png),
+  also new with the measure.
+- Game Guide elsewhere: "removes 1 / Token" (GameGuide.svelte:228) and "Lose 3 / Stability" in the Stability
+  table (GameGuide.svelte:28) at 360; "then 1 / Token comes off" in the Salvation table (GameGuide.svelte:39) at 390;
+  "adds 1 / Token" in the Difficulty list (GameGuide.svelte:280) at 360, 844x390 and 1440.
+- Fix: a no-break space between a numeral and its unit word in the Guide's text and tables (`20&nbsp;Stability`,
+  `10&nbsp;Tokens`, `1&nbsp;Token`, `3&nbsp;Stability`, `2&nbsp;Stability` and the like, including the table data at
+  GameGuide.svelte:28-39) and a non-breaking hyphen in About's "52‑card" (U+2011). Not `white-space: nowrap` on
+  `strong`, since one bold run there is a whole sentence.
+- Acceptance: v3/vl7/numbreak.cjs (extended to hyphens) finds no numeral separated from the next word by a line break
+  on the intro of both games, the Guide (dialog and /how-to) or About at 360, 390, 844x390 and 1440.
 
 ## Checked and not filed
 
-- **No regression since sign-off 4.** The signoff-5 drift table is identical to signoff-4's at all four viewports
-  (toolbar, caption, result line and step button Δ0; the two-line STABILITY CHECK title on phones is still the only
-  mover, 13px at 360 and 14px at 390, Δcx 0, as accepted in sign-offs 1 to 4). Every board text run and control box is
-  identical to signoff-4 in every state, except game-over-stability at 1440, where only the run's values differ (the
-  forced flow dealt other numbers), not positions. Every tracked surface element box is identical in all 16 surface
-  states at all four viewports; the `clipped` and `smallTargets` entries are the same as signoff-4 (the HUD under a
-  dialog, the collapsed Advanced block, the story scroller, About's inline link).
-- **Home in landscape (844x390).** The first screen holds the header, the pitch, both key arts and the tops of the card
-  titles; Play starts at y 553. It is a list page, the cut titles say the page goes on, and putting Play on the first
-  screen would need a side-by-side card in landscape, a re-layout beyond polish.
-- **Home Menu button and touch.** With real taps (v3/vl6/hover.cjs) the button reads `:hover` false after opening and
-  closing at 360 and 390; one sample at 390 read the 1.1 hover scale while the menu was open, and nothing stays stuck
-  after closing. Not filed.
-- **Guide chip row at 360 and 390.** It runs off the dialog's edge by design (a scroll row with a visible cut edge,
-  DP-1-20), not clipping; at 844x390 and 1440 the chips wrap.
-- **The new dialog cue.** The chevron sits 8px from the dialog edge and 4px above the body's bottom, as the journal's
-  does, has `pointer-events: none` and `aria-hidden`, fades by opacity only (no transition under reduced motion), and
-  covers no control at any size (the probe's overlap list is empty in every open state).
-- **Board and surfaces through the visual lens.** HUD tiers, LED digits, the readout, notice tab, captions, cards,
-  endings, journal, final log, library, story mode and dialogs read as in sign-off 4 at every captured viewport.
-- **Header menu at 844x390 and 1440.** Missing by design: the ⋯ menu exists only at phone portrait widths.
+- **Positions hold.** signoff-6 drift: toolbar, title slot, caption, result line and step button Δ0 at all four
+  viewports across the 20 table states. The signoff-6 table measures the title's reserved slot (114, 52/57 high on
+  phones); its ink is pixel-identical to sign-off 5, so the two-line STABILITY CHECK still sits 13px (360) and 14px
+  (390) higher than one-line titles inside that fixed slot, centred, as accepted in sign-offs 1 to 5.
+- **No other change.** Pixel diff of all 178 shots against signoff-5: only the s-17 surfaces moved (cards at 844x390,
+  help-game, intro and page-about at 844x390 and 1440); every other board and surface shot differs by at most 84
+  pixels of background motes. The `clipped`, `outside` and `smallTargets` lists and page overflow are identical to
+  signoff-5 in every surface state (the HUD under a dialog, the collapsed Advanced block, the story scroller, About's
+  inline link, Home below the fold); no board state overflows.
+- **OWN-3 bottom toolbar with real insets** (v3/vl7/portrait-inset.cjs, v3/vl7/iphone-13-insets.png): iPhone 13 with
+  top 47 / bottom 34 puts the HUD at 47..111, the step button at 690..738 (the intro's Begin button is in the same
+  slot) and the toolbar at 762..810, exactly clear of the home indicator. 360x640: HUD 24, step 512, toolbar 584..632.
+- **Guide, About, intro and card at the new measure.** Left-aligned with a ragged right; chips, tables and section
+  rules keep the full column; the lead (18px, 540px) and body (16px, 480px) share a left edge. The card at 844x390
+  leaves the right third of the face to the type badge and the ragged edge, which reads as intended.
+- **Board and surfaces through both lenses** at every captured viewport (montages v3/vl7/mont-360-*, mont-390-*,
+  mont-844-*, mont-1440-A): HUD tiers and LED digits, readout slots, card tab, notice tab, Surreal hint, rule caption,
+  result-hold run-out, reduced-motion d20, header menu, cards, endings, journal, final log, library, story mode and
+  dialogs read as in sign-off 5.
+- **Header menu at 844x390 and 1440.** Missing by design: the ⋯ menu exists only at 720px wide and narrower.
 
 ## Approval
 
-- visual: **approved.** No visual item was open, nothing visual changed except the dialog cue, which matches the
-  journal's, and I have no new visual finding.
-- layout: **not approved.** s-14 and s-15 are resolved, but two new findings stand: s-16 (the game intro's text sits
-  under the notch on a landscape iPhone) and s-17 (reading lines of 85-95 characters on the card in landscape, the
-  desktop intro, the Game Guide and About; the code's `65ch` renders about 88 characters in Inter).
+- layout: **not approved.** s-16 and s-17 are resolved, but s-18 stands: story mode's journal and final log (76-79),
+  the AI summary intro (78) and Settings help (84-85) are still off the reading measure.
+- visual: **not approved.** No visual item was open, but s-19 is new: the measure split the Guide's key figure "10
+  Tokens" and About's "52-card" across lines, and phones already split "1 Token" and "3 Stability".
