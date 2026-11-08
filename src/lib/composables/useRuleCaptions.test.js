@@ -285,21 +285,21 @@ describe('createRuleCaptions: the text, from the live game', () => {
 			`${rule} One more Ace and you escape, if you survive its check.`
 		);
 		expect(take('ace', at(4)).text).toBe(
-			'With all four Aces, Salvation has no target: each roll is a Stability check.'
+			'With all four Aces, Salvation has no target: each Salvation roll is a Stability check.'
 		);
 	});
 
-	it('capitalises Salvation and Token, and gives the long form of Lucid and Surreal', () => {
+	it('capitalises Salvation and Token, and teaches only the cause of Lucid and Surreal (game-copy-v-06)', () => {
 		const c = createRuleCaptions({ onSeen: () => {} });
 		c.observe(base());
 		c.observe(base({ isLucid: true, isSurreal: false }));
 		expect(c.take(base({ state: 'rollForTasks', isLucid: true })).text).toBe(
-			'A natural 20 makes you Lucid: your next roll uses two dice and keeps the higher.'
+			'A natural 20 makes you Lucid, for one roll: this one.'
 		);
 		c.observe(base({ isSurreal: true }));
 		expect(
 			c.take(base({ state: 'failureCheck', isSurreal: true, log: [{ card: '8' }] })).text
-		).toBe('A natural 1 makes you Surreal: your next roll uses two dice and keeps the lower.');
+		).toBe('A natural 1 makes you Surreal, for one roll: this one.');
 		const h = createRuleCaptions({ onSeen: () => {} });
 		h.observe(hard({ aceOfHeartsRevealed: true, log: [AH], acesRevealed: 1 }));
 		h.observe(hard({ aceOfHeartsRevealed: true, log: [AH], acesRevealed: 1, tokens: 11 }));
@@ -309,7 +309,7 @@ describe('createRuleCaptions: the text, from the live game', () => {
 		const s = createRuleCaptions({ onSeen: () => {} });
 		s.observe(base({ state: 'rollForTasks' }));
 		expect(arrive(s, base({ state: 'successCheck', aceOfHeartsRevealed: true })).text).toBe(
-			'Salvation unlocked. Each round ends with a roll to clear a Token. Clear them all to escape.'
+			'Salvation unlocked. Each round ends with a roll to remove a Token. Remove them all to escape.'
 		);
 		const o = createRuleCaptions({ onSeen: () => {} });
 		o.observe(base());

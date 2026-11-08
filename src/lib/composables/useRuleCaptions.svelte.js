@@ -61,7 +61,7 @@ const TEXT = {
 		const aces = g.acesRevealed ?? 0;
 		const fourthWins = fourthAceWins(g);
 		if (aces >= 4 && !fourthWins) {
-			return 'With all four Aces, Salvation has no target: each roll is a Stability check.';
+			return 'With all four Aces, Salvation has no target: each Salvation roll is a Stability check.';
 		}
 		const rule = 'Each Ace makes Salvation easier: 17+ with one, 14+ with two, 11+ with three.';
 		return aces === 3 && fourthWins
@@ -69,10 +69,10 @@ const TEXT = {
 			: rule;
 	},
 	salvation: () =>
-		'Salvation unlocked. Each round ends with a roll to clear a Token. Clear them all to escape.',
+		'Salvation unlocked. Each round ends with a roll to remove a Token. Remove them all to escape.',
 	'fourth-ace': () => 'On Easy, the fourth Ace ends the game.',
-	lucid: () => 'A natural 20 makes you Lucid: your next roll uses two dice and keeps the higher.',
-	surreal: () => 'A natural 1 makes you Surreal: your next roll uses two dice and keeps the lower.',
+	lucid: () => 'A natural 20 makes you Lucid, for one roll: this one.',
+	surreal: () => 'A natural 1 makes you Surreal, for one roll: this one.',
 	token: () => 'On Hard, a missed Salvation roll adds a Token. Hope costs.'
 };
 

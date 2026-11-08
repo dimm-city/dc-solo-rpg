@@ -11,7 +11,7 @@
  *               "Rolled 15 · no Stability lost"
  *               "Natural 20 · +1 Stability · Lucid"
  *               "Natural 1 · −3 Stability · Surreal"
- *               "Rolled 3 · −2 Stability · nothing left to hold on to" (the fatal roll)
+ *               "Rolled 3 · −2 Stability · you fall" (the fatal roll)
  *   The fourth Ace's check on Easy (the final roll: no modifier, the game is over either way):
  *               "Rolled 15 · no Stability lost · you escape"
  *   Tasks       "Rolled 16 · 5 cards this round"
@@ -24,12 +24,14 @@
  *               "Natural 1 · missed · +2 Tokens · Surreal"
  *   Salvation with four Aces (Normal and Hard: a Stability check, then the Token comes off):
  *               "Rolled 14 · no Stability lost · −1 Token"
- *               "Rolled 3 · −2 Stability · nothing left to hold on to" (the fatal roll)
- *   The winning roll (the last Token): "Rolled 15 · the last Token is gone · you escape"
- *               (four Aces: "Rolled 15 · no Stability lost · the last Token is gone · you escape")
+ *               "Rolled 3 · −2 Stability · you fall" (the fatal roll)
+ *   The winning roll (the last Token): "Rolled 15 · −1 Token · you escape"
+ *               (four Aces: "Rolled 15 · no Stability lost · −1 Token · you escape")
  *
  * A roll made with two dice (Lucid or Surreal) names both and which one counted:
- *   "Rolled 6 (low of 6, 15) · −1 Stability"
+ *   "Rolled 6 (low of 6, 15) · −1 Stability". Two equal dice name neither: either one counted.
+ *
+ * Every line fits one line at 390px (GD-1-07): the endings are two words, the Guide's names.
  */
 
 import {
@@ -44,11 +46,10 @@ export const SURREAL_NOTE = 'Surreal';
 /** The hint line above the roll button while the player is Lucid or Surreal (DP-1-05) */
 export const LUCID_HINT = 'Lucid · two dice, keep the higher';
 export const SURREAL_HINT = 'Surreal · two dice, keep the lower';
-export const FATAL_NOTE = 'nothing left to hold on to';
+/** The fatal roll: Stability is gone (the Guide's name for this ending) */
+export const FATAL_NOTE = 'you fall';
 /** The game is won: the fourth Ace's check held (Easy) or the last Token came off */
 export const ESCAPE_NOTE = 'you escape';
-/** The Token clause of the winning Salvation roll */
-export const LAST_TOKEN_NOTE = 'the last Token is gone';
 /** The step button's label while the dice are on the table, on every step */
 export const ROLLING_LABEL = 'Rolling…';
 /** The roll button on the fourth Ace's Stability check (Easy), the last roll of the game */
@@ -72,12 +73,14 @@ const modifier = ({ gainedLucid, gainedSurreal }) =>
  */
 
 /**
- * "(high of 19, 5)" for a two-dice roll, '' otherwise
+ * "(high of 19, 5)" for a two-dice roll, '' otherwise. Two equal dice say nothing more than
+ * the roll itself, so they are not named either (GD-1-07).
  * @param {Throw} [thrown]
  */
 export function describeDice(thrown = {}) {
 	const { dice = [], wasLucid = false, wasSurreal = false } = thrown;
 	if (dice.length !== 2 || !(wasLucid || wasSurreal)) return '';
+	if (dice[0] === dice[1]) return '';
 	return `(${wasLucid ? 'high' : 'low'} of ${dice[0]}, ${dice[1]})`;
 }
 
@@ -156,15 +159,17 @@ export function formatTaskResult(roll, cards, thrown) {
  *   Stability check, then the token)
  * @param {number} tokensAfter - Tokens left after the result was applied
  * @param {Throw} [thrown] - The dice, for a two-dice roll
- * @param {{ hard?: boolean, stabilityBefore?: number, max?: number }} [rules] - hard: the Hard
- *   rules; stabilityBefore and max: four Aces only, Stability before the roll and its cap
+ * @param {{ hard?: boolean, stabilityBefore?: number, max?: number, tokensBefore?: number }}
+ *   [rules] - hard: the Hard rules; stabilityBefore and max: four Aces only, Stability before
+ *   the roll and its cap; tokensBefore: the Tokens before the roll, so a natural 20 on the
+ *   last Token reads "−1 Token", the one that came off
  */
 export function formatSalvationResult(
 	roll,
 	threshold,
 	tokensAfter,
 	thrown,
-	{ hard = false, stabilityBefore = 20, max = 20 } = {}
+	{ hard = false, stabilityBefore = 20, max = 20, tokensBefore } = {}
 ) {
 	if (threshold === 0) {
 		return formatAutomaticSalvation(roll, tokensAfter, thrown, stabilityBefore, max);
@@ -175,9 +180,10 @@ export function formatSalvationResult(
 	});
 	const parts = [rolled(roll, thrown)];
 	if (tokenChange < 0) {
+		const removed = Math.min(-tokenChange, tokensBefore ?? -tokenChange);
+		parts.push(`${MINUS}${count(removed, 'Token')}`);
 		// The winning roll: the game is over, so no modifier
-		if (tokensAfter <= 0) return [...parts, LAST_TOKEN_NOTE, ESCAPE_NOTE].join(SEP);
-		parts.push(`${MINUS}${count(-tokenChange, 'Token')}`);
+		if (tokensAfter <= 0) return [...parts, ESCAPE_NOTE].join(SEP);
 	} else {
 		// A miss: the target it missed (a natural 1 misses whatever the target), then the cost
 		parts.push(gainedSurreal ? 'missed' : `missed ${threshold}+`);
@@ -197,10 +203,10 @@ function formatAutomaticSalvation(roll, tokensAfter, thrown, stabilityBefore, ma
 		parts.push(`${MINUS}${outcome.stabilityLoss} Stability`, FATAL_NOTE);
 		return parts.join(SEP);
 	}
-	parts.push(stabilityChange({ ...outcome, stabilityBefore, max }));
+	parts.push(stabilityChange({ ...outcome, stabilityBefore, max }), `${MINUS}${count(1, 'Token')}`);
 	// The winning roll: the game is over, so no modifier
-	if (tokensAfter <= 0) return [...parts, LAST_TOKEN_NOTE, ESCAPE_NOTE].join(SEP);
-	parts.push(`${MINUS}${count(1, 'Token')}`, ...modifier(outcome));
+	if (tokensAfter <= 0) return [...parts, ESCAPE_NOTE].join(SEP);
+	parts.push(...modifier(outcome));
 	return parts.join(SEP);
 }
 
@@ -279,10 +285,10 @@ export function formatModifierHint({ isLucid = false, isSurreal = false } = {}) 
  */
 export function formatIntroGoal({ stability, tokens, aceRevealed, fourthAceWins = false }) {
 	const hold = `Hold on to your ${stability} Stability.`;
-	const clear = tokens === 1 ? 'clear the one Token' : `clear all ${tokens} Tokens`;
+	const remove = tokens === 1 ? 'remove the one Token' : `remove all ${tokens} Tokens`;
 	const escape = fourthAceWins
-		? `${clear}, or survive the fourth Ace, to escape.`
-		: `${clear} to escape.`;
+		? `${remove}, or survive the fourth Ace, to escape.`
+		: `${remove} to escape.`;
 	return aceRevealed
 		? `${hold} The Ace of Hearts is already revealed: ${escape}`
 		: `${hold} Find the Ace of Hearts, then ${escape}`;
