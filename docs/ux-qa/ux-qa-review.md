@@ -1969,6 +1969,34 @@ QA and integration of the fourth sign-off's fixes, at `5c6eb3d` on
   origin. The fourth sign-off reviews are saved in `docs/ux-qa/design-polish/v3/`. The third
   ones are kept as `signoff-visual-layout.signoff3.md` and `signoff-game-copy.signoff3.md`.
 
+### stage-6
+
+QA and integration of the fifth sign-off's fixes, at `4568859` on
+`claude/vibrant-curie-w9bn88`.
+
+- **Built.** On a notched iPhone in landscape, the game intro's text clears the notch: its
+  column pads by the side inset, and so does the skip link (visual-layout-s-16). Running text
+  has one reading measure, a `--measure` token of 30em. It replaces `65ch` on the card story,
+  the Game Guide and About, and caps the intro column, so lines run about 65 characters and
+  never more than 70 (visual-layout-s-17). Phones at 360 and 390 are unchanged.
+- **Checks.** Unit tests: 68 files, 1098 passed, 1 skipped (the old Easy-difficulty skip).
+  ESLint and Prettier: clean. `npm run check`: 0 errors, 0 warnings. `npm run build`: passes,
+  and publint says "All good".
+- **Playwright.** Full suite on Desktop Chrome, Mobile Chrome and Tablet: 544 passed, 7 skipped
+  (the same project-conditional skips as stage-1), 1 failed, in 25.2 minutes. A capture
+  server for the next sign-off was running at the same time, so the machine was loaded.
+- **Found.** The failure was a race in the test, not in the game. "Round 1 opens on Roll for
+  Tasks" polled for the button's "Rolling…" name after the press. On the loaded machine the
+  dice landed before the first poll, and the button already read "Draw the cards". The test
+  now records every name the button takes from before the press and checks that "Rolling…" is
+  one of them. It passed 24 of 24 repeats on all three projects, and 6 of 6 with the CPUs
+  saturated.
+- **Cleaned up.** The `design/v3-board-6` worktree and branch are removed; its commits are on
+  origin. The fifth visual-layout sign-off is saved in `docs/ux-qa/design-polish/v3/`, and the
+  fourth ones are kept as `signoff-visual-layout.signoff4.md` and
+  `signoff-game-copy.signoff4.md`. The fifth game-copy sign-off was not finished: its file
+  holds only the header and an unchecked progress list.
+
 ## Recommendations
 
 ### Earlier reviews: what is fixed, open, or fixed badly
