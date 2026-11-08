@@ -1410,6 +1410,11 @@
 			bottom: 8px;
 		}
 
+		.static-die {
+			width: 64px;
+			height: 64px;
+		}
+
 		/* The step button's slot is the right-hand column, full table height */
 		.step-slot {
 			position: absolute;
