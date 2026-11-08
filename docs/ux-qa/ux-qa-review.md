@@ -1997,6 +1997,28 @@ QA and integration of the fifth sign-off's fixes, at `4568859` on
   `signoff-game-copy.signoff4.md`. The fifth game-copy sign-off was not finished: its file
   holds only the header and an unchecked progress list.
 
+### stage-7
+
+QA and integration of the sixth sign-off's fixes, at `a32f7b0` on
+`claude/vibrant-curie-w9bn88`.
+
+- **Built.** Story mode's journal entries, final log and card panels, the AI summary, the
+  ending message and the Settings help now take the reading measure (`--measure`, 30em). Their
+  longest lines at 844x390 and 1440 drop from 76-85 characters to 60-66; phones are unchanged
+  (visual-layout-s-18). Numbers stay on the word after them in the Game Guide, About and the
+  Ghost in the Machine intro: no line ends on "10" before "Tokens", or on "52-" before "card"
+  (visual-layout-s-19). New unit tests check that no numeral in the Guide or About can end a
+  line apart from its word.
+- **Checks.** Unit tests: 69 files, 1100 passed, 1 skipped (the old Easy-difficulty skip).
+  ESLint and Prettier: clean. `npm run check`: 0 errors, 0 warnings. `npm run build`: passes,
+  and publint says "All good".
+- **Playwright.** Full suite on Desktop Chrome, Mobile Chrome and Tablet: 545 passed, 7 skipped
+  (the same project-conditional skips as stage-1), 0 failed, 0 flaky, in 23.8 minutes.
+- **Found.** No failures, so no fixes were needed at this stage.
+- **Cleaned up.** The `design/v3-board-7` and `design/v3-surfaces-7` worktrees and branches are
+  removed; their commits are on origin. The sixth visual-layout sign-off is saved in
+  `docs/ux-qa/design-polish/v3/`, and the fifth is kept as `signoff-visual-layout.signoff5.md`.
+
 ## Recommendations
 
 ### Earlier reviews: what is fixed, open, or fixed badly
