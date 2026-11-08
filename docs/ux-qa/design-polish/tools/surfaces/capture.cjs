@@ -432,7 +432,7 @@ const GROUPS = {
 		}
 		if (wanted('help-home') || wanted('help-home-mid') || wanted('help-home-end')) {
 			if (wide) await page.locator('.header-buttons .help-button').click();
-			else await menuItem('Help');
+			else await menuItem('Game Guide');
 			await waitModal(page);
 			await shot('help-home');
 			await scrollModal(page, 0.5);
@@ -442,7 +442,7 @@ const GROUPS = {
 			await closeModal(page);
 		}
 		if (wanted('dice-theme-home') || wanted('dice-theme-home-end')) {
-			await menuItem('Dice Theme');
+			await menuItem('Dice theme');
 			await waitModal(page);
 			await shot('dice-theme-home');
 			const r = await scrollModal(page, 1);
@@ -559,7 +559,7 @@ const GROUPS = {
 			await closeModal(page);
 		}
 		if (wanted('help-game') || wanted('help-game-end')) {
-			await page.locator('button[aria-label="Game help"]').click();
+			await page.locator('button[aria-label="Game Guide"]').click();
 			await waitModal(page);
 			await shot('help-game');
 			await scrollModal(page, 1);
@@ -567,7 +567,7 @@ const GROUPS = {
 			await closeModal(page);
 		}
 		if (wanted('dice-theme-game')) {
-			await viaMenu('Change dice theme', 'Dice');
+			await viaMenu('Dice theme', 'Dice theme');
 			await waitModal(page);
 			await shot('dice-theme-game');
 			await closeModal(page);
