@@ -1,6 +1,6 @@
 # Surfaces capture, round 1
 
-Everything that is not the board, at six core viewports (and four extended ones for the home page, a drawn card, the journal and two endings). Code under test: `563b9b1 Restart the design branch from main (old history was squash-merged in #51)` on `claude/vibrant-curie-w9bn88` in /home/user/dc-solo-rpg, served by `vite dev` on port 5192. Captured 2026-11-07 22:39 UTC with Chromium (swiftshader), no reduced motion.
+Everything that is not the board, at six core viewports (and four extended ones for the home page, a drawn card, the journal and two endings). Code under test: `f9adc3d Design polish round 1: save the capture scripts, manifests and drift tables` on `claude/vibrant-curie-w9bn88` in /home/user/dc-solo-rpg, served by `vite dev` on port 5192. Captured 2026-11-07 23:01 UTC with Chromium (swiftshader), no reduced motion.
 
 ## How to read the metrics
 
@@ -9,7 +9,7 @@ Everything that is not the board, at six core viewports (and four extended ones 
 - **What counts as an element.** Any element with its own text, plus every control (button, link, field, summary, tab, switch, focusable). A button and the text span inside it appear as two rows: `role: "button"` (the control, its full text and tap size) and `role: "button text"` (the span, with its own font). `text` is what renders (text-transform applied for controls, source case for spans); `name` is the accessible name when it differs (icon buttons). Elements behind a modal (`inert`), screen-reader-only text, fully transparent elements and anything scrolled out of view are left out and counted in `counts`; `offscreenTexts` lists up to 60 of the scrolled-away texts.
 - **Role** is a heuristic: title (h1), heading (h2-h6), label, value (digits), caption (small/help/meta/hint classes), body text (p), list item, quote, button, button text, link, field, tab, menu item, disclosure, result line, caption (rule caption), text (anything else). `sel` is a short path (tag.class) and `testid` the nearest data-testid, to find it in the code.
 - **Font.** `font.family` is the CSS stack; `font.rendered` is the face Chrome actually used for that node's text (CDP `CSS.getPlatformFontsForNode`; "(system)" marks a non-web font). size, weight, lineHeight (px, or "normal"), letterSpacing, transform, align and variantNumeric (when set) are computed values.
-- **Colour and contrast.** `color` is the CSS colour (`aN` = alpha), `colorEffective` the colour after opacity is composited over the background. `bg` is the effective background, sampled from the screenshot pixels inside the text box (the most common colour once text-coloured pixels are set aside; `bgShare` is the share of the box it covers, so a low share means a busy background such as art, a gradient or a glow). `bgDom` is the background-colour chain from the DOM, for comparison. `contrast` is the WCAG 2 ratio of `colorEffective` on `bg`; `contrastGlyph` uses the brightest-differing rendered glyph pixel instead (counts glows and gradient text). `large` follows WCAG (24px, or 18.66px at 700+). `wcag` is AAA / AA / fail against 7/4.5 (3/4.5 when large). `lowContrast` lists the fails.
+- **Colour and contrast.** `color` is the CSS colour (`aN` = alpha), `colorEffective` the colour after opacity is composited over the background. `bg` is the effective background, sampled from the screenshot pixels inside the text box (the most common colour once text-coloured pixels are set aside; `bgShare` is the share of the box it covers, so a low share means a busy background such as art, a gradient or a glow). For glowing text (a text-shadow) that is not a button label, the box is mostly glow, so `bg` is read from a ring clear of it instead (12px plus 0.6 of the font size out, 10px wide); the glow is not counted as background, `bgInBox` keeps the inside sample and `bgSource` says which was used. Colours are binned at 4 bits per channel, so a gradient or scanlines still read as one background. `bgDom` is the background-colour chain from the DOM, for comparison. Elements painted over by an overlay (a card, the journal, a dialog over the HUD) are marked `covered: true` (`partlyCovered` when some sample points are hidden, `coveredBy` names what is on top) and left out of `lowContrast`. `contrast` is the WCAG 2 ratio of `colorEffective` on `bg`; `contrastGlyph` uses the brightest-differing rendered glyph pixel instead (counts glows and gradient text). `large` follows WCAG (24px, or 18.66px at 700+). `wcag` is AAA / AA / fail against 7/4.5 (3/4.5 when large). `lowContrast` lists the fails.
 - **Fit.** `pageOverflowX`: the document is wider than the viewport. `clipped`: text with more content than its box where overflow is hidden or an ellipsis applies, or text cut by a clipping ancestor. `outside`: elements crossing a viewport edge; `reachable: true` means a scroller can bring them in (the summary lists only the unreachable ones). `smallTargets`: controls under 44x44 CSS px on touch viewports (`under24` marks those below the WCAG 2.2 AA minimum of 24px; `inline` marks links in running text, which WCAG exempts).
 - **Sheets.** One PNG per state: android-small, iphone-13, ipad-portrait and iphone-13-landscape on the first row, laptop and desktop on the second, every shot scaled to 600px tall and labelled with its viewport; "not captured" boxes mark viewports where the state does not apply (see below). `<state>--extended.png` does the same for iphone-se, pixel-7, ipad-landscape and fhd where they were shot.
 - **Rerun:** start the dev server (`cd /home/user/dc-solo-rpg && npx vite dev --port 5192 --strictPort`), then `cd /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/tools/surfaces && ROUND=2 node capture.cjs && ROUND=2 python3 post.py && ROUND=2 node manifest.cjs`. `GROUP=`, `VPS=`, `STATES=<regex>`, `EXT=0` and `SKIP_SEED=1` narrow a run.
@@ -19,8 +19,8 @@ Everything that is not the board, at six core viewports (and four extended ones 
 | Viewport | Size | Scale | Touch |
 | --- | --- | --- | --- |
 | android-small | 360x640 | 2 | yes |
-| iphone-13 | 390x664 | 2 | yes |
-| iphone-13-landscape | 750x342 | 2 | yes |
+| iphone-13 | 390x844 | 2 | yes |
+| iphone-13-landscape | 844x390 | 2 | yes |
 | ipad-portrait | 768x1024 | 1 | yes |
 | laptop | 1280x720 | 1 | no |
 | desktop | 1440x900 | 1 | no |
@@ -31,14 +31,21 @@ Everything that is not the board, at six core viewports (and four extended ones 
 
 ## Counts
 
-- States defined: 92; states with shots: 89.
-- Shots: 526 (506 at core viewports, 20 at extended viewports).
-- Sheets: 94 in /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces.
-- Not applicable at some viewports: 46; capture failures: 0.
+- States defined: 92; states with shots: 88.
+- Shots: 522 (502 at core viewports, 20 at extended viewports).
+- Sheets: 93 in /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces.
+- Not applicable at some viewports: 50; capture failures: 0.
 
 ## Seed data
 
 The return-visit and library states start from one storage state (localStorage and IndexedDB, /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/tools/surfaces/seed-state.json), written by playing four games through the real game actions in the page with the dice mocked per roll: a Kings loss (Future Lost, 4 rounds), a Stability loss (Ghost in the Machine, shown as "Locked In the Tech District", 4 rounds), a tokens win (Future Lost, Normal, 10 rounds) and an Easy win by the fourth Ace (Future Lost, 3 rounds), each with journal entries and a final log; then an in-progress Ghost in the Machine save at the start of round 3, and an AI summary saved on the tokens win with `saveAIStory()`. The home page clock is held 5 minutes after the seed so the save label reads the same everywhere. Card, journal and ending states play fresh games the same way in their own contexts.
+
+## Capture notes
+
+- Determinism: every card, journal and ending state plays the same cards and rolls at every viewport (deck order set, each die roll mocked), so the copy is identical across viewports; each forced card is shown as "Round 1 · Card 1 of 3".
+- Shots are taken once the page is still (fonts loaded, no finite animation running, dice settled). Three states are deliberately mid-motion and say so in their notes: `splash`, `journal-saved-beat`, `journal-voice-playing` (and the toasts in `home-toast-save-deleted` and `home-custom-game`).
+- The board team captured concurrently on the same 4 CPUs, so a few steps were rerun with longer waits (tools/surfaces/fill.cjs); every shot listed here exists on disk and is backed by a metrics record.
+- The iPhone 13 sizes are the full screen the brief names (390x844 and 844x390), not Playwright's descriptor viewport (390x664, 750x342), matching the board capture.
 
 ## States
 
@@ -52,7 +59,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/splash.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/splash/<viewport>.png
 - **Metric flags:** low contrast: desktop 3, ipad-portrait 1, laptop 3
-- **Notes:** android-small: about 400ms into the 1.2s splash · iphone-13: about 400ms into the 1.2s splash · iphone-13-landscape: about 400ms into the 1.2s splash · ipad-portrait: about 400ms into the 1.2s splash · laptop: about 400ms into the 1.2s splash · desktop: about 400ms into the 1.2s splash
+- **Notes:** android-small: about 400ms into the 1.2s splash · ipad-portrait: about 400ms into the 1.2s splash · laptop: about 400ms into the 1.2s splash · desktop: about 400ms into the 1.2s splash · iphone-13: about 400ms into the 1.2s splash · iphone-13-landscape: about 400ms into the 1.2s splash
 
 #### `first-run`
 
@@ -93,7 +100,8 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/home-toast-save-deleted.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/home-toast-save-deleted/<viewport>.png
-- **Notes:** android-small: about 450ms after the delete; the toast lasts 3s · iphone-13: about 450ms after the delete; the toast lasts 3s · iphone-13-landscape: about 450ms after the delete; the toast lasts 3s · laptop: about 450ms after the delete; the toast lasts 3s · desktop: about 450ms after the delete; the toast lasts 3s · ipad-portrait: about 450ms after the delete; the toast lasts 3s
+- **Metric flags:** low contrast: iphone-13 1
+- **Notes:** android-small: about 450ms after the delete; the toast lasts 3s · laptop: about 450ms after the delete; the toast lasts 3s · desktop: about 450ms after the delete; the toast lasts 3s · ipad-portrait: about 450ms after the delete; the toast lasts 3s · iphone-13: about 450ms after the delete; the toast lasts 3s · iphone-13-landscape: about 450ms after the delete; the toast lasts 3s
 
 #### `home-custom-game`
 
@@ -102,16 +110,17 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/home-custom-game.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/home-custom-game/<viewport>.png
-- **Notes:** android-small: the "Added" toast is up (it lasts 5s) · iphone-13: the "Added" toast is up (it lasts 5s) · iphone-13-landscape: the "Added" toast is up (it lasts 5s) · laptop: the "Added" toast is up (it lasts 5s) · desktop: the "Added" toast is up (it lasts 5s) · ipad-portrait: the "Added" toast is up (it lasts 5s)
+- **Metric flags:** low contrast: iphone-13 1
+- **Notes:** android-small: the "Added" toast is up (it lasts 5s) · laptop: the "Added" toast is up (it lasts 5s) · desktop: the "Added" toast is up (it lasts 5s) · ipad-portrait: the "Added" toast is up (it lasts 5s) · iphone-13: the "Added" toast is up (it lasts 5s) · iphone-13-landscape: the "Added" toast is up (it lasts 5s)
 
 #### `home-first-visit-mid`
 
 - **Shows:** Half way down the first-visit game selector (only where it scrolls more than 1.5 screens).
 - **Reached:** flow: the page scroller set to 50%.
-- **Captured:** 3/6 core (android-small, iphone-13, iphone-13-landscape)
+- **Captured:** 2/6 core (android-small, iphone-13-landscape)
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/home-first-visit-mid.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/home-first-visit-mid/<viewport>.png
-- **Notes:** android-small: scroller main, 50% of 551px · iphone-13: scroller main, 50% of 525px · iphone-13-landscape: scroller main, 50% of 456px
+- **Notes:** android-small: scroller main, 50% of 551px · iphone-13-landscape: scroller main, 50% of 387px
 
 #### `home-first-visit-end`
 
@@ -120,16 +129,18 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 4/6 core (android-small, iphone-13, iphone-13-landscape, laptop)
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/home-first-visit-end.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/home-first-visit-end/<viewport>.png
-- **Notes:** android-small: scroller main, scrolled 551px to the end · iphone-13: scroller main, scrolled 525px to the end · iphone-13-landscape: scroller main, scrolled 456px to the end · laptop: scroller main, scrolled 121px to the end
+- **Metric flags:** low contrast: iphone-13 1
+- **Notes:** android-small: scroller main, scrolled 551px to the end · laptop: scroller main, scrolled 121px to the end · iphone-13: scroller main, scrolled 345px to the end · iphone-13-landscape: scroller main, scrolled 387px to the end
 
 #### `home-return-mid`
 
 - **Shows:** Half way down the return-visit game selector (only where it scrolls more than 1.5 screens).
 - **Reached:** flow: the page scroller set to 50%.
-- **Captured:** 3/6 core (android-small, iphone-13, iphone-13-landscape)
+- **Captured:** 2/6 core (android-small, iphone-13-landscape)
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/home-return-mid.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/home-return-mid/<viewport>.png
-- **Notes:** android-small: scroller main, 50% of 617px · iphone-13: scroller main, 50% of 581px · iphone-13-landscape: scroller main, 50% of 522px
+- **Metric flags:** low contrast: iphone-13-landscape 1
+- **Notes:** android-small: scroller main, 50% of 617px · iphone-13-landscape: scroller main, 50% of 443px
 
 #### `home-return-end`
 
@@ -138,7 +149,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 4/6 core (android-small, iphone-13, iphone-13-landscape, laptop)
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/home-return-end.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/home-return-end/<viewport>.png
-- **Notes:** android-small: scroller main, scrolled 617px to the end · iphone-13: scroller main, scrolled 581px to the end · iphone-13-landscape: scroller main, scrolled 522px to the end · laptop: scroller main, scrolled 177px to the end
+- **Notes:** android-small: scroller main, scrolled 617px to the end · laptop: scroller main, scrolled 177px to the end · iphone-13: scroller main, scrolled 401px to the end · iphone-13-landscape: scroller main, scrolled 443px to the end
 
 ### Pages
 
@@ -149,8 +160,8 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/page-about.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/page-about/<viewport>.png
-- **Metric flags:** tap <44: ipad-portrait 2
-- **Notes:** android-small: HTTP 200 · iphone-13: HTTP 200 · iphone-13-landscape: HTTP 200 · ipad-portrait: HTTP 200 · laptop: HTTP 200 · desktop: HTTP 200
+- **Metric flags:** tap <44: ipad-portrait 2, iphone-13 1
+- **Notes:** android-small: HTTP 200 · ipad-portrait: HTTP 200 · laptop: HTTP 200 · desktop: HTTP 200 · iphone-13: HTTP 200 · iphone-13-landscape: HTTP 200
 
 #### `page-how-to`
 
@@ -160,7 +171,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/page-how-to.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/page-how-to/<viewport>.png
 - **Metric flags:** off-screen: iphone-13 1
-- **Notes:** android-small: HTTP 200 · iphone-13: HTTP 200 · iphone-13-landscape: HTTP 200 · ipad-portrait: HTTP 200 · laptop: HTTP 200 · desktop: HTTP 200
+- **Notes:** android-small: HTTP 200 · ipad-portrait: HTTP 200 · laptop: HTTP 200 · desktop: HTTP 200 · iphone-13: HTTP 200 · iphone-13-landscape: HTTP 200
 
 #### `page-signin`
 
@@ -169,7 +180,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/page-signin.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/page-signin/<viewport>.png
-- **Notes:** android-small: /signin landed on / (sign-in is off: the page redirects home) · iphone-13: /signin landed on / (sign-in is off: the page redirects home) · iphone-13-landscape: /signin landed on / (sign-in is off: the page redirects home) · ipad-portrait: /signin landed on / (sign-in is off: the page redirects home) · laptop: /signin landed on / (sign-in is off: the page redirects home) · desktop: /signin landed on / (sign-in is off: the page redirects home)
+- **Notes:** android-small: /signin landed on / (sign-in is off: the page redirects home) · ipad-portrait: /signin landed on / (sign-in is off: the page redirects home) · laptop: /signin landed on / (sign-in is off: the page redirects home) · desktop: /signin landed on / (sign-in is off: the page redirects home) · iphone-13: /signin landed on / (sign-in is off: the page redirects home) · iphone-13-landscape: /signin landed on / (sign-in is off: the page redirects home)
 
 #### `page-404`
 
@@ -178,7 +189,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/page-404.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/page-404/<viewport>.png
-- **Notes:** android-small: HTTP 404 · iphone-13: HTTP 404 · iphone-13-landscape: HTTP 404 · ipad-portrait: HTTP 404 · laptop: HTTP 404 · desktop: HTTP 404
+- **Notes:** android-small: HTTP 404 · ipad-portrait: HTTP 404 · laptop: HTTP 404 · desktop: HTTP 404 · iphone-13: HTTP 404 · iphone-13-landscape: HTTP 404
 
 #### `page-game-not-found`
 
@@ -187,7 +198,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/page-game-not-found.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/page-game-not-found/<viewport>.png
-- **Notes:** android-small: HTTP 404 · iphone-13: HTTP 404 · iphone-13-landscape: HTTP 404 · ipad-portrait: HTTP 404 · laptop: HTTP 404 · desktop: HTTP 404
+- **Notes:** android-small: HTTP 404 · ipad-portrait: HTTP 404 · laptop: HTTP 404 · desktop: HTTP 404 · iphone-13: HTTP 404 · iphone-13-landscape: HTTP 404
 
 #### `page-custom-game-not-found`
 
@@ -196,17 +207,17 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/page-custom-game-not-found.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/page-custom-game-not-found/<viewport>.png
-- **Notes:** android-small: HTTP 200 · iphone-13: HTTP 200 · iphone-13-landscape: HTTP 200 · ipad-portrait: HTTP 200 · laptop: HTTP 200 · desktop: HTTP 200
+- **Notes:** android-small: HTTP 200 · ipad-portrait: HTTP 200 · laptop: HTTP 200 · desktop: HTTP 200 · iphone-13: HTTP 200 · iphone-13-landscape: HTTP 200
 
 #### `page-about-mid`
 
 - **Shows:** Half way down /about (only where it scrolls more than 1.5 screens).
 - **Reached:** flow: the page scroller set to 50%.
-- **Captured:** 3/6 core (android-small, iphone-13, iphone-13-landscape)
+- **Captured:** 2/6 core (android-small, iphone-13-landscape)
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/page-about-mid.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/page-about-mid/<viewport>.png
-- **Metric flags:** tap <44: iphone-13 1
-- **Notes:** android-small: scroller main, 50% of 466px · iphone-13: scroller main, 50% of 357px · iphone-13-landscape: scroller main, 50% of 487px
+- **Metric flags:** tap <44: iphone-13-landscape 1
+- **Notes:** android-small: scroller main, 50% of 466px · iphone-13-landscape: scroller main, 50% of 439px
 
 #### `page-about-end`
 
@@ -216,7 +227,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/page-about-end.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/page-about-end/<viewport>.png
 - **Metric flags:** tap <44: iphone-13-landscape 2, iphone-13 1
-- **Notes:** android-small: scroller main, scrolled 466px to the end · iphone-13: scroller main, scrolled 357px to the end · iphone-13-landscape: scroller main, scrolled 487px to the end · laptop: scroller main, scrolled 137px to the end
+- **Notes:** android-small: scroller main, scrolled 466px to the end · laptop: scroller main, scrolled 137px to the end · iphone-13: scroller main, scrolled 177px to the end · iphone-13-landscape: scroller main, scrolled 439px to the end
 
 #### `page-how-to-mid`
 
@@ -225,7 +236,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/page-how-to-mid.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/page-how-to-mid/<viewport>.png
-- **Notes:** android-small: scroller main, 50% of 4974px · iphone-13: scroller main, 50% of 4603px · iphone-13-landscape: scroller main, 50% of 3346px · ipad-portrait: scroller main, 50% of 2666px · laptop: scroller main, 50% of 3051px · desktop: scroller main, 50% of 2871px
+- **Notes:** android-small: scroller main, 50% of 4974px · ipad-portrait: scroller main, 50% of 2666px · laptop: scroller main, 50% of 3051px · desktop: scroller main, 50% of 2871px · iphone-13: scroller main, 50% of 4423px · iphone-13-landscape: scroller main, 50% of 3298px
 
 #### `page-how-to-end`
 
@@ -234,7 +245,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/page-how-to-end.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/page-how-to-end/<viewport>.png
-- **Notes:** android-small: scroller main, scrolled 4974px to the end · iphone-13: scroller main, scrolled 4603px to the end · iphone-13-landscape: scroller main, scrolled 3346px to the end · ipad-portrait: scroller main, scrolled 2666px to the end · laptop: scroller main, scrolled 3051px to the end · desktop: scroller main, scrolled 2871px to the end
+- **Notes:** android-small: scroller main, scrolled 4974px to the end · ipad-portrait: scroller main, scrolled 2666px to the end · laptop: scroller main, scrolled 3051px to the end · desktop: scroller main, scrolled 2871px to the end · iphone-13: scroller main, scrolled 4423px to the end · iphone-13-landscape: scroller main, scrolled 3298px to the end
 
 ### Modals
 
@@ -245,7 +256,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/about-modal-home.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/about-modal-home/<viewport>.png
-- **Metric flags:** tap <44: ipad-portrait 2
+- **Metric flags:** tap <44: ipad-portrait 2, iphone-13 1
 
 #### `about-modal-home-end`
 
@@ -254,7 +265,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/about-modal-home-end.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/about-modal-home-end/<viewport>.png
-- **Metric flags:** tap <44: android-small 1, ipad-portrait 2, iphone-13-landscape 1, iphone-13 1
+- **Metric flags:** tap <44: android-small 1, ipad-portrait 2, iphone-13-landscape 2, iphone-13 1
 - **Notes:** desktop: the modal does not scroll here: same view as the top · ipad-portrait: the modal does not scroll here: same view as the top
 
 #### `settings-home`
@@ -264,6 +275,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/settings-home.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/settings-home/<viewport>.png
+- **Metric flags:** clipped: iphone-13 1
 
 #### `settings-home-end`
 
@@ -272,7 +284,8 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/settings-home-end.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/settings-home-end/<viewport>.png
-- **Notes:** desktop: does not scroll here: same view as the top · ipad-portrait: does not scroll here: same view as the top
+- **Metric flags:** clipped: iphone-13 1
+- **Notes:** desktop: does not scroll here: same view as the top · ipad-portrait: does not scroll here: same view as the top · iphone-13: does not scroll here: same view as the top
 
 #### `settings-home-advanced`
 
@@ -355,7 +368,6 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/confirm-remove-game.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/confirm-remove-game/<viewport>.png
-- **Metric flags:** low contrast: ipad-portrait 4
 
 ### In-game modals
 
@@ -366,8 +378,8 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/game-menu.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/game-menu/<viewport>.png
-- **Metric flags:** low contrast: desktop 2, ipad-portrait 2, iphone-13-landscape 2, iphone-13 1, laptop 2; tap <44: ipad-portrait 1, iphone-13-landscape 1
-- **Notes:** iphone-13-landscape: no ⋯ menu at this width: the header shows every button inline (board at Round 1) · ipad-portrait: no ⋯ menu at this width: the header shows every button inline (board at Round 1) · laptop: no ⋯ menu at this width: the header shows every button inline (board at Round 1) · desktop: no ⋯ menu at this width: the header shows every button inline (board at Round 1)
+- **Metric flags:** low contrast: desktop 1, ipad-portrait 1, iphone-13-landscape 1, laptop 1; tap <44: ipad-portrait 1
+- **Notes:** ipad-portrait: no ⋯ menu at this width: the header shows every button inline (board at Round 1) · laptop: no ⋯ menu at this width: the header shows every button inline (board at Round 1) · desktop: no ⋯ menu at this width: the header shows every button inline (board at Round 1) · iphone-13-landscape: no ⋯ menu at this width: the header shows every button inline (board at Round 1)
 
 #### `settings-game`
 
@@ -376,7 +388,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/settings-game.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/settings-game/<viewport>.png
-- **Metric flags:** tap <44: ipad-portrait 1, iphone-13-landscape 1
+- **Metric flags:** clipped: iphone-13 1; tap <44: ipad-portrait 1
 
 #### `help-game`
 
@@ -402,7 +414,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/dice-theme-game.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/dice-theme-game/<viewport>.png
-- **Metric flags:** tap <44: ipad-portrait 1, iphone-13-landscape 1
+- **Metric flags:** tap <44: ipad-portrait 1
 
 #### `exit-confirm-game`
 
@@ -411,7 +423,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/exit-confirm-game.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/exit-confirm-game/<viewport>.png
-- **Metric flags:** tap <44: ipad-portrait 1, iphone-13-landscape 1
+- **Metric flags:** tap <44: ipad-portrait 1
 
 ### Cards
 
@@ -422,7 +434,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/card-event-short.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/card-event-short/<viewport>.png
-- **Notes:** android-small: card 6s · iphone-13: card 6s · iphone-13-landscape: card 6s · ipad-portrait: card 6s · laptop: card 6s · desktop: card 6s
+- **Notes:** android-small: card 6s · ipad-portrait: card 6s · laptop: card 6s · desktop: card 6s · iphone-13: card 6s · iphone-13-landscape: card 6s
 
 #### `card-event-long`
 
@@ -431,8 +443,8 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/card-event-long.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/card-event-long/<viewport>.png
-- **Metric flags:** clipped: android-small 1, ipad-portrait 1, iphone-13-landscape 1, iphone-13 1
-- **Notes:** android-small: card 8h · iphone-13: card 8h · iphone-13-landscape: card 8h · ipad-portrait: card 8h · laptop: card 8h · desktop: card 8h
+- **Metric flags:** clipped: android-small 1, ipad-portrait 1, iphone-13 1
+- **Notes:** android-small: card 8h · ipad-portrait: card 8h · laptop: card 8h · desktop: card 8h · iphone-13: card 8h · iphone-13-landscape: card 8h
 
 #### `card-challenge-short`
 
@@ -441,7 +453,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core; extended iphone-se, pixel-7, ipad-landscape, fhd
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/card-challenge-short.png; extended: /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/card-challenge-short--extended.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/card-challenge-short/<viewport>.png
-- **Notes:** android-small: card 9d · iphone-13: card 9d · iphone-13-landscape: card 9d · ipad-portrait: card 9d · laptop: card 9d · desktop: card 9d · iphone-se: card 9d · pixel-7: card 9d · ipad-landscape: card 9d · fhd: card 9d
+- **Notes:** android-small: card 9d · ipad-portrait: card 9d · laptop: card 9d · desktop: card 9d · iphone-se: card 9d · pixel-7: card 9d · ipad-landscape: card 9d · fhd: card 9d · iphone-13: card 9d · iphone-13-landscape: card 9d
 
 #### `card-challenge-long`
 
@@ -450,8 +462,8 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/card-challenge-long.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/card-challenge-long/<viewport>.png
-- **Metric flags:** clipped: android-small 1, ipad-portrait 1, iphone-13-landscape 1, iphone-13 1
-- **Notes:** android-small: card 5c · iphone-13: card 5c · iphone-13-landscape: card 5c · ipad-portrait: card 5c · laptop: card 5c · desktop: card 5c
+- **Metric flags:** clipped: android-small 1, ipad-portrait 1, iphone-13 1
+- **Notes:** android-small: card 5c · ipad-portrait: card 5c · laptop: card 5c · desktop: card 5c · iphone-13: card 5c · iphone-13-landscape: card 5c
 
 #### `card-primary-success`
 
@@ -460,7 +472,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/card-primary-success.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/card-primary-success/<viewport>.png
-- **Notes:** android-small: card Ah · iphone-13: card Ah · iphone-13-landscape: card Ah · ipad-portrait: card Ah · laptop: card Ah · desktop: card Ah
+- **Notes:** android-small: card Ah · ipad-portrait: card Ah · laptop: card Ah · desktop: card Ah · iphone-13: card Ah · iphone-13-landscape: card Ah
 
 #### `card-primary-success-long`
 
@@ -469,8 +481,8 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/card-primary-success-long.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/card-primary-success-long/<viewport>.png
-- **Metric flags:** clipped: android-small 1, ipad-portrait 1, iphone-13-landscape 1, iphone-13 1
-- **Notes:** android-small: card Ah · iphone-13: card Ah · iphone-13-landscape: card Ah · ipad-portrait: card Ah · laptop: card Ah · desktop: card Ah
+- **Metric flags:** clipped: android-small 1, ipad-portrait 1, iphone-13 1
+- **Notes:** android-small: card Ah · ipad-portrait: card Ah · laptop: card Ah · desktop: card Ah · iphone-13: card Ah · iphone-13-landscape: card Ah
 
 #### `card-failure-counter`
 
@@ -479,7 +491,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/card-failure-counter.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/card-failure-counter/<viewport>.png
-- **Notes:** android-small: card Ks · iphone-13: card Ks · iphone-13-landscape: card Ks · ipad-portrait: card Ks · laptop: card Ks · desktop: card Ks
+- **Notes:** android-small: card Ks · ipad-portrait: card Ks · laptop: card Ks · desktop: card Ks · iphone-13: card Ks · iphone-13-landscape: card Ks
 
 #### `card-failure-counter-long`
 
@@ -488,8 +500,8 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/card-failure-counter-long.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/card-failure-counter-long/<viewport>.png
-- **Metric flags:** clipped: android-small 1, ipad-portrait 1, iphone-13-landscape 1, iphone-13 1
-- **Notes:** android-small: card Kd · iphone-13: card Kd · iphone-13-landscape: card Kd · ipad-portrait: card Kd · laptop: card Kd · desktop: card Kd
+- **Metric flags:** clipped: android-small 1, ipad-portrait 1, iphone-13 1
+- **Notes:** android-small: card Kd · ipad-portrait: card Kd · laptop: card Kd · desktop: card Kd · iphone-13: card Kd · iphone-13-landscape: card Kd
 
 #### `card-final-king`
 
@@ -498,7 +510,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/card-final-king.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/card-final-king/<viewport>.png
-- **Notes:** android-small: card Kh · iphone-13: card Kh · iphone-13-landscape: card Kh · ipad-portrait: card Kh · laptop: card Kh · desktop: card Kh
+- **Notes:** android-small: card Kh · ipad-portrait: card Kh · laptop: card Kh · desktop: card Kh · iphone-13: card Kh · iphone-13-landscape: card Kh
 
 #### `card-narrative`
 
@@ -507,7 +519,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/card-narrative.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/card-narrative/<viewport>.png
-- **Notes:** android-small: card Ad · iphone-13: card Ad · iphone-13-landscape: card Ad · ipad-portrait: card Ad · laptop: card Ad · desktop: card Ad
+- **Notes:** android-small: card Ad · ipad-portrait: card Ad · laptop: card Ad · desktop: card Ad · iphone-13: card Ad · iphone-13-landscape: card Ad
 
 #### `card-narrative-skip-damage`
 
@@ -516,7 +528,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/card-narrative-skip-damage.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/card-narrative-skip-damage/<viewport>.png
-- **Notes:** android-small: card Ac · iphone-13: card Ac · iphone-13-landscape: card Ac · ipad-portrait: card Ac · laptop: card Ac · desktop: card Ac
+- **Notes:** android-small: card Ac · ipad-portrait: card Ac · laptop: card Ac · desktop: card Ac · iphone-13: card Ac · iphone-13-landscape: card Ac
 
 #### `card-narrative-return-king`
 
@@ -525,8 +537,8 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/card-narrative-return-king.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/card-narrative-return-king/<viewport>.png
-- **Metric flags:** clipped: android-small 1, ipad-portrait 1, iphone-13-landscape 1, iphone-13 1
-- **Notes:** android-small: card As · iphone-13: card As · iphone-13-landscape: card As · ipad-portrait: card As · laptop: card As · desktop: card As
+- **Metric flags:** clipped: android-small 1, ipad-portrait 1, iphone-13 1
+- **Notes:** android-small: card As · ipad-portrait: card As · laptop: card As · desktop: card As · iphone-13: card As · iphone-13-landscape: card As
 
 #### `card-fourth-ace-easy`
 
@@ -535,8 +547,8 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/card-fourth-ace-easy.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/card-fourth-ace-easy/<viewport>.png
-- **Metric flags:** clipped: android-small 1, ipad-portrait 1, iphone-13-landscape 1, iphone-13 1
-- **Notes:** android-small: card Ad · iphone-13: card Ad · iphone-13-landscape: card Ad · ipad-portrait: card Ad · laptop: card Ad · desktop: card Ad
+- **Metric flags:** clipped: android-small 1, ipad-portrait 1, iphone-13 1
+- **Notes:** android-small: card Ad · ipad-portrait: card Ad · laptop: card Ad · desktop: card Ad · iphone-13: card Ad · iphone-13-landscape: card Ad
 
 ### Journal
 
@@ -547,7 +559,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core; extended iphone-se, pixel-7, ipad-landscape, fhd
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/journal-entry.png; extended: /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/journal-entry--extended.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/journal-entry/<viewport>.png
-- **Metric flags:** tap <44: ipad-portrait 1, iphone-13-landscape 1
+- **Metric flags:** tap <44: ipad-portrait 1
 
 #### `journal-entry-long-text`
 
@@ -556,8 +568,8 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/journal-entry-long-text.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/journal-entry-long-text/<viewport>.png
-- **Metric flags:** tap <44: ipad-portrait 1, iphone-13-landscape 1
-- **Notes:** android-small: 976 characters typed · iphone-13: 976 characters typed · iphone-13-landscape: 976 characters typed · ipad-portrait: 976 characters typed · laptop: 976 characters typed · desktop: 976 characters typed
+- **Metric flags:** tap <44: ipad-portrait 1
+- **Notes:** android-small: 976 characters typed · ipad-portrait: 976 characters typed · laptop: 976 characters typed · desktop: 976 characters typed · iphone-13: 976 characters typed · iphone-13-landscape: 976 characters typed
 
 #### `journal-voice-recording`
 
@@ -566,7 +578,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/journal-voice-recording.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/journal-voice-recording/<viewport>.png
-- **Metric flags:** low contrast: android-small 1, desktop 1, ipad-portrait 1, iphone-13-landscape 1, iphone-13 1, laptop 1; tap <44: ipad-portrait 1, iphone-13-landscape 1
+- **Metric flags:** low contrast: android-small 1, desktop 1, ipad-portrait 1, iphone-13-landscape 1, iphone-13 1, laptop 1; tap <44: ipad-portrait 1
 
 #### `journal-voice-recorded`
 
@@ -575,7 +587,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/journal-voice-recorded.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/journal-voice-recorded/<viewport>.png
-- **Metric flags:** tap <44: ipad-portrait 1, iphone-13-landscape 1
+- **Metric flags:** tap <44: ipad-portrait 1
 
 #### `journal-voice-playing`
 
@@ -584,8 +596,8 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/journal-voice-playing.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/journal-voice-playing/<viewport>.png
-- **Metric flags:** tap <44: ipad-portrait 1, iphone-13-landscape 1
-- **Notes:** android-small: about 400ms into the 2s playback · iphone-13: about 400ms into the 2s playback · iphone-13-landscape: about 400ms into the 2s playback · ipad-portrait: about 400ms into the 2s playback · laptop: about 400ms into the 2s playback · desktop: about 400ms into the 2s playback
+- **Metric flags:** tap <44: ipad-portrait 1
+- **Notes:** android-small: about 400ms into the 2s playback · ipad-portrait: about 400ms into the 2s playback · laptop: about 400ms into the 2s playback · desktop: about 400ms into the 2s playback · iphone-13: about 400ms into the 2s playback · iphone-13-landscape: about 400ms into the 2s playback
 
 #### `journal-saved-beat`
 
@@ -595,7 +607,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/journal-saved-beat.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/journal-saved-beat/<viewport>.png
 - **Metric flags:** low contrast: desktop 2, ipad-portrait 2, iphone-13-landscape 2, laptop 2
-- **Notes:** android-small: about 300ms into the 800ms beat · iphone-13: about 300ms into the 800ms beat · iphone-13-landscape: about 300ms into the 800ms beat · ipad-portrait: about 300ms into the 800ms beat · laptop: about 300ms into the 800ms beat · desktop: about 300ms into the 800ms beat
+- **Notes:** android-small: about 300ms into the 800ms beat · ipad-portrait: about 300ms into the 800ms beat · laptop: about 300ms into the 800ms beat · desktop: about 300ms into the 800ms beat · iphone-13: about 300ms into the 800ms beat · iphone-13-landscape: about 300ms into the 800ms beat
 
 #### `journal-auto-timer`
 
@@ -604,7 +616,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/journal-auto-timer.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/journal-auto-timer/<viewport>.png
-- **Metric flags:** tap <44: ipad-portrait 1, iphone-13-landscape 1
+- **Metric flags:** tap <44: ipad-portrait 1
 
 ### Endings
 
@@ -615,7 +627,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/gameover-win-easy-ace.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/gameover-win-easy-ace/<viewport>.png
-- **Metric flags:** low contrast: iphone-13-landscape 1; off-screen: android-small 1; tap <44: ipad-portrait 1, iphone-13-landscape 1
+- **Metric flags:** off-screen: android-small 1; tap <44: ipad-portrait 1
 
 #### `gameover-win-tokens`
 
@@ -624,7 +636,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core; extended iphone-se, pixel-7, ipad-landscape, fhd
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/gameover-win-tokens.png; extended: /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/gameover-win-tokens--extended.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/gameover-win-tokens/<viewport>.png
-- **Metric flags:** low contrast: iphone-13-landscape 1; off-screen: android-small 1; tap <44: ipad-portrait 1, iphone-13-landscape 1
+- **Metric flags:** off-screen: android-small 1; tap <44: ipad-portrait 1
 
 #### `gameover-loss-kings`
 
@@ -633,7 +645,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core; extended iphone-se, pixel-7, ipad-landscape, fhd
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/gameover-loss-kings.png; extended: /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/gameover-loss-kings--extended.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/gameover-loss-kings/<viewport>.png
-- **Metric flags:** low contrast: android-small 1, desktop 1, fhd 1, ipad-landscape 1, ipad-portrait 1, iphone-13-landscape 1, iphone-13 1, iphone-se 1, laptop 1, pixel-7 1; tap <44: ipad-portrait 1, iphone-13-landscape 1
+- **Metric flags:** tap <44: ipad-portrait 1
 
 #### `gameover-loss-stability`
 
@@ -642,7 +654,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/gameover-loss-stability.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/gameover-loss-stability/<viewport>.png
-- **Metric flags:** low contrast: android-small 1, desktop 1, ipad-portrait 1, iphone-13-landscape 1, iphone-13 1, laptop 1; tap <44: ipad-portrait 1, iphone-13-landscape 1
+- **Metric flags:** tap <44: ipad-portrait 1
 
 #### `gameover-win-easy-ace-end`
 
@@ -669,7 +681,6 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 1/6 core (android-small)
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/gameover-loss-stability-end.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/gameover-loss-stability-end/<viewport>.png
-- **Metric flags:** low contrast: android-small 1
 
 ### Final log
 
@@ -680,7 +691,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/final-log.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/final-log/<viewport>.png
-- **Metric flags:** low contrast: desktop 9, ipad-portrait 9, laptop 8; tap <44: ipad-portrait 1, iphone-13-landscape 1
+- **Metric flags:** low contrast: desktop 9, ipad-portrait 9, iphone-13-landscape 4, laptop 8; tap <44: ipad-portrait 1
 
 #### `final-log-timeline`
 
@@ -689,8 +700,8 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/final-log-timeline.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/final-log-timeline/<viewport>.png
-- **Metric flags:** low contrast: android-small 8, desktop 9, ipad-portrait 9, iphone-13-landscape 2, iphone-13 9, laptop 9; tap <44: ipad-portrait 1, iphone-13-landscape 1
-- **Notes:** android-small: phone: Timeline tab · iphone-13: phone: Timeline tab · iphone-13-landscape: phone: Timeline tab · ipad-portrait: side by side (no switch at this width); the timeline fits, so this is the same view as final-log · laptop: side by side (no switch at this width): timeline scrolled to its end · desktop: side by side (no switch at this width); the timeline fits, so this is the same view as final-log
+- **Metric flags:** low contrast: android-small 8, desktop 9, ipad-portrait 9, iphone-13-landscape 4, iphone-13 9, laptop 9; tap <44: ipad-portrait 1
+- **Notes:** android-small: phone: Timeline tab · ipad-portrait: side by side (no switch at this width); the timeline fits, so this is the same view as final-log · laptop: side by side (no switch at this width): timeline scrolled to its end · desktop: side by side (no switch at this width); the timeline fits, so this is the same view as final-log · iphone-13: phone: Timeline tab · iphone-13-landscape: side by side (no switch at this width): timeline scrolled to its end
 
 #### `final-log-writing`
 
@@ -699,7 +710,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/final-log-writing.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/final-log-writing/<viewport>.png
-- **Metric flags:** low contrast: desktop 9, ipad-portrait 9, laptop 8; tap <44: ipad-portrait 1, iphone-13-landscape 1
+- **Metric flags:** low contrast: desktop 9, ipad-portrait 9, iphone-13-landscape 4, laptop 8; tap <44: ipad-portrait 1
 
 #### `final-log-epitaph`
 
@@ -708,7 +719,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/final-log-epitaph.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/final-log-epitaph/<viewport>.png
-- **Metric flags:** low contrast: desktop 9, ipad-portrait 9, laptop 7; tap <44: ipad-portrait 1, iphone-13-landscape 1
+- **Metric flags:** low contrast: desktop 9, ipad-portrait 9, iphone-13-landscape 3, laptop 7; tap <44: ipad-portrait 1
 
 #### `final-log-victory`
 
@@ -717,7 +728,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/final-log-victory.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/final-log-victory/<viewport>.png
-- **Metric flags:** low contrast: desktop 12, ipad-portrait 10, laptop 9; tap <44: ipad-portrait 1, iphone-13-landscape 1
+- **Metric flags:** low contrast: desktop 12, ipad-portrait 10, iphone-13-landscape 4, laptop 9; tap <44: ipad-portrait 1
 
 #### `final-log-victory-epitaph`
 
@@ -726,7 +737,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/final-log-victory-epitaph.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/final-log-victory-epitaph/<viewport>.png
-- **Metric flags:** low contrast: desktop 10, ipad-portrait 10, laptop 7; tap <44: ipad-portrait 1, iphone-13-landscape 1
+- **Metric flags:** low contrast: desktop 10, ipad-portrait 10, iphone-13-landscape 3, laptop 7; tap <44: ipad-portrait 1
 
 ### Stories
 
@@ -761,7 +772,6 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/library-delete-confirm.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/library-delete-confirm/<viewport>.png
-- **Metric flags:** low contrast: iphone-13 3
 
 #### `story-round-1`
 
@@ -797,7 +807,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/story-final-log.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/story-final-log/<viewport>.png
-- **Metric flags:** low contrast: desktop 2, ipad-portrait 2, iphone-13-landscape 2, iphone-13 2, laptop 2; tap <44: ipad-portrait 13
+- **Metric flags:** low contrast: desktop 2, ipad-portrait 2, iphone-13-landscape 2, iphone-13 2, laptop 2; tap <44: ipad-portrait 13, iphone-13 3
 
 #### `story-end`
 
@@ -806,7 +816,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/story-end.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/story-end/<viewport>.png
-- **Metric flags:** low contrast: desktop 2, ipad-portrait 2, iphone-13-landscape 2, iphone-13 2, laptop 2; tap <44: ipad-portrait 13
+- **Metric flags:** low contrast: desktop 2, ipad-portrait 2, iphone-13-landscape 2, iphone-13 2, laptop 2; tap <44: ipad-portrait 13, iphone-13 3
 
 #### `story-ai-summary`
 
@@ -842,8 +852,8 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/story-ai-panel-ready.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/story-ai-panel-ready/<viewport>.png
-- **Metric flags:** low contrast: android-small 1, desktop 1, ipad-portrait 1, iphone-13-landscape 1, iphone-13 1, laptop 1; clipped: iphone-13 1; tap <44: android-small 3, ipad-portrait 7, iphone-13-landscape 7, iphone-13 3
-- **Notes:** android-small: placeholder API key saved; nothing generated · iphone-13: placeholder API key saved; nothing generated · laptop: placeholder API key saved; nothing generated · desktop: placeholder API key saved; nothing generated · ipad-portrait: placeholder API key saved; nothing generated · iphone-13-landscape: placeholder API key saved; nothing generated
+- **Metric flags:** clipped: iphone-13 1; tap <44: android-small 3, ipad-portrait 7, iphone-13-landscape 7, iphone-13 3
+- **Notes:** android-small: placeholder API key saved; nothing generated · laptop: placeholder API key saved; nothing generated · desktop: placeholder API key saved; nothing generated · ipad-portrait: placeholder API key saved; nothing generated · iphone-13: placeholder API key saved; nothing generated · iphone-13-landscape: placeholder API key saved; nothing generated
 
 #### `story-ai-settings`
 
@@ -861,16 +871,13 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 6/6 core
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/story-ai-settings-end.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/story-ai-settings-end/<viewport>.png
-- **Metric flags:** tap <44: android-small 2, ipad-portrait 7, iphone-13-landscape 6, iphone-13 2
+- **Metric flags:** tap <44: android-small 2, ipad-portrait 7, iphone-13-landscape 6, iphone-13 3
 
 #### `library-stories-mid`
 
 - **Shows:** Half way down the Story Library with four runs (only where it scrolls more than 1.5 screens).
 - **Reached:** flow: the page scroller set to 50%.
-- **Captured:** 1/6 core (iphone-13-landscape)
-- **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/library-stories-mid.png
-- **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/library-stories-mid/<viewport>.png
-- **Notes:** iphone-13-landscape: scroller div.browse-games, 50% of 302px
+- **Captured:** 0/6 core
 
 #### `library-stories-end`
 
@@ -879,22 +886,25 @@ The return-visit and library states start from one storage state (localStorage a
 - **Captured:** 3/6 core (android-small, iphone-13, iphone-13-landscape)
 - **Sheet:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/sheets/surfaces/library-stories-end.png
 - **Shots:** /tmp/claude-0/-home-user-dc-solo-rpg/46ef24c3-c9b5-5b09-b975-f7e3d89a4702/scratchpad/design-review/round-1/shots/surfaces/library-stories-end/<viewport>.png
-- **Notes:** android-small: scroller div.browse-games, scrolled 236px to the end · iphone-13: scroller div.browse-games, scrolled 188px to the end · iphone-13-landscape: scroller div.browse-games, scrolled 302px to the end
+- **Notes:** android-small: scroller div.browse-games, scrolled 236px to the end · iphone-13: scroller div.browse-games, scrolled 8px to the end · iphone-13-landscape: scroller div.browse-games, scrolled 166px to the end
 
 ## Not captured
 
 ### Not applicable at a viewport (by design)
 
+- `home-first-visit-mid` at iphone-13: scrolls less than 1.5 screens: no mid view.
 - `home-first-visit-mid` at ipad-portrait: the page fits: nothing to scroll.
 - `home-first-visit-mid` at laptop: scrolls less than 1.5 screens: no mid view.
 - `home-first-visit-mid` at desktop: the page fits: nothing to scroll.
 - `home-first-visit-end` at ipad-portrait: the page fits: nothing to scroll.
 - `home-first-visit-end` at desktop: the page fits: nothing to scroll.
+- `home-return-mid` at iphone-13: scrolls less than 1.5 screens: no mid view.
 - `home-return-mid` at ipad-portrait: the page fits: nothing to scroll.
 - `home-return-mid` at laptop: scrolls less than 1.5 screens: no mid view.
 - `home-return-mid` at desktop: the page fits: nothing to scroll.
 - `home-return-end` at ipad-portrait: the page fits: nothing to scroll.
 - `home-return-end` at desktop: the page fits: nothing to scroll.
+- `page-about-mid` at iphone-13: scrolls less than 1.5 screens: no mid view.
 - `page-about-mid` at ipad-portrait: the page fits: nothing to scroll.
 - `page-about-mid` at laptop: scrolls less than 1.5 screens: no mid view.
 - `page-about-mid` at desktop: the page fits: nothing to scroll.
@@ -925,6 +935,7 @@ The return-visit and library states start from one storage state (localStorage a
 - `gameover-loss-stability-end` at desktop: the ending fits: nothing to scroll.
 - `library-stories-mid` at android-small: scrolls less than 1.5 screens: no mid view.
 - `library-stories-mid` at iphone-13: scrolls less than 1.5 screens: no mid view.
+- `library-stories-mid` at iphone-13-landscape: scrolls less than 1.5 screens: no mid view.
 - `library-stories-mid` at ipad-portrait: the page fits: nothing to scroll.
 - `library-stories-mid` at laptop: the page fits: nothing to scroll.
 - `library-stories-mid` at desktop: the page fits: nothing to scroll.
@@ -941,7 +952,7 @@ The return-visit and library states start from one storage state (localStorage a
 - **The sign-in page (SignIn.svelte) and Sign Out.** Sign-in is off (`REQUIRE_SIGN_IN = false` in src/hooks.server.js), so /signin redirects (307) to the home page and the home menu has no Sign Out. Showing them needs a code change and Google OAuth credentials. `page-signin` records where /signin lands.
 - **An exit confirmation on home, and the About modal in game.** Neither exists: home has no exit, and the in-game header has no About.
 - **The loading screen (LoadScreen).** It shows for a moment while the game file loads on a local dev server, too briefly to shoot reliably; it is part of the game page, not a surface in this list.
-- **AI summary while writing, its errors, and a summary with narration.** Writing a summary calls the provider (an API key and a network the capture environment blocks). The dialog is captured empty, unconfigured, configured with a placeholder key, with a saved summary and with its settings form.
+- **AI summary while writing, its errors, and a summary with narration.** Writing a summary calls the provider (an API key and a network the capture environment blocks). The dialog is captured unconfigured, configured with a placeholder key, with a saved summary, and with its settings form.
 - **Read-aloud and narration controls in use.** Headless Chromium has no speech voices and the on-device model downloads from Hugging Face (blocked); the settings for them are captured (`settings-home-advanced`, `story-ai-settings-end`).
 - **Voice-note error (microphone blocked) and story-mode audio.** The capture grants a fake microphone, so the error never shows; no saved run holds a recording, so story mode shows no audio players.
 - **Card in-between stages:** the fourth King's "doom" beat (about 400ms after it is dismissed) and the auto-play hold bar on a card (auto-play on). Both are motion on the card overlay and belong to the animation review; the settled final King is `card-final-king`.

@@ -8,6 +8,6 @@ ROUND="$1"
 mkdir -p "$A/round-$ROUND"
 rm -rf "$A/tools" && mkdir -p "$A/tools"
 (cd "$SPD/tools" && tar cf - --exclude='*.png' --exclude='*.jpg' --exclude='*.webm' --exclude='*.mp4' \
-  --exclude='*.log' --exclude='probe' --exclude='node_modules' .) | (cd "$A/tools" && tar xf -)
+  --exclude='*.log' --exclude='probe' --exclude='node_modules' --exclude='pylib' --exclude='*.tgz' .) | (cd "$A/tools" && tar xf -)
 cp "$SPD"/round-"$ROUND"/*.md "$A/round-$ROUND/" 2>/dev/null || true
 echo "archived round $ROUND: $(find "$A/round-$ROUND" -type f | wc -l) round files, $(find "$A/tools" -type f | wc -l) tool files"

@@ -109,6 +109,7 @@ const store = (page, src, arg) =>
  */
 async function settle(page, { timeout = 6000, extra = 150 } = {}) {
 	const t0 = Date.now();
+	let quiet = 0; // two quiet checks in a row: an entrance that starts a frame late is not missed
 	while (Date.now() - t0 < timeout) {
 		const busy = await page
 			.evaluate(() => {
@@ -123,8 +124,9 @@ async function settle(page, { timeout = 6000, extra = 150 } = {}) {
 				return '';
 			})
 			.catch(() => 'eval');
-		if (!busy) break;
-		await page.waitForTimeout(100);
+		if (!busy && ++quiet >= 2) break;
+		if (busy) quiet = 0;
+		await page.waitForTimeout(busy ? 100 : 150);
 	}
 	await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))).catch(() => {});
 	await page.waitForTimeout(extra);

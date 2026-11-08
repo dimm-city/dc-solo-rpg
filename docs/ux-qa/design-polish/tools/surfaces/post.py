@@ -92,8 +92,9 @@ def sample(img, box, scale, text_rgb):
     cand = px[dist_text > 48]
     if len(cand) < max(4, 0.08 * len(px)):
         cand = px
-    q = cand >> 3
-    keys = q[:, 0] * 1024 + q[:, 1] * 32 + q[:, 2]
+    # 4-bit bins: a gradient or scanlines still fall into one bin
+    q = cand >> 4
+    keys = q[:, 0] * 256 + q[:, 1] * 16 + q[:, 2]
     vals, counts = np.unique(keys, return_counts=True)
     k = vals[counts.argmax()]
     bg = cand[keys == k].mean(0)
@@ -159,19 +160,21 @@ def enrich(state, vp, raw):
         # A checkbox or switch reports its value ("on") as text: it has none
         if e["tag"] == "input" and e["text"] == "on":
             e["text"] = ""
-        s = sample(img, region, scale, col[:3]) if img is not None else None
-        # Glowing or busy text: the box is mostly glow, so read the backdrop from a ring around it
-        # (12-20px outside the text box) instead; the glow itself is not counted as background
+        # Glyph pixels are set aside by the colour they render in (opacity applied over a dark ground)
+        approx_text = over(list(col[:3]) + [(col[3] if len(col) > 3 else 1) * e.get("opacity", 1)], [16, 16, 20])
+        s = sample(img, region, scale, approx_text) if img is not None else None
+        # Glowing text (a text-shadow) outside any button: the box is mostly glow, so read the
+        # backdrop from a ring clear of it (12px plus 0.6 of the font size out, 10px wide); the glow
+        # is not counted as background. A button's label keeps the button's own fill.
         ring = None
-        if s and (e.get("textShadow") or s["bgShare"] < 0.2):
-            # Clear of the glow: a little over half the font size out, or 12px for plain text
-            gap = 12 + (0.6 * e["font"]["size"] if e.get("textShadow") else 0)
-            ring = sample_ring(img, region, scale, col[:3], inner=gap, outer=gap + 10)
+        if s and e.get("textShadow") and e["kind"] == "text" and e["role"] != "button text":
+            gap = 12 + 0.6 * e["font"]["size"]
+            ring = sample_ring(img, region, scale, approx_text, inner=gap, outer=gap + 10)
         if s:
             use_ring = ring is not None and ring["bgShare"] >= 0.1
             bg = ring["bg"] if use_ring else s["bg"]
             e["bg"] = to_hex(bg)
-            e["bgSource"] = "pixels, ring around the text (glow or busy box)" if use_ring else "pixels"
+            e["bgSource"] = "pixels, ring around the glowing text" if use_ring else "pixels"
             e["bgShare"] = ring["bgShare"] if use_ring else s["bgShare"]
             if use_ring:
                 e["bgInBox"] = to_hex(s["bg"])
