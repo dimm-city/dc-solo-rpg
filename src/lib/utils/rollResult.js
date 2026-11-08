@@ -263,14 +263,15 @@ const TOTAL_CLAUSE = /^\d+ of \d+ Kings? out$/;
  * "A♣ skipped its Stability check"); a non-event is phrased "No …" ("No King was out to
  * return"), and the board never states a non-event.
  *
- * The board's notice carries no running total (game-copy-s-03, as DP-1-07 did for the result
- * lines): the Kings count is in the HUD right above it, so "· 0 of 4 Kings out" is dropped. The
- * screen reader has no HUD to glance at, so its announcement keeps it (withTotals).
+ * The board's notice passes withTotals: false and carries no running total (game-copy-s-03, as
+ * DP-1-07 did for the result lines): the Kings count is in the HUD right above it, so
+ * "· 0 of 4 Kings out" is dropped there. The screen-reader announcement, the story cards and the
+ * final log's row keep it.
  * @param {string|null|undefined} modifierResult - The card's modifierResult (gameActions)
- * @param {{ withTotals?: boolean }} [options]
- * @returns {string|null} e.g. "K♥ went back into the deck"
+ * @param {{ withTotals?: boolean }} [options] - false drops the running total (the board)
+ * @returns {string|null} e.g. "K♥ went back into the deck · 0 of 4 Kings out"
  */
-export function formatModifierNotice(modifierResult, { withTotals = false } = {}) {
+export function formatModifierNotice(modifierResult, { withTotals = true } = {}) {
 	const text = (modifierResult ?? '').trim();
 	if (!text || /^No\b/.test(text)) return null;
 	if (withTotals) return text;

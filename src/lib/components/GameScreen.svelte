@@ -112,9 +112,11 @@
 	});
 	// The board's notice drops the Kings count the HUD shows; the announcement keeps it
 	// (game-copy-s-03)
-	const modifierNotice = $derived(noticeCard && formatModifierNotice(noticeCard.modifierResult));
+	const modifierNotice = $derived(
+		noticeCard && formatModifierNotice(noticeCard.modifierResult, { withTotals: false })
+	);
 	const modifierAnnouncement = $derived(
-		noticeCard && formatModifierNotice(noticeCard.modifierResult, { withTotals: true })
+		noticeCard && formatModifierNotice(noticeCard.modifierResult)
 	);
 
 	// DP-1-06: one job per element. The title names the step, the description says what is at
