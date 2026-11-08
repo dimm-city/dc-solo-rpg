@@ -252,21 +252,27 @@ for (;;) {
   log(`Stage ${stage} fixes pushed (${surfaceItems.length} surfaces, ${boardItems.length} board items): ${JSON.stringify(counts())}`)
 
   phase('QA and capture')
+  // From stage 8 the fixes are small and local: no full key-state capture (the sign-off probes
+  // the changed surfaces itself) and the Playwright run covers only the specs those files touch
+  const targeted = stage >= 8
+  const changedNow = [...surfaceItems, ...boardItems].map((it) => it.id).join(', ')
   const [qa, cap] = await parallel([
-    () => agent(qaPrompt(`stage-${stage}`), { label: `qa:${stage}`, phase: 'QA and capture', schema: QA_SCHEMA, effort: 'high' }),
-    () => agent(capturePrompt(`signoff-${stage}`), { label: `capture:${stage}`, phase: 'QA and capture', schema: CAPTURE_SCHEMA, effort: 'medium' }),
+    () => agent(qaPrompt(`stage-${stage}`) + (targeted ? `
+
+Scope for this stage: the only change is ${changedNow}, a few lines in one component. Run svelte-kit sync, vitest, eslint, prettier, svelte-check and the build in full, but in place of the full Playwright suite run only the specs that cover the files changed in this stage (git log --oneline -6 and git diff --name-only against the previous stage's QA commit; for the Game Guide that is tests/help* or tests/how-to* and any spec that opens the Guide or /how-to; grep the tests for the component's test ids). The full suite passed at stage 7.` : ''), { label: `qa:${stage}`, phase: 'QA and capture', schema: QA_SCHEMA, effort: 'high' }),
+    ...(targeted ? [] : [() => agent(capturePrompt(`signoff-${stage}`), { label: `capture:${stage}`, phase: 'QA and capture', schema: CAPTURE_SCHEMA, effort: 'medium' })]),
   ])
   log(`Stage ${stage}: QA ${qa ? (qa.pushed ? 'pushed ' + qa.head : 'did not push') : 'failed'}; capture ${cap ? cap.shots + ' shots of ' + cap.head : 'failed'}`)
   // A capture that came back incomplete (an agent once ended its turn while the run was still
   // going, which killed it after 40 seconds) is taken again before anyone signs off from it
   let goodCap = cap
-  for (let attempt = 1; attempt <= 2 && (!goodCap || (goodCap.shots || 0) < 150); attempt++) {
+  for (let attempt = 1; !targeted && attempt <= 2 && (!goodCap || (goodCap.shots || 0) < 150); attempt++) {
     log(`Stage ${stage}: the key-state capture is incomplete (${goodCap ? goodCap.shots : 0} shots); capturing again (attempt ${attempt})`)
     goodCap = await agent(capturePrompt(`signoff-${stage}`) + `
 
 IMPORTANT, retry ${attempt}: an earlier attempt returned after 40 seconds with 13 shots, because it ended its turn while the capture was still running in the background, which kills the run. Remove /home/user/dc-solo-rpg-wt/capture-signoff-${stage} first if it exists (git -C ${REPO} worktree remove --force), and clear ${DR}/v3/signoff-${stage}/ of the partial output. Then run the capture to completion before you return: run it in the foreground in pieces of under 10 minutes each (one viewport or one group per command), or start it in the background and wait with a Monitor until-loop. Do not return until every key state at every viewport is captured (about 178 shots; header-menu exists only at the phone portrait widths), and the contact sheets, manifest and drift table are written.`, { label: `capture:${stage}:retry${attempt}`, phase: 'QA and capture', schema: CAPTURE_SCHEMA, effort: 'high' })
   }
-  if (goodCap && (goodCap.shots || 0) < 150) log(`Stage ${stage}: the capture is still incomplete (${goodCap.shots} shots); the sign-off will capture what it needs itself`)
+  if (!targeted && goodCap && (goodCap.shots || 0) < 150) log(`Stage ${stage}: the capture is still incomplete (${goodCap.shots} shots); the sign-off will capture what it needs itself`)
 
   phase('Sign-off')
   for (const o of LATE_ITEMS) {
@@ -274,7 +280,9 @@ IMPORTANT, retry ${attempt}: an earlier attempt returned after 40 seconds with 1
     lensOf[o.id] = o.lens; areaOf[o.id] = o.area; status[o.id] = 'built'; details[o.id] = o.text
     log(`Added the owner's ${o.id} to the sign-off`)
   }
-  const capsText = goodCap ? `- manifest ${goodCap.manifest}; shots ${goodCap.dir}; drift ${goodCap.drift || 'n/a'}; missing: ${(goodCap.missing || []).join('; ') || 'none'}` : `- the capture failed: capture the key states yourself from origin/${BRANCH}`
+  const capsText = targeted
+    ? `- No full capture this stage: the only change is ${changedNow}. Verify it directly with targeted probes on a dev server (your own port) at android-small 360x640, iphone-13 390x844, iphone-13-landscape 844x390 and desktop 1440x900, on the surfaces that change touches. Everything else is unchanged since stage ${stage - 1}, whose captures are in ${DR}/v3/signoff-${stage - 1}/ (manifest.md, shots/, drift.md).`
+    : goodCap ? `- manifest ${goodCap.manifest}; shots ${goodCap.dir}; drift ${goodCap.drift || 'n/a'}; missing: ${(goodCap.missing || []).join('; ') || 'none'}` : `- the capture failed: capture the key states yourself from origin/${BRANCH}`
   // Visual and layout first: the game lens judges OWN-6 and OWN-7, whose developer may still be pushing
   for (const pair of [...PAIRS].reverse()) {
     const lenses = pair.lenses.filter((l) => !signedOff[l])

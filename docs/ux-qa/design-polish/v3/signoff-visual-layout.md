@@ -1,111 +1,121 @@
-# Sign-off 6: visual/typography + layout/responsive
+# Sign-off 7: layout/responsive (visual/typography held as well)
 
-Sign-off 6 is complete. Captures: signoff-6 (head 4568859; HEAD 12db0bf changes only tests and docs, no src). Probes run
-at HEAD on a dev server (port 5197, stopped) into v3/vl7/. The sign-off 5 review is saved as
-v3/signoff-visual-layout.signoff5.md.
+Sign-off 7 is complete. Captures: signoff-7 (head a32f7b0). HEAD 55f742f changes only docs, with no src or static
+change since a32f7b0. Probes ran at HEAD on a dev server (port 5288, stopped), output in v3/vl8/. The sign-off 6
+review is saved as v3/signoff-visual-layout.signoff6.md.
 
 ## Verdicts
 
-- **visual-layout-s-16: resolved.** v3/vl7/s16.cjs at HEAD with real insets through CDP
-  (`Emulation.setSafeAreaInsetsOverride`, left/right 47, bottom 21) at 844x390; every visible text run and control
-  measured (sr-only excluded). Report v3/vl7/s16/report-board-iphone-13-landscape-i47.txt.
-  - Intro, first screen: 14 runs, minL 47, maxR 797, 0 under the notch. Scrolled to the end: 12 runs, minL 47, 0 bad.
-    Shot: v3/vl7/s16/iphone-13-landscape-i47-b-intro.png (title and every paragraph start at 47; the scroll cue is
-    centred on the column).
-  - Every other board state the same probe walks (opening roll, round start, task result, draw, card, Stability check
-    and result, Guide, Settings and Exit dialogs, journal): minL 49.8-55, maxR <= 797, 0 bad. Nothing doubled.
-  - The skip link with the insets (Tab, so `:focus-visible`): 47..180, level with the toolbar's left edge (47); 8 without
-    insets (v3/vl7/skip.cjs, v3/vl7/skip-844-i47.png).
-  - Without insets: signoff-6 against signoff-5, the intro at 360 and 390 differs by 8 and 26 pixels (background motes
-    only). 844x390 and 1440 changed only through s-17's measure (below), as expected.
-- **visual-layout-s-17: resolved.** v3/vl7/m7.cjs at HEAD, its own count (all descendant text, a collapsed space counted
-  once), reports v3/vl7/measure/report.txt and report-landscape.txt. Longest line, 360 / 390 / 844x390 / 1440:
-  - Intro, Future Lost: 43 / 47 / 61 / 61. Ghost in the Machine: 45 / 50 / 67 / 67.
-  - Card story, every one of the 104 stories of both games set in the real `.byte-story`: 42 / 47 / 70 / 66; 0 lines
-    over 75 out of 838-1,337 lines per viewport (p95 39 / 42 / 64 / 61).
-  - Game Guide (in game): 46 / 50 / 69 / 69. /how-to: 37 / 43 / 69 / 69. About: 32 / 39 / 61 / 61.
-  - 360 and 390 are unchanged: the column widths (intro 328 / 358, card 291 / 319, About 262 / 292) are those of
-    sign-off 5, and every phone shot is pixel-identical to signoff-5 bar background motes.
-  - At 844x390 the drawn card shows its title and both paragraphs with no scroll (the story scroller's scrollHeight
-    210 = clientHeight 210; v3/vl7/measure/iphone-13-landscape-card.png); the longest story (Ace of Hearts, 1,166
-    characters) shows title and first paragraph (signoff-6 card-primary-success-long/iphone-13-landscape.png).
-  - On desktop the 480px intro column now lines up with the 480px step button (signoff-6 intro/desktop.png).
+- **visual-layout-s-18: resolved.** Measured at HEAD with v3/vl8/m8.cjs (sign-off 6's m7 counter, unchanged) and
+  v3/vl8/s18extra.cjs (the same counter run on every chip panel, the AI summary dialog and Settings with Advanced
+  open). Reports: v3/vl8/m8.out and v3/vl8/measure/report-extra.txt. Longest line at 360 / 390 / 844x390 / 1440:
+  - **Story mode**, every round of all four seeded runs (journal entries, final log and ending): 45 / 49 / 66 / 66.
+    Sign-off 6 measured 45 / 49 / 79 / 79. `.journal-text` is now 540px (30em at 18px) inside the 640px column.
+  - **Card panels**, all 51 chips across the four runs opened one by one: 46 / 49 / 69 / 69. No line is over 75.
+  - **AI summary intro**: 42 / 42 / 62 / 62 (was 78). The width is 480px (30em at 16px).
+  - **Settings**, Advanced open: 45 / 50 / 60 / 60 (was 84 / 85). At 844x390 and 1440, `.cm-section-desc` runs 60
+    and `.cm-help` 58, at 420px (30em at 14px). Shots: v3/vl8/measure/desktop-settings.png and
+    iphone-13-landscape-settings.png. The control column and the switch keep their place. The help text ends about
+    200px short of the switch, which is the usual settings-row layout.
+  - Phone figures are unchanged by construction: the column widths (312-358px) are below every new cap.
+  - `.story-text` (GeneratedStory) has the same rule at the same size as `.journal-text` (1.125rem, 30em = 540px).
+    My seed has no saved summary to fill it, but the 66 measured on `.journal-text` covers the same box.
+  - The other changes stay as they were: no new clipping, overflow or small-target entry in any story or Settings
+    surface (see below).
+- **visual-layout-s-19: resolved.** Measured with my own probe, v3/vl8/numbreak8.cjs (output v3/vl8/nb8.out), written
+  separately from the developer's. It walks all visible text as one stream, so a numeral and its word are checked
+  even when they sit in different elements. It checks four things:
+  - a numeral whose next word, after a space, no-break space, hyphen or element boundary, starts on a later line;
+  - a numeral stranded at the start of a line before punctuation;
+  - any glyph outside its block or the viewport, with horizontal scrollers excluded;
+  - any table cell whose content is wider than the cell.
+  - Pages covered: both intros, the in-game Guide (opened from the header, the common path), /how-to, /about and the
+    About dialog, at 360, 390, 844x390 and 1440. Result: 0 numerals split from their word, 0 stranded, 0 overflow,
+    0 cell overflow. The one hit, "a d20 / decides" at 360 on /about, is a noun followed by its verb, not a count and
+    its unit.
+  - "**10 Tokens**" now starts a line together at 1440 (signoff-7 help-game/desktop.png; crop in
+    v3/vl8/crop-help-settings.png). About reads "A standard / 52-card deck" at 1440 (v3/vl8/about-desk-credits.png).
+  - The joins cost nothing in the tables (v3/vl8/tables.cjs): at 360, "Lose 3 Stability / and become / Surreal" and
+    "Gain 1 Stability / (max 20) and / become Lucid" fill the 158px cell, with no overflow, and wrap the same way at
+    390. At 844x390 and 1440 every cell is one line.
+  - About's credit at 1440 now breaks "...Chris Bissette / and Loot The Room, and licensed under / CC Attribution 3.0
+    Unported." The licence name is kept whole. The short middle line is a fair price for that.
 
 ## New findings
 
-### visual-layout-s-18 · low · layout · pages: the reading measure stops at four surfaces; story mode, the AI summary dialog and Settings help still run 76-85 characters
+### visual-layout-s-20 · low · layout · overlays: the Guide's tables centre each row key against a wrapped value, so "4 Aces" sits beside the value's third line
 
-s-17 set `--measure` on the card story, intro, Guide and About. Three other places that show sentences still set their
-width in `ch` or not at all, so at 844x390 and 1440 they run past 75 characters a line (v3/vl7/m7.cjs, sumpanel.cjs and
-settings-m.cjs; report v3/vl7/measure/report.txt):
+Every Guide table (in-game dialog and /how-to) leaves `th` and `td` at the default `vertical-align: middle`
+(GameGuide.svelte:390-397, with no vertical-align anywhere in the file). A row key is one line. When its value wraps,
+the key is centred on the whole value instead of lining up with its first line, so the eye pairs it with the wrong
+words.
 
-- **Story mode**, the player's own journal entries and final log, read back: `.journal-text` (StoryRound.svelte:304-310)
-  and `.final-log-text` (story/FinalLog.svelte:58-64) have no max-width and fill the 640px `.story-round` column
-  (StoryRound.svelte:157) at 18px (35.6em). Over every round of the four seeded runs: 79 ("The last King turned over and
-  the lights went with it. I kept writing until the"), 78 and 76 characters, at both 844x390 and 1440. A real entry can
-  be any length, so every long entry reads at about 79. Phones: 45 and 49, fine.
-- **The AI summary dialog** (story mode, "Summarise with AI"): `.summary-intro` is `max-width: 60ch`
-  (StoryGenerationPanel.svelte:177-181), 606px at 16px: lines of 78 and 76 ("An AI can read your journal and the cards you
-  drew, and retell this run as one"; v3/vl7/measure/desktop-summary-panel.png).
-- **Settings help**: `.cm-help` has no cap (ContentModal.svelte:681-687) and `.cm-section-desc` is `max-width: 65ch`
-  (ContentModal.svelte:640-646), the very `ch` measure s-17 found renders long in Inter. At 14px in the 576px row:
-  84 ("A short note the first time a rule comes up in a game. The Game Guide lists the ones", signoff-6
-  settings-game/desktop.png, also at 844x390) and 85 (the Voice section description under Advanced). Both are past
-  WCAG 1.4.8's 80.
-- Fix: `max-width: var(--measure)` on `.journal-text`, `.final-log-text`, `.summary-intro` (replacing 60ch),
-  `.cm-section-desc` (replacing 65ch) and `.cm-help`. The token is in em, so it gives about 65 characters at 18, 16
-  and 14px alike.
-- Acceptance: measured the same way at 360, 390, 844x390 and 1440, no line in story mode (every round of the four
-  seeded runs, journal entries and final log), the AI summary intro, or the Settings help and section descriptions
-  (Advanced open) is longer than 75 characters; the phone figures are unchanged.
+Measured with v3/vl8/valign.cjs (output v3/vl8/valign.out). The offset is the value's first-line top minus the
+key's:
 
-### visual-layout-s-19 · low · visual · global: numbers break away from their units at line ends ("10 | Tokens", "52- | card")
+| Viewport | Row key | Value | Offset |
+|---|---|---|---|
+| 360 | "4 Aces" | "No target: a / Stability check, / then 1 Token / comes off" (4 lines) | -37px |
+| 360 | "1" | "Lose 3 Stability / and become / Surreal" (3 lines) | -25px |
+| 360 | "20" | "Gain 1 Stability / (max 20) and / become Lucid" (3 lines) | -25px |
+| 390 | "4 Aces" | 3 lines | -25px |
+| 390 | "20" | 3 lines | -25px |
+| 390 | "1" | 2 lines | -13px |
 
-A number and the word it counts should never be split by a line break; the eye reads "10" at a line end as a
-stray figure. The new measure put two such breaks on the most-read lines, and phones already had others
-(v3/vl7/numbreak.cjs and strongbreak.cjs at HEAD):
+So at 360, "1" reads beside "and become", "20" beside "(max 20) and", and "4 Aces" beside "then 1 Token".
 
-- Game Guide, "The goal" (the first section): the highlighted key figure `<strong>10 Tokens</strong>`
-  (GameGuide.svelte:134) breaks as "and **10** / **Tokens**" at 844x390 and 1440, in the dialog and on /how-to. It
-  held on one line before s-17: v3/vl7/guide-goal-s5-vs-s6.png (signoff-5 above, signoff-6 below).
-- About: "A standard 52- / card deck" at 844x390 and 1440 (AboutContent.svelte:25; signoff-6 page-about/desktop.png),
-  also new with the measure.
-- Game Guide elsewhere: "removes 1 / Token" (GameGuide.svelte:228) and "Lose 3 / Stability" in the Stability
-  table (GameGuide.svelte:28) at 360; "then 1 / Token comes off" in the Salvation table (GameGuide.svelte:39) at 390;
-  "adds 1 / Token" in the Difficulty list (GameGuide.svelte:280) at 360, 844x390 and 1440.
-- Fix: a no-break space between a numeral and its unit word in the Guide's text and tables (`20&nbsp;Stability`,
-  `10&nbsp;Tokens`, `1&nbsp;Token`, `3&nbsp;Stability`, `2&nbsp;Stability` and the like, including the table data at
-  GameGuide.svelte:28-39) and a non-breaking hyphen in About's "52‑card" (U+2011). Not `white-space: nowrap` on
-  `strong`, since one bold run there is a whole sentence.
-- Acceptance: v3/vl7/numbreak.cjs (extended to hyphens) finds no numeral separated from the next word by a line break
-  on the intro of both games, the Guide (dialog and /how-to) or About at 360, 390, 844x390 and 1440.
+The header row has the same fault at every viewport, 360 through 1440. "To succeed" is centred against the two-line
+"Aces revealed": it sits 10-11px below the first line and 10-11px above the second, so it shares neither.
+
+Evidence: v3/vl8/measure/valign-evidence.png. It shows the 360 Stability and Salvation tables, then the 1440
+Salvation header. The same tables are in signoff-7 help-game at 360 and 390 once scrolled, and on /how-to.
+
+These are the tables that teach the dice rules, and phones are the main platform. The standard for a key/value table
+with wrapping values is to align each row's cells to their first line, and to sit column headers on the rule below
+them.
+
+- **Fix:** add `vertical-align: baseline` to `.guide-table th, .guide-table td` (GameGuide.svelte:390). That lines
+  up the first lines of the Share Tech Mono key and the Inter value on one baseline. Add `vertical-align: bottom` to
+  `.guide-table thead th` (GameGuide.svelte:399). Change nothing else.
+- **Acceptance:** run v3/vl8/valign.cjs (or the same measure) on /how-to and the in-game Guide at 360, 390, 844x390
+  and 1440.
+  - In every body row, the key's first line and the value's first line are within 3px of each other, allowing for
+    the difference in ascent between the two faces.
+  - In every header row, the one-line header's line is within 2px of the last line of the two-line header.
+  - Row heights and the tables' widths are unchanged.
 
 ## Checked and not filed
 
-- **Positions hold.** signoff-6 drift: toolbar, title slot, caption, result line and step button Δ0 at all four
-  viewports across the 20 table states. The signoff-6 table measures the title's reserved slot (114, 52/57 high on
-  phones); its ink is pixel-identical to sign-off 5, so the two-line STABILITY CHECK still sits 13px (360) and 14px
-  (390) higher than one-line titles inside that fixed slot, centred, as accepted in sign-offs 1 to 5.
-- **No other change.** Pixel diff of all 178 shots against signoff-5: only the s-17 surfaces moved (cards at 844x390,
-  help-game, intro and page-about at 844x390 and 1440); every other board and surface shot differs by at most 84
-  pixels of background motes. The `clipped`, `outside` and `smallTargets` lists and page overflow are identical to
-  signoff-5 in every surface state (the HUD under a dialog, the collapsed Advanced block, the story scroller, About's
-  inline link, Home below the fold); no board state overflows.
-- **OWN-3 bottom toolbar with real insets** (v3/vl7/portrait-inset.cjs, v3/vl7/iphone-13-insets.png): iPhone 13 with
-  top 47 / bottom 34 puts the HUD at 47..111, the step button at 690..738 (the intro's Begin button is in the same
-  slot) and the toolbar at 762..810, exactly clear of the home indicator. 360x640: HUD 24, step 512, toolbar 584..632.
-- **Guide, About, intro and card at the new measure.** Left-aligned with a ragged right; chips, tables and section
-  rules keep the full column; the lead (18px, 540px) and body (16px, 480px) share a left edge. The card at 844x390
-  leaves the right third of the face to the type badge and the ragged edge, which reads as intended.
-- **Board and surfaces through both lenses** at every captured viewport (montages v3/vl7/mont-360-*, mont-390-*,
-  mont-844-*, mont-1440-A): HUD tiers and LED digits, readout slots, card tab, notice tab, Surreal hint, rule caption,
-  result-hold run-out, reduced-motion d20, header menu, cards, endings, journal, final log, library, story mode and
-  dialogs read as in sign-off 5.
+- **Positions hold.** signoff-7 drift: the toolbar, title slot, caption, result line and step button move 0px at all
+  four viewports across the 20 table states.
+  - Bottom toolbar on phones: 360 at y=584, 390 at y=788.
+  - Top toolbar: 844x390 at y=6, 1440 at y=8.
+- **No unintended change.** I pixel-diffed all 178 shots against signoff-6 (v3/vl8/pxdiff.py).
+  - Board shots differ only by the ambient motes and the background glow. Examples: v3/vl8/d-round-start-390.png,
+    and d-gowin-844.png (the victory screen's radial glow).
+  - Real changes appear only in the s-18 and s-19 surfaces: story-round-1 at 844x390 and 1440, settings-game at
+    1440, help-game at 1440 and page-about.
+  - No board code changed since sign-off 6. Only the story components, ContentModal, StoryGenerationPanel,
+    GameGuide, About and the Ghost intro changed.
+- **Metrics.** The `clipped`, `outside`, `smallTargets`, `pageOverflowX` and `offscreenTexts` lists match signoff-6
+  in all 178 board and surface shots, with two exceptions:
+  - page-about at 844x390 lists the new `nobreak` span below the fold, which is the same content.
+  - page-about at 390 adds "CC Attribution 3.0 Unported" to `smallTargets`. It is now a single 20px line instead of
+    two, and it is an inline link in a sentence. WCAG 2.5.8's inline exception covers it, as it already covered "The
+    Wretched" in every earlier sign-off.
+- **Board and surfaces through both lenses** at every captured viewport, from the signoff-7 sheets:
+  - Board: HUD tiers and LED digits, title slot, card tab, notice tab, Surreal hint, rule caption, result-hold
+    run-out and the reduced-motion d20.
+  - Overlays and screens: header menu, cards, endings, journal, final log (timeline and entry), library, story mode,
+    Settings, the Guide, the exit dialog, Home and About.
+  - All of them read as in sign-off 6, apart from the s-18 and s-19 changes above.
+- **Settings spacing.** The Rule tips row has 40px below it to the Advanced rule, against 16px between other rows.
+  This is the section-boundary spacing (`.cm-section + .cm-section` uses margin 24 plus the row's 16), so the
+  hierarchy is consistent. Not filed.
 - **Header menu at 844x390 and 1440.** Missing by design: the ⋯ menu exists only at 720px wide and narrower.
 
 ## Approval
 
-- layout: **not approved.** s-16 and s-17 are resolved, but s-18 stands: story mode's journal and final log (76-79),
-  the AI summary intro (78) and Settings help (84-85) are still off the reading measure.
-- visual: **not approved.** No visual item was open, but s-19 is new: the measure split the Guide's key figure "10
-  Tokens" and About's "52-card" across lines, and phones already split "1 Token" and "3 Stability".
+- layout: **not approved.** s-18 and s-19 are resolved, but s-20 is new. The Guide's row keys sit beside the second
+  or third line of their values on phones (25-37px off at 360), and the "To succeed" header floats between the two
+  lines of "Aces revealed" at every viewport. The fix is two CSS declarations.
