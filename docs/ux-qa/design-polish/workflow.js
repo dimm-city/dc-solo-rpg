@@ -26,6 +26,23 @@ const OWNER_ASK = `dispatch a team of game design and visual design experts to d
 const OWN1 = 'OWN-1 (owner requirement): every number in the HUD tiles (Stability, Kings, Roll, Cards, Aces, Tokens, including each /max) uses the LED face (--font-led, DSEG7 Classic), as the Roll tile already does (src/lib/components/status/RollCell.svelte: the digits over faint unlit "88" segments). The values must read as one family across the six tiles, align on one baseline, and fit at 360px wide.'
 const OWN2 = 'OWN-2 (owner requirement): every HUD tile uses the Kings tile\'s progressive styling. As its value moves into a new tier, the tile background shifts slightly to a fitting colour (the reference is the Kings tile\'s urgent gradient in src/lib/components/status/KingsCell.svelte, .urgent) and the value\'s colour changes with it. Each tile needs tiers that fit what its value means to the player: Stability by stabilityTier (steady, caution, danger, critical) in hudTiers.js; Tokens falling is good news; Cards running out is pressure; Aces rising is hope (Salvation unlocking); the Roll tile for a natural 20, a natural 1, and a pending Lucid or Surreal. Subtle, on-palette, legible, eased with the animation tokens, instant under reduced motion, and never louder than the Kings at 3 of 4.'
 
+const OWNER_SHOTS = DR + '/owner'
+// Added by the owner during round 2, from their phone on the preview site (screenshots in OWNER_SHOTS)
+const LATE_OWNER_ITEMS = [
+  {
+    id: 'OWN-3', surface: 'In-game toolbar on phones', reviewer: 'layout',
+    text: `OWN-3 (owner requirement, added in round 2): on small devices the top toolbar is displayed at the bottom, under the roll button. The owner's words: "On small devices the top toolbar should be displayed at the bottom under the roll button." The toolbar is the in-game header bar (Exit, Help, the game title, the round, the more menu). On phones in portrait (up to 600px wide) it sits under the step button, clear of the browser's bottom bar and the home-indicator safe area, while the HUD row stays at the top. For landscape phones, the layout reviewer decides whether it moves too, and says why. The owner's screenshot, with the header circled and an arrow to the space under the roll button: ${OWNER_SHOTS}/toolbar-to-bottom.jpg.`,
+  },
+  {
+    id: 'OWN-4', surface: 'Board centre text', reviewer: 'game',
+    text: `OWN-4 (owner requirement, added in round 2): the text in the centre of the game board must look integrated with the board. The owner's words: "The text in the center of the game board is cluttered, and somewhat meaningless and unsettled. This text needs to appear to be more integrated with the game board." In the owner's screenshot (${OWNER_SHOTS}/board-centre-text.jpg, round 2 of a Normal game on a phone) the circled block is the card line ("A♠ · A second chance manifests from the darkness"), the screen title ("STABILITY CHECK"), the description ("An odd card demands a price. 10 or less costs Stability.") and the notice ("No King was out to return"), with the RULE caption below it. Make it settled (nothing jumps or reflows between states), uncluttered (only what helps the player act now; never a statement of a non-event such as "No King was out to return"; no line that repeats another), meaningful, and part of the board's visual language rather than loose text floating over the grid. How it integrates is the reviewers' design call within the polish scope, and it must work at every core viewport. The visual reviewer judges its visual execution too.`,
+  },
+  {
+    id: 'OWN-5', surface: 'Board card line clipped on phones', reviewer: 'layout',
+    text: `OWN-5 (owner report, added in round 2): the card line above the screen title is cut off at the left edge on a phone. In the owner's screenshot (${OWNER_SHOTS}/board-centre-text.jpg), "A♠ · A second chance manifests from the darkness" loses its "A" at the left edge. No text in the board's centre may be clipped at any core viewport: long lines wrap cleanly or are shortened.`,
+  },
+]
+
 const CONTEXT = `## Context
 You are on a design-polish team for DC Solo RPG ("Dream Console" by Dimm City), a SvelteKit 2 / Svelte 5 solo journaling game (Wretched and Alone, d20 variant). Repo: ${REPO}. Branch: ${BRANCH}. Draft PR: https://github.com/dimm-city/dc-solo-rpg/pull/52. CLAUDE.md (already in your context) describes the rules and the architecture.
 
@@ -275,7 +292,8 @@ Cover every captured state through its sheet or the metrics. Leave verdicts empt
 The developers pushed fixes to ${BRANCH} (git -C ${REPO} log --oneline -20). This is a focused round: the captures hold only what changed plus a fixed set, and the latest manifests point at the newest picture of every state.
 1. Verify each of your tracked items below against the captures and the code. Give a verdict per item id: resolved (it fully meets your acceptance), open (not done or only partly done; say exactly what is still wrong and what would satisfy you), regressed (it got worse or broke something else), or withdrawn (you now agree it is not a defect; say why). For a declined item, withdraw it if the reason holds and keep it open if it doesn't, saying why.
 2. Review every surface the work items touched (below) through your lens, for regressions and for anything the fixes introduced. Report those as new findings (ids ${rv.prefix}-${round}-NN).
-3. Set approve=true when every tracked item is resolved or withdrawn and you have no new findings. A full sign-off round follows once every reviewer is clear, so you will see the whole design again before the work is finished.
+${mine.some((e) => e.id.startsWith('OWN-') && !e.ownerSpec) ? `Owner items new this round (OWN-n with no ownerSpec yet): open the owner's screenshots, then put your exact specification for each in ownerSpecs (the sizes, positions, copy and behaviour per viewport that you will accept), and give it the verdict open. Raise anything else they show as normal findings.
+` : ''}3. Set approve=true when every tracked item is resolved or withdrawn and you have no new findings. A full sign-off round follows once every reviewer is clear, so you will see the whole design again before the work is finished.
 The work items done this round:
 ${JSON.stringify(lastItems.map((it) => ({ id: it.id, title: it.title, area: it.area, sources: it.sources, files: it.files })), null, 1)}`
     : `## Round ${round}: full sign-off
@@ -306,11 +324,11 @@ Ledger:
 ${ledgerJson}
 
 ## The plan
-Merge every open finding into one work-list for two developers. Open findings and owner items (OWN-1 and OWN-2 carry their reviewer's spec in ownerSpec):
+Merge every open finding into one work-list for two developers. Open findings and owner items (${round >= 2 ? 'every OWN-n item carries' : 'OWN-1 and OWN-2 carry'} their reviewer's spec in ownerSpec):
 ${JSON.stringify(open.map(brief), null, 1)}
 
 - Merge duplicates and keep every source id. Where reviewers conflict, decide, and write the decision and its rationale into the item so that every source reviewer can accept it.
-- Decline a finding only if it contradicts an owner decision (see Context) or would be an overhaul rather than polish, and give the reason. Never decline OWN-1 or OWN-2. A finding already declined once and kept open by its reviewer (timesDeclined >= 1) must be implemented now, unless the decline rests on a named owner decision.
+- Decline a finding only if it contradicts an owner decision (see Context) or would be an overhaul rather than polish, and give the reason. ${round >= 2 ? 'Never decline an owner item (any id starting OWN-); they are the owner\'s own requirements, and the screenshots behind them are in ' + OWNER_SHOTS + '.' : 'Never decline OWN-1 or OWN-2.'} A finding already declined once and kept open by its reviewer (timesDeclined >= 1) must be implemented now, unless the decline rests on a named owner decision.
 - Each item: id "DP-${round}-NN", a title, an area (hud | play | global | overlays | pages | story), a precise spec (exact copy, tokens, sizes and positions), acceptance (what each source reviewer will check), the source ids, the files, the states and viewports to recapture for it (states), and unitTest (true for any logic change). Specs precise enough that the reviewers accept the result first time are what make this loop fast.
 - Area ownership, so the two developers never edit the same file. Board developer (areas hud, play, global): ${DEV_GROUPS[0].files}. Surfaces developer (areas overlays, pages, story): ${DEV_GROUPS[1].files}. An item that needs both: split it into two items, one per area, and say how they fit together.
 - Every open finding must end up either in an item's sources or in declined.`
@@ -396,6 +414,16 @@ for (let round = 1; round <= MAX_ROUNDS; round++) {
     log('Round 1: reusing the captures already made (board and surfaces)')
   }
 
+  if (round >= 2) {
+    for (const o of LATE_OWNER_ITEMS) {
+      if (ledger[o.id]) continue
+      seed(o.id, o.reviewer, o.text)
+      ledger[o.id].finding.surface = o.surface
+      ledger[o.id].finding.evidence = 'Owner screenshots in ' + OWNER_SHOTS
+      ledger[o.id].round = round
+      log(`Round ${round}: added the owner's ${o.id} (${ledger[o.id].finding.surface}) for the ${o.reviewer} reviewer`)
+    }
+  }
   phase('Review')
   const othersFor = (key) => openAll().filter((e) => e.reviewer !== key)
   const active = mode === 'signoff' ? REVIEWERS.filter((rv) => !signedOff[rv.key]) : REVIEWERS
