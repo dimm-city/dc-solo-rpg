@@ -320,11 +320,11 @@ export function formatIntroGoal({ stability, tokens, aceRevealed, fourthAceWins 
  * Tokens left after Salvation, nothing after the task roll.
  * @param {'stability'|'salvation'|'salvation-four'|'tasks'} kind
  * @param {{ stability?: number, max?: number, tokens?: number, start?: number }} totals
- * @returns {string} e.g. ". Stability 14 of 20." or ". 6 of 10 Tokens left."
+ * @returns {string} e.g. ". Stability 14 of 20." or ". Tokens 6 of 10 left." (label first, as the HUD tile speaks it)
  */
 export function formatResultTotals(kind, { stability = 0, max = 20, tokens = 0, start = 10 } = {}) {
 	const stabilityTotal = ` Stability ${stability} of ${max}.`;
-	const tokensTotal = ` ${tokens} of ${start} Tokens left.`;
+	const tokensTotal = ` Tokens ${tokens} of ${start} left.`;
 	switch (kind) {
 		case 'stability':
 			return `.${stabilityTotal}`;

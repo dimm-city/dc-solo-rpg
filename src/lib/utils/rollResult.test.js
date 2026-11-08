@@ -278,13 +278,13 @@ describe('formatResultTotals (the live announcement only)', () => {
 
 	it('adds the Tokens left after Salvation', () => {
 		expect(formatResultTotals('salvation', { tokens: 6, start: 10 })).toBe(
-			'. 6 of 10 Tokens left.'
+			'. Tokens 6 of 10 left.'
 		);
 	});
 
 	it('adds both after a four-Ace Salvation, and nothing after the task roll', () => {
 		expect(formatResultTotals('salvation-four', { stability: 15, tokens: 3, start: 10 })).toBe(
-			'. Stability 15 of 20. 3 of 10 Tokens left.'
+			'. Stability 15 of 20. Tokens 3 of 10 left.'
 		);
 		expect(formatResultTotals('tasks')).toBe('');
 	});
