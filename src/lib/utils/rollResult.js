@@ -254,18 +254,32 @@ export function formatNextStepLabel({
 	}
 }
 
+/** A running total in a modifier's result ("0 of 4 Kings out"): the HUD shows it on screen */
+const TOTAL_CLAUSE = /^\d+ of \d+ Kings? out$/;
+
 /**
  * What a card modifier did, for the board's notice (OWN-4), or null when it did nothing. A card
  * modifier's result is a past-tense statement ("K♥ went back into the deck · 0 of 4 Kings out",
  * "A♣ skipped its Stability check"); a non-event is phrased "No …" ("No King was out to
  * return"), and the board never states a non-event.
+ *
+ * The board's notice carries no running total (game-copy-s-03, as DP-1-07 did for the result
+ * lines): the Kings count is in the HUD right above it, so "· 0 of 4 Kings out" is dropped. The
+ * screen reader has no HUD to glance at, so its announcement keeps it (withTotals).
  * @param {string|null|undefined} modifierResult - The card's modifierResult (gameActions)
- * @returns {string|null}
+ * @param {{ withTotals?: boolean }} [options]
+ * @returns {string|null} e.g. "K♥ went back into the deck"
  */
-export function formatModifierNotice(modifierResult) {
+export function formatModifierNotice(modifierResult, { withTotals = false } = {}) {
 	const text = (modifierResult ?? '').trim();
 	if (!text || /^No\b/.test(text)) return null;
-	return text;
+	if (withTotals) return text;
+	return (
+		text
+			.split(' · ')
+			.filter((clause) => !TOTAL_CLAUSE.test(clause.trim()))
+			.join(' · ') || null
+	);
 }
 
 /**

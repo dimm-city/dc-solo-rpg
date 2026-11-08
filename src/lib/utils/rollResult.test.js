@@ -332,13 +332,23 @@ describe('formatNextStepLabel (the step button after a result)', () => {
 });
 
 describe('formatModifierNotice (OWN-4): the board states what a modifier did, never a non-event', () => {
-	it('keeps a modifier that did something', () => {
+	it('keeps a modifier that did something, without the running total (game-copy-s-03)', () => {
 		expect(formatModifierNotice('K♥ went back into the deck · 0 of 4 Kings out')).toBe(
-			'K♥ went back into the deck · 0 of 4 Kings out'
+			'K♥ went back into the deck'
+		);
+		expect(formatModifierNotice('K♠ went back into the deck · 1 of 4 Kings out')).toBe(
+			'K♠ went back into the deck'
 		);
 		expect(formatModifierNotice('A♣ skipped its Stability check')).toBe(
 			'A♣ skipped its Stability check'
 		);
+	});
+
+	it('keeps the Kings count for the screen reader (withTotals)', () => {
+		expect(
+			formatModifierNotice('K♥ went back into the deck · 0 of 4 Kings out', { withTotals: true })
+		).toBe('K♥ went back into the deck · 0 of 4 Kings out');
+		expect(formatModifierNotice('No King was out to return', { withTotals: true })).toBeNull();
 	});
 
 	it('drops a modifier that did nothing, and an empty result', () => {

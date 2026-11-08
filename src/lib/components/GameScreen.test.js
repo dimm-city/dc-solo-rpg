@@ -451,11 +451,14 @@ describe('GameScreen: each visit to a step starts clean', () => {
 			modifierResult: 'K♥ went back into the deck · 2 of 4 Kings out'
 		};
 		Object.assign(gameState, { aceOfHeartsRevealed: true, tokens: 5, acesRevealed: 2 });
+		announcements.length = 0;
 		const { getByTestId, queryByTestId } = render(GameScreen);
 		await settle(GUARD_MS);
-		// The suit is drawn with the HUD's pip (SuitText), named for screen readers
+		// The suit is drawn with the HUD's pip (SuitText), named for screen readers. No running
+		// total: the HUD's Kings tile shows it (game-copy-s-03); the announcement keeps it
 		const notice = getByTestId('context-notice');
-		expect(notice.textContent.trim()).toBe('K went back into the deck · 2 of 4 Kings out');
+		expect(notice.textContent.trim()).toBe('K went back into the deck');
+		expect(announcements).toContain('K♥ went back into the deck · 2 of 4 Kings out');
 		expect(notice.querySelector('svg[role="img"]').getAttribute('aria-label')).toBe('hearts');
 
 		mockDieRoll(13);
