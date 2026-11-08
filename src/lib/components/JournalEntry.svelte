@@ -70,6 +70,8 @@
 	let view = $state('entry');
 	// Rows hidden below the round list's scroll edge (small screens): show the card story's cue
 	let roundMoreBelow = $state(false);
+	// The final log's timeline: the same cue below, and a fade at the top once scrolled down
+	let timelineEdges = $state({ above: false, below: false });
 
 	// Desktop only: a touch device would open its keyboard over the sheet (owner decision), so the
 	// page is focused only where a mouse or trackpad drives it
@@ -221,8 +223,30 @@
 	{#if isFinal}
 		<section class="timeline-pane" aria-labelledby="timeline-label">
 			<h3 id="timeline-label" class="section-label">Timeline</h3>
-			<div class="timeline-scroll">
-				<GameTimeline />
+			<!-- The round list's cue while rows remain below the edge (game-copy-s-15) -->
+			<div class="timeline-frame">
+				<div
+					class="timeline-scroll"
+					class:more-below={timelineEdges.below}
+					class:more-above={timelineEdges.above}
+					use:scrollEdges={(edges) => {
+						if (edges.above !== timelineEdges.above || edges.below !== timelineEdges.below)
+							timelineEdges = edges;
+					}}
+					data-testid="timeline-scroll"
+				>
+					<GameTimeline />
+				</div>
+				<span
+					class="more-cue"
+					class:visible={timelineEdges.below}
+					aria-hidden="true"
+					data-testid="timeline-more-cue"
+				>
+					<svg viewBox="0 0 24 24" width="16" height="16">
+						<path d="m6 9 6 6 6-6" />
+					</svg>
+				</span>
 			</div>
 		</section>
 	{:else if currentEvents.length > 0}
@@ -639,12 +663,49 @@
 		display: none;
 	}
 
+	.timeline-frame {
+		position: relative;
+		flex: 1 1 auto;
+		min-height: 0;
+		display: flex;
+		flex-direction: column;
+	}
+
 	.timeline-scroll {
 		flex: 1 1 auto;
 		min-height: 0;
 		overflow-y: auto;
 		overscroll-behavior: contain;
 		padding-right: var(--space-xs);
+	}
+
+	/* Rows past an edge fade out there: 40px at the bottom, as the round list's, with the
+	   chevron; a shorter fade at the top once the pane is scrolled down (game-copy-s-15) */
+	.timeline-scroll.more-below {
+		-webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 40px), transparent 100%);
+		mask-image: linear-gradient(to bottom, #000 calc(100% - 40px), transparent 100%);
+	}
+
+	.timeline-scroll.more-above {
+		-webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 24px);
+		mask-image: linear-gradient(to bottom, transparent 0, #000 24px);
+	}
+
+	.timeline-scroll.more-above.more-below {
+		-webkit-mask-image: linear-gradient(
+			to bottom,
+			transparent 0,
+			#000 24px,
+			#000 calc(100% - 40px),
+			transparent 100%
+		);
+		mask-image: linear-gradient(
+			to bottom,
+			transparent 0,
+			#000 24px,
+			#000 calc(100% - 40px),
+			transparent 100%
+		);
 	}
 
 	/* Writing: takes every pixel the round list leaves, never under about four lines */

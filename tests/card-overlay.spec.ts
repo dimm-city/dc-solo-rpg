@@ -385,6 +385,22 @@ test.describe('Card overlay', () => {
 		const scroll = sheet.locator('.timeline-scroll');
 		expect(await scroll.evaluate((el) => getComputedStyle(el).overflowY)).toBe('auto');
 		expect(await sheet.evaluate((el) => getComputedStyle(el).overflowY)).toBe('hidden');
+
+		// While rows remain below the pane's edge, the round list's cue: a fade and a chevron;
+		// scrolled to the end, both go and the top fades instead (game-copy-s-15)
+		const cue = sheet.getByTestId('timeline-more-cue');
+		const overflows = await scroll.evaluate((el) => el.scrollHeight > el.clientHeight + 2);
+		if (overflows) {
+			await expect(scroll).toHaveClass(/more-below/);
+			await expect(cue).toHaveCSS('opacity', '1');
+			await scroll.evaluate((el) => el.scrollTo({ top: el.scrollHeight }));
+			await expect(scroll).not.toHaveClass(/more-below/);
+			await expect(scroll).toHaveClass(/more-above/);
+			await expect(cue).toHaveCSS('opacity', '0');
+		} else {
+			await expect(scroll).not.toHaveClass(/more-below/);
+			await expect(cue).toHaveCSS('opacity', '0');
+		}
 	});
 
 	test('a quiet round in the timeline says so', async ({ page }) => {

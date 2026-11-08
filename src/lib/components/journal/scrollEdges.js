@@ -1,7 +1,8 @@
 /**
  * Svelte action: tell a scroller's owner whether more content lies above or below its visible
  * part, on scroll and whenever it or its content changes size. The journal's round list uses it
- * for its "more below" cue (visual-layout-s-10), the card story's cue in the same terms.
+ * for its "more below" cue (visual-layout-s-10), the card story's cue in the same terms, and the
+ * final log's timeline for the same cue and a fade at its top once scrolled (game-copy-s-15).
  *
  * @param {HTMLElement} node - The scrolling element
  * @param {(edges: { above: boolean, below: boolean }) => void} onchange

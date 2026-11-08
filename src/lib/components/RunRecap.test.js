@@ -55,9 +55,26 @@ describe('RunRecap', () => {
 			'two',
 			'near'
 		]);
-		// The spoken text starts with the visible label
-		expect(getByTestId('recap-cards').querySelector('.sr-only').textContent).toBe(
-			'Drawn 0 of 52 cards'
+		// The visible label is the tile's only spoken name: the hidden text is the value alone
+		// (game-copy-s-13)
+		expect(getByTestId('recap-cards').querySelector('.sr-only').textContent).toBe('0 of 52 cards');
+		expect(getByTestId('recap-stability').querySelector('.sr-only').textContent).toBe('0 of 20');
+		expect(getByTestId('recap-tokens').querySelector('[data-testid="recap-tokens-lock"]')).toBe(
+			null
+		);
+	});
+
+	it('shows Tokens locked, with a padlock, when the Ace of Hearts was never found (game-copy-s-14)', () => {
+		Object.assign(gameState, { aceOfHeartsRevealed: false, tokens: 10 });
+		const { getByTestId } = render(RunRecap);
+		const tiles = [...getByTestId('run-recap').querySelectorAll('.stat')];
+		expect(tiles).toHaveLength(6);
+		const tokens = getByTestId('recap-tokens');
+		expect(tokens.dataset.tier).toBe('locked');
+		expect(tokens.querySelector('dt').textContent).toBe('Tokens');
+		expect(tokens.querySelector('[data-testid="recap-tokens-lock"]')).not.toBe(null);
+		expect(tokens.querySelector('.sr-only').textContent).toBe(
+			'locked, the Ace of Hearts never found'
 		);
 	});
 });

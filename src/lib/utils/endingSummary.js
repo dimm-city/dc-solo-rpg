@@ -80,10 +80,12 @@ function drawnCards(log = []) {
 }
 
 /**
- * One recap tile: "Kings 1/4", spoken "Kings 1 of 4" (with `suffix`: "Drawn 30 of 52 cards").
+ * One recap tile: "Kings 1/4", spoken "1 of 4" (with `suffix`: "30 of 52 cards"). The visible
+ * label is the tile's spoken name, so the spoken value does not repeat it (game-copy-s-13).
  * `tier` is the HUD tile's tier for the final value (hudTiers.js); null for a neutral count.
+ * `spoken` replaces the spoken value outright (a locked tile).
  */
-function tile(key, label, n, max, { suffix = '', tier = null } = {}) {
+function tile(key, label, n, max, { suffix = '', tier = null, spoken = null } = {}) {
 	const count = max === undefined ? `${n}` : `${n} of ${max}`;
 	return {
 		key,
@@ -91,7 +93,7 @@ function tile(key, label, n, max, { suffix = '', tier = null } = {}) {
 		n,
 		max,
 		value: max === undefined ? String(n) : `${n}/${max}`,
-		spoken: `${label} ${count}${suffix ? ` ${suffix}` : ''}`,
+		spoken: spoken ?? `${count}${suffix ? ` ${suffix}` : ''}`,
 		tier
 	};
 }
@@ -101,7 +103,8 @@ function tile(key, label, n, max, { suffix = '', tier = null } = {}) {
  * its order, Stability, Kings | Rounds (in the Roll slot), Drawn | Aces, Tokens, each resource
  * in its HUD tier's colour for its final value; Rounds and Drawn are neutral counts. "Drawn"
  * counts the cards drawn (game-copy-s-08): the HUD's "Cards" counts the cards left.
- * Tokens are only included once Salvation was unlocked (Ace of Hearts revealed).
+ * Tokens are always there, as in the HUD (game-copy-s-14): when the Ace of Hearts was never
+ * found the tile is "locked" (the HUD's locked look) and says so to a screen reader.
  * @returns {{key: string, label: string, n: number, max?: number, value: string,
  *   spoken: string, tier: string|null}[]}
  */
@@ -122,16 +125,16 @@ export function getRunRecap(state) {
 			})
 		})
 	];
-	if (state.aceOfHeartsRevealed) {
-		const start = state.config?.options?.startingTokens || DEFAULT_STARTING_TOKENS;
-		const tokens = Math.max(0, state.tokens ?? 0);
-		recap.push(
-			tile('tokens', 'Tokens', tokens, start, {
-				suffix: 'left',
-				tier: tokensTier({ unlocked: true, tokens, start })
-			})
-		);
-	}
+	const start = state.config?.options?.startingTokens || DEFAULT_STARTING_TOKENS;
+	const tokens = Math.max(0, state.tokens ?? 0);
+	const unlocked = !!state.aceOfHeartsRevealed;
+	recap.push(
+		tile('tokens', 'Tokens', tokens, start, {
+			suffix: 'left',
+			tier: tokensTier({ unlocked, tokens, start }),
+			spoken: unlocked ? null : 'locked, the Ace of Hearts never found'
+		})
+	);
 	return recap;
 }
 
