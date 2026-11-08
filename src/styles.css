@@ -342,6 +342,21 @@ p {
 	color: var(--color-text-secondary);
 }
 
+/* visual-layout-s-09: body copy never ends on a lone short word (the browser rebalances the
+   last lines). Table cells are a few words in a narrow column, so their lines are balanced.
+   Display titles use balance in their own components. */
+p,
+li,
+dd,
+.confirm-message,
+.round-text {
+	text-wrap: pretty;
+}
+
+td {
+	text-wrap: balance;
+}
+
 strong,
 b {
 	/* Inter at two weights only, 400 and 600 (VT-1-12) */

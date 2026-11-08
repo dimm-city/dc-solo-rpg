@@ -24,7 +24,7 @@
 		<p>
 			It is built on the Wretched and Alone system. A standard 52-card deck sets the pace and a d20
 			decides the risk, while every prompt invites you to write your own story through the neon
-			streets of Dimm City.
+			streets of Dimm&nbsp;City.
 		</p>
 	</section>
 
@@ -32,7 +32,7 @@
 		<svelte:element this={headingTag} class="about-title" id="about-credits-{uid}">
 			Credits
 		</svelte:element>
-		<p>Dream Console is made by Dimm City.</p>
+		<p>Dream Console is made by Dimm&nbsp;City.</p>
 		<p class="about-credit">
 			This work is based on
 			<a href="https://loottheroom.itch.io/wretched" target="_blank" rel="noopener noreferrer"
