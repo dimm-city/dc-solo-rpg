@@ -42,8 +42,8 @@
 
 		<div class="cm-row cm-row-toggle">
 			<div>
-				<label class="cm-label" for="auto-read-prompts">Read prompts</label>
-				<p class="cm-help" id="auto-read-prompts-help">Read screen prompts and instructions.</p>
+				<label class="cm-label" for="auto-read-prompts">Read instructions</label>
+				<p class="cm-help" id="auto-read-prompts-help">Read each step's instructions aloud.</p>
 			</div>
 			<input
 				id="auto-read-prompts"
@@ -95,7 +95,7 @@
 		<div class="cm-row cm-row-toggle">
 			<div>
 				<label class="cm-label" for="auto-roll-dice">Auto-roll dice</label>
-				<p class="cm-help" id="auto-roll-dice-help">Roll automatically when a roll is due.</p>
+				<p class="cm-help" id="auto-roll-dice-help">Roll for you when a roll is due.</p>
 			</div>
 			<input
 				id="auto-roll-dice"
@@ -127,7 +127,7 @@
 		<div class="cm-row">
 			<div>
 				<label class="cm-label" for="auto-advance-delay">Advance delay</label>
-				<p class="cm-help" id="auto-advance-delay-help">Pause before each automatic step.</p>
+				<p class="cm-help" id="auto-advance-delay-help">Pause before auto-play takes each step.</p>
 			</div>
 			<div>
 				<output class="cm-value" for="auto-advance-delay">
@@ -150,8 +150,8 @@
 
 		<div class="cm-row">
 			<div>
-				<label class="cm-label" for="journal-handling">Journaling</label>
-				<p class="cm-help" id="journal-handling-help">What happens at each journal prompt.</p>
+				<label class="cm-label" for="journal-handling">Journal</label>
+				<p class="cm-help" id="journal-handling-help">What happens when the journal opens.</p>
 			</div>
 			<select
 				id="journal-handling"
@@ -160,9 +160,9 @@
 				value={getGameplaySettings().autoHandleJournaling}
 				onchange={(e) => handleGameplaySettingChange('autoHandleJournaling', e.target.value)}
 			>
-				<option value="manual">Manual: you continue</option>
-				<option value="skip">Skip: continue at once</option>
-				<option value="timed">Timed: pause with countdown</option>
+				<option value="manual">Wait for me</option>
+				<option value="skip">Skip the journal</option>
+				<option value="timed">Count down, then move on</option>
 			</select>
 		</div>
 

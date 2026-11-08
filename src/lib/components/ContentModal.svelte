@@ -262,25 +262,19 @@
 		flex-shrink: 0;
 	}
 
+	/* One title style for every dialog, at every width: Inter 600 caps, 18px. The display face
+	   stays out of dialogs (it is for 28px and up, MN-07), which also frees landscape room. */
 	.content-header h2 {
 		margin: 0;
-		font-family: var(--font-display, 'Orbitron', sans-serif);
-		font-size: 1.75rem; /* 28px: the display face is for 28px and up only */
+		font-family: var(--font-body, 'Inter', sans-serif);
+		font-size: 1.125rem;
 		font-weight: 600;
 		line-height: 1.2;
-		letter-spacing: var(--letter-spacing-wide, 0.05em);
-		text-wrap: balance;
-		color: #fff;
-	}
-
-	/* Compact (confirmations): a small title, so Inter 600 caps rather than the display face */
-	.compact .content-header h2 {
-		font-family: var(--font-body, 'Inter', sans-serif);
-		font-size: 1.0625rem;
-		font-weight: 600;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		text-shadow: none;
+		text-wrap: balance;
+		color: #fff;
 	}
 
 	.content-modal-wrapper.compact {
@@ -330,7 +324,7 @@
 
 	.content-body {
 		padding: var(--space-lg, 1.5rem) var(--space-xl, 2rem) var(--space-xl, 2rem);
-		font-size: 1.0625rem; /* 17px body */
+		font-size: 1rem; /* 16px body */
 		line-height: 1.6;
 	}
 
@@ -360,7 +354,7 @@
 		border: 1px solid var(--color-cyber-magenta, #d946ef);
 		border-radius: 4px;
 		font-size: 1rem;
-		font-weight: 700;
+		font-weight: 600;
 		letter-spacing: var(--letter-spacing-wider, 0.1em);
 		text-transform: uppercase;
 		cursor: pointer;
@@ -410,7 +404,7 @@
 
 	:global(.cm-action.danger) {
 		color: #ff8fa3;
-		font-weight: 700;
+		font-weight: 600;
 		border: 2px solid var(--color-danger, #ff4d6d);
 	}
 
@@ -422,7 +416,7 @@
 
 	:global(.cm-action.primary) {
 		color: var(--color-brand-yellow, #ffd700);
-		font-weight: 700;
+		font-weight: 600;
 		background: linear-gradient(135deg, #831d98, #6d22c7);
 		border: 1px solid var(--color-cyber-magenta, #d946ef);
 	}
@@ -456,16 +450,6 @@
 				calc(var(--space-md, 1rem) + env(safe-area-inset-right, 0px)) var(--space-sm, 0.5rem)
 				calc(var(--space-lg, 1.25rem) + env(safe-area-inset-left, 0px));
 			min-height: 64px;
-		}
-
-		/* Below 28px the display face is hard to read: phones get Inter 600 caps, like
-		   the compact titles, so long titles such as Game Settings stay on one line */
-		.content-header h2 {
-			font-family: var(--font-body, 'Inter', sans-serif);
-			font-size: 1.125rem;
-			letter-spacing: 0.08em;
-			text-transform: uppercase;
-			text-shadow: none;
 		}
 
 		.content-body {
@@ -505,6 +489,23 @@
 		}
 	}
 
+	/* Landscape phones and short windows: the dialog takes the height, with an 8px margin, and its
+	   header and footer slim down (both stay pinned; only the body scrolls) */
+	@media (max-height: 500px) {
+		.content-modal-wrapper,
+		.content-modal-wrapper:not(.compact) {
+			max-height: calc(100dvh - 16px);
+		}
+
+		.content-header,
+		.compact .content-header,
+		.content-footer,
+		.compact .content-footer {
+			min-height: 0;
+			padding: var(--space-sm, 0.5rem) var(--space-lg, 1.5rem);
+		}
+	}
+
 	@media (prefers-reduced-motion: reduce) {
 		.close-button,
 		.done-button,
@@ -519,7 +520,7 @@
 
 	/* ------------------------------------------------------------------
 	   Shared "cm-*" building blocks for modal content (Settings, Help, About).
-	   Type scale: section title 18px / label 16px / body 17px / helper 14px.
+	   Type scale: section title 16px / label 16px / body 16px / helper 14px; Inter 400 and 600.
 	   Spacing: 8px grid.
 	   ------------------------------------------------------------------ */
 	:global(.cm-section + .cm-section) {
@@ -532,10 +533,10 @@
 		/* Overrides the global h3 / label / input rules in styles.css */
 		margin: 0;
 		font-family: var(--font-body, 'Inter', sans-serif);
-		font-size: 1.125rem;
-		font-weight: 700;
-		line-height: 1.3;
-		letter-spacing: 0.02em;
+		font-size: 1rem;
+		font-weight: 600;
+		line-height: 1.25;
+		letter-spacing: 0;
 		text-transform: none;
 		color: var(--color-neon-cyan, #00ffff);
 	}
@@ -543,7 +544,7 @@
 	:global(.cm-section-desc) {
 		margin: 8px 0 0;
 		max-width: 65ch;
-		font-size: 0.9375rem;
+		font-size: 0.875rem;
 		line-height: 1.5;
 		color: #b8c5d6;
 	}
@@ -823,7 +824,7 @@
 		border: 1px solid var(--color-danger, #ff4d6d);
 		border-radius: 4px;
 		color: #ff8fa3;
-		font-size: 0.9375rem;
+		font-size: 0.875rem;
 		line-height: 1.5;
 	}
 
@@ -832,7 +833,7 @@
 		padding: 12px 16px;
 		border-left: 3px solid var(--color-neon-cyan, #00ffff);
 		background: rgba(0, 255, 255, 0.06);
-		font-size: 0.9375rem;
+		font-size: 0.875rem;
 		line-height: 1.5;
 		color: #d5dfeb;
 	}

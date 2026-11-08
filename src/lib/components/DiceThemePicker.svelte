@@ -42,7 +42,7 @@
 	}
 </script>
 
-<ContentModal {isOpen} title="Dice" onClose={() => (isOpen = false)}>
+<ContentModal {isOpen} title="Dice theme" onClose={() => (isOpen = false)}>
 	<div class="themes-grid" role="radiogroup" aria-label="Dice theme">
 		{#each themes as theme (theme.key)}
 			<button

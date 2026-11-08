@@ -22,16 +22,31 @@ test.describe('Settings Modal', () => {
 		const dialog = await openContentModal(page, 'Settings');
 
 		await expect(dialog.getByRole('heading', { level: 3, name: 'Gameplay' })).toBeVisible();
-		await expect(dialog.getByText('Applies next game.')).toBeVisible();
 
 		const difficulty = dialog.getByLabel('Difficulty');
 		await expect(difficulty).toBeVisible();
 		await expect(difficulty.locator('option')).toHaveText([
 			'Game default',
-			'Normal',
 			'Easy',
+			'Normal',
 			'Hard'
 		]);
+
+		// The help describes the selected option only, and the select's description reads it
+		const help = {
+			default: 'Each game sets its own; most use Normal.',
+			easy: 'The Ace of Hearts starts revealed, and surviving the fourth Ace wins.',
+			normal: 'Tokens only ever fall. Remove them all to escape.',
+			hard: 'A missed Salvation roll adds a Token (two on a natural 1).'
+		};
+		for (const [value, text] of Object.entries(help)) {
+			await difficulty.selectOption(value);
+			const expected = `${text} Applies from your next game.`;
+			await expect(dialog.getByTestId('difficulty-help')).toHaveText(expected);
+			await expect(difficulty).toHaveAccessibleDescription(expected);
+		}
+		await expect(dialog).not.toContainText('automatic');
+		await difficulty.selectOption('default');
 
 		const playMode = dialog.getByRole('radiogroup', { name: 'Play mode' });
 		await expect(playMode).toBeVisible();
@@ -46,7 +61,7 @@ test.describe('Settings Modal', () => {
 		await expect(advanced).not.toHaveAttribute('open');
 		await expect(dialog.getByLabel('Voice provider')).toBeHidden();
 		await advanced.locator('summary').click();
-		for (const label of ['Voice provider', 'Read cards', 'Auto-roll dice', 'Journaling']) {
+		for (const label of ['Voice provider', 'Read cards', 'Auto-roll dice', 'Journal']) {
 			await expect(dialog.getByLabel(label)).toBeAttached();
 		}
 		await expect(dialog.getByRole('heading', { level: 3, name: 'Read aloud' })).toBeAttached();
@@ -74,7 +89,7 @@ test.describe('Settings Modal', () => {
 		await dialog.locator('details.settings-advanced summary').click();
 		await expect(dialog.getByLabel('Read cards')).toBeChecked();
 		await expect(dialog.getByLabel('Auto-roll dice')).toBeChecked();
-		await expect(dialog.getByLabel('Journaling')).toHaveValue('timed');
+		await expect(dialog.getByLabel('Journal', { exact: true })).toHaveValue('timed');
 
 		// Changing a single setting makes it a custom mix: no mode selected
 		await dialog.getByLabel('Auto-roll dice').uncheck();

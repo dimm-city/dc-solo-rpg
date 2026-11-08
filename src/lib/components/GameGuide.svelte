@@ -28,7 +28,7 @@
 		{ roll: '1', result: 'Lose 3 Stability and become Surreal' },
 		{ roll: '2 to 5', result: 'Lose 2 Stability' },
 		{ roll: '6 to 10', result: 'Lose 1 Stability' },
-		{ roll: '11 to 19', result: 'No loss' },
+		{ roll: '11 to 19', result: 'No Stability lost' },
 		{ roll: '20', result: 'Gain 1 Stability (max 20) and become Lucid' }
 	];
 
@@ -50,6 +50,27 @@
 	];
 
 	const sectionId = (id) => `guide-${uid}-${id}`;
+
+	/**
+	 * Svelte action for the phone chip row: marks it while it can scroll further right, so the
+	 * cut chip fades out at the edge (and the last one shows in full once scrolled to).
+	 */
+	function chipRowEdge(node) {
+		const update = () => {
+			const more = node.scrollLeft + node.clientWidth < node.scrollWidth - 1;
+			node.classList.toggle('more-right', more);
+		};
+		node.addEventListener('scroll', update, { passive: true });
+		const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update);
+		observer?.observe(node);
+		update();
+		return {
+			destroy() {
+				node.removeEventListener('scroll', update);
+				observer?.disconnect();
+			}
+		};
+	}
 	const contents = $derived([
 		...sections.map((s) => ({ ...s, id: sectionId(s.id) })),
 		...extraContents
@@ -93,7 +114,7 @@
 	</p>
 
 	<nav class="guide-nav" aria-label="Guide contents">
-		<ul>
+		<ul use:chipRowEdge>
 			{#each contents as item (item.id)}
 				<li>
 					<button type="button" class="guide-chip" onclick={() => jumpTo(item.id)}>
@@ -111,7 +132,7 @@
 		<p>
 			You start with <strong>20 Stability</strong> (your grip on yourself) and
 			<strong>10 Tokens</strong> (what keeps you trapped). Remove every Token to escape. If Stability
-			hits 0, or all 4 Kings are revealed, you lose.
+			hits 0, or all four Kings are revealed, you lose.
 		</p>
 		<p>The game teaches the rest as you play. This guide is here whenever you want a reminder.</p>
 	</section>
@@ -120,7 +141,7 @@
 		<svelte:element this={headingTag} id={sectionId('rounds')} class="guide-title" tabindex="-1">
 			Rounds and cards
 		</svelte:element>
-		<p>Each round starts with a d20 roll that sets how many cards you draw.</p>
+		<p>Each round starts with the roll for tasks: a d20 that sets how many cards you draw.</p>
 		<table class="guide-table">
 			<caption class="sr-only">Cards drawn per round</caption>
 			<thead><tr><th scope="col">Roll</th><th scope="col">Cards drawn</th></tr></thead>
@@ -172,11 +193,11 @@
 		<p>
 			Any natural 20 makes you <strong>Lucid</strong>; any natural 1 makes you
 			<strong>Surreal</strong>. That holds for every roll in the game: the opening roll, the roll
-			for cards, Stability checks and Salvation.
+			for tasks, Stability checks and Salvation.
 		</p>
 		<p>
-			Lucid: your next roll uses two d20s and keeps the higher. Surreal: your next roll uses two
-			d20s and keeps the lower. Only the die you keep counts, so only it can make you Lucid or
+			Lucid: your next roll uses two dice and keeps the higher. Surreal: your next roll uses two
+			dice and keeps the lower. Only the die you keep counts, so only it can make you Lucid or
 			Surreal.
 		</p>
 		<p>
@@ -226,7 +247,6 @@
 			</li>
 			<li><strong>You fall</strong> when Stability reaches 0.</li>
 			<li><strong>You are taken</strong> when the fourth King is revealed.</li>
-			<li><strong>You are lost</strong> if the deck runs out first.</li>
 		</ul>
 		<p>Whatever the ending, your journal keeps the story you wrote.</p>
 	</section>
@@ -267,8 +287,10 @@
 </div>
 
 <style>
+	/* Reading text: 18px on desktop, 16px on phones (below) */
 	.game-guide {
 		max-width: 65ch;
+		font-size: 1.125rem;
 		color: #fff;
 	}
 
@@ -284,7 +306,7 @@
 	}
 
 	.guide-intro {
-		font-size: 1.1875rem;
+		font-size: 1.125rem;
 		color: #d5dfeb;
 	}
 
@@ -305,7 +327,7 @@
 		border-radius: 22px;
 		color: #fff;
 		font-family: var(--font-body, 'Inter', sans-serif);
-		font-size: 0.9375rem;
+		font-size: 0.875rem;
 		cursor: pointer;
 		transition: background-color 150ms ease-out;
 	}
@@ -327,14 +349,14 @@
 		border-top: 1px solid rgba(255, 255, 255, 0.14);
 	}
 
-	/* Inter, not the display face: these titles are 18px (display face is for 28px and up) */
+	/* A section heading, as in every dialog (.cm-section-title): Inter 600, 16px, sentence case */
 	.game-guide :global(.guide-title) {
 		margin: 0 0 12px;
 		font-family: var(--font-body, 'Inter', sans-serif);
-		font-size: 1.125rem;
-		font-weight: 700;
-		line-height: 1.3;
-		letter-spacing: 0.02em;
+		font-size: 1rem;
+		font-weight: 600;
+		line-height: 1.25;
+		letter-spacing: 0;
 		text-transform: none;
 		text-shadow: none;
 		color: var(--color-neon-cyan, #00ffff);
@@ -395,21 +417,28 @@
 	}
 
 	@media (max-width: 640px) {
-		.guide-intro {
-			font-size: 1.0625rem;
+		.game-guide {
+			font-size: 1rem;
 		}
 
 		.guide-table tbody th {
 			width: 6.5em;
 		}
 
-		/* One scrolling row instead of three wrapped rows of chips */
+		/* One scrolling row instead of three wrapped rows of chips. While more chips lie to the
+		   right, the row fades out over its last 32px, so the cut chip reads as "more". */
 		.guide-nav ul {
 			flex-wrap: nowrap;
 			overflow-x: auto;
 			margin-right: -20px;
-			padding-right: 20px;
+			padding-inline-end: 20px;
+			scroll-padding-inline: 20px;
 			scrollbar-width: none;
+		}
+
+		.guide-nav ul:global(.more-right) {
+			-webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 32px), transparent);
+			mask-image: linear-gradient(90deg, #000 calc(100% - 32px), transparent);
 		}
 
 		.guide-chip {
