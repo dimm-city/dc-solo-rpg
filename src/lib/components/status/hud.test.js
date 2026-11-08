@@ -185,7 +185,10 @@ describe('StatusHUD', () => {
 	it('is one labelled row of six cells, mirrored around the roll and the deck', () => {
 		const { getByTestId, getByRole } = render(StatusHUD);
 		expect(getByRole('group', { name: 'Game status' })).toBe(getByTestId('hud'));
-		const cells = getByTestId('hud').querySelectorAll(':scope > .hud-cell');
+		// Two halves, three cells each, so the Roll|Cards hairline is the row's centre
+		const halves = getByTestId('hud').querySelectorAll(':scope > .hud-half');
+		expect([...halves].map((half) => half.children.length)).toEqual([3, 3]);
+		const cells = getByTestId('hud').querySelectorAll(':scope > .hud-half > .hud-cell');
 		expect([...cells].map((c) => c.dataset.testid)).toEqual([
 			'hud-stability',
 			'hud-kings',
@@ -238,7 +241,7 @@ describe('StatusHUD', () => {
 
 	it('gives every cell one tint layer, first, and its tier (DP-1-02)', () => {
 		const { getByTestId } = render(StatusHUD);
-		const cells = getByTestId('hud').querySelectorAll(':scope > .hud-cell');
+		const cells = getByTestId('hud').querySelectorAll(':scope > .hud-half > .hud-cell');
 		for (const cell of cells) {
 			expect(cell.firstElementChild.classList.contains('tint'), cell.dataset.testid).toBe(true);
 			expect(cell.querySelectorAll('.tint').length, cell.dataset.testid).toBe(1);
