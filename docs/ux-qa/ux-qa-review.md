@@ -1949,6 +1949,26 @@ QA and integration of the third sign-off's fixes, at `7b4f138` on
   `docs/ux-qa/design-polish/v3/`. The second visual-layout sign-off is kept as
   `signoff-visual-layout.signoff2.md`; the second game-copy sign-off is in git at `f642635`.
 
+### stage-5
+
+QA and integration of the fourth sign-off's fixes, at `5c6eb3d` on
+`claude/vibrant-curie-w9bn88`.
+
+- **Built.** Home clears the notch on a landscape iPhone: the Home header, its menu, the Home
+  column and the first-run panel pad each side by the safe-area inset, as the Story Library
+  does. Game Over already did, through the overlay's stage. Dialog bodies that scroll (Settings,
+  Game Guide, Dice theme, About) now show the journal's cue: a bottom fade and chevron while
+  more content is below, and a top fade once scrolled. A body that fits shows neither.
+- **Checks.** Unit tests: 68 files, 1098 passed, 1 skipped (the old Easy-difficulty skip).
+  ESLint and Prettier: clean. `npm run check`: 0 errors, 0 warnings. `npm run build`: passes,
+  and publint says "All good".
+- **Playwright.** Full suite on Desktop Chrome, Mobile Chrome and Tablet: 545 passed, 7 skipped
+  (the same project-conditional skips as stage-1), 0 failed, 0 flaky, in 18.1 minutes.
+- **Found.** No failures, so no fixes were needed at this stage.
+- **Cleaned up.** The `design/v3-surfaces-5` worktree and branch are removed; its commits are on
+  origin. The fourth sign-off reviews are saved in `docs/ux-qa/design-polish/v3/`. The third
+  ones are kept as `signoff-visual-layout.signoff3.md` and `signoff-game-copy.signoff3.md`.
+
 ## Recommendations
 
 ### Earlier reviews: what is fixed, open, or fixed badly
