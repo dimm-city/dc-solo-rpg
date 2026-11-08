@@ -12,7 +12,7 @@
  */
 
 /** Joins a running total to the clause before it: ' · ' with no-break spaces */
-export const HOLD = ' · ';
+export const HOLD = '\u00a0·\u00a0';
 /** A clause with more words than this before its total may break at its own spaces */
 const SHORT_WORDS = 3;
 
@@ -23,7 +23,8 @@ export function rowClauses(text) {
 
 /**
  * One clause, as the words that may wrap and the run that never does.
- * @param {string} clause - e.g. "K♥ went back into the deck · Kings 0 of 4"
+ * @param {string} clause - e.g. "K♥ went back into the deck · Kings 0 of 4" (the total held
+ *   by HOLD)
  * @returns {{ lead: string, held: string[] }} lead: words that may wrap, ending in a space
  *   ('' when the clause stays whole); held: the pieces kept on one line, joined by ' · '
  */

@@ -81,7 +81,7 @@ describe('GameTimeline', () => {
 		const clause = row.querySelector('.tl-clause.breaks');
 		expect(clause).toBeTruthy();
 		// The hold keeps "deck · Kings 0 of 4" together; the words before it may wrap
-		expect(clause.querySelector('.tl-hold').textContent).toBe('deck · Kings 0 of 4');
+		expect(clause.querySelector('.tl-hold').textContent).toBe('deck\u00a0·\u00a0Kings 0 of 4');
 		expect(clause.textContent.startsWith('K')).toBe(true);
 		// A short clause (no total, or a short one) does not break
 		expect(container.querySelectorAll('.tl-clause.breaks')).toHaveLength(1);
