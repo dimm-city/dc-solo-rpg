@@ -68,8 +68,9 @@
 	--font-mono: 'Share Tech Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 	--font-led: 'DSEG7 Classic', var(--font-mono);
 	/* A seven-segment "1" lights only its right-hand segments, so a number led by a 1 ("/10")
-	   leaves an unlit gap; it pulls in by this much (the HUD's .hud-max and RunRecap's .max) */
-	--led-lead-one: -0.4em;
+	   leaves an unlit gap; it pulls in by this much (the HUD's .hud-max and RunRecap's .max).
+	   Measured: the slash-to-ink gap of "/10" then matches "/20" within 0.5px at 360-1440px. */
+	--led-lead-one: -0.52em;
 
 	/* === SHARED UI TOKENS === */
 	--color-danger: #ff4d6d; /* danger only: Kings, Stability loss, critical states */
