@@ -394,9 +394,14 @@
 		text-align: left;
 		line-height: 1.5;
 		color: #e2e9f2;
+		/* A one-line label sits by the first line of a wrapped value (top, not baseline: the mono
+		   and body faces' baselines differ by 1px, and baseline alignment grows every row by it) */
+		vertical-align: top;
 	}
 
 	.guide-table thead th {
+		/* Column heads sit on the rule beneath them, whichever of them wraps */
+		vertical-align: bottom;
 		font-family: var(--font-body, 'Inter', sans-serif);
 		font-size: 0.875rem;
 		font-weight: 600;
