@@ -158,7 +158,7 @@ async function dealToFirstCard(page: Page) {
 	await endUtterance(page);
 	const card = page.getByTestId('card');
 	await expect(card).toHaveClass(/revealed/, { timeout: 10000 });
-	await expect(page.getByTestId('card-mechanic')).toHaveText('King · 4 of 4');
+	await expect(page.getByTestId('card-mechanic')).toHaveText('4 of 4');
 	await expect.poll(() => isSpeaking(page)).toBe(true); // the card is being read
 	return card;
 }

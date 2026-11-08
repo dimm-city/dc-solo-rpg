@@ -24,6 +24,9 @@
 		addableCloudProviders
 	} from '../../utils/voiceProviders.js';
 
+	/** A format hint for the key field (a placeholder is never the label); none for the rest */
+	const KEY_PLACEHOLDERS = { openai: 'sk-…' };
+
 	let availableVoices = $state([]);
 	let providerError = $state(null);
 	/** Set while a provider is starting up (Supertonic downloads its models the first time) */
@@ -275,14 +278,18 @@
 						</select>
 					</div>
 					<div class="cm-row">
-						<label class="cm-label" for="new-tts-key">API key</label>
+						<div>
+							<label class="cm-label" for="new-tts-key">API key</label>
+							<p class="cm-help" id="new-tts-key-help">Stored only in this browser.</p>
+						</div>
 						<input
 							id="new-tts-key"
 							class="cm-control"
 							type="password"
 							autocomplete="off"
+							aria-describedby="new-tts-key-help"
 							bind:value={newKey}
-							placeholder="Paste your key"
+							placeholder={KEY_PLACEHOLDERS[newService]}
 						/>
 					</div>
 				</div>
@@ -312,7 +319,7 @@
 				<div class="cm-row">
 					<div>
 						<label class="cm-label" for="tts-api-key">{CLOUD_PROVIDERS[provider]} API key</label>
-						<p class="cm-help" id="tts-api-key-help">Stored in this browser only.</p>
+						<p class="cm-help" id="tts-api-key-help">Stored only in this browser.</p>
 					</div>
 					<input
 						id="tts-api-key"
@@ -322,7 +329,7 @@
 						aria-describedby="tts-api-key-help"
 						value={getAudioSettings().ttsApiKey || ''}
 						oninput={(e) => handleTTSSettingChange('ttsApiKey', e.target.value || null)}
-						placeholder="Paste your key"
+						placeholder={KEY_PLACEHOLDERS[provider]}
 					/>
 				</div>
 

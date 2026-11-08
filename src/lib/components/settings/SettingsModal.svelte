@@ -21,15 +21,35 @@
 	// Select values are strings; settings store null (game default) or a difficulty level
 	const DIFFICULTY_VALUES = {
 		default: null,
-		normal: DIFFICULTY.NORMAL,
 		easy: DIFFICULTY.EASY,
+		normal: DIFFICULTY.NORMAL,
 		hard: DIFFICULTY.HARD
 	};
+
+	/** The options, easiest first, each with what it changes (only the selected one is shown) */
+	const DIFFICULTY_OPTIONS = [
+		{ value: 'default', label: 'Game default', help: 'Each game sets its own; most use Normal.' },
+		{
+			value: 'easy',
+			label: 'Easy',
+			help: 'The Ace of Hearts starts revealed, and surviving the fourth Ace wins.'
+		},
+		{ value: 'normal', label: 'Normal', help: 'Tokens only ever fall. Remove them all to escape.' },
+		{
+			value: 'hard',
+			label: 'Hard',
+			help: 'A missed Salvation roll adds a Token (two on a natural 1).'
+		}
+	];
 
 	let difficultyValue = $derived(
 		Object.keys(DIFFICULTY_VALUES).find(
 			(key) => DIFFICULTY_VALUES[key] === getSettings().difficulty
-		)
+		) ?? 'default'
+	);
+	// The help under the select describes the selected option only
+	let difficultyHelp = $derived(
+		`${DIFFICULTY_OPTIONS.find((option) => option.value === difficultyValue)?.help ?? ''} Applies from your next game.`
 	);
 
 	let playMode = $derived(detectPlayMode(getAudioSettings(), getGameplaySettings()));
@@ -63,11 +83,8 @@
 			<div class="cm-row">
 				<div>
 					<label class="cm-label" for="difficulty">Difficulty</label>
-					<p class="cm-help" id="difficulty-help">
-						Easy: the Ace of Hearts starts revealed, and the fourth Ace wins the game if you survive
-						its Stability check. Normal: missed Salvation rolls add no Tokens; four Aces make
-						Salvation automatic after a Stability check. Hard: missed Salvation rolls add Tokens.
-						Applies next game.
+					<p class="cm-help" id="difficulty-help" data-testid="difficulty-help">
+						{difficultyHelp}
 					</p>
 				</div>
 				<select
@@ -77,10 +94,9 @@
 					value={difficultyValue}
 					onchange={(e) => updateSettings({ difficulty: DIFFICULTY_VALUES[e.target.value] })}
 				>
-					<option value="default">Game default</option>
-					<option value="normal">Normal</option>
-					<option value="easy">Easy</option>
-					<option value="hard">Hard</option>
+					{#each DIFFICULTY_OPTIONS as option (option.value)}
+						<option value={option.value}>{option.label}</option>
+					{/each}
 				</select>
 			</div>
 
@@ -165,7 +181,7 @@
 		margin: 0;
 		white-space: nowrap;
 		font-family: var(--font-body, 'Inter', sans-serif);
-		font-size: 0.8125rem;
+		font-size: 0.75rem;
 		font-weight: 600;
 		letter-spacing: 0.06em;
 		line-height: 1.2;
@@ -250,15 +266,17 @@
 		outline-offset: 2px;
 	}
 
+	/* A section heading, like .cm-section-title */
 	.advanced-title {
 		font-family: var(--font-body, 'Inter', sans-serif);
-		font-size: 1.125rem;
-		font-weight: 700;
+		font-size: 1rem;
+		font-weight: 600;
+		line-height: 1.25;
 		color: var(--color-neon-cyan, #00ffff);
 	}
 
 	.advanced-desc {
-		font-size: 0.9375rem;
+		font-size: 0.875rem;
 		color: #b8c5d6;
 	}
 

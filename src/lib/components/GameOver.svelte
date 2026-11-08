@@ -93,7 +93,7 @@
 
 				<div class="game-over-button">
 					<ContinueButton
-						text={gameState.config?.labels?.gameOverButtonText ?? 'Record your final log'}
+						text={gameState.config?.labels?.gameOverButtonText ?? 'Write your final log'}
 						onclick={() => transitionTo('finalLog')}
 						testid="game-over-final-log-button"
 						variant="primary"
@@ -163,7 +163,7 @@
 
 	.drain-label {
 		font-family: var(--font-body, 'Inter', sans-serif);
-		font-size: 0.8125rem;
+		font-size: 0.75rem;
 		font-weight: 600;
 		letter-spacing: 0.12em;
 		text-transform: uppercase;
@@ -205,8 +205,10 @@
 		margin: 0;
 		font-family: var(--font-display, 'lixdu', 'Orbitron', sans-serif);
 		font-weight: normal;
-		font-size: clamp(2.5rem, 9vw, 4rem);
+		font-size: clamp(2rem, 9vw, 4rem);
 		line-height: 1.1;
+		max-inline-size: 100%;
+		overflow-wrap: break-word;
 		text-align: center;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
@@ -263,16 +265,17 @@
 		font-size: 1.125rem;
 		line-height: 1.55;
 		color: var(--ending-message);
+		text-wrap: balance;
 	}
 
 	.game-over-message .cause {
 		margin-top: var(--space-sm, 0.5rem);
-		font-size: 0.9375rem;
+		font-size: 1rem;
 		font-weight: 600;
 		color: var(--color-danger, #ff4d6d);
 	}
 
-	/* A win has a cause line too (the fourth Ace): in the victory accent, not the loss red */
+	/* A win has a cause line too (the fourth Ace, the last Token): the victory accent, not red */
 	.game-over.victory .game-over-message .cause {
 		color: var(--ending-accent);
 	}
@@ -282,9 +285,11 @@
 		max-width: 34rem;
 		text-align: center;
 		font-family: var(--font-body, 'Inter', sans-serif);
+		font-size: 1rem;
 		font-style: italic;
 		line-height: 1.6;
 		color: rgba(255, 255, 255, 0.8);
+		text-wrap: balance;
 	}
 
 	@media (max-width: 600px) {

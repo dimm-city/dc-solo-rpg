@@ -13,13 +13,15 @@
 	import FinalLog from './story/FinalLog.svelte';
 	import GameOverMessage from './story/GameOverMessage.svelte';
 	import RoundStats from './story/RoundStats.svelte';
+	import SuitText from './card/SuitText.svelte';
+	import { getCardName } from './card/cardInfo.js';
 	import { sanitizeHtml } from '../utils/sanitizeHtml.js';
 	import {
 		cardShort,
 		cardName,
 		cardTypeLabel,
 		isRedSuit,
-		modifierLabel,
+		modifierLine,
 		rollLine
 	} from './story/storyCards.js';
 
@@ -68,8 +70,8 @@
 							aria-controls={panelId}
 							onclick={() => toggle(index)}
 						>
-							<span aria-hidden="true">{cardShort(chip)}</span>
-							<span class="sr-only">{cardName(chip)}, {cardTypeLabel(chip.type)}</span>
+							<span aria-hidden="true"><SuitText text={cardShort(chip)} /></span>
+							<span class="sr-only">{getCardName(chip)}</span>
 						</button>
 						{#if index < round.cards.length - 1}
 							<span class="chip-sep" aria-hidden="true">·</span>
@@ -94,8 +96,8 @@
 								{@html sanitizeHtml(card.story.replace(/\n/g, '<br>'))}
 							</div>
 						{/if}
-						{#if modifierLabel(card.modifier)}
-							<p class="card-panel-note">{modifierLabel(card.modifier)}</p>
+						{#if modifierLine(card)}
+							<p class="card-panel-note"><SuitText text={modifierLine(card)} /></p>
 						{/if}
 						{#if rollLine(card)}
 							<p class="card-panel-note">{rollLine(card)}</p>
@@ -122,7 +124,7 @@
 						{#if prompt.description}
 							<li>
 								<span class="prompt-card" class:red={isRedSuit(prompt)} aria-hidden="true"
-									>{cardShort(prompt)}</span
+									><SuitText text={cardShort(prompt)} /></span
 								>
 								<span class="sr-only">{cardName(prompt)}:</span>
 								{prompt.description}
@@ -180,7 +182,7 @@
 		margin-left: 0.15em;
 		font-family: var(--font-body);
 		font-size: 1rem;
-		font-weight: 500;
+		font-weight: 400;
 		letter-spacing: 0;
 		text-transform: none;
 		color: #aebbcc;
@@ -208,15 +210,15 @@
 		align-items: center;
 		justify-content: center;
 		min-width: 52px;
-		min-height: 40px;
+		min-height: 44px;
 		padding: 4px 12px;
 		background: rgba(255, 255, 255, 0.04);
 		border: 1px solid rgba(255, 255, 255, 0.28);
 		border-radius: 4px;
 		color: #e6edf5;
 		font-family: var(--font-body);
-		font-size: 1.0625rem;
-		font-weight: 700;
+		font-size: 1.125rem;
+		font-weight: 600;
 		font-variant-numeric: tabular-nums;
 		cursor: pointer;
 		transition:
@@ -271,12 +273,12 @@
 
 	.card-panel-name {
 		font-size: 1rem;
-		font-weight: 700;
+		font-weight: 600;
 		color: #fff;
 	}
 
 	.card-panel-type {
-		font-size: 0.8125rem;
+		font-size: 0.75rem;
 		font-weight: 600;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
@@ -285,7 +287,7 @@
 
 	.card-panel-desc {
 		margin: 0 0 8px;
-		font-size: 1.0625rem;
+		font-size: 1.125rem;
 		line-height: 1.6;
 		font-style: italic;
 		color: #eef3f8;
@@ -299,7 +301,7 @@
 
 	.card-panel-note {
 		margin: 8px 0 0;
-		font-size: 0.9375rem;
+		font-size: 0.875rem;
 		color: #aebbcc;
 	}
 
@@ -320,7 +322,7 @@
 
 	.voice-label {
 		margin: 0 0 8px;
-		font-size: 0.8125rem;
+		font-size: 0.75rem;
 		font-weight: 600;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
@@ -329,7 +331,7 @@
 
 	.no-entry {
 		margin: 0;
-		font-size: 0.9375rem;
+		font-size: 0.875rem;
 		color: #aebbcc;
 	}
 
@@ -356,8 +358,8 @@
 	.prompt-card {
 		flex: 0 0 3ch;
 		font-style: normal;
-		font-weight: 700;
-		font-size: 0.9375rem;
+		font-weight: 600;
+		font-size: 0.875rem;
 		color: #aebbcc;
 	}
 
@@ -384,7 +386,18 @@
 
 		.journal-text,
 		.card-prompts li {
-			font-size: 1.0625rem;
+			font-size: 1rem;
+		}
+	}
+
+	/* Landscape phones: tighter rhythm, so the cards and the entry's first lines fit the view */
+	@media (max-height: 500px) {
+		.story-round {
+			gap: 8px;
+		}
+
+		.journal-text {
+			line-height: 1.6;
 		}
 	}
 

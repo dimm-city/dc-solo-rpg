@@ -49,24 +49,30 @@ describe('SettingsModal', () => {
 		expect(getSettings().difficulty).toBeNull();
 	});
 
-	it('offers Game default, Normal, Easy and Hard, and says what each changes', async () => {
+	it('offers Game default, Easy, Normal and Hard, and says what the selected one changes', async () => {
 		await openSettings();
 
 		const select = screen.getByLabelText('Difficulty');
 		expect([...select.options].map((o) => o.textContent)).toEqual([
 			'Game default',
-			'Normal',
 			'Easy',
+			'Normal',
 			'Hard'
 		]);
-		const help = document.getElementById('difficulty-help').textContent.replace(/\s+/g, ' ');
-		expect(help).toContain(
-			'Easy: the Ace of Hearts starts revealed, and the fourth Ace wins the game if you survive its Stability check.'
-		);
-		expect(help).toContain(
-			'Normal: missed Salvation rolls add no Tokens; four Aces make Salvation automatic after a Stability check.'
-		);
-		expect(help).toContain('Hard: missed Salvation rolls add Tokens.');
+		const help = () => document.getElementById('difficulty-help').textContent.trim();
+		const expected = {
+			default: 'Each game sets its own; most use Normal.',
+			easy: 'The Ace of Hearts starts revealed, and surviving the fourth Ace wins.',
+			normal: 'Tokens only ever fall. Remove them all to escape.',
+			hard: 'A missed Salvation roll adds a Token (two on a natural 1).'
+		};
+		expect(help()).toBe(`${expected.default} Applies from your next game.`);
+		for (const [value, text] of Object.entries(expected)) {
+			await fireEvent.change(select, { target: { value } });
+			expect(help()).toBe(`${text} Applies from your next game.`);
+			expect(select.getAttribute('aria-describedby')).toBe('difficulty-help');
+		}
+		expect(document.body.textContent).not.toMatch(/automatic|prompt/i);
 	});
 
 	it('opens on Manual play mode with default settings', async () => {
@@ -125,13 +131,13 @@ describe('SettingsModal', () => {
 		for (const label of [
 			'Voice provider',
 			'Read cards',
-			'Read prompts',
+			'Read instructions',
 			'Announce dice rolls',
 			'Reading speed',
 			'Auto-roll dice',
 			'Continue after reading',
 			'Advance delay',
-			'Journaling'
+			'Journal'
 		]) {
 			expect(advanced.contains(screen.getByLabelText(label))).toBe(true);
 		}

@@ -29,6 +29,9 @@
 		customEndpoint = $bindable('')
 	} = $props();
 
+	/** A format hint for the key field (a placeholder is never the label); none for the rest */
+	const KEY_PLACEHOLDERS = { anthropic: 'sk-ant-…', openai: 'sk-…' };
+
 	/** @type {{ok: boolean, message: string} | null} */
 	let testResult = $state(null);
 	let testing = $state(false);
@@ -115,6 +118,7 @@
 					{:else}
 						Sent as a Bearer token to your endpoint.
 					{/if}
+					Stored only in this browser.
 				</p>
 			</div>
 			<input
@@ -126,7 +130,7 @@
 				aria-describedby="ai-api-key-help"
 				bind:value={aiApiKey}
 				oninput={clearResult}
-				placeholder="Paste your API key"
+				placeholder={KEY_PLACEHOLDERS[aiProvider]}
 			/>
 		</div>
 
@@ -230,7 +234,7 @@
 
 	.result-mark {
 		flex-shrink: 0;
-		font-weight: 700;
+		font-weight: 600;
 	}
 
 	.cm-help a {

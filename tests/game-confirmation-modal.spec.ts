@@ -114,8 +114,8 @@ test.describe('Game start, saves and confirmations', () => {
 
 		await card(page).getByRole('button', { name: 'New game' }).click();
 		const modal = await confirmation(page, 'New game');
-		await expect(modal.getByTestId('confirm-message')).toContainText(
-			'This replaces your Future Lost save (Round 3)'
+		await expect(modal.getByTestId('confirm-message')).toHaveText(
+			"Start Future Lost from the beginning? Your Round 3 save will be replaced. This can't be undone."
 		);
 
 		await modal.getByRole('button', { name: 'Keep my save' }).click();
@@ -156,7 +156,7 @@ test.describe('Game start, saves and confirmations', () => {
 		);
 		// exact: the close button is named "Close Delete save"
 		await expect(modal.getByRole('button', { name: 'Delete save', exact: true })).toBeVisible();
-		await expect(modal.getByRole('button', { name: 'Keep it' })).toBeVisible();
+		await expect(modal.getByRole('button', { name: 'Keep save' })).toBeVisible();
 	});
 
 	test('should have a 44px close target', async ({ page }) => {
@@ -184,10 +184,10 @@ test.describe('Game start, saves and confirmations', () => {
 		expect(style.border).toBe('rgb(255, 77, 109)');
 	});
 
-	test('should keep the save when choosing Keep it', async ({ page }) => {
+	test('should keep the save when choosing Keep save', async ({ page }) => {
 		const modal = await openDeleteConfirmation(page);
 
-		await modal.getByRole('button', { name: 'Keep it' }).click();
+		await modal.getByRole('button', { name: 'Keep save' }).click();
 
 		await expect(page.getByRole('dialog')).toHaveCount(0);
 		await expect(card(page).getByRole('button', { name: /^Continue/ })).toBeVisible();

@@ -77,9 +77,9 @@
 
 	.progress-marker {
 		position: relative;
-		min-width: 36px;
-		height: 36px;
-		min-height: 36px;
+		min-width: 44px;
+		height: 44px;
+		min-height: 44px;
 		padding: 0 6px;
 		background: rgba(255, 255, 255, 0.04);
 		border: 1px solid rgba(255, 255, 255, 0.2);
@@ -117,8 +117,8 @@
 		color: #fff;
 	}
 
-	/* Phones: the track is enough; Previous / Next sit at the bottom */
-	@media (max-width: 640px) {
+	/* Phones, and landscape phones: the track is enough; Previous / Next sit at the bottom */
+	@media (max-width: 640px), (max-height: 500px) {
 		.progress-markers {
 			display: none;
 		}

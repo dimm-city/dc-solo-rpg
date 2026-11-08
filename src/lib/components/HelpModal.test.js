@@ -58,7 +58,7 @@ describe('HelpModal', () => {
 
 		expect(document.body.textContent).toContain('20 Stability');
 		expect(document.body.textContent).toContain('Odd cards');
-		expect(document.body.textContent).toContain('all 4 Kings');
+		expect(document.body.textContent).toContain('all four Kings');
 		expect(document.body.textContent).toContain('Roll 17 or higher');
 	});
 
@@ -67,7 +67,9 @@ describe('HelpModal', () => {
 
 		const text = document.body.textContent.replace(/\s+/g, ' ');
 		expect(text).toContain('Any natural 20 makes you Lucid; any natural 1 makes you Surreal.');
-		expect(text).toContain('the opening roll, the roll for cards, Stability checks and Salvation');
+		expect(text).toContain('the opening roll, the roll for tasks, Stability checks and Salvation');
+		expect(text).toContain('Lucid: your next roll uses two dice and keeps the higher.');
+		expect(text).not.toMatch(/d20s|keep high|keep low|2 dice|roll for cards|all 4 Kings/);
 		expect(text).not.toContain('on a Stability check makes you');
 	});
 
@@ -81,6 +83,9 @@ describe('HelpModal', () => {
 		expect(text).toContain('And the fourth Ace ends the game');
 		expect(text).toContain('Hard changes one thing: a missed Salvation roll adds 1 Token');
 		expect(text).not.toContain('The fourth Ace ends the game.');
+		// Three endings: escape, fall, taken (the deck never runs out first)
+		expect(text).not.toContain('if the deck runs out');
+		expect(text).not.toMatch(/automatic|assured/);
 	});
 
 	it('lists no "Rules you\'ve met" before any rule tip has been shown', async () => {

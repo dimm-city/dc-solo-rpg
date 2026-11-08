@@ -210,7 +210,7 @@
 	/* Display face is for titles of 28px and up; card titles use Inter (MN-07) */
 	.card-title {
 		font-size: 1.25rem;
-		font-weight: 700;
+		font-weight: 600;
 		line-height: 1.3;
 		letter-spacing: 0.02em;
 		color: #fff;
@@ -242,7 +242,7 @@
 	}
 
 	.card-meta {
-		font-size: 0.9375rem;
+		font-size: 0.875rem;
 		color: #b8c5d6;
 		font-variant-numeric: tabular-nums;
 	}

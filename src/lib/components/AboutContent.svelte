@@ -64,7 +64,7 @@
 	}
 
 	.about-lead {
-		font-size: 1.1875rem;
+		font-size: 1.125rem;
 		color: #d5dfeb;
 		margin-bottom: 8px;
 	}
@@ -75,14 +75,14 @@
 		border-top: 1px solid rgba(255, 255, 255, 0.14);
 	}
 
-	/* Inter: these titles are 18px (the display face is for 28px and up) */
+	/* A section heading, as in every dialog (.cm-section-title): Inter 600, 16px, sentence case */
 	.about-title {
 		margin: 0 0 12px;
 		font-family: var(--font-body, 'Inter', sans-serif);
-		font-size: 1.125rem;
-		font-weight: 700;
-		line-height: 1.3;
-		letter-spacing: 0.02em;
+		font-size: 1rem;
+		font-weight: 600;
+		line-height: 1.25;
+		letter-spacing: 0;
 		text-transform: none;
 		text-shadow: none;
 		color: var(--color-neon-cyan, #00ffff);

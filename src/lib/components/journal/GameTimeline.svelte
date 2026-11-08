@@ -8,8 +8,12 @@
 	 */
 	import { gameState } from '../../stores/gameStore.svelte.js';
 	import { buildTimeline } from '../../utils/gameTimeline.js';
+	import SuitText from '../card/SuitText.svelte';
 
 	const blocks = $derived(buildTimeline(gameState));
+
+	/** An event's clauses; each stays whole on a line, and a line breaks only after a ' ·' */
+	const clauses = (event) => (event.text ? event.text.split(' · ') : []);
 </script>
 
 <ol class="timeline" data-testid="game-timeline">
@@ -19,12 +23,16 @@
 			{#if block.events.length > 0}
 				<ul class="tl-events">
 					{#each block.events as event, i (i)}
+						{@const parts = clauses(event)}
 						<li class="tl-event" data-kind={event.kind}>
-							<span class="tl-label">{event.label}</span>
-							{#if event.text}
-								<span class="tl-sep" aria-hidden="true">·</span>
-								{event.text}
-							{/if}
+							<span class="tl-clause"
+								><span class="tl-label"><SuitText text={event.label} /></span
+								>{#if parts.length}&nbsp;<span class="tl-sep">·</span>{/if}</span
+							>{parts.length ? ' ' : ''}{#each parts as part, p (p)}<span class="tl-clause"
+									><SuitText text={part} />{#if p < parts.length - 1}&nbsp;<span class="tl-sep"
+											>·</span
+										>{/if}</span
+								>{p < parts.length - 1 ? ' ' : ''}{/each}
 						</li>
 					{/each}
 				</ul>
@@ -101,13 +109,22 @@
 
 	.tl-label {
 		font-family: var(--font-mono, 'Share Tech Mono', ui-monospace, monospace);
-		font-size: 0.9375rem;
+		font-size: 1rem;
 		color: var(--event-accent, rgba(255, 255, 255, 0.72));
 	}
 
+	/* One clause, kept whole: the separator ends its line, never starts the next */
+	.tl-clause {
+		white-space: nowrap;
+	}
+
 	.tl-sep {
-		margin: 0 0.25em;
-		color: rgba(255, 255, 255, 0.4);
+		color: rgba(255, 255, 255, 0.5);
+	}
+
+	/* The ending may be an author's own sentence: let it wrap like prose */
+	.tl-event[data-kind='end'] .tl-clause {
+		white-space: normal;
 	}
 
 	.tl-event[data-kind='king'] {

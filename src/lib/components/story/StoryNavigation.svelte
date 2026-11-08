@@ -119,7 +119,7 @@
 
 	.round-indicator {
 		margin: 0;
-		font-size: 0.9375rem;
+		font-size: 0.875rem;
 		color: #aebbcc;
 		white-space: nowrap;
 		font-variant-numeric: tabular-nums;
@@ -127,6 +127,7 @@
 
 	.round-indicator strong {
 		font-size: 1.125rem;
+		font-weight: 600;
 		color: #fff;
 	}
 
@@ -134,7 +135,7 @@
 		grid-column: 1 / -1;
 		justify-self: center;
 		margin: 0;
-		font-size: 0.8125rem;
+		font-size: 0.75rem;
 		color: #8396ab;
 	}
 
@@ -155,6 +156,14 @@
 	@media (hover: none), (max-width: 768px) {
 		.keyboard-hints {
 			display: none;
+		}
+	}
+
+	/* Landscape phones: a slimmer bar; the buttons keep their 44px */
+	@media (max-height: 500px) {
+		.story-navigation {
+			padding-top: 8px;
+			padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
 		}
 	}
 

@@ -3,6 +3,6 @@
 	import GameGuide from '$lib/components/GameGuide.svelte';
 </script>
 
-<StaticPage title="How to play">
+<StaticPage title="Game Guide">
 	<GameGuide level={2} />
 </StaticPage>

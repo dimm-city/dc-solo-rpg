@@ -94,11 +94,46 @@ function saveCustomGames(games) {
 	}
 }
 
+/** "title", "title or subtitle", "title, subtitle or win-message" */
+function orList(items) {
+	return items.length < 2 ? items.join('') : `${items.slice(0, -1).join(', ')} or ${items.at(-1)}`;
+}
+
+/**
+ * A plain reason a file could not be added, for the toast "Couldn't add “x”: {reason}.":
+ * the parser's ValidationError messages, mapped to words a player can act on. The parser keeps
+ * its own messages (and its tests); only what the player reads changes here.
+ * @param {unknown} error - What parseGameFile threw (or its message)
+ * @returns {string} e.g. "it has no Card Deck section"
+ */
+export function friendlyUploadError(error) {
+	const messages =
+		error instanceof ValidationError
+			? error.errors.map(String)
+			: [String(error instanceof Error ? error.message : (error ?? ''))];
+	const first = messages[0] ?? '';
+
+	if (/^No frontmatter found|^Invalid frontmatter format/.test(first)) {
+		return "it doesn't start with a --- block";
+	}
+	const missing = first.match(/^Missing required frontmatter fields: (.+)$/);
+	if (missing) return `it has no ${orList(missing[1].split(/,\s*/))}`;
+	if (/^No "## Card Deck" section found/.test(first)) return 'it has no Card Deck section';
+	if (/^File too large/.test(first)) return "it's larger than 100KB";
+	// validateCardCounts lists every count that is off
+	if (messages.some((m) => /^(Expected exactly|Only ONE)/.test(m))) {
+		return "its deck doesn't have the cards the format needs";
+	}
+	return "it isn't a valid game file";
+}
+
 /**
  * Add a custom game from uploaded file content
  * @param {string} markdown - Raw markdown content from file
  * @param {string} filename - Original filename
- * @returns {{success: boolean, gameConfig?: object, error?: string}}
+ * @returns {{success: boolean, gameConfig?: object, kind?: 'invalid'|'storage', reason?: string,
+ *   error?: string}} on failure, kind says why, and reason is the plain words for an invalid
+ *   file (see friendlyUploadError); error keeps the technical message for the log
  */
 export function addCustomGame(markdown, filename) {
 	try {
@@ -134,15 +169,20 @@ export function addCustomGame(markdown, filename) {
 		if (saveCustomGames(customGames)) {
 			return { success: true, gameConfig };
 		} else {
-			return { success: false, error: 'Failed to save game to storage' };
+			return { success: false, kind: 'storage', error: 'Failed to save game to storage' };
 		}
 	} catch (error) {
 		if (error instanceof ValidationError) {
 			logger.error('[addCustomGame] Validation error:', error.errors);
-			return { success: false, error: error.message };
+		} else {
+			logger.error('[addCustomGame] Parse error:', error);
 		}
-		logger.error('[addCustomGame] Parse error:', error);
-		return { success: false, error: `Failed to parse game file: ${error.message}` };
+		return {
+			success: false,
+			kind: 'invalid',
+			reason: friendlyUploadError(error),
+			error: error?.message ?? String(error)
+		};
 	}
 }
 

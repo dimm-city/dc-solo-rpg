@@ -52,7 +52,7 @@ test.describe('Game Selection Screen', () => {
 		);
 		await expect(
 			page.getByTestId('game-card-ghost-in-the-machine').locator('.game-subtitle')
-		).toHaveText('Grab and go turned mad dash for the gate');
+		).toHaveText('A grab-and-go turned mad dash for the gate');
 		await expect(page.getByText('Begin your adventure')).toHaveCount(0);
 	});
 
@@ -186,7 +186,7 @@ test.describe('Game Selection Screen', () => {
 	test('should be keyboard navigable', async ({ page }) => {
 		// The last header control (More on desktop, the menu button on phones), then Tab
 		const header = page.locator('.page-header');
-		const toggle = header.getByRole('button', { name: 'Toggle menu' });
+		const toggle = header.getByRole('button', { name: 'Menu', exact: true });
 		const last = (await toggle.isVisible())
 			? toggle
 			: header.getByRole('button', { name: 'More', exact: true });

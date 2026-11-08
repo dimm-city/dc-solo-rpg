@@ -10,12 +10,13 @@
 	import AutoJournalTimer from './journal/AutoJournalTimer.svelte';
 	import { getStatusLine } from '../utils/endingSummary.js';
 	import { cardShort } from './story/storyCards.js';
+	import SuitText from './card/SuitText.svelte';
 
-	// How long "Saved to your log" shows before the game moves on
+	// How long "Saved to your journal" shows before the game moves on
 	const SAVED_BEAT = 800;
-	// A result moves on by itself, and on a phone Record Entry opens where the step button was:
+	// A result moves on by itself, and on a phone Record entry opens where the step button was:
 	// a press in the sheet's first 400ms was meant for that button (the same guard it has when
-	// it changes meaning), so Record Entry ignores it rather than saving an empty entry.
+	// it changes meaning), so Record entry ignores it rather than saving an empty entry.
 	const OPEN_GUARD_MS = 400;
 	const openedAt = typeof performance === 'undefined' ? 0 : performance.now();
 
@@ -35,7 +36,8 @@
 
 	// The final log belongs to the ending: it covers the whole run
 	const isFinal = $derived(gameState.gameOver);
-	const statusLine = $derived(getStatusLine(gameState));
+	// Each clause stays whole on a line; a line breaks only after a ' ·'
+	const statusClauses = $derived(getStatusLine(gameState).split(' · '));
 	const sheetLabel = $derived(
 		isFinal
 			? `Round ${gameState.round}`
@@ -43,7 +45,7 @@
 	);
 	const sheetTitle = $derived(isFinal ? 'Final Log' : `Round ${gameState.round}`);
 
-	// Save flow: write -> "Saved to your log" beat -> next round (or epitaph on the final log)
+	// Save flow: write -> "Saved to your journal" beat -> next round (or epitaph on the final log)
 	let saving = $state(false);
 	let savedText = $state('');
 	let beatTimeout = null;
@@ -51,6 +53,13 @@
 		savedText ||
 			gameState.journalEntries.find((entry) => entry.round === gameState.round)?.text ||
 			''
+	);
+	// The epitaph's signature: "Ada, round 7", or "Round 7" with no name (or the Guest default)
+	const playerName = $derived((gameState.player?.name ?? '').trim());
+	const signature = $derived(
+		playerName && playerName.toLowerCase() !== 'guest'
+			? `${playerName}, round ${gameState.round}`
+			: `Round ${gameState.round}`
 	);
 
 	let voiceNote = $state();
@@ -139,13 +148,13 @@
 		autoJournalTimeRemaining = 0;
 	}
 
-	/** Record Entry, unless the sheet has only just opened (see OPEN_GUARD_MS) */
+	/** Record entry, unless the sheet has only just opened (see OPEN_GUARD_MS) */
 	function recordEntry() {
 		if (performance.now() - openedAt < OPEN_GUARD_MS) return;
 		handleSave();
 	}
 
-	// Stops any recording, shows "Saved to your log" for a beat, then saves
+	// Stops any recording, shows "Saved to your journal" for a beat, then saves
 	function handleSave(withBeat = true) {
 		if (saving) return;
 		saving = true;
@@ -163,6 +172,7 @@
 	class:saving
 	class:saved={journalSaved}
 	class:show-timeline={isFinal && !journalSaved && view === 'timeline'}
+	class:has-log={!isFinal && currentEvents.length > 0}
 	data-augmented-ui="tl-clip tr-clip br-clip bl-clip border"
 >
 	<!-- 1. Header: what this is, and where you stand -->
@@ -171,7 +181,13 @@
 			<p class="sheet-label">{sheetLabel}</p>
 			<h2 class="sheet-title">{sheetTitle}</h2>
 		</div>
-		<p class="status-line" data-testid="journal-status-line">{statusLine}</p>
+		<p class="status-line" data-testid="journal-status-line">
+			{#each statusClauses as clause, index (index)}
+				<span class="clause"
+					>{clause}{#if index < statusClauses.length - 1}&nbsp;·{/if}</span
+				>{index < statusClauses.length - 1 ? ' ' : ''}
+			{/each}
+		</p>
 	</header>
 
 	<!-- Phones: the final log is two views, the run's timeline and the writing -->
@@ -212,7 +228,7 @@
 			<ul class="round-list">
 				{#each currentEvents as event (event.id)}
 					<li data-type={event.type}>
-						<span class="round-card" aria-hidden="true">{cardShort(event)}</span>
+						<span class="round-card" aria-hidden="true"><SuitText text={cardShort(event)} /></span>
 						<span class="round-text">{event.description}</span>
 					</li>
 				{/each}
@@ -221,7 +237,7 @@
 	{/if}
 
 	<!-- 3. Voice note. Before the writing in the DOM, so the tab order runs voice note, entry,
-	     Record Entry (Shift+Tab from the entry reaches it); the grid shows it on the footer row. -->
+	     Record entry (Shift+Tab from the entry reaches it); the grid shows it on the footer row. -->
 	{#if !journalSaved}
 		<div class="voice-slot">
 			<VoiceNote
@@ -247,9 +263,7 @@
 			{:else}
 				<blockquote class="empty">You left no words. The silence is a record too.</blockquote>
 			{/if}
-			<p class="epitaph-by">
-				{gameState.player?.name ?? ''}, round {gameState.round}
-			</p>
+			<p class="epitaph-by" data-testid="journal-epitaph-by">{signature}</p>
 		</div>
 	{:else}
 		<!-- 4. Writing: the main element. No prompts (owner decision): the round's cards above
@@ -268,11 +282,12 @@
 	{/if}
 
 	<!-- 5. Footer, pinned: the rule (and the auto-journal countdown) across the sheet, then the
-	     voice note (above) on the left and Record Entry on the right -->
+	     voice note (above) on the left and Record entry on the right -->
 	<div class="timer-slot">
 		<AutoJournalTimer
 			timeRemaining={autoJournalTimeRemaining}
 			totalTime={getGameplaySettings().journalPauseTime}
+			{isFinal}
 		/>
 	</div>
 
@@ -282,7 +297,7 @@
 				<ContinueButton
 					text="Read your story"
 					variant="primary"
-					onclick={() => window.location.assign('/?story=1')}
+					onclick={() => window.location.assign('/?story=latest')}
 					testid="journal-story-button"
 				/>
 				<div class="text-actions">
@@ -300,7 +315,7 @@
 						onclick={onExit}
 						data-testid="journal-exit-button"
 					>
-						Home
+						Go home
 					</button>
 				</div>
 			</div>
@@ -317,7 +332,7 @@
 						<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
 							<path d="M20 6 9 17l-5-5" />
 						</svg>
-						Saved to your log
+						Saved to your journal
 					</p>
 				{:else}
 					<ContinueButton
@@ -325,7 +340,7 @@
 						variant="primary"
 						text={isFinal
 							? 'Record final log'
-							: (gameState.config?.labels?.journalEntrySaveButtonText ?? 'Record Entry')}
+							: (gameState.config?.labels?.journalEntrySaveButtonText ?? 'Record entry')}
 						onclick={recordEntry}
 						testid="journal-save-button"
 					/>
@@ -341,7 +356,7 @@
 	   Full-screen sheet on phones, a 46rem reading column on desktop.
 	   Grid rows: header / (final log on phones: the view switch) / the round's cards / the
 	   writing (flexes) / footer rule / footer row. The footer row is two cells, the voice note
-	   and Record Entry: the voice note comes before the writing in the DOM (tab order), the grid
+	   and Record entry: the voice note comes before the writing in the DOM (tab order), the grid
 	   puts it on the footer row. Only a pane ever scrolls, never the sheet.
 	   The final log from 768px up: see .journal-sheet.final below.
 	   ============================================ */
@@ -439,9 +454,14 @@
 		margin: 0;
 		font-family: var(--font-mono, 'Share Tech Mono', ui-monospace, monospace);
 		font-variant-numeric: tabular-nums;
-		font-size: 0.9375rem;
+		font-size: 0.875rem;
 		letter-spacing: 0.05em;
 		color: rgba(255, 255, 255, 0.8);
+	}
+
+	/* One clause of the status line, kept whole: the ' ·' ends a line, never starts one */
+	.status-line .clause {
+		white-space: nowrap;
 	}
 
 	.section-label {
@@ -509,7 +529,7 @@
 		align-items: baseline;
 		gap: var(--space-sm);
 		padding: var(--space-sm) var(--space-md);
-		font-size: 0.9375rem;
+		font-size: 1rem;
 		line-height: 1.45;
 		color: rgba(255, 255, 255, 0.92);
 		border-left: 3px solid var(--round-accent, rgba(255, 255, 255, 0.3));
@@ -636,7 +656,8 @@
 		overscroll-behavior: contain;
 		display: flex;
 		flex-direction: column;
-		justify-content: center;
+		/* Safe: a long entry starts at the top and scrolls, so the signature is never cut off */
+		justify-content: safe center;
 		gap: var(--space-md);
 		outline: none;
 	}
@@ -646,7 +667,7 @@
 		padding: var(--space-md) var(--space-lg);
 		white-space: pre-wrap;
 		font-family: var(--font-body, 'Inter', sans-serif);
-		font-size: 1.375rem;
+		font-size: 1.25rem;
 		font-style: italic;
 		line-height: 1.7;
 		color: rgba(255, 255, 255, 0.95);
@@ -662,7 +683,7 @@
 		margin: 0;
 		padding-left: var(--space-lg);
 		font-family: var(--font-body, 'Inter', sans-serif);
-		font-size: 0.8125rem;
+		font-size: 0.75rem;
 		font-weight: 600;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
@@ -670,7 +691,7 @@
 	}
 
 	/* Footer: the rule (and the auto-journal countdown) across the sheet, then one row with the
-	   voice note on the left and Record Entry on the right */
+	   voice note on the left and Record entry on the right */
 	.timer-slot {
 		grid-area: timer;
 		margin-top: var(--space-md);
@@ -720,7 +741,7 @@
 		margin: 0;
 		padding: 0 var(--space-md);
 		font-family: var(--font-body, 'Inter', sans-serif);
-		font-size: 1.0625rem;
+		font-size: 1rem;
 		font-weight: 600;
 		letter-spacing: 0.04em;
 		color: var(--color-neon-cyan, #0ff);
@@ -824,7 +845,7 @@
 
 	/* Phones: a full-screen sheet; the stage already insets it for notches */
 	/* Small screens (phones, and short windows): a long round's list scrolls inside itself, so
-	   the writing keeps its room and Record Entry stays on screen (owner decision) */
+	   the writing keeps its room and Record entry stays on screen (owner decision) */
 	@media (max-width: 600px), (max-height: 760px) {
 		.round-list {
 			max-height: min(28dvh, 16rem);
@@ -860,11 +881,11 @@
 		}
 
 		textarea {
-			font-size: 1.0625rem;
+			font-size: 1rem;
 			padding: var(--space-md);
 		}
 
-		/* One row: the 44px mic, then Record Entry filling the rest */
+		/* One row: the 44px mic, then Record entry filling the rest */
 		.journal-sheet {
 			column-gap: var(--space-sm);
 		}
@@ -933,6 +954,63 @@
 		.sheet-actions,
 		.save-slot {
 			min-height: 44px;
+		}
+	}
+
+	/* Landscape phones, a round's journal: the final log's two columns. The round's cards on the
+	   left (about 40%, scrolling inside themselves), the entry on the right at the body's full
+	   height; the voice note and Record entry stay on the footer row. */
+	@media (max-height: 500px) and (orientation: landscape) {
+		.journal-sheet.has-log {
+			grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+			grid-template-rows: auto minmax(0, 1fr) auto auto;
+			grid-template-areas:
+				'header header'
+				'log main'
+				'timer timer'
+				'voice actions';
+			column-gap: var(--space-md);
+		}
+
+		.journal-sheet.has-log .round-log {
+			display: flex;
+			flex-direction: column;
+			min-height: 0;
+			margin-bottom: 0;
+		}
+
+		.journal-sheet.has-log .round-list {
+			flex: 0 1 auto;
+			min-height: 0;
+			max-height: none;
+		}
+
+		.journal-sheet.has-log .writing {
+			min-height: 140px;
+		}
+	}
+
+	/* Landscape phones, after the final entry: the three actions on one row and a smaller
+	   epitaph, so the signature is never cut off by the actions */
+	@media (max-height: 500px) and (orientation: landscape) {
+		.final-actions {
+			flex-direction: row;
+			justify-content: center;
+			gap: var(--space-md);
+		}
+
+		.epitaph {
+			gap: var(--space-sm);
+		}
+
+		.epitaph blockquote {
+			padding: var(--space-xs) var(--space-md);
+			font-size: 1.125rem;
+			line-height: 1.6;
+		}
+
+		.epitaph-by {
+			padding-left: var(--space-md);
 		}
 	}
 </style>

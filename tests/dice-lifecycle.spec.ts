@@ -135,7 +135,7 @@ async function changeTheme(page: Page, key: string) {
 		await page.getByRole('button', { name: 'More game options' }).click();
 		await page.locator('.game-menu-item', { hasText: 'Dice theme' }).click();
 	}
-	const dialog = await settled(page, 'Dice');
+	const dialog = await settled(page, 'Dice theme');
 	await dialog.getByTestId(`dice-theme-${key}`).click();
 	await expect(dialog.getByTestId(`dice-theme-${key}`)).toHaveAttribute('aria-checked', 'true');
 	await page.keyboard.press('Escape');

@@ -54,7 +54,7 @@
 	.confirm-message {
 		margin: 0;
 		white-space: pre-line;
-		font-size: 1.0625rem;
+		font-size: 1rem;
 		line-height: 1.6;
 		color: #d5dfeb;
 	}

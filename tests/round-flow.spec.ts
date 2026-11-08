@@ -422,7 +422,7 @@ test.describe('Results move on by themselves', () => {
 		// The card says what it means: the target goes, the check stays
 		await expect(page.getByTestId('card')).toHaveClass(/revealed/, { timeout: 30000 });
 		await expect(page.getByTestId('card-mechanic')).toHaveText(
-			'Ace · Salvation is now assured · a Stability check follows'
+			'Salvation now has no target · a Stability check follows'
 		);
 		await page.getByTestId('card').click();
 
@@ -467,7 +467,7 @@ test.describe('Results move on by themselves', () => {
 			'Object.assign(gs.gameState, { acesRevealed: 3, aceOfHeartsRevealed: true, tokens: 6, tower: 9 })'
 		);
 		await expect(page.getByTestId('card')).toHaveClass(/revealed/, { timeout: 30000 });
-		await expect(page.getByTestId('card-mechanic')).toHaveText('Ace · Salvation is now assured');
+		await expect(page.getByTestId('card-mechanic')).toHaveText('Salvation now has no target');
 		await page.getByTestId('card').click();
 
 		// No check and no ending: the second card comes

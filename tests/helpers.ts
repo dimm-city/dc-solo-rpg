@@ -23,12 +23,12 @@ export async function openHomePage(page: Page) {
 
 /**
  * Open the header menu. At 900px and up it is the "More" button next to the inline
- * Stories, Settings and Help actions; below 900px it is the "Toggle menu" button and holds
+ * Story Library, Settings and Guide actions; below 900px it is the "Menu" button and holds
  * every action.
  */
 export async function openHeaderMenu(page: Page) {
 	const header = page.locator('.page-header');
-	const toggle = header.getByRole('button', { name: 'Toggle menu' });
+	const toggle = header.getByRole('button', { name: 'Menu', exact: true });
 	const button = (await toggle.isVisible())
 		? toggle
 		: header.getByRole('button', { name: 'More', exact: true });
@@ -40,9 +40,10 @@ export async function openHeaderMenu(page: Page) {
 
 /** The inline desktop label of a header action, where it differs from its menu label */
 const INLINE_LABELS: Record<string, string> = {
-	'Story Library': 'Stories',
+	'Story Library': 'Story Library',
 	Settings: 'Settings',
-	Help: 'Help'
+	// Shown as "Guide", named "Game Guide"
+	'Game Guide': 'Game Guide'
 };
 
 /**
