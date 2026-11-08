@@ -43,7 +43,9 @@ const lost = {
 	]
 };
 
-const lines = (block) => block.events.map((event) => `${event.label} · ${event.text}`);
+/** The lines as read (a held total's no-break spaces read as spaces) */
+const lines = (block) =>
+	block.events.map((event) => `${event.label} · ${event.text}`.replace(/\u00a0/g, ' '));
 
 describe('buildTimeline', () => {
 	const timeline = buildTimeline(lost);
@@ -59,38 +61,38 @@ describe('buildTimeline', () => {
 	});
 
 	it('reads the opening roll', () => {
-		expect(lines(timeline[0])).toEqual(['Instability · Rolled 6 · −1 Stability · 19/20']);
+		expect(lines(timeline[0])).toEqual(['Instability · Rolled 6 · −1 Stability · 19 of 20']);
 	});
 
 	it('lists a Stability check with its roll, loss and Stability after', () => {
-		expect(lines(timeline[1])[0]).toBe('7♥︎ · Rolled 4 · −2 Stability · 17/20');
+		expect(lines(timeline[1])[0]).toBe('7♥︎ · Rolled 4 · −2 Stability · 17 of 20');
 	});
 
 	it('names the Ace of Hearts as Salvation unlocked with its target, then its check', () => {
 		expect(lines(timeline[1]).slice(1)).toEqual([
 			'A♥︎ · Salvation unlocked · needs 17+',
-			'A♥︎ · Rolled 14 · no Stability lost · 17/20',
-			'Salvation · Rolled 15 · missed 17+ · 10 Tokens left'
+			'A♥︎ · Rolled 14 · no Stability lost · 17 of 20',
+			'Salvation · Rolled 15 · missed 17+ · Tokens 10 left'
 		]);
 	});
 
 	it('leaves an even card out: a round of one is quiet apart from its Salvation roll', () => {
-		expect(lines(timeline[2])).toEqual(['Salvation · Rolled 18 · −1 Token · 9 Tokens left']);
+		expect(lines(timeline[2])).toEqual(['Salvation · Rolled 18 · −1 Token · Tokens 9 left']);
 	});
 
 	it('counts the Kings out and marks a natural 20 as Lucid with its Stability back', () => {
 		expect(lines(timeline[3])).toEqual([
-			'K♠︎ · 1 of 4 Kings',
-			'K♥︎ · 2 of 4 Kings',
-			'9♣︎ · Natural 20 · +1 Stability · 18/20 · Lucid'
+			'K♠︎ · Kings 1 of 4',
+			'K♥︎ · Kings 2 of 4',
+			'9♣︎ · Natural 20 · +1 Stability · 18 of 20 · Lucid'
 		]);
 		expect(timeline[3].events[0].kind).toBe('king');
 	});
 
 	it('ends the last round with the ending', () => {
 		expect(lines(timeline[4])).toEqual([
-			'K♣︎ · 3 of 4 Kings',
-			'K♦︎ · 4 of 4 Kings',
+			'K♣︎ · Kings 3 of 4',
+			'K♦︎ · Kings 4 of 4',
 			'The end · The fourth King was revealed.'
 		]);
 		expect(timeline[4].events.at(-1).kind).toBe('end');
@@ -114,7 +116,7 @@ describe('buildTimeline', () => {
 			log: [card('5', 'spades', 1, { diceRoll: 1, damageDealt: 3, gameState: snap(2) })]
 		};
 		expect(lines(buildTimeline(state)[0])).toEqual([
-			'5♠︎ · Natural 1 · −3 Stability · 0/20 · Surreal',
+			'5♠︎ · Natural 1 · −3 Stability · 0 of 20 · Surreal',
 			'The end · Your Stability reached 0.'
 		]);
 	});
@@ -131,11 +133,11 @@ describe('buildTimeline', () => {
 			]
 		};
 		expect(lines(buildTimeline(state)[0])).toEqual([
-			'Salvation · Natural 20 · −2 Tokens · 6 Tokens left · Lucid',
-			'Salvation · Rolled 17 · −1 Token · 5 Tokens left',
-			'Salvation · Rolled 9 · missed 14+ · 5 Tokens left',
-			'Salvation · Natural 1 · missed · 5 Tokens left · Surreal',
-			'Salvation · Rolled 13 · missed 14+ · 1 Token left'
+			'Salvation · Natural 20 · −2 Tokens · Tokens 6 left · Lucid',
+			'Salvation · Rolled 17 · −1 Token · Tokens 5 left',
+			'Salvation · Rolled 9 · missed 14+ · Tokens 5 left',
+			'Salvation · Natural 1 · missed · Tokens 5 left · Surreal',
+			'Salvation · Rolled 13 · missed 14+ · Tokens 1 left'
 		]);
 	});
 
@@ -148,8 +150,8 @@ describe('buildTimeline', () => {
 			]
 		};
 		expect(lines(buildTimeline(state)[0])).toEqual([
-			'Salvation · Rolled 9 · missed 17+ · +1 Token · 7 Tokens left',
-			'Salvation · Natural 1 · missed · +2 Tokens · 9 Tokens left · Surreal'
+			'Salvation · Rolled 9 · missed 17+ · +1 Token · Tokens 7 left',
+			'Salvation · Natural 1 · missed · +2 Tokens · Tokens 9 left · Surreal'
 		]);
 	});
 
@@ -169,7 +171,9 @@ describe('buildTimeline', () => {
 		const rolls = all.filter((event) => ['check', 'salvation', 'opening'].includes(event.kind));
 		for (const event of rolls) expect(event.text).toMatch(/^(Rolled|Natural) \d+/);
 		// A natural 20 at full Stability restores nothing
-		expect(all.at(-1).text).toBe('Natural 20 · Stability already full · 20/20 · Lucid');
+		expect(all.at(-1).text.replace(/\u00a0/g, ' ')).toBe(
+			'Natural 20 · Stability already full · 20 of 20 · Lucid'
+		);
 	});
 
 	it('reads a four-Aces Salvation as a Stability check that frees a token', () => {
@@ -191,8 +195,8 @@ describe('buildTimeline', () => {
 			]
 		};
 		expect(lines(buildTimeline(state).at(-1))).toEqual([
-			'A♦︎ · 4 of 4 Aces · no target',
-			'Salvation · Rolled 7 · −1 Stability · 11/20 · −1 Token · 4 Tokens left'
+			'A♦︎ · Aces 4 of 4 · no target',
+			'Salvation · Rolled 7 · −1 Stability · 11 of 20 · −1 Token · Tokens 4 left'
 		]);
 	});
 
@@ -213,7 +217,7 @@ describe('buildTimeline', () => {
 			]
 		};
 		expect(lines(buildTimeline(state)[1])).toEqual([
-			'A♠︎ · 4 of 4 Aces',
+			'A♠︎ · Aces 4 of 4',
 			'A♠︎ · skipped its Stability check',
 			'Escaped · The fourth Ace was revealed.'
 		]);
@@ -229,7 +233,7 @@ describe('buildTimeline', () => {
 			log: [{ type: 'salvation', round: 3, roll: 19, threshold: 14, tokenChange: -1, tokens: 0 }]
 		};
 		expect(lines(buildTimeline(state).at(-1))).toEqual([
-			'Salvation · Rolled 19 · −1 Token · 0 Tokens left',
+			'Salvation · Rolled 19 · −1 Token · Tokens 0 left',
 			'Escaped · The last Token was removed.'
 		]);
 	});
@@ -254,6 +258,35 @@ describe('buildTimeline', () => {
 		]);
 	});
 
+	it('states no non-event: a King return with no King out has no line', () => {
+		const state = {
+			round: 1,
+			log: [
+				card('A', 'spades', 1, {
+					modifier: 'return-king',
+					modifierResult: 'No King was out to return',
+					gameState: snap(15, { kings: 0 })
+				})
+			]
+		};
+		expect(lines(buildTimeline(state)[0])).toEqual(['A♠︎ · Aces 1 of 4']);
+	});
+
+	it('holds each running total to the clause before it, so it never sits alone on a line', () => {
+		const [opening] = buildTimeline(lost)[0].events;
+		const clauses = opening.text.split(' · ');
+		expect(clauses).toEqual(['Rolled 6', '−1 Stability\u00a0·\u00a019 of 20']);
+		const salvation = buildTimeline(lost)[2].events[0];
+		expect(salvation.text.split(' · ').at(-1)).toBe('−1 Token\u00a0·\u00a0Tokens 9 left');
+		const all = buildTimeline(lost).flatMap((block) => block.events);
+		for (const event of all) {
+			for (const clause of event.text.split(' · ')) {
+				expect(clause).not.toMatch(/^(\d+ of 20|Tokens \d+ left)$/);
+			}
+			expect(event.text).not.toMatch(/\d+\/20/);
+		}
+	});
+
 	it('counts Kings and Aces itself for a log without snapshots, and leaves Stability out', () => {
 		const state = {
 			round: 2,
@@ -265,11 +298,11 @@ describe('buildTimeline', () => {
 			]
 		};
 		const [one, two] = buildTimeline(state);
-		expect(lines(one)).toEqual(['K♣︎ · 1 of 4 Kings', 'A♣︎ · 1 of 4 Aces']);
+		expect(lines(one)).toEqual(['K♣︎ · Kings 1 of 4', 'A♣︎ · Aces 1 of 4']);
 		expect(lines(two)).toEqual([
-			'A♥︎ · Salvation unlocked · 2 of 4 Aces · needs 14+',
+			'A♥︎ · Salvation unlocked · Aces 2 of 4 · needs 14+',
 			'A♥︎ · Rolled 9 · −1 Stability',
-			'K♥︎ · 2 of 4 Kings'
+			'K♥︎ · Kings 2 of 4'
 		]);
 	});
 

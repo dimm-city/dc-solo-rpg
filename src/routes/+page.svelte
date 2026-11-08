@@ -437,7 +437,11 @@
 		/>
 
 		<div class="home-column">
-			<h1 class="home-pitch">A solo journaling game. Draw, roll, write.</h1>
+			<!-- Each sentence stays whole: the only break is between them -->
+			<h1 class="home-pitch">
+				<span class="pitch-sentence">A solo journaling game.</span>
+				<span class="pitch-sentence">Draw, roll, write.</span>
+			</h1>
 
 			<div class="games" data-testid="game-selector">
 				<h2 class="sr-only">Games</h2>
@@ -525,6 +529,11 @@
 		text-shadow: none;
 		text-wrap: balance;
 		color: #e2e9f2;
+	}
+
+	.pitch-sentence {
+		display: inline-block;
+		white-space: nowrap;
 	}
 
 	@media (max-width: 600px) {

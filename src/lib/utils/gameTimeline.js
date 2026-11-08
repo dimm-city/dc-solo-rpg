@@ -2,7 +2,7 @@
  * The game timeline shown beside the final log: one block per round, in order, each a short
  * list of the round's important events, read from the game log and the final state.
  *
- * Events: a King (n of 4), an Ace (and the Salvation target it set), a Stability check and
+ * Events: a King (Kings n of 4), an Ace (and the Salvation target it set), a Stability check and
  * its result, Lucid or Surreal gained (a natural 20 or 1 on any roll), a Salvation roll and
  * its result, a skip-damage or return-king card, and the ending. Ordinary even cards are not
  * events. Pure: it takes a plain state (gameState, or anything with `log`), so it is easy to
@@ -10,15 +10,20 @@
  *
  * Rolls read as the board's result line does ("Rolled 9 · missed 14+", "Natural 20",
  * "no Stability lost", Token capitalised), plus a running total as the last clause before
- * Lucid or Surreal ("· 17/20", "· 6 Tokens left"): the final log has no HUD beside it.
- * Clauses are joined by ' · '; the timeline keeps each one whole on a line.
+ * Lucid or Surreal: the final log has no HUD beside it. Counts take the final log header's
+ * forms ("17 of 20" after the Stability clause that names it, "Kings 2 of 4", "Aces 2 of 4",
+ * "Tokens 6 left"). Clauses are joined by ' · '; the timeline keeps each one whole on a line,
+ * and a total is held to the clause before it (by no-break spaces round its ' · '), so it
+ * never sits alone on a line.
  */
 import { getEndingText, MAX_STABILITY } from './endingSummary.js';
 import { getSalvationThreshold } from '../services/d20Mechanics.js';
 import { fourthAceWins } from '../constants/difficulty.js';
-import { cardShort, modifierLabel } from '../components/story/storyCards.js';
+import { cardShort, modifierLine } from '../components/story/storyCards.js';
 
 const MINUS = '−';
+/** Joins a running total to the clause before it: ' · ' with no-break spaces never splits */
+const HOLD = '\u00a0·\u00a0';
 const LAST_TOKEN_CAUSE = 'The last Token was removed.';
 
 /**
@@ -46,9 +51,19 @@ function tokenChange(change) {
 	return `${change < 0 ? MINUS : '+'}${plural(Math.abs(change), 'Token')}`;
 }
 
-/** "6 Tokens left", "1 Token left" */
+/** "Tokens 6 left", "Tokens 1 left": the final log header's form */
 function tokensLeft(tokens) {
-	return `${plural(tokens, 'Token')} left`;
+	return `Tokens ${tokens} left`;
+}
+
+/** "17 of 20": the clause before it names Stability */
+function stabilityTotal(after) {
+	return `${clamp(after)} of ${MAX_STABILITY}`;
+}
+
+/** Add a running total to the last clause, held to it so it never starts a line alone */
+function holdTotal(parts, total) {
+	parts[parts.length - 1] += `${HOLD}${total}`;
 }
 
 /** "Lucid" after a natural 20, "Surreal" after a natural 1, else nothing */
@@ -58,10 +73,10 @@ function modifierGained(roll) {
 	return [];
 }
 
-/** A d20 read on the Stability table: "Rolled 4 · −2 Stability · 14/20" (· Lucid / Surreal) */
+/** A d20 read on the Stability table: "Rolled 4 · −2 Stability · 14 of 20" (· Lucid / Surreal) */
 function stabilityRoll(roll, change, after) {
 	const parts = [rollHead(roll), stabilityChange(change, roll)];
-	if (typeof after === 'number') parts.push(`${clamp(after)}/${MAX_STABILITY}`);
+	if (typeof after === 'number') holdTotal(parts, stabilityTotal(after));
 	return [...parts, ...modifierGained(roll)];
 }
 
@@ -78,8 +93,8 @@ function openingEvent(entry) {
 
 /**
  * A Salvation roll (logged by applyPendingSuccessCheck with its result):
- * "Rolled 17 · −1 Token · 6 Tokens left", "Rolled 9 · missed 14+ · 6 Tokens left",
- * "Natural 1 · missed · 6 Tokens left · Surreal"; on Hard a miss adds "· +1 Token".
+ * "Rolled 17 · −1 Token · Tokens 6 left", "Rolled 9 · missed 14+ · Tokens 6 left",
+ * "Natural 1 · missed · Tokens 6 left · Surreal"; on Hard a miss adds "· +1 Token".
  */
 function salvationEvent(entry) {
 	const parts = [rollHead(entry.roll)];
@@ -87,7 +102,7 @@ function salvationEvent(entry) {
 	// Four Aces: the roll is a Stability check first
 	if (automatic || entry.stabilityChange) {
 		parts.push(stabilityChange(entry.stabilityChange ?? 0, entry.roll));
-		if (typeof entry.tower === 'number') parts.push(`${clamp(entry.tower)}/${MAX_STABILITY}`);
+		if (typeof entry.tower === 'number') holdTotal(parts, stabilityTotal(entry.tower));
 	}
 	const change = entry.tokenChange ?? 0;
 	// A miss: a natural 1 is a miss whatever the target, so it needs no number
@@ -95,7 +110,7 @@ function salvationEvent(entry) {
 		parts.push(entry.roll === 1 ? 'missed' : `missed ${entry.threshold}+`);
 	if (change !== 0) parts.push(tokenChange(change));
 	if (typeof entry.tokens === 'number' && (change !== 0 || !automatic)) {
-		parts.push(tokensLeft(entry.tokens));
+		holdTotal(parts, tokensLeft(entry.tokens));
 	}
 	return {
 		kind: 'salvation',
@@ -121,7 +136,7 @@ function cardEvents(entry, state, seen) {
 	if (entry.card === 'K') {
 		const kings = (snapshot?.kingsRevealed ?? seen.kings) + 1;
 		seen.kings = kings;
-		events.push({ kind: 'king', label, text: `${kings} of 4 Kings` });
+		events.push({ kind: 'king', label, text: `Kings ${kings} of 4` });
 	} else if (entry.card === 'A') {
 		const aces = (snapshot?.acesRevealed ?? seen.aces) + 1;
 		const unlockedNow = entry.suit === 'hearts';
@@ -130,7 +145,7 @@ function cardEvents(entry, state, seen) {
 		seen.hearts = unlocked;
 		const parts = [];
 		if (unlockedNow) parts.push('Salvation unlocked');
-		if (!unlockedNow || aces > 1) parts.push(`${aces} of 4 Aces`);
+		if (!unlockedNow || aces > 1) parts.push(`Aces ${aces} of 4`);
 		if (unlocked) {
 			// The card face's words: "needs 14+", "no target"
 			const threshold = getSalvationThreshold(aces);
@@ -145,13 +160,11 @@ function cardEvents(entry, state, seen) {
 		events.push({ kind: 'note', label, text: 'skipped its Stability check' });
 	}
 
-	// "6♠ · K♥ went back into the deck · 0 of 4 Kings out", as the board logged it
+	// "6♠ · K♥ went back into the deck · 0 of 4 Kings out", as the board logged it; a King
+	// return with no King out did nothing, and no screen states a non-event
 	if (entry.modifier === 'return-king') {
-		events.push({
-			kind: 'note',
-			label,
-			text: entry.modifierResult || modifierLabel(entry.modifier)
-		});
+		const text = modifierLine(entry);
+		if (text) events.push({ kind: 'note', label, text });
 	}
 
 	if (entry.diceRoll != null) {

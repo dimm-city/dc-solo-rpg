@@ -355,7 +355,7 @@ test.describe('Story mode', () => {
 	}) => {
 		await openLibrary(page, [LONG]);
 		await page.addStyleTag({ content: ANDROID_BROWSER_BARS });
-		await openStory(page, 'Stability gave out', hasTouch);
+		await openStory(page, 'Fell when Stability reached 0', hasTouch);
 		await expect(page.getByTestId('story-mode')).toContainText('6 rounds');
 
 		// Previous / Next are pinned to the bottom of the story, which must be the visible

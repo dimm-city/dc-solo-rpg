@@ -14,6 +14,9 @@
 
 	/** An event's clauses; each stays whole on a line, and a line breaks only after a ' ·' */
 	const clauses = (event) => (event.text ? event.text.split(' · ') : []);
+
+	/** A clause's pieces: a running total is held to the clause before it by no-break spaces */
+	const pieces = (clause) => clause.split('\u00a0·\u00a0');
 </script>
 
 <ol class="timeline" data-testid="game-timeline">
@@ -29,8 +32,10 @@
 								><span class="tl-label"><SuitText text={event.label} /></span
 								>{#if parts.length}&nbsp;<span class="tl-sep">·</span>{/if}</span
 							>{parts.length ? ' ' : ''}{#each parts as part, p (p)}<span class="tl-clause"
-									><SuitText text={part} />{#if p < parts.length - 1}&nbsp;<span class="tl-sep"
-											>·</span
+									>{#each pieces(part) as piece, k (k)}{#if k > 0}&nbsp;<span class="tl-sep">·</span
+											>&nbsp;{/if}<SuitText
+											text={piece}
+										/>{/each}{#if p < parts.length - 1}&nbsp;<span class="tl-sep">·</span
 										>{/if}</span
 								>{p < parts.length - 1 ? ' ' : ''}{/each}
 						</li>

@@ -20,7 +20,7 @@ describe('getStoryOutcome', () => {
 
 	it('names Stability running out, even below zero', () => {
 		expect(getStoryOutcome({ isWon: false, finalTower: 0, kingsRevealed: 1 }).label).toBe(
-			'Stability gave out'
+			'Fell when Stability reached 0'
 		);
 		expect(getStoryOutcome({ isWon: false, finalTower: -2, kingsRevealed: 3 }).kind).toBe(
 			'stability'

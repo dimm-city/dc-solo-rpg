@@ -41,6 +41,11 @@ describe('story card words', () => {
 		expect(modifierLine(null)).toBe('');
 	});
 
+	it('states no non-event: a King return with no King out has no line', () => {
+		const card = { modifier: 'return-king', modifierResult: 'No King was out to return' };
+		expect(modifierLine(card)).toBe('');
+	});
+
 	it('says what a Stability check did', () => {
 		expect(rollLine({ diceRoll: 4, damageDealt: 2 })).toBe(
 			'Stability check: rolled 4 · −2 Stability'
