@@ -509,7 +509,7 @@ describe('My Feature', () => {
 | `AMBIENT`, `AMBIENT_SLOW` | `--dur-ambient(-slow)` | 4s / 8s | The only ambient loop periods       |
 | `RESULT_HOLD`             | (none)                 | 2s      | A result holds, then moves on       |
 | `DICE_SINK`               | `--dur-dice-sink`      | 800ms   | Landed dice sink and fade (in-out)  |
-| `DRAW_PAUSE`              | (none)                 | 300ms   | Empty table before the next card    |
+| `DRAW_PAUSE`              | (none)                 | 100ms   | Gap before the next card is drawn   |
 
 ```javascript
 import { ANIMATION_DURATION, ANIMATION_EASING, Z_INDEX } from '$lib/constants/animations.js';
@@ -550,7 +550,7 @@ async function handleDismiss() {
 	card = null;
 
 	// 3. More cards this round: the next one is drawn after the draw pause
-	//    (ANIMATION_DURATION.DRAW_PAUSE, 300ms: card to card in about 0.8s); a tap or Space
+	//    (ANIMATION_DURATION.DRAW_PAUSE, 100ms: card to card in about 0.57s); a tap or Space
 	//    during the pause draws it at once, once
 	triggerAutoDrawIfNeeded();
 }

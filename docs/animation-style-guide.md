@@ -27,7 +27,7 @@ never disagree. `styles.css` defines no motion numbers of its own; a unit test c
 | `ANIMATION_DURATION.DICE_SINK`         | `--dur-dice-sink`         | 800ms     | Landed dice sinking and fading beneath the board |
 | `ANIMATION_EASING.DICE_SINK`           | `--ease-dice-sink`        | in-out    | The sink's curve: (0.4, 0, 0.6, 1)               |
 | `ANIMATION_DURATION.DICE_SINK_REDUCED` | `--dur-dice-sink-reduced` | 350ms     | The sink under reduced motion: a plain fade      |
-| `ANIMATION_DURATION.DRAW_PAUSE`        | (none)                    | 300ms     | The empty table between one card and the next    |
+| `ANIMATION_DURATION.DRAW_PAUSE`        | (none)                    | 100ms     | The gap between one card and the next            |
 
 The older names still work and follow the standard: `FAST` = 120, `NORMAL` = 200, `SLOW` = 300;
 `--transition-fast/base/slow` = 120/200/300ms; `--anim-fast` = 200ms. `CARD_DISMISS` (600ms),
@@ -50,9 +50,8 @@ The older names still work and follow the standard: `FAST` = 120, `NORMAL` = 200
   fade. The roll resolves in that same moment, so the result line appears in front of them.
   Under reduced motion there is no throw: the number shows, then fades over 350ms
   (`--dur-dice-sink-reduced`). This replaces the `DICE_DELAY` + `DICE_FADE` pattern further down.
-- **Between cards** (`CardDeck.svelte`): the card lifts away (220ms), the table stays empty for
-  `DRAW_PAUSE` (300ms, OWN-7), then the next card rises (250ms): card to card in about 0.8s, so
-  each card lands as its own moment. A tap on the table, Space or the button during the pause
+- **Between cards** (`CardDeck.svelte`): the card lifts away (220ms), the next is drawn after
+  `DRAW_PAUSE` (100ms) and rises (250ms): card to card in about 0.57s. A tap on the table, Space or the button during the pause
   draws at once, and only once. The pause holds under reduced motion (it is not motion). The
   first card of a round comes after the 2s result hold of the task roll, so it needs no extra
   pause.

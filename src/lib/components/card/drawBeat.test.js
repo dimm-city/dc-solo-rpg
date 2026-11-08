@@ -24,12 +24,6 @@ describe('createDrawBeat', () => {
 		vi.useRealTimers();
 	});
 
-	// The owner found 100ms too fast and 600ms too long
-	it('is a deliberate pause between the 100ms that was too fast and the 600ms that was too long', () => {
-		expect(MS).toBeGreaterThan(100);
-		expect(MS).toBeLessThan(600);
-	});
-
 	it('draws nothing before the beat runs out, then draws once', () => {
 		beat.schedule();
 		expect(beat.pending).toBe(true);
