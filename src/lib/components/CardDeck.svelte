@@ -22,7 +22,7 @@
 		isFinalKing
 	} from './card/cardInfo.js';
 	import { createHoldTimer } from './card/holdTimer.js';
-	import { createDrawBeat } from './card/drawBeat.js';
+	import { CARD_GUARD_MS, createDrawBeat } from './card/drawBeat.js';
 	import { ANIMATION_DURATION } from '../constants/animations.js';
 
 	let {
@@ -33,7 +33,7 @@
 	} = $props();
 
 	// Card to card in about 0.57s: dismiss 220ms, the gap before the next draw (DRAW_PAUSE, 100ms),
-	// then the face rises in 250ms
+	// then the face rises in 250ms. It takes input 400ms after it appears (CARD_GUARD_MS)
 	const RISE_MS = 250;
 	const DISMISS_MS = 220;
 	const NEXT_DRAW_MS = ANIMATION_DURATION.DRAW_PAUSE;
@@ -73,8 +73,10 @@
 				return;
 			}
 
+			// The card can be dismissed once it has risen and been up CARD_GUARD_MS, with or
+			// without motion (game-copy-s-01): until then a tap, Space or Enter does nothing
 			animationStage = 'materializing';
-			await sleep(reducedMotion() ? 0 : RISE_MS);
+			await sleep(Math.max(reducedMotion() ? 0 : RISE_MS, CARD_GUARD_MS));
 			if (animationStage === 'materializing') animationStage = 'revealed';
 		} catch (error) {
 			logger.error('Proceed to byte failed:', error);

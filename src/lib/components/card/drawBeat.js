@@ -1,4 +1,13 @@
 /**
+ * A newly shown card takes no dismiss input (a tap, Space, Enter, the step button) until it has
+ * been up 400ms, with or without motion (game-copy-s-01), as the step button does (GameScreen's
+ * STEP_GUARD_MS): CardDeck keeps it 'materializing' until then. A quick second input after a
+ * dismiss never dismisses the next card unread. With motion on the 250ms rise is most of it;
+ * under reduced motion, where the card is up at once, it is the only guard.
+ */
+export const CARD_GUARD_MS = 400;
+
+/**
  * createDrawBeat - the pause on the empty table before the next card of a round (OWN-7)
  *
  * When a card is dismissed and more remain, the next one is drawn `ms` later, so each card
