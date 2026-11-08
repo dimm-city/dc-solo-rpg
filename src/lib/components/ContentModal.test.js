@@ -52,7 +52,9 @@ describe('ContentModal accessibility', () => {
 		Object.defineProperty(body, 'scrollTop', {
 			configurable: true,
 			get: () => top,
-			set: (v) => (top = v)
+			set: (v) => {
+				top = v;
+			}
 		});
 		await fireEvent.scroll(body);
 		expect(body).toHaveClass('more-below');
