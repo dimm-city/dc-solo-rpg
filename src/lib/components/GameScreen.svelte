@@ -61,6 +61,11 @@
 	const currentScreen = $derived(gameState.state);
 	// Reduced from 300ms to 200ms for snappier, more mechanical feel
 	const TRANSITION_DURATION = ANIMATION_DURATION.NORMAL;
+	// The static roll fades as the 3D dice sink (OWN-6); under reduced motion, a short fade
+	const staticRollFadeMs = () =>
+		window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+			? ANIMATION_DURATION.DICE_SINK_REDUCED
+			: ANIMATION_DURATION.DICE_SINK;
 	/** After the step button changes meaning, presses are held off this long (it is highlighted) */
 	const STEP_GUARD_MS = 400;
 
@@ -529,6 +534,14 @@
 			return;
 		}
 
+		// On the draw step the card is the control. Between cards (the beat before the next
+		// one, OWN-7) there is none on the table, so a tap there draws the next card now rather
+		// than being lost; while a card is up it does nothing.
+		if (currentScreen === 'drawCard') {
+			drawCardRef?.draw();
+			return;
+		}
+
 		runStep();
 	}
 
@@ -658,6 +671,7 @@
 				// Auto-draw first card when entering drawCard state
 				// Small delay to ensure CardDeck component is fully initialized
 				clearTimeout(drawTimer);
+				// (Draw only: a card already up from an early press is not dismissed by this)
 				drawTimer = setTimeout(() => {
 					if (
 						!leaving &&
@@ -665,7 +679,7 @@
 						drawCardRef &&
 						gameState.cardsToDraw > 0
 					) {
-						drawCardRef.handleButtonClick();
+						drawCardRef.draw();
 					}
 				}, 100);
 				break;
@@ -928,7 +942,7 @@
 							class="static-roll"
 							data-testid="static-roll"
 							aria-hidden="true"
-							out:fade={{ duration: ANIMATION_DURATION.DICE_SINK }}
+							out:fade={{ duration: staticRollFadeMs() }}
 						>
 							{#each diceState.staticRoll.rolls as value, index (index)}
 								<svg

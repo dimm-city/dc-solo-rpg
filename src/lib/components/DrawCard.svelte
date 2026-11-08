@@ -31,6 +31,13 @@
 	}
 
 	/**
+	 * Draw the next card if none is up (a no-op while a card is shown or leaving)
+	 */
+	export async function draw() {
+		await cardDeckRef?.draw();
+	}
+
+	/**
 	 * Expose button disabled state for toolbar - derived from animation stage
 	 */
 	export function isButtonDisabled() {

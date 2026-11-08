@@ -86,9 +86,9 @@
 	     button, and skips the roll.
 	   - Sinking (the moment .rolling goes, when the roll resolves): the z-index drops at
 	     once, behind the page content, so the HUD, the title, the result line and the button
-	     are in front; the dice then drop 8px, shrink 10% in place and darken out over 350ms,
-	     ease-in, under the table's grid. The result line appears in that same moment, so it
-	     is never covered.
+	     are in front; the dice then drop 8px, shrink 10% in place, darken and fade over
+	     --dur-dice-sink (800ms, ease-in-out: OWN-6), under the table's grid. The result line
+	     appears in that same moment, so it is never covered.
 	   - At rest: under the board and invisible. */
 	.dice-container {
 		position: fixed;
@@ -101,12 +101,13 @@
 		/* Shrinks about the landed dice (diceState.sinkOrigin), so they sink in place */
 		transform: translateY(var(--rise-enter, 8px)) scale(0.9);
 		filter: brightness(0.3);
-		/* No z-index in the list: it changes the moment the sink starts. The drop and the
-		   darkening ease in; the fade eases in harder, so the dice are seen going down. */
+		/* No z-index in the list: it changes the moment the sink starts. The drop, the darkening
+		   and the fade share one calm ease-in-out, so the dice are seen settling and leaving
+		   rather than blinking out. */
 		transition:
-			transform var(--dur-dice-sink, 350ms) ease-in,
-			filter var(--dur-dice-sink, 350ms) ease-in,
-			opacity var(--dur-dice-sink, 350ms) var(--ease-exit, ease-in);
+			transform var(--dur-dice-sink, 800ms) var(--ease-dice-sink, ease-in-out),
+			filter var(--dur-dice-sink, 800ms) var(--ease-dice-sink, ease-in-out),
+			opacity var(--dur-dice-sink, 800ms) var(--ease-dice-sink, ease-in-out);
 	}
 
 	/* Hidden off the game screens */
@@ -132,7 +133,7 @@
 		.dice-container.rolling {
 			transform: none;
 			filter: none;
-			transition: opacity var(--dur-dice-sink, 350ms) linear;
+			transition: opacity var(--dur-dice-sink-reduced, 350ms) linear;
 		}
 	}
 
