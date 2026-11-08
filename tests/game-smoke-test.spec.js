@@ -92,7 +92,7 @@ test.describe('DC Solo RPG - Smoke Test', () => {
 		await expect(page.locator('.logo-dice')).toBeVisible();
 		await expect(page.locator('.version-text')).toHaveText('Dream Console');
 		await openHeaderMenu(page);
-		for (const name of ['Upload Game', 'Dice Theme', 'About']) {
+		for (const name of ['Upload game', 'Dice theme', 'About']) {
 			await expect(page.locator('.mobile-menu').getByRole('button', { name })).toBeVisible();
 		}
 		for (const name of [/^(Stories|Story Library)$/, /^Settings$/, /^Help$/]) {
@@ -138,7 +138,7 @@ test.describe('DC Solo RPG - Smoke Test', () => {
 	test('should test Help modal', async ({ page }) => {
 		await skipToGameSelection(page);
 
-		await clickMenuItem(page, 'Help');
+		await clickMenuItem(page, 'Game Guide');
 		const dialog = page.getByRole('dialog');
 		await expect(dialog).toBeVisible();
 		await expect(dialog).toHaveAccessibleName('Game Guide');

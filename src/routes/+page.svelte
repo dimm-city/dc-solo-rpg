@@ -63,7 +63,10 @@
 	let confirmation = $state(null);
 
 	let toast = $state('');
+	/** 'status' (polite, a few seconds) or 'error' (an alert, at least 10s, dismissible) */
+	let toastTone = $state('status');
 	let toastTimer = null;
+	const ERROR_TOAST_MS = 10000;
 
 	// Story mode state
 	let showBrowseGames = $state(false);
@@ -154,10 +157,19 @@
 		gameSaveData = saveData;
 	}
 
-	function showToast(message, ms = 3000) {
+	function showToast(message, ms = 3000, tone = 'status') {
 		clearTimeout(toastTimer);
 		toast = message;
+		toastTone = tone;
 		toastTimer = setTimeout(() => (toast = ''), ms);
+	}
+
+	/** An error stays at least 10 seconds, as an alert, until it is dismissed */
+	const showError = (message) => showToast(message, ERROR_TOAST_MS, 'error');
+
+	function dismissToast() {
+		clearTimeout(toastTimer);
+		toast = '';
 	}
 
 	function openGame(game) {
@@ -181,7 +193,7 @@
 		if (await resumeGame(gameSlug(game))) {
 			openGame(game);
 		} else {
-			showToast("That save couldn't be opened");
+			showError("That save couldn't be opened. Start a new game or delete the save.");
 		}
 	}
 
@@ -195,7 +207,7 @@
 			if (removeCustomGame(game.slug)) {
 				loadGames();
 				await updateSaveData();
-				showToast(`${game.title} removed`);
+				showToast(`Removed “${game.title}”`);
 			}
 			return;
 		}
@@ -220,27 +232,28 @@
 		const round = saveRoundLabel(gameSaveData[gameSlug(game)]);
 		const save = `${game.title} save${round ? ` (${round})` : ''}`;
 
+		// Cancel keeps the object, confirm names the verb and the object
 		if (kind === 'delete') {
 			return {
 				title: 'Delete save',
 				message: `Delete your ${save}? This can't be undone.`,
 				confirmText: 'Delete save',
-				cancelText: 'Keep it'
+				cancelText: 'Keep save'
 			};
 		}
 		if (kind === 'new') {
 			return {
 				title: 'New game',
-				message: `Start ${game.title} again? This replaces your ${save}, and can't be undone.`,
+				message: `Start ${game.title} from the beginning? Your ${round ? `${round} ` : ''}save will be replaced. This can't be undone.`,
 				confirmText: 'Start new game',
 				cancelText: 'Keep my save'
 			};
 		}
 		return {
 			title: 'Remove game',
-			message: `Remove ${game.title} from your games? To play it again you will need to upload its file.`,
+			message: `Remove ${game.title} from your games? To play it again, upload its file.`,
 			confirmText: 'Remove game',
-			cancelText: 'Keep it'
+			cancelText: 'Keep game'
 		};
 	});
 
@@ -249,7 +262,8 @@
 		if (!file) return;
 
 		if (!file.name.endsWith('.game.md')) {
-			showToast('Please choose a .game.md file');
+			showError('Choose a file that ends in .game.md.');
+			if (fileInput) fileInput.value = '';
 			return;
 		}
 
@@ -261,12 +275,17 @@
 			if (result.success) {
 				loadGames();
 				await updateSaveData();
-				showToast(`Added "${result.gameConfig.title}"`, 5000);
+				showToast(`Added “${result.gameConfig.title}”`, 5000);
+			} else if (result.kind === 'storage') {
+				showError("Couldn't save the game in this browser. Free up some space and try again.");
 			} else {
-				showToast(`Error: ${result.error}`, 5000);
+				showError(
+					`Couldn't add “${file.name}”: ${result.reason}. Fix the file and upload it again.`
+				);
 			}
 		} catch (error) {
-			showToast(`Couldn't load the file: ${error.message}`, 5000);
+			console.error('Upload failed:', error);
+			showError("Couldn't add that file. Try again, or check it opens in a text editor.");
 		} finally {
 			uploading = false;
 			if (fileInput) fileInput.value = '';
@@ -432,7 +451,7 @@
 	</section>
 {/if}
 
-<Toast message={toast} />
+<Toast message={toast} tone={toastTone} ondismiss={dismissToast} />
 
 <ConfirmModal
 	isOpen={confirmation !== null}
@@ -489,13 +508,20 @@
 	.home-pitch {
 		margin: 0 0 clamp(var(--space-lg), 4vw, var(--space-2xl));
 		font-family: var(--font-body);
-		font-size: clamp(1.25rem, 3vw, 1.625rem);
-		font-weight: 500;
+		font-size: 1.5rem;
+		font-weight: 400;
 		line-height: 1.35;
 		letter-spacing: 0;
 		text-transform: none;
 		text-shadow: none;
+		text-wrap: balance;
 		color: #e2e9f2;
+	}
+
+	@media (max-width: 600px) {
+		.home-pitch {
+			font-size: 1.25rem;
+		}
 	}
 
 	/* 2-up; equal heights per row come from the grid's stretch */

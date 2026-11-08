@@ -22,8 +22,7 @@
 
 		<button class="first-run-rules" onclick={onreadrules}>Read the rules first</button>
 
-		<button class="first-run-skip" onclick={onskiptips}>I know how to play: don't show tips.</button
-		>
+		<button class="first-run-skip" onclick={onskiptips}>I know how to play: skip the tips</button>
 	</div>
 </section>
 
@@ -62,7 +61,7 @@
 		font-weight: 600;
 		letter-spacing: 0.16em;
 		text-transform: uppercase;
-		color: #9fb3c8;
+		color: #b4c4d6;
 	}
 
 	/* Screen title: the display face at 28px and up */
@@ -75,7 +74,8 @@
 
 	.first-run-pitch {
 		margin: 0 0 var(--space-sm);
-		font-size: 1.0625rem;
+		font-size: 1rem;
+		text-wrap: balance;
 		color: #d5dfeb;
 	}
 
@@ -109,14 +109,14 @@
 	}
 
 	.play-label {
-		font-size: 1.0625rem;
+		font-size: 1rem;
 		font-weight: 600;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 	}
 
 	.play-detail {
-		font-size: 0.9375rem;
+		font-size: 0.875rem;
 		font-weight: 400;
 		color: #fde68a;
 	}
@@ -126,7 +126,7 @@
 		background: transparent;
 		border: 1px solid rgba(0, 255, 255, 0.55);
 		color: var(--color-neon-cyan);
-		font-size: 0.9375rem;
+		font-size: 0.875rem;
 		font-weight: 600;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
@@ -143,7 +143,7 @@
 		background: none;
 		border: none;
 		font-family: var(--font-body);
-		font-size: 0.9375rem;
+		font-size: 0.875rem;
 		color: #b8c5d6;
 		text-decoration: underline;
 		text-underline-offset: 3px;

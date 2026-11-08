@@ -11,8 +11,8 @@ test.describe('Accessibility', () => {
 
 	test('should have proper ARIA labels on header buttons', async ({ page }) => {
 		// The phone menu button is icon-only, so it needs an explicit label and state
-		const toggle = page.getByRole('button', { name: 'Toggle menu', includeHidden: true });
-		await expect(toggle).toHaveAttribute('aria-label', 'Toggle menu');
+		const toggle = page.getByRole('button', { name: 'Menu', exact: true, includeHidden: true });
+		await expect(toggle).toHaveAttribute('aria-label', 'Menu');
 		await expect(toggle).toHaveAttribute('aria-expanded', 'false');
 
 		// Every header action has a visible text label that names it
@@ -25,7 +25,7 @@ test.describe('Accessibility', () => {
 		}
 		await expect(page.getByRole('button', { name: 'About', exact: true })).toBeVisible();
 		await expect(page.getByRole('button', { name: 'Settings', exact: true })).toBeVisible();
-		await expect(page.getByRole('button', { name: 'Help', exact: true })).toBeVisible();
+		await expect(page.getByRole('button', { name: 'Game Guide', exact: true })).toBeVisible();
 	});
 
 	test('should have accessible names on game card buttons', async ({ page }) => {
@@ -54,7 +54,7 @@ test.describe('Accessibility', () => {
 	test('should have visible focus indicators', async ({ page }) => {
 		// Reach the first Play button by keyboard so :focus-visible applies
 		const header = page.locator('.page-header');
-		const toggle = header.getByRole('button', { name: 'Toggle menu' });
+		const toggle = header.getByRole('button', { name: 'Menu', exact: true });
 		const last = (await toggle.isVisible())
 			? toggle
 			: header.getByRole('button', { name: 'More', exact: true });
@@ -77,7 +77,9 @@ test.describe('Accessibility', () => {
 		const cardCount = await page.locator('.game-card').count();
 		const visited: string[] = [];
 		const headerStops =
-			page.viewportSize()!.width >= 900 ? ['Stories', 'Settings', 'Help', 'More'] : ['Toggle menu'];
+			page.viewportSize()!.width >= 900
+				? ['Story Library', 'Settings', 'Game Guide', 'More']
+				: ['Menu'];
 
 		// Tab from the top of the page: the header actions, then each Play button
 		await page.locator('body').click({ position: { x: 1, y: 1 } });

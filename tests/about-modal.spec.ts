@@ -155,7 +155,7 @@ test.describe('About Modal', () => {
 	test('should be keyboard accessible', async ({ page }) => {
 		// Open with the keyboard from the header menu (More on desktop, the menu button on phones)
 		const header = page.locator('.page-header');
-		const toggle = header.getByRole('button', { name: 'Toggle menu' });
+		const toggle = header.getByRole('button', { name: 'Menu', exact: true });
 		const menuButton = (await toggle.isVisible())
 			? toggle
 			: header.getByRole('button', { name: 'More', exact: true });
