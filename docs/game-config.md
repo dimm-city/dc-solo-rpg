@@ -302,7 +302,7 @@ The `: 7-hearts` notation explicitly assigns this card. Useful for:
 
 ### 6. Optional Card Image
 
-A card can carry one picture. Put a markdown image on a line of its own anywhere in the card body; it shows on the card face, framed above the story:
+A card can carry one picture. Put a markdown image on a line of its own anywhere in the card body; it shows on the card face, framed above the story, and small in Story mode's card panel:
 
 ```markdown
 ### Challenge

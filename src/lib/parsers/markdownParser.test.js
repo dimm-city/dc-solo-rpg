@@ -1240,9 +1240,16 @@ describe('Markdown Parser - card images', () => {
 	});
 
 	it('leaves image: null on cards without one', () => {
-		const deck = parseGameFile(base).deck;
+		const deck = parseGameFile(base, { baseUrl: '/games/future-lost.game.md' }).deck;
 		expect(deck).toHaveLength(52);
-		expect(deck.every((c) => c.image === null)).toBe(true);
+		// Future Lost illustrates its Salvation card, Kings and Aces
+		const withArt = deck.filter((c) => c.image);
+		expect(withArt.map((c) => c.card).sort()).toEqual(['A', 'A', 'A', 'A', 'K', 'K', 'K', 'K']);
+		for (const c of withArt) {
+			expect(c.image.src).toMatch(/^\/games\/future-lost\/[a-z-]+\.svg$/);
+			expect(c.image.alt.length).toBeGreaterThan(10);
+		}
+		expect(deck.filter((c) => !c.image).every((c) => c.image === null)).toBe(true);
 	});
 
 	it('rejects more than one image on a card', () => {

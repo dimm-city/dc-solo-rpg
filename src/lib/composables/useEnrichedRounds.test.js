@@ -27,7 +27,14 @@ const savedGame = {
 			damageDealt: 2,
 			gameState: snap(20, 0)
 		},
-		{ round: 1, card: 'K', suit: 'spades', type: 'failure-counter', gameState: snap(18, 0) },
+		{
+			round: 1,
+			card: 'K',
+			suit: 'spades',
+			type: 'failure-counter',
+			image: { src: '/games/future-lost/king-hostile.svg', alt: 'Armed figures on a ridge' },
+			gameState: snap(18, 0)
+		},
 		{ round: 2, card: 'K', suit: 'hearts', type: 'failure-counter', gameState: snap(18, 1) },
 		{ round: 3, card: 'K', suit: 'clubs', type: 'failure-counter', gameState: snap(14, 2) },
 		{ round: 3, card: 'K', suit: 'diamonds', type: 'failure-counter', gameState: snap(14, 3) }
@@ -50,6 +57,14 @@ describe('useEnrichedRounds', () => {
 
 	it('keeps the Stability check roll on its card', () => {
 		expect(rounds[0].cards[0]).toMatchObject({ diceRoll: 4, damageDealt: 2 });
+	});
+
+	it('keeps a card’s picture, and gives the others image: null', () => {
+		expect(rounds[0].cards[1].image).toEqual({
+			src: '/games/future-lost/king-hostile.svg',
+			alt: 'Armed figures on a ridge'
+		});
+		expect(rounds[0].cards[0].image).toBeNull();
 	});
 
 	it('gives each round the state at its end', () => {

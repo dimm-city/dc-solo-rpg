@@ -25,6 +25,8 @@ You must gather the necessary components and knowledge to repair your time machi
 
 **You find a survivor who knows how to repair the time machine**
 
+![An engineer bent over a glowing field generator in a dark workshop](future-lost/salvation.svg)
+
 This survivor is an engineer from before the collapse. She recognizes your time machine's design and offers to help. With her expertise, you finally have a real chance of getting home. She'll need time to study the damage, but hope fills your heart for the first time since you arrived.
 
 Her name is Dr. Chen, and she was part of the team that first theorized temporal mechanics. She thought she was the last one who understood the technology. Finding you, and your machine, has reignited something in her eyes - purpose.
@@ -37,6 +39,8 @@ Her name is Dr. Chen, and she was part of the team that first theorized temporal
 
 **A group of hostile survivors has spotted you**
 
+![Armed figures on a ridge against a red sky, a searchlight sweeping the ruins](future-lost/king-hostile.svg)
+
 They move through the ruins with purpose, weapons ready. You recognize the look in their eyes - they've survived by taking from others, and they've marked you as their next target.
 
 You have minutes, maybe less, to escape. They're coordinating, surrounding you. This isn't random violence - it's organized predation.
@@ -46,6 +50,8 @@ You have minutes, maybe less, to escape. They're coordinating, surrounding you. 
 ### Failure Counter
 
 **Your stash of resources is stolen**
+
+![A ransacked hideout: empty shelves and an overturned crate in cold light](future-lost/king-stolen.svg)
 
 You return to your hideout to find it ransacked. Everything you'd carefully gathered - food, tools, spare parts - gone. Someone was watching, waiting for you to leave.
 
@@ -57,6 +63,8 @@ The violation leaves you vulnerable and paranoid. How long were they observing? 
 
 **You get lost in a dangerous part of the city**
 
+![A hazard sign on an empty street, the air glowing green](future-lost/king-lost.svg)
+
 The streets all look the same in the ruins. You took a wrong turn somewhere, and now you're deep in territory marked "EXTREME HAZARD" on every map you've found.
 
 The radiation detector in your pocket is clicking faster. You need to find your way out, but every direction looks equally threatening.
@@ -67,6 +75,8 @@ The radiation detector in your pocket is clicking faster. You need to find your 
 
 **The time machine suffers a major malfunction**
 
+![A time machine throwing sparks, its warning lights red](future-lost/king-malfunction.svg)
+
 A cascade failure tears through the temporal matrix. Sparks fly, systems go dark, and your heart sinks as you see the damage. This isn't something you can fix with scavenged parts.
 
 This will require miracles. Or at least, very specific pre-collapse technology that might not exist anymore.
@@ -76,6 +86,8 @@ This will require miracles. Or at least, very specific pre-collapse technology t
 #### Narrative: skip-damage
 
 **A moment of perfect timing saves you**
+
+![A fallen beam holding back debris above a lone figure](future-lost/ace-timing.svg)
 
 In the chaos of your escape from the collapsing structure, something impossible happens. A piece of falling debris that should have crushed you catches on a support beam at the last second. A gas leak that should have ignited doesn't. A patrol that should have spotted you turns the other way.
 
@@ -89,6 +101,8 @@ But for now, you're alive. And sometimes, in this broken world, that's the only 
 
 **A second chance manifests from the darkness**
 
+![A door opening onto darkness, light spilling across the floor](future-lost/ace-second-chance.svg)
+
 Against all odds, you discover a flaw in the hostile survivors' operation. They're not as organized as you thought - their leader made a critical mistake, and you've found it.
 
 With this knowledge, you can undo what seemed irreversible. The catastrophe they caused can be unwound, the damage repaired, the threat neutralized. It will take everything you have, but you can make this right.
@@ -100,6 +114,8 @@ Sometimes the universe gives you a chance to rewrite your failures. This is your
 ### Narrative
 
 **A connection across time**
+
+![A candlelit desk of equations under a web of connected stars](future-lost/ace-connection.svg)
 
 Late at night, working on the time machine by candlelight, you have a strange thought: somewhere in the past, before the collapse, the younger version of Dr. Chen is making the theoretical breakthroughs that will save you.
 

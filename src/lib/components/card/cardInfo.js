@@ -177,6 +177,8 @@ export function getRoundProgress(state) {
 /** Auto-play hold, with read-aloud off: long enough to read the card */
 export const HOLD_BASE_MS = 1500;
 export const HOLD_PER_WORD_MS = 60;
+/** A beat to take in the card's picture, when it has one */
+export const HOLD_ART_MS = 1500;
 export const HOLD_MAX_MS = 15000;
 
 /** @returns {number} words in the card's headline and story */
@@ -186,8 +188,23 @@ export function countWords(card) {
 }
 
 /**
- * How long auto-play keeps a card on screen: 1.5s plus 60ms per word, capped at 15s.
+ * How long auto-play keeps a card on screen: 1.5s plus 60ms per word, plus 1.5s for a picture,
+ * capped at 15s.
  */
 export function getCardHoldMs(card) {
-	return Math.min(HOLD_MAX_MS, HOLD_BASE_MS + HOLD_PER_WORD_MS * countWords(card));
+	const art = card?.image?.src ? HOLD_ART_MS : 0;
+	return Math.min(HOLD_MAX_MS, HOLD_BASE_MS + art + HOLD_PER_WORD_MS * countWords(card));
+}
+
+/**
+ * The pictures of the next cards to be drawn (the top of the deck is its end), to fetch ahead
+ * so a card's art is there when it rises.
+ * @returns {string[]} image URLs, top card first
+ */
+export function getUpcomingArt(deck, count = 3) {
+	return (deck ?? [])
+		.slice(-count)
+		.reverse()
+		.map((card) => card?.image?.src)
+		.filter(Boolean);
 }

@@ -24,6 +24,8 @@
 	import GameOver from './GameOver.svelte';
 	import JournalEntry from './JournalEntry.svelte';
 	import DrawCard from './DrawCard.svelte';
+	import { getUpcomingArt } from './card/cardInfo.js';
+	import { preloadImages } from '../utils/preloadImages.js';
 	import StatusDisplay from './StatusDisplay.svelte';
 	import ConfirmModal from './ConfirmModal.svelte';
 	import RuleCaption from './RuleCaption.svelte';
@@ -880,6 +882,12 @@
 				break;
 		}
 	}
+
+	// The next cards' pictures are fetched ahead of their draw, so a card's art is there when it
+	// rises (the deck overlay itself only exists while a card is up)
+	$effect(() => {
+		preloadImages(getUpcomingArt(gameState.deck));
+	});
 </script>
 
 <!-- LR-1-02: every screen block shares one grid cell, so an outgoing screen fading out never

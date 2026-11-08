@@ -168,7 +168,7 @@ lose-message: Defeat message
 - Writers focus on **card types**, not card identifiers
 - System auto-assigns cards to the 52-card deck
 - Optional special modifiers: `skip-damage`, `return-king`
-- Optional card image: one markdown image line (`![alt](art/x.jpg)`) in the card body; shown framed above the story on the card face (`card/CardDisplay.svelte`). Relative paths resolve against the game file's URL when `parseGameFile` is given `{ baseUrl }`
+- Optional card image: one markdown image line (`![alt](art/x.jpg)`) in the card body; shown framed above the story on the card face (`card/CardDisplay.svelte`) and as a thumbnail in story mode (`StoryRound.svelte`). Relative paths resolve against the game file's URL when `parseGameFile` is given `{ baseUrl }`; the next cards' pictures are fetched ahead (`GameScreen.svelte`, `utils/preloadImages.js`) and auto-play holds a card with a picture 1.5s longer
 - Parser: `src/lib/parsers/markdownParser.js`
 
 **Full specification:** See `docs/game-config.md` and `docs/simplified-type-based-format.md`
