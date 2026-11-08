@@ -118,8 +118,7 @@
 		if (story === 'latest') await openLatestStory();
 		else if (story !== null) showBrowseGames = true;
 
-		loadGames();
-		await updateSaveData();
+		await loadGames();
 	});
 
 	onDestroy(() => clearTimeout(toastTimer));
@@ -142,19 +141,31 @@
 		return hasSeenInstructions() ? 'games' : 'first-run';
 	}
 
-	function loadGames() {
-		allGames = [...getCustomGames(), ...data.games].sort((a, b) => a.title.localeCompare(b.title));
+	/**
+	 * The game list and each game's save, shown together: a card never shows Play and then swaps
+	 * it for Continue once its save has been read.
+	 */
+	async function loadGames() {
+		const games = [...getCustomGames(), ...data.games].sort((a, b) =>
+			a.title.localeCompare(b.title)
+		);
+		gameSaveData = await readSaveData(games);
+		allGames = games;
 	}
 
 	async function updateSaveData() {
+		gameSaveData = await readSaveData(allGames);
+	}
+
+	async function readSaveData(games) {
 		const saveData = {};
-		for (const game of allGames) {
+		for (const game of games) {
 			const slug = gameSlug(game);
 			if (await hasSavedGame(slug)) {
 				saveData[slug] = await getSaveMetadata(slug);
 			}
 		}
-		gameSaveData = saveData;
+		return saveData;
 	}
 
 	function showToast(message, ms = 3000, tone = 'status') {
@@ -205,8 +216,7 @@
 
 		if (kind === 'remove') {
 			if (removeCustomGame(game.slug)) {
-				loadGames();
-				await updateSaveData();
+				await loadGames();
 				showToast(`Removed “${game.title}”`);
 			}
 			return;
@@ -273,8 +283,7 @@
 		try {
 			const result = addCustomGame(await file.text(), file.name);
 			if (result.success) {
-				loadGames();
-				await updateSaveData();
+				await loadGames();
 				showToast(`Added “${result.gameConfig.title}”`, 5000);
 			} else if (result.kind === 'storage') {
 				showError("Couldn't save the game in this browser. Free up some space and try again.");

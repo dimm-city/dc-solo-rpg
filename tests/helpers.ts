@@ -19,6 +19,9 @@ export async function openHomePage(page: Page) {
 	await page.evaluate((key) => localStorage.setItem(key, 'true'), INSTRUCTIONS_SEEN_KEY);
 	await page.goto('/');
 	await expect(page.getByTestId('home-page')).toBeVisible();
+	// The game cards appear once each game's save has been read, with Play or Continue already
+	// in place
+	await expect(page.locator('.game-card').first()).toBeVisible();
 }
 
 /**
