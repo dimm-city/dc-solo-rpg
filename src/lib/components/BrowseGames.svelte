@@ -31,7 +31,7 @@
 
 	let deleteMessage = $derived(
 		pendingDelete
-			? `“${pendingDelete.gameTitle || 'Untitled game'}” (${getStoryOutcome(pendingDelete).label}, ${saves.formatDate(pendingDelete.lastPlayed || pendingDelete.savedAt)}) and its journal will be deleted for good. This can't be undone.`
+			? `“${pendingDelete.gameTitle || 'Untitled game'}” (${getStoryOutcome(pendingDelete).label}, ${saves.formatDate(pendingDelete.lastPlayed || pendingDelete.savedAt)}) and its journal will be deleted. This can't be undone.`
 			: ''
 	);
 
@@ -40,8 +40,8 @@
 		pendingDelete = null;
 		const deleted = await saves.deleteGame(game.id);
 		notice = deleted
-			? `Deleted ${game.gameTitle || 'the story'}.`
-			: "That story couldn't be deleted. Please try again.";
+			? `Deleted “${game.gameTitle || 'Untitled game'}”.`
+			: "That story couldn't be deleted. Try again.";
 	}
 </script>
 
@@ -51,7 +51,7 @@
 	out:fade={{ duration: duration(ANIMATION_DURATION.STORY_MODE) }}
 >
 	<header class="browse-header">
-		<button class="back-button" onclick={onBack} aria-label="Back to menu">
+		<button class="back-button" onclick={onBack} aria-label="Back to home">
 			<svg viewBox="0 0 24 24" aria-hidden="true">
 				<path d="M15 19l-7-7 7-7" />
 			</svg>
@@ -59,7 +59,7 @@
 
 		<div class="title-section">
 			<h1 class="page-title">Story Library</h1>
-			<p class="subtitle">Your finished runs, in your own words.</p>
+			<p class="subtitle">Your finished games, in your own words.</p>
 		</div>
 
 		{#if !saves.isLoading && saves.completedGames.length > 0}
@@ -87,7 +87,7 @@
 					<path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
 				</svg>
 				{#if saves.completedGames.length === 0}
-					<h2>No completed games yet</h2>
+					<h2>No stories yet</h2>
 					<p>Finish a game, win or lose, and its story is kept here to read again.</p>
 					<button class="text-button" onclick={onBack}>Choose a game</button>
 				{:else}
@@ -114,10 +114,10 @@
 
 <ConfirmModal
 	isOpen={!!pendingDelete}
-	title="Delete this story?"
+	title="Delete story"
 	message={deleteMessage}
-	confirmText="Delete"
-	cancelText="Keep it"
+	confirmText="Delete story"
+	cancelText="Keep story"
 	onConfirm={confirmDelete}
 	onCancel={() => (pendingDelete = null)}
 />
@@ -213,7 +213,7 @@
 		max-width: 1200px;
 		margin: 0 auto;
 		min-height: 0;
-		font-size: 0.9375rem;
+		font-size: 0.875rem;
 		color: #b8c5d6;
 	}
 
@@ -283,7 +283,7 @@
 		margin: 0;
 		font-family: var(--font-body);
 		font-size: 1.25rem;
-		font-weight: 700;
+		font-weight: 600;
 		letter-spacing: 0.02em;
 		text-transform: none;
 		text-shadow: none;
@@ -345,7 +345,7 @@
 		}
 
 		.subtitle {
-			font-size: 0.9375rem;
+			font-size: 0.875rem;
 		}
 
 		.games-grid {

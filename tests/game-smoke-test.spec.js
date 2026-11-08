@@ -200,7 +200,7 @@ test.describe('DC Solo RPG - Smoke Test', () => {
 		});
 
 		// Back returns to the game selection screen
-		await page.getByRole('button', { name: 'Back to menu' }).click();
+		await page.getByRole('button', { name: 'Back to home' }).click();
 		await expect(page.getByTestId('home-page')).toBeVisible();
 	});
 

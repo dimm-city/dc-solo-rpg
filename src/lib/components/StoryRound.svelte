@@ -390,6 +390,13 @@
 		}
 	}
 
+	/* Landscape phones: tighter rhythm, so the cards and the entry's first lines fit the view */
+	@media (max-height: 500px) {
+		.story-round {
+			gap: 12px;
+		}
+	}
+
 	@media (prefers-reduced-motion: reduce) {
 		.chip {
 			transition: none;

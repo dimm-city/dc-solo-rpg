@@ -46,7 +46,11 @@
 	let isLastRound = $derived(nav.currentRoundIndex === totalRounds - 1);
 
 	let gameTitle = $derived(savedGame?.gameTitle || 'Untitled game');
-	let playerName = $derived(savedGame?.playerName || '');
+	// No name in the header for an anonymous run (the Guest default)
+	let playerName = $derived.by(() => {
+		const name = (savedGame?.playerName || '').trim();
+		return name.toLowerCase() === 'guest' ? '' : name;
+	});
 	let outcome = $derived(getStoryOutcome(savedGame ?? {}));
 	let written = $derived(enrichedRounds.map((round) => !!round.journalEntry || !!round.finalEntry));
 	let finishedOn = $derived.by(() => {
@@ -122,7 +126,7 @@
 				<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 19l-7-7 7-7" /></svg>
 			</button>
 
-			<h1 class="game-title">{gameTitle}</h1>
+			<h1 class="game-title" title={gameTitle}>{gameTitle}</h1>
 
 			<p class="story-meta">
 				<span class="outcome" class:won={outcome.won}>{outcome.label}</span>
@@ -287,7 +291,7 @@
 	}
 
 	.outcome {
-		font-weight: 700;
+		font-weight: 600;
 		color: #ff8fa3;
 	}
 
@@ -378,12 +382,49 @@
 		}
 
 		.story-meta {
-			font-size: 0.9375rem;
+			font-size: 0.875rem;
 		}
 
 		.reader {
 			padding: 12px 16px 32px;
 			gap: 20px;
+		}
+	}
+
+	/* Landscape phones: the title shares row 1 with the back and AI buttons, on one line, so the
+	   round's cards and the first lines of the entry show above the Previous / Next bar */
+	@media (max-height: 500px) {
+		.story-header {
+			grid-template-columns: auto minmax(0, 1fr) auto;
+			padding-top: 12px;
+			gap: 4px 16px;
+		}
+
+		.back-button {
+			grid-area: 1 / 1;
+			position: static;
+		}
+
+		.game-title {
+			grid-area: 1 / 2;
+			font-size: 1.75rem;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			overflow-wrap: normal;
+		}
+
+		.header-ai {
+			grid-area: 1 / 3;
+		}
+
+		.story-meta {
+			grid-area: 2 / 2 / 3 / 4;
+		}
+
+		.reader {
+			padding-top: 8px;
+			gap: 12px;
 		}
 	}
 

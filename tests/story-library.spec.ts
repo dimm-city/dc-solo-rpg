@@ -176,10 +176,30 @@ test.describe('Story Library', () => {
 		await expect(page.getByTestId('story-card').first()).not.toContainText('Tower');
 		// The back button shows its chevron (it collapsed to an empty circle on iPhone)
 		const chevron = await page
-			.getByRole('button', { name: 'Back to menu' })
+			.getByRole('button', { name: 'Back to home' })
 			.locator('svg')
 			.boundingBox();
 		expect(chevron?.width).toBeGreaterThanOrEqual(20);
+	});
+
+	test('with no finished game: the library says so, and offers a game', async ({ page }) => {
+		await openLibrary(page, []);
+		await expect(page.getByText('Your finished games, in your own words.')).toBeVisible();
+		await expect(page.getByRole('heading', { level: 2, name: 'No stories yet' })).toBeVisible();
+		await expect(page.getByRole('button', { name: 'Choose a game' })).toBeVisible();
+	});
+
+	test('?story=latest opens the newest story at round 1; Back returns to the library', async ({
+		page
+	}) => {
+		await openLibrary(page);
+		await page.goto('/?story=latest');
+		const story = page.getByTestId('story-mode');
+		await expect(story).toBeVisible();
+		await expect(story.locator('.game-title')).toHaveText('Future Lost');
+		await expect(currentRound(page).getByRole('heading')).toContainText('Round 1');
+		await page.getByRole('button', { name: 'Back to Story Library' }).click();
+		await expect(page.getByRole('heading', { level: 1, name: 'Story Library' })).toBeVisible();
 	});
 
 	test('the sort control is sized to its content', async ({ page }) => {
@@ -198,15 +218,24 @@ test.describe('Story Library', () => {
 		await card.getByRole('button', { name: 'More options for Future Lost' }).click();
 		await page.getByRole('menuitem', { name: /Delete story/ }).click();
 		const dialog = page.getByRole('dialog');
-		await expect(dialog).toContainText('Delete this story?');
-		await dialog.getByRole('button', { name: 'Keep it' }).click();
+		await expect(dialog).toHaveAccessibleName('Delete story');
+		await expect(dialog.getByTestId('confirm-message')).toHaveText(
+			/^“Future Lost” \(Taken by the fourth King, .+\) and its journal will be deleted\. This can't be undone\.$/
+		);
+		await expect(dialog).not.toContainText('for good');
+		await dialog.getByRole('button', { name: 'Keep story' }).click();
 		await expect(page.getByTestId('story-card')).toHaveCount(2);
 
 		await card.getByRole('button', { name: 'More options for Future Lost' }).click();
 		await page.getByRole('menuitem', { name: /Delete story/ }).click();
-		await page.getByRole('dialog').getByRole('button', { name: 'Delete', exact: true }).click();
+		await page
+			.getByRole('dialog')
+			.getByRole('button', { name: 'Delete story', exact: true })
+			.click();
 		await expect(page.getByTestId('story-card')).toHaveCount(1);
-		await expect(page.getByRole('status').filter({ hasText: 'Deleted Future Lost' })).toBeVisible();
+		await expect(
+			page.getByRole('status').filter({ hasText: 'Deleted “Future Lost”' })
+		).toBeVisible();
 
 		// Gone for good: still gone after a reload
 		await page.reload();
@@ -247,6 +276,8 @@ test.describe('Story mode', () => {
 
 		// The header names the outcome; the stats use the game's words
 		await expect(page.getByTestId('story-mode')).toContainText('Taken by the fourth King');
+		// An anonymous run shows no player name (the Guest default)
+		await expect(page.locator('.story-header')).not.toContainText(/guest/i);
 		await expect(round).toContainText('Stability');
 		await expect(round).toContainText('Kings');
 		await expect(page.getByTestId('story-mode')).not.toContainText(/Tower|Failures/);
