@@ -1926,6 +1926,29 @@ QA and integration of the second sign-off's fixes, at `f642635` on
   removed; their commits are on origin. The second sign-off reviews are saved in
   `docs/ux-qa/design-polish/v3/`, and the first ones are kept as `*.signoff1.md`.
 
+### stage-4
+
+QA and integration of the third sign-off's fixes, at `7b4f138` on
+`claude/vibrant-curie-w9bn88`.
+
+- **Built.** On phones, hover styles no longer stick after a tap: the step button and the
+  toolbar show hover only on pointer devices, and a tap gets press feedback instead. The rule
+  caption is as wide as the step button on desktop (480px), so their edges line up. The Story
+  Library header in landscape matches story mode's. Copy: the final log keeps a running total
+  with its last word, so the card label shares a line with the row's first words, and the
+  timeline shows the "more below" cue. The Game Over recap reads each label once and always
+  shows Tokens, locked when the Ace of Hearts was never found.
+- **Checks.** Unit tests: 68 files, 1096 passed, 1 skipped (the old Easy-difficulty skip).
+  ESLint and Prettier: clean. `npm run check`: 0 errors, 0 warnings. `npm run build`: passes,
+  and publint says "All good".
+- **Playwright.** Full suite on Desktop Chrome, Mobile Chrome and Tablet: 545 passed, 7 skipped
+  (the same project-conditional skips as stage-1), 0 failed, 0 flaky, in 23.5 minutes.
+- **Found.** No failures, so no fixes were needed at this stage.
+- **Cleaned up.** The `design/v3-board-4` and `design/v3-surfaces-4` worktrees and branches are
+  removed; their commits are on origin. The third sign-off reviews are saved in
+  `docs/ux-qa/design-polish/v3/`. The second visual-layout sign-off is kept as
+  `signoff-visual-layout.signoff2.md`; the second game-copy sign-off is in git at `f642635`.
+
 ## Recommendations
 
 ### Earlier reviews: what is fixed, open, or fixed badly
