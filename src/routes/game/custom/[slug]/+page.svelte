@@ -59,7 +59,7 @@
 	</div>
 {:else}
 	<div class="loading-screen">
-		<p>Loading custom game...</p>
+		<p>Loading the game…</p>
 	</div>
 {/if}
 

@@ -219,9 +219,9 @@ test.describe('About page', () => {
 		expect(column!.width).toBeLessThanOrEqual(720);
 	});
 
-	test('should link back to the console', async ({ page }) => {
+	test('should link back to home', async ({ page }) => {
 		await page.goto('/about');
-		await page.getByRole('link', { name: 'Back to the console' }).click();
+		await page.getByRole('link', { name: 'Back to home' }).click();
 		await expect(page).toHaveURL(/\/$/);
 	});
 });

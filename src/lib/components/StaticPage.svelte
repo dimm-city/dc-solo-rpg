@@ -1,6 +1,6 @@
 <script>
 	/**
-	 * StaticPage - shell for the reading pages (/about, /how-to): a back link to the console,
+	 * StaticPage - shell for the reading pages (/about, /how-to): a "Back to home" link,
 	 * a screen title and one 720px reading column.
 	 *
 	 * @prop {string} title Screen title (also the tab title: "<title> · Dream Console")
@@ -35,7 +35,7 @@
 			>
 				<path d="m15 18-6-6 6-6" />
 			</svg>
-			Back to the console
+			Back to home
 		</a>
 	</nav>
 

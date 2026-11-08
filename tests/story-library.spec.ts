@@ -169,7 +169,7 @@ test.describe('Story Library', () => {
 		const kings = page.getByTestId('story-card').filter({ hasText: 'Future Lost' });
 		await expect(kings).toContainText('Taken by the fourth King');
 		await expect(kings).toContainText('4 rounds');
-		const win = page.getByTestId('story-card').filter({ hasText: 'Locked In the Tech District' });
+		const win = page.getByTestId('story-card').filter({ hasText: 'Locked in the Tech District' });
 		await expect(win).toContainText('Escaped');
 		await expect(win).toContainText('2 rounds');
 

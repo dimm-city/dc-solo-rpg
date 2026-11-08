@@ -17,7 +17,7 @@
 	<div class="error-panel">
 		<h1 id="error-title" class="error-title">Signal lost</h1>
 		<p class="error-message">{message}</p>
-		<a class="error-action" href={resolve('/')}>Back to the console</a>
+		<a class="error-action" href={resolve('/')}>Back to home</a>
 	</div>
 </section>
 

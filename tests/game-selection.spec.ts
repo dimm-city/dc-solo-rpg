@@ -52,7 +52,7 @@ test.describe('Game Selection Screen', () => {
 		);
 		await expect(
 			page.getByTestId('game-card-ghost-in-the-machine').locator('.game-subtitle')
-		).toHaveText('Grab and go turned mad dash for the gate');
+		).toHaveText('A grab-and-go turned mad dash for the gate');
 		await expect(page.getByText('Begin your adventure')).toHaveCount(0);
 	});
 
