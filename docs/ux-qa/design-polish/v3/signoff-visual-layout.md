@@ -1,190 +1,134 @@
-# Sign-off 2: visual/typography + layout/responsive
+# Sign-off 3: visual/typography + layout/responsive
 
-Captures: signoff-2 (head 0ea3607). Source at HEAD 7e10008 differs only in a comment. I ran my own probes at HEAD
-on a dev server (port 5199, now stopped). Their scripts and output are in v3/vl3/:
+Sign-off 3 is complete.
 
-- hud125/: the HUD at 16px and 20px roots
-- menu/: the ⋯ menu keyboard model
-- menu-dialogs/ and intro-settings/: focus in and out of dialogs
-- orphans/: lone last words, scanned live across the surfaces
-- pitch/: the home and first-run pitch at seven widths
-- motion/: a roll for tasks and two card draws at iPhone 13, with every landmark's box sampled each frame, the
-  video and a frame sheet (motion/sheet.png)
-- pairs/: per-state review sheets
-
-The prior review is saved as v3/signoff-visual-layout.signoff1.md.
+Captures: signoff-3 (head 3d0eb29). HEAD d7345d4 changes only docs/ux-qa/ux-qa-review.md. My own probes ran at HEAD
+on a dev server (port 5197, stopped at the end). Scripts and output are in v3/vl4/. The sign-off 2 review is saved
+as v3/signoff-visual-layout.signoff2.md.
 
 ## Verdicts
 
-- **VT-1-11: resolved.** I computed the Inter sizes on every captured screen (raw texts and elements, 45 states x 4
-  viewports).
-  - No screen uses more than 5 Inter sizes.
-  - The only pair 1px apart is the planned 11px HUD label next to the 12px toolbar label at 360, and only below
-    375px (VT-1-10 exemption).
-  - The fractional sizes (22.464, 24.624, 25.896, 32.4, 35.1) are all lixdu display titles, which are exempt.
-  - The 13.33px entries in the story library are `<button>` containers whose text renders in child spans.
-  - The notice tab is 14px on one line at 360, 390, 844x390 and 1440 (notice-return-king raw).
-- **VT-1-14: resolved.**
-  - At 844x390 the final log ends "THE END · The fourth King / was revealed.", with no lone word
-    (final-log-timeline/iphone-13-landscape.png).
-  - The other listed states pass: round-start has no lone words at any viewport (orphan scan); the home pitch and
-    first-run are covered under s-05; the home card title wraps "LOCKED IN / THE TECH / DISTRICT", a balanced
-    display title.
-  - Lone words outside VT-1-14's listed states are filed as s-09.
-- **visual-layout-s-01: resolved.** I probed 360, 375, 390, 412, 844x390 and 1440 at 16px and 20px roots, with the
-  widest values (18/20, 0/4, 20, 52, 3/4, 10/10). Result: 0 fails. The tiles are disjoint, ink clearance is at
-  least 4.0px on phones, and the Roll|Cards seam is 0.00px off (-0.01 at 844x390@20). At the default root the
-  sizes are unchanged: 11/12px labels, 18px values and 11px maxes on phones (vl3/hud125/hud125.json, sheet.png).
-- **visual-layout-s-02: resolved.**
-  - The Ace of Hearts card face shows "it just *ends*" and "You're *using* it." in italic, with no markers, at 360
-    and 390 (card-primary-success-long).
-  - Every card.story consumer goes through storyText.js: CardDisplay.svelte and StoryRound.svelte:95 use
-    storyHtml(), and CardDeck.svelte:174 uses storyPlain() for narration. No other consumer exists.
-- **visual-layout-s-03: resolved.** Measured at 360 and 390 (vl3/menu/android-small.txt and iphone-13.txt):
-  - Enter or Space on ⋯ focuses Settings.
-  - ArrowDown cycles Settings, Dice theme, Auto-play, Read aloud and wraps; ArrowUp, End and Home also work.
-  - Tab, Shift+Tab and Escape close the menu (aria-expanded false) with focus on ⋯.
-  - ArrowUp or ArrowDown on ⋯ opens the menu on its last or first item.
-  - The step button is never focused while the menu is open.
-  - The fill is rgb(8,12,22); no glow shows through (vl3/menu/menu-390-crops.png).
-  - What happens after an item is chosen is a separate defect, filed as s-07.
-- **visual-layout-s-04: resolved.**
-  - In caption-odd the caption has the readout's 8px top-left and bottom-right chamfers, with a 1px gradient
-    border at the readout's 55% (zoom: vl3/caption-corners-360.png).
-  - At 844x390 the caption spans 566..836, which matches the step button's 566..836.
-  - In drift.md every other position is unchanged (caption Δ0 at every viewport).
-- **visual-layout-s-05: resolved.** I probed home and first-run at 360, 375, 390, 412, 768, 844x390 and 1280
-  (vl3/pitch).
-  - Each sentence stays on one line at every width.
-  - At 360, 375 and 390 both surfaces read "A solo journaling game." / "Draw, roll, write."; home also does at 412.
-  - First-run at 412 and up, and home at 768 and up, fit on one line.
-  - No width overflows horizontally.
-
-The owner items and timing were not on my list. The motion probe at iPhone 13 (390x664, the Safari viewport)
-records a roll for tasks and two draws.
-- The HUD, toolbar, readout and step button each keep one box for every frame they are visible. Only the card
-  moves, within its 8px rise.
-- The die resting on the step button and the beats between cards follow the owner's decisions.
+- **visual-layout-s-06: resolved.** The signoff-3 raw controls give the Begin box and the round-start step box as
+  identical at every core viewport: 360 24,512 312x48; 390 24,716 342x48; 844x390 565.9,314 270.1x48; 1440
+  480,820 480x48 (0px difference). The label is one line everywhere (19.2px box at 16px, 21.6px at 18px). The
+  landscape Begin now reads "BEGIN YOUR JOURNEY" on one line in the action column (intro/iphone-13-landscape.png).
+- **visual-layout-s-07: resolved.** vl4/menu-dialogs.cjs at 390 and 360 (touch) and in a 700px window, for
+  Settings and Dice theme (vl4/menu-dialogs/report.txt). Enter on ⋯ then Enter on the item: the dialog is open with
+  focus inside it. 40 Tab and 40 Shift+Tab presses never leave it. One Escape closes it, and focus is on "More game
+  options".
+- **visual-layout-s-08: resolved.** vl4/motes.cjs (the developer's pixel probe, rerun at HEAD) at 360 and 1440:
+  `.neural-background` is z-index −1 on home, library, story mode and About. 0 changed pixels inside any opaque box,
+  except 12 at the clipped corner of the desktop home card (outside the chamfer, not on the fill). The motes still
+  show in the gaps (871 to 246,313 changed pixels per page).
+- **visual-layout-s-09: resolved.** vl4/orphans.cjs (the acceptance scan) at 360, 390, 844x390 and 1440
+  (vl4/orphans.log). The only hits are the home card display title "LOCKED IN THE TECH DISTRICT" (balanced, accepted
+  under VT-1-14) and one card story ending "straightforward." (16 characters, inside the acceptance). The exit
+  dialog reads "Pick it up / from home." AboutContent.svelte:27 and :35 use "Dimm&nbsp;City".
+- **visual-layout-s-10: resolved.** vl4/journal.cjs, a six-card round at 360 and 375 (vl4/journal/report.txt).
+  - At the top, the list has `more-below`, the 40px mask and the chevron at opacity 1. At 375 the edge falls exactly
+    between rows (0 cut rows), which is the case the finding was about, and the cue still shows.
+  - Scrolled to the end, the class and mask are gone and the chevron is at opacity 0. Scrolled back up 20px, the
+    cue returns.
+  - vl4/journal/se-pair.png shows top and end side by side.
 
 ## New findings
 
-### visual-layout-s-06 · medium · layout · play: the intro's Begin button is not in the step slot
+### visual-layout-s-11 · medium · visual · play: on phones a tap leaves the step button in its hover style
 
-When the intro hands over to the board, the primary action jumps at every viewport. In landscape the intro button
-is also a different size and wraps to two lines. Boxes are from the signoff-2 raw intro and round-start controls:
+The step button's look depends on what the player last tapped, not on the game state. After a tap, the frame turns
+gold to cyan, brightens and gets a gold glow. It stays that way until the player taps something else (a card), and
+the next step button is magenta to cyan again. The step button is mounted once and keeps the same slot, so a phone
+player sees its frame flip between two styles from step to step. The owner asked for exactly this slot to be
+settled.
 
-| viewport | intro "Begin your journey" | first board step ("Roll for tasks") | change |
-|---|---|---|---|
-| 360x640 | 16,576 328x48 | 24,512 312x48 | Δy −64, Δx +8, Δw −16 |
-| 390x844 | 16,780 358x48 | 24,716 342x48 | Δy −64, Δw −16 |
-| 844x390 | 590,161 238x67 ("BEGIN YOUR / JOURNEY") | 566,314 270x48 | Δy +153, Δh −19 |
-| 1440x900 | 480,836 480x48 | 480,820 480x48 | Δy −16 |
-
-- Shots: intro/*.png against round-start/*.png.
-- Cause: the intro renders its own ButtonBar + ContinueButton (GameScreen.svelte:1018-1024), not the `#step-action`
-  slot that every board step uses.
-- Fix: render the intro's button with the step slot's geometry (StepAction, or the same position rules) at every
-  breakpoint. In landscape it then sits in the action column's bottom slot at 270px, where the label fits on one
-  line.
+- Probe vl4/hover.cjs uses real touch taps (`page.tap`) at 390 and 360, where `(hover: hover)` is false and
+  `(pointer: fine)` is false (vl4/hover/report.txt, sheet vl4/hover/sheet-iphone-13.png):
+  - Before any tap: `:hover` false, `--aug-border-bg` is `linear-gradient(135deg, #d946ef, #00ffff)`, filter none,
+    wrapper glow `rgba(217,70,239,0.3)`.
+  - After tapping Begin, and again after tapping to roll: `:hover` true, border
+    `linear-gradient(135deg, #ffd700, #00ffff)`, `filter: brightness(1.08)`, wrapper glow
+    `drop-shadow(rgba(255,215,0,0.35) 0 0 10px)`. The new label ("Roll for instability", "Begin round 1") inherits
+    it.
+  - After a tap elsewhere it is back to the rest style.
+- The captures show the same split. round-start, task-result, stability-nat1, salvation-n4-fatal and result-hold
+  have the gold frame (the button was the last thing pressed). stability-check, notice-return-king and
+  easy-final-check have the magenta one (compare round-start/android-small.png with
+  stability-check/android-small.png).
+- Cause: the hover rules are not limited to hover-capable pointers. AugmentedButton.svelte:123-129
+  (`.aug-button-wrapper:hover` glow) and :227-237 (`.aug-button:hover` border, brightness and shadow, and
+  `.aug-button.primary:hover` lifts 2px). The key-cap in the same file is already gated
+  (`@media (hover: hover) and (pointer: fine)`, :294). The toolbar's `.status-bar-button:hover`
+  (PlayerInfoBar.svelte:504) has the same gap.
+- Fix: move these hover rules inside `@media (hover: hover) and (pointer: fine)`, as the key-cap is. Press feedback
+  on touch stays with `:active` and the 400ms `changed` highlight. Do the same for the toolbar buttons.
 - Acceptance:
-  - At 360, 390, 844x390 and 1440, the intro button's box equals the round-start step button's box ±1px (x, y, w, h).
-  - Its label is one line at every core viewport.
+  - Rerun vl4/hover.cjs at 390 and 360 (touch). After each tap (Begin, the roll, Begin round 1), the step button
+    reads the rest values: border `#d946ef` to `#00ffff`, filter none (or the `changed` brightness inside its
+    400ms window), and the phone wrapper glow.
+  - At 1440 with a mouse, hover still shows the gold frame.
 
-### visual-layout-s-07 · medium · layout · overlays: dialogs opened from the ⋯ menu lose keyboard focus
+### visual-layout-s-12 · low · layout · play: on desktop the rule caption is narrower than the step button it docks above
 
-Settings and Dice theme opened from the ⋯ menu start with focus on `<body>`. Escape does nothing until the user
-Tabs into the dialog. On close, focus falls back to `<body>`, not to ⋯.
+The caption docks directly above the step button, and the two relate differently at each breakpoint.
 
-- Measured at 390 (touch) and in a 700px desktop window (vl3/menu-dialogs/report.txt):
-  - Enter on ⋯, then Enter on Settings: the dialog is open with focus on BODY.
-  - Escape: the dialog is still open.
-  - Tab, then Escape: the dialog closes with focus on BODY.
-  - Dice theme behaves the same way.
-- The toolbar path is correct, so this applies only to the ⋯ path. At 844x390 and 1440 focus moves into the
-  dialog, Escape closes it, and focus returns to SETTINGS (vl3/intro-settings/report.txt).
-- Cause:
-  - PlayerInfoBar.svelte:165-168: `fromMenu()` closes the menu without moving focus.
-  - ContentModal.svelte:69-75 therefore records the vanishing menu item as `previouslyFocused`. Its
-    `dialogElement.focus()` does not hold, and on close focus goes to a removed node.
-- Fix: in `fromMenu`, focus ⋯ first (closeMenu({ restoreFocus: true })), then open the dialog. The modal then
-  records ⋯ as the trigger and takes focus.
-- Acceptance: at 390 (touch) and in a 700px window, after Enter on ⋯ and Enter on Settings (and on Dice theme):
-  - focus is inside the dialog;
-  - Tab stays inside it;
-  - one Escape closes it;
-  - focus is back on ⋯.
+| viewport | caption | step button | relation |
+|---|---|---|---|
+| 360 | 8..352 (344) | 24..336 (312) | caption wider; shares the HUD, readout and toolbar edges |
+| 844x390 | 566..836 (270) | 566..836 (270) | edge to edge (the s-04 rule) |
+| 1440 | 510..930 (420) | 480..960 (480) | caption 30px inside each edge; it shares no edge on the board (readout and HUD 240..1200) |
 
-### visual-layout-s-08 · low · layout · pages: the ambient motes paint over content on home, library, story and About
+- Evidence: signoff-3/drift.md (caption-odd rows), crop vl4/caption-desktop-crop.png.
+- Cause: RuleCaption.svelte:63 sets `width: min(100%, 420px)`. Only landscape (:104-108) matches the button.
+- At 1440 the two stacked boxes are 87.5% of each other's width. Near-equal widths read as a misalignment, not a
+  choice.
+- Fix: cap the caption at the step button's width instead of 420px: `width: min(100%, var(--cta-max, 480px))`.
+  Phones are unchanged (100% is under 480). On desktop it then shares both edges with the button, as in
+  landscape. 480px of 14px text is about 68ch, inside the 45-75ch measure.
+- Acceptance: in caption-odd at 1440 the caption box is 480,y 480xh, with x and w ±1px of the step button. At 360,
+  390 and 844x390 the boxes are unchanged.
 
-- NeuralBackground.svelte:158 keeps its default `z-index: var(--neural-z, 10)` on the home route (+page.svelte:386,
-  which also hosts the story library and story mode) and on StaticPage. Their content sits at z-index 1
-  (+page.svelte:497-498, StaticPage.svelte:50-51). Only Game.svelte:107 sets −1.
-- So the motes drift over cards, buttons and prose.
-- Pixel evidence: in home-first-visit/android-small.png the opaque Play fill (120,31,174) reads (87,95,198) under a
-  mote at (420,1002) device px. The fill is `linear-gradient(#831d98, #6d22c7)`, HomeGameCard.svelte:304.
-- Fix: put the motes behind content on these hosts (`--neural-z: 0` or −1, with content at 1), as the game already
-  does.
-- Acceptance: on home, library, story and About at 360 and 1440:
-  - no mote pixels fall inside an opaque button or a text box (the Play fill samples uniform);
-  - the motes still show in the gaps.
+### visual-layout-s-13 · low · layout · pages: in landscape the Story Library title takes two lines at the desktop size
 
-### visual-layout-s-09 · low · visual · global: lone last words remain in prose outside VT-1-14's states
+- At 844x390 the library title is lixdu 40px on two lines ("STORY / LIBRARY", 32..124). With the subtitle it fills
+  32..152, which is 39% of the viewport height, so only one row of cards shows (library-stories/iphone-13-landscape.png).
+- The cause is `.page-title { font-size: clamp(1.75rem, 6vw, 2.5rem) }` (BrowseGames.svelte:196-205). It sizes the
+  title by width, so a landscape phone gets the desktop 40px.
+- Story mode, one tap away in the same viewport, already has a landscape rule (LR-1-09, StoryMode.svelte
+  `@media (max-height: 500px)`): a 1.75rem title on one line beside the back button. The two Story Library pages
+  therefore use different title sizes and header layouts at 844x390, and the back button sits centred on a
+  152px block in one and on a 32px line in the other.
+- Fix: give the library the same landscape rule. At `(max-height: 500px)` set `.page-title` to 1.75rem on one line,
+  with the back button centred on it as in story mode.
+- Acceptance:
+  - At 844x390 the library title is 28px and one line, and the header block (title plus subtitle) is 64px or less.
+  - The second row of story cards starts above y 330.
+  - 360, 390 and 1440 are unchanged.
 
-The live scan (vl3/orphans/orphans.json, vl3/orphans.cjs) finds these:
+## Checked and not filed
 
-- **Exit dialog, 390:** "Your progress is saved. Pick it up from / home." Every player sees this.
-  ConfirmModal.svelte:54-60 has no text-wrap rule (exit-confirm-game/iphone-13.png).
-- **Intro:**
-  - 390: "…running out of / time." (intro/iphone-13.png)
-  - 360: "…remove all 10 Tokens to / escape."
-  - 844x390: "…lost in time / forever."
-- **Game Guide and /how-to, 360 to 1440:** paragraphs ending in a lone "draw.", "reminder.", "need.", "fall.",
-  "revealed." or "on.".
-- **About, 360:** "Dream Console is made by Dimm / City." This splits the studio's name.
-- **Card headline, 360:** Ghost in the Machine's Ace of Hearts ends "…know exactly how to / disappear." even with
-  `text-wrap: pretty` (CardDisplay.svelte:521-530; card-primary-success-long/android-small.png).
-- **Journal round list, 360:** "You find a blueprint of the time / machine".
-
-Only four `text-wrap: pretty` rules exist in src. VT-1-14 recommended pretty on every paragraph of board, card,
-caption, home and dialog copy.
-
-- Fix:
-  - Make `text-wrap: pretty` the default for body copy (p, li, td, .confirm-message, .round-text) in styles.css.
-  - Use `text-wrap: balance` on the card headline (.byte-data, up to 4 lines).
-  - Put a no-break space in "Dimm City" on About.
-- Acceptance: rerun vl3/orphans.cjs at 360, 390, 844x390 and 1440.
-  - No prose block of 2 or more lines ends on a single word under 10 characters.
-  - "Dimm City" never splits.
-
-### visual-layout-s-10 · low · layout · overlays: at 360 the journal's round list hides cards with no cue
-
-- At ≤600px the round list scrolls inside itself (an owner decision). Its height is `max-height: min(28dvh, 16rem)`
-  (JournalEntry.svelte:849-853).
-- At 360 that shows three rows, and the bottom edge falls exactly between the third row's lines.
-  - That row reads "You're caught in a toxic gas"; its last word, "leak", is hidden.
-  - Three more cards (4♣, A♦, 9♣; raw offscreenTexts inScroller) are out of view.
-  - Nothing shows that more follow: no fade, chevron or partial row (journal-entry/android-small.png).
-- At 390 and 844x390 a cut row happens to show, and desktop shows all six.
-- Fix: give the list the card story's scroll cue (a bottom fade plus the chevron, CardDisplay's scrollCue) while
-  rows remain below. Alternatively, size it to whole rows plus half a row.
-- Acceptance: at 360 and 375 with a six-card round:
-  - while rows remain below, the list shows a cue (a fade with the chevron, or a visibly cut row);
-  - the cue goes away at the end of the list.
-
-### Checked and not filed
-
-- **Two-line title drift.** drift.md shows a 13-14px title-ink shift on phones, which is the centred-slot model I
-  accepted in sign-off 1 (Δcx 0, the box fixed).
-- **Intro toolbar.** The toolbar on the intro is opacity 0 and inert, so it cannot be tabbed into or hit.
-- **Desktop main-area overflow.** The 16px "own overflow" on the desktop main area cuts nothing (the step button
-  ends at 868, the box at 884).
-- **Kings label.** The KINGS label turning red at the first King is the VT-1-15 decision.
-- **HUD maxes.** Maxes at 11px (phones) and 10px (landscape) are the OWN-1 spec.
-- **Mono face.** Share Tech Mono on the log stat line is the declared --font-mono.
-- **Intro tab order.** On phones the DOM order puts the toolbar before the step button. A skip link comes first,
-  and the order is the same at every breakpoint; I accepted it in sign-off 1.
+- **Two-line STABILITY CHECK.** The title is the only thing that moves (13-14px of ink, phones in portrait), and its
+  box holds. This is the centred-slot model I accepted in sign-offs 1 and 2. The card tab to title gap is 8px in
+  those states, which still groups the tab with the title.
+- **Desktop description wrap.** salvation-n4-step wraps at 1440 ("…Survive this Stability / check and a Token comes
+  off.", 600px max-width at 20px). It is balanced, and its slot holds.
+- **Card note separators.** "UNLOCKED · NEEDS 17+ · / A STABILITY CHECK FOLLOWS" ends a line on "·" at 360 and 390.
+  That is the DP-1-04/DP-1-16 clause rule (the separator stays with its clause), not a defect.
+- **Second home card title at 360.** "LOCKED / IN THE / TECH / DISTRICT" is four lines (129px) at 28px with balance
+  (vl4/home/android-small-card2.png). No three-line break fits a 280px body at 28px, the text is author content,
+  and it is below the fold. Left as a note for the owner.
+- **Home at 844x390.** The first view is header, pitch and key art, and the card titles start at y 374. The page
+  scrolls, the cut art and title act as the cue, and fitting a Play button above the fold would mean a different
+  card layout, which is beyond polish.
+- **Dice theme tiles.** Two-word names wrap at 360 and 390 ("PINK / DREAMS", "BLOOD / MOON", "GLITTER / PARTY"),
+  which makes those rows taller. Labels stay top-aligned in each row. This is ordinary grid behaviour.
+- **HUD labels at 844x390.** The labels' line boxes are cut by 0.5px at the HUD frame (raw `clipped`). The ink has
+  at least 4px of clearance (s-01).
+- **Touch targets.** Every board control is 44px or more at every core viewport (raw controls).
+- **Overflow.** No page-level horizontal overflow on any board or surface capture.
 
 ## Approval
 
-- visual: **not approved.** s-09 is open; s-08 is filed under layout but is visible on every home screen.
-- layout: **not approved.** s-06, s-07, s-08 and s-10 are open.
+- visual: **not approved.** s-11 is open: the primary button's frame changes style with the last tap on every phone.
+- layout: **not approved.** s-12 and s-13 are open.
+
+All five listed items (s-06 to s-10) are resolved. The dev server I started (port 5197) is stopped.
