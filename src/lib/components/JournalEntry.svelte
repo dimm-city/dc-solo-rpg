@@ -986,9 +986,10 @@
 			font-size: 1.75rem;
 		}
 
-		/* Landscape phones: labels go and the list rows tighten; the writing keeps its room */
+		/* Landscape phones: the list rows tighten; every column keeps its 12px label, so the
+		   entry is still named once text is typed (game-copy-s-11) */
 		.section-label {
-			display: none;
+			margin-bottom: 0.125rem;
 		}
 
 		.round-list {
