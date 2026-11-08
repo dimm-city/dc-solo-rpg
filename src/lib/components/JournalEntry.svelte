@@ -11,6 +11,7 @@
 	import { getStatusLine } from '../utils/endingSummary.js';
 	import { cardShort } from './story/storyCards.js';
 	import SuitText from './card/SuitText.svelte';
+	import { scrollEdges } from './journal/scrollEdges.js';
 
 	// How long "Saved to your journal" shows before the game moves on
 	const SAVED_BEAT = 800;
@@ -67,6 +68,8 @@
 	// The final log on a phone: the timeline and the writing take turns (a switch at the top of
 	// the sheet); from 768px up they sit side by side and the switch is not shown
 	let view = $state('entry');
+	// Rows hidden below the round list's scroll edge (small screens): show the card story's cue
+	let roundMoreBelow = $state(false);
 
 	// Desktop only: a touch device would open its keyboard over the sheet (owner decision), so the
 	// page is focused only where a mouse or trackpad drives it
@@ -225,14 +228,33 @@
 	{:else if currentEvents.length > 0}
 		<section class="round-log" aria-labelledby="round-log-label">
 			<h3 id="round-log-label" class="section-label">This round</h3>
-			<ul class="round-list">
-				{#each currentEvents as event (event.id)}
-					<li data-type={event.type}>
-						<span class="round-card" aria-hidden="true"><SuitText text={cardShort(event)} /></span>
-						<span class="round-text">{event.description}</span>
-					</li>
-				{/each}
-			</ul>
+			<!-- While rows remain below the scroll edge, the card story's cue: a fade and a chevron
+			     (visual-layout-s-10) -->
+			<div class="round-scroll">
+				<ul
+					class="round-list"
+					class:more-below={roundMoreBelow}
+					use:scrollEdges={(edges) => (roundMoreBelow = edges.below)}
+				>
+					{#each currentEvents as event (event.id)}
+						<li data-type={event.type}>
+							<span class="round-card" aria-hidden="true"><SuitText text={cardShort(event)} /></span
+							>
+							<span class="round-text">{event.description}</span>
+						</li>
+					{/each}
+				</ul>
+				<span
+					class="more-cue"
+					class:visible={roundMoreBelow}
+					aria-hidden="true"
+					data-testid="round-more-cue"
+				>
+					<svg viewBox="0 0 24 24" width="16" height="16">
+						<path d="m6 9 6 6 6-6" />
+					</svg>
+				</span>
+			</div>
 		</section>
 	{/if}
 
@@ -516,12 +538,49 @@
 		margin-bottom: var(--space-md);
 	}
 
+	.round-scroll {
+		position: relative;
+	}
+
 	.round-list {
 		list-style: none;
 		margin: 0;
 		padding: 0;
 		border: 1px solid rgba(255, 255, 255, 0.12);
 		background: rgba(255, 255, 255, 0.03);
+	}
+
+	/* Rows hidden below the scroll edge: the last 40px fade out, as the card story's do */
+	.round-list.more-below {
+		-webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 40px), transparent 100%);
+		mask-image: linear-gradient(to bottom, #000 calc(100% - 40px), transparent 100%);
+	}
+
+	/* The card story's "more below" chevron, at the list's bottom-right corner; opacity only */
+	.more-cue {
+		position: absolute;
+		right: var(--space-xs);
+		bottom: 2px;
+		display: grid;
+		place-items: center;
+		width: 24px;
+		height: 24px;
+		color: var(--color-neon-cyan, #0ff);
+		opacity: 0;
+		transition: opacity var(--dur-enter, 200ms) ease-out;
+		pointer-events: none;
+	}
+
+	.more-cue.visible {
+		opacity: 1;
+	}
+
+	.more-cue svg {
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 2;
+		stroke-linecap: round;
+		stroke-linejoin: round;
 	}
 
 	.round-list li {
@@ -801,7 +860,8 @@
 
 	@media (prefers-reduced-motion: reduce) {
 		textarea,
-		.view-tab {
+		.view-tab,
+		.more-cue {
 			transition: none;
 		}
 	}
@@ -977,6 +1037,13 @@
 			flex-direction: column;
 			min-height: 0;
 			margin-bottom: 0;
+		}
+
+		.journal-sheet.has-log .round-scroll {
+			display: flex;
+			flex-direction: column;
+			flex: 0 1 auto;
+			min-height: 0;
 		}
 
 		.journal-sheet.has-log .round-list {
