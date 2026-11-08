@@ -169,7 +169,7 @@ test.describe('DC Solo RPG - Smoke Test', () => {
 		await expect(intro).toBeVisible();
 		await expect(intro.locator('h1')).toHaveText(gameTitle);
 		const begin = page.getByTestId('story-continue-button');
-		await expect(begin).toHaveText('Begin Your Journey');
+		await expect(begin).toHaveText('Begin your journey');
 
 		await page.screenshot({
 			path: 'tests/screenshots/07-game-loaded.png',

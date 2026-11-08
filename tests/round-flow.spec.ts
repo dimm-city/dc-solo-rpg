@@ -122,7 +122,7 @@ test.describe('Round flow', () => {
 	test('the intro ends on what winning takes', async ({ page }) => {
 		await openGame(page);
 		await expect(page.getByTestId('intro-goal')).toHaveText(
-			/^Hold on to your 20 Stability\. (Find the Ace of Hearts, then|The Ace of Hearts is already revealed:) clear all 10 tokens to escape\.$/
+			/^Hold on to your 20 Stability\. (Find the Ace of Hearts, then clear all 10 Tokens to escape|The Ace of Hearts is already revealed: clear all 10 Tokens, or survive the fourth Ace, to escape)\.$/
 		);
 	});
 
@@ -138,7 +138,7 @@ test.describe('Round flow', () => {
 		await expect(roll).toHaveAccessibleName('Rolling…');
 
 		// The result, under the same title, then the deal with no further press
-		await expect(page.getByTestId('result-line')).toHaveText('Rolled 8 · Draw 3 cards', {
+		await expect(page.getByTestId('result-line')).toHaveText('Rolled 8 · 3 cards this round', {
 			timeout: 30000
 		});
 		await expect(page.getByRole('heading', { name: 'Round 1' })).toBeVisible();
@@ -146,7 +146,7 @@ test.describe('Round flow', () => {
 		expect((await gameStateOf(page)).taskRoll).toEqual({ roll: 8, dice: [8], cards: 3 });
 	});
 
-	test('a Lucid roll shows the modifier on the roll button only, and names both dice', async ({
+	test('a Lucid roll shows the modifier on the hint line above the roll button, and names both dice', async ({
 		page
 	}) => {
 		await openGame(page);
@@ -154,17 +154,21 @@ test.describe('Round flow', () => {
 
 		await store(page, 'gs.gameState.isLucid = true; rnd.mockDieRollSequence([4, 15])');
 		const roll = page.getByTestId('roll-tasks-button');
-		await expect(roll.getByTestId('roll-modifier')).toHaveText('Lucid: 2 dice, keep high');
-		await expect(roll).toHaveAttribute('aria-label', 'Roll for tasks · Lucid: 2 dice, keep high');
+		const hint = page.getByTestId('roll-modifier');
+		await expect(hint).toHaveText('Lucid · two dice, keep the higher');
+		// The button's name is its visible label; the hint describes it
+		await expect(roll).toHaveAccessibleName('Roll for tasks');
+		await expect(roll).toHaveAccessibleDescription('Lucid · two dice, keep the higher');
 		await expect(page.getByTestId('state-chip')).toHaveCount(0);
 
 		await pressStep(page, 'roll-tasks-button');
 		await expect(page.getByTestId('result-line')).toHaveText(
-			'Rolled 15 (high of 4, 15) · Draw 4 cards',
+			'Rolled 15 (high of 4, 15) · 4 cards this round',
 			{ timeout: 30000 }
 		);
 		await store(page, 'rnd.resetRNG()');
-		await expect(page.getByTestId('roll-modifier')).toHaveCount(0);
+		// The line stays, empty, so nothing moves
+		await expect(hint).toHaveClass(/empty/);
 		expect((await gameStateOf(page)).isLucid).toBe(false);
 	});
 
@@ -174,7 +178,10 @@ test.describe('Round flow', () => {
 		await openGame(page);
 		await playToFirstRound(page);
 		await page.getByRole('button', { name: 'Exit game' }).click();
-		await page.getByRole('button', { name: 'Leave', exact: true }).click();
+		await page
+			.getByRole('dialog', { name: 'Exit the game?' })
+			.getByRole('button', { name: 'Exit game', exact: true })
+			.click();
 		await expect(page.getByTestId('home-page')).toBeVisible();
 
 		// The game's page rules are gone: the home's scroller scrolls again
@@ -193,12 +200,10 @@ test.describe('Round flow', () => {
 		await openGame(page);
 		await playToFirstRound(page);
 		await page.getByRole('button', { name: 'Exit game' }).click();
-		await expect(page.getByText('Leave the game?')).toBeVisible();
-		await expect(
-			page.getByText('Your progress is saved. Continue it from the home screen.')
-		).toBeVisible();
+		await expect(page.getByText('Exit the game?')).toBeVisible();
+		await expect(page.getByText('Your progress is saved. Pick it up from home.')).toBeVisible();
 		await page.getByRole('button', { name: 'Keep playing' }).click();
-		await expect(page.getByText('Leave the game?')).toHaveCount(0);
+		await expect(page.getByText('Exit the game?')).toHaveCount(0);
 	});
 });
 
@@ -217,12 +222,13 @@ test.describe('Results move on by themselves', () => {
 		await dismissCard(page);
 
 		const check = page.getByTestId('failure-check-button');
-		await expect(check).toHaveAccessibleName('Roll for damage');
+		await expect(check).toHaveAccessibleName('Roll for Stability');
 		await pressStep(page, 'failure-check-button');
-		const line = 'Rolled 13 · no Stability lost · 20/20';
+		const line = 'Rolled 13 · no Stability lost';
 		await expect(page.getByTestId('result-line')).toHaveText(line, { timeout: 30000 });
-		await expect(page.getByTestId('live-region')).toHaveText(line);
-		await expect(check).toHaveAccessibleName('Continue');
+		// The totals are in the announcement, not on the line
+		await expect(page.getByTestId('live-region')).toHaveText(`${line}. Stability 20 of 20.`);
+		await expect(check).toHaveAccessibleName('Draw the next card');
 		// The run-out line runs under reduced motion too (in quarters)
 		await expect(page.getByTestId('step-advance')).toBeVisible();
 
@@ -238,9 +244,10 @@ test.describe('Results move on by themselves', () => {
 		await store(page, 'rnd.mockDieRoll(13)');
 		await dismissCard(page);
 		await pressStep(page, 'failure-check-button');
-		await expect(page.getByTestId('failure-check-button')).toHaveAccessibleName('Continue', {
-			timeout: 30000
-		});
+		await expect(page.getByTestId('failure-check-button')).toHaveAccessibleName(
+			'Draw the next card',
+			{ timeout: 30000 }
+		);
 
 		const pressed = Date.now();
 		await pressStep(page, 'failure-check-button');
@@ -267,7 +274,7 @@ test.describe('Results move on by themselves', () => {
 		await expect(page.getByTestId('screen-gameOver')).toBeVisible();
 	});
 
-	test('a missed Salvation roll loses no token, and the journal opens on its own', async ({
+	test('a missed Salvation roll loses no Token, and the journal opens on its own', async ({
 		page
 	}) => {
 		await openGame(page);
@@ -281,20 +288,23 @@ test.describe('Results move on by themselves', () => {
 		await dismissCard(page);
 
 		const salvation = page.getByTestId('success-check-button');
-		await expect(salvation).toHaveAccessibleName('Roll to remove a token · need 14+');
+		await expect(salvation).toHaveAccessibleName('Roll for Salvation');
+		await expect(page.locator('.context-description')).toHaveText(
+			'You need 14+ to remove a Token.'
+		);
 		await store(page, 'rnd.mockDieRoll(9)');
 		await pressStep(page, 'success-check-button');
-		await expect(page.getByTestId('result-line')).toHaveText(
-			'Rolled 9 · needed 14+ · no token lost',
-			{ timeout: 30000 }
-		);
+		await expect(page.getByTestId('result-line')).toHaveText('Rolled 9 · missed 14+', {
+			timeout: 30000
+		});
+		await expect(salvation).toHaveAccessibleName('Open your journal');
 		await expect(page.getByTestId('hud-tokens')).toContainText('5');
 		await expect(page.getByRole('dialog', { name: 'Journal entry' })).toBeVisible({
 			timeout: 5000
 		});
 	});
 
-	test('on Hard, a missed Salvation roll adds a token', async ({ page }) => {
+	test('on Hard, a missed Salvation roll adds a Token', async ({ page }) => {
 		await openGame(page);
 		await playToFirstRound(page);
 		await playRound(
@@ -304,12 +314,14 @@ test.describe('Results move on by themselves', () => {
 		);
 		await dismissCard(page);
 		await dismissCard(page);
+		await expect(page.locator('.context-description')).toHaveText(
+			'You need 14+ to remove a Token. A miss adds one.'
+		);
 		await store(page, 'rnd.mockDieRoll(9)');
 		await pressStep(page, 'success-check-button');
-		await expect(page.getByTestId('result-line')).toHaveText(
-			'Rolled 9 · needed 14+ · +1 token · 6 left',
-			{ timeout: 30000 }
-		);
+		await expect(page.getByTestId('result-line')).toHaveText('Rolled 9 · missed 14+ · +1 Token', {
+			timeout: 30000
+		});
 		await expect(page.getByTestId('hud-tokens')).toContainText('6');
 	});
 
@@ -330,16 +342,16 @@ test.describe('Results move on by themselves', () => {
 		);
 		await page.getByTestId('card').click();
 
-		await expect(page.getByRole('heading', { name: 'Final Stability Check' })).toBeVisible();
+		await expect(page.getByRole('heading', { name: 'Final Check' })).toBeVisible();
 		await expect(page.locator('.context-description')).toHaveText(
-			'The fourth Ace is out. Survive this one Stability check and you escape. If it takes your last Stability, you fall.'
+			'Come through this roll with any Stability left and you escape.'
 		);
 		const check = page.getByTestId('failure-check-button');
-		await expect(check).toHaveAccessibleName('Roll for Stability · survive this and you escape');
+		await expect(check).toHaveAccessibleName('Roll for Stability');
 		await store(page, 'rnd.mockDieRoll(13)');
 		await pressStep(page, 'failure-check-button');
 		await expect(page.getByTestId('result-line')).toHaveText(
-			'Rolled 13 · no Stability lost · 9/20 · you escape',
+			'Rolled 13 · no Stability lost · you escape',
 			{ timeout: 30000 }
 		);
 
@@ -369,7 +381,7 @@ test.describe('Results move on by themselves', () => {
 		await store(page, 'rnd.mockDieRoll(4)');
 		await pressStep(page, 'failure-check-button');
 		await expect(page.getByTestId('result-line')).toHaveText(
-			'Rolled 4 · −2 Stability · 0/20 · nothing left to hold on to',
+			'Rolled 4 · −2 Stability · nothing left to hold on to',
 			{ timeout: 30000 }
 		);
 		await expect(page.getByTestId('failure-check-button')).toHaveAccessibleName('Face the end');
@@ -417,30 +429,28 @@ test.describe('Results move on by themselves', () => {
 		await expect(page.getByRole('heading', { name: 'Stability Check', exact: true })).toBeVisible();
 		await expect(page.getByTestId('hud-aces')).toHaveAttribute(
 			'title',
-			'All four Aces: Salvation is automatic after a Stability check'
+			'All four Aces: each Salvation is a Stability check; hold on and a Token comes off'
 		);
 		const check = page.getByTestId('failure-check-button');
-		await expect(check).toHaveAccessibleName('Roll for damage');
+		await expect(check).toHaveAccessibleName('Roll for Stability');
 		await store(page, 'rnd.mockDieRoll(13)');
 		await pressStep(page, 'failure-check-button');
-		await expect(page.getByTestId('result-line')).toHaveText(
-			'Rolled 13 · no Stability lost · 16/20',
-			{ timeout: 30000 }
-		);
+		await expect(page.getByTestId('result-line')).toHaveText('Rolled 13 · no Stability lost', {
+			timeout: 30000
+		});
 
 		// The round goes on: the second card, then Salvation, which is now a Stability check
 		await dismissCard(page);
 		const salvation = page.getByTestId('success-check-button');
-		await expect(salvation).toHaveAccessibleName('Roll for Stability · Salvation is assured');
+		await expect(salvation).toHaveAccessibleName('Roll for Salvation');
 		await expect(page.locator('.context-description')).toHaveText(
-			'All four Aces are out. No target to beat now: survive one Stability check and a token comes off.'
+			'No target now. Survive this Stability check and a Token comes off.'
 		);
 		await store(page, 'rnd.mockDieRoll(4)');
 		await pressStep(page, 'success-check-button');
-		await expect(page.getByTestId('result-line')).toHaveText(
-			'Rolled 4 · −2 Stability · −1 token · 2 left',
-			{ timeout: 30000 }
-		);
+		await expect(page.getByTestId('result-line')).toHaveText('Rolled 4 · −2 Stability · −1 Token', {
+			timeout: 30000
+		});
 		await expect(page.getByTestId('hud-stability')).toContainText('14');
 		await expect(page.getByTestId('hud-tokens')).toContainText('2');
 		await expect(page.getByRole('dialog', { name: 'Journal entry' })).toBeVisible({
@@ -463,7 +473,7 @@ test.describe('Results move on by themselves', () => {
 		// No check and no ending: the second card comes
 		await dismissCard(page);
 		await expect(page.getByTestId('success-check-button')).toHaveAccessibleName(
-			'Roll for Stability · Salvation is assured'
+			'Roll for Salvation'
 		);
 	});
 
@@ -481,16 +491,15 @@ test.describe('Results move on by themselves', () => {
 		await dismissCard(page);
 
 		const salvation = page.getByTestId('success-check-button');
-		await expect(salvation).toHaveAccessibleName('Roll for Stability · Salvation is assured');
+		await expect(salvation).toHaveAccessibleName('Roll for Salvation');
 		await expect(page.locator('.context-description')).toHaveText(
-			'All four Aces are out. No target to beat now: survive one Stability check and a token comes off.'
+			'No target now. Survive this Stability check and a Token comes off.'
 		);
 		await store(page, 'rnd.mockDieRoll(4)');
 		await pressStep(page, 'success-check-button');
-		await expect(page.getByTestId('result-line')).toHaveText(
-			'Rolled 4 · −2 Stability · −1 token · 2 left',
-			{ timeout: 30000 }
-		);
+		await expect(page.getByTestId('result-line')).toHaveText('Rolled 4 · −2 Stability · −1 Token', {
+			timeout: 30000
+		});
 		await expect(page.getByTestId('hud-stability')).toContainText('14');
 
 		// The journal opens on its own
@@ -515,7 +524,7 @@ test.describe('Results move on by themselves', () => {
 		await pressStep(page, 'success-check-button');
 
 		await expect(page.getByTestId('result-line')).toHaveText(
-			'Rolled 8 · −1 Stability · 0/20 · nothing left to hold on to',
+			'Rolled 8 · −1 Stability · nothing left to hold on to',
 			{ timeout: 30000 }
 		);
 		await expect(page.getByTestId('success-check-button')).toHaveAccessibleName('Face the end');
@@ -538,8 +547,9 @@ test.describe('Rule tips', () => {
 		await playRound(page, ['7', '9']);
 		await dismissCard(page);
 
+		// The caption starts as the Stability check opens, docked above the step button
 		const caption = page.getByTestId('rule-caption');
-		await expect(caption).toContainText('Odd cards test your Stability');
+		await expect(caption).toContainText('Odd cards call for a Stability check.');
 
 		await setRuleTips(page, false);
 		await expect(caption).toHaveCount(0);
@@ -556,9 +566,22 @@ test.describe('Rule tips', () => {
 		await setRuleTips(page, true);
 		await store(page, 'rnd.mockDieRoll(1)'); // Lucid: two dice, both 1
 		await pressStep(page, 'failure-check-button');
-		await expect(caption).toContainText('Surreal. Your next roll uses two dice', {
-			timeout: 30000
-		});
+		await expect(page.getByTestId('result-line')).toContainText('Natural 1', { timeout: 30000 });
+		// A caption starts only on arriving at a table screen: the next one is Round 2's roll,
+		// after the journal, where the Surreal hint shows too
+		const journal = page.getByRole('dialog', { name: 'Journal entry' });
+		await expect(journal).toBeVisible({ timeout: 10000 });
+		// The sheet takes presses once it has settled: press until it records and moves on
+		await expect(async () => {
+			await journal.getByTestId('journal-save-button').click({ timeout: 2000 });
+			await expect(page.getByTestId('roll-tasks-button')).toBeVisible({ timeout: 3000 });
+		}).toPass({ timeout: 20000 });
+		await expect(caption).toHaveText(
+			/A natural 1 makes you Surreal: your next roll uses two dice and keeps the lower\./
+		);
+		await expect(page.getByTestId('roll-modifier')).toHaveText(
+			'Surreal · two dice, keep the lower'
+		);
 	});
 });
 
@@ -577,9 +600,7 @@ test.describe('Reduced motion', () => {
 			}).observe(document.body, { childList: true, subtree: true });
 		});
 		await pressStep(page, 'initial-damage-button');
-		await expect(page.getByTestId('result-line')).toHaveText(
-			'Rolled 13 · no Stability lost · 20/20'
-		);
+		await expect(page.getByTestId('result-line')).toHaveText('Rolled 13 · no Stability lost');
 		const seen = await page.evaluate(
 			() => (window as unknown as { staticRollSeen: string[] }).staticRollSeen
 		);
