@@ -26,7 +26,8 @@ export async function load({ params, fetch, locals }) {
 		}
 
 		const markdown = await gameResponse.text();
-		const parsed = parseGameFile(markdown);
+		// The file's URL, so a card image written as a relative path is fetched from beside it
+		const parsed = parseGameFile(markdown, { baseUrl: gameUrl });
 
 		// Convert to internal game config format
 		const gameConfig = {

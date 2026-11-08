@@ -168,6 +168,7 @@ lose-message: Defeat message
 - Writers focus on **card types**, not card identifiers
 - System auto-assigns cards to the 52-card deck
 - Optional special modifiers: `skip-damage`, `return-king`
+- Optional card image: one markdown image line (`![alt](art/x.jpg)`) in the card body; shown framed above the story on the card face (`card/CardDisplay.svelte`). Relative paths resolve against the game file's URL when `parseGameFile` is given `{ baseUrl }`
 - Parser: `src/lib/parsers/markdownParser.js`
 
 **Full specification:** See `docs/game-config.md` and `docs/simplified-type-based-format.md`
@@ -367,7 +368,8 @@ resetRNG();
   type: "challenge",      // primary-success, failure-counter, narrative, challenge, event
   modifier: null,         // null, "skip-damage", "return-king"
   description: "Short description",
-  story: "Full narrative text (markdown supported)"
+  story: "Full narrative text (markdown supported)",
+  image: null             // or { src, alt }: optional picture, a markdown image line in the card body
 }
 ```
 
