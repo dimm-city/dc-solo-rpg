@@ -141,6 +141,11 @@ const applyReview = (r, lenses, stage, allowed) => {
     if (!lensOf[v.id] || !lenses.includes(lensOf[v.id]) || !allowed.includes(v.id)) continue
     status[v.id] = v.status
     notes[v.id] = v.note
+    // The owner tuned the card pause by hand (100ms too fast, 600ms too long, now 300ms): no agent retunes it
+    if (v.id === 'OWN-7' && ['open', 'regressed'].includes(v.status)) {
+      status[v.id] = 'owner-tuned'
+      log(`OWN-7: the reviewer wanted changes (${String(v.note).slice(0, 200)}); kept for the owner, who set the pause to 300ms`)
+    }
   }
   for (const f of r.findings || []) {
     let id = f.id || `X-${++newSeq}`
