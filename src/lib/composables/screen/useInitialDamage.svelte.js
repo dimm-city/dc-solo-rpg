@@ -2,7 +2,7 @@
  * useInitialDamage - Initial instability roll composable
  *
  * 1. Roll: dice animate ("Rolling…"; a press skips to the result), Stability updates and a
- *    result line stays on screen. The button becomes "Continue".
+ *    result line stays on screen. The button becomes "Begin round 1".
  * 2. The first round starts by itself after the result hold, like every other roll's result.
  *    A press starts it at once.
  *
@@ -19,6 +19,7 @@ import { gameState } from '../../stores/gameStore.svelte.js';
 import {
 	formatStabilityResult,
 	formatModifierHint,
+	formatNextStepLabel,
 	ROLLING_LABEL
 } from '../../utils/rollResult.js';
 import { createResultHold } from './resultHold.svelte.js';
@@ -96,7 +97,7 @@ export function useInitialDamage() {
 		initialDamageRolling
 			? ROLLING_LABEL
 			: initialDamageResult !== undefined
-				? 'Continue'
+				? formatNextStepLabel({ gameOver: gameState.gameOver, win: gameState.win, next: 'round' })
 				: 'Roll for instability'
 	);
 	// The modifier the roll will use, shown on the roll button only

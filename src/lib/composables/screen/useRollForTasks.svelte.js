@@ -2,7 +2,7 @@
  * useRollForTasks - Roll for Tasks screen logic composable (the screen titled "Round N")
  *
  * 1. Roll: dice animate ("Rolling…"; a press skips to the result), then a result line
- *    ("Rolled 17 · Draw 5 cards") stays on screen. With "Announce dice rolls" on, the voice
+ *    ("Rolled 16 · 5 cards this round") stays on screen. With "Announce dice rolls" on, the voice
  *    reads it out ("You rolled a 17. Draw 5 cards.").
  * 2. The cards are dealt on their own DEAL_DELAY_MS later (the result hold, shown as a line
  *    running out on the button); when the roll is read aloud, a beat after the voice has
@@ -21,7 +21,12 @@ import {
 import { rollDice, skipRoll } from '../../stores/diceStore.svelte.js';
 import { gameState } from '../../stores/gameStore.svelte.js';
 import { getAudioSettings, speak, awaitNarration } from '../../stores/audioStore.svelte.js';
-import { formatTaskResult, formatModifierHint, ROLLING_LABEL } from '../../utils/rollResult.js';
+import {
+	formatTaskResult,
+	formatModifierHint,
+	formatNextStepLabel,
+	ROLLING_LABEL
+} from '../../utils/rollResult.js';
 import { createResultHold, RESULT_HOLD_MS } from './resultHold.svelte.js';
 
 /** Time to read the result line before the cards are dealt (the shared result hold) */
@@ -119,7 +124,7 @@ export function useRollForTasks({ dealDelay = DEAL_DELAY_MS } = {}) {
 			? ROLLING_LABEL
 			: rollTasksRolled
 				? (gameState.config?.labels?.rollForTasksResultHeader ??
-					`Draw ${gameState.cardsToDraw} Card${gameState.cardsToDraw !== 1 ? 's' : ''}`)
+					formatNextStepLabel({ next: 'cards', cards: gameState.cardsToDraw }))
 				: (gameState.config?.labels?.rollForTasksHeader ?? 'Roll for tasks')
 	);
 	// The modifier the roll will use, shown on the roll button only

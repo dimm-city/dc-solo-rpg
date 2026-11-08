@@ -1,3 +1,8 @@
+/**
+ * Result lines (design polish DP-1-07): one grammar, "{head} · {change}", plus the one-word
+ * modifier the roll earned. No totals on screen (formatResultTotals adds them to the live
+ * announcement only).
+ */
 import { describe, it, expect } from 'vitest';
 import {
 	formatStabilityResult,
@@ -6,117 +11,146 @@ import {
 	formatSalvationButton,
 	formatModifierHint,
 	formatIntroGoal,
+	formatResultTotals,
+	formatNextStepLabel,
 	describeDice,
-	FINAL_CHECK_LABEL
+	FINAL_CHECK_LABEL,
+	LUCID_NOTE,
+	SURREAL_NOTE,
+	LUCID_HINT,
+	SURREAL_HINT,
+	ROLLING_LABEL
 } from './rollResult.js';
 
 describe('formatStabilityResult', () => {
-	it('shows the loss and the Stability left', () => {
-		expect(formatStabilityResult(4, 16, 14)).toBe('Rolled 4 · −2 Stability · 14/20');
+	it('shows the loss and nothing more', () => {
+		expect(formatStabilityResult(8, 16, 15)).toBe('Rolled 8 · −1 Stability');
+		expect(formatStabilityResult(4, 16, 14)).toBe('Rolled 4 · −2 Stability');
 	});
 
 	it('says so when nothing is lost', () => {
-		expect(formatStabilityResult(13, 16, 16)).toBe('Rolled 13 · no Stability lost · 16/20');
+		expect(formatStabilityResult(15, 16, 16)).toBe('Rolled 15 · no Stability lost');
 	});
 
-	it('explains a natural 20 and Lucid', () => {
-		expect(formatStabilityResult(20, 18, 19)).toBe(
-			'Natural 20 · +1 Stability · Lucid: your next roll keeps the higher of two dice'
-		);
+	it('names Lucid in one word on a natural 20', () => {
+		expect(formatStabilityResult(20, 18, 19)).toBe('Natural 20 · +1 Stability · Lucid');
 	});
 
 	it('does not claim a gain when Stability is already full', () => {
-		expect(formatStabilityResult(20, 20, 20)).toContain('Stability already full');
+		expect(formatStabilityResult(20, 20, 20)).toBe('Natural 20 · Stability already full · Lucid');
 	});
 
-	it('explains a natural 1 and Surreal', () => {
-		expect(formatStabilityResult(1, 14, 11)).toBe(
-			'Natural 1 · −3 Stability · Surreal: your next roll keeps the lower of two dice'
-		);
+	it('names Surreal in one word on a natural 1', () => {
+		expect(formatStabilityResult(1, 14, 11)).toBe('Natural 1 · −3 Stability · Surreal');
+	});
+
+	it('never shows a total', () => {
+		for (const roll of [1, 3, 8, 15, 20]) {
+			expect(formatStabilityResult(roll, 16, 14)).not.toMatch(/\/20|left/);
+		}
 	});
 });
 
 describe('formatTaskResult', () => {
-	it('shows the cards to draw', () => {
-		expect(formatTaskResult(17, 5)).toBe('Rolled 17 · Draw 5 cards');
+	it('shows the cards this round', () => {
+		expect(formatTaskResult(16, 5)).toBe('Rolled 16 · 5 cards this round');
 	});
 
-	it('uses the singular for one card and flags natural rolls', () => {
-		expect(formatTaskResult(1, 1)).toContain('Draw 1 card · Surreal');
-		expect(formatTaskResult(20, 6)).toContain('Natural 20 · Draw 6 cards · Lucid');
+	it('uses the singular for one card and names the modifier', () => {
+		expect(formatTaskResult(1, 1)).toBe('Natural 1 · 1 card this round · Surreal');
+		expect(formatTaskResult(20, 6)).toBe('Natural 20 · 6 cards this round · Lucid');
 	});
 });
 
 describe('formatSalvationResult', () => {
-	it('shows a success', () => {
-		expect(formatSalvationResult(18, 14, 9)).toBe('Rolled 18 · −1 token · 9 left');
+	it('shows a hit as the Token it removed', () => {
+		expect(formatSalvationResult(17, 17, 9)).toBe('Rolled 17 · −1 Token');
 	});
 
-	it('shows the target on a miss, which loses no token on Normal', () => {
-		expect(formatSalvationResult(2, 14, 10)).toBe('Rolled 2 · needed 14+ · no token lost');
+	it('names the target a miss missed, which loses no Token on Normal', () => {
+		expect(formatSalvationResult(16, 17, 10)).toBe('Rolled 16 · missed 17+');
+		expect(formatSalvationResult(9, 14, 10)).toBe('Rolled 9 · missed 14+');
 	});
 
-	it('handles natural 20 and natural 1 (a miss, so no token lost)', () => {
-		expect(formatSalvationResult(20, 17, 8)).toBe(
-			'Natural 20 · −2 tokens · 8 left · Lucid: your next roll keeps the higher of two dice'
-		);
-		expect(formatSalvationResult(1, 17, 10)).toBe(
-			'Natural 1 · no token lost · Surreal: your next roll keeps the lower of two dice'
-		);
+	it('handles natural 20 and natural 1 (a miss whatever the target)', () => {
+		expect(formatSalvationResult(20, 17, 8)).toBe('Natural 20 · −2 Tokens · Lucid');
+		expect(formatSalvationResult(1, 17, 10)).toBe('Natural 1 · missed · Surreal');
 	});
 
-	describe('on Hard, where a miss adds tokens', () => {
+	it('never says "no token lost" and never shows a total', () => {
+		for (const roll of [1, 9, 17, 20]) {
+			const line = formatSalvationResult(roll, 17, 8);
+			expect(line).not.toMatch(/no token lost|left|\/20/i);
+		}
+	});
+
+	describe('on Hard, where a miss adds Tokens', () => {
 		const hard = { hard: true };
 
-		it('shows the target and the token added', () => {
-			expect(formatSalvationResult(2, 14, 11, undefined, hard)).toBe(
-				'Rolled 2 · needed 14+ · +1 token · 11 left'
+		it('shows the target and the Token added', () => {
+			expect(formatSalvationResult(9, 17, 11, undefined, hard)).toBe(
+				'Rolled 9 · missed 17+ · +1 Token'
 			);
 			expect(formatSalvationResult(1, 17, 12, undefined, hard)).toBe(
-				'Natural 1 · +2 tokens · 12 left · Surreal: your next roll keeps the lower of two dice'
+				'Natural 1 · missed · +2 Tokens · Surreal'
 			);
 		});
 
-		it('leaves a success as it is', () => {
-			expect(formatSalvationResult(18, 14, 9, undefined, hard)).toBe(
-				'Rolled 18 · −1 token · 9 left'
+		it('leaves a hit as it is', () => {
+			expect(formatSalvationResult(18, 14, 9, undefined, hard)).toBe('Rolled 18 · −1 Token');
+		});
+	});
+
+	describe('the winning roll (the last Token)', () => {
+		it('says the last Token is gone and you escape, with no modifier', () => {
+			expect(formatSalvationResult(15, 14, 0)).toBe(
+				'Rolled 15 · the last Token is gone · you escape'
+			);
+			expect(formatSalvationResult(20, 17, 0)).toBe(
+				'Natural 20 · the last Token is gone · you escape'
+			);
+		});
+
+		it('keeps the Stability clause with four Aces', () => {
+			expect(formatSalvationResult(15, 0, 0, undefined, { stabilityBefore: 16 })).toBe(
+				'Rolled 15 · no Stability lost · the last Token is gone · you escape'
 			);
 		});
 	});
 
-	describe('with four Aces (Normal and Hard): a Stability check, then the token', () => {
+	describe('with four Aces (Normal and Hard): a Stability check, then the Token', () => {
 		const at = (stabilityBefore) => ({ stabilityBefore });
 
-		it('names what the roll did to Stability, then the token', () => {
+		it('names what the roll did to Stability, then the Token', () => {
 			expect(formatSalvationResult(14, 0, 3, undefined, at(16))).toBe(
-				'Rolled 14 · no Stability lost · −1 token · 3 left'
+				'Rolled 14 · no Stability lost · −1 Token'
 			);
 			expect(formatSalvationResult(7, 0, 3, undefined, at(16))).toBe(
-				'Rolled 7 · −1 Stability · −1 token · 3 left'
+				'Rolled 7 · −1 Stability · −1 Token'
 			);
 		});
 
 		it('handles natural 20 and natural 1', () => {
 			expect(formatSalvationResult(20, 0, 3, undefined, at(16))).toBe(
-				'Natural 20 · +1 Stability · −1 token · 3 left · Lucid: your next roll keeps the higher of two dice'
+				'Natural 20 · +1 Stability · −1 Token · Lucid'
 			);
 			expect(formatSalvationResult(20, 0, 3, undefined, at(20))).toBe(
-				'Natural 20 · Stability already full · −1 token · 3 left · Lucid: your next roll keeps the higher of two dice'
+				'Natural 20 · Stability already full · −1 Token · Lucid'
 			);
 			expect(formatSalvationResult(1, 0, 3, undefined, at(16))).toBe(
-				'Natural 1 · −3 Stability · −1 token · 3 left · Surreal: your next roll keeps the lower of two dice'
+				'Natural 1 · −3 Stability · −1 Token · Surreal'
 			);
 		});
 
 		it('names both dice of a two-dice roll', () => {
 			expect(formatSalvationResult(9, 0, 3, { dice: [9, 4], wasLucid: true }, at(16))).toBe(
-				'Rolled 9 (high of 9, 4) · −1 Stability · −1 token · 3 left'
+				'Rolled 9 (high of 9, 4) · −1 Stability · −1 Token'
 			);
 		});
 
-		it('the fatal roll keeps the token and says so', () => {
+		it('the fatal roll keeps the Token and says so', () => {
 			expect(formatSalvationResult(3, 0, 4, undefined, at(2))).toBe(
-				'Rolled 3 · −2 Stability · 0/20 · nothing left to hold on to'
+				'Rolled 3 · −2 Stability · nothing left to hold on to'
 			);
 		});
 	});
@@ -125,99 +159,157 @@ describe('formatSalvationResult', () => {
 describe("the fourth Ace's Stability check (Easy: the final roll)", () => {
 	const final = { final: true };
 
-	it('ends in "you escape" when Stability holds, with no modifier note', () => {
-		expect(formatStabilityResult(13, 16, 16, 20, undefined, final)).toBe(
-			'Rolled 13 · no Stability lost · 16/20 · you escape'
+	it('ends in "you escape" when Stability holds, with no modifier', () => {
+		expect(formatStabilityResult(15, 16, 16, 20, undefined, final)).toBe(
+			'Rolled 15 · no Stability lost · you escape'
 		);
 		expect(formatStabilityResult(4, 16, 14, 20, undefined, final)).toBe(
-			'Rolled 4 · −2 Stability · 14/20 · you escape'
+			'Rolled 4 · −2 Stability · you escape'
 		);
 		expect(formatStabilityResult(20, 16, 17, 20, undefined, final)).toBe(
-			'Natural 20 · +1 Stability · 17/20 · you escape'
+			'Natural 20 · +1 Stability · you escape'
 		);
 		expect(formatStabilityResult(1, 16, 13, 20, undefined, final)).toBe(
-			'Natural 1 · −3 Stability · 13/20 · you escape'
+			'Natural 1 · −3 Stability · you escape'
 		);
 		expect(formatStabilityResult(9, 16, 15, 20, { dice: [9, 14], wasSurreal: true }, final)).toBe(
-			'Rolled 9 (low of 9, 14) · −1 Stability · 15/20 · you escape'
+			'Rolled 9 (low of 9, 14) · −1 Stability · you escape'
 		);
 	});
 
 	it('is the fatal roll when it takes the last Stability', () => {
 		expect(formatStabilityResult(3, 2, 0, 20, undefined, final)).toBe(
-			'Rolled 3 · −2 Stability · 0/20 · nothing left to hold on to'
+			'Rolled 3 · −2 Stability · nothing left to hold on to'
 		);
 	});
 
-	it('is the roll button that says what is at stake', () => {
-		expect(FINAL_CHECK_LABEL).toBe('Roll for Stability · survive this and you escape');
+	it('is rolled with the same verb as every Stability check', () => {
+		expect(FINAL_CHECK_LABEL).toBe('Roll for Stability');
 	});
 });
 
 describe('formatSalvationButton', () => {
-	it('shows the target before rolling', () => {
-		expect(formatSalvationButton(14)).toBe('Roll to remove a token · need 14+');
-		expect(formatSalvationButton(0)).toBe('Roll for Stability · Salvation is assured');
+	it('is one verb at every threshold and with four Aces', () => {
+		expect(formatSalvationButton(17)).toBe('Roll for Salvation');
+		expect(formatSalvationButton(14)).toBe('Roll for Salvation');
+		expect(formatSalvationButton(0)).toBe('Roll for Salvation');
 	});
 });
 
 describe('two-dice rolls (Lucid and Surreal) name both dice and the one that counted', () => {
 	const lucid = { dice: [19, 5], wasLucid: true };
-	const surreal = { dice: [3, 15], wasSurreal: true };
+	const surreal = { dice: [6, 15], wasSurreal: true };
 
 	it('describes the dice', () => {
 		expect(describeDice(lucid)).toBe('(high of 19, 5)');
-		expect(describeDice(surreal)).toBe('(low of 3, 15)');
+		expect(describeDice(surreal)).toBe('(low of 6, 15)');
 		expect(describeDice({ dice: [12] })).toBe('');
 		expect(describeDice()).toBe('');
 	});
 
 	it('adds them to every result line', () => {
-		expect(formatTaskResult(19, 5, lucid)).toBe('Rolled 19 (high of 19, 5) · Draw 5 cards');
-		expect(formatStabilityResult(3, 16, 14, 20, surreal)).toBe(
-			'Rolled 3 (low of 3, 15) · −2 Stability · 14/20'
+		expect(formatTaskResult(19, 5, lucid)).toBe('Rolled 19 (high of 19, 5) · 5 cards this round');
+		expect(formatStabilityResult(6, 16, 15, 20, surreal)).toBe(
+			'Rolled 6 (low of 6, 15) · −1 Stability'
 		);
-		expect(formatSalvationResult(19, 14, 9, lucid)).toBe(
-			'Rolled 19 (high of 19, 5) · −1 token · 9 left'
-		);
+		expect(formatSalvationResult(19, 14, 9, lucid)).toBe('Rolled 19 (high of 19, 5) · −1 Token');
 	});
 
 	it('names a natural 20 kept from two dice', () => {
-		expect(formatTaskResult(20, 6, { dice: [7, 20], wasLucid: true })).toContain(
-			'Natural 20 (high of 7, 20) · Draw 6 cards'
+		expect(formatTaskResult(20, 6, { dice: [7, 20], wasLucid: true })).toBe(
+			'Natural 20 (high of 7, 20) · 6 cards this round · Lucid'
 		);
 	});
 });
 
 describe('the fatal roll', () => {
-	it('says there is nothing left, with no modifier note', () => {
+	it('says there is nothing left, with no modifier', () => {
 		expect(formatStabilityResult(3, 2, 0)).toBe(
-			'Rolled 3 · −2 Stability · 0/20 · nothing left to hold on to'
+			'Rolled 3 · −2 Stability · nothing left to hold on to'
 		);
 		expect(formatStabilityResult(1, 3, 0)).toBe(
-			'Natural 1 · −3 Stability · 0/20 · nothing left to hold on to'
+			'Natural 1 · −3 Stability · nothing left to hold on to'
 		);
 	});
 });
 
-describe('formatModifierHint', () => {
-	it('names the modifier the next roll uses', () => {
-		expect(formatModifierHint({ isLucid: true })).toBe('Lucid: 2 dice, keep high');
-		expect(formatModifierHint({ isSurreal: true })).toBe('Surreal: 2 dice, keep low');
+describe('the modifier words and hints', () => {
+	it('names the modifier a roll earned in one word', () => {
+		expect(LUCID_NOTE).toBe('Lucid');
+		expect(SURREAL_NOTE).toBe('Surreal');
+	});
+
+	it('gives the hint line for the next roll, in the long form', () => {
+		expect(LUCID_HINT).toBe('Lucid · two dice, keep the higher');
+		expect(SURREAL_HINT).toBe('Surreal · two dice, keep the lower');
+		expect(formatModifierHint({ isLucid: true })).toBe(LUCID_HINT);
+		expect(formatModifierHint({ isSurreal: true })).toBe(SURREAL_HINT);
 		expect(formatModifierHint({})).toBeNull();
+	});
+
+	it('uses no shorthand and no "..."', () => {
+		for (const text of [LUCID_HINT, SURREAL_HINT, ROLLING_LABEL, FINAL_CHECK_LABEL]) {
+			expect(text).not.toMatch(/keep high|keep low|2 dice|\.\.\./);
+		}
+	});
+});
+
+describe('formatResultTotals (the live announcement only)', () => {
+	it('adds Stability after a Stability roll', () => {
+		expect(formatResultTotals('stability', { stability: 14 })).toBe('. Stability 14 of 20.');
+	});
+
+	it('adds the Tokens left after Salvation', () => {
+		expect(formatResultTotals('salvation', { tokens: 6, start: 10 })).toBe(
+			'. 6 of 10 Tokens left.'
+		);
+	});
+
+	it('adds both after a four-Ace Salvation, and nothing after the task roll', () => {
+		expect(formatResultTotals('salvation-four', { stability: 15, tokens: 3, start: 10 })).toBe(
+			'. Stability 15 of 20. 3 of 10 Tokens left.'
+		);
+		expect(formatResultTotals('tasks')).toBe('');
 	});
 });
 
 describe('formatIntroGoal', () => {
-	it('ends the intro on what winning takes', () => {
+	it('ends the intro on what winning takes (Normal and Hard)', () => {
 		expect(formatIntroGoal({ stability: 20, tokens: 10, aceRevealed: false })).toBe(
-			'Hold on to your 20 Stability. Find the Ace of Hearts, then clear all 10 tokens to escape.'
+			'Hold on to your 20 Stability. Find the Ace of Hearts, then clear all 10 Tokens to escape.'
 		);
 	});
 
-	it('says the Ace of Hearts is already revealed on Easy', () => {
-		expect(formatIntroGoal({ stability: 20, tokens: 1, aceRevealed: true })).toBe(
-			'Hold on to your 20 Stability. The Ace of Hearts is already revealed: clear the one token to escape.'
+	it('on Easy, says the Ace of Hearts is out and the fourth Ace is the other way out', () => {
+		expect(
+			formatIntroGoal({ stability: 20, tokens: 10, aceRevealed: true, fourthAceWins: true })
+		).toBe(
+			'Hold on to your 20 Stability. The Ace of Hearts is already revealed: clear all 10 Tokens, or survive the fourth Ace, to escape.'
 		);
+	});
+
+	it('says "the one Token" for a single Token', () => {
+		expect(formatIntroGoal({ stability: 20, tokens: 1, aceRevealed: false })).toBe(
+			'Hold on to your 20 Stability. Find the Ace of Hearts, then clear the one Token to escape.'
+		);
+	});
+});
+
+describe('formatNextStepLabel (the step button after a result)', () => {
+	it('names the screen that follows', () => {
+		expect(formatNextStepLabel({ next: 'round', round: 0 })).toBe('Begin round 1');
+		expect(formatNextStepLabel({ next: 'cards', cards: 5 })).toBe('Draw the cards');
+		expect(formatNextStepLabel({ next: 'cards', cards: 1 })).toBe('Draw the card');
+		expect(formatNextStepLabel({ next: 'draw' })).toBe('Draw the next card');
+		expect(formatNextStepLabel({ next: 'salvation' })).toBe('Go to Salvation');
+		expect(formatNextStepLabel({ next: 'journal', round: 2 })).toBe('Open your journal');
+		expect(formatNextStepLabel({ next: 'journal', round: 2, skipJournal: true })).toBe(
+			'Begin round 3'
+		);
+	});
+
+	it('names an ending for itself', () => {
+		expect(formatNextStepLabel({ gameOver: true, win: true, next: 'journal' })).toBe('Escape');
+		expect(formatNextStepLabel({ gameOver: true, win: false, next: 'draw' })).toBe('Face the end');
 	});
 });
