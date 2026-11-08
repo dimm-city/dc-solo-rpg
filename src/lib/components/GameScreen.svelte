@@ -25,10 +25,8 @@
 	import JournalEntry from './JournalEntry.svelte';
 	import DrawCard from './DrawCard.svelte';
 	import StatusDisplay from './StatusDisplay.svelte';
-	import ContinueButton from './ContinueButton.svelte';
 	import ConfirmModal from './ConfirmModal.svelte';
 	import RuleCaption from './RuleCaption.svelte';
-	import ButtonBar from './ButtonBar.svelte';
 	import OverlayModal from './OverlayModal.svelte';
 	import SettingsModal from './settings/SettingsModal.svelte';
 	import { onMount, untrack } from 'svelte';
@@ -188,9 +186,25 @@
 
 	// ===== The step button: one slot, mounted once, for every round step =====
 
+	/** The intro's step has no roll, so it never rolls, holds or shows a hint */
+	const INTRO_STEP = {
+		buttonText: 'Begin your journey',
+		buttonHint: null,
+		rolling: false,
+		hold: { active: false, progress: () => 0, paused: false, waiting: false }
+	};
+
 	function stepFor(screen) {
 		const trigger = triggerAutoPlayForCurrentScreen;
 		switch (screen) {
+			// visual-layout-s-06: the intro's button is the step button, in the step slot, so the
+			// primary action never moves as the board takes over; only its label changes
+			case 'showIntro':
+				return {
+					composable: INTRO_STEP,
+					testid: 'story-continue-button',
+					run: () => transitionTo('initialDamageRoll')
+				};
 			case 'initialDamageRoll':
 				return {
 					composable: initialDamage,
@@ -217,7 +231,7 @@
 					run: () => successCheck.handleSuccessCheck(trigger)
 				};
 			default:
-				return null; // The intro, card and journal have their own controls
+				return null; // The card and journal have their own controls
 		}
 	}
 
@@ -270,7 +284,8 @@
 		step ? `${currentScreen}|${step.text}|${step.hint ?? ''}|${step.disabled}` : ''
 	);
 	$effect(() => {
-		if (!stepMeaning) return;
+		// The intro's button is the first step button: there is no earlier one to guard against
+		if (!stepMeaning || currentScreen === 'showIntro') return;
 		stepGuardUntil = performance.now() + STEP_GUARD_MS;
 		stepChanged = true;
 		clearTimeout(stepChangedTimer);
@@ -351,6 +366,39 @@
 			fourthAceWins: fourthAceWins(gameState)
 		})
 	);
+
+	/**
+	 * visual-layout-s-06: the intro covers the table except the step slot, whose button begins
+	 * the game. Its edge is measured from the slot: above it (portrait phones, tablets, desktop;
+	 * on phones the hidden header's row stays below the button, where the header will be), or
+	 * left of it in the landscape action column (the same query as the CSS).
+	 */
+	const ACTION_COLUMN_QUERY = '(max-height: 500px) and (orientation: landscape)';
+	let gameScreenEl = $state();
+	let stepSlotEl = $state();
+	let introInset = $state({ bottom: 0, right: 0 });
+	function measureIntroInset() {
+		if (!gameScreenEl || !stepSlotEl) return;
+		const screen = gameScreenEl.getBoundingClientRect();
+		const slot = stepSlotEl.getBoundingClientRect();
+		const anchor = (stepSlotEl.querySelector('.step-action') ?? stepSlotEl).getBoundingClientRect();
+		const column = window.matchMedia?.(ACTION_COLUMN_QUERY).matches === true;
+		const bottom = column ? 0 : Math.max(0, Math.round(screen.bottom - anchor.top));
+		const right = column ? Math.max(0, Math.round(screen.right - slot.left)) : 0;
+		if (bottom !== introInset.bottom || right !== introInset.right) introInset = { bottom, right };
+	}
+	$effect(() => {
+		if (currentScreen !== 'showIntro' || !gameScreenEl || !stepSlotEl) return;
+		measureIntroInset();
+		if (typeof ResizeObserver === 'undefined') return;
+		const observer = new ResizeObserver(measureIntroInset);
+		// The screen, the slot, and the table it sits in (it moves when the header row resizes)
+		observer.observe(gameScreenEl);
+		observer.observe(stepSlotEl);
+		if (stepSlotEl.parentElement) observer.observe(stepSlotEl.parentElement);
+		document.fonts?.ready.then(measureIntroInset);
+		return () => observer.disconnect();
+	});
 
 	// The intro column: a fade mask and a scroll cue while there is more text below
 	let introScroller = $state();
@@ -455,12 +503,8 @@
 		showExitModal = false;
 	}
 
-	// Buttons that live outside the round steps (intro and journal)
-	const OTHER_PRIMARY_BUTTONS = [
-		'story-continue-button',
-		'journal-save-button',
-		'journal-next-button'
-	];
+	// Buttons that live outside the round steps (the journal)
+	const OTHER_PRIMARY_BUTTONS = ['journal-save-button', 'journal-next-button'];
 
 	function clickVisiblePrimaryButton() {
 		for (const testid of OTHER_PRIMARY_BUTTONS) {
@@ -549,6 +593,9 @@
 			drawCardRef?.draw();
 			return;
 		}
+
+		// The intro begins from its button (or Space/Enter) only, never from a stray tap beside it
+		if (currentScreen === 'showIntro') return;
 
 		runStep();
 	}
@@ -863,20 +910,74 @@
 			Game Exited
 		</div>
 	{:else}
-		<div class="game-screen dc-game-bg screen-block">
-			<!-- The table stays mounted under the intro, so the hand-off never goes through black -->
+		<div class="game-screen dc-game-bg screen-block" bind:this={gameScreenEl}>
+			{#if currentScreen == 'showIntro'}
+				<!-- Fades out (300ms) first; the table then fades in underneath it. First in the DOM, so
+				     the story reads before the button that begins it (the button is the table's). -->
+				<div
+					class="dc-game-bg dc-intro-wrapper"
+					data-testid="screen-showIntro"
+					style:bottom="{introInset.bottom}px"
+					style:right="{introInset.right}px"
+					in:fade|global={{ duration: TRANSITION_DURATION }}
+					out:fade={{ duration: ANIMATION_DURATION.SLOW }}
+				>
+					<div class="intro-story-container">
+						<div class="intro-scroll-area" class:overflows={introOverflows}>
+							<div
+								class="content"
+								class:overflows={introOverflows}
+								class:at-end={introAtEnd}
+								bind:this={introScroller}
+								onscroll={measureIntro}
+							>
+								<div class="intro-column">
+									<h1>{gameState.config?.title || 'Game Introduction'}</h1>
+									<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized via sanitizeHtml -->
+									{@html sanitizeHtml(marked(gameState.config?.introduction ?? ''))}
+									<p class="intro-goal" data-testid="intro-goal">{introGoal}</p>
+								</div>
+							</div>
+							{#if introOverflows && !introAtEnd}
+								<button
+									type="button"
+									class="intro-scroll-cue"
+									aria-label="Scroll the introduction"
+									onclick={scrollIntro}
+									in:fade={{ duration: ANIMATION_DURATION.FAST, delay: ANIMATION_DURATION.SLOW }}
+									out:fade={{ duration: ANIMATION_DURATION.FAST }}
+								>
+									<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+										<path
+											d="M6 9l6 6 6-6"
+											fill="none"
+											stroke="currentColor"
+											stroke-width="2"
+											stroke-linecap="round"
+											stroke-linejoin="round"
+										/>
+									</svg>
+								</button>
+							{/if}
+						</div>
+					</div>
+				</div>
+			{/if}
+
+			<!-- The table stays mounted under the intro, so the hand-off never goes through black.
+			     Under the intro all of it is hidden but the step slot, whose button begins the game. -->
 			<!-- UI Content Layer -->
-			<div
-				class="ui-content-layer"
-				class:behind-intro={currentScreen == 'showIntro'}
-				inert={currentScreen == 'showIntro'}
-			>
-				{#if step}
+			<div class="ui-content-layer" class:behind-intro={currentScreen == 'showIntro'}>
+				{#if step && currentScreen != 'showIntro'}
 					<!-- AC-03: the first tab stop skips the header and goes to the step button -->
 					<a class="skip-link" href="#step-action" onclick={skipToStep}>Skip to action</a>
 				{/if}
 				{#if showStatusHUD}
-					<div class="status-display-area" data-testid="status-display">
+					<div
+						class="status-display-area"
+						data-testid="status-display"
+						inert={currentScreen == 'showIntro'}
+					>
 						<StatusDisplay
 							onHelpClick={handleHelpClick}
 							onExitClick={handleExitClick}
@@ -918,8 +1019,14 @@
 					<!-- AN-02: one step button for every round step, mounted once. Moving to the next
 				     step changes its label only; it never blinks out between steps. -->
 					{#if step}
-						<!-- No entrance of its own: coming back from the card, the overlay fades off it -->
-						<div class="step-slot" data-testid="screen-{currentScreen}">
+						<!-- No entrance of its own: coming back from the card, the overlay fades off it. At
+						     game start it fades in with the intro, its first step. -->
+						<div
+							class="step-slot"
+							data-testid={currentScreen == 'showIntro' ? undefined : `screen-${currentScreen}`}
+							bind:this={stepSlotEl}
+							in:fade|global={{ duration: currentScreen == 'showIntro' ? TRANSITION_DURATION : 0 }}
+						>
 							<!-- The step anchor: the hint line and the button. A rule caption docks above
 						     it, beside the action it explains (DP-1-09). -->
 							<div class="step-anchor">
@@ -968,63 +1075,6 @@
 					{/if}
 				</div>
 			</div>
-
-			{#if currentScreen == 'showIntro'}
-				<!-- Fades out (300ms) first; the table then fades in underneath it -->
-				<div
-					class="dc-game-bg dc-intro-wrapper"
-					data-testid="screen-showIntro"
-					in:fade|global={{ duration: TRANSITION_DURATION }}
-					out:fade={{ duration: ANIMATION_DURATION.SLOW }}
-				>
-					<div class="intro-story-container">
-						<div class="intro-scroll-area" class:overflows={introOverflows}>
-							<div
-								class="content"
-								class:overflows={introOverflows}
-								class:at-end={introAtEnd}
-								bind:this={introScroller}
-								onscroll={measureIntro}
-							>
-								<div class="intro-column">
-									<h1>{gameState.config?.title || 'Game Introduction'}</h1>
-									<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized via sanitizeHtml -->
-									{@html sanitizeHtml(marked(gameState.config?.introduction ?? ''))}
-									<p class="intro-goal" data-testid="intro-goal">{introGoal}</p>
-								</div>
-							</div>
-							{#if introOverflows && !introAtEnd}
-								<button
-									type="button"
-									class="intro-scroll-cue"
-									aria-label="Scroll the introduction"
-									onclick={scrollIntro}
-									in:fade={{ duration: ANIMATION_DURATION.FAST, delay: ANIMATION_DURATION.SLOW }}
-									out:fade={{ duration: ANIMATION_DURATION.FAST }}
-								>
-									<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
-										<path
-											d="M6 9l6 6 6-6"
-											fill="none"
-											stroke="currentColor"
-											stroke-width="2"
-											stroke-linecap="round"
-											stroke-linejoin="round"
-										/>
-									</svg>
-								</button>
-							{/if}
-						</div>
-						<ButtonBar>
-							<ContinueButton
-								text="Begin your journey"
-								onclick={() => transitionTo('initialDamageRoll')}
-								testid="story-continue-button"
-							/>
-						</ButtonBar>
-					</div>
-				</div>
-			{/if}
 		</div>
 	{/if}
 </div>
@@ -1072,7 +1122,8 @@
 		overflow: hidden;
 	}
 
-	/* The intro sits over the table, which stays mounted underneath */
+	/* The intro sits over the table, which stays mounted underneath; its bottom or right edge
+	   stops at the step slot (measured, visual-layout-s-06) */
 	.dc-intro-wrapper {
 		position: absolute;
 		inset: 0;
@@ -1081,7 +1132,6 @@
 		flex-direction: column;
 		overflow: visible;
 		min-height: 0;
-		height: 100%;
 	}
 
 	/* AC-03: hidden until focused, then a visible chip at the top of the table */
@@ -1320,18 +1370,24 @@
 		pointer-events: none; /* Allow dice clicks through */
 	}
 
-	/* The table fades in once the intro has faded out (300ms), never over it */
-	.ui-content-layer {
+	/* The table fades in once the intro has faded out (300ms), never over it. The step slot is
+	   the exception: its button is the intro's, so it stays put and on screen (visual-layout-s-06).
+	   (The header and HUD are named, not their wrappers: on portrait phones those are
+	   display: contents, which takes no opacity.) */
+	.status-display-area :global(:is(.dock-toolbar, .dock-hud)),
+	.main-screen-area > :global(.context-text-background) {
 		transition: opacity 300ms ease-out 300ms;
 	}
 
-	.ui-content-layer.behind-intro {
+	.behind-intro .status-display-area :global(:is(.dock-toolbar, .dock-hud)),
+	.behind-intro .main-screen-area > :global(.context-text-background) {
 		opacity: 0;
 		transition: none;
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.ui-content-layer {
+		.status-display-area :global(:is(.dock-toolbar, .dock-hud)),
+		.main-screen-area > :global(.context-text-background) {
 			transition: none;
 		}
 	}
@@ -1479,22 +1535,9 @@
 			padding-inline: 0;
 		}
 
-		/* The intro reads on the left with its button on the right, like the table */
-		.intro-story-container {
-			flex-direction: row;
-			align-items: center;
-		}
-
-		/* NV-01: the text takes the full height and scrolls; only the button is centred. Centred
-		   itself, a text area taller than the screen overflowed above it, out of reach. (The
-		   column inside still centres with margin-block: auto, which never pushes it off.) */
-		.intro-scroll-area {
-			align-self: stretch;
-		}
-
-		.intro-story-container > :global(.button-bar) {
-			flex: none;
-			width: var(--action-col);
-		}
+		/* The intro reads on the left of the action column, whose step button begins the game
+		   (the intro's right edge is measured from it). NV-01: the text takes the full height
+		   and scrolls; the column inside centres with margin-block: auto, which never pushes it
+		   off the top. */
 	}
 </style>

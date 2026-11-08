@@ -526,7 +526,8 @@
 		color: #ffffff;
 		margin: 0;
 		font-weight: 600;
-		text-wrap: pretty;
+		/* A headline of up to four lines: even lines, never a lone last word (visual-layout-s-09) */
+		text-wrap: balance;
 	}
 
 	/* What a special card does, on its face */

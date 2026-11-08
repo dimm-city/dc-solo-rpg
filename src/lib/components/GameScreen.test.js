@@ -124,6 +124,38 @@ describe('GameScreen step button', () => {
 		expect(container.querySelector('[data-testid="context-title"]').textContent).toBe('Round 1');
 	});
 
+	it("visual-layout-s-06: the intro's Begin button is the step button, so it never moves", async () => {
+		setUp('showIntro');
+		const { getByTestId, container } = render(GameScreen);
+		await settle(0);
+		const begin = getByTestId('story-continue-button');
+		// In the one step slot, the slot the board's steps use
+		expect(begin.closest('#step-action')).not.toBeNull();
+		expect(container.querySelectorAll('#step-action')).toHaveLength(1);
+		expect(begin.getAttribute('aria-label')).toBe('Begin your journey');
+		// The intro text is the screen's; the slot carries no second screen-showIntro
+		expect(container.querySelectorAll('[data-testid="screen-showIntro"]')).toHaveLength(1);
+
+		// It is the first step button, so there is no earlier press to hold off
+		await fireEvent.click(begin);
+		expect(gameState.state).toBe('initialDamageRoll');
+		await settle(0);
+		// Same element, now the opening roll
+		expect(getByTestId('initial-damage-button')).toBe(begin);
+		expect(begin.getAttribute('aria-label')).toBe('Roll for instability');
+	});
+
+	it('the intro begins from its button or Space, never from a tap beside it', async () => {
+		setUp('showIntro');
+		const { container } = render(GameScreen);
+		await settle(0);
+		await fireEvent.click(container.querySelector('.main-screen-area'));
+		expect(gameState.state).toBe('showIntro');
+
+		await fireEvent.keyDown(window, { key: ' ' });
+		expect(gameState.state).toBe('initialDamageRoll');
+	});
+
 	it('ignores a press that lands just after the button changed meaning', async () => {
 		setUp('failureCheck');
 		const { getByTestId } = render(GameScreen);
