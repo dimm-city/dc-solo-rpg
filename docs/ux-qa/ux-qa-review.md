@@ -1851,6 +1851,30 @@ own line; Inter 18px dialog titles.
 - Not run in round 1: the per-frame load sampling (`loadjump`) and captures with a forced bottom
   safe area. The DP-1-13 figures come from the layout. Round 2's reviewers recapture every state.
 
+### stage-1
+
+QA and integration of the owner items and the round-2 fixes, at `d3a902a` on
+`claude/vibrant-curie-w9bn88`.
+
+- **Built.** OWN-3: on phones in portrait the in-game header sits under the step button, clear
+  of the bottom safe area, and the HUD stays on top. OWN-4 and OWN-5: the board's centre text is
+  one settled readout that wraps and never clips, with no notice for a modifier that did nothing.
+  Round-2 fixes: the four-Ace and fatal result lines fit one line at 390px, one verb for Tokens,
+  true rule copy, no two Inter sizes 1px apart, and the recap's "/10" set like the HUD's.
+- **Merged.** The three developer branches (`design/v3-owner-items`, `design/v3-board-1`,
+  `design/v3-surfaces-1`) were all on origin with clean worktrees. The worktrees and branches are
+  removed.
+- **Checks.** Unit tests: 61 files, 1042 passed, 1 skipped (the old Easy-difficulty skip in
+  `gameActions.test.js`). ESLint and Prettier: clean. `npm run check`: 0 errors, 0 warnings.
+  `npm run build`: passes, and publint says "All good".
+- **Playwright.** Full suite on Desktop Chrome, Mobile Chrome and Tablet: 545 passed, 7 skipped,
+  0 failed, in 23.6 minutes. The skips are project-conditional: the three viewport tests in
+  `game-hud.spec.ts` (the new OWN-3 one among them) set their own viewport and run once, on
+  Desktop Chrome, and the card-grid test skips on phones.
+- **Found.** No failures, so no fixes were needed at this stage.
+- **Saved.** The owner-items spec and the two verify reviews (game UX and copy; visual and
+  layout) are in `docs/ux-qa/design-polish/v3/`.
+
 ## Recommendations
 
 ### Earlier reviews: what is fixed, open, or fixed badly
