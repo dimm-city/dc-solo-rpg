@@ -5,7 +5,14 @@
  */
 
 import { fourthAceWins } from '../constants/difficulty.js';
-import { DECK_SIZE, DEFAULT_STARTING_TOKENS } from '../components/status/hudTiers.js';
+import {
+	DECK_SIZE,
+	DEFAULT_STARTING_TOKENS,
+	acesTier,
+	kingsTier,
+	stabilityTier,
+	tokensTier
+} from '../components/status/hudTiers.js';
 
 export const MAX_STABILITY = 20;
 
@@ -72,36 +79,58 @@ function drawnCards(log = []) {
 	return log.filter((entry) => entry.card);
 }
 
-/** One recap tile: "Kings 1/4", spoken "Kings 1 of 4" */
-function tile(key, label, n, max, { spokenLabel = label, danger = false } = {}) {
+/**
+ * One recap tile: "Kings 1/4", spoken "Kings 1 of 4" (with `suffix`: "Drawn 30 of 52 cards").
+ * `tier` is the HUD tile's tier for the final value (hudTiers.js); null for a neutral count.
+ */
+function tile(key, label, n, max, { suffix = '', tier = null } = {}) {
+	const count = max === undefined ? `${n}` : `${n} of ${max}`;
 	return {
 		key,
 		label,
 		n,
 		max,
 		value: max === undefined ? String(n) : `${n}/${max}`,
-		spoken: max === undefined ? `${spokenLabel} ${n}` : `${spokenLabel} ${n} of ${max}`,
-		danger
+		spoken: `${label} ${count}${suffix ? ` ${suffix}` : ''}`,
+		tier
 	};
 }
 
 /**
- * Recap of the whole run, from real game state, in the HUD's words and its n/max counts.
+ * Recap of the whole run, from real game state, read as the HUD (game-copy-s-09): the tiles in
+ * its order, Stability, Kings | Rounds (in the Roll slot), Drawn | Aces, Tokens, each resource
+ * in its HUD tier's colour for its final value; Rounds and Drawn are neutral counts. "Drawn"
+ * counts the cards drawn (game-copy-s-08): the HUD's "Cards" counts the cards left.
  * Tokens are only included once Salvation was unlocked (Ace of Hearts revealed).
  * @returns {{key: string, label: string, n: number, max?: number, value: string,
- *   spoken: string, danger?: boolean}[]}
+ *   spoken: string, tier: string|null}[]}
  */
 export function getRunRecap(state) {
+	const stability = Math.max(0, state.tower ?? 0);
+	const kings = state.kingsRevealed ?? 0;
+	const aces = state.acesRevealed ?? 0;
 	const recap = [
+		tile('stability', 'Stability', stability, MAX_STABILITY, { tier: stabilityTier(stability) }),
+		tile('kings', 'Kings', kings, 4, { tier: kingsTier(kings) }),
 		tile('rounds', 'Rounds', state.round ?? 0),
-		tile('cards', 'Cards', drawnCards(state.log).length, DECK_SIZE, { spokenLabel: 'Cards drawn' }),
-		tile('kings', 'Kings', state.kingsRevealed ?? 0, 4, { danger: true }),
-		tile('aces', 'Aces', state.acesRevealed ?? 0, 4),
-		tile('stability', 'Stability', Math.max(0, state.tower ?? 0), MAX_STABILITY)
+		tile('cards', 'Drawn', drawnCards(state.log).length, DECK_SIZE, { suffix: 'cards' }),
+		tile('aces', 'Aces', aces, 4, {
+			tier: acesTier({
+				count: aces,
+				heartsAce: !!state.aceOfHeartsRevealed,
+				fourthWins: fourthAceWins(state)
+			})
+		})
 	];
 	if (state.aceOfHeartsRevealed) {
 		const start = state.config?.options?.startingTokens || DEFAULT_STARTING_TOKENS;
-		recap.push(tile('tokens', 'Tokens', Math.max(0, state.tokens ?? 0), start));
+		const tokens = Math.max(0, state.tokens ?? 0);
+		recap.push(
+			tile('tokens', 'Tokens', tokens, start, {
+				suffix: 'left',
+				tier: tokensTier({ unlocked: true, tokens, start })
+			})
+		);
 	}
 	return recap;
 }

@@ -34,4 +34,31 @@ describe('RunRecap', () => {
 		const { getByTestId } = render(RunRecap);
 		expect(getByTestId('recap-tokens').querySelector('.max')).not.toHaveClass('lead-one');
 	});
+
+	it('runs in the HUD order, each resource tile carrying its HUD tier (game-copy-s-08, s-09)', () => {
+		Object.assign(gameState, { tower: 0, kingsRevealed: 4, tokens: 2 });
+		const { getByTestId } = render(RunRecap);
+		const tiles = [...getByTestId('run-recap').querySelectorAll('.stat')];
+		expect(tiles.map((t) => t.querySelector('dt').textContent)).toEqual([
+			'Stability',
+			'Kings',
+			'Rounds',
+			'Drawn',
+			'Aces',
+			'Tokens'
+		]);
+		expect(tiles.map((t) => t.dataset.tier)).toEqual([
+			'critical',
+			'urgent',
+			'neutral',
+			'neutral',
+			'two',
+			'near'
+		]);
+		// The spoken text starts with the visible label
+		expect(getByTestId('recap-cards').querySelector('.sr-only').textContent).toBe(
+			'Drawn 0 of 52 cards'
+		);
+	});
 });
+

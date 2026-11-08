@@ -1,9 +1,11 @@
 <script>
 	/**
 	 * RunRecap - the whole run in a few numbers, from real game state, on the Game Over
-	 * screen: one row of tiles on wider screens, three per row on phones. The labels are the
-	 * HUD's, and the counts are its n/max in its LED face. (The final log shows the run as a
-	 * timeline instead: journal/GameTimeline.)
+	 * screen, read as the HUD (game-copy-s-09): its order (Stability, Kings | Rounds, Drawn |
+	 * Aces, Tokens), its labels, its n/max in its LED face, and each resource in its tier's
+	 * colours for the final value (tint, label, count). One row on wider screens; on phones two
+	 * rows of three, the HUD's two halves. (The final log shows the run as a timeline instead:
+	 * journal/GameTimeline.)
 	 */
 	import { gameState } from '../stores/gameStore.svelte.js';
 	import { getRunRecap } from '../utils/endingSummary.js';
@@ -18,9 +20,16 @@
 <div class="run-recap" data-testid="run-recap">
 	<dl>
 		{#each recap as item (item.key)}
-			<div class="stat" data-testid="recap-{item.key}">
+			<div
+				class="stat"
+				data-testid="recap-{item.key}"
+				data-key={item.key}
+				data-tier={item.tier ?? 'neutral'}
+				data-count={item.n}
+			>
+				<span class="tint" aria-hidden="true"></span>
 				<dt>{item.label}</dt>
-				<dd class:danger={item.danger && item.n > 0}>
+				<dd>
 					<!-- The HUD's LED face: lit digits over their unlit "88", the max quieter -->
 					<span class="value" aria-hidden="true"
 						><span class="led-field"
@@ -52,6 +61,12 @@
 	}
 
 	.stat {
+		/* Neutral (Rounds, Drawn): the HUD's plain count, no tint */
+		--tint-color: transparent;
+		--tint-alpha: 0;
+		--value-color: #e2e9f2;
+		--label-color: rgba(255, 255, 255, 0.72);
+		position: relative;
 		flex: 1 1 0;
 		min-width: 0;
 		display: flex;
@@ -64,6 +79,112 @@
 		text-align: center;
 	}
 
+	/* The HUD tiles' tiers (status/*Cell.svelte), for the final value: tint, count, label */
+	.stat[data-key='stability'] {
+		--tint-color: #00ff88;
+		--value-color: #00ff88;
+	}
+	.stat[data-key='stability'][data-tier='caution'] {
+		--tint-color: #ffd700;
+		--tint-alpha: 0.06;
+		--value-color: #ffd700;
+		--label-color: #ffd700;
+	}
+	.stat[data-key='stability'][data-tier='danger'] {
+		--tint-color: #ff8a3d;
+		--tint-alpha: 0.1;
+		--value-color: #ff8a3d;
+		--label-color: #ff8a3d;
+	}
+	.stat[data-key='stability'][data-tier='critical'] {
+		--tint-color: #ff4d6d;
+		--tint-alpha: 0.14;
+		--value-color: #ff4d6d;
+		--label-color: #ff4d6d;
+	}
+	.stat[data-key='kings'] {
+		--tint-color: #ff4d6d;
+		--value-color: #f2f4f8;
+		--label-color: #ff4d6d;
+	}
+	/* As in the HUD, the label turns red with the first King */
+	.stat[data-key='kings'][data-count='0'] {
+		--label-color: rgba(255, 255, 255, 0.72);
+	}
+	.stat[data-key='kings'][data-tier='urgent'] {
+		--tint-alpha: 0.16;
+		--value-color: #ff4d6d;
+	}
+	.stat[data-key='aces'] {
+		--tint-color: #00ffff;
+		--value-color: #00ffff;
+		--label-color: #00ffff;
+	}
+	.stat[data-key='aces'][data-tier='none'] {
+		--value-color: #f2f4f8;
+		--label-color: rgba(255, 255, 255, 0.72);
+	}
+	.stat[data-key='aces'][data-tier='one'] {
+		--tint-alpha: 0.04;
+	}
+	.stat[data-key='aces'][data-tier='two'] {
+		--tint-alpha: 0.07;
+	}
+	.stat[data-key='aces'][data-tier='three'] {
+		--tint-alpha: 0.1;
+	}
+	.stat[data-key='aces'][data-tier='four'] {
+		--tint-alpha: 0.12;
+	}
+	.stat[data-key='aces'][data-tier='final'] {
+		--tint-color: #ffd700;
+		--tint-alpha: 0.12;
+		--value-color: #ffd700;
+		--label-color: #ffd700;
+	}
+	.stat[data-key='tokens'] {
+		--tint-color: #ffd700;
+		--value-color: #ffd700;
+		--label-color: #ffd700;
+	}
+	.stat[data-key='tokens'][data-tier='half'] {
+		--tint-alpha: 0.06;
+	}
+	.stat[data-key='tokens'][data-tier='near'],
+	.stat[data-key='tokens'][data-tier='clear'] {
+		--tint-color: #00ff88;
+		--value-color: #00ff88;
+		--label-color: #00ff88;
+	}
+	.stat[data-key='tokens'][data-tier='near'] {
+		--tint-alpha: 0.1;
+	}
+	.stat[data-key='tokens'][data-tier='clear'] {
+		--tint-alpha: 0.12;
+	}
+	.stat[data-key='tokens'][data-tier='over'] {
+		--tint-color: #ff8a3d;
+		--tint-alpha: 0.08;
+		--value-color: #ff8a3d;
+		--label-color: #ff8a3d;
+	}
+
+	/* The HUD's tint layer: the tier's alpha at the top, a quarter of it at the bottom */
+	.tint {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		background-color: var(--tint-color);
+		opacity: var(--tint-alpha);
+		-webkit-mask-image: linear-gradient(180deg, #000, rgba(0, 0, 0, 0.25));
+		mask-image: linear-gradient(180deg, #000, rgba(0, 0, 0, 0.25));
+	}
+
+	dt,
+	dd {
+		position: relative;
+	}
+
 	dt {
 		font-family: var(--font-body, 'Inter', sans-serif);
 		font-size: 0.75rem;
@@ -72,18 +193,13 @@
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
 		white-space: nowrap;
-		color: rgba(255, 255, 255, 0.72);
+		color: var(--label-color);
 	}
 
 	dd {
-		--value-color: var(--color-brand-yellow, #ffd700);
 		--value-size: 1.5rem;
 		margin: 0;
 		line-height: 1;
-	}
-
-	dd.danger {
-		--value-color: var(--color-danger, #ff4d6d);
 	}
 
 	.value {
