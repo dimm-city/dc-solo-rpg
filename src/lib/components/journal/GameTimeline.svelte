@@ -9,14 +9,9 @@
 	import { gameState } from '../../stores/gameStore.svelte.js';
 	import { buildTimeline } from '../../utils/gameTimeline.js';
 	import SuitText from '../card/SuitText.svelte';
+	import { clauseRuns, rowClauses } from './timelineClauses.js';
 
 	const blocks = $derived(buildTimeline(gameState));
-
-	/** An event's clauses; each stays whole on a line, and a line breaks only after a ' ·' */
-	const clauses = (event) => (event.text ? event.text.split(' · ') : []);
-
-	/** A clause's pieces: a running total is held to the clause before it by no-break spaces */
-	const pieces = (clause) => clause.split('\u00a0·\u00a0');
 </script>
 
 <ol class="timeline" data-testid="game-timeline">
@@ -26,17 +21,20 @@
 			{#if block.events.length > 0}
 				<ul class="tl-events">
 					{#each block.events as event, i (i)}
-						{@const parts = clauses(event)}
+						{@const parts = rowClauses(event.text)}
 						<li class="tl-event" data-kind={event.kind}>
 							<span class="tl-clause"
 								><span class="tl-label"><SuitText text={event.label} /></span
 								>{#if parts.length}&nbsp;<span class="tl-sep">·</span>{/if}</span
-							>{parts.length ? ' ' : ''}{#each parts as part, p (p)}<span class="tl-clause"
-									>{#each pieces(part) as piece, k (k)}{#if k > 0}&nbsp;<span class="tl-sep">·</span
-											>&nbsp;{/if}<SuitText
-											text={piece}
-										/>{/each}{#if p < parts.length - 1}&nbsp;<span class="tl-sep">·</span
-										>{/if}</span
+							>{parts.length ? ' ' : ''}{#each parts as part, p (p)}{@const run =
+									clauseRuns(part)}<span class="tl-clause" class:breaks={run.lead}
+									>{#if run.lead}<SuitText text={run.lead} />{/if}<span class="tl-hold"
+										>{#each run.held as piece, k (k)}{#if k > 0}&nbsp;<span class="tl-sep">·</span
+												>&nbsp;{/if}<SuitText
+												text={piece}
+											/>{/each}{#if p < parts.length - 1}&nbsp;<span class="tl-sep">·</span
+											>{/if}</span
+									></span
 								>{p < parts.length - 1 ? ' ' : ''}{/each}
 						</li>
 					{/each}
@@ -119,8 +117,15 @@
 	}
 
 	/* One clause, kept whole: the separator ends its line, never starts the next */
-	.tl-clause {
+	.tl-clause,
+	.tl-hold {
 		white-space: nowrap;
+	}
+
+	/* A long clause holding a total breaks at its own spaces, so the card label never sits alone
+	   on its line; its last word stays with the total ("deck · Kings 0 of 4"): game-copy-s-12 */
+	.tl-clause.breaks {
+		white-space: normal;
 	}
 
 	.tl-sep {
@@ -128,7 +133,8 @@
 	}
 
 	/* The ending may be an author's own sentence: let it wrap like prose */
-	.tl-event[data-kind='end'] .tl-clause {
+	.tl-event[data-kind='end'] .tl-clause,
+	.tl-event[data-kind='end'] .tl-hold {
 		white-space: normal;
 	}
 
