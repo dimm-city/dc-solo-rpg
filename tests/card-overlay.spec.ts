@@ -361,22 +361,22 @@ test.describe('Card overlay', () => {
 
 		// The opening roll, a check with its loss and Stability after, the Ace and its target, in
 		// the board's words. Suits are drawn as the HUD's pip shapes (named images, no text).
-		await expect(rounds.nth(0)).toContainText('Instability · Rolled 6 · −1 Stability · 19/20');
-		await expect(rounds.nth(1)).toContainText('7 · Rolled 4 · −2 Stability · 17/20');
+		await expect(rounds.nth(0)).toContainText('Instability · Rolled 6 · −1 Stability · 19 of 20');
+		await expect(rounds.nth(1)).toContainText('7 · Rolled 4 · −2 Stability · 17 of 20');
 		await expect(rounds.nth(1).getByRole('img', { name: 'hearts' }).first()).toBeVisible();
 		await expect(rounds.nth(1)).toContainText('A · Salvation unlocked · needs 17+');
 		await expect(rounds.nth(1)).toContainText(
-			'Salvation · Rolled 15 · missed 17+ · 10 Tokens left'
+			'Salvation · Rolled 15 · missed 17+ · Tokens 10 left'
 		);
 		// An even card is no event; the round's Salvation roll is
 		await expect(rounds.nth(2).getByRole('img', { name: 'clubs' })).toHaveCount(0);
-		await expect(rounds.nth(2)).toContainText('Salvation · Rolled 18 · −1 Token · 9 Tokens left');
-		// Kings count out; a natural 20 is Lucid; the ending closes the last round
-		await expect(rounds.nth(3)).toContainText('K · 1 of 4 Kings');
-		await expect(rounds.nth(3)).toContainText('9 · Natural 20 · +1 Stability · 18/20 · Lucid');
-		await expect(rounds.nth(4)).toContainText('K · 4 of 4 Kings');
+		await expect(rounds.nth(2)).toContainText('Salvation · Rolled 18 · −1 Token · Tokens 9 left');
+		// Counts read as the header does; a natural 20 is Lucid; the ending closes the last round
+		await expect(rounds.nth(3)).toContainText('K · Kings 1 of 4');
+		await expect(rounds.nth(3)).toContainText('9 · Natural 20 · +1 Stability · 18 of 20 · Lucid');
+		await expect(rounds.nth(4)).toContainText('K · Kings 4 of 4');
 		await expect(rounds.nth(4)).toContainText('The end · The fourth King was revealed.');
-		await expect(timeline).not.toContainText(/no loss|\btokens?\b|rolled/);
+		await expect(timeline).not.toContainText(/no loss|\btokens?\b|rolled|\d\/20/);
 		// No recap badges any more
 		await expect(sheet.getByTestId('run-recap')).toHaveCount(0);
 
