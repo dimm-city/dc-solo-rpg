@@ -1,121 +1,50 @@
-# Sign-off 7: layout/responsive (visual/typography held as well)
+# Sign-off 8: layout/responsive (visual/typography held as well)
 
-Sign-off 7 is complete. Captures: signoff-7 (head a32f7b0). HEAD 55f742f changes only docs, with no src or static
-change since a32f7b0. Probes ran at HEAD on a dev server (port 5288, stopped), output in v3/vl8/. The sign-off 6
-review is saved as v3/signoff-visual-layout.signoff6.md.
+Sign-off 8 is complete. HEAD is 865c891. The only src change since the signoff-7 captures (a32f7b0) is commit 616cb31:
+five lines of CSS in src/lib/components/GameGuide.svelte (`git diff --stat a32f7b0 HEAD -- src static`). Following
+the owner's note, no full capture was made. I ran one targeted probe on a dev server (port 5295, now stopped) and took
+7 table crops. Output is in v3/vl9/. The sign-off 7 review is saved as v3/signoff-visual-layout.signoff7.md.
 
-## Verdicts
+## Verdict
 
-- **visual-layout-s-18: resolved.** Measured at HEAD with v3/vl8/m8.cjs (sign-off 6's m7 counter, unchanged) and
-  v3/vl8/s18extra.cjs (the same counter run on every chip panel, the AI summary dialog and Settings with Advanced
-  open). Reports: v3/vl8/m8.out and v3/vl8/measure/report-extra.txt. Longest line at 360 / 390 / 844x390 / 1440:
-  - **Story mode**, every round of all four seeded runs (journal entries, final log and ending): 45 / 49 / 66 / 66.
-    Sign-off 6 measured 45 / 49 / 79 / 79. `.journal-text` is now 540px (30em at 18px) inside the 640px column.
-  - **Card panels**, all 51 chips across the four runs opened one by one: 46 / 49 / 69 / 69. No line is over 75.
-  - **AI summary intro**: 42 / 42 / 62 / 62 (was 78). The width is 480px (30em at 16px).
-  - **Settings**, Advanced open: 45 / 50 / 60 / 60 (was 84 / 85). At 844x390 and 1440, `.cm-section-desc` runs 60
-    and `.cm-help` 58, at 420px (30em at 14px). Shots: v3/vl8/measure/desktop-settings.png and
-    iphone-13-landscape-settings.png. The control column and the switch keep their place. The help text ends about
-    200px short of the switch, which is the usual settings-row layout.
-  - Phone figures are unchanged by construction: the column widths (312-358px) are below every new cap.
-  - `.story-text` (GeneratedStory) has the same rule at the same size as `.journal-text` (1.125rem, 30em = 540px).
-    My seed has no saved summary to fill it, but the 66 measured on `.journal-text` covers the same box.
-  - The other changes stay as they were: no new clipping, overflow or small-target entry in any story or Settings
-    surface (see below).
-- **visual-layout-s-19: resolved.** Measured with my own probe, v3/vl8/numbreak8.cjs (output v3/vl8/nb8.out), written
-  separately from the developer's. It walks all visible text as one stream, so a numeral and its word are checked
-  even when they sit in different elements. It checks four things:
-  - a numeral whose next word, after a space, no-break space, hyphen or element boundary, starts on a later line;
-  - a numeral stranded at the start of a line before punctuation;
-  - any glyph outside its block or the viewport, with horizontal scrollers excluded;
-  - any table cell whose content is wider than the cell.
-  - Pages covered: both intros, the in-game Guide (opened from the header, the common path), /how-to, /about and the
-    About dialog, at 360, 390, 844x390 and 1440. Result: 0 numerals split from their word, 0 stranded, 0 overflow,
-    0 cell overflow. The one hit, "a d20 / decides" at 360 on /about, is a noun followed by its verb, not a count and
-    its unit.
-  - "**10 Tokens**" now starts a line together at 1440 (signoff-7 help-game/desktop.png; crop in
-    v3/vl8/crop-help-settings.png). About reads "A standard / 52-card deck" at 1440 (v3/vl8/about-desk-credits.png).
-  - The joins cost nothing in the tables (v3/vl8/tables.cjs): at 360, "Lose 3 Stability / and become / Surreal" and
-    "Gain 1 Stability / (max 20) and / become Lucid" fill the 158px cell, with no overflow, and wrap the same way at
-    390. At 844x390 and 1440 every cell is one line.
-  - About's credit at 1440 now breaks "...Chris Bissette / and Loot The Room, and licensed under / CC Attribution 3.0
-    Unported." The licence name is kept whole. The short middle line is a fair price for that.
-
-## New findings
-
-### visual-layout-s-20 · low · layout · overlays: the Guide's tables centre each row key against a wrapped value, so "4 Aces" sits beside the value's third line
-
-Every Guide table (in-game dialog and /how-to) leaves `th` and `td` at the default `vertical-align: middle`
-(GameGuide.svelte:390-397, with no vertical-align anywhere in the file). A row key is one line. When its value wraps,
-the key is centred on the whole value instead of lining up with its first line, so the eye pairs it with the wrong
-words.
-
-Measured with v3/vl8/valign.cjs (output v3/vl8/valign.out). The offset is the value's first-line top minus the
-key's:
-
-| Viewport | Row key | Value | Offset |
-|---|---|---|---|
-| 360 | "4 Aces" | "No target: a / Stability check, / then 1 Token / comes off" (4 lines) | -37px |
-| 360 | "1" | "Lose 3 Stability / and become / Surreal" (3 lines) | -25px |
-| 360 | "20" | "Gain 1 Stability / (max 20) and / become Lucid" (3 lines) | -25px |
-| 390 | "4 Aces" | 3 lines | -25px |
-| 390 | "20" | 3 lines | -25px |
-| 390 | "1" | 2 lines | -13px |
-
-So at 360, "1" reads beside "and become", "20" beside "(max 20) and", and "4 Aces" beside "then 1 Token".
-
-The header row has the same fault at every viewport, 360 through 1440. "To succeed" is centred against the two-line
-"Aces revealed": it sits 10-11px below the first line and 10-11px above the second, so it shares neither.
-
-Evidence: v3/vl8/measure/valign-evidence.png. It shows the 360 Stability and Salvation tables, then the 1440
-Salvation header. The same tables are in signoff-7 help-game at 360 and 390 once scrolled, and on /how-to.
-
-These are the tables that teach the dice rules, and phones are the main platform. The standard for a key/value table
-with wrapping values is to align each row's cells to their first line, and to sit column headers on the rule below
-them.
-
-- **Fix:** add `vertical-align: baseline` to `.guide-table th, .guide-table td` (GameGuide.svelte:390). That lines
-  up the first lines of the Share Tech Mono key and the Inter value on one baseline. Add `vertical-align: bottom` to
-  `.guide-table thead th` (GameGuide.svelte:399). Change nothing else.
-- **Acceptance:** run v3/vl8/valign.cjs (or the same measure) on /how-to and the in-game Guide at 360, 390, 844x390
-  and 1440.
-  - In every body row, the key's first line and the value's first line are within 3px of each other, allowing for
-    the difference in ascent between the two faces.
-  - In every header row, the one-line header's line is within 2px of the last line of the two-line header.
-  - Row heights and the tables' widths are unchanged.
+- **visual-layout-s-20: resolved.** Probe: v3/vl9/valign9.cjs, output v3/vl9/valign9.out.
+  - Coverage: every row of all three Guide tables (18 rows), on /how-to and in the in-game Guide, at 360x640,
+    390x844, 844x390 and 1440x900. That is 144 rows, and 0 fail.
+  - The probe measures each cell's first-line glyph top, its first-line baseline (from a zero-height inline-block
+    marker) and its last-line bottom. It measures the row height and table width with the fix, then again with the
+    pre-fix `middle` forced in the same page.
+  - **Body rows:** in all 120, the key and the value start within 1px of each other (first-line top -1px, baseline
+    +1px). The limit was 3px.
+    - Wrapped rows before the fix: "4 Aces" -37px at 360 on /how-to, -25px on the in-game Guide and at 390, and -13px
+      on the in-game Guide at 390. "1" and "20" were -25px or -13px.
+  - **Header rows:** "To succeed" ends exactly on the last line of "ACES REVEALED" (0px) at every viewport, on both
+    surfaces. Before the fix it was 10-11px off. The 16 one-line header rows are at 0px.
+  - **Sizes:** row height and table width change by 0 in all 144 rows.
+  - **Clipping:** no cell's ink extends past its cell.
+  - Crops: v3/vl9/salvation-how-to-android-small.png, stability-how-to-android-small.png,
+    salvation-in-game-{android-small,iphone-13,iphone-13-landscape,desktop}.png and stability-in-game-android-small.png.
+    "1" reads beside "Lose 3 Stability", "20" beside "Gain 1 Stability", and "4 Aces" beside "No target: a". The
+    column heads sit on the rule beneath them.
+  - Choosing `top` over the `baseline` I suggested is right. It leaves a 1px baseline offset between Share Tech Mono
+    and Inter, which is within tolerance and invisible at reading size. Baseline would have grown every one-line row
+    by 1px.
 
 ## Checked and not filed
 
-- **Positions hold.** signoff-7 drift: the toolbar, title slot, caption, result line and step button move 0px at all
-  four viewports across the 20 table states.
-  - Bottom toolbar on phones: 360 at y=584, 390 at y=788.
-  - Top toolbar: 844x390 at y=6, 1440 at y=8.
-- **No unintended change.** I pixel-diffed all 178 shots against signoff-6 (v3/vl8/pxdiff.py).
-  - Board shots differ only by the ambient motes and the background glow. Examples: v3/vl8/d-round-start-390.png,
-    and d-gowin-844.png (the victory screen's radial glow).
-  - Real changes appear only in the s-18 and s-19 surfaces: story-round-1 at 844x390 and 1440, settings-game at
-    1440, help-game at 1440 and page-about.
-  - No board code changed since sign-off 6. Only the story components, ContentModal, StoryGenerationPanel,
-    GameGuide, About and the Ghost intro changed.
-- **Metrics.** The `clipped`, `outside`, `smallTargets`, `pageOverflowX` and `offscreenTexts` lists match signoff-6
-  in all 178 board and surface shots, with two exceptions:
-  - page-about at 844x390 lists the new `nobreak` span below the fold, which is the same content.
-  - page-about at 390 adds "CC Attribution 3.0 Unported" to `smallTargets`. It is now a single 20px line instead of
-    two, and it is an inline link in a sentence. WCAG 2.5.8's inline exception covers it, as it already covered "The
-    Wretched" in every earlier sign-off.
-- **Board and surfaces through both lenses** at every captured viewport, from the signoff-7 sheets:
-  - Board: HUD tiers and LED digits, title slot, card tab, notice tab, Surreal hint, rule caption, result-hold
-    run-out and the reduced-motion d20.
-  - Overlays and screens: header menu, cards, endings, journal, final log (timeline and entry), library, story mode,
-    Settings, the Guide, the exit dialog, Home and About.
-  - All of them read as in sign-off 6, apart from the s-18 and s-19 changes above.
-- **Settings spacing.** The Rule tips row has 40px below it to the Advanced rule, against 16px between other rows.
-  This is the section-boundary spacing (`.cm-section + .cm-section` uses margin 24 plus the row's 16), so the
-  hierarchy is consistent. Not filed.
-- **Header menu at 844x390 and 1440.** Missing by design: the ⋯ menu exists only at 720px wide and narrower.
+- **Scope.** The rule is scoped to `.guide-table`, which appears only in GameGuide.svelte (three tables). No other
+  surface can change. The board, HUD, toolbar and every other overlay are byte-identical to the signoff-7 captures,
+  where the drift table read 0px for the toolbar, title slot, caption, result line and step button at all four
+  viewports. The sign-off 7 notes on those still stand.
+- **In-game header on the intro.** The header is opacity 0 and inert under the intro (`.dock-toolbar` opacity 0,
+  `.status-display-area` inert), so it cannot be focused or clicked there. This is intended: it appears once play
+  starts. Not a defect.
+- **/how-to table width at 360.** The table is 262px on /how-to and 312px in the in-game Guide, because of the page's
+  own content padding. It was reviewed and left as it is in every earlier sign-off. No cell overflows (sign-off 7's
+  table probe). Not reopened.
 
 ## Approval
 
-- layout: **not approved.** s-18 and s-19 are resolved, but s-20 is new. The Guide's row keys sit beside the second
-  or third line of their values on phones (25-37px off at 360), and the "To succeed" header floats between the two
-  lines of "Aces revealed" at every viewport. The fix is two CSS declarations.
+- layout: **approved.** s-20 is resolved against every acceptance criterion. There is no open or regressed layout
+  item and no new finding.
+- visual: **approved.** It was held in sign-off 7, and nothing visual changed apart from this alignment, which
+  improves the Guide's tables.
