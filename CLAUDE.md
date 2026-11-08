@@ -67,6 +67,8 @@ npm run prepublishOnly   # Pre-publish checks (runs automatically)
   - Demo pages and examples
   - Not included in published package
 
+- **`static/games/`** - The built-in games (`*.game.md`, plus a folder per game for its card art). The home loader finds them at build time (`src/routes/builtInGames.js`, an `import.meta.glob`), so adding a game is adding its file. There is no games index to generate or maintain.
+
 - **`docs/`** - Documentation for game creators
   - `game-config.md` - Type-based markdown format specification
   - `simplified-type-based-format.md` - Complete format guide with examples
