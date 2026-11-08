@@ -14,7 +14,9 @@ function scroller({ clientHeight, scrollHeight, scrollTop = 0 }) {
 	Object.defineProperty(node, 'scrollTop', {
 		configurable: true,
 		get: () => scrollTop,
-		set: (v) => (scrollTop = v)
+		set: (v) => {
+			scrollTop = v;
+		}
 	});
 	return node;
 }
