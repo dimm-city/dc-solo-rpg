@@ -120,7 +120,7 @@ describe('useFailureCheck', () => {
 		mockDieRoll(3);
 
 		await check.handleFailureCheck();
-		expect(check.resultLine).toBe('Rolled 3 · −2 Stability · nothing left to hold on to');
+		expect(check.resultLine).toBe('Rolled 3 · −2 Stability · you fall');
 		expect(check.buttonText).toBe('Face the end');
 	});
 
@@ -240,7 +240,7 @@ describe("useFailureCheck on the fourth Ace's check (Easy: the final roll)", () 
 		expect(gameState.tower).toBe(0);
 		expect(gameState.win).toBe(false);
 		expect(gameState.gameOver).toBe(true);
-		expect(check.resultLine).toBe('Rolled 4 · −2 Stability · nothing left to hold on to');
+		expect(check.resultLine).toBe('Rolled 4 · −2 Stability · you fall');
 		expect(check.buttonText).toBe('Face the end');
 		expect(check.hold.active).toBe(false);
 		await vi.advanceTimersByTimeAsync(RESULT_HOLD_MS * 2);
@@ -272,9 +272,7 @@ describe("useFailureCheck on the fourth Ace's check (Easy: the final roll)", () 
 
 		await check.handleFailureCheck();
 		expect(gameState.isSurreal).toBe(false);
-		expect(check.resultLine).toBe(
-			'Rolled 3 (low of 15, 3) · −2 Stability · nothing left to hold on to'
-		);
+		expect(check.resultLine).toBe('Rolled 3 (low of 15, 3) · −2 Stability · you fall');
 		expect(gameState.win).toBe(false);
 		expect(gameState.gameOver).toBe(true);
 	});
@@ -412,7 +410,7 @@ describe('useSuccessCheck', () => {
 		await check.handleSuccessCheck();
 		expect(gameState.tower).toBe(0);
 		expect(gameState.tokens).toBe(10);
-		expect(check.resultLine).toBe('Rolled 8 · −1 Stability · nothing left to hold on to');
+		expect(check.resultLine).toBe('Rolled 8 · −1 Stability · you fall');
 		expect(check.buttonText).toBe('Face the end');
 		expect(check.hold.active).toBe(false);
 		await vi.advanceTimersByTimeAsync(RESULT_HOLD_MS * 2);

@@ -122,7 +122,7 @@ test.describe('Round flow', () => {
 	test('the intro ends on what winning takes', async ({ page }) => {
 		await openGame(page);
 		await expect(page.getByTestId('intro-goal')).toHaveText(
-			/^Hold on to your 20 Stability\. (Find the Ace of Hearts, then clear all 10 Tokens to escape|The Ace of Hearts is already revealed: clear all 10 Tokens, or survive the fourth Ace, to escape)\.$/
+			/^Hold on to your 20 Stability\. (Find the Ace of Hearts, then remove all 10 Tokens to escape|The Ace of Hearts is already revealed: remove all 10 Tokens, or survive the fourth Ace, to escape)\.$/
 		);
 	});
 
@@ -380,10 +380,9 @@ test.describe('Results move on by themselves', () => {
 		await dismissCard(page);
 		await store(page, 'rnd.mockDieRoll(4)');
 		await pressStep(page, 'failure-check-button');
-		await expect(page.getByTestId('result-line')).toHaveText(
-			'Rolled 4 · −2 Stability · nothing left to hold on to',
-			{ timeout: 30000 }
-		);
+		await expect(page.getByTestId('result-line')).toHaveText('Rolled 4 · −2 Stability · you fall', {
+			timeout: 30000
+		});
 		await expect(page.getByTestId('failure-check-button')).toHaveAccessibleName('Face the end');
 		await pressStep(page, 'failure-check-button');
 		await expect(page.getByTestId('screen-gameOver')).toBeVisible();
@@ -523,10 +522,9 @@ test.describe('Results move on by themselves', () => {
 		await store(page, 'rnd.mockDieRoll(8)');
 		await pressStep(page, 'success-check-button');
 
-		await expect(page.getByTestId('result-line')).toHaveText(
-			'Rolled 8 · −1 Stability · nothing left to hold on to',
-			{ timeout: 30000 }
-		);
+		await expect(page.getByTestId('result-line')).toHaveText('Rolled 8 · −1 Stability · you fall', {
+			timeout: 30000
+		});
 		await expect(page.getByTestId('success-check-button')).toHaveAccessibleName('Face the end');
 		await pressStep(page, 'success-check-button');
 		await expect(page.getByTestId('screen-gameOver')).toBeVisible();
@@ -576,9 +574,7 @@ test.describe('Rule tips', () => {
 			await journal.getByTestId('journal-save-button').click({ timeout: 2000 });
 			await expect(page.getByTestId('roll-tasks-button')).toBeVisible({ timeout: 3000 });
 		}).toPass({ timeout: 20000 });
-		await expect(caption).toHaveText(
-			/A natural 1 makes you Surreal: your next roll uses two dice and keeps the lower\./
-		);
+		await expect(caption).toHaveText(/A natural 1 makes you Surreal, for one roll: this one\./);
 		await expect(page.getByTestId('roll-modifier')).toHaveText(
 			'Surreal · two dice, keep the lower'
 		);

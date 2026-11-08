@@ -259,7 +259,7 @@ export function acesSpoken({ count, heartsAce = false, fourthWins = false }) {
 		case 'locked':
 			return `Aces ${count} of 4, Salvation locked until the Ace of Hearts`;
 		case 'four':
-			return 'Aces 4 of 4, Salvation has no target: each roll is a Stability check';
+			return 'Aces 4 of 4, Salvation has no target: each Salvation roll is a Stability check';
 		case 'final':
 			return 'Aces 4 of 4, survive the final Stability check and you escape';
 		default:
@@ -305,7 +305,7 @@ export function tokensSpoken({
 		case 'near':
 			return `${left}, ${tokens === 1 ? 'one' : 'two'} to go`;
 		case 'clear':
-			return `${left}, all cleared`;
+			return `${left}, all removed`;
 		case 'over':
 			return `${left}, ${tokens - start} more than at the start`;
 		default:

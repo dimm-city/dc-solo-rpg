@@ -483,7 +483,7 @@ describe('AcesCell', () => {
 			'All four Aces: each Salvation is a Stability check; hold on and a Token comes off'
 		);
 		expect(text(cell.querySelector('.sr-only'))).toBe(
-			'Aces 4 of 4, Salvation has no target: each roll is a Stability check'
+			'Aces 4 of 4, Salvation has no target: each Salvation roll is a Stability check'
 		);
 		expect(lit(cell)).toEqual(['hearts', 'spades', 'diamonds', 'clubs']);
 	});
@@ -851,7 +851,7 @@ describe('HUD spoken text at every tier (DP-1-03)', () => {
 			],
 			[
 				{ count: 4, heartsAce: true },
-				'Aces 4 of 4, Salvation has no target: each roll is a Stability check',
+				'Aces 4 of 4, Salvation has no target: each Salvation roll is a Stability check',
 				`All four Aces: ${rule}`
 			],
 			[
@@ -873,7 +873,7 @@ describe('HUD spoken text at every tier (DP-1-03)', () => {
 		expect(say(5)).toBe('Tokens 5 of 10 left, halfway there');
 		expect(say(2)).toBe('Tokens 2 of 10 left, two to go');
 		expect(say(1)).toBe('Tokens 1 of 10 left, one to go');
-		expect(say(0)).toBe('Tokens 0 of 10 left, all cleared');
+		expect(say(0)).toBe('Tokens 0 of 10 left, all removed');
 		expect(say(12)).toBe('Tokens 12 of 10 left, 2 more than at the start');
 		expect(tokensSpoken({ unlocked: true, tokens: 3, start: 10, label: 'Hope' })).toBe(
 			'Hope 3 of 10 left, halfway there'

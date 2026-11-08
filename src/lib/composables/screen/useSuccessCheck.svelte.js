@@ -52,11 +52,13 @@ export function useSuccessCheck() {
 	/** Apply the rolled (or resumed) result, show its line and start the hold */
 	function settle(roll, threshold, thrown) {
 		const stabilityBefore = gameState.tower;
+		const tokensBefore = gameState.tokens;
 		const hard = isHardGame(gameState);
 		applyPendingSuccessCheck({ advance: false });
 		successCheckResultLine = formatSalvationResult(roll, threshold, gameState.tokens, thrown, {
 			hard,
-			stabilityBefore
+			stabilityBefore,
+			tokensBefore
 		});
 		if (!gameState.gameOver) hold.start(advance);
 	}

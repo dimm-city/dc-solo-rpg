@@ -218,7 +218,7 @@ test.describe('Game HUD', () => {
 			'All four Aces: each Salvation is a Stability check; hold on and a Token comes off'
 		);
 		await expect(aces.locator('.sr-only')).toHaveText(
-			'Aces 4 of 4, Salvation has no target: each roll is a Stability check'
+			'Aces 4 of 4, Salvation has no target: each Salvation roll is a Stability check'
 		);
 		await setState(page, 'g.config.options.difficulty = 2;');
 		await expect(aces).toHaveAttribute(

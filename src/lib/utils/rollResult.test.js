@@ -103,18 +103,22 @@ describe('formatSalvationResult', () => {
 	});
 
 	describe('the winning roll (the last Token)', () => {
-		it('says the last Token is gone and you escape, with no modifier', () => {
-			expect(formatSalvationResult(15, 14, 0)).toBe(
-				'Rolled 15 · the last Token is gone · you escape'
+		it('says the Token came off and you escape, with no modifier (GD-1-07)', () => {
+			expect(formatSalvationResult(15, 14, 0)).toBe('Rolled 15 · −1 Token · you escape');
+			expect(formatSalvationResult(20, 17, 0, undefined, { tokensBefore: 2 })).toBe(
+				'Natural 20 · −2 Tokens · you escape'
 			);
-			expect(formatSalvationResult(20, 17, 0)).toBe(
-				'Natural 20 · the last Token is gone · you escape'
+		});
+
+		it('counts only the Token that was left when a natural 20 takes the last one', () => {
+			expect(formatSalvationResult(20, 17, 0, undefined, { tokensBefore: 1 })).toBe(
+				'Natural 20 · −1 Token · you escape'
 			);
 		});
 
 		it('keeps the Stability clause with four Aces', () => {
 			expect(formatSalvationResult(15, 0, 0, undefined, { stabilityBefore: 16 })).toBe(
-				'Rolled 15 · no Stability lost · the last Token is gone · you escape'
+				'Rolled 15 · no Stability lost · −1 Token · you escape'
 			);
 		});
 	});
@@ -151,7 +155,7 @@ describe('formatSalvationResult', () => {
 
 		it('the fatal roll keeps the Token and says so', () => {
 			expect(formatSalvationResult(3, 0, 4, undefined, at(2))).toBe(
-				'Rolled 3 · −2 Stability · nothing left to hold on to'
+				'Rolled 3 · −2 Stability · you fall'
 			);
 		});
 	});
@@ -180,7 +184,7 @@ describe("the fourth Ace's Stability check (Easy: the final roll)", () => {
 
 	it('is the fatal roll when it takes the last Stability', () => {
 		expect(formatStabilityResult(3, 2, 0, 20, undefined, final)).toBe(
-			'Rolled 3 · −2 Stability · nothing left to hold on to'
+			'Rolled 3 · −2 Stability · you fall'
 		);
 	});
 
@@ -208,6 +212,16 @@ describe('two-dice rolls (Lucid and Surreal) name both dice and the one that cou
 		expect(describeDice()).toBe('');
 	});
 
+	it('does not name two equal dice: either one counted (GD-1-07)', () => {
+		expect(describeDice({ dice: [20, 20], wasSurreal: true })).toBe('');
+		expect(formatTaskResult(20, 6, { dice: [20, 20], wasSurreal: true })).toBe(
+			'Natural 20 · 6 cards this round · Lucid'
+		);
+		expect(formatStabilityResult(8, 16, 15, 20, { dice: [8, 8], wasLucid: true })).toBe(
+			'Rolled 8 · −1 Stability'
+		);
+	});
+
 	it('adds them to every result line', () => {
 		expect(formatTaskResult(19, 5, lucid)).toBe('Rolled 19 (high of 19, 5) · 5 cards this round');
 		expect(formatStabilityResult(6, 16, 15, 20, surreal)).toBe(
@@ -224,13 +238,9 @@ describe('two-dice rolls (Lucid and Surreal) name both dice and the one that cou
 });
 
 describe('the fatal roll', () => {
-	it('says there is nothing left, with no modifier', () => {
-		expect(formatStabilityResult(3, 2, 0)).toBe(
-			'Rolled 3 · −2 Stability · nothing left to hold on to'
-		);
-		expect(formatStabilityResult(1, 3, 0)).toBe(
-			'Natural 1 · −3 Stability · nothing left to hold on to'
-		);
+	it('says you fall, with no modifier (GD-1-07)', () => {
+		expect(formatStabilityResult(3, 2, 0)).toBe('Rolled 3 · −2 Stability · you fall');
+		expect(formatStabilityResult(1, 3, 0)).toBe('Natural 1 · −3 Stability · you fall');
 	});
 });
 
@@ -277,7 +287,7 @@ describe('formatResultTotals (the live announcement only)', () => {
 describe('formatIntroGoal', () => {
 	it('ends the intro on what winning takes (Normal and Hard)', () => {
 		expect(formatIntroGoal({ stability: 20, tokens: 10, aceRevealed: false })).toBe(
-			'Hold on to your 20 Stability. Find the Ace of Hearts, then clear all 10 Tokens to escape.'
+			'Hold on to your 20 Stability. Find the Ace of Hearts, then remove all 10 Tokens to escape.'
 		);
 	});
 
@@ -285,13 +295,13 @@ describe('formatIntroGoal', () => {
 		expect(
 			formatIntroGoal({ stability: 20, tokens: 10, aceRevealed: true, fourthAceWins: true })
 		).toBe(
-			'Hold on to your 20 Stability. The Ace of Hearts is already revealed: clear all 10 Tokens, or survive the fourth Ace, to escape.'
+			'Hold on to your 20 Stability. The Ace of Hearts is already revealed: remove all 10 Tokens, or survive the fourth Ace, to escape.'
 		);
 	});
 
 	it('says "the one Token" for a single Token', () => {
 		expect(formatIntroGoal({ stability: 20, tokens: 1, aceRevealed: false })).toBe(
-			'Hold on to your 20 Stability. Find the Ace of Hearts, then clear the one Token to escape.'
+			'Hold on to your 20 Stability. Find the Ace of Hearts, then remove the one Token to escape.'
 		);
 	});
 });
