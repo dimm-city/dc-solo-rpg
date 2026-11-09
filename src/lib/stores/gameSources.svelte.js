@@ -68,6 +68,7 @@ const store = $state({ ...readStorage(), refreshing: false });
 /** @returns {boolean} false when the browser refused (storage full, private mode) */
 function save() {
 	try {
+		if (typeof localStorage === 'undefined') return false;
 		const sources = $state.snapshot(store.sources).map(({ refreshing: _, ...source }) => source);
 		const seeded = $state.snapshot(store.seeded);
 		localStorage.setItem(
@@ -103,7 +104,13 @@ export function seedDefaultSources(defaults = DEFAULT_SOURCES) {
 	return added;
 }
 
-if (typeof localStorage !== 'undefined') seedDefaultSources();
+// Once per load. A browser that refuses storage (private mode) still gets the defaults for the
+// session: every storage access above is inside a try, and this one must be too
+try {
+	seedDefaultSources();
+} catch (error) {
+	logger.warn('[gameSources] Could not add the default sources:', error);
+}
 
 /** @returns {GameSource[]} The sources, in the order they were added (reactive) */
 export function getGameSources() {

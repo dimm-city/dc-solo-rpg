@@ -181,6 +181,38 @@ test.describe('Card overlay', () => {
 		if (page.viewportSize()!.width <= 600) expect(layout.storyScrolls).toBe(true);
 	});
 
+	test('a card with a picture shows it above the story; a decorative one has no alt text', async ({
+		page
+	}) => {
+		// The Salvation card: its picture sits between the headline and the story, loaded from
+		// beside the game file, and its alt text is part of what the card tells a screen reader
+		const card = await dealCards(page, ['A:hearts'], 'g.aceOfHeartsRevealed = false;');
+		const art = card.locator('.card-art img');
+		await expect(art).toHaveAttribute('src', '/games/ghost-in-the-machine/salvation.svg');
+		await expect
+			.poll(() => art.evaluate((img: HTMLImageElement) => img.naturalWidth))
+			.toBeGreaterThan(0);
+		const layout = await card.evaluate((el) => {
+			const rect = (selector: string) => el.querySelector(selector)!.getBoundingClientRect();
+			return {
+				artBelowHeadline: rect('.card-art').top >= rect('.byte-data').bottom,
+				artAboveStory: rect('.card-art').bottom <= rect('.story-scroll').top,
+				described: (el.getAttribute('aria-describedby') ?? '').includes(
+					el.querySelector('.card-art img')!.id
+				)
+			};
+		});
+		expect(layout).toEqual({ artBelowHeadline: true, artAboveStory: true, described: true });
+
+		// The King of Clubs's picture is decorative: an empty alt, left out of the description
+		const king = await dealCards(page, ['K:clubs'], 'g.kingsRevealed = 1;');
+		const kingArt = king.locator('.card-art img');
+		await expect(kingArt).toHaveAttribute('alt', '');
+		expect(await king.getAttribute('aria-describedby')).not.toContain(
+			await kingArt.getAttribute('id')
+		);
+	});
+
 	test('an odd card says a Stability check follows, and where it sits in the round', async ({
 		page
 	}) => {

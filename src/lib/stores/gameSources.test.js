@@ -190,6 +190,21 @@ describe('game sources', () => {
 			expect(stored().sources.map((s) => s.id)).toEqual(['dimm-city/solo-rpg-games']);
 		});
 
+		it('loads, with the default source, in a browser whose storage throws on every access', async () => {
+			const refuse = () => {
+				throw new DOMException('The operation is insecure.', 'SecurityError');
+			};
+			vi.stubGlobal('localStorage', new Proxy({}, { get: refuse, set: refuse }));
+			try {
+				vi.resetModules();
+				const fresh = await import('./gameSources.svelte.js');
+				expect(fresh.getGameSources().map((s) => s.id)).toEqual(['dimm-city/solo-rpg-games']);
+				expect(fresh.addGameSource('a/one').ok).toBe(false);
+			} finally {
+				vi.unstubAllGlobals();
+			}
+		});
+
 		it('starts from the default source alone when storage is unreadable', async () => {
 			localStorage.setItem(KEY, '{not json');
 			vi.resetModules();

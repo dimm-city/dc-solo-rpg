@@ -2,14 +2,7 @@
 // seed: tests/seed.spec.ts
 
 import { test, expect } from '@playwright/test';
-import { readFileSync } from 'fs';
-import { openHomePage } from './helpers';
-
-/** The built-in game, uploaded again under another name when a test needs a second card */
-const GAME = readFileSync(
-	new URL('../static/games/ghost-in-the-machine.game.md', import.meta.url),
-	'utf8'
-);
+import { addSecondGameCard, openHomePage } from './helpers';
 
 test.describe('Game Selection Screen', () => {
 	test.beforeEach(async ({ page }) => {
@@ -72,12 +65,7 @@ test.describe('Game Selection Screen', () => {
 	});
 
 	test('should draw different key art for each game', async ({ page }) => {
-		// One game ships built in; an uploaded copy under another name makes the second card
-		await page.locator('input[type="file"]').setInputFiles({
-			name: 'another-game.game.md',
-			mimeType: 'text/markdown',
-			buffer: Buffer.from(GAME)
-		});
+		await addSecondGameCard(page);
 		const art = page.locator('.game-card .key-art svg');
 		await expect(art).toHaveCount(2);
 		const first = await art.nth(0).innerHTML();
@@ -131,6 +119,7 @@ test.describe('Game Selection Screen', () => {
 	test('should line cards up: equal heights and actions pinned to the bottom', async ({ page }) => {
 		const viewport = page.viewportSize()!;
 		test.skip(viewport.width <= 640, 'one card per row on phones');
+		await addSecondGameCard(page);
 
 		// Measure once the cards have finished fading in
 		await page.waitForFunction(() =>
@@ -191,6 +180,7 @@ test.describe('Game Selection Screen', () => {
 	});
 
 	test('should have a different card variant for each game card', async ({ page }) => {
+		await addSecondGameCard(page);
 		const cards = page.locator('.game-card');
 		const count = await cards.count();
 		expect(count).toBeGreaterThan(1);

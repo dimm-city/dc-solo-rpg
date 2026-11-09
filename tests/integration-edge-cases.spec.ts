@@ -2,7 +2,13 @@
 // seed: tests/seed.spec.ts
 
 import { test, expect } from '@playwright/test';
-import { INSTRUCTIONS_SEEN_KEY, openHomePage, openContentModal, clickMenuItem } from './helpers';
+import {
+	INSTRUCTIONS_SEEN_KEY,
+	addSecondGameCard,
+	openHomePage,
+	openContentModal,
+	clickMenuItem
+} from './helpers';
 
 test.describe('Integration and Edge Cases', () => {
 	test('should handle rapid modal opening and closing', async ({ page }) => {
@@ -110,6 +116,7 @@ test.describe('Integration and Edge Cases', () => {
 
 	test('should handle rapid game card clicking', async ({ page }) => {
 		await openHomePage(page);
+		await addSecondGameCard(page);
 
 		const cards = page.locator('.game-card');
 		expect(await cards.count()).toBeGreaterThanOrEqual(2);
