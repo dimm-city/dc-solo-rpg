@@ -18,12 +18,13 @@ function formatIntroduction(sections) {
 }
 
 /**
- * Convert parsed game to internal game config format
+ * Convert parsed game to internal game config format. Also used for a game fetched from a
+ * GitHub source (gameSources.svelte.js), which adds its `source` to the result.
  * @param {object} parsed - Parsed game from markdownParser
  * @param {string} slug - Game slug
  * @returns {object} Game configuration
  */
-function convertToGameConfig(parsed, slug) {
+export function convertToGameConfig(parsed, slug) {
 	return {
 		slug,
 		title: parsed.title,

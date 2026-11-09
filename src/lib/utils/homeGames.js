@@ -16,15 +16,27 @@ export function gameSlug(game) {
 
 /**
  * The card subtitle: the game's own `subtitle` frontmatter (read from the file by the home
- * loader for the built-in games, from the parsed upload for custom games). Empty when the game
- * has none.
- * @param {{ subtitle?: string, isCustom?: boolean }} game
+ * loader for the built-in games, from the parsed file for uploads and games from GitHub
+ * sources). Empty when the game has none.
+ * @param {{ subtitle?: string, isCustom?: boolean, source?: object }} game
  * @returns {string}
  */
 export function gameSubtitle(game) {
 	const subtitle = typeof game?.subtitle === 'string' ? game.subtitle.trim() : '';
 	if (subtitle) return subtitle;
+	if (game?.source) return 'From GitHub';
 	return game?.isCustom ? 'Your uploaded game' : '';
+}
+
+/**
+ * The home screen's list: uploaded games, games from GitHub sources and the built-in games
+ * together, by title. Every slug is distinct: uploads are named by file, source games by
+ * repository and file, built-ins by file.
+ * @param {...Array<{ title: string }>} groups
+ * @returns {Array<object>}
+ */
+export function homeGameList(...groups) {
+	return groups.flat().sort((a, b) => a.title.localeCompare(b.title));
 }
 
 const MINUTE = 60 * 1000;

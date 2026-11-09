@@ -4,6 +4,7 @@
 	import { gameState } from '$lib/stores/gameStore.svelte.js';
 	import { getAllDiceThemes } from '$lib/configuration/DiceThemes.js';
 	import { getCustomGame } from '$lib/stores/customGames.js';
+	import { getSourceGame } from '$lib/stores/gameSources.svelte.js';
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import ErrorScreen from '$lib/components/ErrorScreen.svelte';
@@ -24,11 +25,11 @@
 			return;
 		}
 
-		// Load custom game from localStorage
-		const customGame = getCustomGame(slug);
+		// An uploaded game, or one from a GitHub source: both are stored in this browser
+		const customGame = getCustomGame(slug) ?? getSourceGame(slug);
 
 		if (!customGame) {
-			error = `We couldn't find a custom game called “${slug}” in this browser.`;
+			error = `We couldn't find a game called “${slug}” in this browser.`;
 			return;
 		}
 

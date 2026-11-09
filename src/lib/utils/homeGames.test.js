@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
 	gameSlug,
 	gameSubtitle,
+	homeGameList,
 	formatTimeAgo,
 	saveSummaryParts,
 	saveRoundLabel
@@ -33,6 +34,33 @@ describe('gameSubtitle', () => {
 	it("uses an uploaded game's subtitle, or names it as an upload", () => {
 		expect(gameSubtitle({ isCustom: true, subtitle: 'A night shift' })).toBe('A night shift');
 		expect(gameSubtitle({ isCustom: true })).toBe('Your uploaded game');
+	});
+
+	it("uses a GitHub game's subtitle, or says where it is from", () => {
+		const source = { id: 'o/r', owner: 'o', repo: 'r' };
+		expect(gameSubtitle({ isCustom: true, source, subtitle: 'Far away' })).toBe('Far away');
+		expect(gameSubtitle({ isCustom: true, source })).toBe('From GitHub');
+	});
+});
+
+describe('homeGameList', () => {
+	it('puts uploaded, GitHub and built-in games in one list, by title', () => {
+		const uploads = [{ slug: 'night-shift', title: 'Night Shift', isCustom: true }];
+		const fromGitHub = [
+			{ slug: 'o-r--future-lost', title: 'Future Lost', isCustom: true, source: { id: 'o/r' } },
+			{ slug: 'o-r--abyss', title: 'Abyss', isCustom: true, source: { id: 'o/r' } }
+		];
+		const builtIn = [{ slug: 'future-lost', title: 'Future Lost' }];
+		const list = homeGameList(uploads, fromGitHub, builtIn);
+		expect(list.map((g) => g.title)).toEqual([
+			'Abyss',
+			'Future Lost',
+			'Future Lost',
+			'Night Shift'
+		]);
+		// The same file from a repository and the built-in copy are two games with two slugs
+		expect(new Set(list.map(gameSlug)).size).toBe(4);
+		expect(homeGameList([], [], [])).toEqual([]);
 	});
 });
 

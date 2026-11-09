@@ -319,6 +319,36 @@ Story here...
 - Any shape of picture works: the card shows a wide (2:1) crop of its middle, so keep the subject central. Keep files small (a few hundred KB at most)
 - Only `http(s)` URLs and paths are allowed, and one image per card. The image line is not part of the story: it is not shown as text or read aloud
 
+## Hosting Games on GitHub
+
+A public GitHub repository can serve games to anyone who adds it in the app; nothing is uploaded to the app itself. The app reads the repository through GitHub's public API, without a token, so only public repositories work.
+
+### Repository Layout
+
+- Each game is one `.game.md` file. Every file ending in `.game.md` in the folder a player names (the repository root by default) is a game; subfolders are not searched
+- Pictures go beside the file and are written as relative paths: `![alt](art/x.jpg)` in `games/my-game.game.md` is fetched from `games/art/x.jpg` on the same branch. Full `https://` URLs work too
+- A file the parser rejects is skipped, and Settings names it with the reason; the other games in the folder still load
+
+The built-in games are laid out this way, so `dimm-city/dc-solo-rpg/static/games` is a working example.
+
+### Adding a Repository in the App
+
+Settings → Game sources → type the repository and press Add repository:
+
+- `owner/repo` — the root of the default branch
+- `owner/repo/games` — a folder
+- `owner/repo/games@dev` — a folder on another branch
+- A github.com link (`https://github.com/owner/repo/tree/main/games`) is read the same way
+
+The games appear on the home screen with the repository named under the time estimate, and play like uploaded games. Removing the repository takes them off the home screen; saved games are kept.
+
+### Cache and Limits
+
+- The parsed games are stored in the browser, so they stay playable offline (pictures need the network)
+- Each repository is checked on the home screen at most once an hour, or when you press Refresh now in Settings. A check is one request to GitHub's Contents API plus one download per changed file; an unchanged folder costs nothing (the app sends the listing's ETag and GitHub answers 304)
+- GitHub allows 60 anonymous API requests an hour per network. When they run out, or the network is down, the cached games stay and Settings says so; the repository is tried again a few minutes later
+- A private repository, or a folder or branch that is not there, shows as "Not found on GitHub"
+
 ## Advantages
 
 ### For Writers
@@ -412,13 +442,13 @@ These simplifications apply to the system:
 3. System converts to internal format automatically
 4. Share link: `https://dcsolorpg.com/game/my-game`
 
-### Option 2: Repository-Based
+### Option 2: Your Own GitHub Repository
 
-1. Create `my-game.game.md` in `/static/games/` folder
-2. Commit to Git repository
-3. Push to main branch
-4. System automatically detects and publishes
-5. Share link: `https://dcsolorpg.com/game/my-game`
+1. Put `my-game.game.md` (and its pictures) in a public GitHub repository
+2. Players add the repository under Settings → Game sources
+3. Its games show on their home screen, and changes you push are picked up about once an hour
+
+See [Hosting Games on GitHub](#hosting-games-on-github) for the layout, the cache and GitHub's limits.
 
 ### Option 3: CLI Tool
 
