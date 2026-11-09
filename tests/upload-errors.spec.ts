@@ -10,7 +10,10 @@ import { openHomePage } from './helpers';
  * stays at least 10 seconds and can be dismissed.
  */
 
-const GAME = readFileSync(new URL('../static/games/future-lost.game.md', import.meta.url), 'utf8');
+const GAME = readFileSync(
+	new URL('../static/games/ghost-in-the-machine.game.md', import.meta.url),
+	'utf8'
+);
 
 async function upload(page: Page, name: string, text: string) {
 	await page.locator('input[type="file"]').setInputFiles({

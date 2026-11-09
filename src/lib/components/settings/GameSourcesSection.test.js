@@ -7,12 +7,12 @@ import { getGameSources, resetGameSources } from '../../stores/gameSources.svelt
 import { logger } from '../../utils/logger.js';
 
 const gameMarkdown = readFileSync(
-	join(process.cwd(), 'static', 'games', 'future-lost.game.md'),
+	join(process.cwd(), 'static', 'games', 'ghost-in-the-machine.game.md'),
 	'utf-8'
 );
 const LISTING = 'https://api.github.com/repos/dimm-city/dc-solo-rpg/contents/static/games';
 const RAW =
-	'https://raw.githubusercontent.com/dimm-city/dc-solo-rpg/main/static/games/future-lost.game.md';
+	'https://raw.githubusercontent.com/dimm-city/dc-solo-rpg/main/static/games/ghost-in-the-machine.game.md';
 
 function stubGitHub(listing) {
 	vi.stubGlobal(
@@ -73,8 +73,8 @@ describe('GameSourcesSection', () => {
 				new Response(
 					JSON.stringify([
 						{
-							name: 'future-lost.game.md',
-							path: 'static/games/future-lost.game.md',
+							name: 'ghost-in-the-machine.game.md',
+							path: 'static/games/ghost-in-the-machine.game.md',
 							sha: 'abc',
 							type: 'file',
 							download_url: RAW

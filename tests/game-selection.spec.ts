@@ -2,7 +2,14 @@
 // seed: tests/seed.spec.ts
 
 import { test, expect } from '@playwright/test';
+import { readFileSync } from 'fs';
 import { openHomePage } from './helpers';
+
+/** The built-in game, uploaded again under another name when a test needs a second card */
+const GAME = readFileSync(
+	new URL('../static/games/ghost-in-the-machine.game.md', import.meta.url),
+	'utf8'
+);
 
 test.describe('Game Selection Screen', () => {
 	test.beforeEach(async ({ page }) => {
@@ -58,9 +65,6 @@ test.describe('Game Selection Screen', () => {
 	});
 
 	test("should take each subtitle from the game's own frontmatter", async ({ page }) => {
-		await expect(page.getByTestId('game-card-future-lost').locator('.game-subtitle')).toHaveText(
-			'A Dimm City Campaign'
-		);
 		await expect(
 			page.getByTestId('game-card-ghost-in-the-machine').locator('.game-subtitle')
 		).toHaveText('A grab-and-go turned mad dash for the gate');
@@ -68,8 +72,14 @@ test.describe('Game Selection Screen', () => {
 	});
 
 	test('should draw different key art for each game', async ({ page }) => {
+		// One game ships built in; an uploaded copy under another name makes the second card
+		await page.locator('input[type="file"]').setInputFiles({
+			name: 'another-game.game.md',
+			mimeType: 'text/markdown',
+			buffer: Buffer.from(GAME)
+		});
 		const art = page.locator('.game-card .key-art svg');
-		expect(await art.count()).toBeGreaterThan(1);
+		await expect(art).toHaveCount(2);
 		const first = await art.nth(0).innerHTML();
 		const second = await art.nth(1).innerHTML();
 		expect(first).not.toBe(second);
@@ -86,7 +96,7 @@ test.describe('Game Selection Screen', () => {
 			expect(testId).toMatch(/^game-card-[a-z0-9-]+$/);
 		}
 
-		await expect(page.getByTestId('game-card-future-lost')).toBeVisible();
+		await expect(page.getByTestId('game-card-ghost-in-the-machine')).toBeVisible();
 	});
 
 	test('should have augmented-ui styling on game cards', async ({ page }) => {

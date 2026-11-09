@@ -4,11 +4,11 @@
 import { test, expect, type Page } from '@playwright/test';
 import { openHomePage } from './helpers';
 
-const SLUG = 'future-lost';
-const GAME_TITLE = 'Future Lost';
+const SLUG = 'ghost-in-the-machine';
+const GAME_TITLE = 'Locked in the Tech District';
 
 /**
- * Leave Future Lost in progress (round 3) and return to the home page, where its card now
+ * Leave the built-in game in progress (round 3) and return to the home page, where its card now
  * offers Continue, New game and Delete save instead of Play.
  *
  * A real save only happens after a full round of cards, so the save is written through the
@@ -115,7 +115,7 @@ test.describe('Game start, saves and confirmations', () => {
 		await card(page).getByRole('button', { name: 'New game' }).click();
 		const modal = await confirmation(page, 'New game');
 		await expect(modal.getByTestId('confirm-message')).toHaveText(
-			"Start Future Lost from the beginning? Your Round 3 save will be replaced. This can't be undone."
+			"Start Locked in the Tech District from the beginning? Your Round 3 save will be replaced. This can't be undone."
 		);
 
 		await modal.getByRole('button', { name: 'Keep my save' }).click();
@@ -152,7 +152,7 @@ test.describe('Game start, saves and confirmations', () => {
 		await expect(modal).toBeFocused();
 
 		await expect(modal.getByTestId('confirm-message')).toHaveText(
-			"Delete your Future Lost save (Round 3)? This can't be undone."
+			"Delete your Locked in the Tech District save (Round 3)? This can't be undone."
 		);
 		// exact: the close button is named "Close Delete save"
 		await expect(modal.getByRole('button', { name: 'Delete save', exact: true })).toBeVisible();

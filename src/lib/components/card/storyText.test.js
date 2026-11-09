@@ -54,7 +54,7 @@ describe('storyPlain', () => {
 describe('the shipped games', () => {
 	it('leave no emphasis marker in any rendered story', () => {
 		let emphasised = 0;
-		for (const slug of ['ghost-in-the-machine', 'future-lost']) {
+		for (const slug of ['ghost-in-the-machine']) {
 			const text = readFileSync(`static/games/${slug}.game.md`, 'utf8');
 			const game = parseGameFile(text);
 			for (const card of game.deck) {
@@ -64,8 +64,8 @@ describe('the shipped games', () => {
 				expect(html, `${slug} ${card.card} ${card.suit}`).not.toMatch(/\S[_*]($|[\s<.,;:!?)—-])/);
 			}
 		}
-		// Every run in Ghost in the Machine's stories (40, on 39 lines), drawn in italic
-		expect(emphasised).toBe(40);
+		// Every run in Ghost in the Machine's stories (37, on 36 lines; its last Event has no story), drawn in italic
+		expect(emphasised).toBe(37);
 	});
 
 	it("draws the Ace of Hearts' 'ends' and 'using' in italic", () => {

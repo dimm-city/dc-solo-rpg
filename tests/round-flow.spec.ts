@@ -14,7 +14,7 @@ import { INSTRUCTIONS_SEEN_KEY, RULE_TIPS_KEY, playToFirstRound, pressStep } fro
 
 test.describe.configure({ timeout: 60000 });
 
-const SLUG = 'future-lost';
+const SLUG = 'ghost-in-the-machine';
 // Vite serves the app's modules at these URLs on the dev server (held in variables so the
 // type checker does not try to resolve them)
 const GAME_STORE = '/src/lib/stores/gameStore.svelte.js';

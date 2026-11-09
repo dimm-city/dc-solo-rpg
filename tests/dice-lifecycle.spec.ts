@@ -99,9 +99,9 @@ async function settled(page: Page, name: string) {
 	return dialog;
 }
 
-/** From the home page, start Future Lost (Play, or New game over a save) and reach the table */
+/** From the home page, start the built-in game (Play, or New game over a save) and reach the table */
 async function startGame(page: Page) {
-	const card = page.getByTestId('game-card-future-lost');
+	const card = page.getByTestId('game-card-ghost-in-the-machine');
 	await expect(card).toBeVisible();
 	const play = card.locator('.start-btn');
 	if (await play.isVisible()) {

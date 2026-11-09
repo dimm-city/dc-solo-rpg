@@ -11,7 +11,7 @@ import { INSTRUCTIONS_SEEN_KEY, RULE_TIPS_KEY, pressStep } from './helpers';
 
 test.describe.configure({ timeout: 60000 });
 
-const SLUG = 'future-lost';
+const SLUG = 'ghost-in-the-machine';
 const GAME_STORE = '/src/lib/stores/gameStore.svelte.js';
 const RANDOM = '/src/lib/services/random.js';
 

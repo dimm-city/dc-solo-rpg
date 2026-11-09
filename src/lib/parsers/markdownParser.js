@@ -194,7 +194,8 @@ function parseModifiers(modifierText) {
  */
 function extractImage(section) {
 	// The whole line, with the blank lines around it, so the story closes up where it was
-	const IMAGE_LINE = /\n*^[ \t]*!\[([^\]]*)\]\(\s*(\S+?)(?:\s+"[^"]*")?\s*\)[ \t]*$\n*/m;
+	const IMAGE_LINE =
+		/\n*^[ \t]*!\[([^\]]*)\]\(\s*(\S+?)(?:\s+(?:"[^"]*"|'[^']*'))?\s*\)[ \t]*$\n*/m;
 	const match = section.match(IMAGE_LINE);
 	if (!match) return { image: null, section };
 
@@ -266,8 +267,9 @@ function parseCardSection(section) {
  * @returns {object} Cards grouped by type
  */
 function parseCardDeck(cardDeckContent) {
-	// Split by horizontal rules or card headers
-	const cardSections = cardDeckContent.split(/\n---\n/).filter((s) => s.trim());
+	// Split at the separator lines; a separator closing the file (the deck text is trimmed, so it
+	// has no newline after it) ends the last card instead of becoming its story
+	const cardSections = cardDeckContent.split(/\n---(?:\n|\s*$)/).filter((s) => s.trim());
 
 	const cardsByType = {
 		'primary-success': [],

@@ -17,8 +17,8 @@ import { join } from 'path';
 
 describe('Markdown Parser', () => {
 	describe('Valid Game Files', () => {
-		it('should parse future-lost.game.md successfully', () => {
-			const gamePath = join(process.cwd(), 'static', 'games', 'future-lost.game.md');
+		it('should parse ghost-in-the-machine.game.md successfully', () => {
+			const gamePath = join(process.cwd(), 'static', 'games', 'ghost-in-the-machine.game.md');
 			const markdown = readFileSync(gamePath, 'utf-8');
 
 			const result = parseGameFile(markdown);
@@ -65,7 +65,7 @@ describe('Markdown Parser', () => {
 		});
 
 		it('should parse introduction sections correctly', () => {
-			const gamePath = join(process.cwd(), 'static', 'games', 'future-lost.game.md');
+			const gamePath = join(process.cwd(), 'static', 'games', 'ghost-in-the-machine.game.md');
 			const markdown = readFileSync(gamePath, 'utf-8');
 
 			const result = parseGameFile(markdown);
@@ -82,7 +82,7 @@ describe('Markdown Parser', () => {
 		});
 
 		it('should handle special modifiers correctly', () => {
-			const gamePath = join(process.cwd(), 'static', 'games', 'future-lost.game.md');
+			const gamePath = join(process.cwd(), 'static', 'games', 'ghost-in-the-machine.game.md');
 			const markdown = readFileSync(gamePath, 'utf-8');
 
 			const result = parseGameFile(markdown);
@@ -100,7 +100,7 @@ describe('Markdown Parser', () => {
 	describe('Narrative modifiers in built deck', () => {
 		it('keeps skip-damage and return-king on exactly one Ace each', () => {
 			const markdown = readFileSync(
-				join(process.cwd(), 'static', 'games', 'future-lost.game.md'),
+				join(process.cwd(), 'static', 'games', 'ghost-in-the-machine.game.md'),
 				'utf-8'
 			);
 			const { deck } = parseGameFile(markdown);
@@ -1056,7 +1056,7 @@ Description
 		});
 
 		it('should handle cards with story content', () => {
-			const gamePath = join(process.cwd(), 'static', 'games', 'future-lost.game.md');
+			const gamePath = join(process.cwd(), 'static', 'games', 'ghost-in-the-machine.game.md');
 			const markdown = readFileSync(gamePath, 'utf-8');
 
 			const result = parseGameFile(markdown);
@@ -1166,8 +1166,18 @@ Description
 });
 
 describe('Markdown Parser - difficulty frontmatter', () => {
-	const base = readFileSync(join(process.cwd(), 'static', 'games', 'future-lost.game.md'), 'utf-8');
-	const withDifficulty = (line) => base.replace(/^---\r?\n/, `---\n${line}\n`);
+	const base = readFileSync(
+		join(process.cwd(), 'static', 'games', 'ghost-in-the-machine.game.md'),
+		'utf-8'
+	);
+	// The built-in file names its difficulty; these tests put their own line in its place
+	const bare = base.replace(/^difficulty:.*\r?\n/m, '');
+	const withDifficulty = (line) => bare.replace(/^---\r?\n/, `---\n${line}\n`);
+
+	it("reads the built-in game's own difficulty line", () => {
+		expect(base).toMatch(/^difficulty: normal$/m);
+		expect(parseGameFile(base).options).toEqual({ difficulty: 1 });
+	});
 
 	it('should parse difficulty: easy as 0', () => {
 		expect(parseGameFile(withDifficulty('difficulty: easy')).options).toEqual({ difficulty: 0 });
@@ -1183,7 +1193,8 @@ describe('Markdown Parser - difficulty frontmatter', () => {
 	});
 
 	it('should default to Normal when difficulty is absent', () => {
-		expect(parseGameFile(base).options).toEqual({ difficulty: 1 });
+		expect(bare).not.toMatch(/^difficulty:/m);
+		expect(parseGameFile(bare).options).toEqual({ difficulty: 1 });
 	});
 
 	it('should throw ValidationError for an invalid difficulty', () => {
@@ -1198,13 +1209,18 @@ describe('Markdown Parser - difficulty frontmatter', () => {
 });
 
 describe('Markdown Parser - card images', () => {
-	const gamePath = join(process.cwd(), 'static', 'games', 'future-lost.game.md');
+	const gamePath = join(process.cwd(), 'static', 'games', 'ghost-in-the-machine.game.md');
 	const base = readFileSync(gamePath, 'utf-8');
-	const headline = "**You're betrayed by a survivor you trusted**";
+	const headline =
+		"**Cyber-psychosis episode—the neuralware makes you see threats that aren't there.**";
 	const betrayal = (deck) =>
-		deck.find((c) => c.description === "You're betrayed by a survivor you trusted");
+		deck.find(
+			(c) =>
+				c.description ===
+				"Cyber-psychosis episode—the neuralware makes you see threats that aren't there."
+		);
 
-	/** Future Lost with the betrayal card's body replaced by `body` (header and description kept) */
+	/** The built-in game with this card's body replaced by `body` (header and description kept) */
 	function withCardBody(body) {
 		const start = base.indexOf(headline);
 		const end = base.indexOf('\n---\n', start);
@@ -1223,6 +1239,17 @@ describe('Markdown Parser - card images', () => {
 		expect(card.story).toBe('First paragraph.\n\nSecond paragraph.');
 	});
 
+	it('ignores a title after the path, in either quote style', () => {
+		for (const title of ['"A title"', "'A title'"]) {
+			const card = betrayal(
+				parseGameFile(withCardBody(`${headline}\n\n![Alley](art/betrayal.jpg ${title})\n\nText.`))
+					.deck
+			);
+			expect(card.image).toEqual({ src: 'art/betrayal.jpg', alt: 'Alley' });
+			expect(card.story).toBe('Text.');
+		}
+	});
+
 	it('closes the story up where an image stood between paragraphs', () => {
 		const markdown = withCardBody(
 			`${headline}\n\nFirst paragraph.\n\n![](art/betrayal.jpg "A title")\n\nSecond paragraph.`
@@ -1239,16 +1266,32 @@ describe('Markdown Parser - card images', () => {
 		expect(card.story).toBe('The story.');
 	});
 
+	it('ends the last card at a separator that closes the file, story or no story', () => {
+		// The built-in file ends with a separator, and its last Event has no story
+		const deck = parseGameFile(base).deck;
+		const last = deck.find((c) => c.description.startsWith('Perfect hiding spot'));
+		expect(last.story).toBeNull();
+		expect(deck.some((c) => /(^|\n)---\s*$/.test(c.story ?? ''))).toBe(false);
+		// A last card with a story keeps it, without the separator
+		const withStory = base.replace(/\n---\s*$/, '\n\nOne last breath.\n\n---\n');
+		const deck2 = parseGameFile(withStory).deck;
+		expect(deck2.find((c) => c.description.startsWith('Perfect hiding spot')).story).toBe(
+			'One last breath.'
+		);
+	});
+
 	it('leaves image: null on cards without one', () => {
-		const deck = parseGameFile(base, { baseUrl: '/games/future-lost.game.md' }).deck;
+		const deck = parseGameFile(base, { baseUrl: '/games/ghost-in-the-machine.game.md' }).deck;
 		expect(deck).toHaveLength(52);
-		// Future Lost illustrates its Salvation card, Kings and Aces
+		// The built-in game illustrates its Salvation card, Kings and Aces (one of them decorative,
+		// one by a root path), so every image route is exercised on a real file
 		const withArt = deck.filter((c) => c.image);
 		expect(withArt.map((c) => c.card).sort()).toEqual(['A', 'A', 'A', 'A', 'K', 'K', 'K', 'K']);
 		for (const c of withArt) {
-			expect(c.image.src).toMatch(/^\/games\/future-lost\/[a-z-]+\.svg$/);
-			expect(c.image.alt.length).toBeGreaterThan(10);
+			expect(c.image.src).toMatch(/^\/games\/ghost-in-the-machine\/[a-z-]+\.svg$/);
 		}
+		expect(withArt.some((c) => c.image.alt === '')).toBe(true);
+		expect(withArt.filter((c) => c.image.alt.length > 10).length).toBeGreaterThanOrEqual(6);
 		expect(deck.filter((c) => !c.image).every((c) => c.image === null)).toBe(true);
 	});
 
@@ -1269,13 +1312,19 @@ describe('Markdown Parser - card images', () => {
 		const parse = (src, baseUrl) =>
 			betrayal(parseGameFile(withCardBody(`${headline}\n\n![](${src})\n\nText.`), { baseUrl }).deck)
 				.image.src;
-		expect(parse('art/betrayal.jpg', '/games/future-lost.game.md')).toBe('/games/art/betrayal.jpg');
-		expect(parse('./betrayal.jpg', '/games/future-lost.game.md')).toBe('/games/betrayal.jpg');
-		expect(parse('/art/betrayal.jpg', '/games/future-lost.game.md')).toBe('/art/betrayal.jpg');
-		expect(parse('https://cdn.example/x.jpg?v=2', '/games/future-lost.game.md')).toBe(
+		expect(parse('art/betrayal.jpg', '/games/ghost-in-the-machine.game.md')).toBe(
+			'/games/art/betrayal.jpg'
+		);
+		expect(parse('./betrayal.jpg', '/games/ghost-in-the-machine.game.md')).toBe(
+			'/games/betrayal.jpg'
+		);
+		expect(parse('/art/betrayal.jpg', '/games/ghost-in-the-machine.game.md')).toBe(
+			'/art/betrayal.jpg'
+		);
+		expect(parse('https://cdn.example/x.jpg?v=2', '/games/ghost-in-the-machine.game.md')).toBe(
 			'https://cdn.example/x.jpg?v=2'
 		);
-		expect(parse('art/x.jpg', 'https://example.com/games/future-lost.game.md')).toBe(
+		expect(parse('art/x.jpg', 'https://example.com/games/ghost-in-the-machine.game.md')).toBe(
 			'https://example.com/games/art/x.jpg'
 		);
 		// Without a base the path is left as written

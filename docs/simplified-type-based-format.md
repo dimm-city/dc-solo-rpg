@@ -131,7 +131,7 @@ The Primary Success card inherently has dual behavior (activates salvation count
 
 ## Card Images (Optional)
 
-Any card can carry one picture: a markdown image on a line of its own, anywhere in the card body. It shows on the card face, framed above the story (beside it on a landscape phone), and small in Story mode's card panel. It is left out of the story text and the read-aloud voice, and the next cards' pictures are fetched ahead of their draw. Future Lost carries pictures on its Salvation card, Kings and Aces (`static/games/future-lost/`).
+Any card can carry one picture: a markdown image on a line of its own, anywhere in the card body. It shows on the card face, framed above the story (beside it on a landscape phone), and small in Story mode's card panel. It is left out of the story text and the read-aloud voice, and the next cards' pictures are fetched ahead of their draw. The games in [dimm-city/solo-rpg-games](https://github.com/dimm-city/solo-rpg-games) carry pictures on their Salvation card, Kings and Aces; Future Lost is one of them.
 
 ```markdown
 ### Event

@@ -15,6 +15,8 @@ import {
 	isRefreshingSources,
 	refreshGameSources,
 	resetGameSources,
+	seedDefaultSources,
+	DEFAULT_SOURCES,
 	shouldRefresh,
 	CACHE_TTL_MS,
 	RETRY_AFTER_ERROR_MS
@@ -24,7 +26,7 @@ import { logger } from '../utils/logger.js';
 
 const KEY = 'dc-solo-rpg-game-sources';
 const gameMarkdown = readFileSync(
-	join(process.cwd(), 'static', 'games', 'future-lost.game.md'),
+	join(process.cwd(), 'static', 'games', 'ghost-in-the-machine.game.md'),
 	'utf-8'
 );
 const NOW = Date.parse('2026-11-08T12:00:00Z');
@@ -49,8 +51,8 @@ const json = (body, init = {}) =>
 /** One repository with one game, answered from a URL map */
 function answersFor(repo, sha = 's1') {
 	return {
-		[api(`${repo}/contents/games`)]: () => json([file(repo, 'future-lost.game.md', sha)]),
-		[raw(`${repo}/main/games/future-lost.game.md`)]: () => new Response(gameMarkdown)
+		[api(`${repo}/contents/games`)]: () => json([file(repo, 'ghost-in-the-machine.game.md', sha)]),
+		[raw(`${repo}/main/games/ghost-in-the-machine.game.md`)]: () => new Response(gameMarkdown)
 	};
 }
 
@@ -102,9 +104,9 @@ describe('game sources', () => {
 
 			await refreshGameSources(); // joins the one the add started
 			expect(fetch).toHaveBeenCalledTimes(2);
-			expect(getSourceGames().map((g) => g.title)).toEqual(['Future Lost']);
-			expect(getSourceGame('a-one-games--future-lost')).toMatchObject({
-				title: 'Future Lost',
+			expect(getSourceGames().map((g) => g.title)).toEqual(['Locked in the Tech District']);
+			expect(getSourceGame('a-one-games--ghost-in-the-machine')).toMatchObject({
+				title: 'Locked in the Tech District',
 				isCustom: true,
 				source: { id: 'a/one/games', sha: 's1' }
 			});
@@ -132,7 +134,7 @@ describe('game sources', () => {
 
 			expect(removeGameSource('a/one/games')).toBe(true);
 			expect(getGameSources().map((s) => s.id)).toEqual(['b/two/games']);
-			expect(getSourceGames().map((g) => g.slug)).toEqual(['b-two-games--future-lost']);
+			expect(getSourceGames().map((g) => g.slug)).toEqual(['b-two-games--ghost-in-the-machine']);
 			expect(stored().sources.map((s) => s.id)).toEqual(['b/two/games']);
 			expect(removeGameSource('a/one/games')).toBe(false);
 		});
@@ -155,36 +157,44 @@ describe('game sources', () => {
 			vi.spyOn(console, 'warn').mockImplementation(() => {});
 		});
 
-		it('reads the sources and their games back, ready for an offline game', async () => {
+		it('reads the sources and their games back, and adds the default source once', async () => {
 			stubFetch(answersFor('a/one'));
 			addGameSource('a/one/games');
 			await refreshGameSources();
 
 			vi.resetModules();
 			const fresh = await import('./gameSources.svelte.js');
-			expect(fresh.getGameSources()).toHaveLength(1);
+			expect(fresh.getGameSources().map((s) => s.id)).toEqual([
+				'a/one/games',
+				'dimm-city/solo-rpg-games'
+			]);
 			expect(fresh.getGameSources()[0]).toMatchObject({
 				id: 'a/one/games',
 				etag: '"e1"',
 				refreshing: false
 			});
-			expect(fresh.getSourceGame('a-one-games--future-lost')?.deck).toHaveLength(52);
+			expect(fresh.getSourceGame('a-one-games--ghost-in-the-machine')?.deck).toHaveLength(52);
 			expect(fresh.isRefreshingSources()).toBe(false);
+			expect(stored().seeded).toEqual(['dimm-city/solo-rpg-games']);
 		});
 
-		it('drops a list written by another version', async () => {
+		it('drops a list written by another version, keeping only the default source', async () => {
 			localStorage.setItem(KEY, JSON.stringify({ version: 0, sources: [{ id: 'a/one' }] }));
 			vi.resetModules();
 			const fresh = await import('./gameSources.svelte.js');
-			expect(fresh.getGameSources()).toEqual([]);
-			expect(localStorage.getItem(KEY)).toBeNull();
+			expect(fresh.getGameSources().map((s) => s.id)).toEqual(['dimm-city/solo-rpg-games']);
+			expect(stored()).toMatchObject({
+				version: 1,
+				seeded: ['dimm-city/solo-rpg-games']
+			});
+			expect(stored().sources.map((s) => s.id)).toEqual(['dimm-city/solo-rpg-games']);
 		});
 
-		it('starts empty from unreadable storage', async () => {
+		it('starts from the default source alone when storage is unreadable', async () => {
 			localStorage.setItem(KEY, '{not json');
 			vi.resetModules();
 			const fresh = await import('./gameSources.svelte.js');
-			expect(fresh.getGameSources()).toEqual([]);
+			expect(fresh.getGameSources().map((s) => s.id)).toEqual(['dimm-city/solo-rpg-games']);
 		});
 	});
 
@@ -270,7 +280,7 @@ describe('game sources', () => {
 			// a/one was checked and re-downloaded; b/two hit the limit; c/three was not asked
 			expect(fetch.mock.calls.map(([url]) => url)).toEqual([
 				api('a/one/contents/games'),
-				raw('a/one/main/games/future-lost.game.md'),
+				raw('a/one/main/games/ghost-in-the-machine.game.md'),
 				api('b/two/contents/games')
 			]);
 			const [a, b, c] = getGameSources();
@@ -298,7 +308,7 @@ describe('game sources', () => {
 			expect(source.error).toEqual({ kind: 'network', message: "Couldn't reach GitHub." });
 			expect(source.games).toHaveLength(1);
 			expect(source.fetchedAt).toBe(new Date(NOW).toISOString());
-			expect(getSourceGame('a-one-games--future-lost')).not.toBeNull();
+			expect(getSourceGame('a-one-games--ghost-in-the-machine')).not.toBeNull();
 		});
 
 		it('runs one refresh at a time: a second call joins the first', async () => {
@@ -306,7 +316,7 @@ describe('game sources', () => {
 			const listing = new Promise((resolve) => (release = resolve));
 			stubFetch({
 				[api('a/one/contents/games')]: () => listing,
-				[raw('a/one/main/games/future-lost.game.md')]: () => new Response(gameMarkdown)
+				[raw('a/one/main/games/ghost-in-the-machine.game.md')]: () => new Response(gameMarkdown)
 			});
 			addGameSource('a/one/games'); // starts a refresh that waits on the listing
 
@@ -316,7 +326,7 @@ describe('game sources', () => {
 			expect(isRefreshingSources()).toBe(true);
 			expect(getGameSources()[0].refreshing).toBe(true);
 
-			release(json([file('a/one', 'future-lost.game.md')]));
+			release(json([file('a/one', 'ghost-in-the-machine.game.md')]));
 			expect(await first).toBe(true);
 			expect(isRefreshingSources()).toBe(false);
 			expect(getGameSources()[0].refreshing).toBe(false);
@@ -328,17 +338,62 @@ describe('game sources', () => {
 			const listing = new Promise((resolve) => (release = resolve));
 			const fetch = stubFetch({
 				[api('a/one/contents/games')]: () => listing,
-				[raw('a/one/main/games/future-lost.game.md')]: () => new Response(gameMarkdown),
+				[raw('a/one/main/games/ghost-in-the-machine.game.md')]: () => new Response(gameMarkdown),
 				...answersFor('b/two')
 			});
 			addGameSource('a/one/games');
 			addGameSource('b/two/games');
 			const refresh = refreshGameSources();
 			removeGameSource('b/two/games');
-			release(json([file('a/one', 'future-lost.game.md')]));
+			release(json([file('a/one', 'ghost-in-the-machine.game.md')]));
 			await refresh;
 			expect(fetch.mock.calls.map(([url]) => url)).not.toContain(api('b/two/contents/games'));
 			expect(getGameSources().map((s) => s.id)).toEqual(['a/one/games']);
 		});
+	});
+});
+
+describe('default sources', () => {
+	beforeEach(() => {
+		localStorage.clear();
+		resetGameSources();
+	});
+
+	it('names the Dimm City games repository', () => {
+		expect(DEFAULT_SOURCES).toEqual(['dimm-city/solo-rpg-games']);
+	});
+
+	it('adds each default once, with no games until the next refresh, and remembers it', () => {
+		expect(seedDefaultSources()).toEqual(['dimm-city/solo-rpg-games']);
+		expect(getGameSources().map((s) => s.id)).toEqual(['dimm-city/solo-rpg-games']);
+		expect(getGameSources()[0]).toMatchObject({
+			owner: 'dimm-city',
+			repo: 'solo-rpg-games',
+			games: []
+		});
+		expect(stored().seeded).toEqual(['dimm-city/solo-rpg-games']);
+		expect(seedDefaultSources()).toEqual([]);
+		expect(getGameSources()).toHaveLength(1);
+	});
+
+	it('leaves a default the player removed out of the list', () => {
+		seedDefaultSources();
+		expect(removeGameSource('dimm-city/solo-rpg-games')).toBe(true);
+		expect(seedDefaultSources()).toEqual([]);
+		expect(getGameSources()).toEqual([]);
+		expect(stored()).toMatchObject({ sources: [], seeded: ['dimm-city/solo-rpg-games'] });
+	});
+
+	it('adds a default beside the sources a player already has', () => {
+		expect(addGameSource('someone/else').ok).toBe(true);
+		seedDefaultSources();
+		expect(getGameSources().map((s) => s.id)).toEqual(['someone/else', 'dimm-city/solo-rpg-games']);
+	});
+
+	it('skips a default that is already in the list, but still remembers it', () => {
+		expect(addGameSource('dimm-city/solo-rpg-games').ok).toBe(true);
+		expect(seedDefaultSources()).toEqual([]);
+		expect(getGameSources()).toHaveLength(1);
+		expect(stored().seeded).toEqual(['dimm-city/solo-rpg-games']);
 	});
 });
