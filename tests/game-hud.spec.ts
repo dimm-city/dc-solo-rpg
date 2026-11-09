@@ -16,7 +16,7 @@ async function openTable(page: Page) {
 		sessionStorage.setItem('splashShown', 'true');
 		localStorage.setItem(key, 'true');
 	}, INSTRUCTIONS_SEEN_KEY);
-	await page.goto('/game/future-lost');
+	await page.goto('/game/ghost-in-the-machine');
 	await page.getByTestId('story-continue-button').click();
 	await expect(page.getByTestId('screen-initialDamageRoll')).toBeVisible();
 	await expect(page.getByTestId('hud')).toBeVisible();

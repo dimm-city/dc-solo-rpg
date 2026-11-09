@@ -8,9 +8,9 @@
 import { test, expect, type Page } from '@playwright/test';
 import { INSTRUCTIONS_SEEN_KEY } from './helpers';
 
-/** Open Future Lost, leave the intro, then deal the given cards (top of the deck first) */
+/** Open the built-in game, leave the intro, then deal the given cards (top of the deck first) */
 async function dealCards(page: Page, picks: string[], setup = '') {
-	await page.goto('/game/future-lost');
+	await page.goto('/game/ghost-in-the-machine');
 	await page.evaluate((key) => localStorage.setItem(key, 'true'), INSTRUCTIONS_SEEN_KEY);
 	await page.getByTestId('story-continue-button').click();
 	await page.evaluate(
@@ -39,9 +39,9 @@ async function dealCards(page: Page, picks: string[], setup = '') {
 	return card;
 }
 
-/** Open Future Lost and go straight to round 3's journal, with these ranks drawn in the round */
+/** Open the built-in game and go straight to round 3's journal, with these ranks drawn in the round */
 async function openJournal(page: Page, ranks: string[]) {
-	await page.goto('/game/future-lost');
+	await page.goto('/game/ghost-in-the-machine');
 	await page.evaluate((key) => localStorage.setItem(key, 'true'), INSTRUCTIONS_SEEN_KEY);
 	await page.getByTestId('story-continue-button').click();
 	await page.evaluate(async (ranks) => {
@@ -60,12 +60,12 @@ async function openJournal(page: Page, ranks: string[]) {
 }
 
 /**
- * Open Future Lost and go straight to the final log of a run lost to the fourth King: an
+ * Open the built-in game and go straight to the final log of a run lost to the fourth King: an
  * opening roll, Stability checks, the Ace of Hearts and its Salvation rolls, a quiet round and
  * the four Kings, written into the log the way the game writes them.
  */
 async function openFinalLog(page: Page) {
-	await page.goto('/game/future-lost');
+	await page.goto('/game/ghost-in-the-machine');
 	await page.evaluate((key) => localStorage.setItem(key, 'true'), INSTRUCTIONS_SEEN_KEY);
 	await page.getByTestId('story-continue-button').click();
 	await page.evaluate(async () => {
@@ -179,6 +179,38 @@ test.describe('Card overlay', () => {
 		expect(layout.footBelowStory && layout.footInside).toBe(true);
 		// On a phone this story is longer than the card's body, so the story itself scrolls
 		if (page.viewportSize()!.width <= 600) expect(layout.storyScrolls).toBe(true);
+	});
+
+	test('a card with a picture shows it above the story; a decorative one has no alt text', async ({
+		page
+	}) => {
+		// The Salvation card: its picture sits between the headline and the story, loaded from
+		// beside the game file, and its alt text is part of what the card tells a screen reader
+		const card = await dealCards(page, ['A:hearts'], 'g.aceOfHeartsRevealed = false;');
+		const art = card.locator('.card-art img');
+		await expect(art).toHaveAttribute('src', '/games/ghost-in-the-machine/salvation.svg');
+		await expect
+			.poll(() => art.evaluate((img: HTMLImageElement) => img.naturalWidth))
+			.toBeGreaterThan(0);
+		const layout = await card.evaluate((el) => {
+			const rect = (selector: string) => el.querySelector(selector)!.getBoundingClientRect();
+			return {
+				artBelowHeadline: rect('.card-art').top >= rect('.byte-data').bottom,
+				artAboveStory: rect('.card-art').bottom <= rect('.story-scroll').top,
+				described: (el.getAttribute('aria-describedby') ?? '').includes(
+					el.querySelector('.card-art img')!.id
+				)
+			};
+		});
+		expect(layout).toEqual({ artBelowHeadline: true, artAboveStory: true, described: true });
+
+		// The King of Clubs's picture is decorative: an empty alt, left out of the description
+		const king = await dealCards(page, ['K:clubs'], 'g.kingsRevealed = 1;');
+		const kingArt = king.locator('.card-art img');
+		await expect(kingArt).toHaveAttribute('alt', '');
+		expect(await king.getAttribute('aria-describedby')).not.toContain(
+			await kingArt.getAttribute('id')
+		);
 	});
 
 	test('an odd card says a Stability check follows, and where it sits in the round', async ({
@@ -404,7 +436,7 @@ test.describe('Card overlay', () => {
 	});
 
 	test('a quiet round in the timeline says so', async ({ page }) => {
-		await page.goto('/game/future-lost');
+		await page.goto('/game/ghost-in-the-machine');
 		await page.evaluate((key) => localStorage.setItem(key, 'true'), INSTRUCTIONS_SEEN_KEY);
 		await page.getByTestId('story-continue-button').click();
 		await page.evaluate(async () => {
@@ -486,7 +518,7 @@ test.describe('Card overlay', () => {
 		await page.waitForURL(/\?story=latest/);
 		const story = page.getByTestId('story-mode');
 		await expect(story).toBeVisible({ timeout: 15000 });
-		await expect(story).toContainText('Future Lost');
+		await expect(story).toContainText('Locked in the Tech District');
 		await expect(story.locator('[data-testid="story-round"]:not([inert])')).toContainText(
 			'Round 1'
 		);

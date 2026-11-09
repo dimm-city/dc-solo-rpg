@@ -25,11 +25,11 @@ describe('built-in games', () => {
 	});
 
 	it('leaves out a file the parser rejects, keeping the rest', () => {
-		const good = readFileSync(join(gamesDir, 'future-lost.game.md'), 'utf-8');
+		const good = readFileSync(join(gamesDir, 'ghost-in-the-machine.game.md'), 'utf-8');
 		const games = listBuiltInGames({
-			'/static/games/future-lost.game.md': good,
+			'/static/games/ghost-in-the-machine.game.md': good,
 			'/static/games/broken.game.md': 'not a game'
 		});
-		expect(games.map((g) => g.slug)).toEqual(['future-lost']);
+		expect(games.map((g) => g.slug)).toEqual(['ghost-in-the-machine']);
 	});
 });

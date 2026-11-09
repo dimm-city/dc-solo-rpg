@@ -2,7 +2,7 @@
 // seed: tests/seed.spec.ts
 
 import { test, expect } from '@playwright/test';
-import { openHomePage } from './helpers';
+import { addSecondGameCard, openHomePage } from './helpers';
 
 test.describe('Game Selection Screen', () => {
 	test.beforeEach(async ({ page }) => {
@@ -58,9 +58,6 @@ test.describe('Game Selection Screen', () => {
 	});
 
 	test("should take each subtitle from the game's own frontmatter", async ({ page }) => {
-		await expect(page.getByTestId('game-card-future-lost').locator('.game-subtitle')).toHaveText(
-			'A Dimm City Campaign'
-		);
 		await expect(
 			page.getByTestId('game-card-ghost-in-the-machine').locator('.game-subtitle')
 		).toHaveText('A grab-and-go turned mad dash for the gate');
@@ -68,8 +65,9 @@ test.describe('Game Selection Screen', () => {
 	});
 
 	test('should draw different key art for each game', async ({ page }) => {
+		await addSecondGameCard(page);
 		const art = page.locator('.game-card .key-art svg');
-		expect(await art.count()).toBeGreaterThan(1);
+		await expect(art).toHaveCount(2);
 		const first = await art.nth(0).innerHTML();
 		const second = await art.nth(1).innerHTML();
 		expect(first).not.toBe(second);
@@ -86,7 +84,7 @@ test.describe('Game Selection Screen', () => {
 			expect(testId).toMatch(/^game-card-[a-z0-9-]+$/);
 		}
 
-		await expect(page.getByTestId('game-card-future-lost')).toBeVisible();
+		await expect(page.getByTestId('game-card-ghost-in-the-machine')).toBeVisible();
 	});
 
 	test('should have augmented-ui styling on game cards', async ({ page }) => {
@@ -121,6 +119,7 @@ test.describe('Game Selection Screen', () => {
 	test('should line cards up: equal heights and actions pinned to the bottom', async ({ page }) => {
 		const viewport = page.viewportSize()!;
 		test.skip(viewport.width <= 640, 'one card per row on phones');
+		await addSecondGameCard(page);
 
 		// Measure once the cards have finished fading in
 		await page.waitForFunction(() =>
@@ -181,6 +180,7 @@ test.describe('Game Selection Screen', () => {
 	});
 
 	test('should have a different card variant for each game card', async ({ page }) => {
+		await addSecondGameCard(page);
 		const cards = page.locator('.game-card');
 		const count = await cards.count();
 		expect(count).toBeGreaterThan(1);

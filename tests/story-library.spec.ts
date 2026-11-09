@@ -18,7 +18,7 @@ type Plan = {
 };
 
 const KINGS: Plan = {
-	slug: 'future-lost',
+	slug: 'ghost-in-the-machine',
 	outcome: 'kings',
 	rounds: [
 		{ cards: ['7', 'Q'], journal: 'The rain came through the roof again.' },
@@ -40,7 +40,7 @@ const WIN: Plan = {
 
 /** Six rounds, written and unwritten, until Stability gives out */
 const LONG: Plan = {
-	slug: 'future-lost',
+	slug: 'ghost-in-the-machine',
 	outcome: 'stability',
 	rounds: [
 		{ cards: ['7', 'Q'], journal: 'The rain came through the roof again.' },
@@ -166,10 +166,10 @@ test.describe('Story Library', () => {
 	test('cards say how each run ended, with rounds and date', async ({ page }) => {
 		await openLibrary(page);
 
-		const kings = page.getByTestId('story-card').filter({ hasText: 'Future Lost' });
+		const kings = page.getByTestId('story-card').filter({ hasText: 'fourth King' });
 		await expect(kings).toContainText('Taken by the fourth King');
 		await expect(kings).toContainText('4 rounds');
-		const win = page.getByTestId('story-card').filter({ hasText: 'Locked in the Tech District' });
+		const win = page.getByTestId('story-card').filter({ hasText: 'Escaped' });
 		await expect(win).toContainText('Escaped');
 		await expect(win).toContainText('2 rounds');
 
@@ -196,7 +196,7 @@ test.describe('Story Library', () => {
 		await page.goto('/?story=latest');
 		const story = page.getByTestId('story-mode');
 		await expect(story).toBeVisible();
-		await expect(story.locator('.game-title')).toHaveText('Future Lost');
+		await expect(story.locator('.game-title')).toHaveText('Locked in the Tech District');
 		await expect(currentRound(page).getByRole('heading')).toContainText('Round 1');
 		await page.getByRole('button', { name: 'Back to Story Library' }).click();
 		await expect(page.getByRole('heading', { level: 1, name: 'Story Library' })).toBeVisible();
@@ -213,20 +213,24 @@ test.describe('Story Library', () => {
 
 	test('Delete is in an overflow menu and asks first', async ({ page }) => {
 		await openLibrary(page);
-		const card = page.getByTestId('story-card').filter({ hasText: 'Future Lost' });
+		const card = page.getByTestId('story-card').filter({ hasText: 'fourth King' });
 
-		await card.getByRole('button', { name: 'More options for Future Lost' }).click();
+		await card
+			.getByRole('button', { name: 'More options for Locked in the Tech District' })
+			.click();
 		await page.getByRole('menuitem', { name: /Delete story/ }).click();
 		const dialog = page.getByRole('dialog');
 		await expect(dialog).toHaveAccessibleName('Delete story');
 		await expect(dialog.getByTestId('confirm-message')).toHaveText(
-			/^“Future Lost” \(Taken by the fourth King, .+\) and its journal will be deleted\. This can't be undone\.$/
+			/^“Locked in the Tech District” \(Taken by the fourth King, .+\) and its journal will be deleted\. This can't be undone\.$/
 		);
 		await expect(dialog).not.toContainText('for good');
 		await dialog.getByRole('button', { name: 'Keep story' }).click();
 		await expect(page.getByTestId('story-card')).toHaveCount(2);
 
-		await card.getByRole('button', { name: 'More options for Future Lost' }).click();
+		await card
+			.getByRole('button', { name: 'More options for Locked in the Tech District' })
+			.click();
 		await page.getByRole('menuitem', { name: /Delete story/ }).click();
 		await page
 			.getByRole('dialog')
@@ -234,7 +238,7 @@ test.describe('Story Library', () => {
 			.click();
 		await expect(page.getByTestId('story-card')).toHaveCount(1);
 		await expect(
-			page.getByRole('status').filter({ hasText: 'Deleted “Future Lost”' })
+			page.getByRole('status').filter({ hasText: 'Deleted “Locked in the Tech District”' })
 		).toBeVisible();
 
 		// Gone for good: still gone after a reload
@@ -244,7 +248,10 @@ test.describe('Story Library', () => {
 
 	test('Escape closes the overflow menu and gives focus back', async ({ page }) => {
 		await openLibrary(page);
-		const more = page.getByRole('button', { name: 'More options for Future Lost' });
+		// Both finished runs are of the same game now, so take the first card's menu
+		const more = page
+			.getByRole('button', { name: 'More options for Locked in the Tech District' })
+			.first();
 		await more.focus();
 		await page.keyboard.press('Enter');
 		await expect(page.getByRole('menuitem', { name: /Delete story/ })).toBeFocused();

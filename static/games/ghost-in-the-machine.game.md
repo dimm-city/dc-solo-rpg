@@ -1,6 +1,7 @@
 ---
 title: Locked in the Tech District
 subtitle: A grab-and-go turned mad dash for the gate
+difficulty: normal
 win-message: You slip through Drift Gate 7 as it cycles, the stolen neuralware finally synced to your consciousness. The augmerc's roar fades behind you as reality fractures and reforms. You're free—for now. But in Dimm City, freedom is just another word for "running faster."
 lose-message: The augmerc's chrome claws find you at last. As your vision fractures into static and the smell of burnt ozone fills your lungs, you realize the Machine always wins. The Tech District claims another ghost.
 ---
@@ -51,6 +52,8 @@ Survive. Adapt. Escape. In Dimm City, that's the only prayer that ever gets answ
 
 **The neuralware finally syncs—you see everything, and you know exactly how to disappear.**
 
+![A fox etherlock, one eye alight, every camera in the district turned to show them the way](ghost-in-the-machine/salvation.svg)
+
 The pain stops. Not gradually, not with mercy—it just _ends_, like a switch flipping in your brain. The stolen tech completes its integration, and suddenly you're not fighting it anymore. You're _using_ it.
 
 Every camera in the Tech District becomes your eyes. Every locked door whispers its override codes. You see the patrol patterns of security drones mapped in three-dimensional space, their predictable routes glowing like neon threads. The Etherwave Transit Hub's schedule unfolds before you—Drift Gate 7 will cycle in exactly forty-three ticks, and you know precisely which maintenance tunnel to use, which guard to avoid, which moment of electromagnetic interference will blank the sensors long enough for you to slip through.
@@ -62,6 +65,8 @@ Drift Gate 7 shimmers ahead, its reality-distortion field making the air taste l
 ---
 
 ### Failure Counter
+
+![A district map lighting up red as kill-squads are called in](ghost-in-the-machine/king-network.svg)
 
 **The augmerc's network activates—corporate kill-squads mobilize across the district.**
 
@@ -79,6 +84,8 @@ Red targeting lasers paint the walls around you. Somewhere above, you hear the w
 
 Your vision fractures into static. Blood—your blood—drips from your nose, tasting of copper and burnt circuits. The stolen tech is trying to rewrite your nervous system, and your body is _screaming_ its refusal.
 
+![A fox doubled over as static tears through the implant at their temple](ghost-in-the-machine/king-rejection.svg)
+
 Your limbs move wrong, jerking like a puppet with tangled strings. The optic implant in your left eye flares white-hot, and for a horrible moment you can see through walls, through flesh, through the fundamental code of reality itself. Then it all goes dark except for error messages scrolling endlessly across your retinas.
 
 You collapse against a rusted dumpster, retching acid and bile. The neuralware is killing you from the inside. Maybe that's mercy compared to what the augmerc will do.
@@ -88,6 +95,8 @@ You collapse against a rusted dumpster, retching acid and bile. The neuralware i
 ### Failure Counter
 
 **You're trapped in a lockdown zone—all exits sealed, security closing in.**
+
+![](ghost-in-the-machine/king-lockdown.svg)
 
 The corporate towers loom overhead as blast doors slam shut with hydraulic finality. You're in Sector 12-Theta, a manufacturing sub-level that just went into full quarantine protocol. Red emergency lights pulse like a dying heartbeat. Klaxons wail.
 
@@ -103,6 +112,8 @@ Through the walls, you hear them coming: chrome boots on concrete, the mechanica
 
 **The augmerc finds you—chrome claws and murder in his eyes.**
 
+![A chrome-plated wolf filling the alley, claws out, eyes burning red](ghost-in-the-machine/king-augmerc.svg)
+
 He's massive. Bigger than you remembered. The wolf towers over you, his chrome-plated body reflecting the flickering neon in broken rainbows. Where his neuralware should be, there's just an empty socket weeping fluid and sparking electricity.
 
 "You took something from me," he growls, and his voice is razors dragged across sheet metal. "I'm taking it back. Along with your spine."
@@ -111,9 +122,11 @@ His claws extend—military-grade adamantine, designed to tear through armored v
 
 ---
 
-### Narrative: skip-damage
+### Narrative: A-clubs, skip-damage
 
 **You find a reality glitch at exactly the right moment—danger phases right through you.**
+
+![A fox stepping through a wall that has come apart into drifting pixels](ghost-in-the-machine/ace-glitch.svg)
 
 The wall _fractures_. Not physically—it's still there, still solid rust-stained concrete. But you can see where it's _wrong_, where the code stutters and skips. An etherlock's gift, finally useful for more than madness.
 
@@ -129,6 +142,8 @@ The glitch fades, sealing behind you. Your head pounds and your mouth tastes lik
 
 **The neuralware shows you a way to undo what seemed irreversible.**
 
+![Shattered fragments of a street flowing back together](ghost-in-the-machine/ace-undo.svg)
+
 The stolen tech pulses against your ribs, and suddenly you _see_ it—a cascade of probability threads spreading out from this moment like a spider's web. The augmerc's network, the corporate lockdown, the security protocols—they're all just _code_, and code can be rewritten.
 
 Your claws move without conscious thought, interfacing with a nearby terminal. The neuralware floods your mind with access keys you shouldn't have, backdoors you shouldn't know exist. You're rewriting recent history in the district's security logs, creating just enough chaos and contradiction to reset their response protocols.
@@ -142,6 +157,8 @@ The Machine may always win eventually. But not today. Not this tick.
 ### Narrative
 
 **You remember why you're fighting—a moment of crystalline clarity amid the chaos.**
+
+![A fox on a rooftop above the district lights, still for once](ghost-in-the-machine/ace-clarity.svg 'A moment of clarity')
 
 You're crouched in an abandoned server farm, surrounded by the hum of dying machines and the smell of burnt insulation. Through a cracked window, you can see the Tech District sprawled out below: a circuit board of light and shadow, beauty and brutality intertwined.
 
@@ -335,7 +352,7 @@ The floor lurches. Ceiling tiles rain down. Somewhere below, you hear the CASCAD
 
 ---
 
-### Challenge
+### Challenge: 9-spades
 
 **Desperate cornered by gang enforcers who mistake you for someone else.**
 
@@ -694,11 +711,5 @@ It's not hope. But it's close enough to keep your legs moving.
 ### Event
 
 **Perfect hiding spot—you catch your breath and plan next moves.**
-
-The service closet is small, dark, and smells like cleaning chemicals and rust. But it's _empty_ and it's _safe_ and for the first time in what feels like forever, you can stop moving.
-
-You lean against the wall, letting your pounding heart slow. The neuralware pulses steadily against your ribs, no longer fighting your biology. It's integrating. Slowly, painfully, but _integrating_.
-
-You review your mental map. Calculate distances. Consider options. You're not there yet. But you're closer than you were. And sometimes, closer is all you need to keep going.
 
 ---

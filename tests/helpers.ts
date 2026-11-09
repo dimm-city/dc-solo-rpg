@@ -1,4 +1,5 @@
 import { expect, type Page } from '@playwright/test';
+import { readFileSync } from 'fs';
 
 /** localStorage key set once the first-time choice is made (see src/lib/utils/instructionsStorage.js) */
 export const INSTRUCTIONS_SEEN_KEY = 'dc-solo-rpg:instructions-seen';
@@ -108,4 +109,26 @@ export async function playToFirstRound(page: Page) {
 	// A natural 20 or 1 on the opening roll puts its modifier on the hint line above the button.
 	await expect(page.getByTestId('roll-tasks-button')).toHaveAccessibleName('Roll for tasks');
 	await expect(page.getByRole('heading', { name: 'Round 1' })).toBeVisible();
+}
+
+/** The one built-in game's file (Locked in the Tech District) */
+export const BUILT_IN_GAME = readFileSync(
+	new URL('../static/games/ghost-in-the-machine.game.md', import.meta.url),
+	'utf8'
+);
+
+/**
+ * Give the home screen a second game card: the built-in game uploaded again as "Another Game".
+ * One game ships built in; the Dimm City games come from a GitHub source the suite keeps
+ * switched off, so tests that compare cards add one this way.
+ */
+export async function addSecondGameCard(page: Page) {
+	await page.locator('input[type="file"]').setInputFiles({
+		name: 'another-game.game.md',
+		mimeType: 'text/markdown',
+		buffer: Buffer.from(
+			BUILT_IN_GAME.replace('title: Locked in the Tech District', 'title: Another Game')
+		)
+	});
+	await expect(page.locator('.game-card')).toHaveCount(2);
 }

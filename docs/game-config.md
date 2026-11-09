@@ -321,6 +321,8 @@ Story here...
 
 ## Hosting Games on GitHub
 
+The app comes with [dimm-city/solo-rpg-games](https://github.com/dimm-city/solo-rpg-games) already in the list, which is where the Dimm City games live; remove it in Settings if you don't want them. Write card image paths relative to the game file (`art/x.jpg`, not `/games/x.jpg`), so a game works the same as a built-in file and from a repository.
+
 A public GitHub repository can serve games to anyone who adds it in the app; nothing is uploaded to the app itself. The app reads the repository through GitHub's public API, without a token, so only public repositories work.
 
 ### Repository Layout

@@ -18,7 +18,7 @@ import {
 import { logger } from '../utils/logger.js';
 
 const gameMarkdown = readFileSync(
-	join(process.cwd(), 'static', 'games', 'future-lost.game.md'),
+	join(process.cwd(), 'static', 'games', 'ghost-in-the-machine.game.md'),
 	'utf-8'
 );
 
@@ -132,15 +132,15 @@ describe('sourceLabel, sourceGameSlug and contentsUrl', () => {
 	});
 
 	it('namespaces a game slug by its source, so two repositories never clash', () => {
-		expect(sourceGameSlug(SOURCE, 'Future-Lost.game.md')).toBe(
-			'dimm-city-dc-solo-rpg-static-games--future-lost'
+		expect(sourceGameSlug(SOURCE, 'Ghost-In-The-Machine.game.md')).toBe(
+			'dimm-city-dc-solo-rpg-static-games--ghost-in-the-machine'
 		);
 		expect(sourceGameSlug(parseGameSource('o/r@release/1.0').source, 'x.game.md')).toBe(
 			'o-r-release-1-0--x'
 		);
-		expect(sourceGameSlug(parseGameSource('other/r').source, 'future-lost.game.md')).not.toBe(
-			sourceGameSlug(SOURCE, 'future-lost.game.md')
-		);
+		expect(
+			sourceGameSlug(parseGameSource('other/r').source, 'ghost-in-the-machine.game.md')
+		).not.toBe(sourceGameSlug(SOURCE, 'ghost-in-the-machine.game.md'));
 	});
 
 	it('builds the Contents API URL, with ref only for a named branch', () => {
@@ -162,12 +162,16 @@ describe('fetchSourceGames', () => {
 	it('lists the folder, downloads and parses each .game.md, and keeps where each came from', async () => {
 		const fetch = fakeFetch({
 			[API]: json(
-				[file('future-lost.game.md', 'abc'), file('notes.md'), { name: 'art', type: 'dir' }],
+				[
+					file('ghost-in-the-machine.game.md', 'abc'),
+					file('notes.md'),
+					{ name: 'art', type: 'dir' }
+				],
 				{
 					headers: { etag: '"e1"' }
 				}
 			),
-			[`${RAW}/future-lost.game.md`]: new Response(gameMarkdown)
+			[`${RAW}/ghost-in-the-machine.game.md`]: new Response(gameMarkdown)
 		});
 
 		const entry = await fetchSourceGames(SOURCE, null, { fetch, now: NOW });
@@ -183,8 +187,8 @@ describe('fetchSourceGames', () => {
 		expect(entry.games).toHaveLength(1);
 
 		const game = entry.games[0];
-		expect(game.slug).toBe('dimm-city-dc-solo-rpg-static-games--future-lost');
-		expect(game.title).toBe('Future Lost');
+		expect(game.slug).toBe('dimm-city-dc-solo-rpg-static-games--ghost-in-the-machine');
+		expect(game.title).toBe('Locked in the Tech District');
 		expect(game.isCustom).toBe(true);
 		expect(game.loaded).toBe(true);
 		expect(game.deck).toHaveLength(52);
@@ -193,9 +197,9 @@ describe('fetchSourceGames', () => {
 			owner: 'dimm-city',
 			repo: 'dc-solo-rpg',
 			branch: null,
-			path: 'static/games/future-lost.game.md',
+			path: 'static/games/ghost-in-the-machine.game.md',
 			sha: 'abc',
-			url: `${RAW}/future-lost.game.md`
+			url: `${RAW}/ghost-in-the-machine.game.md`
 		});
 		expect(game.metadata.fetchedAt).toBe(entry.fetchedAt);
 		expect(game.metadata.uploadedAt).toBeUndefined();
@@ -203,14 +207,14 @@ describe('fetchSourceGames', () => {
 
 	it('resolves a relative card image against the raw file URL, so art beside the file loads', async () => {
 		const fetch = fakeFetch({
-			[API]: json([file('future-lost.game.md')]),
-			[`${RAW}/future-lost.game.md`]: new Response(gameMarkdown)
+			[API]: json([file('ghost-in-the-machine.game.md')]),
+			[`${RAW}/ghost-in-the-machine.game.md`]: new Response(gameMarkdown)
 		});
 		const { games } = await fetchSourceGames(SOURCE, null, { fetch, now: NOW });
 		const withImage = games[0].deck.filter((card) => card.image);
 		expect(withImage.length).toBeGreaterThan(0);
 		for (const card of withImage) {
-			expect(card.image.src).toMatch(new RegExp(`^${RAW}/future-lost/[a-z-]+\\.svg$`));
+			expect(card.image.src).toMatch(new RegExp(`^${RAW}/ghost-in-the-machine/[a-z-]+\\.svg$`));
 		}
 	});
 
@@ -246,7 +250,7 @@ describe('fetchSourceGames', () => {
 			source: { sha: 'g' }
 		};
 		const stale = {
-			slug: sourceGameSlug(SOURCE, 'future-lost.game.md'),
+			slug: sourceGameSlug(SOURCE, 'ghost-in-the-machine.game.md'),
 			title: 'Old',
 			source: { sha: 'old' }
 		};
@@ -257,29 +261,32 @@ describe('fetchSourceGames', () => {
 			games: [kept, gone, stale]
 		};
 		const fetch = fakeFetch({
-			[API]: json([file('kept.game.md', 'same'), file('future-lost.game.md', 'new')], {
+			[API]: json([file('kept.game.md', 'same'), file('ghost-in-the-machine.game.md', 'new')], {
 				headers: { etag: '"e2"' }
 			}),
-			[`${RAW}/future-lost.game.md`]: new Response(gameMarkdown)
+			[`${RAW}/ghost-in-the-machine.game.md`]: new Response(gameMarkdown)
 		});
 
 		const entry = await fetchSourceGames(SOURCE, cached, { fetch, now: NOW });
 
-		expect(fetch.mock.calls.map(([url]) => url)).toEqual([API, `${RAW}/future-lost.game.md`]);
+		expect(fetch.mock.calls.map(([url]) => url)).toEqual([
+			API,
+			`${RAW}/ghost-in-the-machine.game.md`
+		]);
 		expect(entry.etag).toBe('"e2"');
-		expect(entry.games.map((g) => g.title)).toEqual(['Kept', 'Future Lost']);
+		expect(entry.games.map((g) => g.title)).toEqual(['Kept', 'Locked in the Tech District']);
 		expect(entry.games[0]).toBe(kept);
 		expect(entry.games[1].source.sha).toBe('new');
 	});
 
 	it('skips a file that is not a valid game, naming it and the reason, and keeps the rest', async () => {
 		const fetch = fakeFetch({
-			[API]: json([file('broken.game.md', 'b'), file('future-lost.game.md', 'f')]),
+			[API]: json([file('broken.game.md', 'b'), file('ghost-in-the-machine.game.md', 'f')]),
 			[`${RAW}/broken.game.md`]: new Response('# Not a game'),
-			[`${RAW}/future-lost.game.md`]: new Response(gameMarkdown)
+			[`${RAW}/ghost-in-the-machine.game.md`]: new Response(gameMarkdown)
 		});
 		const entry = await fetchSourceGames(SOURCE, null, { fetch, now: NOW });
-		expect(entry.games.map((g) => g.title)).toEqual(['Future Lost']);
+		expect(entry.games.map((g) => g.title)).toEqual(['Locked in the Tech District']);
 		expect(entry.skipped).toEqual([
 			{ name: 'broken.game.md', reason: "it doesn't start with a --- block" }
 		]);
@@ -302,16 +309,18 @@ describe('fetchSourceGames', () => {
 	});
 
 	it('reads a path that is one .game.md file as a source of one game', async () => {
-		const source = parseGameSource('dimm-city/dc-solo-rpg/static/games/future-lost.game.md').source;
-		const url = `${API}/future-lost.game.md`;
+		const source = parseGameSource(
+			'dimm-city/dc-solo-rpg/static/games/ghost-in-the-machine.game.md'
+		).source;
+		const url = `${API}/ghost-in-the-machine.game.md`;
 		const fetch = fakeFetch({
-			[url]: json(file('future-lost.game.md', 'f')),
-			[`${RAW}/future-lost.game.md`]: new Response(gameMarkdown)
+			[url]: json(file('ghost-in-the-machine.game.md', 'f')),
+			[`${RAW}/ghost-in-the-machine.game.md`]: new Response(gameMarkdown)
 		});
 		const entry = await fetchSourceGames(source, null, { fetch, now: NOW });
-		expect(entry.games.map((g) => g.title)).toEqual(['Future Lost']);
+		expect(entry.games.map((g) => g.title)).toEqual(['Locked in the Tech District']);
 		expect(entry.games[0].slug).toBe(
-			'dimm-city-dc-solo-rpg-static-games-future-lost-game-md--future-lost'
+			'dimm-city-dc-solo-rpg-static-games-ghost-in-the-machine-game-md--ghost-in-the-machine'
 		);
 	});
 

@@ -10,6 +10,12 @@ import { emptySourceCache, fetchSourceGames, parseGameSource } from '../services
 const SOURCES_KEY = 'dc-solo-rpg-game-sources';
 const STORAGE_VERSION = 1;
 
+/**
+ * Sources every player starts with. Each is added once, the first time this browser sees it;
+ * a player who removes one keeps it removed (the id stays in `seeded`).
+ */
+export const DEFAULT_SOURCES = ['dimm-city/solo-rpg-games'];
+
 /** How long a source's games are trusted before GitHub is asked again */
 export const CACHE_TTL_MS = 60 * 60 * 1000;
 /** How soon a source is tried again after a failed check */
@@ -31,39 +37,79 @@ export const RETRY_AFTER_ERROR_MS = 5 * 60 * 1000;
  * @property {boolean} refreshing - A check is under way (not stored)
  */
 
+/** @returns {{sources: GameSource[], seeded: string[]}} seeded: default ids already added once */
 function readStorage() {
+	const empty = { sources: [], seeded: [] };
 	try {
-		if (typeof localStorage === 'undefined') return [];
+		if (typeof localStorage === 'undefined') return empty;
 		const stored = JSON.parse(localStorage.getItem(SOURCES_KEY) ?? 'null');
-		if (!stored) return [];
+		if (!stored) return empty;
 		if (stored.version !== STORAGE_VERSION) {
 			logger.warn('[gameSources] Version mismatch, clearing game sources');
 			localStorage.removeItem(SOURCES_KEY);
-			return [];
+			return empty;
 		}
-		return (stored.sources ?? []).map((source) => ({
-			...emptySourceCache(),
-			...source,
-			refreshing: false
-		}));
+		return {
+			sources: (stored.sources ?? []).map((source) => ({
+				...emptySourceCache(),
+				...source,
+				refreshing: false
+			})),
+			seeded: Array.isArray(stored.seeded) ? stored.seeded : []
+		};
 	} catch (error) {
 		logger.error('[gameSources] Failed to load game sources:', error);
-		return [];
+		return empty;
 	}
 }
 
-const store = $state({ sources: readStorage(), refreshing: false });
+const store = $state({ ...readStorage(), refreshing: false });
 
 /** @returns {boolean} false when the browser refused (storage full, private mode) */
 function save() {
 	try {
+		if (typeof localStorage === 'undefined') return false;
 		const sources = $state.snapshot(store.sources).map(({ refreshing: _, ...source }) => source);
-		localStorage.setItem(SOURCES_KEY, JSON.stringify({ version: STORAGE_VERSION, sources }));
+		const seeded = $state.snapshot(store.seeded);
+		localStorage.setItem(
+			SOURCES_KEY,
+			JSON.stringify({ version: STORAGE_VERSION, sources, seeded })
+		);
 		return true;
 	} catch (error) {
 		logger.error('[gameSources] Failed to save game sources:', error);
 		return false;
 	}
+}
+
+/**
+ * Add each default source this browser has not seen yet (see DEFAULT_SOURCES). Runs once at
+ * load; one the player removed is not added again. Its games arrive with the next refresh.
+ * @param {string[]} [defaults]
+ * @returns {string[]} the ids added this time
+ */
+export function seedDefaultSources(defaults = DEFAULT_SOURCES) {
+	const added = [];
+	for (const text of defaults) {
+		const parsed = parseGameSource(text);
+		if (!parsed.ok || store.seeded.includes(parsed.source.id)) continue;
+		store.seeded.push(parsed.source.id);
+		if (!store.sources.some((source) => source.id === parsed.source.id)) {
+			store.sources.push({ ...parsed.source, ...emptySourceCache(), refreshing: false });
+			added.push(parsed.source.id);
+		}
+	}
+	if (added.length || store.seeded.length) save();
+	if (added.length) logger.info(`[gameSources] Added the default sources: ${added.join(', ')}`);
+	return added;
+}
+
+// Once per load. A browser that refuses storage (private mode) still gets the defaults for the
+// session: every storage access above is inside a try, and this one must be too
+try {
+	seedDefaultSources();
+} catch (error) {
+	logger.warn('[gameSources] Could not add the default sources:', error);
 }
 
 /** @returns {GameSource[]} The sources, in the order they were added (reactive) */
@@ -205,6 +251,7 @@ async function runRefresh({ force = false, now = Date.now(), fetch = globalThis.
 /** Forget every source and its games (tests, and a future "clear" action) */
 export function resetGameSources() {
 	store.sources.splice(0, store.sources.length);
+	store.seeded.splice(0, store.seeded.length);
 	store.refreshing = false;
 	try {
 		localStorage.removeItem(SOURCES_KEY);

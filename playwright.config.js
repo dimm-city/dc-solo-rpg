@@ -14,6 +14,26 @@ const config = {
 		timeout: 10000 // 10 second timeout for assertions
 	},
 	use: {
+		// Every test starts with the default GitHub game source already "seen" and none added, so
+		// the suite never calls GitHub (see DEFAULT_SOURCES in src/lib/stores/gameSources.svelte.js)
+		storageState: {
+			cookies: [],
+			origins: [
+				{
+					origin: 'http://localhost:5173',
+					localStorage: [
+						{
+							name: 'dc-solo-rpg-game-sources',
+							value: JSON.stringify({
+								version: 1,
+								sources: [],
+								seeded: ['dimm-city/solo-rpg-games']
+							})
+						}
+					]
+				}
+			]
+		},
 		// Use Playwright's bundled Chromium
 		launchOptions: {
 			args: [
